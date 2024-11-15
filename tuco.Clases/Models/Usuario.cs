@@ -1,0 +1,40 @@
+﻿using System;
+using System.Collections.Generic;
+using Tuco.Clases.Models;
+
+namespace tuco.Clases.Models;
+
+public partial class Usuario
+{
+    public int UsuarioId { get; set; }
+
+    public string NombreUsuario { get; set; } = null!;
+
+    public string Email { get; set; } = null!;
+
+    public string Contraseña { get; set; } = null!;
+
+    public DateTime? FechaCreacion { get; set; }
+
+    public bool? Activo { get; set; }
+
+    // Nuevo campo para el token de activación
+    public string? Token { get; set; }
+
+    public virtual ICollection<Cliente> Clientes { get; set; } = new List<Cliente>();
+
+    public virtual ICollection<Documento> Documentos { get; set; } = new List<Documento>();
+
+    public virtual ICollection<HistorialAccione> HistorialAcciones { get; set; } = new List<HistorialAccione>();
+
+    public virtual ICollection<Inventario> Inventarios { get; set; } = new List<Inventario>();
+
+    public virtual ICollection<PedidosProveedor> PedidosProveedors { get; set; } = new List<PedidosProveedor>();
+
+    public virtual ICollection<SesionUsuario> SesionUsuarios { get; set; } = new List<SesionUsuario>();
+
+    public virtual ICollection<Role> Rols { get; set; } = new List<Role>();
+
+    public virtual ICollection<UsuarioRol> UsuarioRoles { get; set; } = new List<UsuarioRol>();
+
+}
