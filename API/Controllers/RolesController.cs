@@ -138,5 +138,184 @@ public class RolesController : ControllerBase
 
         return Ok(new { Message = "Rol eliminado exitosamente." });
     }
+
+
+    /*CRUD DE PERMISOS A ASOCIADOS A LOS ROLES*/
+
+
+    // Obtener permisos asociados a un rol
+    [HttpGet("obtener-permisos-del-rol/{id}")]
+    public async Task<ActionResult> ObtenerPermisosDeRol(int id)
+    {
+        // Buscar el rol con su relación de permisos
+        var rol = await _context.Roles
+            .Include(r => r.RolPermiso) // Incluir la relación RolPermiso
+            .ThenInclude(rp => rp.Permiso) // Incluir detalles de los permisos en RolPermiso
+            .FirstOrDefaultAsync(r => r.RolId == id); // Filtrar por el ID del rol
+
+        // Validar si el rol existe
+        if (rol == null)
+        {
+            return NotFound(new { Message = "Rol no encontrado." }); // Retorna un error 404 si no se encuentra el rol
+        }
+
+        // Obtener la lista de permisos asociados al rol
+        var permisos = rol.RolPermiso.Select(rp => rp.Permiso).ToList();
+
+        // Retornar la lista de permisos
+        return Ok(permisos);
+    }
+
+
+    // Agregar permisos a un rol
+    [HttpPost("agregar-permisos-al-rol/{id}")]
+    public async Task<ActionResult> AgregarPermisosARol(int id, [FromBody] List<int> permisoIds)
+    {
+        // Buscar el rol por ID e incluir su relación RolPermiso
+        var rol = await _context.Roles
+            .Include(r => r.RolPermiso) // Incluir la relación RolPermiso
+            .FirstOrDefaultAsync(r => r.RolId == id); // Filtrar por el ID del rol
+
+        // Validar si el rol existe
+        if (rol == null)
+        {
+            return NotFound(new { Message = "Rol no encontrado." }); // Retorna un error 404 si no se encuentra el rol
+        }
+
+        // Iterar sobre los IDs de los permisos recibidos
+        foreach (var permisoId in permisoIds)
+        {
+            // Validar si el permiso no está ya asociado al rol
+            if (!rol.RolPermiso.Any(rp => rp.PermisoID == permisoId))
+            {
+                // Agregar la relación entre el rol y el permiso
+                rol.RolPermiso.Add(new RolPermisoRE { RolID = id, PermisoID = permisoId });
+            }
+        }
+
+        // Guardar los cambios en la base de datos
+        await _context.SaveChangesAsync();
+        return Ok(new { Message = "Permisos agregados exitosamente." }); // Retornar éxito
+    }
+
+    // Actualizar permisos de un rol existente
+    [HttpPut("actualizar-permisos-del-rol/{rolId}")]
+    public async Task<IActionResult> ActualizarPermisosDeRol(int rolId, [FromBody] List<int> permisosIds)
+    {
+        // Busca el rol en la base de datos
+        var rolExistente = await _context.Roles
+            .Include(r => r.RolPermiso)
+            .FirstOrDefaultAsync(r => r.RolId == rolId);
+
+        // Verifica si el rol existe
+        if (rolExistente == null)
+        {
+            return NotFound(new { Message = "Rol no encontrado." });
+        }
+
+        // Eliminar los permisos actuales no incluidos en la nueva lista
+        var permisosAEliminar = rolExistente.RolPermiso
+            .Where(rp => !permisosIds.Contains(rp.PermisoID))
+            .ToList(); // Convertir a lista para poder iterar
+
+        foreach (var permiso in permisosAEliminar)
+        {
+            rolExistente.RolPermiso.Remove(permiso); // Remover de la colección
+        }
+
+        // Agregar nuevos permisos que no están ya asociados al rol
+        var permisosAAgregar = permisosIds
+            .Where(pid => !rolExistente.RolPermiso.Any(rp => rp.PermisoID == pid))
+            .ToList();
+
+        foreach (var permisoId in permisosAAgregar)
+        {
+            rolExistente.RolPermiso.Add(new RolPermisoRE
+            {
+                RolID = rolId,
+                PermisoID = permisoId
+            });
+        }
+
+        // Guardar los cambios en la base de datos
+        await _context.SaveChangesAsync();
+        return Ok(new { Message = "Permisos actualizados exitosamente." });
+    }
+
+
+
+    // Eliminar permisos específicos de un rol
+    [HttpDelete("eliminar-permisos-al-Rol/{id}")]
+    public async Task<ActionResult> EliminarPermisosDeRol(int id, [FromBody] List<int> permisoIds)
+    {
+        // Buscar el rol por ID e incluir su relación RolPermiso
+        var rol = await _context.Roles
+            .Include(r => r.RolPermiso) // Incluir la relación RolPermiso
+            .FirstOrDefaultAsync(r => r.RolId == id); // Filtrar por el ID del rol
+
+        // Validar si el rol existe
+        if (rol == null)
+        {
+            return NotFound(new { Message = "Rol no encontrado." }); // Retorna un error 404 si no se encuentra el rol
+        }
+
+        // Identificar las relaciones de permisos que deben ser eliminadas
+        var permisosAEliminar = rol.RolPermiso
+            .Where(rp => permisoIds.Contains(rp.PermisoID)) // Filtrar los permisos a eliminar
+            .ToList(); // Convertir a lista para iterar
+
+        // Eliminar las relaciones de permisos de la colección
+        foreach (var permiso in permisosAEliminar)
+        {
+            rol.RolPermiso.Remove(permiso); // Remover cada permiso
+        }
+
+        // Guardar los cambios en la base de datos
+        await _context.SaveChangesAsync();
+
+        // Verificar si el rol ya no tiene permisos asociados
+        if (!rol.RolPermiso.Any())
+        {
+            return Ok(new { Message = "Permisos eliminados exitosamente. El rol ya no tiene permisos asociados." });
+        }
+
+        return Ok(new { Message = "Permisos eliminados exitosamente." }); // Retornar éxito
+    }
+
+
+    // Eliminar todos los permisos de un rol
+    [HttpDelete("eliminar-todos-permisos/{id}")]
+    public async Task<ActionResult> EliminarTodosPermisosDeRol(int id)
+    {
+        // Buscar el rol por ID e incluir su relación RolPermiso
+        var rol = await _context.Roles
+            .Include(r => r.RolPermiso) // Incluir la relación RolPermiso
+            .FirstOrDefaultAsync(r => r.RolId == id); // Filtrar por el ID del rol
+
+        // Validar si el rol existe
+        if (rol == null)
+        {
+            return NotFound(new { Message = "Rol no encontrado." }); // Retorna un error 404 si no se encuentra el rol
+        }
+
+        // Verificar si el rol no tiene permisos
+        if (!rol.RolPermiso.Any())
+        {
+            return BadRequest(new { Message = "El rol no tiene permisos para eliminar." }); // Retornar error si no hay permisos
+        }
+
+        // Eliminar todas las relaciones de permisos
+        rol.RolPermiso.Clear();
+
+        // Guardar los cambios en la base de datos
+        await _context.SaveChangesAsync();
+        return Ok(new { Message = "Todos los permisos han sido eliminados del rol." }); // Retornar éxito
+    }
+
+
+
+
+
+
 }
 
