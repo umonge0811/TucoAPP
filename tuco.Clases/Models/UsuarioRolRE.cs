@@ -7,7 +7,7 @@ namespace Tuco.Clases.Models
     /// <summary>
     /// Clase que representa la relación muchos a muchos entre Usuarios y Roles.
     /// </summary>
-    public class UsuarioRol
+    public class UsuarioRolRE
     {
         /// <summary>
         /// ID del usuario.

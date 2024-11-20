@@ -51,11 +51,11 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
-    public DbSet<RolPermiso> RolPermiso { get; set; }
+    public DbSet<RolPermisoRE> RolPermisos { get; set; }
 
-    public DbSet<UsuarioRol> UsuarioRoles { get; set; }
+    public DbSet<UsuarioRolRE> UsuarioRoles { get; set; }
 
-    public DbSet<UsuarioPermiso> UsuarioPermisos { get; set; }
+    public DbSet<UsuarioPermisoRE> UsuarioPermisos { get; set; }
 
 
 
@@ -454,7 +454,7 @@ public partial class TucoContext : DbContext
                         j.IndexerProperty<int>("UsuarioId").HasColumnName("UsuarioID");
                         j.IndexerProperty<int>("RolId").HasColumnName("RolID");
                     });
-            modelBuilder.Entity<UsuarioRol>(entity =>
+            modelBuilder.Entity<UsuarioRolRE>(entity =>
             {
                 entity.HasKey(ur => new { ur.UsuarioId, ur.RolId }).HasName("PK_UsuarioRol");
 
@@ -471,21 +471,44 @@ public partial class TucoContext : DbContext
                     .HasConstraintName("FK_UsuarioRol_Rol");
             });
 
-            modelBuilder.Entity<RolPermiso>(entity =>
+            modelBuilder.Entity<UsuarioPermisoRE>(entity =>
             {
-                entity.HasKey(rp => new { rp.RolID, rp.PermisoID }).HasName("PK_RolPermiso");
+                // Configuración de la clave compuesta
+                entity.HasKey(up => new { up.UsuarioID, up.PermisoID })
+                      .HasName("PK_UsuarioPermiso");
 
+                // Relación con Usuario
+                entity.HasOne(up => up.Usuario)
+                      .WithMany(u => u.UsuarioPermiso)
+                      .HasForeignKey(up => up.UsuarioID)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Relación con Permiso
+                entity.HasOne(up => up.Permiso)
+                      .WithMany(p => p.UsuarioPermiso)
+                      .HasForeignKey(up => up.PermisoID)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<RolPermisoRE>(entity =>
+            {
+                // Configuración de la clave compuesta
+                entity.HasKey(rp => new { rp.RolID, rp.PermisoID })
+                      .HasName("PK_RolPermiso");
+
+                // Relación con Usuario
                 entity.HasOne(rp => rp.Rol)
-                    .WithMany(r => r.RolPermiso)
-                    .HasForeignKey(rp => rp.RolID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_RolPermiso_Rol");
+                      .WithMany(r => r.RolPermiso)
+                      .HasForeignKey(rp => rp.RolID)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .HasConstraintName("FK_RolPermiso_Rol");
 
+                // Relación con Permiso
                 entity.HasOne(rp => rp.Permiso)
-                    .WithMany(p => p.RolPermiso)
-                    .HasForeignKey(rp => rp.PermisoID)
-                    .OnDelete(DeleteBehavior.Cascade)
-                    .HasConstraintName("FK_RolPermiso_Permis o");
+                      .WithMany(r => r.RolPermiso)
+                      .HasForeignKey(rp => rp.PermisoID)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .HasConstraintName("FK_RolPermiso_Permiso");
             });
 
 

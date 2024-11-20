@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Tuco.Clases.Models;
 
 namespace tuco.Clases.Models;
@@ -35,6 +36,11 @@ public partial class Usuario
 
     public virtual ICollection<Role> Rols { get; set; } = new List<Role>();
 
-    public virtual ICollection<UsuarioRol> UsuarioRoles { get; set; } = new List<UsuarioRol>();
+    public virtual ICollection<UsuarioRolRE> UsuarioRoles { get; set; } = new List<UsuarioRolRE>();
+
+    // Propiedad de navegación para la relación muchos a muchos con Permisos
+    public virtual ICollection<UsuarioPermisoRE> UsuarioPermiso { get; set; } = new List<UsuarioPermisoRE>();
+
+    
 
 }

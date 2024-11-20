@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using Tuco.Clases.Models;
+using System.Text.Json.Serialization;
+
 
 namespace tuco.Clases.Models;
 
-public partial class Permiso
+public class Permiso
 {
     public int PermisoId { get; set; }
 
     public string NombrePermiso { get; set; } = null!;
 
-    public string DescripcionPermiso { get; set; } = null!;
+    public string? DescripcionPermiso { get; set; }
 
+    [JsonIgnore]
     public virtual ICollection<Role> Rols { get; set; } = new List<Role>();
 
-    // Relación con RolPermiso
-    public virtual ICollection<RolPermiso> RolPermiso { get; set; } = new List<RolPermiso>();
+    [JsonIgnore]
+    public virtual ICollection<RolPermisoRE> RolPermiso { get; set; } = new List<RolPermisoRE>();
 
-    // Relación con UsuarioPermiso
-    public virtual ICollection<UsuarioPermiso> UsuarioPermiso { get; set; } = new List<UsuarioPermiso>();
+    [JsonIgnore]
+    public virtual ICollection<UsuarioPermisoRE> UsuarioPermiso { get; set; } = new List<UsuarioPermisoRE>();
 }

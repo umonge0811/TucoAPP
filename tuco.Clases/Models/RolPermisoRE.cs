@@ -12,12 +12,10 @@ namespace Tuco.Clases.Models
     /// <summary>
     /// Clase que representa la relación muchos a muchos entre Roles y Permisos.
     /// </summary>
-    public class RolPermiso
+    public class RolPermisoRE
     {
-        [Key, Column(Order = 0)]
-        public int RolID { get; set; }
-
-        [Key, Column(Order = 1)]
+      
+        public int RolID { get; set; }        
         public int PermisoID { get; set; }
 
         /// <summary>

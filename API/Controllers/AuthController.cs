@@ -136,7 +136,7 @@ public class AuthController : ControllerBase
             .ToList();
 
         // Obtener los permisos del rol del usuario
-        var permisosRol = _context.RolPermiso
+        var permisosRol = _context.RolPermisos
             .Where(rp => roles.Any(r => rp.Rol.NombreRol == r))
             .Select(rp => rp.Permiso.NombrePermiso)
             .ToList();
