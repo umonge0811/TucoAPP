@@ -9,9 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tuco.Clases", "tuco.Clases\Tuco.Clases.csproj", "{90629A45-8636-4AB5-974A-06375C89A12D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TucoWEB", "TucoWEB\TucoWEB\TucoWEB.csproj", "{8E8E5E03-F424-426F-A4DF-A7B84173A62E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TucoWEB", "TucoWEB\TucoWEB\TucoWEB.csproj", "{8E8E5E03-F424-426F-A4DF-A7B84173A62E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TucoWEB.Client", "TucoWEB\TucoWEB.Client\TucoWEB.Client.csproj", "{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TucoWEB.Client", "TucoWEB\TucoWEB.Client\TucoWEB.Client.csproj", "{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,40 +1,35 @@
-using TucoWEB.Client.Pages; // Importa las páginas del cliente (TucoWEB.Client).
-using TucoWEB.Components;  // Importa componentes adicionales definidos en el cliente.
+using TucoWEB.Client.Pages;
+using TucoWEB.Components;
 
-var builder = WebApplication.CreateBuilder(args); // Crea un constructor para configurar los servicios y el pipeline de la aplicación.
-builder.Services.AddScoped(sp =>
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents()
+    .AddInteractiveWebAssemblyComponents();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    var configuration = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = configuration["ApiSettings:BaseUrl"]; // Lee la URL base desde appsettings.json
-    return new HttpClient { BaseAddress = new Uri(baseUrl) }; // Configura HttpClient con esa URL
-});
-
-// Configuración de servicios
-builder.Services.AddRazorComponents() // Habilita el uso de Razor Components.
-    .AddInteractiveServerComponents() // Habilita el modo de renderizado en servidor para componentes interactivos.
-    .AddInteractiveWebAssemblyComponents(); // Habilita el modo de renderizado en cliente (WebAssembly) para componentes interactivos.
-
-var app = builder.Build(); // Construye la aplicación con los servicios y configuraciones definidos anteriormente.
-
-// Configuración del pipeline HTTP
-if (app.Environment.IsDevelopment()) // Si estamos en un entorno de desarrollo:
-{
-    app.UseWebAssemblyDebugging(); // Habilita herramientas de depuración para WebAssembly.
+    app.UseWebAssemblyDebugging();
 }
-else // Si estamos en un entorno de producción:
+else
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true); // Maneja errores no controlados redirigiéndolos a una página de error.
-    app.UseHsts(); // Habilita HSTS para mejorar la seguridad en HTTPS.
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 
-app.UseHttpsRedirection(); // Redirige automáticamente solicitudes HTTP a HTTPS.
-app.UseStaticFiles(); // Habilita el acceso a archivos estáticos como CSS, imágenes, etc.
-app.UseAntiforgery(); // Agrega protección contra ataques CSRF para formularios y endpoints sensibles.
+app.UseHttpsRedirection();
 
-// Mapeo de Razor Components
-app.MapRazorComponents<App>() // Configura el componente principal `App` para renderizarlo.
-    .AddInteractiveServerRenderMode() // Habilita el renderizado en servidor para los Razor Components.
-    .AddInteractiveWebAssemblyRenderMode() // Habilita el renderizado en cliente para los Razor Components.
-    .AddAdditionalAssemblies(typeof(TucoWEB.Client._Imports).Assembly); // Asegura que los componentes y recursos de TucoWEB.Client estén disponibles.
+app.UseStaticFiles();
+app.UseAntiforgery();
 
-app.Run(); // Inicia la aplicación y bloquea el hilo hasta que esta se detenga.
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode()
+    .AddInteractiveWebAssemblyRenderMode()
+    .AddAdditionalAssemblies(typeof(TucoWEB.Client._Imports).Assembly);
+
+app.Run();

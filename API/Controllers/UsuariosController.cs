@@ -71,30 +71,11 @@ public class UsuariosController : ControllerBase
         return Ok(new { Message = "Usuario registrado exitosamente. Revisa tu correo para activar la cuenta." });
     }
 
-    // Endpoint para listar todos los usuarios
-    [HttpGet("usuarios")]
-    public async Task<IActionResult> ObtenerUsuarios()
-    {
-        // Consulta a la base de datos para obtener todos los usuarios
-        var usuarios = await _context.Usuarios
-            .Select(u => new
-            {
-                u.NombreUsuario, // Nombre del usuario
-                u.Email,         // Correo del usuario
-                u.Activo         // Estado de activación del usuario
-            })
-            .ToListAsync();
-
-        // Retornar la lista de usuarios como una respuesta exitosa
-        return Ok(usuarios);
-    }
 
 
 
+  
 
-
-
-
-
+    
 
 }
