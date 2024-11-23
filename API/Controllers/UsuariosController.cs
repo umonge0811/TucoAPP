@@ -1,4 +1,5 @@
 ﻿using API.Data;
+using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,10 +11,13 @@ using Tuco.Clases.DTOs;
 public class UsuariosController : ControllerBase
 {
     private readonly TucoContext _context;
+    private readonly EmailService _emailService;
 
-    public UsuariosController(TucoContext context)
+
+    public UsuariosController(TucoContext context, EmailService emailService)
     {
         _context = context;
+        _emailService = emailService; // Inyectar EmailService
     }
 
     /// <summary>
@@ -21,7 +25,7 @@ public class UsuariosController : ControllerBase
     /// </summary>
     /// <param name="request">Datos del usuario a registrar.</param>
     /// <returns>Confirmación del registro o mensaje de error.</returns>
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     [HttpPost("registrar-usuario")]
     public async Task<IActionResult> RegistrarUsuario([FromBody] RegistroUsuarioRequestDTO request)
     {
@@ -32,32 +36,45 @@ public class UsuariosController : ControllerBase
             return BadRequest(new { Message = "El email ya está registrado." });
         }
 
+        // Crear un token único para activación
+        var tokenActivacion = Guid.NewGuid().ToString();
+
         // Crear una nueva instancia del usuario
         var usuario = new Usuario
         {
             NombreUsuario = request.NombreUsuario,
             Email = request.Email,
-            Contraseña = BCrypt.Net.BCrypt.HashPassword(request.Contraseña), // Hashear la contraseña
+            Contraseña = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()), // Contraseña temporal hasheada
             FechaCreacion = DateTime.Now,
-            Activo = request.Activo ?? true, // Por defecto, usuario activo
-            Token = null // Se puede generar un token para validaciones futuras
+            Activo = false, // Cuenta desactivada por defecto
+            Token = tokenActivacion // Asignar el token de activación
         };
 
         // Guardar el nuevo usuario en la base de datos
         _context.Usuarios.Add(usuario);
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Usuario registrado exitosamente." });
+        // Generar enlace de activación
+        var activationUrl = $"https://localhost:7273/cambiar-contrasena?token={tokenActivacion}";
+
+
+        // Contenido del correo
+        var subject = "Activa tu cuenta";
+        var htmlContent = $@"
+        <p>Haz clic en el siguiente enlace para activar tu cuenta y cambiar tu contraseña:</p>
+        <a href='{activationUrl}' style='background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Activar Cuenta</a>
+        ";
+
+        // Enviar el correo de activación
+        await _emailService.EnviarCorreoAsync(usuario.Email, subject, htmlContent);
+
+        return Ok(new { Message = "Usuario registrado exitosamente. Revisa tu correo para activar la cuenta." });
     }
 
-    
 
-    private void EnviarEmailActivacion(string email, string token)
-    {
-        string activationLink = $"https://tu-dominio.com/activar-cuenta?token={token}";
-        // Lógica para enviar email (usa un servicio de email como SendGrid)
-        Console.WriteLine($"Enviar este enlace al correo: {activationLink}");
-    }
+
+
+  
 
     
 

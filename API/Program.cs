@@ -1,21 +1,26 @@
 using API.Data;
+using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Tuco.Clases.Models.Emails;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<EmailService>();
 
+builder.Services.AddDbContext<TucoContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+// Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configurar el DbContext
-builder.Services.AddDbContext<TucoContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("GestionLlanteraDB")));
 
 // Configurar autenticación JWT
 builder.Services.AddAuthentication(options =>

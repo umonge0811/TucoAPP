@@ -3,11 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35431.28
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tuco", "Tuco\Tuco.csproj", "{2DC717B1-43B0-48B8-9A61-62798DC0E3F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tuco", "Tuco\Tuco.csproj", "{2DC717B1-43B0-48B8-9A61-62798DC0E3F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{A38B1D36-6634-4B2E-9CF5-900CAF839952}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{A38B1D36-6634-4B2E-9CF5-900CAF839952}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tuco.Clases", "tuco.Clases\Tuco.Clases.csproj", "{90629A45-8636-4AB5-974A-06375C89A12D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tuco.Clases", "tuco.Clases\Tuco.Clases.csproj", "{90629A45-8636-4AB5-974A-06375C89A12D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TucoWEB", "TucoWEB\TucoWEB\TucoWEB.csproj", "{8E8E5E03-F424-426F-A4DF-A7B84173A62E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TucoWEB.Client", "TucoWEB\TucoWEB.Client\TucoWEB.Client.csproj", "{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +33,14 @@ Global
 		{90629A45-8636-4AB5-974A-06375C89A12D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90629A45-8636-4AB5-974A-06375C89A12D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90629A45-8636-4AB5-974A-06375C89A12D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E8E5E03-F424-426F-A4DF-A7B84173A62E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E8E5E03-F424-426F-A4DF-A7B84173A62E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E8E5E03-F424-426F-A4DF-A7B84173A62E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E8E5E03-F424-426F-A4DF-A7B84173A62E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

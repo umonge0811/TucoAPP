@@ -21,14 +21,10 @@ namespace Tuco.Clases.DTOs
         /// </summary>
         public string Email { get; set; }
 
-        /// <summary>
-        /// Contraseña del usuario.
-        /// </summary>
-        public string Contraseña { get; set; }
 
         /// <summary>
         /// Estado activo del usuario (opcional).
         /// </summary>
-        public bool? Activo { get; set; }
+        public bool? Activo { get; set; } = false;
     }
 }

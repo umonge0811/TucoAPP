@@ -1,0 +1,43 @@
+﻿@page "/activar"
+@inject NavigationManager NavigationManager
+
+<h3>Activar Cuenta</h3>
+
+<p>@Mensaje</p>
+
+@code {
+    [Parameter]
+    public string? Token { get; set; } // Parámetro para recibir el token desde la URL
+
+    private string Mensaje = "Procesando activación de la cuenta...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(Token))
+        {
+            Mensaje = "El token no es válido o está vacío.";
+            return;
+        }
+
+        try
+        {
+            // Llama al backend para activar la cuenta
+            using var http = new HttpClient();
+            var apiUrl = "https://tu-api.com/api/activar-cuenta?token=" + Token;
+            var response = await http.GetAsync(apiUrl);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Mensaje = "Tu cuenta ha sido activada correctamente.";
+            }
+            else
+            {
+                Mensaje = "Error al activar la cuenta. Por favor, contacta soporte.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Mensaje = $"Hubo un error al activar la cuenta: {ex.Message}";
+        }
+    }
+}

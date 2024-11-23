@@ -62,7 +62,8 @@ public class AuthController : ControllerBase
         // Guarda los cambios en la base de datos
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Cuenta activada con éxito." });
+        // Opcional: Redirigir a una página de éxito o mostrar un mensaje.
+        return Ok(new { Message = "Cuenta activada con éxito. Ahora puedes iniciar sesión." });
     }
 
     /// <summary>
