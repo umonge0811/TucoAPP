@@ -1,0 +1,59 @@
+﻿@page "/usuarios"
+@inject HttpClient Http
+
+<h3>Lista de Usuarios</h3>
+
+@if (usuarios == null)
+{
+    <p>Cargando usuarios...</p>
+}
+else if (usuarios.Count == 0)
+{
+    <p>No hay usuarios registrados.</p>
+}
+else
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var usuario in usuarios)
+            {
+                <tr>
+                    <td>@usuario.NombreUsuario</td>
+                    <td>@usuario.Email</td>
+                    <td>@(usuario.Activo ? "Activo" : "Inactivo")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Usuario> usuarios;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            usuarios = await Http.GetFromJsonAsync<List<Usuario>>("api/Usuarios/usuarios");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener usuarios: {ex.Message}");
+            usuarios = new List<Usuario>();
+        }
+    }
+
+    public class Usuario
+    {
+        public string NombreUsuario { get; set; }
+        public string Email { get; set; }
+        public bool Activo { get; set; }
+    }
+}
