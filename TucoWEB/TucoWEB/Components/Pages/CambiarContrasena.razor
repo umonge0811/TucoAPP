@@ -1,0 +1,83 @@
+﻿@page "/cambiar-contrasena"
+
+
+
+<h3>Cambiar Contraseña</h3>
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info">@mensaje</div>
+}
+
+@if (!string.IsNullOrEmpty(token))
+{
+    <div>
+        <label for="nuevaContrasena">Nueva Contrasena:</label>
+        <input type="password" @bind="nuevaContrasena" class="form-control" />
+        <button @onclick="CambiarContrasenaAsync" class="btn btn-primary mt-2">Cambiar Contraseña</button>
+    </div>
+}
+else
+{
+    <div class="alert alert-danger">No se puede procesar el cambio de contraseña.</div>
+}
+
+
+
+@code {
+
+    [Parameter]
+    public string token { get; set; }
+    private string nuevaContrasena = string.Empty;
+    private string mensaje = string.Empty;
+    private bool isLoading = false;
+
+    protected override void OnInitialized()
+    {
+        // Obtener el token de la URL
+        var uri = new Uri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        token = query["token"];
+
+        if (string.IsNullOrEmpty(token))
+        {
+            mensaje = "El token es inválido o no se encuentra en la URL.";
+        }
+    }
+
+
+    private async Task CambiarContrasenaAsync()
+    {
+        if (string.IsNullOrEmpty(nuevaContrasena))
+        {
+            mensaje = "Por favor, ingrese una nueva contraseña.";
+            return;
+        }
+
+        isLoading = true;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/Usuarios/CambiarContraseña", new { token, NuevaContraseña = nuevaContrasena });
+
+            if (response.IsSuccessStatusCode)
+            {
+                mensaje = "Contraseña cambiada exitosamente.";
+            }
+            else
+            {
+                mensaje = "Hubo un problema al cambiar la contraseña.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+
+}

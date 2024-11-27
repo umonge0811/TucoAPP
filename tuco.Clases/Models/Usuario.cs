@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Tuco.Clases.Enums;
 using Tuco.Clases.Models;
 
 namespace tuco.Clases.Models;
@@ -13,9 +14,13 @@ public partial class Usuario
 
     public string Email { get; set; } = null!;
 
-    public string Contraseña { get; set; } = null!;
-
+    public string Contrasena { get; set; } = null!;
+    
     public DateTime? FechaCreacion { get; set; }
+
+    public DateTime? FechaExpiracionToken { get; set; }
+
+    public PropositoTokenEnum? PropositoToken { get; set; }
 
     public bool? Activo { get; set; }
 

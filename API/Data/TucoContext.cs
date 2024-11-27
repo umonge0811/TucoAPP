@@ -432,7 +432,7 @@ public partial class TucoContext : DbContext
 
             entity.Property(e => e.UsuarioId).HasColumnName("UsuarioID");
             entity.Property(e => e.Activo).HasDefaultValue(true);
-            entity.Property(e => e.Contraseña)
+            entity.Property(e => e.Contrasena)
                 .HasMaxLength(255)
                 .IsUnicode(false);
             entity.Property(e => e.Email)

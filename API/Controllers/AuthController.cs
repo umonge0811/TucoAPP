@@ -51,7 +51,7 @@ public class AuthController : ControllerBase
         }
 
         // Hashea la nueva contraseña proporcionada por el usuario
-        usuario.Contraseña = HashPassword(request.NuevaContraseña);
+        usuario.Contrasena = HashPassword(request.NuevaContraseña);
 
         // Marca la cuenta como activada
         usuario.Activo = true;
@@ -89,7 +89,7 @@ public class AuthController : ControllerBase
         // Busca al usuario por correo electrónico
         var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-        if (usuario == null || !BCrypt.Net.BCrypt.Verify(request.Contraseña, usuario.Contraseña))
+        if (usuario == null || !BCrypt.Net.BCrypt.Verify(request.Contrasena, usuario.Contrasena))
         {
             // Devuelve un error si el usuario no existe o la contraseña no es válida
             return Unauthorized(new { Message = "Credenciales inválidas." });

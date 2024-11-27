@@ -3,8 +3,13 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using System.Text;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs;
+using Tuco.Clases.Enums;
+using Tuco.Clases.Models.Password;
+
 
 [ApiController]
 [Route("api/[controller]")]
@@ -19,6 +24,12 @@ public class UsuariosController : ControllerBase
         _context = context;
         _emailService = emailService; // Inyectar EmailService
     }
+
+    private string GenerarToken()
+    {
+        return Guid.NewGuid().ToString();
+    }
+
 
     /// <summary>
     /// Endpoint para registrar un nuevo usuario en el sistema.
@@ -37,14 +48,15 @@ public class UsuariosController : ControllerBase
         }
 
         // Crear un token único para activación
-        var tokenActivacion = Guid.NewGuid().ToString();
+        var tokenActivacion = GenerarToken(); // Llamada al método en lugar de Guid.NewGuid().ToString()
+
 
         // Crear una nueva instancia del usuario
         var usuario = new Usuario
         {
             NombreUsuario = request.NombreUsuario,
             Email = request.Email,
-            Contraseña = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()), // Contraseña temporal hasheada
+            Contrasena = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()), // Contraseña temporal hasheada
             FechaCreacion = DateTime.Now,
             Activo = false, // Cuenta desactivada por defecto
             Token = tokenActivacion // Asignar el token de activación
@@ -54,10 +66,8 @@ public class UsuariosController : ControllerBase
         _context.Usuarios.Add(usuario);
         await _context.SaveChangesAsync();
 
-        // Generar enlace de activación
-        var activationUrl = $"https://localhost:7273/cambiar-contrasena?token={tokenActivacion}";
-
-
+        // Generar enlace de activación con el enlace de ngrok
+        var activationUrl = $"https://9e3b-186-64-223-105.ngrok-free.app/cambiar-contrasena?token={tokenActivacion}";
         // Contenido del correo
         var subject = "Activa tu cuenta";
         var htmlContent = $@"
@@ -88,6 +98,61 @@ public class UsuariosController : ControllerBase
         // Retornar la lista de usuarios como una respuesta exitosa
         return Ok(usuarios);
     }
+
+    private string HashearContraseña(string contraseña)
+    {
+        return BCrypt.Net.BCrypt.HashPassword(contraseña);
+    }
+
+
+    [HttpPost("CambiarContrasena")]
+    public async Task<IActionResult> CambiarContraseña(CambiarContraseñaRequest request)
+    {
+        try
+        {
+            // Buscar al usuario por el token y el propósito (ahora comparando con el enumerador)
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Token == request.Token && u.PropositoToken == PropositoTokenEnum.CambioContrasena);
+
+            if (usuario == null)
+            {
+                return BadRequest(new { message = "Token inválido o propósito incorrecto." });
+            }
+
+            // Validar que el usuario esté activo
+            if (usuario.Activo != true) // Cambiamos el chequeo para mayor claridad
+            {
+                return BadRequest(new { message = "El usuario está inactivo. No se puede realizar esta acción." });
+            }
+
+            // Validar la expiración del token
+            if (usuario.FechaExpiracionToken.HasValue && usuario.FechaExpiracionToken.Value < DateTime.Now)
+            {
+                return BadRequest(new { message = "El token ha expirado." });
+            }
+
+            // Hashear la nueva contraseña utilizando BCrypt
+            usuario.Contrasena = BCrypt.Net.BCrypt.HashPassword(request.NuevaContrasena);
+
+            // Invalidar el token después de su uso
+            usuario.Token = null;
+            usuario.PropositoToken = null; // Invalidamos el propósito
+            usuario.FechaExpiracionToken = null; // Limpiamos la fecha de expiración
+
+            // Guardar los cambios
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Contraseña cambiada exitosamente." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = $"Ocurrió un error: {ex.Message}" });
+        }
+    }
+
+
+
 
 
 
