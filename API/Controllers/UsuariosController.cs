@@ -65,6 +65,7 @@ public class UsuariosController : ControllerBase
 
             // Crear una nueva instancia del usuario
             var usuario = new Usuario
+
             {
                 NombreUsuario = request.NombreUsuario,
                 Email = request.Email,
@@ -92,7 +93,8 @@ public class UsuariosController : ControllerBase
             );
 
             // Generar enlace de activación con el enlace de ngrok
-            var activationUrl = $"https://9e3b-186-64-223-105.ngrok-free.app/cambiar-contrasena?token={tokenActivacion}";
+            // Generar enlace de activación con la ruta esperada por el Razor Component
+            var activationUrl = $"https://9e3b-186-64-223-105.ngrok-free.app/cambiar-contrasena/{tokenActivacion}";
 
             // Contenido del correo
             var subject = "Activa tu cuenta";

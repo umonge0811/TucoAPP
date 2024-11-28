@@ -56,9 +56,23 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Admin")); // Define una política para administradores
 });
 
+// Configurar servicios de CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirNgrok",
+        policy =>
+        {
+            policy.WithOrigins("https://9e3b-186-64-223-105.ngrok-free.app") // Reemplaza con la URL actual de tu ngrok
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                    .AllowCredentials(); // Permitir cookies y credenciales (opcional)
+        });
+});
+
 var app = builder.Build();
 
-
+// Usar la política de CORS
+app.UseCors("PermitirNgrok");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

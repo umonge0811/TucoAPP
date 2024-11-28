@@ -5,14 +5,26 @@ var builder = WebApplication.CreateBuilder(args); // Crea un constructor para co
 builder.Services.AddScoped(sp =>
 {
     var configuration = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = configuration["ApiSettings:BaseUrl"]; // Lee la URL base desde appsettings.json
-    return new HttpClient { BaseAddress = new Uri(baseUrl) }; // Configura HttpClient con esa URL
+    var baseUrl = configuration["ApiSettings:BaseUrl"];
+    if (string.IsNullOrEmpty(baseUrl))
+    {
+        throw new Exception("La URL base de la API no está configurada en ApiSettings:BaseUrl.");
+    }
+    return new HttpClient
+    {
+        BaseAddress = new Uri(baseUrl),
+        Timeout = TimeSpan.FromSeconds(30) // Ajusta el tiempo de espera según sea necesario
+    };
 });
+
 
 // Configuración de servicios
 builder.Services.AddRazorComponents() // Habilita el uso de Razor Components.
     .AddInteractiveServerComponents() // Habilita el modo de renderizado en servidor para componentes interactivos.
     .AddInteractiveWebAssemblyComponents(); // Habilita el modo de renderizado en cliente (WebAssembly) para componentes interactivos.
+
+builder.Logging.AddConsole(); // Agrega logs a la consola para revisar los errores
+
 
 var app = builder.Build(); // Construye la aplicación con los servicios y configuraciones definidos anteriormente.
 

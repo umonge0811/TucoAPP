@@ -1,6 +1,5 @@
-﻿@page "/cambiar-contrasena"
-
-
+﻿@page "/cambiar-contrasena/{token}"
+@using System.ComponentModel.DataAnnotations
 
 <h3>Cambiar Contraseña</h3>
 @if (!string.IsNullOrEmpty(mensaje))
@@ -11,9 +10,9 @@
 @if (!string.IsNullOrEmpty(token))
 {
     <div>
-        <label for="nuevaContrasena">Nueva Contrasena:</label>
+        <label for="nuevaContrasena">Nueva Contraseña:</label>
         <input type="password" @bind="nuevaContrasena" class="form-control" />
-        <button @onclick="CambiarContrasenaAsync" class="btn btn-primary mt-2">Cambiar Contraseña</button>
+        <button @onclick="CambiarContrasenaAsync" class="btn btn-primary mt-2" disabled="@isLoading">Cambiar Contraseña</button>
     </div>
 }
 else
@@ -21,65 +20,79 @@ else
     <div class="alert alert-danger">No se puede procesar el cambio de contraseña.</div>
 }
 
-
-
 @code {
-
     [Parameter]
+    [Required]
     public string token { get; set; }
+
     private string nuevaContrasena = string.Empty;
     private string mensaje = string.Empty;
     private bool isLoading = false;
 
-    protected override void OnInitialized()
-    {
-        // Obtener el token de la URL
-        var uri = new Uri(NavigationManager.Uri);
-        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-        token = query["token"];
 
-        if (string.IsNullOrEmpty(token))
+    protected override async Task OnInitializedAsync()
+    {
+        try
         {
-            mensaje = "El token es inválido o no se encuentra en la URL.";
+            if (string.IsNullOrEmpty(token))
+            {
+                mensaje = "El token no es válido o no fue proporcionado.";
+                return;
+            }
+
+            // Construir la URL de la API con el token
+            var response = await Http.GetAsync($"api/Auth/activar-cuenta?token={Uri.EscapeDataString(token)}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                mensaje = "Usuario activado correctamente.";
+            }
+            else
+            {
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                mensaje = $"Error al activar la cuenta: {errorMessage}";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error inesperado: {ex.Message}";
         }
     }
 
 
+
     private async Task CambiarContrasenaAsync()
     {
-        Console.WriteLine("Método CambiarContrasenaAsync ejecutado."); // Confirmación para debug
         if (string.IsNullOrEmpty(nuevaContrasena))
         {
             mensaje = "Por favor, ingrese una nueva contraseña.";
             return;
         }
 
-        isLoading = true;
+        isLoading = true; // Deshabilitar botón mientras se procesa
 
         try
         {
-            var response = await Http.PostAsJsonAsync("/api/Usuarios/CambiarContrasena", new { token, NuevaContraseña = nuevaContrasena });
+            // Llamada al endpoint para cambiar contraseña
+            var response = await Http.PostAsJsonAsync("/api/Usuarios/CambiarContrasena", new { token, NuevaContrasena = nuevaContrasena });
 
             if (response.IsSuccessStatusCode)
             {
                 mensaje = "Contraseña cambiada exitosamente.";
-
             }
             else
             {
-                mensaje = "Hubo un problema al cambiar la contraseña.";
+                var errorMessage = await response.Content.ReadAsStringAsync();
+                mensaje = $"Error al cambiar la contraseña: {errorMessage}";
             }
         }
         catch (Exception ex)
         {
-            mensaje = $"Error: {ex.Message}";
+            mensaje = $"Error inesperado: {ex.Message}";
         }
         finally
         {
-            isLoading = false;
+            isLoading = false; // Habilitar botón al finalizar
         }
     }
-
-
-
 }

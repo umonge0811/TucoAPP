@@ -4,6 +4,7 @@ using Org.BouncyCastle.Security;
 using System;
 using System.Collections.Generic;
 using tuco.Clases.Models;
+using Tuco.Clases.Enums;
 using Tuco.Clases.Models;
 
 namespace API.Data;
@@ -444,6 +445,11 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.NombreUsuario)
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.PropositoToken)
+            .HasConversion(
+                v => v.ToString(), // De enum a string
+                v => (PropositoTokenEnum)Enum.Parse(typeof(PropositoTokenEnum), v) // De string a enum
+            );
 
             entity.HasMany(d => d.Rols).WithMany(p => p.Usuarios)
                 .UsingEntity<Dictionary<string, object>>(

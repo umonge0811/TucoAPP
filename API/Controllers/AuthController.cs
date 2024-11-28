@@ -50,9 +50,10 @@ public class AuthController : ControllerBase
     {
         try
         {
+
             // Buscar el usuario por el token y el propósito
             var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Token == token && u.PropositoToken == PropositoTokenEnum.ActivarCuenta);
+                .FirstOrDefaultAsync(u => u.Token == token.Trim('"') && u.PropositoToken == PropositoTokenEnum.ActivarCuenta);
 
             if (usuario == null)
             {
@@ -71,6 +72,7 @@ public class AuthController : ControllerBase
 
                 return BadRequest(new { message = "Token inválido o propósito incorrecto." });
             }
+
 
             // Validar la expiración del token
             if (usuario.FechaExpiracionToken.HasValue && usuario.FechaExpiracionToken.Value < DateTime.Now)
