@@ -11,6 +11,10 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
+using Tuco.Clases.Enums;
+using Tuco.Clases.Helpers;
+using System.Net.Http;
+using tuco.Utilities;
 
 
 
@@ -20,13 +24,15 @@ public class AuthController : ControllerBase
 {
     TucoContext _context;
     IConfiguration _configuration;
+    HttpClient _httpClient;
 
 
 
-    public AuthController(TucoContext context, IConfiguration configuration)
+    public AuthController(TucoContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _context = context;
-        _configuration = configuration; 
+        _configuration = configuration;
+        _httpClient = httpClientFactory.CreateClient("TucoApi");
     }
 
     /// <summary>
@@ -38,43 +44,100 @@ public class AuthController : ControllerBase
     /// <returns>Mensaje de éxito o error.</returns>
     /// 
 
-    [HttpPost("activar-cuenta")]
-    public async Task<IActionResult> ActivarCuenta([FromQuery] string token, [FromBody] ActivacionRequest request)
+    [AllowAnonymous]
+    [HttpGet("activar-cuenta")]
+    public async Task<IActionResult> ActivarCuenta(string token)
     {
-        // Busca al usuario en la base de datos utilizando el token proporcionado
-        var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Token == token);
-
-        // Verifica si el token es válido o si la cuenta ya está activada
-        if (usuario == null || (usuario.Activo ?? false))
+        try
         {
-            return BadRequest(new { Message = "Token inválido o cuenta ya activada." });
+            // Buscar el usuario por el token y el propósito
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Token == token && u.PropositoToken == PropositoTokenEnum.ActivarCuenta);
+
+            if (usuario == null)
+            {
+                // Registrar intento fallido de activación en el historial
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 0, // No podemos identificar el usuario en este caso
+                    tipoAccion: "Activación",
+                    modulo: "Usuarios",
+                    detalle: "Intento de activación fallido. Token no válido o propósito incorrecto.",
+                    token: token,
+                    propositoToken: PropositoTokenEnum.ActivarCuenta.ToString(),
+                    estadoAccion: "Error",
+                    errorDetalle: "Token inválido o propósito incorrecto."
+                );
+
+                return BadRequest(new { message = "Token inválido o propósito incorrecto." });
+            }
+
+            // Validar la expiración del token
+            if (usuario.FechaExpiracionToken.HasValue && usuario.FechaExpiracionToken.Value < DateTime.Now)
+            {
+                // Registrar intento fallido de activación por token expirado
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: usuario.UsuarioId,
+                    tipoAccion: "Activación",
+                    modulo: "Usuarios",
+                    detalle: "Intento de activación fallido. Token expirado.",
+                    token: token,
+                    propositoToken: PropositoTokenEnum.ActivarCuenta.ToString(),
+                    estadoAccion: "Error",
+                    errorDetalle: "El token ha expirado."
+                );
+
+                return BadRequest(new { message = "El token ha expirado." });
+            }
+
+            // Activar el usuario
+            usuario.Activo = true;
+
+            // Generar un nuevo token para el cambio de contraseña
+            var tokenCambio = TokenHelper.GenerarToken();
+            usuario.Token = tokenCambio;
+            usuario.PropositoToken = PropositoTokenEnum.CambioContrasena;
+            usuario.FechaExpiracionToken = DateTime.Now.AddMinutes(30); // Token válido por 30 minutos
+
+            // Guardar los cambios en la base de datos
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            // Registrar activación exitosa en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: usuario.UsuarioId,
+                tipoAccion: "Activación",
+                modulo: "Usuarios",
+                detalle: "Usuario activado exitosamente.",
+                token: tokenCambio,
+                propositoToken: PropositoTokenEnum.CambioContrasena.ToString()
+            );
+
+            // Redirigir a la página de cambio de contraseña
+            var cambiarContrasenaUrl = $"https://9e3b-186-64-223-105.ngrok-free.app/cambiar-contrasena?token={tokenCambio}";
+            return Redirect(cambiarContrasenaUrl);
         }
+        catch (Exception ex)
+        {
+            // Registrar error en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 0, // No podemos identificar el usuario en este caso
+                tipoAccion: "Activación",
+                modulo: "Usuarios",
+                detalle: "Error al intentar activar usuario.",
+                token: token,
+                propositoToken: PropositoTokenEnum.ActivarCuenta.ToString(),
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
 
-        // Hashea la nueva contraseña proporcionada por el usuario
-        usuario.Contrasena = HashPassword(request.NuevaContraseña);
-
-        // Marca la cuenta como activada
-        usuario.Activo = true;
-
-        // Limpia el token de activación para evitar su reutilización
-        usuario.Token = null;
-
-        // Guarda los cambios en la base de datos
-        await _context.SaveChangesAsync();
-
-        // Opcional: Redirigir a una página de éxito o mostrar un mensaje.
-        return Ok(new { Message = "Cuenta activada con éxito. Ahora puedes iniciar sesión." });
+            return StatusCode(500, new { message = $"Ocurrió un error: {ex.Message}" });
+        }
     }
 
-    /// <summary>
-    /// Método auxiliar para hashear contraseñas usando BCrypt.
-    /// </summary>
-    /// <param name="password">La contraseña en texto plano proporcionada por el usuario.</param>
-    /// <returns>La contraseña hasheada.</returns>
-    private string HashPassword(string password)
-    {
-        return BCrypt.Net.BCrypt.HashPassword(password);
-    }
 
     /// <summary>
     /// Endpoint para autenticar a los usuarios.

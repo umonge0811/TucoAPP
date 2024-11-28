@@ -31,7 +31,7 @@ public partial class Usuario
 
     public virtual ICollection<Documento> Documentos { get; set; } = new List<Documento>();
 
-    public virtual ICollection<HistorialAccione> HistorialAcciones { get; set; } = new List<HistorialAccione>();
+    public virtual ICollection<HistorialAcciones> HistorialAcciones { get; set; } = new List<HistorialAcciones>();
 
     public virtual ICollection<Inventario> Inventarios { get; set; } = new List<Inventario>();
 

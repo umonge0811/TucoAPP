@@ -40,7 +40,7 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<Documento> Documentos { get; set; }
 
-    public virtual DbSet<HistorialAccione> HistorialAcciones { get; set; }
+    public virtual DbSet<HistorialAcciones> HistorialAcciones { get; set; }
 
     public virtual DbSet<ImagenesProducto> ImagenesProductos { get; set; }
 
@@ -212,7 +212,7 @@ public partial class TucoContext : DbContext
                 .HasConstraintName("FK__Documento__Usuar__571DF1D5");
         });
 
-        modelBuilder.Entity<HistorialAccione>(entity =>
+        modelBuilder.Entity<HistorialAcciones>(entity =>
         {
             entity.HasKey(e => e.HistorialId).HasName("PK__Historia__975206EFBF27118C");
 

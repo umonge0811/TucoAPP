@@ -6,9 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 using tuco.Clases.Models;
+using tuco.Utilities;
 using Tuco.Clases.DTOs;
 using Tuco.Clases.Enums;
+using Tuco.Clases.Helpers;
 using Tuco.Clases.Models.Password;
+using Tuco.Clases.Utilities;
+using static System.Net.WebRequestMethods;
 
 
 [ApiController]
@@ -17,19 +21,15 @@ public class UsuariosController : ControllerBase
 {
     private readonly TucoContext _context;
     private readonly EmailService _emailService;
+    private HttpClient _httpClient;
 
 
-    public UsuariosController(TucoContext context, EmailService emailService)
+    public UsuariosController(TucoContext context, EmailService emailService, IHttpClientFactory httpClientFactory)
     {
         _context = context;
         _emailService = emailService; // Inyectar EmailService
+        _httpClient = httpClientFactory.CreateClient("TucoApi");
     }
-
-    private string GenerarToken()
-    {
-        return Guid.NewGuid().ToString();
-    }
-
 
     /// <summary>
     /// Endpoint para registrar un nuevo usuario en el sistema.
@@ -40,46 +40,89 @@ public class UsuariosController : ControllerBase
     [HttpPost("registrar-usuario")]
     public async Task<IActionResult> RegistrarUsuario([FromBody] RegistroUsuarioRequestDTO request)
     {
-        // Validar si el email ya está registrado
-        var existeUsuario = await _context.Usuarios.AnyAsync(u => u.Email == request.Email);
-        if (existeUsuario)
+        try
         {
-            return BadRequest(new { Message = "El email ya está registrado." });
+            // Validar si el email ya está registrado
+            var existeUsuario = await _context.Usuarios.AnyAsync(u => u.Email == request.Email);
+            if (existeUsuario)
+            {
+                // Registrar historial de error por intento de registro fallido
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient, // Cliente HTTP inicializado
+                    usuarioId: 0, // No hay usuario creado todavía
+                    tipoAccion: "Registro",
+                    modulo: "Usuarios",
+                    detalle: $"Intento de registro fallido. Email: {request.Email} ya está registrado.",
+                    estadoAccion: "Error",
+                    errorDetalle: "El email ya está registrado."
+                );
+
+                return BadRequest(new { Message = "El email ya está registrado." });
+            }
+
+            // Crear un token único para activación usando el método centralizado
+            var tokenActivacion = TokenHelper.GenerarToken();
+
+            // Crear una nueva instancia del usuario
+            var usuario = new Usuario
+            {
+                NombreUsuario = request.NombreUsuario,
+                Email = request.Email,
+                Contrasena = HashContrasena.HashearContrasena(Guid.NewGuid().ToString()), // Contraseña temporal hasheada
+                FechaCreacion = DateTime.Now,
+                Activo = false, // Cuenta desactivada por defecto
+                Token = tokenActivacion, // Asignar el token de activación
+                PropositoToken = PropositoTokenEnum.ActivarCuenta, // Usar Enum para propósito del token
+                FechaExpiracionToken = DateTime.Now.AddMinutes(30) // Expiración del token
+            };
+
+            // Guardar el nuevo usuario en la base de datos
+            _context.Usuarios.Add(usuario);
+            await _context.SaveChangesAsync();
+
+            // Registrar historial de registro exitoso
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: usuario.UsuarioId, // ID del usuario recién creado
+                tipoAccion: "Registro",
+                modulo: "Usuarios",
+                detalle: $"Usuario registrado exitosamente. Email: {usuario.Email}",
+                token: tokenActivacion,
+                propositoToken: PropositoTokenEnum.ActivarCuenta.ToString()
+            );
+
+            // Generar enlace de activación con el enlace de ngrok
+            var activationUrl = $"https://9e3b-186-64-223-105.ngrok-free.app/cambiar-contrasena?token={tokenActivacion}";
+
+            // Contenido del correo
+            var subject = "Activa tu cuenta";
+            var htmlContent = $@"
+            <p>Haz clic en el siguiente enlace para activar tu cuenta y cambiar tu contraseña:</p>
+            <a href='{activationUrl}' style='background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Activar Cuenta</a>
+            ";
+
+            // Enviar el correo de activación
+            await _emailService.EnviarCorreoAsync(usuario.Email, subject, htmlContent);
+
+            return Ok(new { Message = "Usuario registrado exitosamente. Revisa tu correo para activar la cuenta." });
         }
-
-        // Crear un token único para activación
-        var tokenActivacion = GenerarToken(); // Llamada al método en lugar de Guid.NewGuid().ToString()
-
-
-        // Crear una nueva instancia del usuario
-        var usuario = new Usuario
+        catch (Exception ex)
         {
-            NombreUsuario = request.NombreUsuario,
-            Email = request.Email,
-            Contrasena = BCrypt.Net.BCrypt.HashPassword(Guid.NewGuid().ToString()), // Contraseña temporal hasheada
-            FechaCreacion = DateTime.Now,
-            Activo = false, // Cuenta desactivada por defecto
-            Token = tokenActivacion // Asignar el token de activación
-        };
+            // Registrar historial de error en caso de excepción
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 0, // No hay usuario creado
+                tipoAccion: "Registro",
+                modulo: "Usuarios",
+                detalle: "Error al registrar usuario.",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
 
-        // Guardar el nuevo usuario en la base de datos
-        _context.Usuarios.Add(usuario);
-        await _context.SaveChangesAsync();
-
-        // Generar enlace de activación con el enlace de ngrok
-        var activationUrl = $"https://9e3b-186-64-223-105.ngrok-free.app/cambiar-contrasena?token={tokenActivacion}";
-        // Contenido del correo
-        var subject = "Activa tu cuenta";
-        var htmlContent = $@"
-        <p>Haz clic en el siguiente enlace para activar tu cuenta y cambiar tu contraseña:</p>
-        <a href='{activationUrl}' style='background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Activar Cuenta</a>
-        ";
-
-        // Enviar el correo de activación
-        await _emailService.EnviarCorreoAsync(usuario.Email, subject, htmlContent);
-
-        return Ok(new { Message = "Usuario registrado exitosamente. Revisa tu correo para activar la cuenta." });
+            return StatusCode(500, new { Message = $"Error al registrar usuario: {ex.Message}" });
+        }
     }
+
 
     // Endpoint para listar todos los usuarios
     [HttpGet("usuarios")]
@@ -99,10 +142,6 @@ public class UsuariosController : ControllerBase
         return Ok(usuarios);
     }
 
-    private string HashearContraseña(string contraseña)
-    {
-        return BCrypt.Net.BCrypt.HashPassword(contraseña);
-    }
 
 
     [HttpPost("CambiarContrasena")]
@@ -132,7 +171,7 @@ public class UsuariosController : ControllerBase
             }
 
             // Hashear la nueva contraseña utilizando BCrypt
-            usuario.Contrasena = BCrypt.Net.BCrypt.HashPassword(request.NuevaContrasena);
+            usuario.Contrasena = HashContrasena.HashearContrasena(request.NuevaContrasena);
 
             // Invalidar el token después de su uso
             usuario.Token = null;
@@ -150,16 +189,4 @@ public class UsuariosController : ControllerBase
             return StatusCode(500, new { message = $"Ocurrió un error: {ex.Message}" });
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
 }
