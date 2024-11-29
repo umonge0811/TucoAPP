@@ -117,9 +117,12 @@ public class AuthController : ControllerBase
                 propositoToken: PropositoTokenEnum.CambioContrasena.ToString()
             );
 
-            // Redirigir a la página de cambio de contraseña
-            var cambiarContrasenaUrl = $"https://9e3b-186-64-223-105.ngrok-free.app/cambiar-contrasena?token={tokenCambio}";
-            return Redirect(cambiarContrasenaUrl);
+            // Modificar el final del método ActivarCuenta
+            return Ok(new
+            {
+                message = "Cuenta activada exitosamente.",
+                token = tokenCambio
+            });
         }
         catch (Exception ex)
         {
