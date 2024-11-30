@@ -1,5 +1,7 @@
 ﻿@page "/cambiar-contrasena/{token}"
 @using System.ComponentModel.DataAnnotations
+@inherits LayoutComponentBase
+
 
 <h3>Cambiar Contraseña</h3>
 @if (!string.IsNullOrEmpty(mensaje))
@@ -12,7 +14,9 @@
     <div>
         <label for="nuevaContrasena">Nueva Contraseña:</label>
         <input type="password" @bind="nuevaContrasena" class="form-control" />
-        <button @onclick="CambiarContrasenaAsync" class="btn btn-primary mt-2" disabled="@isLoading">Cambiar Contraseña</button>
+        <button @onclick="CambiarContrasenaAsync" aria-label="Cambiar contraseña" class="btn btn-primary mt-2">
+            Cambiar Contraseña
+        </button>
     </div>
 }
 else
@@ -30,34 +34,50 @@ else
     private bool isLoading = false;
 
 
-    protected override async Task OnInitializedAsync()
+   protected override async Task OnInitializedAsync()
+{
+    try
     {
-        try
+        if (string.IsNullOrEmpty(token))
         {
-            if (string.IsNullOrEmpty(token))
+            mensaje = "El token no es válido o no fue proporcionado.";
+            return;
+        }
+
+        // Construir la URL para verificar si el usuario ya está activo
+        var checkResponse = await Http.GetAsync($"api/Auth/check-usuario-activo?token={Uri.EscapeDataString(token)}");
+
+        if (checkResponse.IsSuccessStatusCode)
+        {
+            var isActive = await checkResponse.Content.ReadAsStringAsync();
+            if (bool.TryParse(isActive, out bool usuarioActivo) && usuarioActivo)
             {
-                mensaje = "El token no es válido o no fue proporcionado.";
+                mensaje = "El usuario ya está activo. No es necesario activar nuevamente.";
                 return;
             }
-
-            // Construir la URL de la API con el token
-            var response = await Http.GetAsync($"api/Auth/activar-cuenta?token={Uri.EscapeDataString(token)}");
-
-            if (response.IsSuccessStatusCode)
-            {
-                mensaje = "Usuario activado correctamente.";
-            }
-            else
-            {
-                var errorMessage = await response.Content.ReadAsStringAsync();
-                mensaje = $"Error al activar la cuenta: {errorMessage}";
-            }
         }
-        catch (Exception ex)
+
+        // Construir la URL de la API con el token para activar la cuenta
+        var response = await Http.GetAsync($"api/Auth/activar-cuenta?token={Uri.EscapeDataString(token)}");
+
+        if (response.IsSuccessStatusCode)
         {
-            mensaje = $"Error inesperado: {ex.Message}";
+            var result = await response.Content.ReadFromJsonAsync<ActivationResponseDTO>();
+            token = result.Token;
+            mensaje = result.Message;
+        }
+        else
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            mensaje = $"Error al activar la cuenta: {errorMessage}";
         }
     }
+    catch (Exception ex)
+    {
+        mensaje = $"Error inesperado: {ex.Message}";
+    }
+}
+
 
 
 

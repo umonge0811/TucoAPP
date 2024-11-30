@@ -10,5 +10,6 @@ namespace Tuco.Clases.DTOs
     {
         public string Message { get; set; }
         public string Token { get; set; }
+
     }
 }
