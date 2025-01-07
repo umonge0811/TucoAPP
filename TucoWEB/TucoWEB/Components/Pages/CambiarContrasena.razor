@@ -1,6 +1,10 @@
 ﻿@page "/cambiar-contrasena/{token}"
 @using System.ComponentModel.DataAnnotations
-@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Web
+@using TucoWEB.Services
+@inject TokenStateService TokenState
+@rendermode InteractiveServer
+@* @rendermode InteractiveWebAssembly *@
 
 
 <h3>Cambiar Contraseña</h3>
@@ -25,59 +29,46 @@ else
 }
 
 @code {
-    [Parameter]
-    [Required]
+
+    [Parameter, Required]
     public string token { get; set; }
 
     private string nuevaContrasena = string.Empty;
     private string mensaje = string.Empty;
     private bool isLoading = false;
+    private bool initialized  = false;
+    private string tempToken = string.Empty; // Nueva variable para almacenar el token temporal
 
 
-   protected override async Task OnInitializedAsync()
-{
-    try
+    protected override async Task OnInitializedAsync()
     {
-        if (string.IsNullOrEmpty(token))
-        {
-            mensaje = "El token no es válido o no fue proporcionado.";
-            return;
-        }
 
-        // Construir la URL para verificar si el usuario ya está activo
-        var checkResponse = await Http.GetAsync($"api/Auth/check-usuario-activo?token={Uri.EscapeDataString(token)}");
+        await base.OnInitializedAsync();
+    }
 
-        if (checkResponse.IsSuccessStatusCode)
+
+    protected override async Task OnParametersSetAsync() {
+
+        if (!TokenState.IsInitialized)
         {
-            var isActive = await checkResponse.Content.ReadAsStringAsync();
-            if (bool.TryParse(isActive, out bool usuarioActivo) && usuarioActivo)
+
+            try
             {
-                mensaje = "El usuario ya está activo. No es necesario activar nuevamente.";
-                return;
+                var activationResponse = await Http.GetAsync($"api/Auth/activar-cuenta?token={Uri.EscapeDataString(token)}");
+                if (activationResponse.IsSuccessStatusCode)
+                {
+                    var result = await activationResponse.Content.ReadFromJsonAsync<ActivationResponseDTO>();
+                    TokenState.Token = result.Token; // Guardamos en variable temporal
+                    mensaje = result.Message;
+                }
             }
-        }
-
-        // Construir la URL de la API con el token para activar la cuenta
-        var response = await Http.GetAsync($"api/Auth/activar-cuenta?token={Uri.EscapeDataString(token)}");
-
-        if (response.IsSuccessStatusCode)
-        {
-            var result = await response.Content.ReadFromJsonAsync<ActivationResponseDTO>();
-            token = result.Token;
-            mensaje = result.Message;
-        }
-        else
-        {
-            var errorMessage = await response.Content.ReadAsStringAsync();
-            mensaje = $"Error al activar la cuenta: {errorMessage}";
+            catch (Exception ex)
+            {
+                mensaje = "Error al procesar la solicitud.";
+            }
+            TokenState.IsInitialized = true;
         }
     }
-    catch (Exception ex)
-    {
-        mensaje = $"Error inesperado: {ex.Message}";
-    }
-}
-
 
 
 
@@ -93,12 +84,16 @@ else
 
         try
         {
+            // Usamos tempToken en lugar de token
+            var response = await Http.PostAsJsonAsync("/api/Usuarios/CambiarContrasena",
+                new { token = TokenState.Token, NuevaContrasena = nuevaContrasena });
             // Llamada al endpoint para cambiar contraseña
-            var response = await Http.PostAsJsonAsync("/api/Usuarios/CambiarContrasena", new { token, NuevaContrasena = nuevaContrasena });
+           // var response = await Http.PostAsJsonAsync("/api/Usuarios/CambiarContrasena", new { token, NuevaContrasena = nuevaContrasena });
 
             if (response.IsSuccessStatusCode)
             {
                 mensaje = "Contraseña cambiada exitosamente.";
+                TokenState.Token = string.Empty; // Limpiar token
             }
             else
             {

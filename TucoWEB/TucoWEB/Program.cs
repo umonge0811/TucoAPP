@@ -1,5 +1,6 @@
 using TucoWEB.Client.Pages; // Importa las páginas del cliente (TucoWEB.Client).
-using TucoWEB.Components;  // Importa componentes adicionales definidos en el cliente.
+using TucoWEB.Components;
+using TucoWEB.Services;  // Importa componentes adicionales definidos en el cliente.
 
 var builder = WebApplication.CreateBuilder(args); // Crea un constructor para configurar los servicios y el pipeline de la aplicación.
 builder.Services.AddScoped(sp =>
@@ -17,7 +18,7 @@ builder.Services.AddScoped(sp =>
     };
 });
 
-
+builder.Services.AddSingleton<TokenStateService>(); // Registra el servicio de estado del token.
 // Configuración de servicios
 builder.Services.AddRazorComponents() // Habilita el uso de Razor Components.
     .AddInteractiveServerComponents() // Habilita el modo de renderizado en servidor para componentes interactivos.
