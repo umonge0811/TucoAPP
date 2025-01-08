@@ -15,7 +15,7 @@ namespace tuco.Utilities
         // Método estático y asíncrono para registrar una acción en el historial
         public static async Task RegistrarHistorial(
             HttpClient httpClient,
-            int usuarioId,
+            int? usuarioId,
             string tipoAccion,
             string modulo,
             string detalle,
@@ -28,7 +28,7 @@ namespace tuco.Utilities
             {
                 var historial = new HistorialAccionDTO
                 {
-                    UsuarioID = usuarioId,
+                    UsuarioID = usuarioId == 0 ? null : usuarioId,
                     TipoAccion = tipoAccion,
                     Modulo = modulo,
                     Detalle = detalle,
@@ -49,7 +49,8 @@ namespace tuco.Utilities
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"Error al registrar historial: {response.StatusCode}");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error al registrar historial: {response.StatusCode}, Detalles: {errorContent}");
                 }
             }
             catch (Exception ex)

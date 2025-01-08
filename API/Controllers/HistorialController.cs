@@ -23,7 +23,7 @@ namespace API.Controllers
             {
                 var historial = new HistorialAcciones
                 {
-                    UsuarioId = request.UsuarioID,
+                    UsuarioId = (int)request.UsuarioID,
                     FechaAccion = DateTime.Now,
                     TipoAccion = request.TipoAccion,
                     Modulo = request.Modulo,

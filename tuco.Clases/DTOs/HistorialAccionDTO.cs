@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public class HistorialAccionDTO
 {
-    public int UsuarioID { get; set; }
+    public int? UsuarioID { get; set; }
     public string TipoAccion { get; set; } = null!;
     public string Modulo { get; set; } = null!;
     public string Detalle { get; set; } = null!;
