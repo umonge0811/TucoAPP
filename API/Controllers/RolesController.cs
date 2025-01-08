@@ -6,63 +6,118 @@ using System.Collections.Generic;
 using API.Data;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs;
+using System.Net.Http;
+using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
+using tuco.Utilities;
 
 [ApiController]
 [Route("api/[controller]")]
 public class RolesController : ControllerBase
 {
     private readonly TucoContext _context;
+    HttpClient _httpClient;
 
-    public RolesController(TucoContext context)
+
+    public RolesController(TucoContext context, IHttpClientFactory httpClientFactory)
     {
         _context = context;
+        _httpClient = httpClientFactory.CreateClient("TucoApi");
     }
 
-    // Crear un nuevo rol
+
+    #region Crear un nuevo rol
     [HttpPost("CrearRoles")]
     public async Task<IActionResult> CrearRol([FromBody] RoleDTO dto)
     {
-        // Validar si ya existe un rol con el mismo nombre
-        if (await _context.Roles.AnyAsync(r => r.NombreRol == dto.NombreRol))
+        try
         {
-            return BadRequest(new { Message = "El rol ya existe." });
-        }
-
-        // Crear una nueva instancia del rol con los datos proporcionados en el DTO
-        var nuevoRol = new Role
-        {
-            NombreRol = dto.NombreRol,
-            DescripcionRol = dto.DescripcionRol
-        };
-
-        // Agregar el nuevo rol al contexto para ser persistido en la base de datos
-        _context.Roles.Add(nuevoRol);
-        await _context.SaveChangesAsync(); // Guardar cambios en la base de datos
-
-        // Verificar si hay permisos asociados en el DTO
-        if (dto.PermisoIds != null && dto.PermisoIds.Count > 0)
-        {
-            // Recorrer los IDs de permisos proporcionados y crear relaciones RolPermiso
-            foreach (var permisoId in dto.PermisoIds)
+            // Validar si ya existe un rol con el mismo nombre
+            if (await _context.Roles.AnyAsync(r => r.NombreRol == dto.NombreRol))
             {
-                var rolPermiso = new RolPermisoRE
-                {
-                    RolID = nuevoRol.RolId, // ID del rol recién creado
-                    PermisoID = permisoId  // ID del permiso asociado
-                };
+                // Registrar intento fallido en el historial
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 1, // ID de usuario para pruebas
+                    tipoAccion: "Creación de Roles",
+                    modulo: "Roles",
+                    detalle: $"Intento de crear rol fallido. El rol '{dto.NombreRol}' ya existe.",
+                    estadoAccion: "Error",
+                    errorDetalle: "El rol ya existe."
+                );
 
-                // Agregar la relación al contexto
-                _context.RolPermisos.Add(rolPermiso);
+                return BadRequest(new { Message = "El rol ya existe." });
             }
 
-            // Guardar las relaciones en la base de datos
+            // Crear una nueva instancia del rol con los datos proporcionados en el DTO
+            var nuevoRol = new Role
+            {
+                NombreRol = dto.NombreRol,
+                DescripcionRol = dto.DescripcionRol
+            };
+
+            // Agregar el nuevo rol al contexto para ser persistido en la base de datos
+            _context.Roles.Add(nuevoRol);
             await _context.SaveChangesAsync();
+
+            // Registrar creación exitosa del rol en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1, // ID de usuario para pruebas
+                tipoAccion: "Creación de Roles",
+                modulo: "Roles",
+                detalle: $"Rol creado exitosamente: '{dto.NombreRol}'.",
+                estadoAccion: "Éxito"
+            );
+
+            // Asociar permisos si están definidos en el DTO
+            if (dto.PermisoIds != null && dto.PermisoIds.Count > 0)
+            {
+                foreach (var permisoId in dto.PermisoIds)
+                {
+                    var rolPermiso = new RolPermisoRE
+                    {
+                        RolID = nuevoRol.RolId,
+                        PermisoID = permisoId
+                    };
+
+                    _context.RolPermisos.Add(rolPermiso);
+                }
+
+                // Guardar las relaciones entre rol y permisos
+                await _context.SaveChangesAsync();
+
+                // Registrar en el historial la asociación de permisos
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 1, // ID de usuario para pruebas
+                    tipoAccion: "Asociación de Permisos",
+                    modulo: "Roles",
+                    detalle: $"Permisos asociados al rol '{dto.NombreRol}'.",
+                    estadoAccion: "Éxito"
+                );
+            }
+
+            return Ok(new { Message = "Rol creado exitosamente.", RolId = nuevoRol.RolId });
         }
+        catch (Exception ex)
+        {
+            // Registrar error en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1, // ID de usuario para pruebas
+                tipoAccion: "Creación de Roles",
+                modulo: "Roles",
+                detalle: "Error al crear el rol.",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
 
-        // Retornar respuesta exitosa con el ID del rol creado
-        return Ok(new { Message = "Rol creado exitosamente.", RolId = nuevoRol.RolId });
+            return StatusCode(500, new { Message = $"Ocurrió un error: {ex.Message}" });
+        }
     }
+    #endregion
 
+    #region consultar todos los roles
     // Obtener todos los roles
     [HttpGet("ObtenerTodosRoles")]
     public async Task<ActionResult<List<Role>>> ObtenerRoles()
@@ -74,8 +129,9 @@ public class RolesController : ControllerBase
 
         return Ok(roles);
     }
+    #endregion
 
-    // Obtener todos los permisos
+    #region Obtener todos los permisos asociados al rol
     [HttpGet("obtener-rol-id/{id}")]
     public async Task<ActionResult> ObtenerRolesPorID(int id)
     {
@@ -89,228 +145,362 @@ public class RolesController : ControllerBase
         }
         return Ok(RolExistenteID);
     }
+    #endregion
 
-
-    // Actualizar un rol existente
+    #region Actualizar un rol existente
     [HttpPut("actualizarRole/{id}")]
     public async Task<IActionResult> ActualizarRolporID(int id, [FromBody] RoleUpdateDTO rol)
     {
-        var rolExistente = await _context.Roles.FindAsync(id);
-        if (rolExistente == null)
+        try
         {
-            return NotFound(new { Message = "Rol no encontrado." });
+            var rolExistente = await _context.Roles.FindAsync(id);
+            if (rolExistente == null)
+            {
+                // Registrar en el historial si el rol no existe
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 1,
+                    tipoAccion: "Actualización de Roles",
+                    modulo: "Roles",
+                    detalle: $"Intento fallido de actualizar rol. Rol con ID '{id}' no encontrado.",
+                    estadoAccion: "Error",
+                    errorDetalle: "Rol no encontrado."
+                );
+
+                return NotFound(new { Message = "Rol no encontrado." });
+            }
+
+            // Actualizar los campos necesarios
+            rolExistente.NombreRol = rol.NombreRol;
+            rolExistente.DescripcionRol = rol.DescripcionRol;
+
+            await _context.SaveChangesAsync();
+
+            // Registrar en el historial la actualización exitosa
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Actualización de Roles",
+                modulo: "Roles",
+                detalle: $"Rol con ID '{id}' actualizado exitosamente.",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Rol actualizado exitosamente." });
         }
+        catch (Exception ex)
+        {
+            // Registrar error en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Actualización de Roles",
+                modulo: "Roles",
+                detalle: "Error al actualizar el rol.",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
 
-        // Actualizar los campos necesarios
-        rolExistente.NombreRol = rol.NombreRol;
-        rolExistente.DescripcionRol = rol.DescripcionRol;
-
-        await _context.SaveChangesAsync();
-        return Ok(new { Message = "Rol actualizado exitosamente." });
+            return StatusCode(500, new { Message = $"Ocurrió un error: {ex.Message}" });
+        }
     }
+    #endregion
 
-    // Eliminar un rol existente
+    #region Eliminar un rol existente
     [HttpDelete("{id}")]
     public async Task<IActionResult> EliminarRol(int id)
     {
-        var rol = await _context.Roles
-            .Include(r => r.RolPermiso) // Incluir relaciones con permisos
-            .FirstOrDefaultAsync(r => r.RolId == id);
-
-        if (rol == null)
+        try
         {
-            return NotFound(new { Message = "Rol no encontrado." });
-        }
+            var rol = await _context.Roles
+                .Include(r => r.RolPermiso) // Incluir relaciones con permisos
+                .FirstOrDefaultAsync(r => r.RolId == id);
 
-        // Verificar si el rol está asociado con usuarios
-        var tieneUsuarios = await _context.UsuarioRoles.AnyAsync(ur => ur.RolId == id);
-        if (tieneUsuarios)
+            if (rol == null)
+            {
+                // Registrar en el historial si el rol no existe
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 1,
+                    tipoAccion: "Eliminación de Roles",
+                    modulo: "Roles",
+                    detalle: $"Intento fallido de eliminar rol. Rol con ID '{id}' no encontrado.",
+                    estadoAccion: "Error",
+                    errorDetalle: "Rol no encontrado."
+                );
+
+                return NotFound(new { Message = "Rol no encontrado." });
+            }
+
+            // Verificar si el rol está asociado con usuarios
+            var tieneUsuarios = await _context.UsuarioRoles.AnyAsync(ur => ur.RolId == id);
+            if (tieneUsuarios)
+            {
+                // Registrar en el historial el intento fallido
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 1,
+                    tipoAccion: "Eliminación de Roles",
+                    modulo: "Roles",
+                    detalle: $"Intento fallido de eliminar rol. Rol con ID '{id}' está asociado a usuarios.",
+                    estadoAccion: "Error",
+                    errorDetalle: "Rol asociado a usuarios."
+                );
+
+                return BadRequest(new { Message = "No se puede eliminar un rol asociado a usuarios." });
+            }
+
+            // Eliminar asociaciones con permisos
+            _context.RolPermisos.RemoveRange(rol.RolPermiso);
+
+            // Eliminar el rol
+            _context.Roles.Remove(rol);
+            await _context.SaveChangesAsync();
+
+            // Registrar en el historial la eliminación exitosa
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Eliminación de Roles",
+                modulo: "Roles",
+                detalle: $"Rol con ID '{id}' eliminado exitosamente.",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Rol eliminado exitosamente." });
+        }
+        catch (Exception ex)
         {
-            return BadRequest(new { Message = "No se puede eliminar un rol asociado a usuarios." });
+            // Registrar error en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Eliminación de Roles",
+                modulo: "Roles",
+                detalle: "Error al eliminar el rol.",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = $"Ocurrió un error: {ex.Message}" });
         }
-
-        // Eliminar asociaciones con permisos
-        _context.RolPermisos.RemoveRange(rol.RolPermiso);
-
-        // Eliminar el rol
-        _context.Roles.Remove(rol);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { Message = "Rol eliminado exitosamente." });
     }
+    #endregion
 
 
-    /*CRUD DE PERMISOS A ASOCIADOS A LOS ROLES*/
 
-
-    // Obtener permisos asociados a un rol
+    #region Obtener permisos asociados a un rol
+    /// <summary>
+    /// Obtener los permisos asociados a un rol específico.
+    /// </summary>
+    /// <param name="id">ID del rol.</param>
+    /// <returns>Lista de permisos asociados al rol.</returns>
     [HttpGet("obtener-permisos-del-rol/{id}")]
     public async Task<ActionResult> ObtenerPermisosDeRol(int id)
     {
-        // Buscar el rol con su relación de permisos
-        var rol = await _context.Roles
-            .Include(r => r.RolPermiso) // Incluir la relación RolPermiso
-            .ThenInclude(rp => rp.Permiso) // Incluir detalles de los permisos en RolPermiso
-            .FirstOrDefaultAsync(r => r.RolId == id); // Filtrar por el ID del rol
-
-        // Validar si el rol existe
-        if (rol == null)
+        try
         {
-            return NotFound(new { Message = "Rol no encontrado." }); // Retorna un error 404 si no se encuentra el rol
+            // Buscar el rol con sus permisos relacionados
+            var rol = await _context.Roles
+                .Include(r => r.RolPermiso)
+                .ThenInclude(rp => rp.Permiso)
+                .FirstOrDefaultAsync(r => r.RolId == id);
+
+            // Validar si el rol existe
+            if (rol == null)
+            {
+                return NotFound(new { Message = "Rol no encontrado." });
+            }
+
+            // Obtener la lista de permisos asociados
+            var permisos = rol.RolPermiso.Select(rp => rp.Permiso).ToList();
+
+            return Ok(permisos);
         }
-
-        // Obtener la lista de permisos asociados al rol
-        var permisos = rol.RolPermiso.Select(rp => rp.Permiso).ToList();
-
-        // Retornar la lista de permisos
-        return Ok(permisos);
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = $"Error al obtener permisos: {ex.Message}" });
+        }
     }
+    #endregion
 
-
-    // Agregar permisos a un rol
+    #region Agregar permisos a un rol
+    /// <summary>
+    /// Agregar permisos a un rol específico.
+    /// </summary>
+    /// <param name="id">ID del rol.</param>
+    /// <param name="permisoIds">Lista de IDs de permisos a agregar.</param>
+    /// <returns>Mensaje de éxito o error.</returns>
     [HttpPost("agregar-permisos-al-rol/{id}")]
     public async Task<ActionResult> AgregarPermisosARol(int id, [FromBody] List<int> permisoIds)
     {
-        // Buscar el rol por ID e incluir su relación RolPermiso
-        var rol = await _context.Roles
-            .Include(r => r.RolPermiso) // Incluir la relación RolPermiso
-            .FirstOrDefaultAsync(r => r.RolId == id); // Filtrar por el ID del rol
-
-        // Validar si el rol existe
-        if (rol == null)
+        try
         {
-            return NotFound(new { Message = "Rol no encontrado." }); // Retorna un error 404 si no se encuentra el rol
-        }
+            // Buscar el rol
+            var rol = await _context.Roles.Include(r => r.RolPermiso).FirstOrDefaultAsync(r => r.RolId == id);
 
-        // Iterar sobre los IDs de los permisos recibidos
-        foreach (var permisoId in permisoIds)
-        {
-            // Validar si el permiso no está ya asociado al rol
-            if (!rol.RolPermiso.Any(rp => rp.PermisoID == permisoId))
+            if (rol == null)
             {
-                // Agregar la relación entre el rol y el permiso
-                rol.RolPermiso.Add(new RolPermisoRE { RolID = id, PermisoID = permisoId });
+                return NotFound(new { Message = "Rol no encontrado." });
             }
+
+            // Agregar permisos
+            foreach (var permisoId in permisoIds)
+            {
+                if (!rol.RolPermiso.Any(rp => rp.PermisoID == permisoId))
+                {
+                    rol.RolPermiso.Add(new RolPermisoRE { RolID = id, PermisoID = permisoId });
+                }
+            }
+
+            // Guardar cambios
+            await _context.SaveChangesAsync();
+
+            // Registrar en el historial
+            await HistorialHelper.RegistrarHistorial(
+                _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Agregar permisos a rol",
+                modulo: "Roles",
+                detalle: $"Permisos agregados al rol ID {id}",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Permisos agregados exitosamente." });
         }
-
-        // Guardar los cambios en la base de datos
-        await _context.SaveChangesAsync();
-        return Ok(new { Message = "Permisos agregados exitosamente." }); // Retornar éxito
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Agregar permisos a rol",
+                modulo: "Roles",
+                detalle: $"Error al agregar permisos al rol ID {id}",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+            return StatusCode(500, new { Message = $"Error: {ex.Message}" });
+        }
     }
+    #endregion
 
-    // Actualizar permisos de un rol existente
+    #region Actualizar permisos de un rol
+    /// <summary>
+    /// Actualizar los permisos de un rol.
+    /// </summary>
+    /// <param name="rolId">ID del rol.</param>
+    /// <param name="permisosIds">Lista de IDs de permisos nuevos.</param>
+    /// <returns>Mensaje de éxito o error.</returns>
     [HttpPut("actualizar-permisos-del-rol/{rolId}")]
     public async Task<IActionResult> ActualizarPermisosDeRol(int rolId, [FromBody] List<int> permisosIds)
     {
-        // Busca el rol en la base de datos
-        var rolExistente = await _context.Roles
-            .Include(r => r.RolPermiso)
-            .FirstOrDefaultAsync(r => r.RolId == rolId);
-
-        // Verifica si el rol existe
-        if (rolExistente == null)
+        try
         {
-            return NotFound(new { Message = "Rol no encontrado." });
-        }
+            var rol = await _context.Roles.Include(r => r.RolPermiso).FirstOrDefaultAsync(r => r.RolId == rolId);
 
-        // Eliminar los permisos actuales no incluidos en la nueva lista
-        var permisosAEliminar = rolExistente.RolPermiso
-            .Where(rp => !permisosIds.Contains(rp.PermisoID))
-            .ToList(); // Convertir a lista para poder iterar
-
-        foreach (var permiso in permisosAEliminar)
-        {
-            rolExistente.RolPermiso.Remove(permiso); // Remover de la colección
-        }
-
-        // Agregar nuevos permisos que no están ya asociados al rol
-        var permisosAAgregar = permisosIds
-            .Where(pid => !rolExistente.RolPermiso.Any(rp => rp.PermisoID == pid))
-            .ToList();
-
-        foreach (var permisoId in permisosAAgregar)
-        {
-            rolExistente.RolPermiso.Add(new RolPermisoRE
+            if (rol == null)
             {
-                RolID = rolId,
-                PermisoID = permisoId
-            });
+                return NotFound(new { Message = "Rol no encontrado." });
+            }
+
+            // Eliminar permisos no incluidos
+            var permisosAEliminar = rol.RolPermiso.Where(rp => !permisosIds.Contains(rp.PermisoID)).ToList();
+            foreach (var permiso in permisosAEliminar)
+            {
+                rol.RolPermiso.Remove(permiso);
+            }
+
+            // Agregar permisos nuevos
+            var permisosAAgregar = permisosIds.Where(pid => !rol.RolPermiso.Any(rp => rp.PermisoID == pid)).ToList();
+            foreach (var permisoId in permisosAAgregar)
+            {
+                rol.RolPermiso.Add(new RolPermisoRE { RolID = rolId, PermisoID = permisoId });
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Registrar en el historial
+            await HistorialHelper.RegistrarHistorial(
+                _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Actualizar permisos de rol",
+                modulo: "Roles",
+                detalle: $"Permisos del rol ID {rolId} actualizados.",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Permisos actualizados exitosamente." });
         }
-
-        // Guardar los cambios en la base de datos
-        await _context.SaveChangesAsync();
-        return Ok(new { Message = "Permisos actualizados exitosamente." });
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Actualizar permisos de rol",
+                modulo: "Roles",
+                detalle: $"Error al actualizar permisos del rol ID {rolId}",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+            return StatusCode(500, new { Message = $"Error: {ex.Message}" });
+        }
     }
+    #endregion
 
-
-
-    // Eliminar permisos específicos de un rol
+    #region Eliminar permisos de un rol
+    /// <summary>
+    /// Eliminar permisos específicos de un rol.
+    /// </summary>
+    /// <param name="id">ID del rol.</param>
+    /// <param name="permisoIds">Lista de IDs de permisos a eliminar.</param>
+    /// <returns>Mensaje de éxito o error.</returns>
     [HttpDelete("eliminar-permisos-al-Rol/{id}")]
     public async Task<ActionResult> EliminarPermisosDeRol(int id, [FromBody] List<int> permisoIds)
     {
-        // Buscar el rol por ID e incluir su relación RolPermiso
-        var rol = await _context.Roles
-            .Include(r => r.RolPermiso) // Incluir la relación RolPermiso
-            .FirstOrDefaultAsync(r => r.RolId == id); // Filtrar por el ID del rol
-
-        // Validar si el rol existe
-        if (rol == null)
+        try
         {
-            return NotFound(new { Message = "Rol no encontrado." }); // Retorna un error 404 si no se encuentra el rol
+            var rol = await _context.Roles.Include(r => r.RolPermiso).FirstOrDefaultAsync(r => r.RolId == id);
+
+            if (rol == null)
+            {
+                return NotFound(new { Message = "Rol no encontrado." });
+            }
+
+            var permisosAEliminar = rol.RolPermiso.Where(rp => permisoIds.Contains(rp.PermisoID)).ToList();
+            foreach (var permiso in permisosAEliminar)
+            {
+                rol.RolPermiso.Remove(permiso);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Registrar en el historial
+            await HistorialHelper.RegistrarHistorial(
+                _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Eliminar permisos de rol",
+                modulo: "Roles",
+                detalle: $"Permisos eliminados del rol ID {id}.",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Permisos eliminados exitosamente." });
         }
-
-        // Identificar las relaciones de permisos que deben ser eliminadas
-        var permisosAEliminar = rol.RolPermiso
-            .Where(rp => permisoIds.Contains(rp.PermisoID)) // Filtrar los permisos a eliminar
-            .ToList(); // Convertir a lista para iterar
-
-        // Eliminar las relaciones de permisos de la colección
-        foreach (var permiso in permisosAEliminar)
+        catch (Exception ex)
         {
-            rol.RolPermiso.Remove(permiso); // Remover cada permiso
+            await HistorialHelper.RegistrarHistorial(
+                _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Eliminar permisos de rol",
+                modulo: "Roles",
+                detalle: $"Error al eliminar permisos del rol ID {id}",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+            return StatusCode(500, new { Message = $"Error: {ex.Message}" });
         }
-
-        // Guardar los cambios en la base de datos
-        await _context.SaveChangesAsync();
-
-        // Verificar si el rol ya no tiene permisos asociados
-        if (!rol.RolPermiso.Any())
-        {
-            return Ok(new { Message = "Permisos eliminados exitosamente. El rol ya no tiene permisos asociados." });
-        }
-
-        return Ok(new { Message = "Permisos eliminados exitosamente." }); // Retornar éxito
     }
-
-
-    // Eliminar todos los permisos de un rol
-    [HttpDelete("eliminar-todos-permisos/{id}")]
-    public async Task<ActionResult> EliminarTodosPermisosDeRol(int id)
-    {
-        // Buscar el rol por ID e incluir su relación RolPermiso
-        var rol = await _context.Roles
-            .Include(r => r.RolPermiso) // Incluir la relación RolPermiso
-            .FirstOrDefaultAsync(r => r.RolId == id); // Filtrar por el ID del rol
-
-        // Validar si el rol existe
-        if (rol == null)
-        {
-            return NotFound(new { Message = "Rol no encontrado." }); // Retorna un error 404 si no se encuentra el rol
-        }
-
-        // Verificar si el rol no tiene permisos
-        if (!rol.RolPermiso.Any())
-        {
-            return BadRequest(new { Message = "El rol no tiene permisos para eliminar." }); // Retornar error si no hay permisos
-        }
-
-        // Eliminar todas las relaciones de permisos
-        rol.RolPermiso.Clear();
-
-        // Guardar los cambios en la base de datos
-        await _context.SaveChangesAsync();
-        return Ok(new { Message = "Todos los permisos han sido eliminados del rol." }); // Retornar éxito
-    }
+    #endregion
 
 
 

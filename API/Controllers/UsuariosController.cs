@@ -31,6 +31,8 @@ public class UsuariosController : ControllerBase
         _httpClient = httpClientFactory.CreateClient("TucoApi");
     }
 
+
+    #region Registro de Usuarios
     /// <summary>
     /// Endpoint para registrar un nuevo usuario en el sistema.
     /// </summary>
@@ -124,9 +126,9 @@ public class UsuariosController : ControllerBase
             return StatusCode(500, new { Message = $"Error al registrar usuario: {ex.Message}" });
         }
     }
+    #endregion
 
-
-    // Endpoint para listar todos los usuarios
+    #region Endpoint para listar todos los usuarios
     [HttpGet("usuarios")]
     public async Task<IActionResult> ObtenerUsuarios()
     {
@@ -143,9 +145,9 @@ public class UsuariosController : ControllerBase
         // Retornar la lista de usuarios como una respuesta exitosa
         return Ok(usuarios);
     }
+    #endregion
 
-
-
+    #region Cambio de Contraseña
     [HttpPost("CambiarContrasena")]
     public async Task<IActionResult> CambiarContraseña(CambiarContraseñaRequest request)
     {
@@ -249,5 +251,6 @@ public class UsuariosController : ControllerBase
             return StatusCode(500, new { message = $"Ocurrió un error: {ex.Message}" });
         }
     }
+    #endregion
 
 }

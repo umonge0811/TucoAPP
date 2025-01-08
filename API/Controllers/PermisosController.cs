@@ -108,64 +108,122 @@ public class PermisosController : ControllerBase
     }
     #endregion
 
-    #region actualizacion de permisos
-    // Actualizar un permiso existente
+    #region Actualización de Permisos
     [HttpPut("actualizar/{id}")]
     public async Task<IActionResult> ActualizarPermiso(int id, [FromBody] Permiso permiso)
     {
-        var permisoExistente = await _context.Permisos.FindAsync(id);
-        if (permisoExistente == null)
+        try
         {
-            return NotFound(new { Message = "Permiso no encontrado." });
-        }
-
-        permisoExistente.NombrePermiso = permiso.NombrePermiso;
-        permisoExistente.DescripcionPermiso = permiso.DescripcionPermiso;
-
-        await _context.SaveChangesAsync();
-
-         // Registrar intento fallido en el historial
+            // Buscar el permiso existente por ID
+            var permisoExistente = await _context.Permisos.FindAsync(id);
+            if (permisoExistente == null)
+            {
+                // Registrar intento fallido en el historial
                 await HistorialHelper.RegistrarHistorial(
-                    httpClient: _httpClient, // Puedes pasar un HttpClient si es necesario
-                    usuarioId: 1, // Método para obtener el ID del usuario
+                    httpClient: _httpClient,
+                    usuarioId: 1, // Usuario ID para pruebas
                     tipoAccion: "Actualización de Permiso",
                     modulo: "Permisos",
-                    detalle: $" El permiso '{permiso.NombrePermiso}' Se actualizó.",
-                    estadoAccion: "Exito",
-                    errorDetalle: "El permiso se actualizó."
+                    detalle: $"Intento de actualizar permiso fallido. Permiso con ID '{id}' no encontrado.",
+                    estadoAccion: "Error",
+                    errorDetalle: "Permiso no encontrado."
                 );
-        return Ok(new { Message = "Permiso actualizado exitosamente." });
-    }
 
+                return NotFound(new { Message = "Permiso no encontrado." });
+            }
+
+            // Actualizar los valores del permiso existente
+            permisoExistente.NombrePermiso = permiso.NombrePermiso;
+            permisoExistente.DescripcionPermiso = permiso.DescripcionPermiso;
+
+            // Guardar los cambios en la base de datos
+            await _context.SaveChangesAsync();
+
+            // Registrar acción exitosa en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1, // Usuario ID para pruebas
+                tipoAccion: "Actualización de Permiso",
+                modulo: "Permisos",
+                detalle: $"Permiso actualizado exitosamente: {permiso.NombrePermiso}.",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Permiso actualizado exitosamente." });
+        }
+        catch (Exception ex)
+        {
+            // Registrar error en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1, // Usuario ID para pruebas
+                tipoAccion: "Actualización de Permiso",
+                modulo: "Permisos",
+                detalle: "Error al actualizar el permiso.",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = $"Ocurrió un error: {ex.Message}" });
+        }
+    }
     #endregion
 
-    #region Eliminacion de Permisos
-    // Eliminar un permiso existente
+    #region Eliminación de Permisos
     [HttpDelete("eliminar/{id}")]
     public async Task<IActionResult> EliminarPermiso(int id)
     {
-        var permiso = await _context.Permisos.FindAsync(id);
-        if (permiso == null)
+        try
         {
-            return NotFound(new { Message = "Permiso no encontrado." });
-        }
+            // Buscar el permiso existente por ID
+            var permiso = await _context.Permisos.FindAsync(id);
+            if (permiso == null)
+            {
+                // Registrar intento fallido en el historial
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 1, // Usuario ID para pruebas
+                    tipoAccion: "Eliminación de Permiso",
+                    modulo: "Permisos",
+                    detalle: $"Intento de eliminar permiso fallido. Permiso con ID '{id}' no encontrado.",
+                    estadoAccion: "Error",
+                    errorDetalle: "Permiso no encontrado."
+                );
 
-        _context.Permisos.Remove(permiso);
-        await _context.SaveChangesAsync();
+                return NotFound(new { Message = "Permiso no encontrado." });
+            }
 
-        // Registrar intento fallido en el historial
-        await HistorialHelper.RegistrarHistorial(
-            httpClient: _httpClient, // Puedes pasar un HttpClient si es necesario
-            usuarioId: 1, // Método para obtener el ID del usuario
-            tipoAccion: "Eliminar de Permiso",
-            modulo: "Permisos",
-            detalle: $" El permiso '{permiso.NombrePermiso}' Se Eliminó.",
-            estadoAccion: "Exito",
-            errorDetalle: "Permiso eliminado."
+            // Eliminar el permiso de la base de datos
+            _context.Permisos.Remove(permiso);
+            await _context.SaveChangesAsync();
+
+            // Registrar acción exitosa en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1, // Usuario ID para pruebas
+                tipoAccion: "Eliminación de Permiso",
+                modulo: "Permisos",
+                detalle: $"Permiso eliminado exitosamente: {permiso.NombrePermiso}.",
+                estadoAccion: "Éxito"
             );
 
+            return Ok(new { Message = "Permiso eliminado exitosamente." });
+        }
+        catch (Exception ex)
+        {
+            // Registrar error en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 1, // Usuario ID para pruebas
+                tipoAccion: "Eliminación de Permiso",
+                modulo: "Permisos",
+                detalle: "Error al eliminar el permiso.",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
 
-        return Ok(new { Message = "Permiso eliminado exitosamente." });
+            return StatusCode(500, new { Message = $"Ocurrió un error: {ex.Message}" });
+        }
     }
     #endregion
 }
