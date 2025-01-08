@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 
 <h3>Cambiar Contraseña</h3>
+
 @if (!string.IsNullOrEmpty(mensaje))
 {
     <div class="alert alert-info">@mensaje</div>
@@ -21,12 +22,21 @@
             <div class="text-danger mt-2">@errorValidacion</div>
         }
 
-        <button @onclick="CambiarContrasenaAsync" aria-label="Cambiar contraseña" class="btn btn-primary mt-2" disabled="@isLoading">
+        <button @onclick="CambiarContrasenaAsync" class="btn btn-primary mt-2" disabled="@isLoading">
             @if (isLoading)
             {
                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             }
             Cambiar Contraseña
+        </button>
+    </div>
+}
+else if (mostrarSolicitudToken)
+{
+    <div>
+        <p>El token ha expirado. Por favor, solicite un nuevo token para continuar.</p>
+        <button @onclick="SolicitarNuevoTokenAsync" class="btn btn-warning">
+            Solicitar Nuevo Token
         </button>
     </div>
 }
@@ -41,18 +51,13 @@
     private string errorValidacion = string.Empty;
     private bool isLoading = false;
     private bool mostrarFormulario = true;
+    private bool mostrarSolicitudToken = false;
+
 
     protected override async Task OnParametersSetAsync()
     {
         if (!TokenState.IsInitialized)
         {
-            if (!string.IsNullOrEmpty(TokenState.Token))
-            {
-                token = TokenState.Token;
-                mensaje = "El usuario ya fue activado.";
-                return;
-            }
-
             try
             {
                 var activationResponse = await Http.GetAsync($"api/Auth/activar-cuenta?token={Uri.EscapeDataString(token)}");
@@ -61,11 +66,22 @@
                     var result = await activationResponse.Content.ReadFromJsonAsync<ActivationResponseDTO>();
                     TokenState.Token = result.Token;
                     mensaje = result.Message;
+                    mostrarFormulario = true;
+                    mostrarSolicitudToken = false;
                 }
                 else
                 {
                     var errorMessage = await activationResponse.Content.ReadAsStringAsync();
-                    mensaje = $"Error al activar la cuenta: {errorMessage}";
+                    if (errorMessage.Contains("expirado", StringComparison.OrdinalIgnoreCase))
+                    {
+                        mostrarFormulario = false;
+                        mostrarSolicitudToken = true;
+                        TokenState.Token = null; // Limpia el token si está expirado
+                    }
+                    else
+                    {
+                        mensaje = $"Error al activar la cuenta: {errorMessage}";
+                    }
                 }
             }
             catch (Exception ex)
@@ -75,11 +91,15 @@
 
             TokenState.IsInitialized = true;
         }
+        else
+        {
+            mostrarFormulario = TokenState.Token != null && !mostrarSolicitudToken;
+            mostrarSolicitudToken = TokenState.Token == null;
+        }
     }
 
     private async Task CambiarContrasenaAsync()
     {
-        // Validaciones de contraseña
         if (string.IsNullOrEmpty(nuevaContrasena) || string.IsNullOrEmpty(repetirContrasena))
         {
             errorValidacion = "Debe ingresar y repetir la contraseña.";
@@ -109,11 +129,9 @@
             if (response.IsSuccessStatusCode)
             {
                 mensaje = "Contraseña cambiada exitosamente.";
-                TokenState.Token = string.Empty; // Limpiar token
-                TokenState.IsInitialized = false;
-                mostrarFormulario = false; // Ocultar formulario
+                TokenState.Token = string.Empty;
+                mostrarFormulario = false;
 
-                // Mostrar SweetAlert para el éxito
                 await JSRuntime.InvokeVoidAsync("Swal.fire", new
                 {
                     title = "Éxito",
@@ -124,8 +142,38 @@
             }
             else
             {
-                var errorMessage = await response.Content.ReadAsStringAsync();
-                mensaje = $"Error al cambiar la contraseña: {errorMessage}";
+                mensaje = $"Error al cambiar la contraseña: {await response.Content.ReadAsStringAsync()}";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error inesperado: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+
+    private async Task SolicitarNuevoTokenAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            // Enviar la solicitud solo con el token actual
+            var response = await Http.PostAsJsonAsync("api/Auth/regenerar-token", new { token = token });
+
+            if (response.IsSuccessStatusCode)
+            {
+                mensaje = "Se ha enviado un nuevo token a tu correo. Por favor, revisa tu bandeja de entrada.";
+                mostrarSolicitudToken = false;
+            }
+            else
+            {
+                mensaje = $"Error al solicitar el token: {await response.Content.ReadAsStringAsync()}";
             }
         }
         catch (Exception ex)

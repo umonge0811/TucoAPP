@@ -76,7 +76,7 @@ public class UsuariosController : ControllerBase
                 Activo = false, // Cuenta desactivada por defecto
                 Token = tokenActivacion, // Asignar el token de activación
                 PropositoToken = PropositoTokenEnum.ActivarCuenta, // Usar Enum para propósito del token
-                FechaExpiracionToken = DateTime.Now.AddMinutes(30) // Expiración del token
+                FechaExpiracionToken = DateTime.Now.AddMinutes(1) // Expiración del token
             };
 
             // Guardar el nuevo usuario en la base de datos
@@ -96,7 +96,7 @@ public class UsuariosController : ControllerBase
 
             // Generar enlace de activación con el enlace de ngrok
             // Generar enlace de activación con la ruta esperada por el Razor Component
-            var activationUrl = $"https://0cb2-186-26-118-106.ngrok-free.app/cambiar-contrasena/{tokenActivacion}";
+            var activationUrl = $"https://3256-186-26-118-107.ngrok-free.app/cambiar-contrasena/{tokenActivacion}";
 
             // Contenido del correo
             var subject = "Activa tu cuenta";
@@ -127,6 +127,8 @@ public class UsuariosController : ControllerBase
         }
     }
     #endregion
+
+
 
     #region Endpoint para listar todos los usuarios
     [HttpGet("usuarios")]
