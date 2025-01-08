@@ -11,7 +11,13 @@
 @using TucoWEB.Components
 @using Tuco.Clases.Models
 @using Tuco.Clases.DTOs
+@using TucoWEB.Services
+@using System.ComponentModel.DataAnnotations
+
 
 @inject NavigationManager NavigationManager
 @inject HttpClient Http
+@inject TokenStateService TokenState
+@inject IJSRuntime JSRuntime
+
 

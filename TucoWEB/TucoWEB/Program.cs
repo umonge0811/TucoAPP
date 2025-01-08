@@ -19,6 +19,7 @@ builder.Services.AddScoped(sp =>
 });
 
 builder.Services.AddSingleton<TokenStateService>(); // Registra el servicio de estado del token.
+
 // Configuración de servicios
 builder.Services.AddRazorComponents() // Habilita el uso de Razor Components.
     .AddInteractiveServerComponents() // Habilita el modo de renderizado en servidor para componentes interactivos.

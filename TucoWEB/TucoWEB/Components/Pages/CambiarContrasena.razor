@@ -1,11 +1,5 @@
 ﻿@page "/cambiar-contrasena/{token}"
-@using System.ComponentModel.DataAnnotations
-@using Microsoft.AspNetCore.Components.Web
-@using TucoWEB.Services
-@inject TokenStateService TokenState
 @rendermode InteractiveServer
-@* @rendermode InteractiveWebAssembly *@
-
 
 <h3>Cambiar Contraseña</h3>
 @if (!string.IsNullOrEmpty(mensaje))
@@ -13,44 +7,51 @@
     <div class="alert alert-info">@mensaje</div>
 }
 
-@if (!string.IsNullOrEmpty(token))
+@if (mostrarFormulario)
 {
     <div>
         <label for="nuevaContrasena">Nueva Contraseña:</label>
-        <input type="password" @bind="nuevaContrasena" class="form-control" />
-        <button @onclick="CambiarContrasenaAsync" aria-label="Cambiar contraseña" class="btn btn-primary mt-2">
+        <input type="password" @bind="nuevaContrasena" class="form-control" placeholder="Ingrese su nueva contraseña" />
+
+        <label for="repetirContrasena" class="mt-2">Repita la Contraseña:</label>
+        <input type="password" @bind="repetirContrasena" class="form-control" placeholder="Repita su nueva contraseña" />
+
+        @if (!string.IsNullOrEmpty(errorValidacion))
+        {
+            <div class="text-danger mt-2">@errorValidacion</div>
+        }
+
+        <button @onclick="CambiarContrasenaAsync" aria-label="Cambiar contraseña" class="btn btn-primary mt-2" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            }
             Cambiar Contraseña
         </button>
     </div>
 }
-else
-{
-    <div class="alert alert-danger">No se puede procesar el cambio de contraseña.</div>
-}
 
 @code {
-
     [Parameter, Required]
     public string token { get; set; }
 
     private string nuevaContrasena = string.Empty;
+    private string repetirContrasena = string.Empty;
     private string mensaje = string.Empty;
+    private string errorValidacion = string.Empty;
     private bool isLoading = false;
-    private bool initialized  = false;
-    private string tempToken = string.Empty; // Nueva variable para almacenar el token temporal
+    private bool mostrarFormulario = true;
 
-
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-
-        await base.OnInitializedAsync();
-    }
-
-
-    protected override async Task OnParametersSetAsync() {
-
         if (!TokenState.IsInitialized)
         {
+            if (!string.IsNullOrEmpty(TokenState.Token))
+            {
+                token = TokenState.Token;
+                mensaje = "El usuario ya fue activado.";
+                return;
+            }
 
             try
             {
@@ -58,42 +59,68 @@ else
                 if (activationResponse.IsSuccessStatusCode)
                 {
                     var result = await activationResponse.Content.ReadFromJsonAsync<ActivationResponseDTO>();
-                    TokenState.Token = result.Token; // Guardamos en variable temporal
+                    TokenState.Token = result.Token;
                     mensaje = result.Message;
+                }
+                else
+                {
+                    var errorMessage = await activationResponse.Content.ReadAsStringAsync();
+                    mensaje = $"Error al activar la cuenta: {errorMessage}";
                 }
             }
             catch (Exception ex)
             {
-                mensaje = "Error al procesar la solicitud.";
+                mensaje = $"Error inesperado: {ex.Message}";
             }
+
             TokenState.IsInitialized = true;
         }
     }
 
-
-
     private async Task CambiarContrasenaAsync()
     {
-        if (string.IsNullOrEmpty(nuevaContrasena))
+        // Validaciones de contraseña
+        if (string.IsNullOrEmpty(nuevaContrasena) || string.IsNullOrEmpty(repetirContrasena))
         {
-            mensaje = "Por favor, ingrese una nueva contraseña.";
+            errorValidacion = "Debe ingresar y repetir la contraseña.";
             return;
         }
 
-        isLoading = true; // Deshabilitar botón mientras se procesa
+        if (nuevaContrasena != repetirContrasena)
+        {
+            errorValidacion = "Las contraseñas no coinciden.";
+            return;
+        }
+
+        if (nuevaContrasena.Length < 8)
+        {
+            errorValidacion = "La contraseña debe tener al menos 8 caracteres.";
+            return;
+        }
+
+        errorValidacion = string.Empty;
+        isLoading = true;
 
         try
         {
-            // Usamos tempToken en lugar de token
             var response = await Http.PostAsJsonAsync("/api/Usuarios/CambiarContrasena",
                 new { token = TokenState.Token, NuevaContrasena = nuevaContrasena });
-            // Llamada al endpoint para cambiar contraseña
-           // var response = await Http.PostAsJsonAsync("/api/Usuarios/CambiarContrasena", new { token, NuevaContrasena = nuevaContrasena });
 
             if (response.IsSuccessStatusCode)
             {
                 mensaje = "Contraseña cambiada exitosamente.";
                 TokenState.Token = string.Empty; // Limpiar token
+                TokenState.IsInitialized = false;
+                mostrarFormulario = false; // Ocultar formulario
+
+                // Mostrar SweetAlert para el éxito
+                await JSRuntime.InvokeVoidAsync("Swal.fire", new
+                {
+                    title = "Éxito",
+                    text = "Su contraseña ha sido cambiada correctamente.",
+                    icon = "success",
+                    confirmButtonText = "OK"
+                });
             }
             else
             {
@@ -107,7 +134,7 @@ else
         }
         finally
         {
-            isLoading = false; // Habilitar botón al finalizar
+            isLoading = false;
         }
     }
 }

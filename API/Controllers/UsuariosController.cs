@@ -94,7 +94,7 @@ public class UsuariosController : ControllerBase
 
             // Generar enlace de activación con el enlace de ngrok
             // Generar enlace de activación con la ruta esperada por el Razor Component
-            var activationUrl = $"https://5565-186-26-118-106.ngrok-free.app/cambiar-contrasena/{tokenActivacion}";
+            var activationUrl = $"https://0cb2-186-26-118-106.ngrok-free.app/cambiar-contrasena/{tokenActivacion}";
 
             // Contenido del correo
             var subject = "Activa tu cuenta";
@@ -151,24 +151,61 @@ public class UsuariosController : ControllerBase
     {
         try
         {
-            // Buscar al usuario por el token y el propósito (ahora comparando con el enumerador)
+            // Buscar al usuario por el token y el propósito
             var usuario = await _context.Usuarios
                 .FirstOrDefaultAsync(u => u.Token == request.Token && u.PropositoToken == PropositoTokenEnum.CambioContrasena);
 
             if (usuario == null)
             {
+                // Registrar intento fallido en el historial
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 0,
+                    tipoAccion: "Cambio de Contraseña",
+                    modulo: "Usuarios",
+                    detalle: $"Intento fallido de cambio de contraseña. Token inválido o propósito incorrecto.",
+                    token: request.Token,
+                    propositoToken: PropositoTokenEnum.CambioContrasena.ToString(),
+                    estadoAccion: "Error",
+                    errorDetalle: "Token inválido o propósito incorrecto."
+                );
+
                 return BadRequest(new { message = "Token inválido o propósito incorrecto." });
             }
 
             // Validar que el usuario esté activo
-            if (usuario.Activo != true) // Cambiamos el chequeo para mayor claridad
+            if (usuario.Activo != true)
             {
+                // Registrar historial de usuario inactivo
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: usuario.UsuarioId,
+                    tipoAccion: "Cambio de Contraseña",
+                    modulo: "Usuarios",
+                    detalle: "Intento de cambio de contraseña fallido. Usuario inactivo.",
+                    estadoAccion: "Error",
+                    errorDetalle: "El usuario está inactivo."
+                );
+
                 return BadRequest(new { message = "El usuario está inactivo. No se puede realizar esta acción." });
             }
 
             // Validar la expiración del token
             if (usuario.FechaExpiracionToken.HasValue && usuario.FechaExpiracionToken.Value < DateTime.Now)
             {
+                // Registrar historial de token expirado
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: usuario.UsuarioId,
+                    tipoAccion: "Cambio de Contraseña",
+                    modulo: "Usuarios",
+                    detalle: "Intento de cambio de contraseña fallido. Token expirado.",
+                    token: request.Token,
+                    propositoToken: PropositoTokenEnum.CambioContrasena.ToString(),
+                    estadoAccion: "Error",
+                    errorDetalle: "El token ha expirado."
+                );
+
                 return BadRequest(new { message = "El token ha expirado." });
             }
 
@@ -177,18 +214,40 @@ public class UsuariosController : ControllerBase
 
             // Invalidar el token después de su uso
             usuario.Token = null;
-            usuario.PropositoToken = null; // Invalidamos el propósito
-            usuario.FechaExpiracionToken = null; // Limpiamos la fecha de expiración
+            usuario.PropositoToken = null;
+            usuario.FechaExpiracionToken = null;
 
             // Guardar los cambios
             _context.Usuarios.Update(usuario);
             await _context.SaveChangesAsync();
 
+            // Registrar historial de cambio exitoso
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: usuario.UsuarioId,
+                tipoAccion: "Cambio de Contraseña",
+                modulo: "Usuarios",
+                detalle: $"El usuario {usuario.Email} cambió su contraseña exitosamente.",
+                estadoAccion: "Exito"
+            );
+
             return Ok(new { message = "Contraseña cambiada exitosamente." });
         }
         catch (Exception ex)
         {
+            // Registrar error en el historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 0,
+                tipoAccion: "Cambio de Contraseña",
+                modulo: "Usuarios",
+                detalle: "Error al intentar cambiar la contraseña.",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
             return StatusCode(500, new { message = $"Ocurrió un error: {ex.Message}" });
         }
     }
+
 }
