@@ -1,0 +1,60 @@
+﻿@page "/usuarios"
+@using TucoMAUI.DTO
+
+
+
+<h3>Lista de Usuarios</h3>
+
+@if (isLoading)
+{
+    <p>Cargando usuarios...</p>
+}
+else if (usuarios == null || !usuarios.Any())
+{
+    <p>No hay usuarios disponibles.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Activo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var usuario in usuarios)
+            {
+                <tr>
+                    <td>@usuario.UsuarioId</td>
+                    <td>@usuario.NombreUsuario</td>
+                    <td>@usuario.Email</td>
+                    <td>@(usuario.Activo ? "Sí" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<UsuarioDTO> usuarios = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            usuarios = await usuarioService.ObtenerUsuariosAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar usuarios: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

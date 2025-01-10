@@ -43,8 +43,7 @@ else if (mostrarSolicitudToken)
 
 @code {
     [Parameter, Required]
-    public string token { get; set; }
-
+    public string token { get; set; }         
     private string nuevaContrasena = string.Empty;
     private string repetirContrasena = string.Empty;
     private string mensaje = string.Empty;
@@ -98,6 +97,7 @@ else if (mostrarSolicitudToken)
         }
     }
 
+    #region cambiar contraseña
     private async Task CambiarContrasenaAsync()
     {
         if (string.IsNullOrEmpty(nuevaContrasena) || string.IsNullOrEmpty(repetirContrasena))
@@ -154,9 +154,9 @@ else if (mostrarSolicitudToken)
             isLoading = false;
         }
     }
+    #endregion
 
-
-
+    #region Solicitar Nuevo token despues de Expirado
     private async Task SolicitarNuevoTokenAsync()
     {
         isLoading = true;
@@ -185,4 +185,5 @@ else if (mostrarSolicitudToken)
             isLoading = false;
         }
     }
+    #endregion
 }
