@@ -9,7 +9,9 @@
 @using TucoMAUI.Components
 @using System.Net.Http.Headers; // Para las cabeceras del cliente HTTP
 @inject HttpClient Http
-
+@inject NavigationManager navigationManager
+@inject IJSRuntime JSRuntime
 @inject UsuarioService usuarioService
+
 @using TucoMAUI.DTO
 @using TucoMAUI.Services

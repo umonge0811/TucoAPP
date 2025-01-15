@@ -1,0 +1,84 @@
+﻿@page "/login"
+@using System.IdentityModel.Tokens.Jwt
+@using TucoMAUI.Services
+@using TucoMAUI_APP.Models
+@inject NavigationManager NavManager
+
+<h3>Iniciar Sesión</h3>
+
+<EditForm Model="@loginModel" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Correo Electrónico</label>
+        <input type="email" @bind-value="loginModel.Email" class="form-control" placeholder="Ingrese su correo" />
+        <ValidationMessage For="@(() => loginModel.Email)" />
+    </div>
+    <div class="mt-2 form-group">
+        <label>Contraseña</label>
+        <input type="password" @bind-value="loginModel.Password" class="form-control" placeholder="Ingrese su contraseña" />
+        <ValidationMessage For="@(() => loginModel.Password)" />
+    </div>
+    <div class="text-center mt-3">
+        <button class="btn btn-primary" type="submit">
+            <span class="@_spinnerClass" role="status" aria-hidden="true"></span>
+            Iniciar Sesión
+        </button>
+    </div>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
+
+@code {
+    private LoginModel loginModel = new();
+    private string _spinnerClass = "";
+    private string errorMessage = string.Empty;
+
+    private async Task Submit()
+    {
+        _spinnerClass = "spinner-border spinner-border-sm";
+
+        try
+        {
+            var response = await AppService.AuthenticateUser(loginModel);
+
+            if (response.IsSuccess)
+            {
+                var tokenResponse = response.Content as AuthenticateRequestAndResponse;
+
+                // Guardar detalles del usuario
+                var handler = new JwtSecurityTokenHandler();
+                var jwtToken = handler.ReadToken(tokenResponse.AccessToken) as JwtSecurityToken;
+
+                Setting.UserBasicDetail = new UserBasicDetail
+                    {
+                        Email = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email)?.Value,
+                        UserName = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Name)?.Value,
+                        AccessToken = tokenResponse.AccessToken,
+                        RefreshToken = tokenResponse.RefreshToken,
+                    };
+
+                // Almacenar en SecureStorage
+                string userDetails = System.Text.Json.JsonSerializer.Serialize(Setting.UserBasicDetail);
+                await SecureStorage.SetAsync(nameof(Setting.UserBasicDetail), userDetails);
+
+                NavManager.NavigateTo("/dashboard");
+            }
+            else
+            {
+                errorMessage = "Credenciales inválidas. Por favor, intente de nuevo.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _spinnerClass = "";
+            StateHasChanged();
+        }
+    }
+}

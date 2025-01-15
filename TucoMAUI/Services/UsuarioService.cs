@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using TucoMAUI.DTO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using System.Text;
 
 namespace TucoMAUI.Services
 {
@@ -47,5 +48,43 @@ namespace TucoMAUI.Services
                 return new List<UsuarioDTO>();
             }
         }
+        public async Task<LoginResponseDTO> AutenticarUsuarioAsync(string email, string password)
+        {
+            try
+            {
+                var cliente = _httpClientFactory.CreateClient("TucoApi");
+
+                // Crear el cuerpo de la solicitud con las credenciales
+                var requestPayload = new LoginRequestDTO
+                {
+                    Email = email,
+                    Contrasena = password
+                };
+
+                var response = await cliente.PostAsJsonAsync("api/Auth/login", requestPayload);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Leer y deserializar la respuesta en un objeto LoginResponseDTO
+                    var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDTO>();
+                    return loginResponse;
+                }
+                else
+                {
+                    // En caso de error, manejar el mensaje y devolver nulo
+                    var errorMessage = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error en la autenticación: {errorMessage}");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al autenticar usuario: {ex.Message}");
+                return null;
+            }
+        }
+
     }
+
+
 }

@@ -1,0 +1,73 @@
+﻿@page "/registration"
+
+@using TucoMAUI.Services
+@using TucoMAUI_APP.Models
+@using Windows.Services.Maps
+@inject IAppService AppService
+
+<h3>Registrar Usuario</h3>
+
+<EditForm Model="@registrationModel" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Nombre de Usuario</label>
+        <input @bind-value="registrationModel.NombreUsuario" class="form-control" placeholder="Ingrese su nombre" />
+        <ValidationMessage For="@(() => registrationModel.NombreUsuario)" />
+    </div>
+    <div class="mt-2 form-group">
+        <label>Correo Electrónico</label>
+        <input type="email" @bind-value="registrationModel.Email" class="form-control" placeholder="Ingrese su correo" />
+        <ValidationMessage For="@(() => registrationModel.Email)" />
+    </div>
+    <div class="mt-2 form-group">
+        <label>Contraseña</label>
+        <input type="password" @bind-value="registrationModel.Password" class="form-control" placeholder="Ingrese su contraseña" />
+        <ValidationMessage For="@(() => registrationModel.Password)" />
+    </div>
+    <div class="text-center mt-3">
+        <button class="btn btn-primary" type="submit">
+            <span class="@_spinnerClass" role="status" aria-hidden="true"></span>
+            Registrar
+        </button>
+    </div>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
+
+@code {
+    private RegistrationModel registrationModel = new();
+    private string _spinnerClass = "";
+    private string errorMessage = string.Empty;
+
+    private async Task Submit()
+    {
+        _spinnerClass = "spinner-border spinner-border-sm";
+
+        try
+        {
+            var response = await AppService.RegisterUser(registrationModel);
+
+            if (response.IsSuccess)
+            {
+                await App.Current.MainPage.DisplayAlert("Éxito", "Usuario registrado correctamente.", "OK");
+                NavManager.NavigateTo("/login");
+            }
+            else
+            {
+                errorMessage = response.ErrorMessage;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            _spinnerClass = "";
+            StateHasChanged();
+        }
+    }
+}

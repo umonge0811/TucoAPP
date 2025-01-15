@@ -7,11 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tuco.Clases", "tuco.Clases\Tuco.Clases.csproj", "{90629A45-8636-4AB5-974A-06375C89A12D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TucoWEB", "TucoWEB\TucoWEB\TucoWEB.csproj", "{8E8E5E03-F424-426F-A4DF-A7B84173A62E}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TucoWEB.Client", "TucoWEB\TucoWEB.Client\TucoWEB.Client.csproj", "{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TucoMAUI", "TucoMAUI\TucoMAUI.csproj", "{94280FE6-E44B-493C-82B7-24FA11BF8711}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestionLlantera.Web", "GestionLlantera.Web\GestionLlantera.Web.csproj", "{84F9CE2C-38B0-4A61-9D09-A04D6B97353E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,20 +23,10 @@ Global
 		{90629A45-8636-4AB5-974A-06375C89A12D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90629A45-8636-4AB5-974A-06375C89A12D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90629A45-8636-4AB5-974A-06375C89A12D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E8E5E03-F424-426F-A4DF-A7B84173A62E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E8E5E03-F424-426F-A4DF-A7B84173A62E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E8E5E03-F424-426F-A4DF-A7B84173A62E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E8E5E03-F424-426F-A4DF-A7B84173A62E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F435DC8B-68EE-4AE6-9309-7CFD58505DD1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{94280FE6-E44B-493C-82B7-24FA11BF8711}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{94280FE6-E44B-493C-82B7-24FA11BF8711}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{94280FE6-E44B-493C-82B7-24FA11BF8711}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{94280FE6-E44B-493C-82B7-24FA11BF8711}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{94280FE6-E44B-493C-82B7-24FA11BF8711}.Release|Any CPU.Build.0 = Release|Any CPU
-		{94280FE6-E44B-493C-82B7-24FA11BF8711}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{84F9CE2C-38B0-4A61-9D09-A04D6B97353E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84F9CE2C-38B0-4A61-9D09-A04D6B97353E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84F9CE2C-38B0-4A61-9D09-A04D6B97353E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84F9CE2C-38B0-4A61-9D09-A04D6B97353E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

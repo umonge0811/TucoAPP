@@ -227,54 +227,63 @@ public class AuthController : ControllerBase
     /// <returns>Token JWT.</returns>
     private string GenerarToken(Usuario usuario)
     {
-        // Obtener los roles del usuario
-        var roles = _context.UsuarioRoles
-            .Where(ur => ur.UsuarioId == usuario.UsuarioId)
-            .Select(ur => ur.Rol.NombreRol) // Asegúrate de que la relación con la tabla Roles está configurada
-            .ToList();
+        try
+        {
+            // Obtener los roles del usuario (maneja caso vacío)
+            var roles = _context.UsuarioRoles
+                .Where(ur => ur.UsuarioId == usuario.UsuarioId)
+                .Select(ur => ur.Rol.NombreRol)
+                .ToList() ?? new List<string>();
 
-        // Obtener los permisos del rol del usuario
-        var permisosRol = _context.RolPermisos
-            .Where(rp => roles.Any(r => rp.Rol.NombreRol == r))
-            .Select(rp => rp.Permiso.NombrePermiso)
-            .ToList();
+            // Obtener los permisos del rol del usuario (maneja caso vacío)
+            var permisosRol = _context.RolPermisos
+                .Where(rp => roles.Any(r => rp.Rol.NombreRol == r))
+                .Select(rp => rp.Permiso.NombrePermiso)
+                .ToList() ?? new List<string>();
 
-        // Obtener los permisos específicos del usuario
-        var permisosUsuario = _context.UsuarioPermisos
-            .Where(up => up.UsuarioID == usuario.UsuarioId)
-            .Select(up => up.Permiso.NombrePermiso)
-            .ToList();
+            // Obtener los permisos específicos del usuario (maneja caso vacío)
+            var permisosUsuario = _context.UsuarioPermiso
+                .Where(up => up.UsuarioID == usuario.UsuarioId)
+                .Select(up => up.Permiso.NombrePermiso)
+                .ToList() ?? new List<string>();
 
-        // Combinar permisos de rol y permisos personalizados
-        var permisosTotales = permisosRol.Union(permisosUsuario).Distinct();
+            // Combinar permisos de rol y permisos personalizados (maneja caso vacío)
+            var permisosTotales = permisosRol.Union(permisosUsuario).Distinct();
 
-        // Crear los claims del token
-        var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.Name, usuario.NombreUsuario),
-        new Claim(ClaimTypes.Email, usuario.Email)
-    };
+            // Crear los claims del token (sin roles ni permisos si están vacíos)
+            var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, usuario.NombreUsuario),
+            new Claim(ClaimTypes.Email, usuario.Email)
+        };
 
-        // Agregar roles y permisos como claims
-        claims.AddRange(roles.Select(rol => new Claim(ClaimTypes.Role, rol)));
-        claims.AddRange(permisosTotales.Select(permiso => new Claim("Permission", permiso)));
+            // Agregar roles y permisos solo si existen
+            claims.AddRange(roles.Select(rol => new Claim(ClaimTypes.Role, rol)));
+            claims.AddRange(permisosTotales.Select(permiso => new Claim("Permission", permiso)));
 
-        // Generar el token JWT
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            // Generar el token JWT
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var token = new JwtSecurityToken(
-            issuer: _configuration["JwtSettings:Issuer"],
-            audience: _configuration["JwtSettings:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["JwtSettings:ExpiryMinutes"])),
-            signingCredentials: creds);
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JwtSettings:Issuer"],
+                audience: _configuration["JwtSettings:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["JwtSettings:ExpiryMinutes"])),
+                signingCredentials: creds);
 
-        
-        return new JwtSecurityTokenHandler().WriteToken(token);
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        catch (Exception ex)
+        {
+            // Log del error (puedes usar un servicio de logging o simplemente registrarlo en consola)
+            Console.WriteLine($"Error al generar el token: {ex.Message}");
+
+            // Puedes lanzar una excepción específica si lo deseas
+            throw new Exception("Hubo un error al generar el token. Por favor, revisa los detalles del error.", ex);
+        }
     }
     #endregion
-
     #region Regenerar Token
     /// <summary>
     /// Endpoint para regenerar un token de activación para un usuario.

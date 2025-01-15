@@ -49,7 +49,7 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<Llanta> Llantas { get; set; }
 
-    public virtual DbSet<PedidosProveedor> PedidosProveedors { get; set; }
+    public virtual DbSet<PedidosProveedor> PedidosProveedores { get; set; }
 
     public virtual DbSet<Permiso> Permisos { get; set; }
 
@@ -67,7 +67,7 @@ public partial class TucoContext : DbContext
 
     public DbSet<UsuarioRolRE> UsuarioRoles { get; set; }
 
-    public DbSet<UsuarioPermisoRE> UsuarioPermisos { get; set; }
+    public DbSet<UsuarioPermisoRE> UsuarioPermiso { get; set; }
 
 
 

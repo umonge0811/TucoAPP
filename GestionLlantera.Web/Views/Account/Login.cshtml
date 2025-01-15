@@ -1,0 +1,54 @@
+﻿@model GestionLlantera.Web.Models.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card mt-5">
+            <div class="card-header">
+                <h2 class="text-center">@ViewData["Title"]</h2>
+            </div>
+            <div class="card-body">
+                @* Formulario que enviará los datos al método Login (POST) del AccountController *@
+                <form asp-action="Login" method="post">
+                    @* Mostrar errores generales del ModelState *@
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    @* Campo Email *@
+                    <div class="form-group mb-3">
+                        <label asp-for="Email" class="control-label">Correo Electrónico</label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    @* Campo Contraseña *@
+                    <div class="form-group mb-3">
+                        <label asp-for="Contrasena" class="control-label">Contraseña</label>
+                        <input asp-for="Contrasena" class="form-control" type="password" />
+                        <span asp-validation-for="Contrasena" class="text-danger"></span>
+                    </div>
+
+                    @* Checkbox Recordarme *@
+                    <div class="form-group mb-3">
+                        <div class="form-check">
+                            <input asp-for="RecordarMe" class="form-check-input" />
+                            <label asp-for="RecordarMe" class="form-check-label">Recordarme</label>
+                        </div>
+                    </div>
+
+                    @* Botón de envío *@
+                    <div class="form-group text-center">
+                        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

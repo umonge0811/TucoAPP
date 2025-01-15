@@ -1,70 +1,63 @@
-﻿@page "/login"
-
+﻿@namespace TucoMAUI.Pages
 <h3>Iniciar Sesión</h3>
 
-<div class="login-container">
-    <div>
-        <label>Correo Electrónico:</label>
-        <input @bind="email" type="email" placeholder="Ingresa tu correo" />
-
-        <label>Contraseña:</label>
-        <input @bind="password" type="password" placeholder="Ingresa tu contraseña" />
-
-        @if (!string.IsNullOrEmpty(errorMessage))
-        {
-            <div class="error">@errorMessage</div>
-        }
-
-        <button @onclick="OnLoginClick" disabled="@isLoading">
-            @if (isLoading)
-            {
-                <span>Cargando...</span>
-            }
-            else
-            {
-                <span>Iniciar Sesión</span>
-            }
-        </button>
-    </div>
+<div>
+    <label>Correo:</label>
+    <input @bind="email" />
 </div>
+<div>
+    <label>Contraseña:</label>
+    <input type="password" @bind="password" />
+</div>
+<div>
+    <button @onclick="HandleLogin">Ingresar</button>
+</div>
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
 
 @code {
     private string email = string.Empty;
     private string password = string.Empty;
     private string errorMessage = string.Empty;
-    private bool isLoading = false;
 
-    
-    private async Task OnLoginClick()
+    private async Task HandleLogin()
     {
-        isLoading = true;
-        errorMessage = string.Empty;
-
         try
         {
-            // // Llamar al servicio para iniciar sesión
-            // var result = await ApiService.LoginAsync(email, password);
+            // Llamar al servicio para autenticar al usuario
+            var loginResponse = await usuarioService.AutenticarUsuarioAsync(email, password);
 
-            // if (result.IsSuccess)
-            // {
-            //     // Guardar el token en SecureStorage
-            //     await SecureStorage.Default.SetAsync("AuthToken", result.Token);
+            if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
+            {
+                // Guardar el token si es necesario
+                Console.WriteLine($"Token recibido: {loginResponse.Token}");
 
-            //     // Redirigir a la página principal
-            //     NavigationManager.NavigateTo("/");
-            // }
-            // else
-            // {
-            //     errorMessage = result.ErrorMessage;
-            // }
+                // Mostrar alerta de bienvenida
+                await JSRuntime. InvokeVoidAsync("Swal.fire", new
+                {
+                    title = "¡Bienvenido!",
+                    text = "Inicio de sesión exitoso.",
+                    icon = "success",
+                    timer = 2000,
+                    showConfirmButton = false
+                });
+
+                // Esperar a que la alerta se cierre automáticamente
+                await Task.Delay(2000);
+
+                // Redirigir a la página principal
+                navigationManager.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                errorMessage = "Credenciales inválidas.";
+            }
         }
         catch (Exception ex)
         {
-            errorMessage = "Ocurrió un error inesperado.";
-        }
-        finally
-        {
-            isLoading = false;
+            errorMessage = $"Error al iniciar sesión: {ex.Message}";
         }
     }
 }
