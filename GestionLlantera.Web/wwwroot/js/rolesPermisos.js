@@ -4,6 +4,9 @@
 let modalRol = null;
 let modalPermiso = null;
 
+// Variable global para almacenar la URL base de la API
+const API_URL = 'https://localhost:7273';
+
 // Esperar a que el documento esté listo
 document.addEventListener('DOMContentLoaded', function () {
     // Inicializar los modales
@@ -81,6 +84,109 @@ async function cargarPermisos() {
         mostrarNotificacion('Error al cargar los permisos: ' + error.message, 'error');
     }
 }
+
+/**
+ * Función para cargar y mostrar los roles en la tabla
+ * Mantiene el mismo estilo que la tabla de permisos
+ */
+// Función para cargar roles
+async function cargarRoles() {
+    try {
+        console.log('Iniciando carga de roles...');
+
+        const response = await fetch(`${API_URL}/api/Roles/ObtenerTodosRoles`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar roles');
+        }
+
+        const roles = await response.json();
+        console.log('Roles cargados:', roles);
+
+        // Solo seleccionar el tbody de la tabla de roles
+        const tbody = document.querySelector('#tablaRoles tbody');
+
+        if (!tbody) {
+            throw new Error('No se encontró el tbody de la tabla de roles');
+        }
+
+        // Solo limpiar el contenido del tbody
+        tbody.innerHTML = '';
+
+        // Agregar las filas al tbody
+        roles.forEach(rol => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${rol.nombreRol || ''}</td>
+                <td>${rol.descripcionRol || ''}</td>
+                <td>
+                    ${rol.rolPermiso && rol.rolPermiso.length > 0 ?
+                    rol.rolPermiso.map(p => `
+                            <span class="badge bg-primary me-1">${p.permiso.nombrePermiso}</span>
+                        `).join('')
+                    : '<span class="text-muted">Sin permisos</span>'
+                }
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary me-2" onclick="editarRol(${rol.rolId})" title="Editar">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})" title="Eliminar">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+    } catch (error) {
+        console.error('Error al cargar roles:', error);
+        mostrarNotificacion('Error al cargar los roles', 'error');
+    }
+}
+/**
+ * Función auxiliar para formatear los permisos de un rol
+ * @param {Array} permisos - Array de permisos asociados al rol
+ * @returns {string} HTML formateado con los permisos
+ */
+function formatearPermisos(permisos) {
+    if (!Array.isArray(permisos) || permisos.length === 0) {
+        return '<span class="text-muted">Sin permisos</span>';
+    }
+
+    return permisos
+        .map(rp => {
+            if (!rp || !rp.permiso) return '';
+            return `<span class="badge bg-primary me-1">
+                ${escapeHtml(rp.permiso.nombrePermiso || '')}
+            </span>`;
+        })
+        .join('');
+}
+
+/**
+ * Función de utilidad para escapar HTML y prevenir XSS
+ * @param {string} text - Texto a escapar
+ * @returns {string} Texto escapado
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    cargarPermisos();
+    cargarRoles();
+});
+
 
 // Función para editar rol
 async function editarRol(rolId) {
@@ -179,15 +285,17 @@ function actualizarListaPermisosModal(permisos) {
     `).join('');
 }
 
+// Función auxiliar para mostrar notificaciones al usuario
 function mostrarNotificacion(mensaje, tipo) {
-    // Asumiendo que usas Toastr o similar
+    // Verificar si toastr está disponible
     if (typeof toastr !== 'undefined') {
+        // Mostrar notificación usando toastr
         toastr[tipo](mensaje);
     } else {
+        // Fallback a alert si toastr no está disponible
         alert(mensaje);
     }
 }
-
 // Limpiar formularios al cerrar modales
 document.getElementById('modalNuevoRol').addEventListener('hidden.bs.modal', function () {
     document.getElementById('formRol').reset();

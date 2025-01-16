@@ -5,6 +5,7 @@ using GestionLlantera.Web.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
+using Org.BouncyCastle.Pqc.Crypto.Lms;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -80,12 +81,12 @@ namespace GestionLlantera.Web.Controllers
                     Response.Cookies.Append("JwtToken", token, cookieOptions);
 
                     // Crear los claims para la identidad
-                    var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Email, model.Email),
-                new Claim(ClaimTypes.Name, model.Email), // Puedes ajustar esto si tienes el nombre real
-                new Claim("JwtToken", token)
-            };
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Email, model.Email),
+                    new Claim(ClaimTypes.Name, model.Email), // Usar NombreUsuario en lugar de model.Email
+                    new Claim("JwtToken", token)
+};
 
                     // Crear la identidad y el principal
                     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

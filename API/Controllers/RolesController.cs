@@ -9,9 +9,12 @@ using Tuco.Clases.DTOs;
 using System.Net.Http;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 using tuco.Utilities;
+using Microsoft.AspNetCore.Cors;
 
 [ApiController]
 [Route("api/[controller]")]
+// Habilitar CORS para este controlador
+[EnableCors("AllowAll")]
 public class RolesController : ControllerBase
 {
     private readonly TucoContext _context;

@@ -1,6 +1,7 @@
 ﻿using API.Data;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
@@ -17,6 +18,8 @@ using static System.Net.WebRequestMethods;
 
 [ApiController]
 [Route("api/[controller]")]
+// Habilitar CORS para este controlador
+[EnableCors("AllowAll")]
 public class UsuariosController : ControllerBase
 {
     private readonly TucoContext _context;
