@@ -5,9 +5,12 @@ using tuco.Clases.Models;
 using tuco.Utilities;
 using Tuco.Clases.Utilities;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
+using Microsoft.AspNetCore.Cors;
 
 [ApiController]
 [Route("api/[controller]")]
+// Habilitar CORS para este controlador usando la política "AllowAll"
+[EnableCors("AllowAll")]
 public class PermisosController : ControllerBase
 {
     TucoContext _context;
@@ -86,7 +89,7 @@ public class PermisosController : ControllerBase
 
     #region Consulta de Permisos
     // Obtener todos los permisos
-    [HttpGet("obtener todos")]
+    [HttpGet("obtener-todos")]
     public async Task<ActionResult<List<Permiso>>> ObtenerPermisos()
     {
         return Ok(await _context.Permisos.ToListAsync());

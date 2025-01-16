@@ -1,0 +1,171 @@
+﻿@model List<RoleDTO>
+@{
+    ViewData["Title"] = "Roles y Permisos";
+    Layout = "_AdminLayout";
+}
+
+@* Contenedor principal *@
+<div class="container-fluid">
+    @* Encabezado de la página *@
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Gestión de Roles y Permisos</h2>
+    </div>
+
+    @* Tabs para cambiar entre Roles y Permisos *@
+    <ul class="nav nav-tabs" id="configTabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="roles-tab" data-bs-toggle="tab" href="#roles" role="tab">
+                Roles
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="permisos-tab" data-bs-toggle="tab" href="#permisos" role="tab">
+                Permisos
+            </a>
+        </li>
+    </ul>
+
+    @* Contenido de los tabs *@
+    <div class="tab-content mt-4" id="configTabsContent">
+        @* Tab de Roles *@
+        <div class="tab-pane fade show active" id="roles" role="tabpanel">
+            <div class="row mb-3">
+                <div class="col">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoRol">
+                        <i class="bi bi-plus-circle"></i> Nuevo Rol
+                    </button>
+                </div>
+            </div>
+
+            @* Tabla de Roles *@
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Rol</th>
+                            <th>Descripción</th>
+                            <th>Permisos Asignados</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rol in Model)
+                        {
+                            <tr>
+                                <td>@rol.NombreRol</td>
+                                <td>@rol.DescripcionRol</td>
+                                <td>
+                                    @foreach (var permiso in rol.Permisos)
+                                    {
+                                        <span class="badge bg-primary me-1">@permiso.NombrePermiso</span>
+                                    }
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editarRol(@rol.RolId)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="eliminarRol(@rol.RolId)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* Tab de Permisos *@
+        <div class="tab-pane fade" id="permisos" role="tabpanel">
+            <div class="row mb-3">
+                <div class="col">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoPermiso">
+                        <i class="bi bi-plus-circle"></i> Nuevo Permiso
+                    </button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Permiso</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaPermisos">
+                        @* Se cargará dinámicamente vía JavaScript *@
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal para Nuevo/Editar Rol *@
+<div class="modal fade" id="modalNuevoRol" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Rol</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formRol">
+                    <input type="hidden" id="rolId" value="0" />
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Rol</label>
+                        <input type="text" class="form-control" id="nombreRol" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionRol" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Permisos</label>
+                        <div id="listaPermisos" class="form-check">
+                            @* Se cargará dinámicamente vía JavaScript *@
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarRol">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal para Nuevo/Editar Permiso *@
+<div class="modal fade" id="modalNuevoPermiso" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Permiso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPermiso">
+                    <input type="hidden" id="permisoId" value="0" />
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Permiso</label>
+                        <input type="text" class="form-control" id="nombrePermiso" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionPermiso" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarPermiso">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/rolesPermisos.js"></script>
+}

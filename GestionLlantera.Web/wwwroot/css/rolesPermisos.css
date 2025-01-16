@@ -1,0 +1,52 @@
+﻿/* Estilos para la página de Roles y Permisos */
+
+/* Estilos para los tabs */
+.nav-tabs .nav-link {
+    color: #495057;
+    font-weight: 500;
+    padding: 12px 20px;
+    border: none;
+    border-bottom: 2px solid transparent;
+}
+
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom: 2px solid #0d6efd;
+        background: transparent;
+    }
+
+/* Estilos para las tablas */
+.table {
+    margin-top: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+    .table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        padding: 12px 15px;
+    }
+
+    .table tbody td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+
+/* Estilos para los botones de acción */
+.btn-action {
+    padding: 6px 12px;
+    margin: 0 3px;
+}
+
+/* Estilos para los modales */
+.modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
