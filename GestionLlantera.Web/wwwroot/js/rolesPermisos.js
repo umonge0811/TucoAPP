@@ -239,6 +239,22 @@ async function abrirModalNuevoRol() {
     }
 }
 
+// Función para abrir el modal de nuevo permiso
+async function abrirModalNuevoPermiso() {
+    try {
+        // Resetear el formulario
+        document.getElementById('formPermiso').reset();
+        document.getElementById('permisoId').value = '0';
+        document.querySelector('#modalNuevoPermiso .modal-title').textContent = 'Nuevo Permiso';
+
+        // Mostrar el modal
+        modalPermiso.show();
+    } catch (error) {
+        console.error('Error al preparar modal de nuevo permiso:', error);
+        mostrarNotificacion('Error al abrir el formulario', 'error');
+    }
+}
+
 async function editarRol(rolId) {
     try {
         // 1. Obtener la información del rol
@@ -416,7 +432,147 @@ async function eliminarRol(rolId) {
             );
         }
     }
-}// Funciones auxiliares
+
+}
+
+// Función para abrir el modal de nuevo permiso
+async function abrirModalNuevoPermiso() {
+    try {
+        // Resetear el formulario
+        document.getElementById('formPermiso').reset();
+        document.getElementById('permisoId').value = '0';
+        document.querySelector('#modalNuevoPermiso .modal-title').textContent = 'Nuevo Permiso';
+
+        // Mostrar el modal
+        modalPermiso.show();
+    } catch (error) {
+        console.error('Error al preparar modal de nuevo permiso:', error);
+        mostrarNotificacion('Error al abrir el formulario', 'error');
+    }
+}
+
+// Función para guardar permiso (crear/editar)
+async function guardarPermiso() {
+    try {
+        // Obtener valores del formulario
+        const permisoId = document.getElementById('permisoId').value;
+        const nombrePermiso = document.getElementById('nombrePermiso').value.trim();
+        const descripcionPermiso = document.getElementById('descripcionPermiso').value.trim();
+
+        // Validaciones básicas
+        if (!nombrePermiso) {
+            mostrarNotificacion('El nombre del permiso es requerido', 'warning');
+            return;
+        }
+
+        // Preparar datos
+        const data = {
+            nombrePermiso: nombrePermiso,
+            descripcionPermiso: descripcionPermiso
+        };
+
+        // Determinar si es creación o actualización
+        const url = permisoId === '0' ? 
+            `${API_URL}/api/Permisos/crear-permiso` : 
+            `${API_URL}/api/Permisos/actualizar/${permisoId}`;
+
+        const response = await fetch(url, {
+            method: permisoId === '0' ? 'POST' : 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error al guardar el permiso');
+        }
+
+        // Cerrar modal y recargar permisos
+        modalPermiso.hide();
+        await cargarPermisos();
+        
+        // Mostrar mensaje de éxito
+        mostrarNotificacion(
+            permisoId === '0' ? 'Permiso creado exitosamente' : 'Permiso actualizado exitosamente', 
+            'success'
+        );
+
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion(error.message || 'Error al guardar el permiso', 'error');
+    }
+}
+
+// Función para editar permiso
+async function editarPermiso(permisoId) {
+    try {
+        // Obtener datos del permiso
+        const response = await fetch(`${API_URL}/api/Permisos/obtener-por-id/${permisoId}`);
+        if (!response.ok) throw new Error('Error al obtener permiso');
+
+        const permiso = await response.json();
+
+        // Llenar el formulario
+        document.getElementById('permisoId').value = permisoId;
+        document.getElementById('nombrePermiso').value = permiso.nombrePermiso;
+        document.getElementById('descripcionPermiso').value = permiso.descripcionPermiso || '';
+
+        // Actualizar título del modal
+        document.querySelector('#modalNuevoPermiso .modal-title').textContent = 'Editar Permiso';
+
+        // Mostrar modal
+        modalPermiso.show();
+
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al cargar el permiso', 'error');
+    }
+}
+
+// Función para eliminar permiso
+async function eliminarPermiso(permisoId) {
+    try {
+        // Confirmar eliminación con SweetAlert2
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Esta acción no se puede revertir",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            const response = await fetch(`${API_URL}/api/Permisos/eliminar/${permisoId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al eliminar el permiso');
+            }
+
+            await cargarPermisos();
+            Swal.fire(
+                '¡Eliminado!',
+                'El permiso ha sido eliminado.',
+                'success'
+            );
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire(
+            'Error',
+            error.message || 'Error al eliminar el permiso',
+            'error'
+        );
+    }
+}
+
+// Funciones auxiliares
 function actualizarListaPermisosModal(permisos) {
     const listaPermisos = document.getElementById('listaPermisos');
     listaPermisos.innerHTML = permisos.map(permiso => `
