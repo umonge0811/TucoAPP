@@ -1,46 +1,98 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@* Views/Shared/_Layout.cshtml *@
+<!DOCTYPE html>
+<html lang="es">
 <head>
+    @* Meta tags necesarios *@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - GestionLlantera.Web</title>
+    <title>@ViewData["Title"] - Llantera</title>
+
+    @* Hojas de estilo *@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/GestionLlantera.Web.styles.css" asp-append-version="true" />
+
+    @* Estilos para el footer fijo *@
+    <style>
+        /* Aseguramos que el html y body ocupen todo el alto disponible */
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        /* Contenedor principal que envuelve todo el contenido */
+        .page-container {
+            min-height: 100vh; /* Viewport height al 100% */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* El contenido principal ocupará todo el espacio disponible */
+        .content-wrap {
+            flex: 1 0 auto; /* Permite que el contenido crezca pero no se encoja */
+        }
+
+        /* Footer siempre al final */
+        .footer {
+            flex-shrink: 0; /* Evita que el footer se encoja */
+            background-color: #f8f9fa;
+            padding: 1rem 0;
+            margin-top: auto; /* Empuja el footer al final */
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">GestionLlantera.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+    @* Contenedor principal que envolverá todo *@
+    <div class="page-container">
+        @* Navbar *@
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container">
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    Llantera
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" href="#servicios">Servicios</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#contacto">Contacto</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="btn btn-primary" asp-controller="Account" asp-action="Login">
+                                Iniciar Sesión
+                            </a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+        @* Contenido principal *@
+        <div class="content-wrap">
+            <div class="container">
+                <main role="main" class="pb-3">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+
+        @* Footer *@
+        <footer class="footer border-top">
+            <div class="container text-center">
+                &copy; 2025 - Llantera
+            </div>
+        </footer>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - GestionLlantera.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    @* Scripts *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

@@ -1,8 +1,31 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@* Views/Home/Index.cshtml - Página de inicio pública *@
+@{
+    ViewData["Title"] = "Inicio";
 }
 
+@* Sección de bienvenida *@
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    @* Título principal *@
+    <h1 class="display-4 mt-5">Bienvenido a Llantera</h1>
+    @* Subtítulo o descripción corta *@
+    <p class="lead">Tu mejor opción en llantas y servicios automotrices</p>
+</div>
+
+@* Sección de características principales *@
+<div class="row mt-5">
+    @* Característica 1 - Calidad *@
+    <div class="col-md-4">
+        <h3>Calidad</h3>
+        <p>Las mejores marcas y productos del mercado.</p>
+    </div>
+    @* Característica 2 - Servicio *@
+    <div class="col-md-4">
+        <h3>Servicio</h3>
+        <p>Atención personalizada y profesional.</p>
+    </div>
+    @* Característica 3 - Garantía *@
+    <div class="col-md-4">
+        <h3>Garantía</h3>
+        <p>Respaldamos todos nuestros productos y servicios.</p>
+    </div>
 </div>

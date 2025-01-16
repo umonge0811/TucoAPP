@@ -1,0 +1,65 @@
+﻿/* Estilos para el sidebar principal */
+#sidebar {
+    min-height: 100vh;
+    background: #343a40;
+    color: #fff;
+    width: 250px;
+    position: fixed;
+    left: 0;
+    top: 0;
+    transition: all 0.3s;
+}
+
+/* Área de contenido - ajustado al sidebar */
+#content {
+    margin-left: 250px;
+    transition: all 0.3s;
+}
+
+/* Encabezado del sidebar */
+.sidebar-header {
+    padding: 20px;
+    background: #2c3136;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Navegación del sidebar */
+.sidebar-nav {
+    padding: 20px 0;
+}
+
+    /* Estilos generales para enlaces del sidebar */
+    .sidebar-nav .nav-link {
+        color: #fff;
+        padding: 10px 20px;
+        transition: all 0.3s;
+        opacity: 0.8;
+    }
+
+        /* Efecto hover en los enlaces */
+        .sidebar-nav .nav-link:hover {
+            background: #2c3136;
+            opacity: 1;
+        }
+
+/* Estilos para el submenú de configuración */
+.submenu {
+    background: rgba(0,0,0,0.1);
+}
+
+    .submenu .nav-link {
+        padding-left: 40px;
+        font-size: 0.9em;
+    }
+
+/* Estilo para ítem activo */
+.nav-link.active {
+    background: #2c3136;
+    opacity: 1;
+}
+
+/* Barra superior */
+.top-navbar {
+    background: #343a40;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}

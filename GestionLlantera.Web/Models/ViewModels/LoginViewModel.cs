@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 
 namespace GestionLlantera.Web.Models.ViewModels
 {
@@ -12,5 +13,6 @@ namespace GestionLlantera.Web.Models.ViewModels
         public string Contrasena { get; set; } = string.Empty;
 
         public bool RecordarMe { get; set; }
+        public ClaimsIdentity? NombreUsuario { get; internal set; }
     }
 }
