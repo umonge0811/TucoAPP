@@ -94,7 +94,8 @@ async function cargarRoles() {
     try {
         console.log('Iniciando carga de roles...');
 
-        const response = await fetch(`${API_URL}/api/Roles/ObtenerTodosRoles`, {
+        // Primero obtenemos los roles
+        const rolesResponse = await fetch(`${API_URL}/api/Roles/ObtenerTodosRoles`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -102,34 +103,33 @@ async function cargarRoles() {
             }
         });
 
-        if (!response.ok) {
-            throw new Error('Error al cargar roles');
-        }
+        if (!rolesResponse.ok) throw new Error('Error al cargar roles');
+        const roles = await rolesResponse.json();
 
-        const roles = await response.json();
-        console.log('Roles cargados:', roles);
+        // Para cada rol, obtenemos sus permisos
+        const rolesConPermisos = await Promise.all(roles.map(async (rol) => {
+            const permisosResponse = await fetch(`${API_URL}/api/Roles/obtener-permisos-del-rol/${rol.rolId}`);
+            if (permisosResponse.ok) {
+                const permisos = await permisosResponse.json();
+                return { ...rol, permisos };
+            }
+            return rol;
+        }));
 
-        // Solo seleccionar el tbody de la tabla de roles
         const tbody = document.querySelector('#tablaRoles tbody');
-
-        if (!tbody) {
-            throw new Error('No se encontró el tbody de la tabla de roles');
-        }
-
-        // Solo limpiar el contenido del tbody
         tbody.innerHTML = '';
 
-        // Agregar las filas al tbody
-        roles.forEach(rol => {
+        // Renderizar los roles con sus permisos
+        rolesConPermisos.forEach(rol => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${rol.nombreRol || ''}</td>
-                <td>${rol.descripcionRol || ''}</td>
+                <td>${rol.nombreRol}</td>
+                <td>${rol.descripcionRol || '-'}</td>
                 <td>
-                    ${rol.rolPermiso && rol.rolPermiso.length > 0 ?
-                    rol.rolPermiso.map(p => `
-                            <span class="badge bg-primary me-1">${p.permiso.nombrePermiso}</span>
-                        `).join('')
+                    ${rol.permisos && rol.permisos.length > 0
+                    ? rol.permisos.map(permiso =>
+                        `<span class="badge bg-primary me-1">${permiso.nombrePermiso}</span>`
+                    ).join('')
                     : '<span class="text-muted">Sin permisos</span>'
                 }
                 </td>
@@ -150,6 +150,8 @@ async function cargarRoles() {
         mostrarNotificacion('Error al cargar los roles', 'error');
     }
 }
+
+
 /**
  * Función auxiliar para formatear los permisos de un rol
  * @param {Array} permisos - Array de permisos asociados al rol
@@ -188,6 +190,55 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+// Función para abrir el modal de nuevo rol
+async function abrirModalNuevoRol() {
+    try {
+        console.log('Abriendo modal de nuevo rol...');
+
+        // Cargar los permisos disponibles
+        const response = await fetch(`${API_URL}/api/Permisos/obtener-todos`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar permisos');
+        }
+
+        const permisos = await response.json();
+        console.log('Permisos cargados para el modal:', permisos);
+
+        // Actualizar lista de permisos en el modal
+        const listaPermisos = document.getElementById('listaPermisos');
+        listaPermisos.innerHTML = permisos.map(permiso => `
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" 
+                       value="${permiso.permisoId}" 
+                       id="permiso_${permiso.permisoId}">
+                <label class="form-check-label" for="permiso_${permiso.permisoId}">
+                    ${permiso.nombrePermiso}
+                </label>
+                <small class="text-muted d-block">${permiso.descripcionPermiso || ''}</small>
+            </div>
+        `).join('');
+
+        // Resetear el formulario
+        document.getElementById('formRol').reset();
+        document.getElementById('rolId').value = '0';
+        document.querySelector('#modalNuevoRol .modal-title').textContent = 'Nuevo Rol';
+
+        // Mostrar el modal
+        modalRol.show();
+
+    } catch (error) {
+        console.error('Error al preparar modal de nuevo rol:', error);
+        mostrarNotificacion('Error al cargar los permisos disponibles', 'error');
+    }
+}
+
 // Función para editar rol
 async function editarRol(rolId) {
     try {
@@ -221,38 +272,64 @@ async function editarRol(rolId) {
 // Función para guardar rol
 async function guardarRol() {
     try {
+        // Obtener los valores del formulario
         const rolId = document.getElementById('rolId').value;
-        const esNuevo = rolId === '0';
+        const nombreRol = document.getElementById('nombreRol').value.trim();
+        const descripcionRol = document.getElementById('descripcionRol').value.trim();
+
+        // Validaciones básicas
+        if (!nombreRol) {
+            mostrarNotificacion('El nombre del rol es requerido', 'warning');
+            return;
+        }
+
+        // Obtener permisos seleccionados
+        const permisosSeleccionados = Array.from(
+            document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
 
         const data = {
-            nombreRol: document.getElementById('nombreRol').value,
-            descripcionRol: document.getElementById('descripcionRol').value,
-            permisoIds: Array.from(document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked'))
-                .map(cb => parseInt(cb.value))
+            nombreRol: nombreRol,
+            descripcionRol: descripcionRol,
+            permisoIds: permisosSeleccionados
         };
 
-        const url = esNuevo ? '/api/roles/CrearRoles' : `/api/roles/actualizarRole/${rolId}`;
-        const method = esNuevo ? 'POST' : 'PUT';
+        // Si es edición, agregar el ID
+        if (rolId !== '0') {
+            data.rolId = parseInt(rolId);
+        }
+
+        const url = rolId === '0' ?
+            `${API_URL}/api/Roles/CrearRoles` :
+            `${API_URL}/api/Roles/actualizarRole/${rolId}`;
 
         const response = await fetch(url, {
-            method: method,
+            method: rolId === '0' ? 'POST' : 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(data)
         });
 
-        if (!response.ok) throw new Error('Error al guardar rol');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error al guardar el rol');
+        }
 
-        mostrarNotificacion(esNuevo ? 'Rol creado exitosamente' : 'Rol actualizado exitosamente', 'success');
+        // Cerrar modal y actualizar la tabla
         modalRol.hide();
-        location.reload(); // Recargar página para ver cambios
+        await cargarRoles();
+
+        // Mostrar mensaje de éxito
+        mostrarNotificacion(
+            rolId === '0' ? 'Rol creado exitosamente' : 'Rol actualizado exitosamente',
+            'success'
+        );
     } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion('Error al guardar el rol', 'error');
+        console.error('Error al guardar rol:', error);
+        mostrarNotificacion(error.message || 'Error al guardar el rol', 'error');
     }
 }
-
 // Función para eliminar rol
 async function eliminarRol(rolId) {
     if (!confirm('¿Está seguro de eliminar este rol?')) return;
