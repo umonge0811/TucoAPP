@@ -37,9 +37,23 @@ builder.Services.AddHttpClient<IRolesService, RolesService>(client =>
         new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
+// En Program.cs
+builder.Services.AddHttpClient<IUsuariosService, UsuariosService>(client =>
+{
+    var apiSettings = builder.Configuration.GetSection("ApiSettings").Get<ApiSettings>();
+    var baseUrl = apiSettings?.BaseUrl ??
+        throw new InvalidOperationException("API BaseUrl not configured");
+
+    client.BaseAddress = new Uri(baseUrl);
+    client.DefaultRequestHeaders.Accept.Clear();
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
 // REGISTRO DE SERVICIOS
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRolesService, RolesService>(); // NUEVO
+builder.Services.AddHttpClient<IUsuariosService, UsuariosService>();
 
 // Configuración de autenticación por cookies
 builder.Services.AddAuthentication(options =>

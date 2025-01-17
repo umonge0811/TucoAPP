@@ -1,0 +1,142 @@
+﻿@using GestionLlantera.Web.Models.DTOs
+@model List<UsuarioDTO>
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid px-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Gestión de Usuarios</h2>
+        </div> 
+        <a href="@Url.Action("Crear")" class="btn btn-primary">
+            <i class="bi bi-person-plus"></i> Nuevo Usuario
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- Vista móvil -->
+            <div class="d-block d-md-none">
+                @foreach (var usuario in Model)
+                {
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">@usuario.NombreUsuario</h5>
+                                <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
+                                    @(usuario.Activo ? "Activo" : "Inactivo")
+                                </span>
+                            </div>
+                            <p class="text-muted mb-2">@usuario.Email</p>
+                            <div class="mb-2">
+                                @foreach (var rol in usuario.Roles)
+                                {
+                                    <span class="badge bg-primary me-1">@rol</span>
+                                }
+                            </div>
+                            <div class="btn-group w-100">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
+                                    <i class="bi bi-shield"></i> Roles
+                                </button>
+                                @if (usuario.Activo)
+                                {
+                                    <button class="btn btn-sm btn-outline-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
+                                        <i class="bi bi-person-x"></i> Desactivar
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-success" onclick="activarUsuario(@usuario.UsuarioId)">
+                                        <i class="bi bi-person-check"></i> Activar
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Vista desktop -->
+            <div class="table-responsive d-none d-md-block">
+                <table class="table" id="tablaUsuarios">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="min-width: 150px">Nombre</th>
+                            <th style="min-width: 200px">Email</th>
+                            <th style="min-width: 150px">Roles</th>
+                            <th style="min-width: 100px">Estado</th>
+                            <th style="min-width: 150px">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var usuario in Model)
+                        {
+                            <tr>
+                                <td>@usuario.NombreUsuario</td>
+                                <td>@usuario.Email</td>
+                                <td>
+                                    @foreach (var rol in usuario.Roles)
+                                    {
+                                        <span class="badge bg-primary me-1">@rol</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
+                                        @(usuario.Activo ? "Activo" : "Inactivo")
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editarRoles(@usuario.UsuarioId)">
+                                        <i class="bi bi-shield"></i>
+                                    </button>
+                                    @if (usuario.Activo)
+                                    {
+                                        <button class="btn btn-sm btn-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
+                                            <i class="bi bi-person-x"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-success" onclick="activarUsuario(@usuario.UsuarioId)">
+                                            <i class="bi bi-person-check"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar roles -->
+<div class="modal fade" id="modalRoles" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Editar Roles</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formRoles">
+                    <input type="hidden" id="usuarioId" />
+                    <div id="listaRoles">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarRoles()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/usuarios.js"></script>
+}

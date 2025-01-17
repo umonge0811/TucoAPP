@@ -4,62 +4,50 @@
     Layout = "_Layout";
 }
 
-<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+<div class="container min-vh-100 d-flex align-items-center">
     <div class="row justify-content-center w-100">
-        <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
-            <div class="card border-0 shadow-lg">
+        <div class="col-11 col-sm-8 col-md-6 col-lg-5">
+            <div class="card shadow">
                 <div class="card-header bg-dark text-white py-3">
-                    <h2 class="text-center mb-0 fs-4">@ViewData["Title"]</h2>
+                    <h4 class="text-center mb-0">Iniciar Sesión</h4>
                 </div>
-                <div class="card-body p-4">
-                    <form asp-action="Login" method="post" class="needs-validation" novalidate>
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3" role="alert"></div>
+                <div class="card-body px-4 py-4">
+                    <form asp-action="Login" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                        <!-- Campo Email -->
-                        <div class="form-group mb-4">
-                            <label asp-for="Email" class="form-label fw-semibold">
-                                <i class="bi bi-envelope me-2"></i>Correo Electrónico
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">
+                                <i class="bi bi-envelope-fill me-1"></i> Correo Electrónico
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text bg-dark text-white">
-                                    <i class="bi bi-envelope-fill"></i>
-                                </span>
                                 <input asp-for="Email" class="form-control" placeholder="ejemplo@correo.com" />
                             </div>
-                            <span asp-validation-for="Email" class="text-danger small"></span>
+                            <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
 
-                        <!-- Campo Contraseña -->
-                        <div class="form-group mb-4">
-                            <label asp-for="Contrasena" class="form-label fw-semibold">
-                                <i class="bi bi-lock me-2"></i>Contraseña
+                        <div class="mb-3">
+                            <label asp-for="Contrasena" class="form-label">
+                                <i class="bi bi-lock-fill me-1"></i> Contraseña
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text bg-dark text-white">
-                                    <i class="bi bi-lock-fill"></i>
-                                </span>
-                                <input asp-for="Contrasena" class="form-control" type="password" />
-                                <button class="btn btn-outline-dark" type="button" id="togglePassword">
+                                <input asp-for="Contrasena" type="password" class="form-control" />
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
                             </div>
-                            <span asp-validation-for="Contrasena" class="text-danger small"></span>
+                            <span asp-validation-for="Contrasena" class="text-danger"></span>
                         </div>
 
-                        <!-- Checkbox Recordarme -->
-                        <div class="form-group mb-4">
+                        <div class="mb-3">
                             <div class="form-check">
                                 <input asp-for="RecordarMe" class="form-check-input" />
-                                <label asp-for="RecordarMe" class="form-check-label">
-                                    <i class="bi bi-check2-circle me-2"></i>Recordarme
-                                </label>
+                                <label asp-for="RecordarMe" class="form-check-label">Recordarme</label>
                             </div>
                         </div>
 
-                        <!-- Botón de envío -->
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-dark btn-lg">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                            <button type="submit" class="btn btn-dark">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
                             </button>
                         </div>
                     </form>
@@ -70,22 +58,21 @@
 </div>
 
 @section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <script>
-        // Toggle password visibility
-        document.getElementById('togglePassword').addEventListener('click', function () {
-            const password = document.querySelector('[asp-for="Contrasena"]');
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.querySelector('[asp-for="Contrasena"]');
             const icon = this.querySelector('i');
-            
-            if (password.type === 'password') {
-                password.type = 'text';
-                icon.classList.remove('bi-eye-fill');
-                icon.classList.add('bi-eye-slash-fill');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
             } else {
-                password.type = 'password';
-                icon.classList.remove('bi-eye-slash-fill');
-                icon.classList.add('bi-eye-fill');
+                passwordInput.type = 'password';
+                icon.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
             }
         });
     </script>
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

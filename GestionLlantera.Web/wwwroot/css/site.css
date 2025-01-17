@@ -46,3 +46,50 @@ body {
     border-color: #343a40;
     box-shadow: 0 0 0 0.25rem rgba(52,58,64,.25);
 }
+
+/* Estilos generales */
+body {
+    overflow-x: hidden;
+}
+
+/* Estilos para móvil */
+@media (max-width: 768px) {
+    .navbar .btn-outline-light:focus,
+    .navbar .btn-outline-light:hover {
+        background-color: rgba(255,255,255,0.1);
+    }
+
+    .dropdown-menu {
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    }
+
+    .table-responsive {
+        margin: 0 -0.75rem;
+    }
+}
+
+/* Estilos para la tabla */
+.table-responsive {
+    border-radius: 0.25rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.table th {
+    white-space: nowrap;
+    background-color: #343a40;
+    color: white;
+}
+
+/* Estilos para el formulario de login */
+.card.shadow {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+
+.input-group .btn-outline-secondary {
+    border-color: #ced4da;
+}
+
+    .input-group .btn-outline-secondary:hover {
+        background-color: #f8f9fa;
+    }

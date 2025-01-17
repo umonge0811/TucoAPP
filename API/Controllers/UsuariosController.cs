@@ -141,13 +141,13 @@ public class UsuariosController : ControllerBase
         var usuarios = await _context.Usuarios
             .Select(u => new
             {
-                u.NombreUsuario, // Nombre del usuario
-                u.Email,         // Correo del usuario
-                u.Activo         // Estado de activación del usuario
+                u.UsuarioId,     // Agregamos el ID
+                u.NombreUsuario,
+                u.Email,
+                u.Activo
             })
             .ToListAsync();
 
-        // Retornar la lista de usuarios como una respuesta exitosa
         return Ok(usuarios);
     }
     #endregion
