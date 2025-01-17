@@ -9,8 +9,8 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Gestión de Usuarios</h2>
-        </div> 
-        <a href="@Url.Action("Crear")" class="btn btn-primary">
+        </div>
+        <a href="@Url.Action("Crear", "Usuarios")" class="btn btn-primary">
             <i class="bi bi-person-plus"></i> Nuevo Usuario
         </a>
     </div>
@@ -138,5 +138,7 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="~/js/usuarios.js"></script>
 }

@@ -49,22 +49,66 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+       
 
-        public Task<bool> ActivarUsuarioAsync(int id)
+        public async Task<List<RolUsuarioDTO>> ObtenerRolesUsuarioAsync(int usuarioId)
         {
-            throw new NotImplementedException();
+            var response = await _httpClient.GetAsync($"api/Usuarios/usuarios/{usuarioId}/roles");
+            if (!response.IsSuccessStatusCode)
+                throw new Exception("Error al obtener roles del usuario");
+
+            return await response.Content.ReadFromJsonAsync<List<RolUsuarioDTO>>() ?? new List<RolUsuarioDTO>();
         }
 
-        public Task<bool> DesactivarUsuarioAsync(int id)
+        public async Task<bool> AsignarRolesAsync(int usuarioId, List<int> rolesIds)
         {
-            throw new NotImplementedException();
+            var response = await _httpClient.PostAsJsonAsync($"api/Usuarios/usuarios/{usuarioId}/roles", rolesIds);
+            return response.IsSuccessStatusCode;
         }
 
-        public Task<bool> AsignarRolesAsync(int usuarioId, List<int> rolesIds)
+        public async Task<bool> ActivarUsuarioAsync(int usuarioId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // La ruta debe coincidir exactamente con la del Swagger
+                var response = await _httpClient.PostAsync($"api/Usuarios/{usuarioId}/activar", null);
+
+                // Para debug
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error al activar usuario. Status: {response.StatusCode}, Error: {errorContent}");
+                }
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al activar usuario");
+                throw;
+            }
         }
 
-        // Implementa los demás métodos...
+
+        public async Task<bool> DesactivarUsuarioAsync(int usuarioId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"api/Usuarios/{usuarioId}/desactivar", null);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error al desactivar usuario. Status: {response.StatusCode}, Error: {errorContent}");
+                }
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al desactivar usuario");
+                throw;
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Org.BouncyCastle.Pqc.Crypto.Lms;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -56,43 +57,37 @@ namespace GestionLlantera.Web.Controllers
         // Este método se ejecuta cuando el usuario envía el formulario de login
         // POST: /Account/Login
         [HttpPost]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+            if (!ModelState.IsValid)
+                return View(model);
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    return View(model);
-                }
-
-                // Intentar login con la API
                 var (success, token, errorMessage) = await _authService.LoginAsync(model);
 
                 if (success && !string.IsNullOrEmpty(token))
                 {
-                    // Guardar el token en una cookie
-                    var cookieOptions = new CookieOptions
+                    // Guardar el token en una cookie segura
+                    Response.Cookies.Append("JwtToken", token, new CookieOptions
                     {
                         HttpOnly = true,
                         Secure = true,
-                        SameSite = SameSiteMode.Strict,
-                        Expires = DateTime.UtcNow.AddHours(1)
-                    };
-                    Response.Cookies.Append("JwtToken", token, cookieOptions);
+                        SameSite = SameSiteMode.Lax,
+                        Expires = DateTime.Now.AddHours(1)
+                    });
 
                     // Crear los claims para la identidad
-                var claims = new List<Claim>
+                    var claims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.Email, model.Email),
-                    new Claim(ClaimTypes.Name, model.Email), // Usar NombreUsuario en lugar de model.Email
+                    new Claim(ClaimTypes.Name, model.Email),
                     new Claim("JwtToken", token)
-};
+                };
 
-                    // Crear la identidad y el principal
                     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var principal = new ClaimsPrincipal(identity);
 
-                    // Iniciar sesión
                     await HttpContext.SignInAsync(
                         CookieAuthenticationDefaults.AuthenticationScheme,
                         principal,
@@ -102,9 +97,6 @@ namespace GestionLlantera.Web.Controllers
                             ExpiresUtc = DateTime.UtcNow.AddHours(1)
                         });
 
-                    _logger.LogInformation($"Login exitoso para el usuario: {model.Email}");
-
-                    // Redirigir al dashboard
                     return RedirectToAction("Index", "Dashboard");
                 }
 
@@ -113,7 +105,6 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en el proceso de login");
                 ModelState.AddModelError(string.Empty, "Error al procesar el login");
                 return View(model);
             }

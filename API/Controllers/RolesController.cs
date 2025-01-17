@@ -134,7 +134,7 @@ public class RolesController : ControllerBase
     }
     #endregion
 
-    #region Obtener todos los permisos asociados al rol
+    #region Obtener el rol por el numero de id
     [HttpGet("obtener-rol-id/{id}")]
     public async Task<ActionResult> ObtenerRolesPorID(int id)
     {

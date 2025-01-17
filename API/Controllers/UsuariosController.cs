@@ -11,6 +11,7 @@ using tuco.Utilities;
 using Tuco.Clases.DTOs;
 using Tuco.Clases.Enums;
 using Tuco.Clases.Helpers;
+using Tuco.Clases.Models;
 using Tuco.Clases.Models.Password;
 using Tuco.Clases.Utilities;
 using static System.Net.WebRequestMethods;
@@ -131,20 +132,21 @@ public class UsuariosController : ControllerBase
     }
     #endregion
 
-
-
     #region Endpoint para listar todos los usuarios
     [HttpGet("usuarios")]
     public async Task<IActionResult> ObtenerUsuarios()
     {
-        // Consulta a la base de datos para obtener todos los usuarios
+        // Consulta a la base de datos para obtener todos los usuarios con sus roles
         var usuarios = await _context.Usuarios
             .Select(u => new
             {
-                u.UsuarioId,     // Agregamos el ID
+                u.UsuarioId,
                 u.NombreUsuario,
                 u.Email,
-                u.Activo
+                u.Activo,
+                Roles = u.UsuarioRoles
+                        .Select(ur => ur.Rol.NombreRol)
+                        .ToList()
             })
             .ToListAsync();
 
@@ -258,4 +260,205 @@ public class UsuariosController : ControllerBase
     }
     #endregion
 
+    #region Obtener Roles de Usuario
+    /// <summary>
+    /// Endpoint para obtener los roles de un usuario.
+    /// </summary>
+    /// <param name="id">ID del usuario.</param>
+    /// <returns>Lista de roles del usuario.</returns>
+    [HttpGet("usuarios/{id}/roles")]
+    public async Task<IActionResult> ObtenerRolesUsuario(int id)
+    {
+        try
+        {
+            // Obtener los roles disponibles y los asignados al usuario
+            var rolesDisponibles = await _context.Roles.ToListAsync();
+            var rolesUsuario = await _context.UsuarioRoles
+                .Where(ur => ur.UsuarioId == id)
+                .Select(ur => ur.RolId)
+                .ToListAsync();
+
+            var rolesInfo = rolesDisponibles.Select(rol => new
+            {
+                rolId = rol.RolId,
+                nombreRol = rol.NombreRol,
+                asignado = rolesUsuario.Contains(rol.RolId)
+            });
+
+            return Ok(rolesInfo);
+        }
+        catch (Exception ex)
+        {
+            // Registrar error en historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Consulta de Roles",
+                modulo: "Usuarios",
+                detalle: "Error al obtener roles del usuario",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al obtener roles" });
+        }
+    }
+    #endregion
+
+    #region Asignar Roles a Usuario
+    /// <summary>
+    /// Endpoint para asignar roles a un usuario.
+    /// </summary>
+    /// <param name="id">ID del usuario.</param>
+    /// <param name="rolesIds">Lista de IDs de roles a asignar.</param>
+    /// <returns>Confirmación de la asignación de roles o mensaje de error.</returns>
+    [HttpPost("usuarios/{id}/roles")]
+    public async Task<IActionResult> AsignarRoles(int id, [FromBody] List<int> rolesIds)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound(new { Message = "Usuario no encontrado" });
+
+            // Eliminar roles actuales
+            var rolesActuales = await _context.UsuarioRoles
+                .Where(ur => ur.UsuarioId == id)
+                .ToListAsync();
+            _context.UsuarioRoles.RemoveRange(rolesActuales);
+
+            // Asignar nuevos roles
+            foreach (var rolId in rolesIds)
+            {
+                _context.UsuarioRoles.Add(new UsuarioRolRE
+                {
+                    UsuarioId = id,
+                    RolId = rolId
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Registrar en historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Actualización de Roles",
+                modulo: "Usuarios",
+                detalle: $"Se actualizaron los roles del usuario. Roles asignados: {string.Join(", ", rolesIds)}",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Roles actualizados exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Actualización de Roles",
+                modulo: "Usuarios",
+                detalle: "Error al actualizar roles",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al actualizar roles" });
+        }
+    }
+    #endregion
+
+    #region Activar Usuario
+    /// <summary>
+    /// Endpoint para activar un usuario.
+    /// </summary>
+    /// <param name="id">ID del usuario.</param>
+    /// <returns>Confirmación de la activación o mensaje de error.</returns>
+    [HttpPost("usuarios/{id}/activar")]
+    public async Task<IActionResult> ActivarUsuario(int id)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound(new { Message = "Usuario no encontrado" });
+
+            usuario.Activo = true;
+            await _context.SaveChangesAsync();
+
+            // Registrar en historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Activación de Usuario",
+                modulo: "Usuarios",
+                detalle: "Usuario activado exitosamente",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Usuario activado exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Activación de Usuario",
+                modulo: "Usuarios",
+                detalle: "Error al activar usuario",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al activar usuario" });
+        }
+    }
+    #endregion
+
+    #region Desactivar Usuario
+    /// <summary>
+    /// Endpoint para desactivar un usuario.
+    /// </summary>
+    /// <param name="id">ID del usuario.</param>
+    /// <returns>Confirmación de la desactivación o mensaje de error.</returns>
+    [HttpPost("usuarios/{id}/desactivar")]
+    public async Task<IActionResult> DesactivarUsuario(int id)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound(new { Message = "Usuario no encontrado" });
+
+            usuario.Activo = false;
+            await _context.SaveChangesAsync();
+
+            // Registrar en historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Desactivación de Usuario",
+                modulo: "Usuarios",
+                detalle: "Usuario desactivado exitosamente",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Usuario desactivado exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Desactivación de Usuario",
+                modulo: "Usuarios",
+                detalle: "Error al desactivar usuario",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al desactivar usuario" });
+        }
+    }
+    #endregion
 }

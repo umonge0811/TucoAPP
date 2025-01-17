@@ -68,9 +68,11 @@ builder.Services.AddAuthentication(options =>
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(1);
+    options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.Strict;
+    // Esto es importante para prevenir redirects infinitos
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // Configuración de CORS (Cross-Origin Resource Sharing)

@@ -22,6 +22,8 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
+
+
         public async Task<IActionResult> Index()
         {
             try
@@ -50,26 +52,27 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 ViewBag.Roles = await _rolesService.ObtenerTodosLosRoles();
-                return View(new CreateUsuarioDTO());
+                return View();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cargar el formulario de creación");
+                _logger.LogError(ex, "Error al cargar la vista de creación de usuario");
+                TempData["Error"] = "Error al cargar el formulario de creación";
                 return RedirectToAction(nameof(Index));
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> Crear(CreateUsuarioDTO modelo)
+        public async Task<IActionResult> Crear([FromBody] CreateUsuarioDTO modelo)
         {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.Roles = await _rolesService.ObtenerTodosLosRoles();
+                return View(modelo);
+            }
+
             try
             {
-                if (!ModelState.IsValid)
-                {
-                    ViewBag.Roles = await _rolesService.ObtenerTodosLosRoles();
-                    return View(modelo);
-                }
-
                 var resultado = await _usuariosService.CrearUsuarioAsync(modelo);
                 if (resultado)
                 {
@@ -86,6 +89,86 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogError(ex, "Error al crear usuario");
                 TempData["Error"] = "Error al crear el usuario";
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        [HttpGet("roles/{id}")] // Ruta: /Usuarios/roles/{id}
+        public async Task<IActionResult> ObtenerRoles(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Obteniendo roles para usuario {id}");
+                var response = await _usuariosService.ObtenerRolesUsuarioAsync(id);
+                return Ok(new { roles = response }); // Cambiado a Ok() para consistencia
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener roles del usuario");
+                return StatusCode(500, new { error = "Error al obtener roles" });
+            }
+        }
+
+
+        [HttpPost("roles/{id}")] // Ruta: /Usuarios/roles/{id}
+        public async Task<IActionResult> GuardarRoles(int id, [FromBody] List<int> rolesIds)
+        {
+            try
+            {
+                _logger.LogInformation($"Guardando roles para usuario {id}: {string.Join(", ", rolesIds)}");
+                var resultado = await _usuariosService.AsignarRolesAsync(id, rolesIds);
+                if (resultado)
+                {
+                    _logger.LogInformation($"Roles actualizados exitosamente para usuario {id}");
+                    return Ok(new { message = "Roles actualizados exitosamente" });
+                }
+                return BadRequest(new { error = "Error al actualizar roles" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al guardar roles");
+                return StatusCode(500, new { error = "Error al guardar roles" });
+            }
+        }
+
+        [HttpPost("{id}/activar")] // Ruta: /Usuarios/{id}/activar
+        public async Task<IActionResult> Activar(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Activando usuario {id}");
+                var resultado = await _usuariosService.ActivarUsuarioAsync(id);
+                if (resultado)
+                {
+                    _logger.LogInformation($"Usuario {id} activado exitosamente");
+                    return Ok(new { message = "Usuario activado exitosamente" });
+                }
+                return BadRequest(new { error = "Error al activar usuario" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al activar usuario");
+                return StatusCode(500, new { error = "Error al activar usuario" });
+            }
+        }
+
+        [HttpPost("{id}/desactivar")] // Ruta: /Usuarios/{id}/desactivar
+        public async Task<IActionResult> Desactivar(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Desactivando usuario {id}");
+                var resultado = await _usuariosService.DesactivarUsuarioAsync(id);
+                if (resultado)
+                {
+                    _logger.LogInformation($"Usuario {id} desactivado exitosamente");
+                    return Ok(new { message = "Usuario desactivado exitosamente" });
+                }
+                return BadRequest(new { error = "Error al desactivar usuario" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al desactivar usuario");
+                return StatusCode(500, new { error = "Error al desactivar usuario" });
             }
         }
     }
