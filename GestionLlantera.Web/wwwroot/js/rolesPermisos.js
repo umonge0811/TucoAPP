@@ -7,23 +7,6 @@ let modalPermiso = null;
 // Variable global para almacenar la URL base de la API
 const API_URL = 'https://localhost:7273';
 
-//// Esperar a que el documento esté listo
-//document.addEventListener('DOMContentLoaded', function () {
-//    // Inicializar los modales
-//    modalRol = new bootstrap.Modal(document.getElementById('modalNuevoRol'));
-//    modalPermiso = new bootstrap.Modal(document.getElementById('modalNuevoPermiso'));
-
-//    // Cargar datos iniciales
-//    cargarPermisos();
-
-//    // Configurar eventos de los botones guardar
-//    document.getElementById('btnGuardarRol').addEventListener('click', guardarRol);
-//    document.getElementById('btnGuardarPermiso').addEventListener('click', guardarPermiso);
-//});
-
-// wwwroot/js/rolesPermisos.js
-
-
 // Un solo event listener para la inicialización
 document.addEventListener('DOMContentLoaded', async function () {
     // Inicializar modales
@@ -210,12 +193,6 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
-
-//// Inicializar cuando el DOM esté listo
-//document.addEventListener('DOMContentLoaded', () => {
-//    cargarPermisos();
-//    cargarRoles();
-//});
 
 
 // Función para abrir el modal de nuevo rol
@@ -444,12 +421,13 @@ async function eliminarRol(rolId) {
 
             await cargarRoles();
 
-            // Mostrar mensaje de éxito con SweetAlert2
-            await Swal.fire(
-                '¡Eliminado!',
-                'El rol ha sido eliminado.',
-                'success'
-            );
+            await Swal.fire({
+                title: '¡Eliminado!',
+                text: 'El Rol ha sido eliminado.',
+                icon: 'success',
+                timer: 2000, // Tiempo en milisegundos antes de que se cierre automáticamente
+                showConfirmButton: false // Ocultar el botón "OK"
+            });
 
         } catch (error) {
             console.error('Error:', error);
@@ -591,11 +569,13 @@ async function eliminarPermiso(permisoId) {
                 cargarRoles()
             ]);
 
-            await Swal.fire(
-                '¡Eliminado!',
-                'El permiso ha sido eliminado.',
-                'success'
-            );
+            await Swal.fire({
+                title: '¡Eliminado!',
+                text: 'El permiso ha sido eliminado.',
+                icon: 'success',
+                timer: 2000, // Tiempo en milisegundos antes de que se cierre automáticamente
+                showConfirmButton: false // Ocultar el botón "OK"
+            });
         }
     } catch (error) {
         console.error('Error:', error);

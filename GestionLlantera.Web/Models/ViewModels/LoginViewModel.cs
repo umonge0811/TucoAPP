@@ -12,6 +12,8 @@ namespace GestionLlantera.Web.Models.ViewModels
         [Required(ErrorMessage = "La contraseña es requerida")]
         public string Contrasena { get; set; } = string.Empty;
 
+        public string nombre { get; set; }
+
         public bool RecordarMe { get; set; }
         public ClaimsIdentity? NombreUsuario { get; internal set; }
     }
