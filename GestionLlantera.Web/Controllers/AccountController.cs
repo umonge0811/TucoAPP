@@ -84,7 +84,7 @@ namespace GestionLlantera.Web.Controllers
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Email, model.Email),
-                    new Claim(ClaimTypes.Name, model.nombre), // Usar NombreUsuario en lugar de model.Email
+                    new Claim(ClaimTypes.Name, model.Email), // Usar NombreUsuario en lugar de model.Email
                     new Claim("JwtToken", token)
 };
 

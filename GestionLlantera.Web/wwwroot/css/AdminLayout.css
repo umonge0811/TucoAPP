@@ -1,4 +1,4 @@
-﻿/* wwwroot/css/AdminLayout.css */
+﻿/* Estilos para el sidebar principal */
 #sidebar {
     min-height: 100vh;
     background: #343a40;
@@ -7,15 +7,13 @@
     position: fixed;
     left: 0;
     top: 0;
-    z-index: 1050;
-    transition: transform 0.3s ease-in-out;
+    transition: all 0.3s;
 }
 
-/* Área de contenido */
+/* Área de contenido - ajustado al sidebar */
 #content {
     margin-left: 250px;
     transition: all 0.3s;
-    min-height: 100vh;
 }
 
 /* Encabezado del sidebar */
@@ -28,25 +26,23 @@
 /* Navegación del sidebar */
 .sidebar-nav {
     padding: 20px 0;
-    overflow-y: auto;
-    height: calc(100vh - 80px); /* Altura total menos el header */
 }
 
-    /* Enlaces del sidebar */
+    /* Estilos generales para enlaces del sidebar */
     .sidebar-nav .nav-link {
         color: #fff;
         padding: 10px 20px;
         transition: all 0.3s;
         opacity: 0.8;
-        white-space: nowrap;
     }
 
+        /* Efecto hover en los enlaces */
         .sidebar-nav .nav-link:hover {
             background: #2c3136;
             opacity: 1;
         }
 
-/* Submenú */
+/* Estilos para el submenú de configuración */
 .submenu {
     background: rgba(0,0,0,0.1);
 }
@@ -56,7 +52,7 @@
         font-size: 0.9em;
     }
 
-/* Ítem activo */
+/* Estilo para ítem activo */
 .nav-link.active {
     background: #2c3136;
     opacity: 1;
@@ -66,65 +62,4 @@
 .top-navbar {
     background: #343a40;
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding: 0.5rem 1rem;
-}
-
-/* Media queries para móviles */
-@media (max-width: 768px) {
-    #sidebar {
-        transform: translateX(-250px); /* Inicialmente oculto */
-    }
-
-        #sidebar.active {
-            transform: translateX(0); /* Visible cuando está activo */
-        }
-
-    #content {
-        margin-left: 0;
-    }
-
-        #content.active {
-            margin-left: 250px;
-        }
-
-    /* Estilos para el botón toggle */
-    #sidebarToggle {
-        position: fixed;
-        left: 10px;
-        top: 10px;
-        z-index: 1060;
-        background: transparent;
-        border: none;
-        padding: 10px;
-    }
-
-        #sidebarToggle i {
-            font-size: 24px;
-            color: white;
-        }
-
-    /* Ajustar navbar en móviles */
-    .navbar {
-        padding-left: 50px; /* Espacio para el botón toggle */
-    }
-}
-
-/* Ajustes para tablets */
-@media (min-width: 769px) and (max-width: 1024px) {
-    #sidebar {
-        width: 200px;
-    }
-
-    #content {
-        margin-left: 200px;
-    }
-
-    .sidebar-nav .nav-link {
-        padding: 8px 15px;
-        font-size: 0.9em;
-    }
-
-    .submenu .nav-link {
-        padding-left: 30px;
-    }
 }
