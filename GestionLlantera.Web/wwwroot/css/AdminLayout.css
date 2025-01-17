@@ -1,34 +1,30 @@
-﻿/* Estilos para el sidebar principal */
+﻿/* Estilos base */
+#wrapper {
+    min-height: 100vh;
+    display: flex;
+}
+
 #sidebar {
+    width: 250px;
     min-height: 100vh;
     background: #343a40;
     color: #fff;
-    width: 250px;
+    transition: all 0.3s;
     position: fixed;
-    left: 0;
-    top: 0;
-    transition: all 0.3s;
+    height: 100%;
+    z-index: 1000;
 }
 
-/* Área de contenido - ajustado al sidebar */
-#content {
-    margin-left: 250px;
-    transition: all 0.3s;
-}
-
-/* Encabezado del sidebar */
 .sidebar-header {
     padding: 20px;
     background: #2c3136;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-/* Navegación del sidebar */
 .sidebar-nav {
     padding: 20px 0;
 }
 
-    /* Estilos generales para enlaces del sidebar */
     .sidebar-nav .nav-link {
         color: #fff;
         padding: 10px 20px;
@@ -36,13 +32,11 @@
         opacity: 0.8;
     }
 
-        /* Efecto hover en los enlaces */
         .sidebar-nav .nav-link:hover {
             background: #2c3136;
             opacity: 1;
         }
 
-/* Estilos para el submenú de configuración */
 .submenu {
     background: rgba(0,0,0,0.1);
 }
@@ -52,14 +46,110 @@
         font-size: 0.9em;
     }
 
-/* Estilo para ítem activo */
 .nav-link.active {
     background: #2c3136;
     opacity: 1;
 }
 
-/* Barra superior */
+#content {
+    flex: 1;
+    margin-left: 250px;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
 .top-navbar {
     background: #343a40;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
+
+    .top-navbar .nav-link {
+        color: #fff;
+    }
+
+/* Responsive styles */
+@media (max-width: 767.98px) {
+    #sidebar {
+        margin-left: -250px;
+    }
+
+    #content {
+        margin-left: 0;
+        padding-top: 56px; /* Altura del navbar móvil */
+    }
+
+    .offcanvas {
+        width: 250px;
+    }
+
+    .navbar-toggler {
+        padding: .25rem .5rem;
+        font-size: 1rem;
+    }
+}
+
+/* Tablets */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    #sidebar {
+        width: 200px;
+    }
+
+    #content {
+        margin-left: 200px;
+    }
+
+    .sidebar-nav .nav-link {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+}
+
+/* Ajustes para pantallas más pequeñas */
+@media (max-width: 575.98px) {
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+/* Estilos para el modo oscuro del sidebar móvil */
+.offcanvas.bg-dark {
+    background-color: #343a40 !important;
+}
+
+.offcanvas .nav-link {
+    color: rgba(255,255,255,.8);
+}
+
+    .offcanvas .nav-link:hover {
+        color: #fff;
+        background: rgba(255,255,255,.1);
+    }
+
+/* Estilos para el navbar y dropdown */
+.top-navbar .dropdown-toggle::after {
+    color: white;
+}
+
+.top-navbar .dropdown-menu {
+    margin-top: 0.5rem;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.nav-link:hover {
+    opacity: 0.8;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+}
+
+    .dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .dropdown-item.text-danger:hover {
+        background-color: #dc3545;
+        color: white !important;
+    }

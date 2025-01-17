@@ -20,3 +20,29 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Estilos para el login */
+.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+}
+
+.btn-dark {
+    background-color: #343a40;
+    border-color: #343a40;
+    transition: all 0.3s ease;
+}
+
+    .btn-dark:hover {
+        background-color: #23272b;
+        border-color: #1d2124;
+        transform: translateY(-1px);
+    }
+
+.input-group-text {
+    border: 1px solid #ced4da;
+}
+
+.form-control:focus {
+    border-color: #343a40;
+    box-shadow: 0 0 0 0.25rem rgba(52,58,64,.25);
+}
