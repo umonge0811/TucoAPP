@@ -7,21 +7,49 @@ let modalPermiso = null;
 // Variable global para almacenar la URL base de la API
 const API_URL = 'https://localhost:7273';
 
-// Esperar a que el documento esté listo
-document.addEventListener('DOMContentLoaded', function () {
-    // Inicializar los modales
+//// Esperar a que el documento esté listo
+//document.addEventListener('DOMContentLoaded', function () {
+//    // Inicializar los modales
+//    modalRol = new bootstrap.Modal(document.getElementById('modalNuevoRol'));
+//    modalPermiso = new bootstrap.Modal(document.getElementById('modalNuevoPermiso'));
+
+//    // Cargar datos iniciales
+//    cargarPermisos();
+
+//    // Configurar eventos de los botones guardar
+//    document.getElementById('btnGuardarRol').addEventListener('click', guardarRol);
+//    document.getElementById('btnGuardarPermiso').addEventListener('click', guardarPermiso);
+//});
+
+// wwwroot/js/rolesPermisos.js
+
+
+// Un solo event listener para la inicialización
+document.addEventListener('DOMContentLoaded', async function () {
+    // Inicializar modales
     modalRol = new bootstrap.Modal(document.getElementById('modalNuevoRol'));
     modalPermiso = new bootstrap.Modal(document.getElementById('modalNuevoPermiso'));
 
-    // Cargar datos iniciales
-    cargarPermisos();
-
-    // Configurar eventos de los botones guardar
+    // Configurar eventos de los botones
     document.getElementById('btnGuardarRol').addEventListener('click', guardarRol);
     document.getElementById('btnGuardarPermiso').addEventListener('click', guardarPermiso);
-});
 
-// wwwroot/js/rolesPermisos.js
+    // Configurar eventos de los tabs
+    const configTabs = document.querySelectorAll('a[data-bs-toggle="tab"]');
+    configTabs.forEach(tab => {
+        tab.addEventListener('shown.bs.tab', async (event) => {
+            const targetTab = event.target.getAttribute('href');
+            if (targetTab === '#roles') {
+                await cargarRoles();
+            } else if (targetTab === '#permisos') {
+                await cargarPermisos();
+            }
+        });
+    });
+
+    // Cargar datos iniciales
+    await Promise.all([cargarPermisos(), cargarRoles()]);
+});
 
 // Función asíncrona para cargar los permisos desde la API
 async function cargarPermisos() {
@@ -183,11 +211,11 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    cargarPermisos();
-    cargarRoles();
-});
+//// Inicializar cuando el DOM esté listo
+//document.addEventListener('DOMContentLoaded', () => {
+//    cargarPermisos();
+//    cargarRoles();
+//});
 
 
 // Función para abrir el modal de nuevo rol
@@ -489,13 +517,15 @@ async function guardarPermiso() {
             throw new Error(errorData.message || 'Error al guardar el permiso');
         }
 
-        // Cerrar modal y recargar permisos
+        // Cerrar modal y recargar ambas tablas
         modalPermiso.hide();
-        await cargarPermisos();
-        
-        // Mostrar mensaje de éxito
+        await Promise.all([
+            cargarPermisos(),
+            cargarRoles() // Agregar esta línea
+        ]);
+
         mostrarNotificacion(
-            permisoId === '0' ? 'Permiso creado exitosamente' : 'Permiso actualizado exitosamente', 
+            permisoId === '0' ? 'Permiso creado exitosamente' : 'Permiso actualizado exitosamente',
             'success'
         );
 
@@ -555,8 +585,13 @@ async function eliminarPermiso(permisoId) {
                 throw new Error('Error al eliminar el permiso');
             }
 
-            await cargarPermisos();
-            Swal.fire(
+            // Recargar ambas tablas
+            await Promise.all([
+                cargarPermisos(),
+                cargarRoles()
+            ]);
+
+            await Swal.fire(
                 '¡Eliminado!',
                 'El permiso ha sido eliminado.',
                 'success'
@@ -564,11 +599,7 @@ async function eliminarPermiso(permisoId) {
         }
     } catch (error) {
         console.error('Error:', error);
-        Swal.fire(
-            'Error',
-            error.message || 'Error al eliminar el permiso',
-            'error'
-        );
+        Swal.fire('Error', error.message || 'Error al eliminar el permiso', 'error');
     }
 }
 
