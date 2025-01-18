@@ -11,34 +11,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-    @* Estilos para el footer fijo *@
-    <style>
-        /* Aseguramos que el html y body ocupen todo el alto disponible */
-        html, body {
-            height: 100%;
-            margin: 0;
-        }
-
-        /* Contenedor principal que envuelve todo el contenido */
-        .page-container {
-            min-height: 100vh; /* Viewport height al 100% */
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* El contenido principal ocupará todo el espacio disponible */
-        .content-wrap {
-            flex: 1 0 auto; /* Permite que el contenido crezca pero no se encoja */
-        }
-
-        /* Footer siempre al final */
-        .footer {
-            flex-shrink: 0; /* Evita que el footer se encoja */
-            background-color: #f8f9fa;
-            padding: 1rem 0;
-            margin-top: auto; /* Empuja el footer al final */
-        }
-    </style>
+   
 </head>
 <body>
     @* Contenedor principal que envolverá todo *@
@@ -87,7 +60,7 @@
         @* Footer *@
         <footer class="footer border-top">
             <div class="container text-center">
-                &copy; 2025 - Llantera
+                &copy; 2025 - Llantera Tuco
             </div>
         </footer>
     </div>
