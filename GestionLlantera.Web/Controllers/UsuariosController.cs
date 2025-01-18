@@ -22,20 +22,12 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
-
-
         public async Task<IActionResult> Index()
         {
             try
             {
-                // Agrega log para debug
-                _logger.LogInformation("Intentando obtener lista de usuarios");
-
+                _logger.LogInformation("Obteniendo lista de usuarios");
                 var usuarios = await _usuariosService.ObtenerTodosAsync();
-
-                // Log del resultado
-                _logger.LogInformation($"Se obtuvieron {usuarios.Count} usuarios");
-
                 return View(usuarios);
             }
             catch (Exception ex)
@@ -52,12 +44,12 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 ViewBag.Roles = await _rolesService.ObtenerTodosLosRoles();
-                return View();
+                return View(new CreateUsuarioDTO());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cargar la vista de creación de usuario");
-                TempData["Error"] = "Error al cargar el formulario de creación";
+                _logger.LogError(ex, "Error al cargar la vista de creación");
+                TempData["Error"] = "Error al cargar el formulario";
                 return RedirectToAction(nameof(Index));
             }
         }
@@ -67,8 +59,7 @@ namespace GestionLlantera.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = await _rolesService.ObtenerTodosLosRoles();
-                return View(modelo);
+                return BadRequest(ModelState);
             }
 
             try
@@ -76,30 +67,24 @@ namespace GestionLlantera.Web.Controllers
                 var resultado = await _usuariosService.CrearUsuarioAsync(modelo);
                 if (resultado)
                 {
-                    TempData["Success"] = "Usuario creado exitosamente";
-                    return RedirectToAction(nameof(Index));
+                    return Ok(new { message = "Usuario creado exitosamente" });
                 }
-
-                ModelState.AddModelError("", "Error al crear el usuario");
-                ViewBag.Roles = await _rolesService.ObtenerTodosLosRoles();
-                return View(modelo);
+                return BadRequest(new { message = "Error al crear el usuario" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear usuario");
-                TempData["Error"] = "Error al crear el usuario";
-                return RedirectToAction(nameof(Index));
+                return StatusCode(500, "Error interno del servidor");
             }
         }
 
-        [HttpGet("roles/{id}")] // Ruta: /Usuarios/roles/{id}
+        [HttpGet("roles/{id}")]
         public async Task<IActionResult> ObtenerRoles(int id)
         {
             try
             {
-                _logger.LogInformation($"Obteniendo roles para usuario {id}");
-                var response = await _usuariosService.ObtenerRolesUsuarioAsync(id);
-                return Ok(new { roles = response }); // Cambiado a Ok() para consistencia
+                var roles = await _usuariosService.ObtenerRolesUsuarioAsync(id);
+                return Ok(new { roles = roles });
             }
             catch (Exception ex)
             {
@@ -108,19 +93,19 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-
-        [HttpPost("roles/{id}")] // Ruta: /Usuarios/roles/{id}
+        [HttpPost("roles/{id}")]
         public async Task<IActionResult> GuardarRoles(int id, [FromBody] List<int> rolesIds)
         {
             try
             {
                 _logger.LogInformation($"Guardando roles para usuario {id}: {string.Join(", ", rolesIds)}");
                 var resultado = await _usuariosService.AsignarRolesAsync(id, rolesIds);
+
                 if (resultado)
                 {
-                    _logger.LogInformation($"Roles actualizados exitosamente para usuario {id}");
                     return Ok(new { message = "Roles actualizados exitosamente" });
                 }
+
                 return BadRequest(new { error = "Error al actualizar roles" });
             }
             catch (Exception ex)
@@ -130,18 +115,19 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpPost("{id}/activar")] // Ruta: /Usuarios/{id}/activar
+        [HttpPost("{id}/activar")]
         public async Task<IActionResult> Activar(int id)
         {
             try
             {
                 _logger.LogInformation($"Activando usuario {id}");
                 var resultado = await _usuariosService.ActivarUsuarioAsync(id);
+
                 if (resultado)
                 {
-                    _logger.LogInformation($"Usuario {id} activado exitosamente");
                     return Ok(new { message = "Usuario activado exitosamente" });
                 }
+
                 return BadRequest(new { error = "Error al activar usuario" });
             }
             catch (Exception ex)
@@ -151,18 +137,19 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpPost("{id}/desactivar")] // Ruta: /Usuarios/{id}/desactivar
+        [HttpPost("{id}/desactivar")]
         public async Task<IActionResult> Desactivar(int id)
         {
             try
             {
                 _logger.LogInformation($"Desactivando usuario {id}");
                 var resultado = await _usuariosService.DesactivarUsuarioAsync(id);
+
                 if (resultado)
                 {
-                    _logger.LogInformation($"Usuario {id} desactivado exitosamente");
                     return Ok(new { message = "Usuario desactivado exitosamente" });
                 }
+
                 return BadRequest(new { error = "Error al desactivar usuario" });
             }
             catch (Exception ex)
@@ -173,3 +160,4 @@ namespace GestionLlantera.Web.Controllers
         }
     }
 }
+

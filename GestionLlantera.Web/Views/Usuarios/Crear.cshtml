@@ -1,23 +1,41 @@
 ﻿@using GestionLlantera.Web.Models.DTOs
-@model CreateUsuarioDTO
-@{
-    ViewData["Title"] = "Crear Usuario";
-    Layout = "_AdminLayout";
+@model GestionLlantera.Web.Models.DTOs.CreateUsuarioDTO
+
+{
+
+    ViewData
+[
+"Title"
+]
+ 
+=
+ 
+"Crear Usuario"
+;
+
+    Layout 
+=
+ 
+"_AdminLayout"
+;
+
 }
 
-<div class="container-fluid px-3">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Crear Nuevo Usuario</h2>
-        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
-    </div>
 
+<div class="container-fluid">
     <div class="row">
-        <div class="col-12 col-md-8 col-lg-6">
-            <div class="card shadow-sm">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Crear Nuevo Usuario</h5>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
                 <div class="card-body">
-                    <form asp-action="Crear" method="post">
+                    <form id="createUserForm" method="post">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                         <div class="mb-3">
@@ -35,24 +53,119 @@
                         <div class="mb-3">
                             <label class="form-label">Roles</label>
                             <div class="border rounded p-3">
-                                @foreach (var rol in (List<RoleDTO>)ViewBag.Roles)
-                                {
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input"
-                                               name="RolesIds" value="@rol.RolId"
-                                               id="rol_@rol.RolId" />
-                                        <label class="form-check-label" for="rol_@rol.RolId">
-                                            @rol.NombreRol
-                                        </label>
-                                    </div>
-                                }
+                                
+@foreach
+ 
+(
+var
+ rol 
+in
+ 
+(
+List
+<
+RoleDTO
+>
+)
+ViewBag
+.
+Roles
+)
+
+                                
+{
+
+                                    
+<
+div
+ 
+class
+=
+"
+form-check
+"
+>
+
+                                        
+<
+input
+ 
+type
+=
+"
+checkbox
+"
+ 
+class
+=
+"
+form-check-input
+"
+
+                                               
+name
+=
+"
+RolesIds
+"
+ 
+value
+=
+"
+@rol.RolId
+"
+
+                                               
+id
+=
+"
+rol_@rol.RolId
+"
+ 
+/>
+
+                                        
+<
+label
+ 
+class
+=
+"
+form-check-label
+"
+ 
+for
+=
+"
+rol_@rol.RolId
+"
+>
+
+                                            
+@rol
+.
+NombreRol
+
+                                        
+</
+label
+>
+
+                                    
+</
+div
+>
+
+                                
+}
+
                             </div>
                             <span asp-validation-for="RolesIds" class="text-danger"></span>
                         </div>
 
-                        <div class="d-grid gap-2">
+                        <div class="text-end">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-person-plus"></i> Crear Usuario
+                                <i class="bi bi-save"></i> Guardar
                             </button>
                         </div>
                     </form>
@@ -63,7 +176,52 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    
+@{
+await
+ Html
+.
+RenderPartialAsync
+(
+"_ValidationScriptsPartial"
+)
+;
+}
+
+    
+    <script>
+        document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                nombreUsuario: document.querySelector('[name="NombreUsuario"]').value,
+                email: document.querySelector('[name="Email"]').value,
+                rolesIds: Array.from(document.querySelectorAll('input[name="RolesIds"]:checked'))
+                    .map(cb => parseInt(cb.value))
+            };
+
+            try {
+                const response = await fetch('@Url.Action("Crear", "Usuarios")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    toastr.success('Usuario creado exitosamente');
+                    setTimeout(() => {
+                        window.location.href = '@Url.Action("Index", "Usuarios")';
+                    }, 1500);
+                } else {
+                    const error = await response.text();
+                    toastr.error('Error al crear usuario: ' + error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                toastr.error('Error al crear usuario');
+            }
+        });
+    </script>
 }

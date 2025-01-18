@@ -1,8 +1,12 @@
-﻿// Variables globales
+﻿// Variable global para almacenar la URL base de la API
+const API_URL = 'https://localhost:7273';
+
+// Variables globales
 let modalRoles = null;
 
 // Inicialización cuando el documento está listo
 document.addEventListener('DOMContentLoaded', function () {
+    // Inicializar modal de roles
     modalRoles = new bootstrap.Modal(document.getElementById('modalRoles'));
 
     // Configurar toastr
@@ -17,80 +21,64 @@ document.addEventListener('DOMContentLoaded', function () {
 // Función para editar roles
 async function editarRoles(usuarioId) {
     try {
-        console.log('Obteniendo roles para usuario:', usuarioId);
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Cargando roles...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
-        const response = await fetch(`/Usuarios/roles/${usuarioId}`, {
+        // Realizar la petición para obtener roles del usuario
+        const response = await fetch(`${API_URL}/api/Usuarios/usuarios/${usuarioId}/roles`, {
             method: 'GET',
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || 'Error al obtener roles');
+            throw new Error('Error al obtener roles');
         }
 
-        const data = await response.json();
-        console.log('Roles obtenidos:', data);
+        const rolesData = await response.json();
 
+        // Actualizar el ID del usuario en el modal
         document.getElementById('usuarioId').value = usuarioId;
 
+        // Generar HTML para los checkboxes de roles
         const listaRoles = document.getElementById('listaRoles');
-        listaRoles.innerHTML = data.roles.map(rol => `
-            <div class="form-check mb-2">
+        listaRoles.innerHTML = rolesData.roles.map(rol => `
+            <div class="form-check">
                 <input class="form-check-input" type="checkbox" 
-                       value="${rol.rolId}" id="rol_${rol.rolId}"
+                       value="${rol.rolId}" 
+                       id="rol_${rol.rolId}"
                        ${rol.asignado ? 'checked' : ''}>
                 <label class="form-check-label" for="rol_${rol.rolId}">
                     ${rol.nombreRol}
                 </label>
+                <small class="text-muted d-block">${rol.descripcionRol || ''}</small>
             </div>
         `).join('');
 
+        // Cerrar el indicador de carga
+        Swal.close();
+
+        // Mostrar el modal
         const modalRoles = new bootstrap.Modal(document.getElementById('modalRoles'));
         modalRoles.show();
+
     } catch (error) {
         console.error('Error:', error);
-        toastr.error('Error al cargar los roles');
-    }
-}
-
-// Función para guardar roles
-async function guardarRoles() {
-    try {
-        const usuarioId = document.getElementById('usuarioId').value;
-        const rolesSeleccionados = Array.from(
-            document.querySelectorAll('#listaRoles input[type="checkbox"]:checked')
-        ).map(cb => parseInt(cb.value));
-
-        console.log('Guardando roles para usuario:', usuarioId, rolesSeleccionados);
-
-        const response = await fetch(`/Usuarios/roles/${usuarioId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(rolesSeleccionados)
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudieron cargar los roles'
         });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText || 'Error al guardar roles');
-        }
-
-        const modalRoles = bootstrap.Modal.getInstance(document.getElementById('modalRoles'));
-        modalRoles.hide();
-
-        toastr.success('Roles actualizados exitosamente');
-        setTimeout(() => location.reload(), 1000);
-    } catch (error) {
-        console.error('Error:', error);
-        toastr.error('Error al guardar los roles');
     }
 }
-
 // Función para activar usuario
 async function activarUsuario(usuarioId) {
     try {
@@ -105,19 +93,16 @@ async function activarUsuario(usuarioId) {
         });
 
         if (result.isConfirmed) {
-            console.log('Activando usuario:', usuarioId);
-
-            const response = await fetch(`/Usuarios/${usuarioId}/activar`, {
+            const response = await fetch(`${API_URL}/api/Usuarios/usuarios/${usuarioId}/activar`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Error al activar usuario');
+                throw new Error('Error al activar usuario');
             }
 
             toastr.success('Usuario activado exitosamente');
@@ -128,7 +113,6 @@ async function activarUsuario(usuarioId) {
         toastr.error('Error al activar el usuario');
     }
 }
-
 
 // Función para desactivar usuario
 async function desactivarUsuario(usuarioId) {
@@ -144,19 +128,16 @@ async function desactivarUsuario(usuarioId) {
         });
 
         if (result.isConfirmed) {
-            console.log('Desactivando usuario:', usuarioId);
-
-            const response = await fetch(`/Usuarios/${usuarioId}/desactivar`, {
+            const response = await fetch(`${API_URL}/api/Usuarios/usuarios/${usuarioId}/desactivar`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Error al desactivar usuario');
+                throw new Error('Error al desactivar usuario');
             }
 
             toastr.success('Usuario desactivado exitosamente');
@@ -165,5 +146,50 @@ async function desactivarUsuario(usuarioId) {
     } catch (error) {
         console.error('Error:', error);
         toastr.error('Error al desactivar el usuario');
+    }
+}
+
+// Función para guardar roles
+async function guardarRoles() {
+    try {
+        const usuarioId = document.getElementById('usuarioId').value;
+        const rolesSeleccionados = Array.from(
+            document.querySelectorAll('#listaRoles input[type="checkbox"]:checked')
+        ).map(cb => parseInt(cb.value));
+
+        const response = await fetch(`${API_URL}/api/Usuarios/usuarios/${usuarioId}/roles`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(rolesSeleccionados)
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al guardar roles');
+        }
+
+        // Cerrar el modal
+        const modalRoles = bootstrap.Modal.getInstance(document.getElementById('modalRoles'));
+        modalRoles.hide();
+
+        // Mostrar mensaje de éxito
+        Swal.fire({
+            icon: 'success',
+            title: 'Roles actualizados',
+            text: 'Los roles se han actualizado correctamente'
+        });
+
+        // Recargar la página después de un breve momento
+        setTimeout(() => location.reload(), 1500);
+
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudieron guardar los cambios en los roles'
+        });
     }
 }

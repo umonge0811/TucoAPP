@@ -1,5 +1,7 @@
 ﻿using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
+using System.Text.Json;
+using System.Text;
 
 namespace GestionLlantera.Web.Services
 {
@@ -7,26 +9,28 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<UsuariosService> _logger;
+        private readonly JsonSerializerOptions _jsonOptions;
 
         public UsuariosService(HttpClient httpClient, ILogger<UsuariosService> logger)
         {
             _httpClient = httpClient;
             _logger = logger;
+            _jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
         }
 
         public async Task<List<UsuarioDTO>> ObtenerTodosAsync()
         {
             try
             {
-                // Asegurémonos de que la ruta coincida con el endpoint de la API
                 var response = await _httpClient.GetAsync("api/Usuarios/usuarios");
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError($"Error al obtener usuarios. Status code: {response.StatusCode}");
-                    throw new Exception($"Error al obtener usuarios. Status code: {response.StatusCode}");
-                }
+                response.EnsureSuccessStatusCode();
 
-                var usuarios = await response.Content.ReadFromJsonAsync<List<UsuarioDTO>>();
+                var content = await response.Content.ReadAsStringAsync();
+                var usuarios = JsonSerializer.Deserialize<List<UsuarioDTO>>(content, _jsonOptions);
+
                 return usuarios ?? new List<UsuarioDTO>();
             }
             catch (Exception ex)
@@ -40,7 +44,10 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/usuarios/registrar-usuario", usuario);
+                var json = JsonSerializer.Serialize(usuario);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/usuarios/registrar-usuario", content);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -49,37 +56,48 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
-       
 
         public async Task<List<RolUsuarioDTO>> ObtenerRolesUsuarioAsync(int usuarioId)
         {
-            var response = await _httpClient.GetAsync($"api/Usuarios/usuarios/{usuarioId}/roles");
-            if (!response.IsSuccessStatusCode)
-                throw new Exception("Error al obtener roles del usuario");
+            try
+            {
+                var response = await _httpClient.GetAsync($"api/Usuarios/usuarios/{usuarioId}/roles");
+                response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<List<RolUsuarioDTO>>() ?? new List<RolUsuarioDTO>();
+                var content = await response.Content.ReadAsStringAsync();
+                var roles = JsonSerializer.Deserialize<List<RolUsuarioDTO>>(content, _jsonOptions);
+
+                return roles ?? new List<RolUsuarioDTO>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener roles del usuario");
+                throw;
+            }
         }
 
         public async Task<bool> AsignarRolesAsync(int usuarioId, List<int> rolesIds)
         {
-            var response = await _httpClient.PostAsJsonAsync($"api/Usuarios/usuarios/{usuarioId}/roles", rolesIds);
-            return response.IsSuccessStatusCode;
+            try
+            {
+                var json = JsonSerializer.Serialize(rolesIds);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync($"api/Usuarios/usuarios/{usuarioId}/roles", content);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al asignar roles");
+                throw;
+            }
         }
 
-        public async Task<bool> ActivarUsuarioAsync(int usuarioId)
+        public async Task<bool> ActivarUsuarioAsync(int id)
         {
             try
             {
-                // La ruta debe coincidir exactamente con la del Swagger
-                var response = await _httpClient.PostAsync($"api/Usuarios/{usuarioId}/activar", null);
-
-                // Para debug
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"Error al activar usuario. Status: {response.StatusCode}, Error: {errorContent}");
-                }
-
+                var response = await _httpClient.PostAsync($"api/Usuarios/usuarios/{id}/activar", null);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -89,19 +107,11 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-
-        public async Task<bool> DesactivarUsuarioAsync(int usuarioId)
+        public async Task<bool> DesactivarUsuarioAsync(int id)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"api/Usuarios/{usuarioId}/desactivar", null);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"Error al desactivar usuario. Status: {response.StatusCode}, Error: {errorContent}");
-                }
-
+                var response = await _httpClient.PostAsync($"api/Usuarios/usuarios/{id}/desactivar", null);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)

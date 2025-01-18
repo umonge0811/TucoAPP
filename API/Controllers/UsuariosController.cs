@@ -282,10 +282,11 @@ public class UsuariosController : ControllerBase
             {
                 rolId = rol.RolId,
                 nombreRol = rol.NombreRol,
+                descripcionRol = rol.DescripcionRol, // Añadimos la descripción del rol
                 asignado = rolesUsuario.Contains(rol.RolId)
             });
 
-            return Ok(rolesInfo);
+            return Ok(new { roles = rolesInfo }); // Envolvemos en un objeto con propiedad 'roles'
         }
         catch (Exception ex)
         {

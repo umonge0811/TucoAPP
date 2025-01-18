@@ -7,21 +7,6 @@ let modalPermiso = null;
 // Variable global para almacenar la URL base de la API
 const API_URL = 'https://localhost:7273';
 
-//// Esperar a que el documento esté listo
-//document.addEventListener('DOMContentLoaded', function () {
-//    // Inicializar los modales
-//    modalRol = new bootstrap.Modal(document.getElementById('modalNuevoRol'));
-//    modalPermiso = new bootstrap.Modal(document.getElementById('modalNuevoPermiso'));
-
-//    // Cargar datos iniciales
-//    cargarPermisos();
-
-//    // Configurar eventos de los botones guardar
-//    document.getElementById('btnGuardarRol').addEventListener('click', guardarRol);
-//    document.getElementById('btnGuardarPermiso').addEventListener('click', guardarPermiso);
-//});
-
-// wwwroot/js/rolesPermisos.js
 
 
 // Un solo event listener para la inicialización
