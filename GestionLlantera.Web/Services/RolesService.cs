@@ -17,10 +17,21 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync("/api/Roles/ObtenerTodosRoles");
-                response.EnsureSuccessStatusCode();
+                _logger.LogInformation($"URL Base del cliente: {_httpClient.BaseAddress}");
+
+                // La URL debe coincidir con el endpoint en la API
+                var response = await _httpClient.GetAsync("api/Roles/ObtenerTodosRoles");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error de la API: {error}");
+                    throw new Exception($"Error al obtener roles. Status: {response.StatusCode}");
+                }
 
                 var roles = await response.Content.ReadFromJsonAsync<List<RoleDTO>>();
+                _logger.LogInformation($"Roles obtenidos: {roles?.Count ?? 0}");
+
                 return roles ?? new List<RoleDTO>();
             }
             catch (Exception ex)

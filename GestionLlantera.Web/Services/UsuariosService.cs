@@ -2,6 +2,7 @@
 using GestionLlantera.Web.Services.Interfaces;
 using System.Text.Json;
 using System.Text;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GestionLlantera.Web.Services
 {
@@ -39,6 +40,8 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+
+       
 
         public async Task<bool> CrearUsuarioAsync(CreateUsuarioDTO usuario)
         {

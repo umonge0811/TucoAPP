@@ -22,7 +22,7 @@ namespace GestionLlantera.Web.Models.DTOs
         [EmailAddress(ErrorMessage = "El formato del correo no es válido")]
         public string Email { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar al menos un rol")]
-        public List<int> RolesIds { get; set; } = new List<int>();
+        [Required(ErrorMessage = "Debe seleccionar un rol")]
+        public int RolId { get; set; }
     }
 }

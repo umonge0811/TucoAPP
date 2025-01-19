@@ -28,8 +28,8 @@ builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
 builder.Services.AddHttpClient<IRolesService, RolesService>(client =>
 {
     var apiSettings = builder.Configuration.GetSection("ApiSettings").Get<ApiSettings>();
-    var baseUrl = apiSettings?.BaseUrl ??
-        throw new InvalidOperationException("API BaseUrl not configured");
+    var baseUrl = apiSettings?.BaseUrl ?? 
+    throw new InvalidOperationException("API BaseUrl not configured");
 
     client.BaseAddress = new Uri(baseUrl);
     client.DefaultRequestHeaders.Accept.Clear();

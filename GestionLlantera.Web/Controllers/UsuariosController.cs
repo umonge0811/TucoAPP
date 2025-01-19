@@ -22,6 +22,34 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
+        public async Task<IActionResult> CrearUsuario()
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando carga de roles...");
+
+                // Intenta obtener los roles
+                var roles = await _rolesService.ObtenerTodosLosRoles();
+
+                _logger.LogInformation($"Roles obtenidos: {roles.Count}");
+
+                ViewBag.Roles = roles;
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error detallado al cargar la vista de creación");
+                // En lugar de redireccionar, mostremos la vista sin roles para depurar
+                ViewBag.Roles = new List<RoleDTO>();
+                return View();
+            }
+        }
+
+        //public IActionResult CrearUsuario()
+        //{
+        //    return View();
+        //}
+
         public async Task<IActionResult> Index()
         {
             try
