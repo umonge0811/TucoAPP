@@ -7,5 +7,11 @@ namespace GestionLlantera.Web.Services.Interfaces
     {
         // Método para hacer login
         Task<(bool Success, string? Token, string? ErrorMessage)> LoginAsync(LoginViewModel model);
+
+        // Nuevos métodos
+        Task<bool> CheckUsuarioActivo(string token);
+        Task<bool> ActivarCuenta(string token);
+        Task<bool> RegenerarToken(string token);
+        Task<bool> CambiarContrasena(string token, string nuevaContrasena);
     }
 }

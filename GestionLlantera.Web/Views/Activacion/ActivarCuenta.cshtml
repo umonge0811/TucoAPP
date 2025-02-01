@@ -1,0 +1,111 @@
+﻿@using GestionLlantera.Web.Models.ViewModels
+<!-- Views/Activacion/ActivarCuenta.cshtml -->
+@model ActivacionCuentaViewModel
+@{
+    ViewData["Title"] = "Activación de Cuenta";
+    Layout = "_Layout";
+}
+
+<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="card shadow-lg col-11 col-md-6 col-lg-4">
+        <div class="card-header bg-primary text-white text-center py-3">
+            <h4 class="mb-0">Activación de Cuenta</h4>
+        </div>
+
+        <div class="card-body p-4">
+            @if (Model.TokenExpirado)
+            {
+                <!-- Sección para token expirado -->
+                <div class="text-center">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        El enlace de activación ha expirado
+                    </div>
+                    <button id="btnSolicitarToken" class="btn btn-primary mt-3">
+                        <i class="bi bi-arrow-repeat me-2"></i>
+                        Solicitar Nuevo Token
+                    </button>
+                </div>
+            }
+            else
+            {
+                <!-- Formulario de activación -->
+                <form asp-action="ActivarCuenta" method="post">
+                    <input type="hidden" asp-for="Token" />
+
+                    <div class="mb-3">
+                        <label asp-for="NuevaContrasena" class="form-label">Nueva Contraseña</label>
+                        <div class="input-group">
+                            <input asp-for="NuevaContrasena" class="form-control" type="password" />
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('NuevaContrasena')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="NuevaContrasena" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ConfirmarContrasena" class="form-label">Confirmar Contraseña</label>
+                        <div class="input-group">
+                            <input asp-for="ConfirmarContrasena" class="form-control" type="password" />
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('ConfirmarContrasena')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Activar Cuenta
+                        </button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // Función para mostrar/ocultar contraseña
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = event.currentTarget.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('bi-eye', 'bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('bi-eye-slash', 'bi-eye');
+            }
+        }
+
+        // Manejar solicitud de nuevo token
+        document.getElementById('btnSolicitarToken')?.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/auth/regenerar-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify('@Model.Token')
+                });
+
+                if (response.ok) {
+                    toastr.success('Se ha enviado un nuevo enlace de activación a su correo.');
+                } else {
+                    toastr.error('Error al solicitar nuevo token. Por favor, intente más tarde.');
+                }
+            } catch (error) {
+                toastr.error('Error al procesar la solicitud.');
+            }
+        });
+    </script>
+}

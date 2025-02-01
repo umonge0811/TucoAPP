@@ -3,6 +3,11 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Win32;
+using Org.BouncyCastle.Math;
+using Microsoft.Extensions.DependencyInjection;
+using tuco.Clases.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,20 +29,21 @@ builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
         new MediaTypeWithQualityHeaderValue("application/json"));
 });
 
-// 2. Servicio de Roles (NUEVO)
-builder.Services.AddHttpClient<IRolesService, RolesService>(client =>
+// Configuración del HttpClient
+// Configuración centralizada del HttpClient
+builder.Services.AddHttpClient("APIClient", (serviceProvider, client) =>
 {
-    var apiSettings = builder.Configuration.GetSection("ApiSettings").Get<ApiSettings>();
-    var baseUrl = apiSettings?.BaseUrl ?? 
-    throw new InvalidOperationException("API BaseUrl not configured");
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+var baseUrl = configuration.GetValue<string>("ApiSettings:BaseUrl")
+    ?? throw new InvalidOperationException("API BaseUrl not configured");
 
-    client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Clear();
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
+client.BaseAddress = new Uri(baseUrl);
+client.DefaultRequestHeaders.Accept.Clear();
+client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// En Program.cs
+
 builder.Services.AddHttpClient<IUsuariosService, UsuariosService>(client =>
 {
     var apiSettings = builder.Configuration.GetSection("ApiSettings").Get<ApiSettings>();

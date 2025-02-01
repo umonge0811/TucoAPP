@@ -22,34 +22,40 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
         public async Task<IActionResult> CrearUsuario()
         {
             try
             {
-                _logger.LogInformation("Iniciando carga de roles...");
-
-                // Intenta obtener los roles
                 var roles = await _rolesService.ObtenerTodosLosRoles();
+                _logger.LogInformation($"Roles cargados: {roles.Count}");
 
-                _logger.LogInformation($"Roles obtenidos: {roles.Count}");
+                // Verificar explícitamente que hay datos
+                if (roles != null && roles.Any())
+                {
+                    foreach (var rol in roles)
+                    {
+                        _logger.LogInformation($"Rol: {rol.NombreRol}");
+                    }
+                    ViewBag.Roles = roles;
+                }
+                else
+                {
+                    _logger.LogWarning("No se obtuvieron roles de la API");
+                    ViewBag.Roles = new List<RoleDTO>();
+                }
 
-                ViewBag.Roles = roles;
                 return View();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error detallado al cargar la vista de creación");
-                // En lugar de redireccionar, mostremos la vista sin roles para depurar
+                _logger.LogError(ex, "Error al cargar roles");
                 ViewBag.Roles = new List<RoleDTO>();
                 return View();
             }
         }
 
-        //public IActionResult CrearUsuario()
-        //{
-        //    return View();
-        //}
-
+       
         public async Task<IActionResult> Index()
         {
             try
@@ -66,24 +72,9 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Crear()
-        {
-            try
-            {
-                ViewBag.Roles = await _rolesService.ObtenerTodosLosRoles();
-                return View(new CreateUsuarioDTO());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al cargar la vista de creación");
-                TempData["Error"] = "Error al cargar el formulario";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
+       
         [HttpPost]
-        public async Task<IActionResult> Crear([FromBody] CreateUsuarioDTO modelo)
+        public async Task<IActionResult> CrearUsuario([FromBody] CreateUsuarioDTO modelo)
         {
             if (!ModelState.IsValid)
             {
@@ -105,6 +96,7 @@ namespace GestionLlantera.Web.Controllers
                 return StatusCode(500, "Error interno del servidor");
             }
         }
+
 
         [HttpGet("roles/{id}")]
         public async Task<IActionResult> ObtenerRoles(int id)

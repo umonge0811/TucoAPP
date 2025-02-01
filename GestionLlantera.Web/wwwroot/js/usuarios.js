@@ -192,4 +192,51 @@ async function guardarRoles() {
             text: 'No se pudieron guardar los cambios en los roles'
         });
     }
+
+    const response = await fetch('@Url.Action("CrearUsuario", "Usuarios")', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    });
+
+    // Evento para crear usuario
+    document.addEventListener('DOMContentLoaded', function () {
+        const createUserForm = document.getElementById('createUserForm');
+        if (createUserForm) {
+            createUserForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                try {
+                    const formData = {
+                        nombreUsuario: document.getElementById('NombreUsuario').value,
+                        email: document.getElementById('Email').value,
+                        rolId: parseInt(document.getElementById('RolId').value)
+                    };
+
+                    const response = await fetch('/Usuarios/CrearUsuario', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    if (response.ok) {
+                        toastr.success('Usuario creado exitosamente. Se ha enviado un correo para activar la cuenta.');
+                        setTimeout(() => {
+                            window.location.href = '/Usuarios';
+                        }, 3000);
+                    } else {
+                        const error = await response.json();
+                        toastr.error(error.message || 'Error al crear el usuario');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    toastr.error('Error al procesar la solicitud');
+                }
+            });
+        }
+    });
 }

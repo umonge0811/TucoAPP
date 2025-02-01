@@ -1,15 +1,16 @@
 ﻿using GestionLlantera.Web.Services.Interfaces;
+using tuco.Clases.Models;
 
 namespace GestionLlantera.Web.Services
 {
     public class RolesService : IRolesService
     {
-        private readonly HttpClient _httpClient;
+        private readonly IHttpClientFactory _clientFactory;
         private readonly ILogger<RolesService> _logger;
 
-        public RolesService(HttpClient httpClient, ILogger<RolesService> logger)
+        public RolesService(IHttpClientFactory clientFactory, ILogger<RolesService> logger)
         {
-            _httpClient = httpClient;
+            _clientFactory = clientFactory;
             _logger = logger;
         }
 
@@ -17,20 +18,14 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation($"URL Base del cliente: {_httpClient.BaseAddress}");
+                var client = _clientFactory.CreateClient("APIClient");
+                _logger.LogInformation($"Obteniendo roles desde: {client.BaseAddress}api/Roles/ObtenerTodosRoles");
 
-                // La URL debe coincidir con el endpoint en la API
-                var response = await _httpClient.GetAsync("api/Roles/ObtenerTodosRoles");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"Error de la API: {error}");
-                    throw new Exception($"Error al obtener roles. Status: {response.StatusCode}");
-                }
+                var response = await client.GetAsync("/api/Roles/ObtenerTodosRoles");
+                response.EnsureSuccessStatusCode();
 
                 var roles = await response.Content.ReadFromJsonAsync<List<RoleDTO>>();
-                _logger.LogInformation($"Roles obtenidos: {roles?.Count ?? 0}");
+                _logger.LogInformation($"Roles obtenidos exitosamente: {roles?.Count ?? 0}");
 
                 return roles ?? new List<RoleDTO>();
             }

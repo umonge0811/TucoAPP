@@ -2,14 +2,12 @@
 @{
     ViewData["Title"] = "Crear Usuario";
     Layout = "_AdminLayout";
-    var roles = ViewBag.Roles as List<RoleDTO> ?? new List<RoleDTO>();
 }
-
 <div class="container-fluid">
     <h2>Crear Usuario</h2>
     <div class="card">
         <div class="card-body">
-            <form asp-action="Crear">
+            <form id="createUserForm">
                 <div class="mb-3">
                     <label asp-for="NombreUsuario" class="control-label">Nombre Usuario</label>
                     <input asp-for="NombreUsuario" class="form-control" />
@@ -23,14 +21,30 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="control-label">Rol</label>
-                    <select name="RolId" class="form-select" asp-items="@(new SelectList(roles, "RolId", "NombreRol"))">
-                        <option value="">-- Seleccione un rol --</option>
-                    </select>
+                    <label class="form-label">Rol</label>
+                    @{
+                        var roles = ViewBag.Roles as List<RoleDTO>;
+                    }
+                    @if (roles != null && roles.Any())
+                    {
+                        <select name="RolId" id="RolId" class="form-select">
+                            <option value="">-- Seleccione un rol --</option>
+                            @foreach (var rol in roles)
+                            {
+                                <option value="@rol.RolId">@rol.NombreRol</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            No hay roles disponibles. Por favor, cree roles primero.
+                        </div>
+                    }
                 </div>
 
                 <div class="mb-3">
-                    <input type="submit" value="Crear" class="btn btn-primary" />
+                    <button type="submit" class="btn btn-primary">Crear</button>
                     <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
                 </div>
             </form>
@@ -42,4 +56,5 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="~/js/usuarios.js"></script>
 }
