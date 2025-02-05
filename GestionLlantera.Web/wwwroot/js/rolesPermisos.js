@@ -43,7 +43,7 @@ async function cargarPermisos() {
         console.log('Iniciando carga de permisos...');
 
         // Realizar la petición GET a la API
-        const response = await fetch('https://localhost:7273/api/Permisos/obtener-todos', {
+        const response = await fetch(`${API_URL}/api/Permisos/obtener-todos`, {
             method: 'GET',
             headers: {
                 // Especificar que aceptamos JSON como respuesta
@@ -296,8 +296,8 @@ async function editarRol(rolId) {
             const estaAsignado = permisosRol.some(p => p.permisoId === permiso.permisoId);
             return `
                 <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox" 
-                           value="${permiso.permisoId}" 
+                    <input class="form-check-input" type="checkbox"
+                           value="${permiso.permisoId}"
                            id="permiso_${permiso.permisoId}"
                            ${estaAsignado ? 'checked' : ''}>
                     <label class="form-check-label" for="permiso_${permiso.permisoId}">
@@ -319,6 +319,8 @@ async function editarRol(rolId) {
         mostrarNotificacion('Error al cargar los datos del rol', 'error');
     }
 }
+
+
 // Función para guardar rol
 // Y mejoramos la función de guardar rol
 async function guardarRol() {

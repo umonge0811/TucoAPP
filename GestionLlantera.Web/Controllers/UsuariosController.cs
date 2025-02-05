@@ -72,110 +72,116 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-       
+
         [HttpPost]
         public async Task<IActionResult> CrearUsuario([FromBody] CreateUsuarioDTO modelo)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             try
             {
+                // Validación básica
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Llamada al servicio para crear el usuario
                 var resultado = await _usuariosService.CrearUsuarioAsync(modelo);
+
                 if (resultado)
                 {
-                    return Ok(new { message = "Usuario creado exitosamente" });
+                    // Si la creación fue exitosa
+                    return Ok(new
+                    {
+                        message = "Usuario creado exitosamente. Se ha enviado un correo de activación."
+                    });
                 }
-                return BadRequest(new { message = "Error al crear el usuario" });
+
+                // Si hubo un error en la creación
+                return BadRequest(new
+                {
+                    message = "No se pudo crear el usuario. Por favor, intente nuevamente."
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear usuario");
-                return StatusCode(500, "Error interno del servidor");
+                _logger.LogError(ex, "Error al crear usuario: {Email}", modelo.Email);
+                return StatusCode(500, new
+                {
+                    message = "Error interno del servidor al crear el usuario"
+                });
             }
         }
 
 
-        [HttpGet("roles/{id}")]
-        public async Task<IActionResult> ObtenerRoles(int id)
+        /// <summary>
+        /// Obtiene los roles asignados y disponibles para un usuario específico
+        /// </summary>
+        /// <param name="id">ID del usuario</param>
+        [HttpGet]
+        public async Task<IActionResult> ObtenerRolesUsuario(int id)
         {
             try
             {
+                // Obtener roles mediante el servicio
                 var roles = await _usuariosService.ObtenerRolesUsuarioAsync(id);
                 return Ok(new { roles = roles });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener roles del usuario");
-                return StatusCode(500, new { error = "Error al obtener roles" });
+                _logger.LogError(ex, "Error al obtener roles del usuario {Id}", id);
+                return StatusCode(500, new { message = "Error al obtener roles" });
             }
         }
 
-        [HttpPost("roles/{id}")]
+
+        [HttpPost]
         public async Task<IActionResult> GuardarRoles(int id, [FromBody] List<int> rolesIds)
         {
             try
             {
-                _logger.LogInformation($"Guardando roles para usuario {id}: {string.Join(", ", rolesIds)}");
                 var resultado = await _usuariosService.AsignarRolesAsync(id, rolesIds);
-
-                if (resultado)
-                {
-                    return Ok(new { message = "Roles actualizados exitosamente" });
-                }
-
-                return BadRequest(new { error = "Error al actualizar roles" });
+                return resultado
+                    ? Ok(new { message = "Roles actualizados exitosamente" })
+                    : BadRequest(new { message = "Error al actualizar roles" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al guardar roles");
-                return StatusCode(500, new { error = "Error al guardar roles" });
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
 
-        [HttpPost("{id}/activar")]
-        public async Task<IActionResult> Activar(int id)
+        [HttpPost]
+        public async Task<IActionResult> ActivarUsuario(int id)
         {
             try
             {
-                _logger.LogInformation($"Activando usuario {id}");
                 var resultado = await _usuariosService.ActivarUsuarioAsync(id);
-
-                if (resultado)
-                {
-                    return Ok(new { message = "Usuario activado exitosamente" });
-                }
-
-                return BadRequest(new { error = "Error al activar usuario" });
+                return resultado
+                    ? Ok(new { message = "Usuario activado exitosamente" })
+                    : BadRequest(new { message = "Error al activar usuario" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al activar usuario");
-                return StatusCode(500, new { error = "Error al activar usuario" });
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
 
-        [HttpPost("{id}/desactivar")]
-        public async Task<IActionResult> Desactivar(int id)
+        [HttpPost]
+        public async Task<IActionResult> DesactivarUsuario(int id)
         {
             try
             {
-                _logger.LogInformation($"Desactivando usuario {id}");
                 var resultado = await _usuariosService.DesactivarUsuarioAsync(id);
-
-                if (resultado)
-                {
-                    return Ok(new { message = "Usuario desactivado exitosamente" });
-                }
-
-                return BadRequest(new { error = "Error al desactivar usuario" });
+                return resultado
+                    ? Ok(new { message = "Usuario desactivado exitosamente" })
+                    : BadRequest(new { message = "Error al desactivar usuario" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al desactivar usuario");
-                return StatusCode(500, new { error = "Error al desactivar usuario" });
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
     }

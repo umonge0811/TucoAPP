@@ -11,8 +11,10 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<UsuariosService> _logger;
         private readonly JsonSerializerOptions _jsonOptions;
+        private readonly IConfiguration _configuration;
+        private readonly string _apiUrl;
 
-        public UsuariosService(HttpClient httpClient, ILogger<UsuariosService> logger)
+        public UsuariosService(HttpClient httpClient, ILogger<UsuariosService> logger, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _logger = logger;
@@ -20,7 +22,10 @@ namespace GestionLlantera.Web.Services
             {
                 PropertyNameCaseInsensitive = true
             };
+            _configuration = configuration;
+            _apiUrl = _configuration["ApiSettings:BaseUrl"]; // Obtiene la URL de la configuración
         }
+        
 
         public async Task<List<UsuarioDTO>> ObtenerTodosAsync()
         {
@@ -41,22 +46,32 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-       
 
-        public async Task<bool> CrearUsuarioAsync(CreateUsuarioDTO usuario)
+
+        public async Task<bool> CrearUsuarioAsync(CreateUsuarioDTO modelo)
         {
             try
             {
-                var json = JsonSerializer.Serialize(usuario);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsJsonAsync("api/usuarios/registrar-usuario", modelo);
 
-                var response = await _httpClient.PostAsync("api/usuarios/registrar-usuario", content);
-                return response.IsSuccessStatusCode;
+                // Log de la respuesta para diagnóstico
+                var contenido = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta de la API: {Contenido}", contenido);
+
+                // Verificar si la petición fue exitosa
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+
+                _logger.LogWarning("Error al crear usuario. Código: {StatusCode}, Respuesta: {Respuesta}",
+                    response.StatusCode, contenido);
+                return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear usuario");
-                throw;
+                _logger.LogError(ex, "Error al crear usuario con email: {Email}", modelo.Email);
+                return false;
             }
         }
 
@@ -83,16 +98,15 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var json = JsonSerializer.Serialize(rolesIds);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PostAsync($"api/Usuarios/usuarios/{usuarioId}/roles", content);
+                var response = await _httpClient.PostAsJsonAsync(
+                    $"api/Usuarios/usuarios/{usuarioId}/roles",
+                    rolesIds);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al asignar roles");
-                throw;
+                _logger.LogError(ex, "Error en llamada a API");
+                return false;
             }
         }
 
@@ -123,5 +137,7 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+
+        
     }
 }

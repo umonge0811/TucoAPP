@@ -26,5 +26,7 @@ namespace Tuco.Clases.DTOs
         /// Estado activo del usuario (opcional).
         /// </summary>
         public bool? Activo { get; set; } = false;
+
+        public int RolId { get; set; }
     }
 }

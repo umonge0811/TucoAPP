@@ -1,5 +1,7 @@
 ﻿// Variable global para almacenar la URL base de la API
 const API_URL = 'https://localhost:7273';
+console.log('Archivo usuarios.js cargado');
+console.log('API_URL:', API_URL);
 
 // Variables globales
 let modalRoles = null;
@@ -18,10 +20,13 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 });
 
-// Función para editar roles
+/**
+* Función para cargar y editar roles de un usuario
+* Ahora adaptada para usar el controlador web en lugar de la API directamente
+*/
 async function editarRoles(usuarioId) {
     try {
-        // Mostrar indicador de carga
+        // Mostrar indicador de carga con SweetAlert2
         Swal.fire({
             title: 'Cargando roles...',
             allowOutsideClick: false,
@@ -30,47 +35,49 @@ async function editarRoles(usuarioId) {
             }
         });
 
-        // Realizar la petición para obtener roles del usuario
-        const response = await fetch(`${API_URL}/api/Usuarios/usuarios/${usuarioId}/roles`, {
+        // Petición al controlador web para obtener roles
+        const response = await fetch(`/Usuarios/ObtenerRolesUsuario?id=${usuarioId}`, {
             method: 'GET',
             headers: {
-                'Accept': 'application/json',
                 'Content-Type': 'application/json'
             }
         });
 
+        // Verificar respuesta
         if (!response.ok) {
             throw new Error('Error al obtener roles');
         }
 
+        // Procesar datos de roles recibidos
         const rolesData = await response.json();
 
-        // Actualizar el ID del usuario en el modal
+        // Actualizar ID del usuario en el modal para referencia
         document.getElementById('usuarioId').value = usuarioId;
 
-        // Generar HTML para los checkboxes de roles
+        // Generar HTML para los checkboxes de roles dinámicamente
         const listaRoles = document.getElementById('listaRoles');
         listaRoles.innerHTML = rolesData.roles.map(rol => `
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" 
-                       value="${rol.rolId}" 
-                       id="rol_${rol.rolId}"
-                       ${rol.asignado ? 'checked' : ''}>
-                <label class="form-check-label" for="rol_${rol.rolId}">
-                    ${rol.nombreRol}
-                </label>
-                <small class="text-muted d-block">${rol.descripcionRol || ''}</small>
-            </div>
-        `).join('');
+           <div class="form-check">
+               <input class="form-check-input" type="checkbox"
+                      value="${rol.rolId}"
+                      id="rol_${rol.rolId}"
+                      ${rol.asignado ? 'checked' : ''}>
+               <label class="form-check-label" for="rol_${rol.rolId}">
+                   ${rol.nombreRol}
+               </label>
+               <small class="text-muted d-block">${rol.descripcionRol || ''}</small>
+           </div>
+       `).join('');
 
-        // Cerrar el indicador de carga
+        // Cerrar indicador de carga
         Swal.close();
 
-        // Mostrar el modal
+        // Mostrar modal de edición de roles
         const modalRoles = new bootstrap.Modal(document.getElementById('modalRoles'));
         modalRoles.show();
 
     } catch (error) {
+        // Manejo de errores
         console.error('Error:', error);
         Swal.fire({
             icon: 'error',
@@ -79,6 +86,7 @@ async function editarRoles(usuarioId) {
         });
     }
 }
+
 // Función para activar usuario
 async function activarUsuario(usuarioId) {
     try {
@@ -93,17 +101,14 @@ async function activarUsuario(usuarioId) {
         });
 
         if (result.isConfirmed) {
-            const response = await fetch(`${API_URL}/api/Usuarios/usuarios/${usuarioId}/activar`, {
+            const response = await fetch(`/Usuarios/ActivarUsuario?id=${usuarioId}`, {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('Error al activar usuario');
-            }
+            if (!response.ok) throw new Error('Error al activar usuario');
 
             toastr.success('Usuario activado exitosamente');
             setTimeout(() => location.reload(), 1000);
@@ -114,7 +119,6 @@ async function activarUsuario(usuarioId) {
     }
 }
 
-// Función para desactivar usuario
 async function desactivarUsuario(usuarioId) {
     try {
         const result = await Swal.fire({
@@ -128,17 +132,14 @@ async function desactivarUsuario(usuarioId) {
         });
 
         if (result.isConfirmed) {
-            const response = await fetch(`${API_URL}/api/Usuarios/usuarios/${usuarioId}/desactivar`, {
+            const response = await fetch(`/Usuarios/DesactivarUsuario?id=${usuarioId}`, {
                 method: 'POST',
                 headers: {
-                    'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('Error al desactivar usuario');
-            }
+            if (!response.ok) throw new Error('Error al desactivar usuario');
 
             toastr.success('Usuario desactivado exitosamente');
             setTimeout(() => location.reload(), 1000);
@@ -149,7 +150,7 @@ async function desactivarUsuario(usuarioId) {
     }
 }
 
-// Función para guardar roles
+// Función para guardar roles en desde la vista de todos los usuarios
 async function guardarRoles() {
     try {
         const usuarioId = document.getElementById('usuarioId').value;
@@ -157,86 +158,35 @@ async function guardarRoles() {
             document.querySelectorAll('#listaRoles input[type="checkbox"]:checked')
         ).map(cb => parseInt(cb.value));
 
-        const response = await fetch(`${API_URL}/api/Usuarios/usuarios/${usuarioId}/roles`, {
+        const response = await fetch(`/Usuarios/GuardarRoles?id=${usuarioId}`, {
             method: 'POST',
             headers: {
-                'Accept': 'application/json',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(rolesSeleccionados)
         });
 
-        if (!response.ok) {
-            throw new Error('Error al guardar roles');
-        }
+        if (!response.ok) throw new Error('Error al guardar roles');
 
-        // Cerrar el modal
-        const modalRoles = bootstrap.Modal.getInstance(document.getElementById('modalRoles'));
+        const result = await response.json();
+
         modalRoles.hide();
 
-        // Mostrar mensaje de éxito
         Swal.fire({
             icon: 'success',
             title: 'Roles actualizados',
-            text: 'Los roles se han actualizado correctamente'
+            text: result.message
         });
 
-        // Recargar la página después de un breve momento
         setTimeout(() => location.reload(), 1500);
-
     } catch (error) {
-        console.error('Error:', error);
+        console.error(error);
         Swal.fire({
             icon: 'error',
             title: 'Error',
             text: 'No se pudieron guardar los cambios en los roles'
         });
     }
-
-    const response = await fetch('@Url.Action("CrearUsuario", "Usuarios")', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-    });
-
-    // Evento para crear usuario
-    document.addEventListener('DOMContentLoaded', function () {
-        const createUserForm = document.getElementById('createUserForm');
-        if (createUserForm) {
-            createUserForm.addEventListener('submit', async function (e) {
-                e.preventDefault();
-
-                try {
-                    const formData = {
-                        nombreUsuario: document.getElementById('NombreUsuario').value,
-                        email: document.getElementById('Email').value,
-                        rolId: parseInt(document.getElementById('RolId').value)
-                    };
-
-                    const response = await fetch('/Usuarios/CrearUsuario', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(formData)
-                    });
-
-                    if (response.ok) {
-                        toastr.success('Usuario creado exitosamente. Se ha enviado un correo para activar la cuenta.');
-                        setTimeout(() => {
-                            window.location.href = '/Usuarios';
-                        }, 3000);
-                    } else {
-                        const error = await response.json();
-                        toastr.error(error.message || 'Error al crear el usuario');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    toastr.error('Error al procesar la solicitud');
-                }
-            });
-        }
-    });
 }
+    
+

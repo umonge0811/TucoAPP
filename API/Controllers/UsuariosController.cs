@@ -26,13 +26,17 @@ public class UsuariosController : ControllerBase
     private readonly TucoContext _context;
     private readonly EmailService _emailService;
     private HttpClient _httpClient;
+    private readonly ILogger<UsuariosController> _logger;
+    private readonly IConfiguration _configuration;
 
 
-    public UsuariosController(TucoContext context, EmailService emailService, IHttpClientFactory httpClientFactory)
+    public UsuariosController(TucoContext context, EmailService emailService, IHttpClientFactory httpClientFactory, ILogger<UsuariosController> logger, IConfiguration configuration)
     {
         _context = context;
         _emailService = emailService; // Inyectar EmailService
         _httpClient = httpClientFactory.CreateClient("TucoApi");
+        _logger = logger;
+        _configuration = configuration;
     }
 
 
@@ -52,10 +56,9 @@ public class UsuariosController : ControllerBase
             var existeUsuario = await _context.Usuarios.AnyAsync(u => u.Email == request.Email);
             if (existeUsuario)
             {
-                // Registrar historial de error por intento de registro fallido
                 await HistorialHelper.RegistrarHistorial(
-                    httpClient: _httpClient, // Cliente HTTP inicializado
-                    usuarioId: 0, // No hay usuario creado todavía
+                    httpClient: _httpClient,
+                    usuarioId: 0,
                     tipoAccion: "Registro",
                     modulo: "Usuarios",
                     detalle: $"Intento de registro fallido. Email: {request.Email} ya está registrado.",
@@ -66,31 +69,63 @@ public class UsuariosController : ControllerBase
                 return BadRequest(new { Message = "El email ya está registrado." });
             }
 
-            // Crear un token único para activación usando el método centralizado
+            // Crear token de activación
             var tokenActivacion = TokenHelper.GenerarToken();
 
-            // Crear una nueva instancia del usuario
+            // Crear usuario
             var usuario = new Usuario
-
             {
                 NombreUsuario = request.NombreUsuario,
                 Email = request.Email,
-                Contrasena = HashContrasena.HashearContrasena(Guid.NewGuid().ToString()), // Contraseña temporal hasheada
+                Contrasena = HashContrasena.HashearContrasena(Guid.NewGuid().ToString()), // Contraseña temporal
                 FechaCreacion = DateTime.Now,
-                Activo = false, // Cuenta desactivada por defecto
-                Token = tokenActivacion, // Asignar el token de activación
-                PropositoToken = PropositoTokenEnum.ActivarCuenta, // Usar Enum para propósito del token
-                FechaExpiracionToken = DateTime.Now.AddMinutes(30) // Expiración del token
+                Activo = false,
+                Token = tokenActivacion,
+                PropositoToken = PropositoTokenEnum.ActivarCuenta,
+                FechaExpiracionToken = DateTime.Now.AddMinutes(30)
             };
 
-            // Guardar el nuevo usuario en la base de datos
-            _context.Usuarios.Add(usuario);
-            await _context.SaveChangesAsync();
+            // Agregar usuario y rol en una transacción
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // Guardar usuario
+                    _context.Usuarios.Add(usuario);
+                    await _context.SaveChangesAsync();
 
-            // Registrar historial de registro exitoso
+                    // Asociar rol al usuario
+                    var usuarioRol = new UsuarioRolRE
+                    {
+                        UsuarioId = usuario.UsuarioId,
+                        RolId = request.RolId
+                    };
+
+                    _context.UsuarioRoles.Add(usuarioRol);
+                    await _context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+
+            // Enviar correo de activación
+            var activationUrl = $"{_configuration["WebAppSettings:BaseUrl"]}/cambiar-contrasena/{tokenActivacion}";
+            var subject = "Activa tu cuenta";
+            var htmlContent = $@"
+            <p>Haz clic en el siguiente enlace para activar tu cuenta y cambiar tu contraseña:</p>
+            <a href='{activationUrl}'>Activar Cuenta</a>";
+
+            await _emailService.EnviarCorreoAsync(usuario.Email, subject, htmlContent);
+
+            // Registrar en historial
             await HistorialHelper.RegistrarHistorial(
                 httpClient: _httpClient,
-                usuarioId: usuario.UsuarioId, // ID del usuario recién creado
+                usuarioId: usuario.UsuarioId,
                 tipoAccion: "Registro",
                 modulo: "Usuarios",
                 detalle: $"Usuario registrado exitosamente. Email: {usuario.Email}",
@@ -98,35 +133,11 @@ public class UsuariosController : ControllerBase
                 propositoToken: PropositoTokenEnum.ActivarCuenta.ToString()
             );
 
-            // Generar enlace de activación con el enlace de ngrok
-            // Generar enlace de activación con la ruta esperada por el Razor Component
-            var activationUrl = $"https://789f-186-26-118-107.ngrok-free.app/cambiar-contrasena/{tokenActivacion}";
-
-            // Contenido del correo
-            var subject = "Activa tu cuenta";
-            var htmlContent = $@"
-            <p>Haz clic en el siguiente enlace para activar tu cuenta y cambiar tu contraseña:</p>
-            <a href='{activationUrl}' style='background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Activar Cuenta</a>
-            ";
-
-            // Enviar el correo de activación
-            await _emailService.EnviarCorreoAsync(usuario.Email, subject, htmlContent);
-
             return Ok(new { Message = "Usuario registrado exitosamente. Revisa tu correo para activar la cuenta." });
         }
         catch (Exception ex)
         {
-            // Registrar historial de error en caso de excepción
-            await HistorialHelper.RegistrarHistorial(
-                httpClient: _httpClient,
-                usuarioId: 0, // No hay usuario creado
-                tipoAccion: "Registro",
-                modulo: "Usuarios",
-                detalle: "Error al registrar usuario.",
-                estadoAccion: "Error",
-                errorDetalle: ex.Message
-            );
-
+            _logger.LogError(ex, "Error al registrar usuario");
             return StatusCode(500, new { Message = $"Error al registrar usuario: {ex.Message}" });
         }
     }

@@ -20,27 +20,20 @@
                     <span asp-validation-for="Email" class="text-danger"></span>
                 </div>
 
+                <!-- En GestionLlantera.Web/Views/Usuarios/CrearUsuario.cshtml -->
                 <div class="mb-3">
-                    <label class="form-label">Rol</label>
-                    @{
-                        var roles = ViewBag.Roles as List<RoleDTO>;
-                    }
-                    @if (roles != null && roles.Any())
-                    {
-                        <select name="RolId" id="RolId" class="form-select">
-                            <option value="">-- Seleccione un rol --</option>
-                            @foreach (var rol in roles)
+                    <label asp-for="RolId" class="control-label">Rol</label>
+                    <select asp-for="RolId" class="form-select" required>
+                        <option value="">-- Seleccione un rol --</option>
+                        @if (ViewBag.Roles != null)
+                        {
+                            foreach (var rol in ViewBag.Roles)
                             {
                                 <option value="@rol.RolId">@rol.NombreRol</option>
                             }
-                        </select>
-                    }
-                    else
-                    {
-                        <div class="alert alert-warning">
-                            No hay roles disponibles. Por favor, cree roles primero.
-                        </div>
-                    }
+                        }
+                    </select>
+                    <span asp-validation-for="RolId" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
