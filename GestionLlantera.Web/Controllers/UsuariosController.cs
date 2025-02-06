@@ -27,35 +27,22 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // Obtener roles usando el servicio
                 var roles = await _rolesService.ObtenerTodosLosRoles();
                 _logger.LogInformation($"Roles cargados: {roles.Count}");
 
-                // Verificar explícitamente que hay datos
-                if (roles != null && roles.Any())
-                {
-                    foreach (var rol in roles)
-                    {
-                        _logger.LogInformation($"Rol: {rol.NombreRol}");
-                    }
-                    ViewBag.Roles = roles;
-                }
-                else
-                {
-                    _logger.LogWarning("No se obtuvieron roles de la API");
-                    ViewBag.Roles = new List<RoleDTO>();
-                }
-
+                // Pasar los roles a la vista usando ViewData o ViewBag
+                ViewBag.Roles = roles;
                 return View();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cargar roles");
-                ViewBag.Roles = new List<RoleDTO>();
-                return View();
+                _logger.LogError(ex, "Error al cargar la vista de crear usuario");
+                TempData["Error"] = "Error al cargar el formulario";
+                return RedirectToAction(nameof(Index));
             }
         }
 
-       
         public async Task<IActionResult> Index()
         {
             try
@@ -139,18 +126,40 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // Log para debugging
+                _logger.LogInformation("Recibiendo solicitud de guardar roles. Usuario: {Id}, Roles: {@RolesIds}",
+                    id, rolesIds);
+
+                // Validaciones
+                if (id <= 0)
+                {
+                    return BadRequest(new { message = "ID de usuario inválido" });
+                }
+
+                if (rolesIds == null || !rolesIds.Any() || rolesIds.Any(r => r <= 0))
+                {
+                    return BadRequest(new { message = "Debe proporcionar al menos un rol válido" });
+                }
+
+                // Llamar al servicio
                 var resultado = await _usuariosService.AsignarRolesAsync(id, rolesIds);
-                return resultado
-                    ? Ok(new { message = "Roles actualizados exitosamente" })
-                    : BadRequest(new { message = "Error al actualizar roles" });
+
+                // Log del resultado
+                _logger.LogInformation("Resultado de asignación de roles: {Resultado}", resultado);
+
+                if (resultado)
+                {
+                    return Ok(new { message = "Roles actualizados exitosamente" });
+                }
+
+                return BadRequest(new { message = "Error al actualizar roles" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al guardar roles");
+                _logger.LogError(ex, "Error al guardar roles para usuario {Id}", id);
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
-
         [HttpPost]
         public async Task<IActionResult> ActivarUsuario(int id)
         {

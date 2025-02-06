@@ -13,3 +13,12 @@ public class PermisoDTO
     public string NombrePermiso { get; set; } = string.Empty;
     public string? DescripcionPermiso { get; set; }
 }
+
+
+public class RolResponse
+{
+    public int RolId { get; set; }
+    public string NombreRol { get; set; }
+    public string DescripcionRol { get; set; }
+    public bool Asignado { get; set; }
+}

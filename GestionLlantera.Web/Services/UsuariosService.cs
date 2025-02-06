@@ -3,6 +3,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using System.Text.Json;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Nodes;
 
 namespace GestionLlantera.Web.Services
 {
@@ -20,7 +21,8 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
             _jsonOptions = new JsonSerializerOptions
             {
-                PropertyNameCaseInsensitive = true
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
             };
             _configuration = configuration;
             _apiUrl = _configuration["ApiSettings:BaseUrl"]; // Obtiene la URL de la configuración
@@ -75,41 +77,76 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+
         public async Task<List<RolUsuarioDTO>> ObtenerRolesUsuarioAsync(int usuarioId)
         {
             try
             {
                 var response = await _httpClient.GetAsync($"api/Usuarios/usuarios/{usuarioId}/roles");
-                response.EnsureSuccessStatusCode();
 
-                var content = await response.Content.ReadAsStringAsync();
-                var roles = JsonSerializer.Deserialize<List<RolUsuarioDTO>>(content, _jsonOptions);
+                if (response.IsSuccessStatusCode)
+                {
+                    // Leer el contenido primero para debugging
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("Respuesta API: {JsonContent}", jsonContent);
 
-                return roles ?? new List<RolUsuarioDTO>();
+                    var resultado = await response.Content.ReadFromJsonAsync<RolesResponseDTO>();
+                    return resultado?.Roles ?? new List<RolUsuarioDTO>();
+                }
+
+                _logger.LogWarning("Error al obtener roles: {StatusCode}", response.StatusCode);
+                return new List<RolUsuarioDTO>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener roles del usuario");
-                throw;
+                _logger.LogError(ex, "Error al obtener roles del usuario {Id}", usuarioId);
+                return new List<RolUsuarioDTO>();
             }
         }
+        //public async Task<List<RolUsuarioDTO>> ObtenerRolesUsuarioAsync(int usuarioId)
+        //{
+        //    try
+        //    {
+        //        var response = await _httpClient.GetAsync($"api/Usuarios/usuarios/{usuarioId}/roles");
+        //        response.EnsureSuccessStatusCode();
+
+        //        var content = await response.Content.ReadAsStringAsync();
+        //        JsonNode root = JsonNode.Parse(content);
+        //        JsonArray rolesArra = root["roles"].AsArray();
+        //        //var roles = JsonSerializer.Deserialize<List<RolUsuarioDTO>>(content, _jsonOptions);
+        //        List<RolUsuarioDTO> roles = rolesArra.Deserialize<List<RolUsuarioDTO>>();   
+
+        //        return roles ?? new List<RolUsuarioDTO>();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error al obtener roles del usuario");
+        //        throw;
+        //    }
+        //}
 
         public async Task<bool> AsignarRolesAsync(int usuarioId, List<int> rolesIds)
         {
             try
             {
+                _logger.LogInformation("Llamando a API para asignar roles. Usuario: {Id}, Roles: {@RolesIds}",
+                    usuarioId, rolesIds);
+
                 var response = await _httpClient.PostAsJsonAsync(
                     $"api/Usuarios/usuarios/{usuarioId}/roles",
                     rolesIds);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta de API: {Response}", responseContent);
+
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en llamada a API");
+                _logger.LogError(ex, "Error al asignar roles al usuario {Id}", usuarioId);
                 return false;
             }
         }
-
         public async Task<bool> ActivarUsuarioAsync(int id)
         {
             try
