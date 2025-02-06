@@ -8,16 +8,16 @@ let modalRoles = null;
 
 // Inicialización cuando el documento está listo
 document.addEventListener('DOMContentLoaded', function () {
-    // Inicializar modal de roles
-    modalRoles = new bootstrap.Modal(document.getElementById('modalRoles'));
+    // Inicializar modal usando getElementById en lugar de bootstrap.Modal
+    const modalElement = document.getElementById('modalRoles');
+    if (modalElement) {
+        modalRoles = new bootstrap.Modal(modalElement);
+    }
 
-    // Configurar toastr
-    toastr.options = {
-        "closeButton": true,
-        "progressBar": true,
-        "positionClass": "toast-top-right",
-        "timeOut": "3000"
-    };
+    const createUserForm = document.getElementById('createUserForm');
+    if (createUserForm) {
+        createUserForm.addEventListener('submit', crearUsuario);
+    }
 });
 
 /**
@@ -315,71 +315,54 @@ async function desactivarUsuario(usuarioId) {
     }
 }
 
-//// Función para guardar roles en desde la vista de todos los usuarios
-//async function guardarRoles() {
-//    try {
-//        const usuarioId = document.getElementById('usuarioId').value;
-//        console.log('ID de usuario:', usuarioId);
+async function crearUsuario(e) {
+    e.preventDefault();
 
-//        // Esperamos un momento pequeño para asegurar que el estado de los checkboxes esté actualizado
-//        await new Promise(resolve => setTimeout(resolve, 100));
+    try {
+        const formData = {
+            nombreUsuario: document.getElementById('NombreUsuario').value,
+            email: document.getElementById('Email').value,
+            rolId: parseInt(document.getElementById('RolId').value)
+        };
 
-//        // Obtener todos los checkboxes dentro de listaRoles
-//        const checkboxes = document.querySelectorAll('#listaRoles input[type="checkbox"]');
-//        console.log('Total de checkboxes:', checkboxes.length);
+        const response = await fetch('/Usuarios/CrearUsuario', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
 
-//        // Obtener los checkboxes seleccionados y mostrar su estado
-//        const rolesSeleccionados = Array.from(checkboxes)
-//            .filter(cb => {
-//                console.log(`Checkbox ${cb.id}: checked = ${cb.checked}`);
-//                return cb.checked;
-//            })
-//            .map(cb => parseInt(cb.value))
-//            .filter(val => !isNaN(val));
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error al crear usuario');
+        }
 
-//        console.log('Roles seleccionados final:', rolesSeleccionados);
+        const result = await response.json();
 
-//        // Validación más detallada
-//        if (!rolesSeleccionados || rolesSeleccionados.length === 0) {
-//            console.log('No hay roles seleccionados después de la validación');
-//            Swal.fire({
-//                icon: 'warning',
-//                title: 'Advertencia',
-//                text: 'Debe seleccionar al menos un rol'
-//            });
-//            return;
-//        }
+        Swal.fire({
+            icon: 'success',
+            title: 'Usuario Creado',
+            text: result.message,
+            showConfirmButton: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '/Usuarios/Index';
+            }
+        });
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Error al crear el usuario'
+        });
+    }
+}
 
-//        // Envío al servidor con los roles seleccionados
-//        const response = await fetch(`/Usuarios/GuardarRoles?id=${usuarioId}`, {
-//            method: 'POST',
-//            headers: {
-//                'Content-Type': 'application/json'
-//            },
-//            body: JSON.stringify(rolesSeleccionados)
-//        });
-
-//        const result = await response.json();
-//        console.log('Respuesta del servidor:', result);
-
-//        if (!response.ok) {
-//            throw new Error(result.message || 'Error al guardar roles');
-//        }
-
-//        modalRoles.hide();
-//        Swal.fire({
-//            icon: 'success',
-//            title: 'Roles actualizados',
-//            text: result.message
-//        });
-
-//        setTimeout(() => location.reload(), 1500);
-//    } catch (error) {
-//        console.error('Error completo:', error);
-//        Swal.fire({
-//            icon: 'error',
-//            title: 'Error',
-//            text: 'No se pudieron guardar los cambios en los roles'
-//        });
-//    }
-//}
+// Agregar al event listener existente
+document.addEventListener('DOMContentLoaded', function () {
+    const createUserForm = document.getElementById('createUserForm');
+    if (createUserForm) {
+        createUserForm.addEventListener('submit', crearUsuario);
+    }
+});

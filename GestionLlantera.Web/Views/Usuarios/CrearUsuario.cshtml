@@ -9,21 +9,18 @@
         <div class="card-body">
             <form id="createUserForm">
                 <div class="mb-3">
-                    <label asp-for="NombreUsuario" class="control-label">Nombre Usuario</label>
-                    <input asp-for="NombreUsuario" class="form-control" />
-                    <span asp-validation-for="NombreUsuario" class="text-danger"></span>
+                    <label for="NombreUsuario" class="form-label">Nombre Usuario</label>
+                    <input type="text" class="form-control" id="NombreUsuario" required>
                 </div>
 
                 <div class="mb-3">
-                    <label asp-for="Email" class="control-label">Email</label>
-                    <input asp-for="Email" class="form-control" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
+                    <label for="Email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="Email" required>
                 </div>
 
-                <!-- En GestionLlantera.Web/Views/Usuarios/CrearUsuario.cshtml -->
                 <div class="mb-3">
-                    <label asp-for="RolId" class="control-label">Rol</label>
-                    <select asp-for="RolId" class="form-select" required>
+                    <label for="RolId" class="form-label">Rol</label>
+                    <select class="form-select" id="RolId" required>
                         <option value="">-- Seleccione un rol --</option>
                         @if (ViewBag.Roles != null)
                         {
@@ -33,7 +30,6 @@
                             }
                         }
                     </select>
-                    <span asp-validation-for="RolId" class="text-danger"></span>
                 </div>
 
                 <div class="mb-3">
@@ -44,7 +40,6 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
