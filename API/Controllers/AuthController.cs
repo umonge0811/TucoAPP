@@ -150,23 +150,16 @@ public class AuthController : ControllerBase
     [HttpGet("check-usuario-activo")]
     public async Task<IActionResult> CheckUsuarioActivo(string token)
     {
-        if (string.IsNullOrEmpty(token))
-        {
-            return BadRequest(new { message = "El token es requerido." });
-        }
-
-        // Limpiar cualquier comilla o espacio extra del token
-        token = token.Trim('"').Trim();
-
-        // Buscar el usuario en la base de datos
         var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Token == token);
+        if (usuario == null) return NotFound();
 
-        if (usuario == null)
+        // Validar expiración
+        if (usuario.FechaExpiracionToken.HasValue && usuario.FechaExpiracionToken.Value < DateTime.Now)
         {
-            return NotFound(new { message = "Usuario no encontrado." });
+            return Ok(new { active = false, expired = true });
         }
 
-        return Ok(usuario.Activo); // Devuelve true o false según el estado del usuario
+        return Ok(new { active = usuario.Activo, expired = false });
     }
 
 

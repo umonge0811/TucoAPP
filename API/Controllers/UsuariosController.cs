@@ -82,7 +82,7 @@ public class UsuariosController : ControllerBase
                 Activo = false,
                 Token = tokenActivacion,
                 PropositoToken = PropositoTokenEnum.ActivarCuenta,
-                FechaExpiracionToken = DateTime.Now.AddMinutes(30)
+                FechaExpiracionToken = DateTime.Now.AddHours(24) // Para 24 horas            };
             };
 
             // Agregar usuario y rol en una transacción
@@ -114,12 +114,73 @@ public class UsuariosController : ControllerBase
             }
 
             // Enviar correo de activación
-            var activationUrl = $"{_configuration["WebAppSettings:BaseUrl"]}/cambiar-contrasena/{tokenActivacion}";
+            var activationUrl = $"{_configuration["WebAppSettings:BaseUrl"]}/Activacion/ActivarCuenta/{tokenActivacion}";
             var subject = "Activa tu cuenta";
+            var logoUrl = $"{_configuration["WebAppSettings:BaseUrl"]}/images/logo.png";
             var htmlContent = $@"
-            <p>Haz clic en el siguiente enlace para activar tu cuenta y cambiar tu contraseña:</p>
-            <a href='{activationUrl}'>Activar Cuenta</a>";
-
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        color: #333;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        padding: 20px;
+                    }}
+                    .header {{
+                        background-color: #007bff;
+                        color: white;
+                        padding: 20px;
+                        text-align: center;
+                        border-radius: 5px 5px 0 0;
+                    }}
+                    .content {{
+                        background-color: #fff;
+                        padding: 20px;
+                        border: 1px solid #ddd;
+                        border-radius: 0 0 5px 5px;
+                    }}
+                    .button {{
+                        display: inline-block;
+                        padding: 12px 24px;
+                        background-color: #007bff;
+                        color: white;
+                        text-decoration: none;
+                        border-radius: 5px;
+                        margin: 20px 0;
+                    }}
+                    .footer {{
+                        text-align: center;
+                        margin-top: 20px;
+                        color: #666;
+                        font-size: 0.9em;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class='header'>
+                    <img src='{logoUrl}' alt='Logo TUCO' class='logo'/>
+                    <h1>Multiservicios TUCO</h1>
+                </div>
+                <div class='content'>
+                    <h2>¡Gracias por registrarte!</h2>
+                    <p>Para comenzar a usar tu cuenta, necesitas activarla haciendo clic en el siguiente botón:</p>
+                    <div style='text-align: center;'>
+                        <a href='{activationUrl}' class='button'>Activar mi cuenta</a>
+                    </div>
+                    <p>Si el botón no funciona, copia y pega este enlace en tu navegador:</p>
+                    <p style='word-break: break-all; color: #666;'>{activationUrl}</p>
+                    <p><strong>Este enlace expirará en 24 horas por razones de seguridad.</strong></p>
+                </div>
+                <div class='footer'>
+                    <p>Mensaje enviado automáticamente por el sistema Multiservicios TUCO.</p>
+                    <p>Por favor, no responda a este correo electrónico.</p>
+                </div>
+            </body>   
+            </html>";
             await _emailService.EnviarCorreoAsync(usuario.Email, subject, htmlContent);
 
             // Registrar en historial

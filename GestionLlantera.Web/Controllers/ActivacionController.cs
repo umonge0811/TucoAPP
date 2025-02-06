@@ -15,9 +15,34 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
+        [Route("/Activacion/ActivarCuenta/{token}")]  // Ruta absoluta
+        public async Task<IActionResult> ActivarCuenta(string token)
+        {
+            try
+            {
+                // Verificar el estado del token
+                var estaActivo = await _authService.CheckUsuarioActivo(token);
+
+                var modelo = new ActivacionCuentaViewModel
+                {
+                    Token = token,
+                    TokenExpirado = !estaActivo
+                };
+
+                return View("ActivarCuenta", modelo); // Especificar nombre de la vista
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cargar vista de activación");
+                return RedirectToAction("Error", "Home");
+            }
+        }
+
         // Este método se llamará cuando el usuario haga clic en el enlace del correo
         // Método que maneja el POST del formulario
-        [HttpPost("activar-cuenta")]
+        [HttpPost]
+        [Route("/Activacion/ActivarCuenta")]  // Ruta para el POST
         public async Task<IActionResult> ActivarCuenta(ActivacionCuentaViewModel model)
         {
             try
