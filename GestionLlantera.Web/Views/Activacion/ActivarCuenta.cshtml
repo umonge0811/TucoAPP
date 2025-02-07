@@ -1,9 +1,7 @@
 ﻿@using GestionLlantera.Web.Models.ViewModels
-<!-- Views/Activacion/ActivarCuenta.cshtml -->
 @model ActivacionCuentaViewModel
 @{
-    ViewData["Title"] = "Activación de Cuenta";
-    Layout = "_Layout";
+    ViewData["Title"] = "Activar Cuenta";
 }
 
 <div class="container min-vh-100 d-flex align-items-center justify-content-center">
@@ -15,21 +13,25 @@
         <div class="card-body p-4">
             @if (Model.TokenExpirado)
             {
-                <!-- Sección para token expirado -->
-                <div class="text-center">
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle me-2"></i>
-                        El enlace de activación ha expirado
-                    </div>
-                    <button id="btnSolicitarToken" class="btn btn-primary mt-3">
-                        <i class="bi bi-arrow-repeat me-2"></i>
-                        Solicitar Nuevo Token
-                    </button>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    El enlace de activación ha expirado
+                </div>
+                <div class="text-center mt-3">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                        Volver al inicio
+                    </a>
                 </div>
             }
             else
             {
-                <!-- Formulario de activación -->
+                @if (ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger">
+                        <div asp-validation-summary="All" class="text-danger"></div>
+                    </div>
+                }
+
                 <form asp-controller="Activacion" asp-action="ActivarCuenta" method="post">
                     <input type="hidden" asp-for="Token" />
 
@@ -45,7 +47,9 @@
                         <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Activar Cuenta</button>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Activar Cuenta</button>
+                    </div>
                 </form>
             }
         </div>
@@ -56,41 +60,5 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
-    <script>
-        // Función para mostrar/ocultar contraseña
-        function togglePassword(inputId) {
-            const input = document.getElementById(inputId);
-            const icon = event.currentTarget.querySelector('i');
-
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('bi-eye', 'bi-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('bi-eye-slash', 'bi-eye');
-            }
-        }
-
-        // Manejar solicitud de nuevo token
-        document.getElementById('btnSolicitarToken')?.addEventListener('click', async () => {
-            try {
-                const response = await fetch('/api/auth/regenerar-token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify('@Model.Token')
-                });
-
-                if (response.ok) {
-                    toastr.success('Se ha enviado un nuevo enlace de activación a su correo.');
-                } else {
-                    toastr.error('Error al solicitar nuevo token. Por favor, intente más tarde.');
-                }
-            } catch (error) {
-                toastr.error('Error al procesar la solicitud.');
-            }
-        });
-    </script>
+    <script src="~/js/views/activacion/activarCuenta.js"></script>
 }

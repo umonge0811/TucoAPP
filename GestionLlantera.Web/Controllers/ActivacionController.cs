@@ -21,12 +21,21 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var (activo, expirado) = await _authService.CheckUsuarioActivo(token);
+                var resultado = await _authService.CheckUsuarioActivo(token);
+                bool activo = resultado.activo;
+                bool expirado = resultado.expirado;
+
+                if (expirado)
+                {
+                    TempData["Error"] = "El enlace de activación ha expirado.";
+                    return RedirectToAction("Index", "Home");
+                }
 
                 var modelo = new ActivacionCuentaViewModel
                 {
                     Token = token,
-                    TokenExpirado = expirado
+                    TokenExpirado = expirado,
+                    CuentaActiva = activo
                 };
 
                 return View(modelo);
@@ -34,54 +43,43 @@ namespace GestionLlantera.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar vista de activación");
+                TempData["Error"] = "Error al procesar la activación de la cuenta.";
                 return RedirectToAction("Error", "Home");
             }
         }
-        
-        
+
+
         // Este método se llamará cuando el usuario haga clic en el enlace del correo
         // Método que maneja el POST del formulario
         [HttpPost]
-        [Route("/Activacion/ActivarCuenta")]  // Ruta para el POST
-        public async Task<IActionResult> ActivarCuenta(ActivacionCuentaViewModel model)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ActivarCuenta(ActivacionCuentaViewModel modelo)
         {
             try
             {
                 if (!ModelState.IsValid)
                 {
-                    return View(model);
+                    return View(modelo);
                 }
 
-                // Primero activamos la cuenta
-                var activacionExitosa = await _authService.ActivarCuenta(model.Token);
-
-                if (!activacionExitosa)
+                var resultado = await _authService.ActivarCuenta(modelo.Token);
+                if (resultado)
                 {
-                    ModelState.AddModelError("", "Error al activar la cuenta. Por favor, intente nuevamente.");
-                    return View(model);
+                    // Agrega el mensaje de éxito
+                    TempData["Success"] = "¡Cuenta activada exitosamente! Ya puedes iniciar sesión con tus credenciales.";
+                    return RedirectToAction("Login", "Account");
                 }
 
-                // Si la activación fue exitosa, cambiamos la contraseña
-                var cambioContrasenaExitoso = await _authService.CambiarContrasena(model.Token, model.NuevaContrasena);
-
-                if (!cambioContrasenaExitoso)
-                {
-                    ModelState.AddModelError("", "Error al establecer la contraseña. Por favor, intente nuevamente.");
-                    return View(model);
-                }
-
-                // Si todo fue exitoso, redirigimos al login con mensaje de éxito
-                TempData["SuccessMessage"] = "Cuenta activada exitosamente. Ya puede iniciar sesión.";
-                return RedirectToAction("Login", "Account");
+                ModelState.AddModelError("", "No se pudo activar la cuenta. Por favor, inténtalo de nuevo.");
+                return View(modelo);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en el proceso de activación de cuenta");
-                ModelState.AddModelError("", "Ocurrió un error inesperado. Por favor, intente nuevamente.");
-                return View(model);
+                _logger.LogError(ex, "Error al activar cuenta");
+                ModelState.AddModelError("", "Ocurrió un error al activar la cuenta.");
+                return View(modelo);
             }
         }
-
         // Método para solicitar nuevo token
         [HttpPost("solicitar-nuevo-token")]
         public async Task<IActionResult> SolicitarNuevoToken([FromBody] string token)

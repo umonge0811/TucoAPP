@@ -88,11 +88,10 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadFromJsonAsync<ActivationResponseDTO>();
-                    return result?.Message.Contains("exitosamente") ?? false;
+                    var result = await response.Content.ReadFromJsonAsync<Tuco.Clases.DTOs.ActivationResponseDTO>();
+                    return result?.Message?.Contains("exitosamente") ?? false;
                 }
 
-                _logger.LogWarning("Error al activar cuenta");
                 return false;
             }
             catch (Exception ex)
@@ -101,6 +100,7 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+
 
         // Solicitar nuevo token
         public async Task<bool> RegenerarToken(string token)
