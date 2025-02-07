@@ -16,6 +16,8 @@ using Tuco.Clases.Helpers;
 using System.Net.Http;
 using tuco.Utilities;
 using API.Services;
+using Tuco.Clases.Models.Password;
+using Tuco.Clases.Utilities;
 
 
 
@@ -27,16 +29,18 @@ public class AuthController : ControllerBase
     IConfiguration _configuration;
     HttpClient _httpClient;
     private readonly EmailService _emailService;
+    private readonly ILogger<AuthController> _logger;
 
 
 
 
-    public AuthController(TucoContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory, EmailService emailService)
+    public AuthController(TucoContext context, IConfiguration configuration, IHttpClientFactory httpClientFactory, EmailService emailService, ILogger<AuthController> logger)
     {
         _context = context;
         _configuration = configuration;
         _emailService = emailService; // Inyectar EmailService
         _httpClient = httpClientFactory.CreateClient("TucoApi");
+        _logger = logger;
     }
 
     /// <summary>
@@ -55,9 +59,10 @@ public class AuthController : ControllerBase
         try
         {
 
-            // Buscar el usuario por el token y el propósito
-            var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Token == token.Trim('"') && u.PropositoToken == PropositoTokenEnum.ActivarCuenta);
+             var usuario = await _context.Usuarios
+            .FirstOrDefaultAsync(u => u.Token == token.Trim('"') &&
+                                    u.PropositoToken == PropositoTokenEnum.ActivarCuenta);
+
 
             if (usuario == null)
             {
@@ -100,9 +105,6 @@ public class AuthController : ControllerBase
             // Activar el usuario
             usuario.Activo = true;
 
-            // Generar un nuevo token para el cambio de contraseña
-            var tokenCambio = TokenHelper.GenerarToken();
-            usuario.Token = tokenCambio;
             usuario.PropositoToken = PropositoTokenEnum.CambioContrasena;
             usuario.FechaExpiracionToken = DateTime.Now.AddMinutes(30); // Token válido por 30 minutos
 
@@ -117,7 +119,6 @@ public class AuthController : ControllerBase
                 tipoAccion: "Activación",
                 modulo: "Usuarios",
                 detalle: "Usuario activado exitosamente.",
-                token: tokenCambio,
                 propositoToken: PropositoTokenEnum.CambioContrasena.ToString()
             );
 
@@ -125,7 +126,8 @@ public class AuthController : ControllerBase
             return Ok(new
             {
                 message = "Cuenta activada exitosamente.",
-                token = tokenCambio
+                token = usuario.Token
+
             });
         }
         catch (Exception ex)
@@ -377,6 +379,131 @@ public class AuthController : ControllerBase
 
             // Retornar un error 500 con el mensaje de excepción
             return StatusCode(500, new { Message = $"Error al regenerar token: {ex.Message}" });
+        }
+    }
+    #endregion
+
+    #region Cambio de Contraseña Activación
+    [HttpPost("CambiarContrasenaActivacion")]
+    public async Task<IActionResult> CambiarContrasenaActivacion([FromBody] CambiarContrasenaRequest request)
+    {
+        try
+        {
+
+            Console.WriteLine($"Token recibido: {request?.Token}"); // Log directo a consola
+            Console.WriteLine($"PropositoToken buscado: {PropositoTokenEnum.CambioContrasena}");
+
+            // Primero busquemos el usuario solo por token para ver si existe
+            var usuarioSoloToken = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Token == request.Token);
+
+            if (usuarioSoloToken == null)
+            {
+                Console.WriteLine("No se encontró usuario con ese token");
+                return BadRequest(new { message = "Token no encontrado" });
+            }
+
+            Console.WriteLine($"Usuario encontrado por token: {usuarioSoloToken.Email}");
+            Console.WriteLine($"Propósito actual del token: {usuarioSoloToken.PropositoToken}");
+
+            if (request == null || string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.NuevaContrasena))
+            {
+                _logger.LogWarning("Request inválido - datos faltantes");
+                return BadRequest(new { message = "Datos inválidos" });
+            }
+
+            // Buscar al usuario por el token y el propósito
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Token == request.Token && u.PropositoToken == PropositoTokenEnum.CambioContrasena);
+
+            if (usuario == null)
+            {
+                Console.WriteLine("Usuario no encontrado con token y propósito específico");
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 0,
+                    tipoAccion: "Cambio de Contraseña Activación",
+                    modulo: "Usuarios",
+                    detalle: $"Intento fallido de cambio de contraseña. Token inválido o propósito incorrecto.",
+                    token: request.Token,
+                    propositoToken: PropositoTokenEnum.CambioContrasena.ToString(),
+                    estadoAccion: "Error",
+                    errorDetalle: "Token inválido o propósito incorrecto."
+                );
+
+                return BadRequest(new { message = "Token inválido o propósito incorrecto." });
+            }
+
+            // Validar que el usuario esté activo
+            if (usuario.Activo != true)
+            {
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: usuario.UsuarioId,
+                    tipoAccion: "Cambio de Contraseña Activación",
+                    modulo: "Usuarios",
+                    detalle: "Intento de cambio de contraseña fallido. Usuario inactivo.",
+                    estadoAccion: "Error",
+                    errorDetalle: "El usuario está inactivo."
+                );
+
+                return BadRequest(new { message = "El usuario está inactivo. No se puede realizar esta acción." });
+            }
+
+            // Validar la expiración del token
+            if (usuario.FechaExpiracionToken.HasValue && usuario.FechaExpiracionToken.Value < DateTime.Now)
+            {
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: usuario.UsuarioId,
+                    tipoAccion: "Cambio de Contraseña Activación",
+                    modulo: "Usuarios",
+                    detalle: "Intento de cambio de contraseña fallido. Token expirado.",
+                    token: request.Token,
+                    propositoToken: PropositoTokenEnum.CambioContrasena.ToString(),
+                    estadoAccion: "Error",
+                    errorDetalle: "El token ha expirado."
+                );
+
+                return BadRequest(new { message = "El token ha expirado." });
+            }
+
+            // Hashear la nueva contraseña utilizando BCrypt
+            usuario.Contrasena = HashContrasena.HashearContrasena(request.NuevaContrasena);
+
+            // Invalidar el token después de su uso
+            usuario.Token = null;
+            usuario.PropositoToken = null;
+            usuario.FechaExpiracionToken = null;
+
+            // Guardar los cambios
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: usuario.UsuarioId,
+                tipoAccion: "Cambio de Contraseña Activación",
+                modulo: "Usuarios",
+                detalle: $"El usuario {usuario.Email} cambió su contraseña exitosamente.",
+                estadoAccion: "Exito"
+            );
+
+            return Ok(new { message = "Contraseña cambiada exitosamente." });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 0,
+                tipoAccion: "Cambio de Contraseña Activación",
+                modulo: "Usuarios",
+                detalle: "Error al intentar cambiar la contraseña.",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { message = $"Ocurrió un error: {ex.Message}" });
         }
     }
     #endregion

@@ -62,24 +62,35 @@ namespace GestionLlantera.Web.Controllers
                     return View(modelo);
                 }
 
-                var resultado = await _authService.ActivarCuenta(modelo.Token);
-                if (resultado)
+                // Primero activamos la cuenta
+                var resultadoActivacion = await _authService.ActivarCuenta(modelo.Token);
+                if (!resultadoActivacion)
                 {
-                    // Agrega el mensaje de éxito
-                    TempData["Success"] = "¡Cuenta activada exitosamente! Ya puedes iniciar sesión con tus credenciales.";
-                    return RedirectToAction("Login", "Account");
+                    ModelState.AddModelError("", "No se pudo activar la cuenta. Por favor, inténtelo de nuevo.");
+                    return View(modelo);
                 }
 
-                ModelState.AddModelError("", "No se pudo activar la cuenta. Por favor, inténtalo de nuevo.");
-                return View(modelo);
+                // Si la activación fue exitosa, procedemos a cambiar la contraseña
+                var resultadoCambioContraseña = await _authService.CambiarContrasena(modelo.Token, modelo.NuevaContrasena);
+                if (!resultadoCambioContraseña)
+                {
+                    ModelState.AddModelError("", "La cuenta se activó pero no se pudo establecer la contraseña. Por favor, contacte al administrador.");
+                    return View(modelo);
+                }
+
+                // Si todo fue exitoso
+                TempData["Success"] = "¡Cuenta activada y contraseña establecida exitosamente! Ya puedes iniciar sesión.";
+                return RedirectToAction("Login", "Account");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al activar cuenta");
-                ModelState.AddModelError("", "Ocurrió un error al activar la cuenta.");
+                _logger.LogError(ex, "Error al procesar la activación y cambio de contraseña");
+                ModelState.AddModelError("", "Ocurrió un error al procesar la solicitud.");
                 return View(modelo);
             }
         }
+
+
         // Método para solicitar nuevo token
         [HttpPost("solicitar-nuevo-token")]
         public async Task<IActionResult> SolicitarNuevoToken([FromBody] string token)

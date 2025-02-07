@@ -5,6 +5,42 @@ console.log('API_URL:', API_URL);
 
 // Variables globales
 let modalRoles = null;
+let spinnerModal;
+
+// Function to show/hide spinner
+function showSpinner() {
+    const spinnerModal = document.getElementById('spinnerModal');
+    if (spinnerModal) {
+        const bsModal = new bootstrap.Modal(spinnerModal);
+        bsModal.show();
+    } else {
+        console.error('Spinner modal not found');
+    }
+}
+
+function hideSpinner() {
+    const spinnerModal = document.getElementById('spinnerModal');
+    if (spinnerModal) {
+        const bsModal = bootstrap.Modal.getInstance(spinnerModal);
+        if (bsModal) {
+            bsModal.hide();
+        }
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Inicializar el modal al cargar la página
+    spinnerModal = new bootstrap.Modal(document.getElementById('spinnerModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+
+    const createUserForm = document.getElementById('createUserForm');
+    if (createUserForm) {
+        createUserForm.addEventListener('submit', crearUsuario);
+    }
+});
 
 // Inicialización cuando el documento está listo
 document.addEventListener('DOMContentLoaded', function () {
@@ -315,15 +351,22 @@ async function desactivarUsuario(usuarioId) {
     }
 }
 
+// En el evento de submit del formulario
 async function crearUsuario(e) {
     e.preventDefault();
+    console.log('Formulario enviado'); // Debug log
 
     try {
+        showSpinner();
+        console.log('Spinner mostrado'); // Debug log
+
         const formData = {
             nombreUsuario: document.getElementById('NombreUsuario').value,
             email: document.getElementById('Email').value,
             rolId: parseInt(document.getElementById('RolId').value)
         };
+
+        console.log('Datos del formulario:', formData); // Debug log
 
         const response = await fetch('/Usuarios/CrearUsuario', {
             method: 'POST',
@@ -333,6 +376,8 @@ async function crearUsuario(e) {
             body: JSON.stringify(formData)
         });
 
+        hideSpinner();
+
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.message || 'Error al crear usuario');
@@ -340,17 +385,18 @@ async function crearUsuario(e) {
 
         const result = await response.json();
 
-        Swal.fire({
+        await Swal.fire({
             icon: 'success',
             title: 'Usuario Creado',
-            text: result.message,
+            text: 'El usuario ha sido creado exitosamente. Se ha enviado un correo de activación.',
             showConfirmButton: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = '/Usuarios/Index';
-            }
         });
+
+        window.location.href = '/Usuarios/Index';
     } catch (error) {
+        console.error('Error:', error);
+        hideSpinner();
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -359,10 +405,16 @@ async function crearUsuario(e) {
     }
 }
 
-// Agregar al event listener existente
+
+
+// Event listener for form submission
 document.addEventListener('DOMContentLoaded', function () {
-    const createUserForm = document.getElementById('createUserForm');
-    if (createUserForm) {
-        createUserForm.addEventListener('submit', crearUsuario);
+    console.log('DOM Loaded'); // Debug log
+    const form = document.getElementById('createUserForm');
+    if (form) {
+        console.log('Form found'); // Debug log
+        form.addEventListener('submit', crearUsuario);
+    } else {
+        console.error('Form not found');
     }
 });

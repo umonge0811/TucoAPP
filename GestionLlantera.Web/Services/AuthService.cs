@@ -4,6 +4,7 @@ using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Models.ViewModels;
 using GestionLlantera.Web.Services.Interfaces;
 using Tuco.Clases.DTOs;
+using Tuco.Clases.Models.Password;
 
 namespace GestionLlantera.Web.Services
 {
@@ -89,7 +90,12 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var result = await response.Content.ReadFromJsonAsync<Tuco.Clases.DTOs.ActivationResponseDTO>();
-                    return result?.Message?.Contains("exitosamente") ?? false;
+                    // Guardamos el token que se usará para el cambio de contraseña
+                    if (result?.Token != null)
+                    {
+                        // Aquí podrías guardarlo en TempData o devolverlo para su uso
+                        return true;
+                    }
                 }
 
                 return false;
@@ -130,21 +136,31 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                _logger.LogInformation($"Iniciando cambio de contraseña. Token: {token}");
+
                 var client = _clientFactory.CreateClient("APIClient");
-                var request = new
+                var request = new CambiarContrasenaRequest
                 {
                     Token = token,
                     NuevaContrasena = nuevaContrasena
                 };
 
-                var response = await client.PostAsJsonAsync("/api/auth/CambiarContrasena", request);
+                // Log del contenido que vamos a enviar
+                _logger.LogInformation($"Request Content: Token={request.Token}, NuevaContrasena={request.NuevaContrasena}");
+
+                var response = await client.PostAsJsonAsync("api/auth/CambiarContrasenaActivacion", request);
+
+                // Log detallado de la respuesta
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation($"Status Code: {response.StatusCode}");
+                _logger.LogInformation($"Response Content: {responseContent}");
 
                 if (response.IsSuccessStatusCode)
                 {
+                    _logger.LogInformation("Contraseña cambiada exitosamente");
                     return true;
                 }
 
-                _logger.LogWarning("Error al cambiar contraseña");
                 return false;
             }
             catch (Exception ex)
