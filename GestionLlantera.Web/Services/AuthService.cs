@@ -55,7 +55,7 @@ namespace GestionLlantera.Web.Services
         }
 
         // Verificar si el usuario está activo
-        public async Task<bool> CheckUsuarioActivo(string token)
+        public async Task<(bool activo, bool expirado)> CheckUsuarioActivo(string token)
         {
             try
             {
@@ -64,11 +64,11 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return await response.Content.ReadFromJsonAsync<bool>();
+                    var result = await response.Content.ReadFromJsonAsync<UsuarioActivoDTO>();
+                    return (result.Active, result.TokenExpirado);
                 }
 
-                _logger.LogWarning("Error al verificar estado de usuario");
-                return false;
+                return (false, true);
             }
             catch (Exception ex)
             {
@@ -76,6 +76,7 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+
 
         // Activar la cuenta del usuario
         public async Task<bool> ActivarCuenta(string token)

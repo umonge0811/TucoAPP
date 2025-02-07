@@ -114,6 +114,7 @@ public class UsuariosController : ControllerBase
             }
 
             // Enviar correo de activación
+            // En el endpoint RegistrarUsuario de la API
             var activationUrl = $"{_configuration["WebAppSettings:BaseUrl"]}/Activacion/ActivarCuenta/{tokenActivacion}";
             var subject = "Activa tu cuenta";
             var logoUrl = $"{_configuration["WebAppSettings:BaseUrl"]}/images/logo.png";

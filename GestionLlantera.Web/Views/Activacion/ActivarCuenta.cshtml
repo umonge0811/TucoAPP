@@ -30,37 +30,22 @@
             else
             {
                 <!-- Formulario de activación -->
-                <form asp-action="ActivarCuenta" method="post">
+                <form asp-controller="Activacion" asp-action="ActivarCuenta" method="post">
                     <input type="hidden" asp-for="Token" />
 
                     <div class="mb-3">
                         <label asp-for="NuevaContrasena" class="form-label">Nueva Contraseña</label>
-                        <div class="input-group">
-                            <input asp-for="NuevaContrasena" class="form-control" type="password" />
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('NuevaContrasena')">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
+                        <input asp-for="NuevaContrasena" class="form-control" type="password" />
                         <span asp-validation-for="NuevaContrasena" class="text-danger"></span>
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label asp-for="ConfirmarContrasena" class="form-label">Confirmar Contraseña</label>
-                        <div class="input-group">
-                            <input asp-for="ConfirmarContrasena" class="form-control" type="password" />
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('ConfirmarContrasena')">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
+                        <input asp-for="ConfirmarContrasena" class="form-control" type="password" />
                         <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
                     </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-circle me-2"></i>
-                            Activar Cuenta
-                        </button>
-                    </div>
+                    <button type="submit" class="btn btn-primary">Activar Cuenta</button>
                 </form>
             }
         </div>

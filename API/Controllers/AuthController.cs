@@ -146,6 +146,7 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = $"Ocurrió un error: {ex.Message}" });
         }
     }
+
     [AllowAnonymous]
     [HttpGet("check-usuario-activo")]
     public async Task<IActionResult> CheckUsuarioActivo(string token)
@@ -154,12 +155,14 @@ public class AuthController : ControllerBase
         if (usuario == null) return NotFound();
 
         // Validar expiración
-        if (usuario.FechaExpiracionToken.HasValue && usuario.FechaExpiracionToken.Value < DateTime.Now)
-        {
-            return Ok(new { active = false, expired = true });
-        }
+        var tokenExpirado = usuario.FechaExpiracionToken.HasValue &&
+                           usuario.FechaExpiracionToken.Value < DateTime.Now;
 
-        return Ok(new { active = usuario.Activo, expired = false });
+        return Ok(new
+        {
+            active = usuario.Activo,
+            expired = tokenExpirado
+        });
     }
 
 
