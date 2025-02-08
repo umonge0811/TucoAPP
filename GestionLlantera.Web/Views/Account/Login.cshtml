@@ -41,6 +41,9 @@
                                 <input asp-for="RecordarMe" class="form-check-input" />
                                 <label asp-for="RecordarMe" class="form-check-label">Recordarme</label>
                             </div>
+                            <a href="@Url.Action("OlvideContrasena", "Account")" class="text-primary">
+                                ¿Olvidaste tu contraseña?
+                            </a>
                         </div>
 
                         <button type="submit" class="btn btn-dark w-100" id="submitButton">

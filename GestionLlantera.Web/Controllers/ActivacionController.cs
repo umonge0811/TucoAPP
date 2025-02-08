@@ -49,7 +49,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
 
-        // Este método se llamará cuando el usuario haga clic en el enlace del correo
+        // Este método se llamará cuando el usuario haga clic en el boton de activar cuenta despues de colocar las contraseñas
         // Método que maneja el POST del formulario
         [HttpPost]
         [ValidateAntiForgeryToken]

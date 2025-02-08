@@ -508,6 +508,84 @@ public class AuthController : ControllerBase
     }
     #endregion
 
+    #region Olvide Contraseña
+    [HttpPost("solicitar-recuperacion")]
+    [AllowAnonymous]
+    public async Task<IActionResult> SolicitarRecuperacion([FromBody] SolicitarRecuperacionRequest request)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            if (usuario == null)
+            {
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 0,
+                    tipoAccion: "Solicitud Recuperación",
+                    modulo: "Usuarios",
+                    detalle: $"Intento de recuperación con email no registrado: {request.Email}",
+                    estadoAccion: "Error",
+                    errorDetalle: "Email no encontrado"
+                );
+
+                return NotFound(new { message = "Email no encontrado" });
+            }
+
+            // Generar token de recuperación
+            var token = TokenHelper.GenerarToken();
+            usuario.Token = token;
+            usuario.PropositoToken = PropositoTokenEnum.RecuperacionContrasena;
+            usuario.FechaExpiracionToken = DateTime.Now.AddHours(1);
+
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            // Enviar correo
+            var baseUrl = _configuration["WebAppSettings:BaseUrl"];
+            var recuperacionUrl = $"{baseUrl}/Account/RestablecerContrasena?token={token}";
+
+            var subject = "Recuperación de Contraseña";
+            var htmlContent = $@"
+            <h2>Recuperación de Contraseña</h2>
+            <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace:</p>
+            <a href='{recuperacionUrl}' style='padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;'>
+                Restablecer Contraseña
+            </a>
+            <p>Este enlace expirará en 1 hora.</p>
+            <p>Si no solicitaste este cambio, ignora este correo.</p>";
+
+            await _emailService.EnviarCorreoAsync(usuario.Email, subject, htmlContent);
+
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: usuario.UsuarioId,
+                tipoAccion: "Solicitud Recuperación",
+                modulo: "Usuarios",
+                detalle: "Solicitud de recuperación exitosa",
+                token: token,
+                propositoToken: PropositoTokenEnum.RecuperacionContrasena.ToString(),
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { message = "Se han enviado las instrucciones a tu correo" });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 0,
+                tipoAccion: "Solicitud Recuperación",
+                modulo: "Usuarios",
+                detalle: "Error en solicitud de recuperación",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { message = "Error al procesar la solicitud" });
+        }
+    }
+    #endregion
 
 
 

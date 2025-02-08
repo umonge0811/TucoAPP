@@ -142,5 +142,35 @@ namespace GestionLlantera.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
         }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult OlvideContrasena()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> OlvideContrasena(string email)
+        {
+            try
+            {
+                var response = await _authService.SolicitarRecuperacion(email);
+                if (response)
+                {
+                    TempData["Success"] = "Se han enviado las instrucciones a tu correo electrónico";
+                    return View();
+                }
+
+                TempData["Error"] = "No se pudo procesar la solicitud";
+                return View();
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Ocurrió un error al procesar la solicitud";
+                return View();
+            }
+        }
     }
 }

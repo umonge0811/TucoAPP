@@ -1,0 +1,49 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Recuperar Contraseña";
+}
+
+<div class="container min-vh-100 d-flex align-items-center">
+    <div class="row justify-content-center w-100">
+        <div class="col-11 col-sm-8 col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white py-3">
+                    <h4 class="text-center mb-0">Recuperar Contraseña</h4>
+                </div>
+                <div class="card-body px-4 py-4">
+                    <form id="recuperarForm" asp-action="OlvideContrasena" method="post">
+                        @if (TempData["Error"] != null)
+                        {
+                            <div class="alert alert-danger">@TempData["Error"]</div>
+                        }
+                        @if (TempData["Success"] != null)
+                        {
+                            <div class="alert alert-success">@TempData["Success"]</div>
+                        }
+
+                        <div class="mb-3">
+                            <label for="Email" class="form-label">
+                                <i class="bi bi-envelope-fill me-1"></i> Correo Electrónico
+                            </label>
+                            <input type="email" class="form-control" id="Email" name="Email" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100" id="submitButton">
+                            <span class="normal-state">
+                                <i class="bi bi-envelope"></i> Enviar Instrucciones
+                            </span>
+                            <span class="loading-state" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Enviando...
+                            </span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/views/account/recuperarContrasena.js"></script>
+}
