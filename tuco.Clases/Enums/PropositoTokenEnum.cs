@@ -10,7 +10,7 @@ namespace Tuco.Clases.Enums
     {
         ActivarCuenta,
         CambioContrasena,
-        ResetearContrasena,
+        RecuperacionContrasena,
         VerificarEmail
         // Agrega más propósitos según sea necesario
     }

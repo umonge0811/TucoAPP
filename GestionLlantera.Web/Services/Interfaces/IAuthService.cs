@@ -13,5 +13,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<(bool activo, bool expirado)> CheckUsuarioActivo(string token); Task<bool> ActivarCuenta(string token);
         Task<bool> RegenerarToken(string token);
         Task<bool> CambiarContrasena(string token, string nuevaContrasena);
+        Task<bool> SolicitarRecuperacion(string email);
+        Task<bool> RestablecerContrasena(string token, string nuevaContrasena);
     }
 }

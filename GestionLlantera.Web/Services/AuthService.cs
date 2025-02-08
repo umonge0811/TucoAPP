@@ -25,8 +25,8 @@ namespace GestionLlantera.Web.Services
 
         }
 
-        
 
+        #region Login
         public async Task<(bool Success, string? Token, string? ErrorMessage)> LoginAsync(LoginViewModel model)
         {
             try
@@ -55,6 +55,9 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        #endregion
+
+        #region CheckUsuarioActivo
         // Verificar si el usuario está activo
         public async Task<(bool activo, bool expirado)> CheckUsuarioActivo(string token)
         {
@@ -77,8 +80,9 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+        #endregion
 
-
+        #region ActivarCuenta
         // Activar la cuenta del usuario
         public async Task<bool> ActivarCuenta(string token)
         {
@@ -106,8 +110,9 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+        #endregion
 
-
+        #region RegenerarToken
         // Solicitar nuevo token
         public async Task<bool> RegenerarToken(string token)
         {
@@ -130,7 +135,10 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+        #endregion
 
+
+        #region CambiarContrasena ACTIVACION
         // Cambiar contraseña durante activación
         public async Task<bool> CambiarContrasena(string token, string nuevaContrasena)
         {
@@ -169,7 +177,65 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
+        #endregion
+
+        #region CambiarContrasena RECUPERACION
+        public async Task<bool> SolicitarRecuperacion(string email)
+        {
+            try
+            {
+                var client = _clientFactory.CreateClient("APIClient");
+                var response = await client.PostAsJsonAsync("/api/auth/solicitar-recuperacion",
+                    new { email = email });
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al solicitar recuperación de contraseña");
+                return false;
+            }
+        }
+
+        // En GestionLlantera.Web/Services/AuthService.cs
+        public async Task<bool> RestablecerContrasena(string token, string nuevaContrasena)
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando solicitud de restablecimiento de contraseña");
+
+                var client = _clientFactory.CreateClient("APIClient");
+                var request = new
+                {
+                    Token = token,
+                    NuevaContrasena = nuevaContrasena
+                };
+
+                var response = await client.PostAsJsonAsync("/api/auth/restablecer-contrasena", request);
+
+                // Log de la respuesta
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation($"Respuesta del servidor: {response.StatusCode}, Contenido: {responseContent}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("Contraseña restablecida exitosamente");
+                    return true;
+                }
+
+                _logger.LogWarning($"Error al restablecer contraseña. StatusCode: {response.StatusCode}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al intentar restablecer la contraseña");
+                return false;
+            }
+        }
+
+        #endregion
     }
 
-   
+
+
 }

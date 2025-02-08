@@ -26,6 +26,8 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
+
+        #region Login
         // GET: /Account/Login
         // Este método se ejecuta cuando el usuario accede a la página de login
         public IActionResult Login()
@@ -109,6 +111,10 @@ namespace GestionLlantera.Web.Controllers
                 return View(model);
             }
         }
+
+        #endregion
+
+        #region Logout
         /// <summary>
         /// Método para cerrar la sesión del usuario y limpiar todas las cookies
         /// </summary>
@@ -142,6 +148,9 @@ namespace GestionLlantera.Web.Controllers
                 return RedirectToAction("Index", "Home");
             }
         }
+        #endregion
+
+        #region Olvide Contrasena
 
         [HttpGet]
         [AllowAnonymous]
@@ -168,9 +177,52 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al procesar solicitud de recuperación de contraseña");
                 TempData["Error"] = "Ocurrió un error al procesar la solicitud";
                 return View();
             }
         }
+
+
+        [HttpGet]
+        public IActionResult RestablecerContrasena(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var viewModel = new RestablecerContrasenaViewModel { Token = token };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RestablecerContrasena(RestablecerContrasenaViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                var response = await _authService.RestablecerContrasena(model.Token, model.NuevaContrasena);
+                if (response)
+                {
+                    TempData["Success"] = "Contraseña actualizada exitosamente";
+                    return RedirectToAction("Login");
+                }
+
+                ModelState.AddModelError("", "Error al restablecer la contraseña");
+                return View(model);
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Ocurrió un error al procesar la solicitud");
+                return View(model);
+            }
+        }
+        #endregion
     }
 }

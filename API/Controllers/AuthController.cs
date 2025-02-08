@@ -52,6 +52,8 @@ public class AuthController : ControllerBase
     /// <returns>Mensaje de éxito o error.</returns>
     /// 
 
+    #region Activacion de Cuenta
+
     [AllowAnonymous]
     [HttpGet("activar-cuenta")]
     public async Task<IActionResult> ActivarCuenta(string token)
@@ -166,11 +168,9 @@ public class AuthController : ControllerBase
             expired = tokenExpirado
         });
     }
+    #endregion
 
-
-
-
-
+    #region Login
     /// <summary>
     /// Endpoint para autenticar a los usuarios.
     /// Verifica las credenciales y genera un token JWT para la sesión.
@@ -206,16 +206,9 @@ public class AuthController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Endpoint protegido que requiere un token JWT.
-    /// </summary>
-    /// <returns>Mensaje de éxito si el usuario está autenticado.</returns>
-    [HttpGet("protegido")]
-    [Authorize]
-    public IActionResult Protegido()
-    {
-        return Ok(new { Message = "Has accedido a un endpoint protegido." });
-    }
+    #endregion
+
+    
 
     #region Generar Token
     /// <summary>
@@ -282,6 +275,8 @@ public class AuthController : ControllerBase
         }
     }
     #endregion
+
+
     #region Regenerar Token
     /// <summary>
     /// Endpoint para regenerar un token de activación para un usuario.
@@ -383,7 +378,7 @@ public class AuthController : ControllerBase
     }
     #endregion
 
-    #region Cambio de Contraseña Activación
+    #region Cambio de Contraseña en Activación de Usuario
     [HttpPost("CambiarContrasenaActivacion")]
     public async Task<IActionResult> CambiarContrasenaActivacion([FromBody] CambiarContrasenaRequest request)
     {
@@ -509,6 +504,7 @@ public class AuthController : ControllerBase
     #endregion
 
     #region Olvide Contraseña
+    //El usuario Solicita la recuperacion
     [HttpPost("solicitar-recuperacion")]
     [AllowAnonymous]
     public async Task<IActionResult> SolicitarRecuperacion([FromBody] SolicitarRecuperacionRequest request)
@@ -585,9 +581,93 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "Error al procesar la solicitud" });
         }
     }
+    
+
+
+    /*El usuario despues de dar click en el enlace del correo y poner sus contraseña nueva en el formulario ejecuta este endpoint para asi cambiarla*/
+    [HttpPost("restablecer-contrasena")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RestablecerContrasena([FromBody] RestablecerContrasenaRequestDTO request)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.Token == request.Token &&
+                                        u.PropositoToken == PropositoTokenEnum.RecuperacionContrasena);
+
+            if (usuario == null)
+            {
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 0,
+                    tipoAccion: "Restablecer Contraseña",
+                    modulo: "Usuarios",
+                    detalle: "Intento fallido de restablecimiento. Token inválido.",
+                    token: request.Token,
+                    propositoToken: PropositoTokenEnum.RecuperacionContrasena.ToString(),
+                    estadoAccion: "Error",
+                    errorDetalle: "Token inválido"
+                );
+
+                return BadRequest(new { message = "Token inválido o expirado" });
+            }
+
+            // Validar expiración del token
+            if (usuario.FechaExpiracionToken < DateTime.Now)
+            {
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: usuario.UsuarioId,
+                    tipoAccion: "Restablecer Contraseña",
+                    modulo: "Usuarios",
+                    detalle: "Intento de restablecimiento fallido. Token expirado.",
+                    token: request.Token,
+                    propositoToken: PropositoTokenEnum.RecuperacionContrasena.ToString(),
+                    estadoAccion: "Error",
+                    errorDetalle: "Token expirado"
+                );
+
+                return BadRequest(new { message = "El enlace ha expirado" });
+            }
+
+            // Actualizar contraseña
+            usuario.Contrasena = HashContrasena.HashearContrasena(request.NuevaContrasena);
+
+            // Limpiar token usado
+            usuario.Token = null;
+            usuario.PropositoToken = null;
+            usuario.FechaExpiracionToken = null;
+
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: usuario.UsuarioId,
+                tipoAccion: "Restablecer Contraseña",
+                modulo: "Usuarios",
+                detalle: "Contraseña restablecida exitosamente",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { message = "Contraseña actualizada exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: 0,
+                tipoAccion: "Restablecer Contraseña",
+                modulo: "Usuarios",
+                detalle: "Error al restablecer contraseña",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { message = "Error al restablecer contraseña" });
+        }
+    }
     #endregion
-
-
 
 
 

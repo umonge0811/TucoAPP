@@ -1,0 +1,70 @@
+﻿@using GestionLlantera.Web.Models.ViewModels
+@model RestablecerContrasenaViewModel
+@{
+    ViewData["Title"] = "Restablecer Contraseña";
+}
+
+<div class="container min-vh-100 d-flex align-items-center">
+    <div class="row justify-content-center w-100">
+        <div class="col-11 col-sm-8 col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white py-3">
+                    <h4 class="text-center mb-0">Restablecer Contraseña</h4>
+                </div>
+                <div class="card-body px-4 py-4">
+                    <form asp-action="RestablecerContrasena" method="post">
+                        <input type="hidden" asp-for="Token" />
+
+                        @if (TempData["Error"] != null)
+                        {
+                            <div class="alert alert-danger">@TempData["Error"]</div>
+                        }
+
+                        <div class="mb-3">
+                            <label asp-for="NuevaContrasena" class="form-label">
+                                <i class="bi bi-lock-fill me-1"></i> Nueva Contraseña
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="NuevaContrasena" class="form-control" type="password" />
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('NuevaContrasena')">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="NuevaContrasena" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ConfirmarContrasena" class="form-label">
+                                <i class="bi bi-lock-fill me-1"></i> Confirmar Contraseña
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="ConfirmarContrasena" class="form-control" type="password" />
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('ConfirmarContrasena')">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100" id="submitButton">
+                            <span class="normal-state">
+                                <i class="bi bi-check-lg"></i> Actualizar Contraseña
+                            </span>
+                            <span class="loading-state" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Actualizando...
+                            </span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="~/js/views/account/restablecerContrasena.js"></script>
+}
