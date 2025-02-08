@@ -5,54 +5,26 @@ console.log('API_URL:', API_URL);
 
 // Variables globales
 let modalRoles = null;
-let spinnerModal;
-
-// Function to show/hide spinner
-function showSpinner() {
-    const spinnerModal = document.getElementById('spinnerModal');
-    if (spinnerModal) {
-        const bsModal = new bootstrap.Modal(spinnerModal);
-        bsModal.show();
-    } else {
-        console.error('Spinner modal not found');
-    }
-}
-
-function hideSpinner() {
-    const spinnerModal = document.getElementById('spinnerModal');
-    if (spinnerModal) {
-        const bsModal = bootstrap.Modal.getInstance(spinnerModal);
-        if (bsModal) {
-            bsModal.hide();
-        }
-    }
-}
 
 
+
+// Un solo event listener para la inicialización
 document.addEventListener('DOMContentLoaded', function () {
-    // Inicializar el modal al cargar la página
-    spinnerModal = new bootstrap.Modal(document.getElementById('spinnerModal'), {
-        backdrop: 'static',
-        keyboard: false
-    });
+    console.log('DOM Cargado');
 
-    const createUserForm = document.getElementById('createUserForm');
-    if (createUserForm) {
-        createUserForm.addEventListener('submit', crearUsuario);
-    }
-});
-
-// Inicialización cuando el documento está listo
-document.addEventListener('DOMContentLoaded', function () {
-    // Inicializar modal usando getElementById en lugar de bootstrap.Modal
+    // Inicializar modal usando getElementById
     const modalElement = document.getElementById('modalRoles');
     if (modalElement) {
         modalRoles = new bootstrap.Modal(modalElement);
     }
 
+    // Inicializar formulario de creación
     const createUserForm = document.getElementById('createUserForm');
     if (createUserForm) {
+        console.log('Formulario encontrado');
         createUserForm.addEventListener('submit', crearUsuario);
+    } else {
+        console.error('Formulario no encontrado');
     }
 });
 
@@ -131,95 +103,6 @@ async function editarRoles(usuarioId) {
     }
 }
 
-async function editarRoles(usuarioId) {
-    try {
-        Swal.fire({
-            title: 'Cargando roles...',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        const response = await fetch(`/Usuarios/ObtenerRolesUsuario?id=${usuarioId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Error al obtener roles');
-        }
-
-        const data = await response.json();
-        console.log('Data completa recibida:', data);
-
-        document.getElementById('usuarioId').value = usuarioId;
-
-        // Asegurarse de que roles existe y es un array
-        const roles = Array.isArray(data.roles) ? data.roles : [];
-        console.log('Roles a procesar:', roles);
-
-        const listaRoles = document.getElementById('listaRoles');
-        listaRoles.innerHTML = roles.map(rol => {
-            // Aquí usamos los nombres exactos de las propiedades que vienen de la API
-            const rolId = rol.RolId || rol.rolId || 0;
-            const nombreRol = rol.NombreRol || rol.nombreRol || '';
-            const descripcionRol = rol.DescripcionRol || rol.descripcionRol || '';
-            const asignado = rol.Asignado || rol.asignado || false;
-
-            console.log('Procesando rol:', {
-                rolId,
-                nombreRol,
-                descripcionRol,
-                asignado
-            });
-
-            return `
-                <div class="form-check">
-                    <input class="form-check-input" 
-                           type="checkbox"
-                           value="${rolId}"
-                           id="rol_${rolId}"
-                           name="roles[]"
-                           ${asignado ? 'checked' : ''}>
-                    <label class="form-check-label" for="rol_${rolId}">
-                        ${nombreRol}
-                    </label>
-                    <small class="text-muted d-block">${descripcionRol}</small>
-                </div>
-            `;
-        }).join('');
-
-        // Verificar los checkboxes después de generarlos
-        const checkboxes = document.querySelectorAll('#listaRoles input[type="checkbox"]');
-        checkboxes.forEach(cb => {
-            console.log('Checkbox generado:', {
-                id: cb.id,
-                value: cb.value,
-                checked: cb.checked
-            });
-
-            // Agregar event listener para logging
-            cb.addEventListener('change', (e) => {
-                console.log(`Checkbox ${cb.id} cambió a: ${cb.checked}`);
-            });
-        });
-
-        Swal.close();
-        modalRoles = new bootstrap.Modal(document.getElementById('modalRoles'));
-        modalRoles.show();
-
-    } catch (error) {
-        console.error('Error completo:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No se pudieron cargar los roles'
-        });
-    }
-}
 async function guardarRoles() {
     try {
         const usuarioId = document.getElementById('usuarioId').value;
@@ -354,19 +237,29 @@ async function desactivarUsuario(usuarioId) {
 // En el evento de submit del formulario
 async function crearUsuario(e) {
     e.preventDefault();
-    console.log('Formulario enviado'); // Debug log
+
+    // Obtener referencias
+    const submitButton = document.querySelector('#submitButton');
+
+    if (!submitButton) {
+        console.error('El botón de submit no fue encontrado');
+        return;
+    }
+
+    const normalState = submitButton.querySelector('.normal-state');
+    const loadingState = submitButton.querySelector('.loading-state');
 
     try {
-        showSpinner();
-        console.log('Spinner mostrado'); // Debug log
+        // Deshabilitar botón y mostrar estado de carga
+        submitButton.disabled = true;
+        normalState.style.display = 'none';
+        loadingState.style.display = 'inline-flex';
 
         const formData = {
             nombreUsuario: document.getElementById('NombreUsuario').value,
             email: document.getElementById('Email').value,
             rolId: parseInt(document.getElementById('RolId').value)
         };
-
-        console.log('Datos del formulario:', formData); // Debug log
 
         const response = await fetch('/Usuarios/CrearUsuario', {
             method: 'POST',
@@ -375,8 +268,6 @@ async function crearUsuario(e) {
             },
             body: JSON.stringify(formData)
         });
-
-        hideSpinner();
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -395,7 +286,11 @@ async function crearUsuario(e) {
         window.location.href = '/Usuarios/Index';
     } catch (error) {
         console.error('Error:', error);
-        hideSpinner();
+
+        // Restaurar estado del botón
+        submitButton.disabled = false;
+        normalState.style.display = 'inline-flex';
+        loadingState.style.display = 'none';
 
         Swal.fire({
             icon: 'error',
@@ -404,17 +299,3 @@ async function crearUsuario(e) {
         });
     }
 }
-
-
-
-// Event listener for form submission
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM Loaded'); // Debug log
-    const form = document.getElementById('createUserForm');
-    if (form) {
-        console.log('Form found'); // Debug log
-        form.addEventListener('submit', crearUsuario);
-    } else {
-        console.error('Form not found');
-    }
-});

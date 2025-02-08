@@ -58,7 +58,7 @@ namespace GestionLlantera.Web.Controllers
         // POST: /Account/Login
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)  // No tiene [FromBody]
         {
             if (!ModelState.IsValid)
                 return View(model);
@@ -80,10 +80,10 @@ namespace GestionLlantera.Web.Controllers
 
                     // Crear los claims para la identidad
                     var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, model.Email),
-                    new Claim("JwtToken", token)
-                };
+            {
+                new Claim(ClaimTypes.Name, model.Email),
+                new Claim("JwtToken", token)
+            };
 
                     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var principal = new ClaimsPrincipal(identity);
@@ -109,7 +109,6 @@ namespace GestionLlantera.Web.Controllers
                 return View(model);
             }
         }
-
         /// <summary>
         /// Método para cerrar la sesión del usuario y limpiar todas las cookies
         /// </summary>

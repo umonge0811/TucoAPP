@@ -33,7 +33,15 @@
                 </div>
 
                 <div class="mb-3">
-                    <button type="submit" class="btn btn-primary">Crear</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        <span class="normal-state">
+                            <i class="bi bi-person-plus"></i> Crear Usuario
+                        </span>
+                        <span class="loading-state" style="display: none;">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Creando usuario...
+                        </span>
+                    </button> 
                     <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
                 </div>
             </form>

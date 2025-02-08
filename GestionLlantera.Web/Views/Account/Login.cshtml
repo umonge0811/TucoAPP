@@ -12,16 +12,14 @@
                     <h4 class="text-center mb-0">Iniciar Sesión</h4>
                 </div>
                 <div class="card-body px-4 py-4">
-                    <form asp-action="Login" method="post">
+                    <form asp-action="Login" method="post" id="loginForm">
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                         <div class="mb-3">
                             <label asp-for="Email" class="form-label">
                                 <i class="bi bi-envelope-fill me-1"></i> Correo Electrónico
                             </label>
-                            <div class="input-group">
-                                <input asp-for="Email" class="form-control" placeholder="ejemplo@correo.com" />
-                            </div>
+                            <input asp-for="Email" class="form-control" placeholder="ejemplo@correo.com" />
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
 
@@ -45,11 +43,15 @@
                             </div>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-dark">
+                        <button type="submit" class="btn btn-dark w-100" id="submitButton">
+                            <span class="normal-state">
                                 <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
-                            </button>
-                        </div>
+                            </span>
+                            <span class="loading-state" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Iniciando sesión...
+                            </span>
+                        </button>
                     </form>
                 </div>
             </div>
@@ -60,19 +62,7 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        <script src="~/js/views/account/login.js"></script>
     }
-    <script>
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordInput = document.querySelector('[asp-for="Contrasena"]');
-            const icon = this.querySelector('i');
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
-            } else {
-                passwordInput.type = 'password';
-                icon.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
-            }
-        });
-    </script>
+    
 }

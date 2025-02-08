@@ -1,30 +1,14 @@
-﻿#spinnerModal {
-    background: rgba(0, 0, 0, 0.5);
+﻿
+
+/* Estilos para estados del botón */
+.normal-state, .loading-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-    #spinnerModal .modal-dialog {
-        display: flex;
-        align-items: center;
-        min-height: calc(100vh - 60px);
-    }
-
-    #spinnerModal .modal-content {
-        background-color: transparent !important;
-        border: none;
-        box-shadow: none;
-    }
-
-    #spinnerModal .spinner-border {
-        width: 3rem;
-        height: 3rem;
-    }
-
-    #spinnerModal .modal-body {
-        text-align: center;
-    }
-
-    #spinnerModal h5 {
-        color: white;
-        margin-top: 1rem;
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-    }
+/* Cuando el botón está deshabilitado */
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
