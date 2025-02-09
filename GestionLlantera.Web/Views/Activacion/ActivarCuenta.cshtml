@@ -32,23 +32,40 @@
                     </div>
                 }
 
-                <form asp-controller="Activacion" asp-action="ActivarCuenta" method="post">
+                <form asp-controller="Activacion" asp-action="ActivarCuenta" method="post" id="activationForm">
                     <input type="hidden" asp-for="Token" />
 
                     <div class="mb-3">
                         <label asp-for="NuevaContrasena" class="form-label">Nueva Contraseña</label>
-                        <input asp-for="NuevaContrasena" class="form-control" type="password" />
+                        <div class="input-group">
+                            <input asp-for="NuevaContrasena" class="form-control" type="password" />
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('NuevaContrasena')">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="NuevaContrasena" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="ConfirmarContrasena" class="form-label">Confirmar Contraseña</label>
-                        <input asp-for="ConfirmarContrasena" class="form-control" type="password" />
+                        <div class="input-group">
+                            <input asp-for="ConfirmarContrasena" class="form-control" type="password" />
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('ConfirmarContrasena')">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
                     </div>
 
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">Activar Cuenta</button>
+                        <button type="submit" class="btn btn-primary position-relative" id="submitButton" style="min-height: 38px;">
+                            <div class="normal-state w-100 d-inline-flex align-items-center justify-content-center">
+                                <i class="bi bi-check-circle me-2"></i>Activar Cuenta
+                            </div>
+                            <div class="loading-state position-absolute w-100 h-100 top-0 start-0 d-none align-items-center justify-content-center">
+                                <span class="spinner-border spinner-border-sm me-2"></span>Activando cuenta...
+                            </div>
+                        </button>
                     </div>
                 </form>
             }
@@ -60,5 +77,6 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="~/js/buttonUtils.js"></script>
     <script src="~/js/views/activacion/activarCuenta.js"></script>
 }

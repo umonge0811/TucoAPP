@@ -1,5 +1,5 @@
 ﻿// Archivo: wwwroot/js/rolesPermisos.js
-
+console.log('ButtonUtils disponible:', typeof ButtonUtils !== 'undefined');
 // Variables globales para los modales
 let modalRol = null;
 let modalPermiso = null;
@@ -11,31 +11,58 @@ const API_URL = 'https://localhost:7273';
 
 // Un solo event listener para la inicialización
 document.addEventListener('DOMContentLoaded', async function () {
+    console.log('DOM Cargado - Inicializando componentes...');
+
+    // Verificar que ButtonUtils está disponible
+    console.log('ButtonUtils disponible:', typeof ButtonUtils);
+
     // Inicializar modales
     modalRol = new bootstrap.Modal(document.getElementById('modalNuevoRol'));
     modalPermiso = new bootstrap.Modal(document.getElementById('modalNuevoPermiso'));
 
-    // Configurar eventos de los botones
-    document.getElementById('btnGuardarRol').addEventListener('click', guardarRol);
-    document.getElementById('btnGuardarPermiso').addEventListener('click', guardarPermiso);
+    // Verificar que los botones existen
+    const btnGuardarRol = document.getElementById('btnGuardarRol');
+    const btnGuardarPermiso = document.getElementById('btnGuardarPermiso');
 
-    // Configurar eventos de los tabs
-    const configTabs = document.querySelectorAll('a[data-bs-toggle="tab"]');
-    configTabs.forEach(tab => {
-        tab.addEventListener('shown.bs.tab', async (event) => {
-            const targetTab = event.target.getAttribute('href');
-            if (targetTab === '#roles') {
-                await cargarRoles();
-            } else if (targetTab === '#permisos') {
-                await cargarPermisos();
-            }
-        });
+    console.log('Botones encontrados:', {
+        btnGuardarRol: btnGuardarRol,
+        btnGuardarPermiso: btnGuardarPermiso
     });
 
-    // Cargar datos iniciales
-    await Promise.all([cargarPermisos(), cargarRoles()]);
-});
+    // Verificar la estructura de los botones
+    if (btnGuardarRol) {
+        console.log('Estructura btnGuardarRol:', {
+            normalState: btnGuardarRol.querySelector('.normal-state'),
+            loadingState: btnGuardarRol.querySelector('.loading-state')
+        });
+    }
 
+    if (btnGuardarPermiso) {
+        console.log('Estructura btnGuardarPermiso:', {
+            normalState: btnGuardarPermiso.querySelector('.normal-state'),
+            loadingState: btnGuardarPermiso.querySelector('.loading-state')
+        });
+    }
+
+    // Configurar eventos de los botones
+    if (btnGuardarRol) {
+        btnGuardarRol.addEventListener('click', guardarRol);
+        console.log('Evento click configurado para btnGuardarRol');
+    }
+
+    if (btnGuardarPermiso) {
+        btnGuardarPermiso.addEventListener('click', guardarPermiso);
+        console.log('Evento click configurado para btnGuardarPermiso');
+    }
+
+    // Cargar datos iniciales
+    try {
+        await Promise.all([cargarPermisos(), cargarRoles()]);
+        console.log('Datos iniciales cargados exitosamente');
+    } catch (error) {
+        console.error('Error al cargar datos iniciales:', error);
+    }
+});
 
 // Función asíncrona para cargar los permisos desde la API  HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
 async function cargarPermisos() {
@@ -263,18 +290,25 @@ async function abrirModalNuevoPermiso() {
 }
 
 async function editarRol(rolId) {
+    const submitButton = document.querySelector(`button[onclick="editarRol(${rolId})"]`);
+
     try {
-        // 1. Obtener la información del rol HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
+        // Mostrar estado de carga en el botón
+        if (submitButton) {
+            ButtonUtils.startLoading(submitButton);
+        }
+
+        // 1. Obtener la información del rol
         const rolResponse = await fetch(`${API_URL}/api/Roles/obtener-rol-id/${rolId}`);
         if (!rolResponse.ok) throw new Error('Error al obtener rol');
         const rol = await rolResponse.json();
 
-        // 2. Obtener los permisos del rol HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
+        // 2. Obtener los permisos del rol
         const permisosRolResponse = await fetch(`${API_URL}/api/Roles/obtener-permisos-del-rol/${rolId}`);
         if (!permisosRolResponse.ok) throw new Error('Error al obtener permisos del rol');
         const permisosRol = await permisosRolResponse.json();
 
-        // 3. Obtener todos los permisos disponibles HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
+        // 3. Obtener todos los permisos disponibles
         const permisosResponse = await fetch(`${API_URL}/api/Permisos/obtener-todos`);
         if (!permisosResponse.ok) throw new Error('Error al obtener permisos');
         const todosLosPermisos = await permisosResponse.json();
@@ -286,21 +320,18 @@ async function editarRol(rolId) {
 
         // Generar lista de permisos y marcar los que ya tiene asignados
         const listaPermisos = document.getElementById('listaPermisos');
-        listaPermisos.innerHTML = todosLosPermisos.map(permiso => {
-            const estaAsignado = permisosRol.some(p => p.permisoId === permiso.permisoId);
-            return `
-                <div class="form-check mb-2">
-                    <input class="form-check-input" type="checkbox"
-                           value="${permiso.permisoId}"
-                           id="permiso_${permiso.permisoId}"
-                           ${estaAsignado ? 'checked' : ''}>
-                    <label class="form-check-label" for="permiso_${permiso.permisoId}">
-                        ${permiso.nombrePermiso}
-                    </label>
-                    <small class="text-muted d-block">${permiso.descripcionPermiso || ''}</small>
-                </div>
-            `;
-        }).join('');
+        listaPermisos.innerHTML = todosLosPermisos.map(permiso => `
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox"
+                       value="${permiso.permisoId}"
+                       id="permiso_${permiso.permisoId}"
+                       ${permisosRol.some(p => p.permisoId === permiso.permisoId) ? 'checked' : ''}>
+                <label class="form-check-label" for="permiso_${permiso.permisoId}">
+                    ${permiso.nombrePermiso}
+                </label>
+                <small class="text-muted d-block">${permiso.descripcionPermiso || ''}</small>
+            </div>
+        `).join('');
 
         // Actualizar título del modal
         document.querySelector('#modalNuevoRol .modal-title').textContent = 'Editar Rol';
@@ -310,72 +341,124 @@ async function editarRol(rolId) {
 
     } catch (error) {
         console.error('Error:', error);
-        mostrarNotificacion('Error al cargar los datos del rol', 'error');
+        toastr.error('Error al cargar los datos del rol');
+    } finally {
+        // Restaurar estado del botón
+        if (submitButton) {
+            ButtonUtils.stopLoading(submitButton);
+        }
     }
 }
 
 
 // Función para guardar rol
-// Y mejoramos la función de guardar rol
 async function guardarRol() {
+    console.log('Iniciando guardarRol');
     const submitButton = document.getElementById('btnGuardarRol');
+
     if (!submitButton) {
-        console.error('Botón no encontrado');
+        console.error('Botón guardarRol no encontrado');
         return;
     }
 
     try {
+        console.log('Iniciando proceso de guardado de rol');
+        ButtonUtils.startLoading(submitButton);
+
         // Obtener los datos del formulario
+        const rolId = document.getElementById('rolId').value;
         const nombreRol = document.getElementById('nombreRol').value.trim();
         const descripcionRol = document.getElementById('descripcionRol').value.trim();
-        const permisosSeleccionados = Array.from(
-            document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked')
-        ).map(cb => parseInt(cb.value));
+
+        // Obtener permisos seleccionados
+        const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
+        const permisoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        console.log('PermisoIds seleccionados:', permisoIds);
 
         // Validaciones
         if (!nombreRol) {
+            console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
+            ButtonUtils.stopLoading(submitButton);
             return;
         }
 
-        // Mostrar spinner
-        ButtonUtils.startLoading(submitButton);
-        console.log('Spinner iniciado'); // Para debugging
+        const isEditing = rolId !== '0';
 
-        // Crear objeto con los datos
-        const dataRol = {
-            nombreRol: nombreRol,
-            descripcionRol: descripcionRol,
-            permisoIds: permisosSeleccionados
-        };
+        if (isEditing) {
+            // 1. Primero actualizamos la información básica del rol
+            const dataRol = {
+                id: parseInt(rolId),
+                nombreRol: nombreRol,
+                descripcionRol: descripcionRol
+            };
 
-        // Enviar petición
-        const response = await fetch(`${API_URL}/api/Roles/CrearRoles`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dataRol)
-        });
+            const updateResponse = await fetch(`${API_URL}/api/Roles/actualizarRole/${rolId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(dataRol)
+            });
 
-        if (!response.ok) {
-            throw new Error('Error al guardar el rol');
+            if (!updateResponse.ok) {
+                const errorData = await updateResponse.json();
+                throw new Error(errorData.message || 'Error al actualizar el rol');
+            }
+
+            // 2. Luego actualizamos los permisos usando el endpoint correcto
+            const permisosResponse = await fetch(`${API_URL}/api/Roles/actualizar-permisos-del-rol/${rolId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(permisoIds)
+            });
+
+            if (!permisosResponse.ok) {
+                const errorData = await permisosResponse.json();
+                throw new Error(errorData.message || 'Error al actualizar los permisos del rol');
+            }
+        } else {
+            // Si es un nuevo rol, usamos el endpoint de creación que maneja todo junto
+            const dataRol = {
+                nombreRol: nombreRol,
+                descripcionRol: descripcionRol,
+                permisoIds: permisoIds
+            };
+
+            const response = await fetch(`${API_URL}/api/Roles/CrearRoles`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(dataRol)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al crear el rol');
+            }
         }
 
-        // Si todo sale bien
+        console.log('Rol guardado exitosamente');
         await cargarRoles();
         modalRol.hide();
-        toastr.success('Rol creado exitosamente');
+        toastr.success(isEditing ? 'Rol actualizado exitosamente' : 'Rol creado exitosamente');
 
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error en guardarRol:', error);
         toastr.error(error.message || 'Error al guardar el rol');
     } finally {
-        // Ocultar spinner
+        console.log('Finalizando guardarRol');
         ButtonUtils.stopLoading(submitButton);
-        console.log('Spinner detenido'); // Para debugging
     }
 }
+
 // Función para eliminar rol
 async function eliminarRol(rolId) {
     // Mostrar confirmación con SweetAlert2
@@ -440,9 +523,20 @@ async function abrirModalNuevoPermiso() {
     }
 }
 
-// Función para guardar permiso (crear/editar)
+// Función para guardar permiso
 async function guardarPermiso() {
+    console.log('Iniciando guardarPermiso');
+    const submitButton = document.getElementById('btnGuardarPermiso');
+
+    if (!submitButton) {
+        console.error('Botón guardarPermiso no encontrado');
+        return;
+    }
+
     try {
+        console.log('Iniciando proceso de guardado de permiso');
+        ButtonUtils.startLoading(submitButton);
+
         // Obtener valores del formulario
         const permisoId = document.getElementById('permisoId').value;
         const nombrePermiso = document.getElementById('nombrePermiso').value.trim();
@@ -450,7 +544,9 @@ async function guardarPermiso() {
 
         // Validaciones básicas
         if (!nombrePermiso) {
-            mostrarNotificacion('El nombre del permiso es requerido', 'warning');
+            console.warn('Nombre de permiso vacío');
+            toastr.warning('El nombre del permiso es requerido');
+            ButtonUtils.stopLoading(submitButton);
             return;
         }
 
@@ -459,10 +555,12 @@ async function guardarPermiso() {
             nombrePermiso: nombrePermiso,
             descripcionPermiso: descripcionPermiso
         };
-         
-        // Determinar si es creación o actualización HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
-        const url = permisoId === '0' ? 
-            `${API_URL}/api/Permisos/crear-permiso` : 
+
+        console.log('Datos a enviar:', data);
+
+        // Determinar si es creación o actualización
+        const url = permisoId === '0' ?
+            `${API_URL}/api/Permisos/crear-permiso` :
             `${API_URL}/api/Permisos/actualizar/${permisoId}`;
 
         const response = await fetch(url, {
@@ -474,25 +572,20 @@ async function guardarPermiso() {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Error al guardar el permiso');
+            throw new Error('Error al guardar el permiso');
         }
 
-        // Cerrar modal y recargar ambas tablas
+        console.log('Permiso guardado exitosamente');
         modalPermiso.hide();
-        await Promise.all([
-            cargarPermisos(),
-            cargarRoles() // Agregar esta línea
-        ]);
-
-        mostrarNotificacion(
-            permisoId === '0' ? 'Permiso creado exitosamente' : 'Permiso actualizado exitosamente',
-            'success'
-        );
+        await Promise.all([cargarPermisos(), cargarRoles()]);
+        toastr.success('Permiso guardado exitosamente');
 
     } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion(error.message || 'Error al guardar el permiso', 'error');
+        console.error('Error en guardarPermiso:', error);
+        toastr.error(error.message || 'Error al guardar el permiso');
+    } finally {
+        console.log('Finalizando guardarPermiso');
+        ButtonUtils.stopLoading(submitButton);
     }
 }
 

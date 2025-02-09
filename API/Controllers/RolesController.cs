@@ -290,8 +290,6 @@ public class RolesController : ControllerBase
     }
     #endregion
 
-
-
     #region Obtener permisos asociados a un rol
     /// <summary>
     /// Obtener los permisos asociados a un rol específico.
