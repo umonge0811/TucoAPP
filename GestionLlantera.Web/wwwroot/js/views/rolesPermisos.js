@@ -9,50 +9,24 @@ const API_URL = 'https://localhost:7273';
 
 
 
-// Un solo event listener para la inicialización
+// Event listener principal para la inicialización
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('DOM Cargado - Inicializando componentes...');
-
-    // Verificar que ButtonUtils está disponible
-    console.log('ButtonUtils disponible:', typeof ButtonUtils);
 
     // Inicializar modales
     modalRol = new bootstrap.Modal(document.getElementById('modalNuevoRol'));
     modalPermiso = new bootstrap.Modal(document.getElementById('modalNuevoPermiso'));
 
-    // Verificar que los botones existen
+    // Verificar que los botones existen y configurar eventos
     const btnGuardarRol = document.getElementById('btnGuardarRol');
     const btnGuardarPermiso = document.getElementById('btnGuardarPermiso');
 
-    console.log('Botones encontrados:', {
-        btnGuardarRol: btnGuardarRol,
-        btnGuardarPermiso: btnGuardarPermiso
-    });
-
-    // Verificar la estructura de los botones
-    if (btnGuardarRol) {
-        console.log('Estructura btnGuardarRol:', {
-            normalState: btnGuardarRol.querySelector('.normal-state'),
-            loadingState: btnGuardarRol.querySelector('.loading-state')
-        });
-    }
-
-    if (btnGuardarPermiso) {
-        console.log('Estructura btnGuardarPermiso:', {
-            normalState: btnGuardarPermiso.querySelector('.normal-state'),
-            loadingState: btnGuardarPermiso.querySelector('.loading-state')
-        });
-    }
-
-    // Configurar eventos de los botones
     if (btnGuardarRol) {
         btnGuardarRol.addEventListener('click', guardarRol);
-        console.log('Evento click configurado para btnGuardarRol');
     }
 
     if (btnGuardarPermiso) {
         btnGuardarPermiso.addEventListener('click', guardarPermiso);
-        console.log('Evento click configurado para btnGuardarPermiso');
     }
 
     // Cargar datos iniciales
@@ -63,135 +37,91 @@ document.addEventListener('DOMContentLoaded', async function () {
         console.error('Error al cargar datos iniciales:', error);
     }
 });
-
-// Función asíncrona para cargar los permisos desde la API  HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
+// Función para cargar todos los permisos
 async function cargarPermisos() {
     try {
-        // Log para debugging
         console.log('Iniciando carga de permisos...');
 
-        // Realizar la petición GET a la API
-        const response = await fetch(`${API_URL}/api/Permisos/obtener-todos`, {
-            method: 'GET',
-            headers: {
-                // Especificar que aceptamos JSON como respuesta
-                'Accept': 'application/json',
-                // Especificar que enviamos JSON (aunque es GET)
-                'Content-Type': 'application/json'
-            },
-            // Habilitar CORS explícitamente
-            mode: 'cors'
-        });
+        // Llamada al nuevo endpoint del controlador
+        const response = await fetch('/Configuracion/ObtenerPermisos');
 
-        // Verificar si la respuesta fue exitosa
         if (!response.ok) {
-            console.error('Error response:', await response.text());
             throw new Error('Error al cargar permisos');
         }
 
-        // Convertir la respuesta a JSON
         const permisos = await response.json();
         console.log('Permisos cargados:', permisos);
 
-        // Obtener la referencia a la tabla donde se mostrarán los permisos
-        const tablaPermisos = document.getElementById('tablaPermisos');
-        // Limpiar la tabla antes de agregar nuevos datos
-        tablaPermisos.innerHTML = '';
+        // Actualizar la tabla de permisos
+        actualizarTablaPermisos(permisos);
 
-        // Iterar sobre cada permiso y crear las filas de la tabla
-        permisos.forEach(permiso => {
-            const tr = document.createElement('tr');
-            // Crear el HTML para cada fila con los datos del permiso
-            tr.innerHTML = `
-                <td>${permiso.nombrePermiso}</td>
-                <td>${permiso.descripcionPermiso || '-'}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary me-2" onclick="editarPermiso(${permiso.permisoId})">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(${permiso.permisoId})">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            `;
-            // Agregar la fila a la tabla
-            tablaPermisos.appendChild(tr);
-        });
-
+        return permisos;
     } catch (error) {
-        // Registrar el error en la consola para debugging
-        console.error('Error detallado:', error);
-        // Mostrar un mensaje de error al usuario
-        mostrarNotificacion('Error al cargar los permisos: ' + error.message, 'error');
+        console.error('Error al cargar permisos:', error);
+        toastr.error('Error al cargar los permisos');
+        throw error;
     }
 }
+
 
 /**
  * Función para cargar y mostrar los roles en la tabla
  * Mantiene el mismo estilo que la tabla de permisos
  */
-// Función para cargar roles  HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
+// Función para cargar todos los roles
 async function cargarRoles() {
     try {
         console.log('Iniciando carga de roles...');
 
-        // Primero obtenemos los roles
-        const rolesResponse = await fetch(`${API_URL}/api/Roles/ObtenerTodosRoles`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
+        // Llamada al nuevo endpoint del controlador
+        const response = await fetch('/Configuracion/ObtenerRoles');
 
-        if (!rolesResponse.ok) throw new Error('Error al cargar roles');
-        const roles = await rolesResponse.json();
+        if (!response.ok) {
+            throw new Error('Error al cargar roles');
+        }
 
-        // Para cada rol, obtenemos sus permisos  HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
-        const rolesConPermisos = await Promise.all(roles.map(async (rol) => {
-            const permisosResponse = await fetch(`${API_URL}/api/Roles/obtener-permisos-del-rol/${rol.rolId}`);
-            if (permisosResponse.ok) {
-                const permisos = await permisosResponse.json();
-                return { ...rol, permisos };
-            }
-            return rol;
-        }));
+        const roles = await response.json();
+        console.log('Roles cargados:', roles);
 
-        const tbody = document.querySelector('#tablaRoles tbody');
-        tbody.innerHTML = '';
+        // Actualizar la tabla de roles
+        actualizarTablaRoles(roles);
 
-        // Renderizar los roles con sus permisos
-        rolesConPermisos.forEach(rol => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${rol.nombreRol}</td>
-                <td>${rol.descripcionRol || '-'}</td>
-                <td>
-                    ${rol.permisos && rol.permisos.length > 0
-                    ? rol.permisos.map(permiso =>
-                        `<span class="badge bg-primary me-1">${permiso.nombrePermiso}</span>`
-                    ).join('')
-                    : '<span class="text-muted">Sin permisos</span>'
-                }
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-primary me-2" onclick="editarRol(${rol.rolId})" title="Editar">
-                        <i class="bi bi-pencil-fill"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})" title="Eliminar">
-                        <i class="bi bi-trash-fill"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-
+        return roles;
     } catch (error) {
         console.error('Error al cargar roles:', error);
-        mostrarNotificacion('Error al cargar los roles', 'error');
+        toastr.error('Error al cargar los roles');
+        throw error;
     }
 }
 
+// Función auxiliar para actualizar la tabla de roles
+function actualizarTablaRoles(roles) {
+    const tbody = document.querySelector('#tablaRoles tbody');
+    if (!tbody) return;
+
+    tbody.innerHTML = roles.map(rol => `
+        <tr>
+            <td>${rol.nombreRol}</td>
+            <td>${rol.descripcionRol || '-'}</td>
+            <td>
+                ${rol.permisos && rol.permisos.length > 0
+            ? rol.permisos.map(permiso =>
+                `<span class="badge bg-primary me-1">${permiso.nombrePermiso}</span>`
+            ).join('')
+            : '<span class="text-muted">Sin permisos</span>'
+        }
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary me-2" onclick="editarRol(${rol.rolId})" title="Editar">
+                    <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})" title="Eliminar">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
 
 /**
  * Función auxiliar para formatear los permisos de un rol
