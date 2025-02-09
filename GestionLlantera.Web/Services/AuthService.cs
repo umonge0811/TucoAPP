@@ -137,7 +137,6 @@ namespace GestionLlantera.Web.Services
         }
         #endregion
 
-
         #region CambiarContrasena ACTIVACION
         // Cambiar contraseña durante activación
         public async Task<bool> CambiarContrasena(string token, string nuevaContrasena)
@@ -232,7 +231,6 @@ namespace GestionLlantera.Web.Services
                 return false;
             }
         }
-
         #endregion
     }
 

@@ -4,6 +4,17 @@
     ViewData["Title"] = "Restablecer Contraseña";
 }
 
+<div id="tokenInvalidoAlert" style="display: none;">
+    <div class="alert alert-warning text-center">
+        <h4 class="alert-heading">Enlace no válido</h4>
+        <p id="mensajeError"></p>
+        <hr>
+        <a href="@Url.Action("OlvideContrasena", "Account")" class="btn btn-primary">
+            Solicitar nuevo enlace
+        </a>
+    </div>
+</div>
+
 <div class="container min-vh-100 d-flex align-items-center">
     <div class="row justify-content-center w-100">
         <div class="col-11 col-sm-8 col-md-6 col-lg-5">
@@ -12,8 +23,9 @@
                     <h4 class="text-center mb-0">Restablecer Contraseña</h4>
                 </div>
                 <div class="card-body px-4 py-4">
-                    <form asp-action="RestablecerContrasena" method="post">
-                        <input type="hidden" asp-for="Token" />
+                    <div id="formContainer">
+                        <form id="restablecerForm" asp-action="RestablecerContrasena" method="post">
+                            <input type="hidden" asp-for="Token" />
 
                         @if (TempData["Error"] != null)
                         {
@@ -25,7 +37,7 @@
                                 <i class="bi bi-lock-fill me-1"></i> Nueva Contraseña
                             </label>
                             <div class="input-group">
-                                <input asp-for="NuevaContrasena" class="form-control" type="password" />
+                                <input asp-for="NuevaContrasena" type="password" class="form-control" />
                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('NuevaContrasena')">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
@@ -38,7 +50,7 @@
                                 <i class="bi bi-lock-fill me-1"></i> Confirmar Contraseña
                             </label>
                             <div class="input-group">
-                                <input asp-for="ConfirmarContrasena" class="form-control" type="password" />
+                                <input asp-for="ConfirmarContrasena" type="password" class="form-control" />
                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('ConfirmarContrasena')">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
@@ -56,6 +68,7 @@
                             </span>
                         </button>
                     </form>
+                    </div>
                 </div>
             </div>
         </div>

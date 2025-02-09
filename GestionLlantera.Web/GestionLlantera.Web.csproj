@@ -15,4 +15,8 @@
     <ProjectReference Include="..\API\API.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\js\utils\" />
+  </ItemGroup>
+
 </Project>

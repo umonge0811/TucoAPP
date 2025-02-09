@@ -42,13 +42,14 @@ function showNotification(message, type) {
 // Funciones para la activación de cuenta
 function togglePassword(inputId) {
     const input = document.getElementById(inputId);
-    const icon = event.currentTarget.querySelector('i');
+    const button = event.currentTarget;
+    const icon = button.querySelector('i');
 
     if (input.type === 'password') {
         input.type = 'text';
-        icon.classList.replace('bi-eye', 'bi-eye-slash');
+        icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
     } else {
         input.type = 'password';
-        icon.classList.replace('bi-eye-slash', 'bi-eye');
+        icon.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
     }
 }

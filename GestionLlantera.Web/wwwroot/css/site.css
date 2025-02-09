@@ -123,4 +123,11 @@ html, body {
     padding: 1rem 0;
     margin-top: auto; /* Empuja el footer al final */
 }
+
+/* Ocultar el icono del navegador en los inputs de tipo password */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none;
+}
         

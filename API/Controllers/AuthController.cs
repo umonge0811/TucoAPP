@@ -207,7 +207,6 @@ public class AuthController : ControllerBase
     }
 
     #endregion
-
     
 
     #region Generar Token
@@ -581,7 +580,36 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "Error al procesar la solicitud" });
         }
     }
-    
+
+
+    [HttpGet("verificar-token-recuperacion")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerificarTokenRecuperacion(string token)
+    {
+        var usuario = await _context.Usuarios
+            .FirstOrDefaultAsync(u => u.Token == token &&
+                                    u.PropositoToken == PropositoTokenEnum.RecuperacionContrasena);
+
+        if (usuario == null)
+        {
+            return Ok(new
+            {
+                valido = false,
+                mensaje = "El enlace ya no es válido o ha sido utilizado"
+            });
+        }
+
+        if (usuario.FechaExpiracionToken < DateTime.Now)
+        {
+            return Ok(new
+            {
+                valido = false,
+                mensaje = "El enlace ha expirado. Por favor, solicita un nuevo enlace"
+            });
+        }
+
+        return Ok(new { valido = true });
+    }
 
 
     /*El usuario despues de dar click en el enlace del correo y poner sus contraseña nueva en el formulario ejecuta este endpoint para asi cambiarla*/

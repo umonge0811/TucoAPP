@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     await Promise.all([cargarPermisos(), cargarRoles()]);
 });
 
-// Función asíncrona para cargar los permisos desde la API
+
+// Función asíncrona para cargar los permisos desde la API  HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
 async function cargarPermisos() {
     try {
         // Log para debugging
@@ -102,7 +103,7 @@ async function cargarPermisos() {
  * Función para cargar y mostrar los roles en la tabla
  * Mantiene el mismo estilo que la tabla de permisos
  */
-// Función para cargar roles
+// Función para cargar roles  HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
 async function cargarRoles() {
     try {
         console.log('Iniciando carga de roles...');
@@ -119,7 +120,7 @@ async function cargarRoles() {
         if (!rolesResponse.ok) throw new Error('Error al cargar roles');
         const roles = await rolesResponse.json();
 
-        // Para cada rol, obtenemos sus permisos
+        // Para cada rol, obtenemos sus permisos  HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
         const rolesConPermisos = await Promise.all(roles.map(async (rol) => {
             const permisosResponse = await fetch(`${API_URL}/api/Roles/obtener-permisos-del-rol/${rol.rolId}`);
             if (permisosResponse.ok) {
@@ -196,19 +197,12 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-//// Inicializar cuando el DOM esté listo
-//document.addEventListener('DOMContentLoaded', () => {
-//    cargarPermisos();
-//    cargarRoles();
-//});
-
-
 // Función para abrir el modal de nuevo rol
 async function abrirModalNuevoRol() {
     try {
         console.log('Abriendo modal de nuevo rol...');
 
-        // Cargar los permisos disponibles
+        // Cargar los permisos disponibles HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
         const response = await fetch(`${API_URL}/api/Permisos/obtener-todos`, {
             method: 'GET',
             headers: {
@@ -270,17 +264,17 @@ async function abrirModalNuevoPermiso() {
 
 async function editarRol(rolId) {
     try {
-        // 1. Obtener la información del rol
+        // 1. Obtener la información del rol HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
         const rolResponse = await fetch(`${API_URL}/api/Roles/obtener-rol-id/${rolId}`);
         if (!rolResponse.ok) throw new Error('Error al obtener rol');
         const rol = await rolResponse.json();
 
-        // 2. Obtener los permisos del rol
+        // 2. Obtener los permisos del rol HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
         const permisosRolResponse = await fetch(`${API_URL}/api/Roles/obtener-permisos-del-rol/${rolId}`);
         if (!permisosRolResponse.ok) throw new Error('Error al obtener permisos del rol');
         const permisosRol = await permisosRolResponse.json();
 
-        // 3. Obtener todos los permisos disponibles
+        // 3. Obtener todos los permisos disponibles HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
         const permisosResponse = await fetch(`${API_URL}/api/Permisos/obtener-todos`);
         if (!permisosResponse.ok) throw new Error('Error al obtener permisos');
         const todosLosPermisos = await permisosResponse.json();
@@ -324,8 +318,14 @@ async function editarRol(rolId) {
 // Función para guardar rol
 // Y mejoramos la función de guardar rol
 async function guardarRol() {
+    const submitButton = document.getElementById('btnGuardarRol');
+    if (!submitButton) {
+        console.error('Botón no encontrado');
+        return;
+    }
+
     try {
-        const rolId = document.getElementById('rolId').value;
+        // Obtener los datos del formulario
         const nombreRol = document.getElementById('nombreRol').value.trim();
         const descripcionRol = document.getElementById('descripcionRol').value.trim();
         const permisosSeleccionados = Array.from(
@@ -334,76 +334,48 @@ async function guardarRol() {
 
         // Validaciones
         if (!nombreRol) {
-            mostrarNotificacion('El nombre del rol es requerido', 'warning');
+            toastr.warning('El nombre del rol es requerido');
             return;
         }
 
-        // 1. Primero actualizamos la información básica del rol
+        // Mostrar spinner
+        ButtonUtils.startLoading(submitButton);
+        console.log('Spinner iniciado'); // Para debugging
+
+        // Crear objeto con los datos
         const dataRol = {
             nombreRol: nombreRol,
-            descripcionRol: descripcionRol
+            descripcionRol: descripcionRol,
+            permisoIds: permisosSeleccionados
         };
 
-        let response;
-        if (rolId === '0') {
-            // Si es nuevo rol
-            response = await fetch(`${API_URL}/api/Roles/CrearRoles`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ...dataRol,
-                    permisoIds: permisosSeleccionados
-                })
-            });
-        } else {
-            // Si es actualización
-            // Actualizar información básica
-            response = await fetch(`${API_URL}/api/Roles/actualizarRole/${rolId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(dataRol)
-            });
-
-            if (response.ok) {
-                // 2. Luego actualizamos los permisos
-                const responsePermisos = await fetch(`${API_URL}/api/Roles/actualizar-permisos-del-rol/${rolId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(permisosSeleccionados)
-                });
-
-                if (!responsePermisos.ok) {
-                    throw new Error('Error al actualizar los permisos');
-                }
-            }
-        }
+        // Enviar petición
+        const response = await fetch(`${API_URL}/api/Roles/CrearRoles`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dataRol)
+        });
 
         if (!response.ok) {
             throw new Error('Error al guardar el rol');
         }
 
-        // Actualizar la vista
+        // Si todo sale bien
         await cargarRoles();
-
-        // Cerrar modal y mostrar mensaje
         modalRol.hide();
-        mostrarNotificacion(
-            rolId === '0' ? 'Rol creado exitosamente' : 'Rol actualizado exitosamente',
-            'success'
-        );
+        toastr.success('Rol creado exitosamente');
 
     } catch (error) {
         console.error('Error:', error);
-        mostrarNotificacion(error.message || 'Error al guardar el rol', 'error');
+        toastr.error(error.message || 'Error al guardar el rol');
+    } finally {
+        // Ocultar spinner
+        ButtonUtils.stopLoading(submitButton);
+        console.log('Spinner detenido'); // Para debugging
     }
 }
-
 // Función para eliminar rol
 async function eliminarRol(rolId) {
     // Mostrar confirmación con SweetAlert2
@@ -420,6 +392,8 @@ async function eliminarRol(rolId) {
 
     if (result.isConfirmed) {
         try {
+
+            //HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
             const response = await fetch(`${API_URL}/api/Roles/${rolId}`, {
                 method: 'DELETE'
             });
@@ -485,8 +459,8 @@ async function guardarPermiso() {
             nombrePermiso: nombrePermiso,
             descripcionPermiso: descripcionPermiso
         };
-
-        // Determinar si es creación o actualización
+         
+        // Determinar si es creación o actualización HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
         const url = permisoId === '0' ? 
             `${API_URL}/api/Permisos/crear-permiso` : 
             `${API_URL}/api/Permisos/actualizar/${permisoId}`;
@@ -526,7 +500,7 @@ async function guardarPermiso() {
 async function editarPermiso(permisoId) {
     try {
         // Obtener datos del permiso
-        const response = await fetch(`${API_URL}/api/Permisos/obtener-por-id/${permisoId}`);
+        const response = await fetch(`${API_URL}/api/Permisos/obtener-por-id/${permisoId}`); //HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
         if (!response.ok) throw new Error('Error al obtener permiso');
 
         const permiso = await response.json();
@@ -564,6 +538,7 @@ async function eliminarPermiso(permisoId) {
         });
 
         if (result.isConfirmed) {
+            //HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
             const response = await fetch(`${API_URL}/api/Permisos/eliminar/${permisoId}`, {
                 method: 'DELETE'
             });

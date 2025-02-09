@@ -31,13 +31,15 @@
 
         @* Tab de Roles - Mantenemos la estructura original que funcionaba *@
         <div class="tab-pane fade show active" id="roles" role="tabpanel">
-            <div class="row mb-3">
-                <div class="col">
-                    <button class="btn btn-primary" onclick="abrirModalNuevoRol()">
-                        <i class="bi bi-plus-circle"></i> Nuevo Rol
-                    </button>
-                </div>
-            </div>
+            <button class="btn btn-primary" onclick="abrirModalNuevoRol()" id="btnNuevoRol">
+                <span class="normal-state">
+                    <i class="bi bi-plus-circle"></i> Nuevo Rol
+                </span>
+                <span class="loading-state" style="display: none;">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Procesando...
+                </span>
+            </button>
             <div class="table-responsive">
                 <table class="table table-striped table-hover" id="tablaRoles">
                     <thead class="table-light">
@@ -145,4 +147,6 @@
 
 @section Scripts {
     <script src="~/js/views/rolesPermisos.js"></script>
+        <script src="~/js/utils/buttonUtils.js"></script>
+
 }
