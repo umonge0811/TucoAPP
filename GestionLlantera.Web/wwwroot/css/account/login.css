@@ -1,0 +1,27 @@
+﻿/* Estilos específicos para la página de login */
+.login-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+    .login-card .card-header {
+        background: var(--primary-color);
+        border-radius: 1rem 1rem 0 0;
+        padding: 1.5rem;
+    }
+
+    .login-card .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+    }
+
+    .login-card .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+.login-icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+}

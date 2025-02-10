@@ -1,31 +1,135 @@
-﻿@* Views/Home/Index.cshtml - Página de inicio pública *@
-@{
+﻿@{
     ViewData["Title"] = "Inicio";
 }
 
-@* Sección de bienvenida *@
-<div class="text-center">
-    @* Título principal *@
-    <h1 class="display-4 mt-5">Bienvenido a Llantera</h1>
-    @* Subtítulo o descripción corta *@
-    <p class="lead">Tu mejor opción en llantas y servicios automotrices</p>
+@* Hero Section *@
+<div class="hero-section">
+    <div class="position-absolute w-100 h-100">
+        <img src="https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&q=80&w=2070"
+             alt="Llantera Hero"
+             class="w-100 h-100 object-fit-cover" />
+        <div class="overlay"></div>
+    </div>
+    <div class="container h-100">
+        <div class="d-flex align-items-center h-100">
+            <div class="hero-content text-white">
+                <h1 class="display-4 fw-bold mb-4">Llantera Tuco</h1>
+                <p class="fs-4 mb-4">Tu mejor opción en llantas y servicios automotrices. Calidad y profesionalismo garantizado.</p>
+                <a href="#contacto" class="btn btn-primary-custom d-inline-flex align-items-center gap-2">
+                    Agendar Servicio
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
-@* Sección de características principales *@
-<div class="row mt-5">
-    @* Característica 1 - Calidad *@
-    <div class="col-md-4">
-        <h3>Calidad</h3>
-        <p>Las mejores marcas y productos del mercado.</p>
+@* Features Section *@
+<div class="py-5 bg-light">
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-car-front feature-icon"></i>
+                    <h3 class="fs-4 fw-bold mb-3">Calidad Premium</h3>
+                    <p class="text-muted">Trabajamos con las mejores marcas del mercado para garantizar tu seguridad y satisfacción.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-wrench feature-icon"></i>
+                    <h3 class="fs-4 fw-bold mb-3">Servicio Profesional</h3>
+                    <p class="text-muted">Nuestro equipo de técnicos certificados te brinda la mejor atención personalizada.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <i class="bi bi-shield-check feature-icon"></i>
+                    <h3 class="fs-4 fw-bold mb-3">Garantía Total</h3>
+                    <p class="text-muted">Respaldamos todos nuestros productos y servicios con garantías reales.</p>
+                </div>
+            </div>
+        </div>
     </div>
-    @* Característica 2 - Servicio *@
-    <div class="col-md-4">
-        <h3>Servicio</h3>
-        <p>Atención personalizada y profesional.</p>
+</div>
+
+@* Services Section *@
+<div id="servicios" class="py-5">
+    <div class="container py-5">
+        <h2 class="text-center display-6 fw-bold mb-5">Nuestros Servicios</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&q=80&w=1000"
+                         alt="Venta de Llantas"
+                         class="w-100 object-fit-cover"
+                         style="height: 300px;" />
+                    <div class="service-content">
+                        <h3 class="fs-4 fw-bold mb-2">Venta de Llantas</h3>
+                        <p class="mb-0">Gran variedad de marcas y modelos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1632823471565-1ecdf5c6d7f7?auto=format&fit=crop&q=80&w=1000"
+                         alt="Alineación y Balanceo"
+                         class="w-100 object-fit-cover"
+                         style="height: 300px;" />
+                    <div class="service-content">
+                        <h3 class="fs-4 fw-bold mb-2">Alineación y Balanceo</h3>
+                        <p class="mb-0">Equipos de última generación</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="service-card">
+                    <img src="https://images.unsplash.com/photo-1635764700453-a591be1d1d7d?auto=format&fit=crop&q=80&w=1000"
+                         alt="Servicio Mecánico"
+                         class="w-100 object-fit-cover"
+                         style="height: 300px;" />
+                    <div class="service-content">
+                        <h3 class="fs-4 fw-bold mb-2">Servicio Mecánico</h3>
+                        <p class="mb-0">Mantenimiento integral</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    @* Característica 3 - Garantía *@
-    <div class="col-md-4">
-        <h3>Garantía</h3>
-        <p>Respaldamos todos nuestros productos y servicios.</p>
+</div>
+
+@* Contact Section *@
+<div id="contacto" class="contact-section py-5">
+    <div class="container py-5">
+        <h2 class="text-center display-6 fw-bold mb-5">Contacto</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-telephone contact-icon"></i>
+                    <div>
+                        <h3 class="fs-5 fw-semibold mb-1">Teléfono</h3>
+                        <p class="mb-0">+52 (123) 456-7890</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-clock contact-icon"></i>
+                    <div>
+                        <h3 class="fs-5 fw-semibold mb-1">Horario</h3>
+                        <p class="mb-0">Lun - Sáb: 8:00 - 18:00</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-geo-alt contact-icon"></i>
+                    <div>
+                        <h3 class="fs-5 fw-semibold mb-1">Dirección</h3>
+                        <p class="mb-0">Av. Principal #123, Ciudad</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

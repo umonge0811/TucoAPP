@@ -5,50 +5,63 @@
     Layout = "_AdminLayout";
 }
 
-<div class="container-fluid px-3">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Gestión de Usuarios</h2>
-        </div>
-        <a asp-controller="Usuarios" asp-action="CrearUsuario" class="btn btn-primary">
+<link rel="stylesheet" href="~/css/views/admin/usuarios.css" asp-append-version="true" />
+
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h2>Gestión de Usuarios</h2>
+        <a asp-controller="Usuarios" asp-action="CrearUsuario" class="btn btn-new-user">
             <i class="bi bi-person-plus"></i> Nuevo Usuario
         </a>
     </div>
+    <div class="users-card">
+        <!-- Vista móvil -->
+        <div class="d-block d-md-none">
+            <div class="mobile-filters mb-3">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" id="mobileBuscar" placeholder="Buscar usuario...">
+                </div>
+                <select class="form-select mt-2" id="mobileEstado">
+                    <option value="">Todos los estados</option>
+                    <option value="activo">Activos</option>
+                    <option value="inactivo">Inactivos</option>
+                </select>
+            </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <!-- Vista móvil -->
-            <div class="d-block d-md-none">
+            <div id="mobileUsersList">
                 @foreach (var usuario in Model)
                 {
-                    <div class="card mb-3">
+                    <div class="user-card" data-estado="@(usuario.Activo ? "activo" : "inactivo")">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="mb-0">@usuario.NombreUsuario</h5>
                                 <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
                                     @(usuario.Activo ? "Activo" : "Inactivo")
                                 </span>
                             </div>
-                            <p class="text-muted mb-2">@usuario.Email</p>
-                            <div class="mb-2">
+                            <p class="text-muted mb-3">@usuario.Email</p>
+                            <div class="mb-3">
                                 @foreach (var rol in usuario.Roles)
                                 {
                                     <span class="badge bg-primary me-1">@rol</span>
                                 }
                             </div>
                             <div class="btn-group w-100">
-                                <button class="btn btn-sm btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
+                                <button class="btn btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
                                     <i class="bi bi-shield"></i> Roles
                                 </button>
                                 @if (usuario.Activo)
                                 {
-                                    <button class="btn btn-sm btn-outline-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
+                                    <button class="btn btn-outline-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
                                         <i class="bi bi-person-x"></i> Desactivar
                                     </button>
                                 }
                                 else
                                 {
-                                    <button class="btn btn-sm btn-outline-success" onclick="activarUsuario(@usuario.UsuarioId)">
+                                    <button class="btn btn-outline-success" onclick="activarUsuario(@usuario.UsuarioId)">
                                         <i class="bi bi-person-check"></i> Activar
                                     </button>
                                 }
@@ -57,69 +70,74 @@
                     </div>
                 }
             </div>
+        </div>
 
-            <!-- Vista desktop -->
-            <div class="table-responsive d-none d-md-block">
-                <table class="table" id="tablaUsuarios">
-                    <thead class="table-dark">
+        <!-- Vista desktop -->
+        <div class="table-responsive d-none d-md-block">
+            <table id="tablaUsuarios" class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var usuario in Model)
+                    {
                         <tr>
-                            <th style="min-width: 150px">Nombre</th>
-                            <th style="min-width: 200px">Email</th>
-                            <th style="min-width: 150px">Roles</th>
-                            <th style="min-width: 100px">Estado</th>
-                            <th style="min-width: 150px">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var usuario in Model)
-                        {
-                            <tr>
-                                <td>@usuario.NombreUsuario</td>
-                                <td>@usuario.Email</td>
-                                <td>
-                                    @foreach (var rol in usuario.Roles)
-                                    {
-                                        <span class="badge bg-primary me-1">@rol</span>
-                                    }
-                                </td>
-                                <td>
-                                    <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
-                                        @(usuario.Activo ? "Activo" : "Inactivo")
-                                    </span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="editarRoles(@usuario.UsuarioId)">
+                            <td>@usuario.NombreUsuario</td>
+                            <td>@usuario.Email</td>
+                            <td>
+                                @foreach (var rol in usuario.Roles)
+                                {
+                                    <span class="badge bg-primary me-1">@rol</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
+                                    @(usuario.Activo ? "Activo" : "Inactivo")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="editarRoles(@usuario.UsuarioId)"
+                                            data-bs-toggle="tooltip" title="Editar Roles">
                                         <i class="bi bi-shield"></i>
                                     </button>
                                     @if (usuario.Activo)
                                     {
-                                        <button class="btn btn-sm btn-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
+                                        <button class="btn btn-danger" onclick="desactivarUsuario(@usuario.UsuarioId)"
+                                                data-bs-toggle="tooltip" title="Desactivar Usuario">
                                             <i class="bi bi-person-x"></i>
                                         </button>
                                     }
                                     else
                                     {
-                                        <button class="btn btn-sm btn-success" onclick="activarUsuario(@usuario.UsuarioId)">
+                                        <button class="btn btn-success" onclick="activarUsuario(@usuario.UsuarioId)"
+                                                data-bs-toggle="tooltip" title="Activar Usuario">
                                             <i class="bi bi-person-check"></i>
                                         </button>
                                     }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
 <!-- Modal para editar roles -->
-<div class="modal fade" id="modalRoles" tabindex="-1" aria-labelledby="modalRolesLabel" aria-hidden="true">
+<div class="modal fade" id="modalRoles" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalRolesLabel">Editar Roles de Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Editar Roles de Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="usuarioId" />
@@ -134,12 +152,14 @@
         </div>
     </div>
 </div>
+
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <script>
-        console.log('Vista Index cargada');
-    </script>
-    <!-- En _Layout.cshtml o donde tengas tus scripts -->
-    <script src="~/js/usuarios.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    <script src="~/js/usuarios.js" asp-append-version="true"></script>
 }

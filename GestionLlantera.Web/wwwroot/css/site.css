@@ -1,133 +1,71 @@
+/* Variables globales */
+:root {
+    --primary-color: #dc2626;
+    --primary-hover: #b91c1c;
+}
+
+/* Estilos base */
 html {
-  font-size: 14px;
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
-body {
-  margin-bottom: 60px;
-}
-
-/* Estilos para el login */
-.shadow-lg {
-    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
-}
-
-.btn-dark {
-    background-color: #343a40;
-    border-color: #343a40;
-    transition: all 0.3s ease;
-}
-
-    .btn-dark:hover {
-        background-color: #23272b;
-        border-color: #1d2124;
-        transform: translateY(-1px);
+    html {
+        font-size: 16px;
     }
-
-.input-group-text {
-    border: 1px solid #ced4da;
 }
 
-.form-control:focus {
-    border-color: #343a40;
-    box-shadow: 0 0 0 0.25rem rgba(52,58,64,.25);
-}
-
-/* Estilos generales */
 body {
+    font-family: system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
-}
-
-/* Estilos para móvil */
-@media (max-width: 768px) {
-    .navbar .btn-outline-light:focus,
-    .navbar .btn-outline-light:hover {
-        background-color: rgba(255,255,255,0.1);
-    }
-
-    .dropdown-menu {
-        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-    }
-
-    .table-responsive {
-        margin: 0 -0.75rem;
-    }
-}
-
-/* Estilos para la tabla */
-.table-responsive {
-    border-radius: 0.25rem;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-
-.table th {
-    white-space: nowrap;
-    background-color: #343a40;
-    color: white;
-}
-
-/* Estilos para el formulario de login */
-.card.shadow {
-    border: none;
-    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
-}
-
-.input-group .btn-outline-secondary {
-    border-color: #ced4da;
-}
-
-    .input-group .btn-outline-secondary:hover {
-        background-color: #f8f9fa;
-    }
-
-
-
-
-
-html, body {
-    height: 100%;
-    margin: 0;
-}
-           
-
-/* Contenedor principal que envuelve todo el contenido */
-.page-container {
-    min-height: 100vh; /* Viewport height al 100% */
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
-/* El contenido principal ocupará todo el espacio disponible */
+/* Layout principal */
 .content-wrap {
-    flex: 1 0 auto; /* Permite que el contenido crezca pero no se encoja */
+    flex: 1 0 auto;
 }
 
-/* Footer siempre al final */
 .footer {
-    flex-shrink: 0; /* Evita que el footer se encoja */
+    flex-shrink: 0;
     background-color: #f8f9fa;
     padding: 1rem 0;
-    margin-top: auto; /* Empuja el footer al final */
+    margin-top: auto;
 }
 
-/* Ocultar el icono del navegador en los inputs de tipo password */
+/* Utilidades */
+.btn-primary-custom {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+    .btn-primary-custom:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+        color: white;
+    }
+
+.text-primary-custom {
+    color: var(--primary-color) !important;
+}
+
+/* Formularios */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+}
+
+/* Ocultar elementos del navegador */
 input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear,
 input[type="password"]::-webkit-credentials-auto-fill-button {
     display: none;
 }
-        

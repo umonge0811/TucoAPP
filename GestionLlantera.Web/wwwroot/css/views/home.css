@@ -1,0 +1,74 @@
+﻿/* Hero section */
+.hero-section {
+    position: relative;
+    height: 600px;
+    margin-top: -5px;
+}
+
+    .hero-section .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+}
+
+/* Características */
+.feature-card {
+    padding: 2rem;
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+
+.feature-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+/* Servicios */
+.service-card {
+    position: relative;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+    .service-card img {
+        transition: transform 0.3s ease;
+    }
+
+    .service-card:hover img {
+        transform: scale(1.05);
+    }
+
+.service-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1.5rem;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    color: white;
+}
+
+/* Contacto */
+.contact-section {
+    background-color: #111827;
+    color: white;
+}
+
+.contact-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}

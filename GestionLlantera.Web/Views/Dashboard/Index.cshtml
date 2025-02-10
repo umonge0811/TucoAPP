@@ -3,39 +3,303 @@
     Layout = "_AdminLayout";
 }
 
-<div class="container-fluid">
-    <h1 class="mt-4">Dashboard</h1>
-    <div class="row mt-4">
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card bg-primary text-white mb-4">
-                <div class="card-body">
-                    <h5>Ventas del Día</h5>
-                    <h2>0</h2>
+<div class="dashboard-container">
+    @* Estadísticas Principales *@
+    <div class="dashboard-section">
+        <div class="row g-4">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="stat-card sales">
+                    <div class="stat-icon">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Top Vendedor</h3>
+                        <div class="stat-value">Carlos Mora</div>
+                        <div class="stat-comparison">
+                            <span>₡850,000 este mes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="stat-card inventory">
+                    <div class="stat-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Inventario Total</h3>
+                        <div class="stat-value">₡12,500,000</div>
+                        <div class="stat-comparison">
+                            <span>248 productos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="stat-card alerts">
+                    <div class="stat-icon">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Alertas Stock</h3>
+                        <div class="stat-value">5</div>
+                        <div class="stat-comparison text-warning">
+                            <span>Productos por agotarse</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="stat-card pending">
+                    <div class="stat-icon">
+                        <i class="bi bi-people"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Usuarios Activos</h3>
+                        <div class="stat-value">4</div>
+                        <div class="stat-comparison">
+                            <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#usersPanel">
+                                Ver conectados <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card bg-success text-white mb-4">
-                <div class="card-body">
-                    <h5>Productos</h5>
-                    <h2>0</h2>
+    </div>
+
+    @* Segunda Fila *@
+    <div class="dashboard-section">
+        <div class="row g-4">
+            @* Notas y Recordatorios *@
+            <div class="col-12 col-lg-6">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h2><i class="bi bi-sticky text-warning"></i> Notas Rápidas</h2>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newNoteModal">
+                            <i class="bi bi-plus-lg"></i> Nueva Nota
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="notes-container">
+                            <div class="note-item">
+                                <div class="note-content">
+                                    <h5>Pedido de Llantas</h5>
+                                    <p>Llamar al proveedor para confirmar llegada de llantas 205/55R16</p>
+                                </div>
+                                <div class="note-footer">
+                                    <span class="note-date">Hoy, 10:30 AM</span>
+                                    <div class="note-actions">
+                                        <button class="btn btn-sm btn-link text-success">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-link text-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="note-item">
+                                <div class="note-content">
+                                    <h5>Mantenimiento</h5>
+                                    <p>Programar mantenimiento de elevador hidráulico</p>
+                                </div>
+                                <div class="note-footer">
+                                    <span class="note-date">Ayer, 15:45 PM</span>
+                                    <div class="note-actions">
+                                        <button class="btn btn-sm btn-link text-success">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-link text-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* Anuncios Internos *@
+            <div class="col-12 col-lg-6">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h2><i class="bi bi-megaphone text-primary"></i> Anuncios Internos</h2>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newAnnouncementModal">
+                            <i class="bi bi-plus-lg"></i> Nuevo Anuncio
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="announcements-container">
+                            <div class="announcement-item important">
+                                <div class="announcement-header">
+                                    <span class="badge bg-danger">Importante</span>
+                                    <span class="announcement-date">15 Feb, 2024</span>
+                                </div>
+                                <h5>Actualización de Precios</h5>
+                                <p>Se han actualizado los precios de todas las llantas. Por favor revisar el nuevo catálogo en el sistema.</p>
+                            </div>
+                            <div class="announcement-item">
+                                <div class="announcement-header">
+                                    <span class="badge bg-info">Información</span>
+                                    <span class="announcement-date">14 Feb, 2024</span>
+                                </div>
+                                <h5>Capacitación Próxima</h5>
+                                <p>Recordatorio: Este viernes tendremos capacitación sobre el nuevo sistema de balanceo.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card bg-warning text-white mb-4">
-                <div class="card-body">
-                    <h5>Alertas</h5>
-                    <h2>0</h2>
+    </div>
+
+    @* Accesos Rápidos *@
+    <div class="dashboard-section">
+        <div class="quick-access-grid">
+            <a href="#" class="quick-access-card">
+                <div class="quick-access-icon">
+                    <i class="bi bi-cart-plus"></i>
+                </div>
+                <span>Nueva Venta</span>
+            </a>
+            <a href="#" class="quick-access-card">
+                <div class="quick-access-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <span>Inventario</span>
+            </a>
+            <a href="#" class="quick-access-card">
+                <div class="quick-access-icon">
+                    <i class="bi bi-tools"></i>
+                </div>
+                <span>Servicios</span>
+            </a>
+            <a href="#" class="quick-access-card">
+                <div class="quick-access-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <span>Clientes</span>
+            </a>
+            <a href="#" class="quick-access-card">
+                <div class="quick-access-icon">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <span>Reportes</span>
+            </a>
+            <a href="#" class="quick-access-card">
+                <div class="quick-access-icon">
+                    <i class="bi bi-gear"></i>
+                </div>
+                <span>Configuración</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+@* Panel de Usuarios Conectados *@
+<div class="offcanvas offcanvas-end" id="usersPanel" tabindex="-1">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">
+            <i class="bi bi-circle-fill text-success me-2"></i>
+            Usuarios Conectados
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="connected-users-list">
+            <div class="user-item">
+                <div class="user-avatar">CM</div>
+                <div class="user-info">
+                    <div class="user-name">Carlos Mora</div>
+                    <div class="user-role">Vendedor</div>
+                    <div class="user-status">Activo hace 5 min</div>
+                </div>
+            </div>
+            <div class="user-item">
+                <div class="user-avatar">MR</div>
+                <div class="user-info">
+                    <div class="user-name">María Rodríguez</div>
+                    <div class="user-role">Admin</div>
+                    <div class="user-status">Activo hace 2 min</div>
+                </div>
+            </div>
+            <div class="user-item">
+                <div class="user-avatar">JG</div>
+                <div class="user-info">
+                    <div class="user-name">Juan González</div>
+                    <div class="user-role">Técnico</div>
+                    <div class="user-status">Activo hace 10 min</div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-sm-6 col-xl-3">
-            <div class="card bg-danger text-white mb-4">
-                <div class="card-body">
-                    <h5>Pendientes</h5>
-                    <h2>0</h2>
-                </div>
+    </div>
+</div>
+
+@* Modal Nueva Nota *@
+<div class="modal fade" id="newNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Nota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newNoteForm">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contenido</label>
+                        <textarea class="form-control" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="newNoteForm" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal Nuevo Anuncio *@
+<div class="modal fade" id="newAnnouncementModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Anuncio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newAnnouncementForm">
+                    <div class="mb-3">
+                        <label class="form-label">Título</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contenido</label>
+                        <textarea class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Importancia</label>
+                        <select class="form-select">
+                            <option value="info">Informativo</option>
+                            <option value="warning">Importante</option>
+                            <option value="danger">Urgente</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha de Vencimiento</label>
+                        <input type="date" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="newAnnouncementForm" class="btn btn-primary">Publicar</button>
             </div>
         </div>
     </div>

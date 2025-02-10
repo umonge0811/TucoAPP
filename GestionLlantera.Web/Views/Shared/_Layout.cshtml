@@ -1,71 +1,76 @@
-﻿@* Views/Shared/_Layout.cshtml *@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>@ViewData["Title"] - Llantera</title>
 
-    @* Hojas de estilo *@
+    @* Hojas de estilo base *@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/components/spinner.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body>
-    @* Contenedor principal *@
-    <div class="page-container">
-        @* Navbar *@
-        <nav class="navbar navbar-expand-lg navbar-light bg-light">
-            <div class="container">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    Llantera
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#servicios">Servicios</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#contacto">Contacto</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="btn btn-primary" asp-controller="Account" asp-action="Login">
-                                Iniciar Sesión
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
 
-        @* Contenido principal *@
-        <div class="content-wrap">
-            <div class="container">
-                <main role="main" class="pb-3">
-                    @RenderBody()
-                </main>
+    @* Componentes *@
+    <link rel="stylesheet" href="~/css/components/navbar.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/components/spinner.css" />
+
+    @* Estilos específicos de la vista *@
+    @if (ViewContext.View.Path.Contains("/Views/Home/"))
+    {
+        <link rel="stylesheet" href="~/css/views/home.css" asp-append-version="true" />
+    }
+    @if (ViewContext.View.Path.Contains("/Views/Account/Login"))
+    {
+        <link rel="stylesheet" href="~/css/views/account/login.css" asp-append-version="true" />
+    }
+
+    @* Librerías de terceros *@
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+    @* Navbar *@
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-dark" asp-controller="Home" asp-action="Index">
+                Llantera Tuco
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="bi bi-list"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#servicios">Servicios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contacto">Contacto</a>
+                    </li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-primary-custom" asp-controller="Account" asp-action="Login">
+                            Iniciar Sesión
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
+    </nav>
 
-        @* Footer *@
-        <footer class="footer border-top">
-            <div class="container text-center">
-                &copy; 2025 - Llantera Tuco
-            </div>
-        </footer>
-    </div>
+    @* Contenido principal *@
+    <main role="main" class="flex-grow-1">
+        @RenderBody()
+    </main>
 
-    @* Scripts en orden correcto *@
+    @* Footer *@
+    <footer class="bg-light border-top py-4 mt-auto">
+        <div class="container text-center text-muted">
+            &copy; 2025 - Llantera Tuco - Todos los derechos reservados
+        </div>
+    </footer>
+
+    @* Scripts *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -74,7 +79,7 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/views/account/recuperarContrasena.js"></script>
 
-    @* Notificaciones después de cargar toastr *@
+    @* Notificaciones *@
     @if (TempData["Success"] != null)
     {
         <script>

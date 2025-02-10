@@ -1,0 +1,14 @@
+﻿/* Navbar personalizada */
+.navbar-custom {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+    .navbar-custom .nav-link {
+        color: #4b5563;
+        transition: color 0.3s ease;
+    }
+
+        .navbar-custom .nav-link:hover {
+            color: var(--primary-color);
+        }

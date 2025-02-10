@@ -1,71 +1,138 @@
-﻿@model GestionLlantera.Web.Models.DTOs.CreateUsuarioDTO
+﻿@using GestionLlantera.Web.Models.DTOs
+@model List<UsuarioDTO>
 @{
-    ViewData["Title"] = "Crear Usuario";
+    ViewData["Title"] = "Gestión de Usuarios";
     Layout = "_AdminLayout";
 }
+
 <div class="container-fluid">
-    <h2>Crear Usuario</h2>
-    <div class="card">
-        <div class="card-body">
-            <form id="createUserForm">
-                <div class="mb-3">
-                    <label for="NombreUsuario" class="form-label">Nombre Usuario</label>
-                    <input type="text" class="form-control" id="NombreUsuario" required>
-                </div>
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h2>Gestión de Usuarios</h2>
+        <a asp-controller="Usuarios" asp-action="CrearUsuario" class="btn btn-new-user">
+            <i class="bi bi-person-plus"></i> Nuevo Usuario
+        </a>
+    </div>
 
-                <div class="mb-3">
-                    <label for="Email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="Email" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="RolId" class="form-label">Rol</label>
-                    <select class="form-select" id="RolId" required>
-                        <option value="">-- Seleccione un rol --</option>
-                        @if (ViewBag.Roles != null)
-                        {
-                            foreach (var rol in ViewBag.Roles)
+    <div class="users-card">
+        <!-- Vista móvil -->
+        <div class="d-block d-md-none">
+            @foreach (var usuario in Model)
+            {
+                <div class="user-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">@usuario.NombreUsuario</h5>
+                            <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
+                                @(usuario.Activo ? "Activo" : "Inactivo")
+                            </span>
+                        </div>
+                        <p class="text-muted mb-3">@usuario.Email</p>
+                        <div class="mb-3">
+                            @foreach (var rol in usuario.Roles)
                             {
-                                <option value="@rol.RolId">@rol.NombreRol</option>
+                                <span class="badge bg-primary me-1">@rol</span>
                             }
-                        }
-                    </select>
+                        </div>
+                        <div class="btn-group w-100">
+                            <button class="btn btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
+                                <i class="bi bi-shield"></i> Roles
+                            </button>
+                            @if (usuario.Activo)
+                            {
+                                <button class="btn btn-outline-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
+                                    <i class="bi bi-person-x"></i> Desactivar
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-success" onclick="activarUsuario(@usuario.UsuarioId)">
+                                    <i class="bi bi-person-check"></i> Activar
+                                </button>
+                            }
+                        </div>
+                    </div>
                 </div>
+            }
+        </div>
 
-                <div class="mb-3">
-                    <button type="submit" class="btn btn-primary" id="submitButton">
-                        <span class="normal-state">
-                            <i class="bi bi-person-plus"></i> Crear Usuario
-                        </span>
-                        <span class="loading-state" style="display: none;">
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            Creando usuario...
-                        </span>
-                    </button> 
-                    <a asp-action="Index" class="btn btn-secondary">Volver a la lista</a>
-                </div>
-            </form>
+        <!-- Vista desktop -->
+        <div class="table-responsive d-none d-md-block">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var usuario in Model)
+                    {
+                        <tr>
+                            <td>@usuario.NombreUsuario</td>
+                            <td>@usuario.Email</td>
+                            <td>
+                                @foreach (var rol in usuario.Roles)
+                                {
+                                    <span class="badge bg-primary me-1">@rol</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
+                                    @(usuario.Activo ? "Activo" : "Inactivo")
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group">
+                                    <button class="btn btn-primary" onclick="editarRoles(@usuario.UsuarioId)" title="Editar Roles">
+                                        <i class="bi bi-shield"></i>
+                                    </button>
+                                    @if (usuario.Activo)
+                                    {
+                                        <button class="btn btn-danger" onclick="desactivarUsuario(@usuario.UsuarioId)" title="Desactivar Usuario">
+                                            <i class="bi bi-person-x"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-success" onclick="activarUsuario(@usuario.UsuarioId)" title="Activar Usuario">
+                                            <i class="bi bi-person-check"></i>
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Spinner Modal -->
-<div class="modal fade" id="spinnerModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-body text-center">
-                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                    <span class="visually-hidden">Procesando...</span>
+<!-- Modal para editar roles -->
+<div class="modal fade" id="modalRoles" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Roles de Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="usuarioId" />
+                <div id="listaRoles" class="mb-3">
+                    <!-- Los roles se cargarán aquí dinámicamente -->
                 </div>
-                <h5 class="text-white mt-3">Creando usuario, por favor espere...</h5>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarRoles()">Guardar Cambios</button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
     <script src="~/js/usuarios.js"></script>
 }
