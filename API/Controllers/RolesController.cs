@@ -18,13 +18,15 @@ using Microsoft.AspNetCore.Cors;
 public class RolesController : ControllerBase
 {
     private readonly TucoContext _context;
+    private readonly ILogger<RolesController> _logger;
     HttpClient _httpClient;
 
 
-    public RolesController(TucoContext context, IHttpClientFactory httpClientFactory)
+    public RolesController(TucoContext context, IHttpClientFactory httpClientFactory, ILogger<RolesController> logger)
     {
         _context = context;
         _httpClient = httpClientFactory.CreateClient("TucoApi");
+        _logger = logger;
     }
 
 
@@ -120,19 +122,40 @@ public class RolesController : ControllerBase
     }
     #endregion
 
-    #region consultar todos los roles
-    // Obtener todos los roles
     [HttpGet("ObtenerTodosRoles")]
-    public async Task<ActionResult<List<Role>>> ObtenerRoles()
+    public async Task<ActionResult<List<RoleDTO>>> ObtenerRoles()
     {
-        var roles = await _context.Roles
-            .Include(r => r.RolPermiso) // Incluir relaciones con permisos
-            .ThenInclude(rp => rp.Permiso)
-            .ToListAsync();
+        try
+        {
+            var roles = await _context.Roles
+                .Include(r => r.RolPermiso) // Incluir relación intermedia
+                .ThenInclude(rp => rp.Permiso) // Incluir los permisos
+                .ToListAsync();
 
-        return Ok(roles);
+            // Mapeo explícito incluyendo los permisos
+            var rolesDTO = roles.Select(r => new RoleDTO
+            {
+                RolId = r.RolId,
+                NombreRol = r.NombreRol,
+                DescripcionRol = r.DescripcionRol,
+                // Mapear los permisos desde RolPermiso
+                Permisos = r.RolPermiso
+                    .Select(rp => new PermisoDTO
+                    {
+                        PermisoId = rp.Permiso.PermisoId,
+                        NombrePermiso = rp.Permiso.NombrePermiso,
+                        DescripcionPermiso = rp.Permiso.DescripcionPermiso
+                    }).ToList()
+            }).ToList();
+
+            return Ok(rolesDTO);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener roles");
+            return StatusCode(500, new { message = "Error al obtener roles" });
+        }
     }
-    #endregion
 
     #region Obtener el rol por el numero de id
     [HttpGet("obtener-rol-id/{id}")]

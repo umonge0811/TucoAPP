@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         console.error('Error al cargar datos iniciales:', error);
     }
 });
+
+
 // Función para cargar todos los permisos
 async function cargarPermisos() {
     try {
@@ -73,7 +75,6 @@ async function cargarRoles() {
     try {
         console.log('Iniciando carga de roles...');
 
-        // Llamada al nuevo endpoint del controlador
         const response = await fetch('/Configuracion/ObtenerRoles');
 
         if (!response.ok) {
@@ -81,23 +82,57 @@ async function cargarRoles() {
         }
 
         const roles = await response.json();
-        console.log('Roles cargados:', roles);
+        console.log('Roles recibidos:', roles); // Verificar la estructura de los datos
 
-        // Actualizar la tabla de roles
-        actualizarTablaRoles(roles);
+        const tbody = document.querySelector('#tablaRoles tbody');
+        if (!tbody) {
+            console.error('No se encontró el elemento tbody de la tabla de roles');
+            return;
+        }
 
-        return roles;
+        tbody.innerHTML = roles.map(rol => {
+            console.log('Procesando rol:', rol); // Ver cada rol individual
+            console.log('Permisos del rol:', rol.permisos); // Ver los permisos de cada rol
+
+            return `
+                <tr>
+                    <td>${rol.nombreRol}</td>
+                    <td>${rol.descripcionRol || '-'}</td>
+                    <td>
+                        ${Array.isArray(rol.permisos) && rol.permisos.length > 0
+                    ? rol.permisos.map(permiso =>
+                        `<span class="badge bg-primary me-1">${permiso.nombrePermiso}</span>`
+                    ).join('')
+                    : '<span class="text-muted">Sin permisos</span>'
+                }
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-2" onclick="editarRol(${rol.rolId})" title="Editar">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})" title="Eliminar">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
     } catch (error) {
         console.error('Error al cargar roles:', error);
         toastr.error('Error al cargar los roles');
-        throw error;
     }
 }
 
+
+// Función auxiliar para actualizar la tabla de roles
 // Función auxiliar para actualizar la tabla de roles
 function actualizarTablaRoles(roles) {
     const tbody = document.querySelector('#tablaRoles tbody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.error('No se encontró la tabla de roles');
+        return;
+    }
 
     tbody.innerHTML = roles.map(rol => `
         <tr>
@@ -116,6 +151,31 @@ function actualizarTablaRoles(roles) {
                     <i class="bi bi-pencil-fill"></i>
                 </button>
                 <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})" title="Eliminar">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+
+// Función auxiliar para actualizar la tabla de permisos
+function actualizarTablaPermisos(permisos) {
+    const tbody = document.getElementById('tablaPermisos');
+    if (!tbody) {
+        console.error('No se encontró el elemento tablaPermisos');
+        return;
+    }
+
+    tbody.innerHTML = permisos.map(permiso => `
+        <tr>
+            <td>${permiso.nombrePermiso}</td>
+            <td>${permiso.descripcionPermiso || '-'}</td>
+            <td>
+                <button class="btn btn-sm btn-primary me-2" onclick="editarPermiso(${permiso.permisoId})" title="Editar">
+                    <i class="bi bi-pencil-fill"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(${permiso.permisoId})" title="Eliminar">
                     <i class="bi bi-trash-fill"></i>
                 </button>
             </td>

@@ -60,24 +60,22 @@ public class ConfiguracionController : Controller
     {
         try
         {
-            // Registramos la solicitud de obtención de roles
-            _logger.LogInformation("Procesando solicitud de obtención de roles");
-
-            // Obtenemos los roles mediante el servicio
             var roles = await _rolesService.ObtenerTodosLosRoles();
 
-            // Registramos el éxito de la operación
-            _logger.LogInformation("Roles obtenidos exitosamente. Total: {Count}", roles.Count);
+            // Agregar log para verificar los datos
+            _logger.LogInformation("Roles obtenidos: {Count}", roles.Count);
+            foreach (var rol in roles)
+            {
+                _logger.LogInformation("Rol: {NombreRol}, Permisos: {NumPermisos}",
+                    rol.NombreRol,
+                    rol.Permisos?.Count ?? 0);
+            }
 
-            // Retornamos los roles en formato JSON
             return Ok(roles);
         }
         catch (Exception ex)
         {
-            // Registramos el error detalladamente
-            _logger.LogError(ex, "Error al procesar la solicitud de obtención de roles");
-
-            // Retornamos un error 500 con mensaje para el cliente
+            _logger.LogError(ex, "Error al obtener roles");
             return StatusCode(500, new { message = "Error al obtener roles" });
         }
     }

@@ -14,10 +14,10 @@ namespace GestionLlantera.Web.Services
         private readonly JsonSerializerOptions _jsonOptions; // Opciones de serialización JSON
 
         // Constructor que recibe las dependencias necesarias mediante inyección de dependencias
-        public RolesService(HttpClient httpClient, ILogger<RolesService> logger)
+        public RolesService(IHttpClientFactory httpClientFactory, ILogger<RolesService> logger)
         {
             // Inicializamos las dependencias inyectadas
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
 
             // Configuramos las opciones de serialización JSON
@@ -48,6 +48,16 @@ namespace GestionLlantera.Web.Services
 
                 // Deserializamos el JSON a una lista de RoleDTO
                 var roles = JsonSerializer.Deserialize<List<RoleDTO>>(content, _jsonOptions);
+
+                // Log para ver si los roles incluyen permisos
+                foreach (var rol in roles ?? new List<RoleDTO>())
+                {
+                    _logger.LogInformation(
+                        "Rol: {RolNombre}, Permisos: {PermisosCount}",
+                        rol.NombreRol,
+                        rol.Permisos?.Count ?? 0
+                    );
+                }
 
                 // Retornamos la lista de roles o una lista vacía si es null
                 return roles ?? new List<RoleDTO>();
