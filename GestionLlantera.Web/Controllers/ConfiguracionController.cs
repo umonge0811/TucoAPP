@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
 using tuco.Clases.Models;
+using Tuco.Clases.DTOs;
 
 // Controlador que maneja la configuración del sistema, incluyendo roles y permisos
 [Authorize] // Asegura que solo usuarios autenticados puedan acceder a este controlador

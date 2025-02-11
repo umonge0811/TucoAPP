@@ -126,7 +126,6 @@ async function cargarRoles() {
 
 
 // Función auxiliar para actualizar la tabla de roles
-// Función auxiliar para actualizar la tabla de roles
 function actualizarTablaRoles(roles) {
     const tbody = document.querySelector('#tablaRoles tbody');
     if (!tbody) {
@@ -219,14 +218,8 @@ async function abrirModalNuevoRol() {
     try {
         console.log('Abriendo modal de nuevo rol...');
 
-        // Cargar los permisos disponibles HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
-        const response = await fetch(`${API_URL}/api/Permisos/obtener-todos`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
+        // Obtener permisos usando el controlador
+        const response = await fetch('/Configuracion/ObtenerPermisos');
 
         if (!response.ok) {
             throw new Error('Error al cargar permisos');
@@ -237,6 +230,10 @@ async function abrirModalNuevoRol() {
 
         // Actualizar lista de permisos en el modal
         const listaPermisos = document.getElementById('listaPermisos');
+        if (!listaPermisos) {
+            throw new Error('No se encontró el elemento listaPermisos');
+        }
+
         listaPermisos.innerHTML = permisos.map(permiso => `
             <div class="form-check mb-2">
                 <input class="form-check-input" type="checkbox" 
@@ -259,10 +256,9 @@ async function abrirModalNuevoRol() {
 
     } catch (error) {
         console.error('Error al preparar modal de nuevo rol:', error);
-        mostrarNotificacion('Error al cargar los permisos disponibles', 'error');
+        toastr.error('Error al cargar los permisos disponibles');
     }
 }
-
 // Función para abrir el modal de nuevo permiso
 async function abrirModalNuevoPermiso() {
     try {

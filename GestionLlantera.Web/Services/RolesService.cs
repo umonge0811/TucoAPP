@@ -2,6 +2,8 @@
 using System.Net.Http;
 using System.Text.Json;
 using tuco.Clases.Models;
+using Tuco.Clases.DTOs;
+using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Services
 {

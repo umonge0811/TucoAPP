@@ -1,4 +1,7 @@
 ﻿// Services/Interfaces/IRolesService.cs
+using Tuco.Clases.DTOs;
+using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
+
 namespace GestionLlantera.Web.Services.Interfaces
 {
     public interface IRolesService
