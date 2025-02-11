@@ -122,6 +122,7 @@ public class RolesController : ControllerBase
     }
     #endregion
 
+    #region Obtener todos los roles
     [HttpGet("ObtenerTodosRoles")]
     public async Task<ActionResult<List<RoleDTO>>> ObtenerRoles()
     {
@@ -156,6 +157,7 @@ public class RolesController : ControllerBase
             return StatusCode(500, new { message = "Error al obtener roles" });
         }
     }
+    #endregion
 
     #region Obtener el rol por el numero de id
     [HttpGet("obtener-rol-id/{id}")]

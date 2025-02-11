@@ -4,113 +4,127 @@
     Layout = "_AdminLayout";
 }
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Gestión de Roles y Permisos</h2>
+<div class="roles-permisos-container">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Gestión de Roles y Permisos</h2>
     </div>
 
-    <ul class="nav nav-tabs" id="configTabs" role="tablist">
-        <li class="nav-item">
-            <a class="nav-link active" id="roles-tab" data-bs-toggle="tab" href="#roles" role="tab">
-                Roles
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" id="permisos-tab" data-bs-toggle="tab" href="#permisos" role="tab">
-                Permisos
-            </a>
-        </li>
-    </ul>
+    <div class="config-tabs">
+        <ul class="nav nav-tabs custom-tabs" id="configTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="roles-tab" data-bs-toggle="tab" href="#roles" role="tab">
+                    <i class="bi bi-shield-lock me-2"></i>Roles
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="permisos-tab" data-bs-toggle="tab" href="#permisos" role="tab">
+                    <i class="bi bi-key me-2"></i>Permisos
+                </a>
+            </li>
+        </ul>
 
-    <div class="tab-content mt-4" id="configTabsContent">
-        <div class="tab-pane fade show active" id="roles" role="tabpanel">
-            <button class="btn btn-primary" onclick="abrirModalNuevoRol()" id="btnNuevoRol">
-                <span class="normal-state">
-                    <i class="bi bi-plus-circle"></i> Nuevo Rol
-                </span>
-                <span class="loading-state" style="display: none;">
-                    <span class="spinner-border spinner-border-sm me-2"></span>
-                    Procesando...
-                </span>
-            </button>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover" id="tablaRoles">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Nombre del Rol</th>
-                            <th>Descripción</th>
-                            <th>Permisos Asignados</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="permisos" role="tabpanel">
-            <div class="row mb-3">
-                <div class="col">
-                    <button class="btn btn-primary" onclick="abrirModalNuevoPermiso()" id="btnNuevoPermiso">
-                        <span class="normal-state">
-                            <i class="bi bi-plus-circle"></i> Nuevo Permiso
-                        </span>
-                        <span class="loading-state" style="display: none;">
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            Procesando...
-                        </span>
-                    </button>
+        <div class="tab-content mt-4" id="configTabsContent">
+            <!-- Tab Roles -->
+            <div class="tab-pane fade show active" id="roles" role="tabpanel">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Lista de Roles</h3>
+                        <button class="btn btn-primary-custom" onclick="abrirModalNuevoRol()" id="btnNuevoRol">
+                            <span class="normal-state">
+                                <i class="bi bi-plus-lg me-2"></i>Nuevo Rol
+                            </span>
+                            <span class="loading-state" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Procesando...
+                            </span>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table" id="tablaRoles">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre del Rol</th>
+                                        <th>Descripción</th>
+                                        <th>Permisos Asignados</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Permiso</th>
-                            <th>Descripción</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaPermisos">
-                    </tbody>
-                </table>
+
+            <!-- Tab Permisos -->
+            <div class="tab-pane fade" id="permisos" role="tabpanel">
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3>Lista de Permisos</h3>
+                        <button class="btn btn-primary-custom" onclick="abrirModalNuevoPermiso()" id="btnNuevoPermiso">
+                            <span class="normal-state">
+                                <i class="bi bi-plus-lg me-2"></i>Nuevo Permiso
+                            </span>
+                            <span class="loading-state" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Procesando...
+                            </span>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Permiso</th>
+                                        <th>Descripción</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaPermisos">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    @* Modal para Nuevo/Editar Rol *@
+    <!-- Modal Nuevo/Editar Rol -->
     <div class="modal fade" id="modalNuevoRol" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nuevo Rol</h5>
+                    <h5 class="modal-title"><i class="bi bi-shield-plus me-2"></i>Nuevo Rol</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formRol">
                         <input type="hidden" id="rolId" value="0" />
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label">Nombre del Rol</label>
                             <input type="text" class="form-control" id="nombreRol" required>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label">Descripción</label>
                             <textarea class="form-control" id="descripcionRol" rows="3"></textarea>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label">Permisos</label>
-                            <div id="listaPermisos" class="form-check">
-                                @* Se cargará dinámicamente vía JavaScript *@
+                            <div id="listaPermisos" class="permisos-grid">
+                                <!-- Se cargará dinámicamente vía JavaScript -->
                             </div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnGuardarRol">
+                    <button type="button" class="btn btn-primary-custom" id="btnGuardarRol">
                         <span class="normal-state">
-                            <i class="bi bi-save"></i> Guardar Rol
+                            <i class="bi bi-check-lg me-2"></i>Guardar Rol
                         </span>
                         <span class="loading-state" style="display: none;">
                             <span class="spinner-border spinner-border-sm me-2"></span>
@@ -122,22 +136,22 @@
         </div>
     </div>
 
-    @* Modal para Nuevo/Editar Permiso *@
+    <!-- Modal Nuevo/Editar Permiso -->
     <div class="modal fade" id="modalNuevoPermiso" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nuevo Permiso</h5>
+                    <h5 class="modal-title"><i class="bi bi-key-fill me-2"></i>Nuevo Permiso</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="formPermiso">
                         <input type="hidden" id="permisoId" value="0" />
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label">Nombre del Permiso</label>
                             <input type="text" class="form-control" id="nombrePermiso" required>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label">Descripción</label>
                             <textarea class="form-control" id="descripcionPermiso" rows="3"></textarea>
                         </div>
@@ -145,9 +159,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="btnGuardarPermiso">
+                    <button type="button" class="btn btn-primary-custom" id="btnGuardarPermiso">
                         <span class="normal-state">
-                            <i class="bi bi-save"></i> Guardar Permiso
+                            <i class="bi bi-check-lg me-2"></i>Guardar Permiso
                         </span>
                         <span class="loading-state" style="display: none;">
                             <span class="spinner-border spinner-border-sm me-2"></span>
