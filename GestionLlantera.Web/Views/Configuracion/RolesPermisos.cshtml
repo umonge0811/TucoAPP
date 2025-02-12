@@ -1,175 +1,292 @@
-﻿@using Tuco.Clases.DTOs
-@model List<RoleDTO>
+﻿@model List<Tuco.Clases.DTOs.RoleDTO>
 @{
     ViewData["Title"] = "Roles y Permisos";
     Layout = "_AdminLayout";
 }
 
 <div class="roles-permisos-container">
-    <div class="page-header d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">Gestión de Roles y Permisos</h2>
+    <div class="page-header mb-4">
+        <h2>Roles y Permisos</h2>
     </div>
 
-    <div class="config-tabs">
-        <ul class="nav nav-tabs custom-tabs" id="configTabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="roles-tab" data-bs-toggle="tab" href="#roles" role="tab">
-                    <i class="bi bi-shield-lock me-2"></i>Roles
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="permisos-tab" data-bs-toggle="tab" href="#permisos" role="tab">
-                    <i class="bi bi-key me-2"></i>Permisos
-                </a>
-            </li>
-        </ul>
+    <ul class="nav custom-tabs mb-4" id="rolesPermisosTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" type="button" role="tab">
+                <i class="bi bi-shield-lock me-2"></i>Roles
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="permisos-tab" data-bs-toggle="tab" data-bs-target="#permisos" type="button" role="tab">
+                <i class="bi bi-key me-2"></i>Permisos
+            </button>
+        </li>
+    </ul>
 
-        <div class="tab-content mt-4" id="configTabsContent">
-            <!-- Tab Roles -->
-            <div class="tab-pane fade show active" id="roles" role="tabpanel">
-                <div class="dashboard-card">
-                    <div class="card-header">
-                        <h3>Lista de Roles</h3>
-                        <button class="btn btn-primary-custom" onclick="abrirModalNuevoRol()" id="btnNuevoRol">
-                            <span class="normal-state">
-                                <i class="bi bi-plus-lg me-2"></i>Nuevo Rol
-                            </span>
-                            <span class="loading-state" style="display: none;">
-                                <span class="spinner-border spinner-border-sm me-2"></span>
-                                Procesando...
-                            </span>
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table" id="tablaRoles">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre del Rol</th>
-                                        <th>Descripción</th>
-                                        <th>Permisos Asignados</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+    <div class="tab-content" id="rolesPermisosContent">
+        <div class="tab-pane fade show active" id="roles" role="tabpanel">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>Lista de Roles</h3>
+                    <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalNuevoRol">
+                        <i class="bi bi-plus-lg"></i>
+                        Nuevo Rol
+                    </button>
                 </div>
-            </div>
-
-            <!-- Tab Permisos -->
-            <div class="tab-pane fade" id="permisos" role="tabpanel">
-                <div class="dashboard-card">
-                    <div class="card-header">
-                        <h3>Lista de Permisos</h3>
-                        <button class="btn btn-primary-custom" onclick="abrirModalNuevoPermiso()" id="btnNuevoPermiso">
-                            <span class="normal-state">
-                                <i class="bi bi-plus-lg me-2"></i>Nuevo Permiso
-                            </span>
-                            <span class="loading-state" style="display: none;">
-                                <span class="spinner-border spinner-border-sm me-2"></span>
-                                Procesando...
-                            </span>
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
+                <div class="card-body">
+                    <!-- Vista Desktop -->
+                    <div class="table-responsive d-none d-md-block">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre del Rol</th>
+                                    <th>Descripción</th>
+                                    <th>Permisos Asignados</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var rol in Model)
+                                {
                                     <tr>
-                                        <th>Permiso</th>
-                                        <th>Descripción</th>
-                                        <th>Acciones</th>
+                                        <td class="fw-semibold">@rol.NombreRol</td>
+                                        <td>@rol.DescripcionRol</td>
+                                        <td>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach (var permiso in rol.Permisos)
+                                                {
+                                                    <span class="badge bg-light text-dark">
+                                                        <i class="bi bi-key-fill me-1 text-primary"></i>
+                                                        @permiso.NombrePermiso
+                                                    </span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-primary" onclick="editarRol(@rol.RolId)">
+                                                    <i class="bi bi-pencil me-1"></i>
+                                                    Editar
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="eliminarRol(@rol.RolId)">
+                                                    <i class="bi bi-trash me-1"></i>
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody id="tablaPermisos">
-                                </tbody>
-                            </table>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Vista Móvil -->
+                    <div class="d-md-none">
+                        <div class="roles-grid">
+                            @foreach (var rol in Model)
+                            {
+                                <div class="role-card">
+                                    <div class="role-card-header">
+                                        <h4 class="role-name">@rol.NombreRol</h4>
+                                    </div>
+                                    <div class="role-card-body">
+                                        <p class="role-description">@rol.DescripcionRol</p>
+                                        <div class="role-permissions">
+                                            <h5 class="permissions-title">
+                                                <i class="bi bi-key-fill me-2"></i>
+                                                Permisos Asignados
+                                            </h5>
+                                            <div class="permissions-list">
+                                                @foreach (var permiso in rol.Permisos)
+                                                {
+                                                    <span class="permission-badge">
+                                                        <i class="bi bi-key-fill me-1"></i>
+                                                        @permiso.NombrePermiso
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="role-card-footer">
+                                        <button class="btn btn-primary flex-grow-1" onclick="editarRol(@rol.RolId)">
+                                            <i class="bi bi-pencil me-2"></i>
+                                            Editar
+                                        </button>
+                                        <button class="btn btn-outline-danger flex-grow-1" onclick="eliminarRol(@rol.RolId)">
+                                            <i class="bi bi-trash me-2"></i>
+                                            Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal Nuevo/Editar Rol -->
-    <div class="modal fade" id="modalNuevoRol" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-shield-plus me-2"></i>Nuevo Rol</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="tab-pane fade" id="permisos" role="tabpanel">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>Lista de Permisos</h3>
+                    <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalNuevoPermiso">
+                        <i class="bi bi-plus-lg"></i>
+                        Nuevo Permiso
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <form id="formRol">
-                        <input type="hidden" id="rolId" value="0" />
-                        <div class="mb-4">
-                            <label class="form-label">Nombre del Rol</label>
-                            <input type="text" class="form-control" id="nombreRol" required>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionRol" rows="3"></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label">Permisos</label>
-                            <div id="listaPermisos" class="permisos-grid">
-                                <!-- Se cargará dinámicamente vía JavaScript -->
+                <div class="card-body">
+                    <!-- Vista Desktop -->
+                    <div class="table-responsive d-none d-md-block">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var permisosUnicos = Model.SelectMany(r => r.Permisos)
+                                    .GroupBy(p => p.PermisoId)
+                                    .Select(g => g.First());
+                                }
+                                @foreach (var permiso in permisosUnicos)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-key-fill text-primary"></i>
+                                                @permiso.NombrePermiso
+                                            </div>
+                                        </td>
+                                        <td>@permiso.DescripcionPermiso</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-primary" onclick="editarPermiso(@permiso.PermisoId)">
+                                                    <i class="bi bi-pencil me-1"></i>
+                                                    Editar
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(@permiso.PermisoId)">
+                                                    <i class="bi bi-trash me-1"></i>
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Vista Móvil -->
+                    <div class="d-md-none">
+                        @{
+                            var permisosUnicosMobile = Model.SelectMany(r => r.Permisos)
+                            .GroupBy(p => p.PermisoId)
+                            .Select(g => g.First());
+                        }
+                        @foreach (var permiso in permisosUnicosMobile)
+                        {
+                            <div class="mobile-permission-card">
+                                <div class="permission-item">
+                                    <i class="bi bi-key-fill permission-icon"></i>
+                                    <div class="permission-content">
+                                        <div class="permission-name">
+                                            @permiso.NombrePermiso
+                                        </div>
+                                        <p class="permission-description">@permiso.DescripcionPermiso</p>
+                                    </div>
+                                    <div class="permission-actions">
+                                        <button class="btn btn-sm btn-primary" onclick="editarPermiso(@permiso.PermisoId)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(@permiso.PermisoId)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary-custom" id="btnGuardarRol">
-                        <span class="normal-state">
-                            <i class="bi bi-check-lg me-2"></i>Guardar Rol
-                        </span>
-                        <span class="loading-state" style="display: none;">
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            Guardando...
-                        </span>
-                    </button>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal Nuevo/Editar Permiso -->
-    <div class="modal fade" id="modalNuevoPermiso" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-key-fill me-2"></i>Nuevo Permiso</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formPermiso">
-                        <input type="hidden" id="permisoId" value="0" />
-                        <div class="mb-4">
-                            <label class="form-label">Nombre del Permiso</label>
-                            <input type="text" class="form-control" id="nombrePermiso" required>
+    </div>
+</div>
+
+<!-- Los modales se mantienen igual -->
+<!-- Modal Nuevo/Editar Rol -->
+<div class="modal fade" id="modalNuevoRol" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-shield-plus"></i>
+                    Nuevo Rol
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formRol">
+                    <input type="hidden" id="rolId" value="0" />
+                    <div class="mb-4">
+                        <label class="form-label">Nombre del Rol</label>
+                        <input type="text" class="form-control" id="nombreRol" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionRol" rows="3"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Permisos</label>
+                        <div id="listaPermisos" class="permisos-grid">
+                            <!-- Se cargará dinámicamente vía JavaScript -->
                         </div>
-                        <div class="mb-4">
-                            <label class="form-label">Descripción</label>
-                            <textarea class="form-control" id="descripcionPermiso" rows="3"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary-custom" id="btnGuardarPermiso">
-                        <span class="normal-state">
-                            <i class="bi bi-check-lg me-2"></i>Guardar Permiso
-                        </span>
-                        <span class="loading-state" style="display: none;">
-                            <span class="spinner-border spinner-border-sm me-2"></span>
-                            Guardando...
-                        </span>
-                    </button>
-                </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn-new" id="btnGuardarRol">
+                    <i class="bi bi-check-lg"></i>
+                    Guardar Rol
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo/Editar Permiso -->
+<div class="modal fade" id="modalNuevoPermiso" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-key"></i>
+                    Nuevo Permiso
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPermiso">
+                    <input type="hidden" id="permisoId" value="0" />
+                    <div class="mb-4">
+                        <label class="form-label">Nombre del Permiso</label>
+                        <input type="text" class="form-control" id="nombrePermiso" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionPermiso" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn-new" id="btnGuardarPermiso">
+                    <i class="bi bi-check-lg"></i>
+                    Guardar Permiso
+                </button>
             </div>
         </div>
     </div>

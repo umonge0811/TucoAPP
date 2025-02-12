@@ -1,44 +1,64 @@
 ﻿@using GestionLlantera.Web.Models.ViewModels
-@model OlvideContrasenaViewModel  // Cambiar de string a un ViewModel específico
-
+@model OlvideContrasenaViewModel
 @{
     ViewData["Title"] = "Recuperar Contraseña";
+    Layout = "_Layout";
 }
-<div class="container min-vh-100 d-flex align-items-center">
-    <div class="row justify-content-center w-100">
-        <div class="col-11 col-sm-8 col-md-6 col-lg-5">
-            <div class="card shadow">
-                <div class="card-header bg-dark text-white py-3">
-                    <h4 class="text-center mb-0">Recuperar Contraseña</h4>
-                </div>
-                <div class="card-body px-4 py-4">
-                    <form id="recuperarForm" asp-action="OlvideContrasena" method="post">
-                        @if (TempData["Error"] != null)
-                        {
-                            <div class="alert alert-danger">@TempData["Error"]</div>
-                        }
-                        @if (TempData["Success"] != null)
-                        {
-                            <div class="alert alert-success">@TempData["Success"]</div>
-                        }
 
-                        <div class="mb-3">
-                            <label for="Email" class="form-label">
-                                <i class="bi bi-envelope-fill me-1"></i> Correo Electrónico
-                            </label>
-                            <input type="email" class="form-control" id="Email" name="Email" required>
+<div class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-11 col-sm-8 col-md-6 col-lg-5">
+                <div class="card border-0 shadow-lg rounded-4">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-key-fill text-primary-custom display-1"></i>
+                            <h2 class="mt-3 mb-1 fw-bold">Recuperar Contraseña</h2>
+                            <p class="text-muted">Ingresa tu correo electrónico para recibir las instrucciones</p>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100" id="submitButton">
-                            <span class="normal-state">
-                                <i class="bi bi-envelope"></i> Enviar Instrucciones
-                            </span>
-                            <span class="loading-state" style="display: none;">
-                                <span class="spinner-border spinner-border-sm me-2"></span>
-                                Enviando...
-                            </span>
-                        </button>
-                    </form>
+                        <form id="recuperarForm" asp-action="OlvideContrasena" method="post">
+                            @if (TempData["Error"] != null)
+                            {
+                                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <div>@TempData["Error"]</div>
+                                </div>
+                            }
+                            @if (TempData["Success"] != null)
+                            {
+                                <div class="alert alert-success d-flex align-items-center" role="alert">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <div>@TempData["Success"]</div>
+                                </div>
+                            }
+
+                            <div class="mb-4">
+                                <label asp-for="Email" class="form-label">
+                                    <i class="bi bi-envelope-fill me-2 text-primary-custom"></i>Correo Electrónico
+                                </label>
+                                <input asp-for="Email" class="form-control form-control-lg rounded-3"
+                                       placeholder="ejemplo@correo.com" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary-custom w-100 btn-lg mb-3" id="submitButton">
+                                <span class="normal-state">
+                                    <i class="bi bi-send-fill me-2"></i>Enviar Instrucciones
+                                </span>
+                                <span class="loading-state" style="display: none;">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Enviando instrucciones...
+                                </span>
+                            </button>
+
+                            <div class="text-center">
+                                <a href="@Url.Action("Login", "Account")" class="text-decoration-none text-primary-custom">
+                                    <i class="bi bi-arrow-left me-1"></i>Volver al inicio de sesión
+                                </a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -46,5 +66,9 @@
 </div>
 
 @section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="~/js/utils/buttonUtils.js"></script>
     <script src="~/js/views/account/restablecerContrasena.js"></script>
 }
