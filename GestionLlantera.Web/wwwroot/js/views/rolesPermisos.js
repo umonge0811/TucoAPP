@@ -337,7 +337,6 @@ async function editarRol(rolId) {
 }
 
 
-// Función para guardar rol
 async function guardarRol() {
     console.log('Iniciando guardarRol');
     const submitButton = document.getElementById('btnGuardarRol');
@@ -371,68 +370,48 @@ async function guardarRol() {
         }
 
         const isEditing = rolId !== '0';
+        let response;
 
         if (isEditing) {
-            // 1. Primero actualizamos la información básica del rol
+            // Actualizar rol existente
             const dataRol = {
-                id: parseInt(rolId),
+                rolId: parseInt(rolId),
                 nombreRol: nombreRol,
-                descripcionRol: descripcionRol
+                descripcionRol: descripcionRol,
+                permisoIds: permisoIds
             };
 
-            const updateResponse = await fetch(`${API_URL}/api/Roles/actualizarRole/${rolId}`, {
-                method: 'PUT',
+            response = await fetch(`/Configuracion/ActualizarRol/${rolId}`, {
+                method: 'PUT',  // Cambiado de POST a PUT
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(dataRol)
             });
-
-            if (!updateResponse.ok) {
-                const errorData = await updateResponse.json();
-                throw new Error(errorData.message || 'Error al actualizar el rol');
-            }
-
-            // 2. Luego actualizamos los permisos usando el endpoint correcto
-            const permisosResponse = await fetch(`${API_URL}/api/Roles/actualizar-permisos-del-rol/${rolId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(permisoIds)
-            });
-
-            if (!permisosResponse.ok) {
-                const errorData = await permisosResponse.json();
-                throw new Error(errorData.message || 'Error al actualizar los permisos del rol');
-            }
         } else {
-            // Si es un nuevo rol, usamos el endpoint de creación que maneja todo junto
+            // Crear nuevo rol
             const dataRol = {
                 nombreRol: nombreRol,
                 descripcionRol: descripcionRol,
                 permisoIds: permisoIds
             };
 
-            const response = await fetch(`${API_URL}/api/Roles/CrearRoles`, {
+            response = await fetch('/Configuracion/CrearRol', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(dataRol)
             });
+        }
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al crear el rol');
-            }
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error al guardar el rol');
         }
 
         console.log('Rol guardado exitosamente');
-        await cargarRoles();
+        await cargarRoles();  // Recargar la tabla
         modalRol.hide();
         toastr.success(isEditing ? 'Rol actualizado exitosamente' : 'Rol creado exitosamente');
 
@@ -444,6 +423,7 @@ async function guardarRol() {
         ButtonUtils.stopLoading(submitButton);
     }
 }
+
 
 // Función para eliminar rol
 async function eliminarRol(rolId) {
@@ -626,11 +606,7 @@ async function eliminarPermiso(permisoId) {
                 throw new Error('Error al eliminar el permiso');
             }
 
-            // Recargar ambas tablas
-            await Promise.all([
-                cargarPermisos(),
-                cargarRoles()
-            ]);
+             
 
             await Swal.fire(
                 '¡Eliminado!',

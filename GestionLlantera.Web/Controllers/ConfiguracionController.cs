@@ -145,80 +145,33 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para crear un nuevo rol en el sistema
-    [HttpPost]
-    public async Task<IActionResult> CrearRol([FromBody] RoleDTO rolDto)
+    [HttpPost("CrearRol")]
+    public async Task<IActionResult> CrearRol([FromBody] RoleDTO rolDTO)
     {
         try
         {
-            // Validamos que el modelo recibido sea válido
-            if (!ModelState.IsValid)
-            {
-                // Registramos el error de validación
-                _logger.LogWarning("Modelo inválido al crear rol");
-                return BadRequest(ModelState);
-            }
-
-            // Registramos el intento de creación del rol
-            _logger.LogInformation("Intentando crear nuevo rol: {NombreRol}", rolDto.NombreRol);
-
-            // Llamamos al servicio para crear el rol
-            var resultado = await _rolesService.CrearRol(rolDto);
-
-            // Verificamos el resultado de la operación
-            if (resultado)
-            {
-                // Registramos el éxito de la operación
-                _logger.LogInformation("Rol creado exitosamente: {NombreRol}", rolDto.NombreRol);
-                return Ok(new { message = "Rol creado exitosamente" });
-            }
-
-            // Si no se pudo crear, retornamos un error
-            return BadRequest(new { message = "No se pudo crear el rol" });
+            var resultado = await _rolesService.CrearRol(rolDTO);
+            return Ok(new { message = "Rol creado exitosamente" });
         }
         catch (Exception ex)
         {
-            // Registramos cualquier error no esperado
-            _logger.LogError(ex, "Error al crear rol: {NombreRol}", rolDto.NombreRol);
+            _logger.LogError(ex, "Error al crear rol");
             return StatusCode(500, new { message = "Error al crear el rol" });
         }
     }
 
     // Endpoint API para actualizar un rol existente
-    [HttpPut]
-    public async Task<IActionResult> ActualizarRol(int id, [FromBody] RoleDTO rolDto)
+    [HttpPut("ActualizarRol/{id}")]
+    public async Task<IActionResult> ActualizarRol(int id, [FromBody] RoleDTO rolDTO)
     {
         try
         {
-            // Validamos que el ID coincida con el del DTO
-            if (id != rolDto.RolId)
-            {
-                // Registramos la discrepancia de IDs
-                _logger.LogWarning("ID de ruta ({RouteId}) no coincide con ID del DTO ({DtoId})",
-                    id, rolDto.RolId);
-                return BadRequest(new { message = "IDs no coinciden" });
-            }
-
-            // Registramos el intento de actualización
-            _logger.LogInformation("Intentando actualizar rol. ID: {Id}", id);
-
-            // Llamamos al servicio para actualizar el rol
-            var resultado = await _rolesService.ActualizarRol(id, rolDto);
-
-            // Verificamos el resultado de la operación
-            if (resultado)
-            {
-                // Registramos el éxito de la operación
-                _logger.LogInformation("Rol actualizado exitosamente. ID: {Id}", id);
-                return Ok(new { message = "Rol actualizado exitosamente" });
-            }
-
-            // Si no se pudo actualizar, retornamos un error
-            return BadRequest(new { message = "No se pudo actualizar el rol" });
+            var resultado = await _rolesService.ActualizarRol(id, rolDTO);
+            return Ok(new { message = "Rol actualizado exitosamente" });
         }
         catch (Exception ex)
         {
-            // Registramos cualquier error no esperado
-            _logger.LogError(ex, "Error al actualizar rol. ID: {Id}", id);
+            _logger.LogError(ex, "Error al actualizar rol");
             return StatusCode(500, new { message = "Error al actualizar el rol" });
         }
     }
