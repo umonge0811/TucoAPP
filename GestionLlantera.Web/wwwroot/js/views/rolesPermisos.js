@@ -215,25 +215,31 @@ function escapeHtml(text) {
 
 // Función para abrir el modal de nuevo rol
 async function abrirModalNuevoRol() {
+    const submitButton = document.querySelector('.btn-primary-custom');
+
     try {
-        console.log('Abriendo modal de nuevo rol...');
+        console.log('Iniciando apertura de modal nuevo rol...');
 
-        // Obtener permisos usando el controlador
+        if (submitButton) {
+            ButtonUtils.startLoading(submitButton);
+        }
+
+        // 1. Cargar los permisos primero
         const response = await fetch('/Configuracion/ObtenerPermisos');
-
         if (!response.ok) {
             throw new Error('Error al cargar permisos');
         }
 
         const permisos = await response.json();
-        console.log('Permisos cargados para el modal:', permisos);
+        console.log('Permisos cargados:', permisos);
 
-        // Actualizar lista de permisos en el modal
+        // 2. Preparar el modal
         const listaPermisos = document.getElementById('listaPermisos');
         if (!listaPermisos) {
             throw new Error('No se encontró el elemento listaPermisos');
         }
 
+        // 3. Generar los checkboxes
         listaPermisos.innerHTML = permisos.map(permiso => `
             <div class="form-check mb-2">
                 <input class="form-check-input" type="checkbox" 
@@ -246,19 +252,25 @@ async function abrirModalNuevoRol() {
             </div>
         `).join('');
 
-        // Resetear el formulario
+        // 4. Resetear el formulario
         document.getElementById('formRol').reset();
         document.getElementById('rolId').value = '0';
         document.querySelector('#modalNuevoRol .modal-title').textContent = 'Nuevo Rol';
 
-        // Mostrar el modal
-        modalRol.show();
+        // 5. Solo después de todo lo anterior, mostrar el modal
+        const modal = new bootstrap.Modal(document.getElementById('modalNuevoRol'));
+        modal.show();
 
     } catch (error) {
         console.error('Error al preparar modal de nuevo rol:', error);
         toastr.error('Error al cargar los permisos disponibles');
+    } finally {
+        if (submitButton) {
+            ButtonUtils.stopLoading(submitButton);
+        }
     }
 }
+
 // Función para abrir el modal de nuevo permiso
 async function abrirModalNuevoPermiso() {
     try {
@@ -274,6 +286,7 @@ async function abrirModalNuevoPermiso() {
         mostrarNotificacion('Error al abrir el formulario', 'error');
     }
 }
+
 
 async function editarRol(rolId) {
     const submitButton = document.querySelector(`button[onclick="editarRol(${rolId})"]`);
@@ -338,13 +351,7 @@ async function editarRol(rolId) {
 
 
 async function guardarRol() {
-    console.log('Iniciando guardarRol');
     const submitButton = document.getElementById('btnGuardarRol');
-
-    if (!submitButton) {
-        console.error('Botón guardarRol no encontrado');
-        return;
-    }
 
     try {
         console.log('Iniciando proceso de guardado de rol');
@@ -355,76 +362,63 @@ async function guardarRol() {
         const nombreRol = document.getElementById('nombreRol').value.trim();
         const descripcionRol = document.getElementById('descripcionRol').value.trim();
 
-        // Obtener permisos seleccionados
-        const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
-        const permisoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
-
-        console.log('PermisoIds seleccionados:', permisoIds);
-
         // Validaciones
         if (!nombreRol) {
             console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
-            ButtonUtils.stopLoading(submitButton);
             return;
         }
 
+        // Obtener permisos seleccionados
+        const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
+        const permisoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+        console.log('Permisos seleccionados:', permisoIds);
+
         const isEditing = rolId !== '0';
-        let response;
+        const url = isEditing ? `/Configuracion/ActualizarRol/${rolId}` : '/Configuracion/CrearRol';
+        const method = isEditing ? 'PUT' : 'POST';
+
+        // Preparar los datos según si es edición o creación
+        const dataRol = {
+            nombreRol: nombreRol,
+            descripcionRol: descripcionRol,
+            permisoIds: permisoIds
+        };
 
         if (isEditing) {
-            // Actualizar rol existente
-            const dataRol = {
-                rolId: parseInt(rolId),
-                nombreRol: nombreRol,
-                descripcionRol: descripcionRol,
-                permisoIds: permisoIds
-            };
-
-            response = await fetch(`/Configuracion/ActualizarRol/${rolId}`, {
-                method: 'PUT',  // Cambiado de POST a PUT
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(dataRol)
-            });
-        } else {
-            // Crear nuevo rol
-            const dataRol = {
-                nombreRol: nombreRol,
-                descripcionRol: descripcionRol,
-                permisoIds: permisoIds
-            };
-
-            response = await fetch('/Configuracion/CrearRol', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(dataRol)
-            });
+            dataRol.rolId = parseInt(rolId);
         }
+
+        console.log(`Enviando petición ${method} a ${url}`);
+        console.log('Datos a enviar:', dataRol);
+
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+            },
+            body: JSON.stringify(dataRol)
+        });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Error al guardar el rol');
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            throw new Error('Error al guardar el rol');
         }
 
-        console.log('Rol guardado exitosamente');
         await cargarRoles();  // Recargar la tabla
-        modalRol.hide();
+        modalRol.hide();      // Cerrar el modal
         toastr.success(isEditing ? 'Rol actualizado exitosamente' : 'Rol creado exitosamente');
 
     } catch (error) {
-        console.error('Error en guardarRol:', error);
+        console.error('Error detallado en guardarRol:', error);
         toastr.error(error.message || 'Error al guardar el rol');
     } finally {
-        console.log('Finalizando guardarRol');
         ButtonUtils.stopLoading(submitButton);
     }
 }
-
-
 // Función para eliminar rol
 async function eliminarRol(rolId) {
     // Mostrar confirmación con SweetAlert2
@@ -473,21 +467,6 @@ async function eliminarRol(rolId) {
 
 }
 
-// Función para abrir el modal de nuevo permiso
-async function abrirModalNuevoPermiso() {
-    try {
-        // Resetear el formulario
-        document.getElementById('formPermiso').reset();
-        document.getElementById('permisoId').value = '0';
-        document.querySelector('#modalNuevoPermiso .modal-title').textContent = 'Nuevo Permiso';
-
-        // Mostrar el modal
-        modalPermiso.show();
-    } catch (error) {
-        console.error('Error al preparar modal de nuevo permiso:', error);
-        mostrarNotificacion('Error al abrir el formulario', 'error');
-    }
-}
 
 // Función para guardar permiso
 async function guardarPermiso() {

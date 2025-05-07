@@ -150,13 +150,18 @@ public class ConfiguracionController : Controller
     {
         try
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var resultado = await _rolesService.CrearRol(rolDTO);
             return Ok(new { message = "Rol creado exitosamente" });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al crear rol");
-            return StatusCode(500, new { message = "Error al crear el rol" });
+            return StatusCode(500, new { message = ex.Message });
         }
     }
 
