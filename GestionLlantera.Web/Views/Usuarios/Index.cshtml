@@ -14,121 +14,139 @@
             <i class="bi bi-person-plus"></i> Nuevo Usuario
         </a>
     </div>
-    <div class="users-card">
-        <!-- Vista móvil -->
-        <div class="d-block d-md-none">
-            <div class="mobile-filters mb-3">
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="bi bi-search"></i>
-                    </span>
-                    <input type="text" class="form-control" id="mobileBuscar" placeholder="Buscar usuario...">
-                </div>
-                <select class="form-select mt-2" id="mobileEstado">
-                    <option value="">Todos los estados</option>
-                    <option value="activo">Activos</option>
-                    <option value="inactivo">Inactivos</option>
-                </select>
-            </div>
 
-            <div id="mobileUsersList">
-                @foreach (var usuario in Model)
-                {
-                    <div class="user-card" data-estado="@(usuario.Activo ? "activo" : "inactivo")">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="mb-0">@usuario.NombreUsuario</h5>
-                                <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
-                                    @(usuario.Activo ? "Activo" : "Inactivo")
-                                </span>
-                            </div>
-                            <p class="text-muted mb-3">@usuario.Email</p>
-                            <div class="mb-3">
-                                @foreach (var rol in usuario.Roles)
-                                {
-                                    <span class="badge bg-primary me-1">@rol</span>
-                                }
-                            </div>
-                            <div class="btn-group w-100">
-                                <button class="btn btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
-                                    <i class="bi bi-shield"></i> Roles
-                                </button>
-                                @if (usuario.Activo)
-                                {
-                                    <button class="btn btn-outline-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
-                                        <i class="bi bi-person-x"></i> Desactivar
-                                    </button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-outline-success" onclick="activarUsuario(@usuario.UsuarioId)">
-                                        <i class="bi bi-person-check"></i> Activar
-                                    </button>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
+    @if (Model == null)
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            No se pudieron cargar los usuarios. Por favor, intenta recargar la página.
         </div>
+    }
+    else if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            No hay usuarios registrados en el sistema.
+        </div>
+    }
+    else
+    {
+        <div class="users-card">
+            <!-- Vista móvil -->
+            <div class="d-block d-md-none">
+                <div class="mobile-filters mb-3">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="mobileBuscar" placeholder="Buscar usuario...">
+                    </div>
+                    <select class="form-select mt-2" id="mobileEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="activo">Activos</option>
+                        <option value="inactivo">Inactivos</option>
+                    </select>
+                </div>
 
-        <!-- Vista desktop -->
-        <div class="table-responsive d-none d-md-block">
-            <table id="tablaUsuarios" class="table">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Roles</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
+                <div id="mobileUsersList">
                     @foreach (var usuario in Model)
                     {
-                        <tr>
-                            <td>@usuario.NombreUsuario</td>
-                            <td>@usuario.Email</td>
-                            <td>
-                                @foreach (var rol in usuario.Roles)
-                                {
-                                    <span class="badge bg-primary me-1">@rol</span>
-                                }
-                            </td>
-                            <td>
-                                <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
-                                    @(usuario.Activo ? "Activo" : "Inactivo")
-                                </span>
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-primary" onclick="editarRoles(@usuario.UsuarioId)"
-                                            data-bs-toggle="tooltip" title="Editar Roles">
-                                        <i class="bi bi-shield"></i>
+                        <div class="user-card" data-estado="@(usuario.Activo ? "activo" : "inactivo")">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="mb-0">@usuario.NombreUsuario</h5>
+                                    <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
+                                        @(usuario.Activo ? "Activo" : "Inactivo")
+                                    </span>
+                                </div>
+                                <p class="text-muted mb-3">@usuario.Email</p>
+                                <div class="mb-3">
+                                    @foreach (var rol in usuario.Roles)
+                                    {
+                                        <span class="badge bg-primary me-1">@rol</span>
+                                    }
+                                </div>
+                                <div class="btn-group w-100">
+                                    <button class="btn btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
+                                        <i class="bi bi-shield"></i> Roles
                                     </button>
                                     @if (usuario.Activo)
                                     {
-                                        <button class="btn btn-danger" onclick="desactivarUsuario(@usuario.UsuarioId)"
-                                                data-bs-toggle="tooltip" title="Desactivar Usuario">
-                                            <i class="bi bi-person-x"></i>
+                                        <button class="btn btn-outline-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
+                                            <i class="bi bi-person-x"></i> Desactivar
                                         </button>
                                     }
                                     else
                                     {
-                                        <button class="btn btn-success" onclick="activarUsuario(@usuario.UsuarioId)"
-                                                data-bs-toggle="tooltip" title="Activar Usuario">
-                                            <i class="bi bi-person-check"></i>
+                                        <button class="btn btn-outline-success" onclick="activarUsuario(@usuario.UsuarioId)">
+                                            <i class="bi bi-person-check"></i> Activar
                                         </button>
                                     }
                                 </div>
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
                     }
-                </tbody>
-            </table>
+                </div>
+            </div>
+
+            <!-- Vista desktop -->
+            <div class="table-responsive d-none d-md-block">
+                <table id="tablaUsuarios" class="table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Roles</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var usuario in Model)
+                        {
+                            <tr>
+                                <td>@usuario.NombreUsuario</td>
+                                <td>@usuario.Email</td>
+                                <td>
+                                    @foreach (var rol in usuario.Roles)
+                                    {
+                                        <span class="badge bg-primary me-1">@rol</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
+                                        @(usuario.Activo ? "Activo" : "Inactivo")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-primary" onclick="editarRoles(@usuario.UsuarioId)"
+                                                data-bs-toggle="tooltip" title="Editar Roles">
+                                            <i class="bi bi-shield"></i>
+                                        </button>
+                                        @if (usuario.Activo)
+                                        {
+                                            <button class="btn btn-danger" onclick="desactivarUsuario(@usuario.UsuarioId)"
+                                                    data-bs-toggle="tooltip" title="Desactivar Usuario">
+                                                <i class="bi bi-person-x"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-success" onclick="activarUsuario(@usuario.UsuarioId)"
+                                                    data-bs-toggle="tooltip" title="Activar Usuario">
+                                                <i class="bi bi-person-check"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    }
 </div>
 
 <!-- Modal para editar roles -->

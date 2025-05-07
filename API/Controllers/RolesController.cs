@@ -42,14 +42,13 @@ public class RolesController : ControllerBase
                 // Registrar intento fallido en el historial
                 await HistorialHelper.RegistrarHistorial(
                     httpClient: _httpClient,
-                    usuarioId: 1, // ID de usuario para pruebas
+                    usuarioId: 2, // ID de usuario para pruebas
                     tipoAccion: "Creación de Roles",
                     modulo: "Roles",
                     detalle: $"Intento de crear rol fallido. El rol '{dto.NombreRol}' ya existe.",
                     estadoAccion: "Error",
                     errorDetalle: "El rol ya existe."
                 );
-
                 return BadRequest(new { Message = "El rol ya existe." });
             }
 
@@ -64,42 +63,73 @@ public class RolesController : ControllerBase
             _context.Roles.Add(nuevoRol);
             await _context.SaveChangesAsync();
 
-            // Registrar creación exitosa del rol en el historial
-            await HistorialHelper.RegistrarHistorial(
-                httpClient: _httpClient,
-                usuarioId: 1, // ID de usuario para pruebas
-                tipoAccion: "Creación de Roles",
-                modulo: "Roles",
-                detalle: $"Rol creado exitosamente: '{dto.NombreRol}'.",
-                estadoAccion: "Éxito"
-            );
+            // Registrar creación exitosa del rol en el historial - PRIMERA GUARDADA
+            try
+            {
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 2, // ID de usuario para pruebas
+                    tipoAccion: "Creación de Roles",
+                    modulo: "Roles",
+                    detalle: $"Rol creado exitosamente: '{dto.NombreRol}'.",
+                    estadoAccion: "Éxito"
+                );
+            }
+            catch (Exception historialEx)
+            {
+                // Solo registrar la excepción pero no detener el proceso
+                Console.WriteLine($"Error al registrar historial: {historialEx.Message}");
+            }
 
             // Asociar permisos si están definidos en el DTO
             if (dto.PermisoIds != null && dto.PermisoIds.Count > 0)
             {
+                // Primera carga explícita de todos los permisos relevantes
+                var permisosExistentes = await _context.Permisos
+                    .Where(p => dto.PermisoIds.Contains(p.PermisoId))
+                    .ToListAsync();
+
                 foreach (var permisoId in dto.PermisoIds)
                 {
-                    var rolPermiso = new RolPermisoRE
-                    {
-                        RolID = nuevoRol.RolId,
-                        PermisoID = permisoId
-                    };
+                    // Verificar que el permiso existe en los cargados previamente
+                    var permisoExistente = permisosExistentes.FirstOrDefault(p => p.PermisoId == permisoId);
 
-                    _context.RolPermisos.Add(rolPermiso);
+                    if (permisoExistente != null)
+                    {
+                        var rolPermiso = new RolPermisoRE
+                        {
+                            RolID = nuevoRol.RolId,
+                            PermisoID = permisoId
+                        };
+
+                        _context.RolPermisos.Add(rolPermiso);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"El permiso con ID {permisoId} no existe");
+                    }
                 }
 
                 // Guardar las relaciones entre rol y permisos
                 await _context.SaveChangesAsync();
 
-                // Registrar en el historial la asociación de permisos
-                await HistorialHelper.RegistrarHistorial(
-                    httpClient: _httpClient,
-                    usuarioId: 1, // ID de usuario para pruebas
-                    tipoAccion: "Asociación de Permisos",
-                    modulo: "Roles",
-                    detalle: $"Permisos asociados al rol '{dto.NombreRol}'.",
-                    estadoAccion: "Éxito"
-                );
+                // Registrar en el historial la asociación de permisos - SEGUNDA GUARDADA
+                try
+                {
+                    await HistorialHelper.RegistrarHistorial(
+                        httpClient: _httpClient,
+                        usuarioId: 2, // ID de usuario para pruebas
+                        tipoAccion: "Asociación de Permisos",
+                        modulo: "Roles",
+                        detalle: $"Permisos asociados al rol '{dto.NombreRol}'.",
+                        estadoAccion: "Éxito"
+                    );
+                }
+                catch (Exception historialEx)
+                {
+                    // Solo registrar la excepción pero no detener el proceso
+                    Console.WriteLine($"Error al registrar historial de permisos: {historialEx.Message}");
+                }
             }
 
             return Ok(new { Message = "Rol creado exitosamente.", RolId = nuevoRol.RolId });
@@ -107,15 +137,22 @@ public class RolesController : ControllerBase
         catch (Exception ex)
         {
             // Registrar error en el historial
-            await HistorialHelper.RegistrarHistorial(
-                httpClient: _httpClient,
-                usuarioId: 1, // ID de usuario para pruebas
-                tipoAccion: "Creación de Roles",
-                modulo: "Roles",
-                detalle: "Error al crear el rol.",
-                estadoAccion: "Error",
-                errorDetalle: ex.Message
-            );
+            try
+            {
+                await HistorialHelper.RegistrarHistorial(
+                    httpClient: _httpClient,
+                    usuarioId: 2, // ID de usuario para pruebas
+                    tipoAccion: "Creación de Roles",
+                    modulo: "Roles",
+                    detalle: "Error al crear el rol.",
+                    estadoAccion: "Error",
+                    errorDetalle: ex.Message
+                );
+            }
+            catch
+            {
+                // Ignorar errores del historial en caso de excepción principal
+            }
 
             return StatusCode(500, new { Message = $"Ocurrió un error: {ex.Message}" });
         }

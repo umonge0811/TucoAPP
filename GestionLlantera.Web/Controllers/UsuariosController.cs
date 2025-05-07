@@ -51,12 +51,21 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("Obteniendo lista de usuarios");
                 var usuarios = await _usuariosService.ObtenerTodosAsync();
+
+                // Comprobar si usuarios es null y proporcionar una lista vacía en su lugar
+                if (usuarios == null)
+                {
+                    _logger.LogWarning("El servicio de usuarios devolvió NULL");
+                    return View(new List<UsuarioDTO>());
+                }
+
                 return View(usuarios);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener usuarios");
                 TempData["Error"] = "Error al cargar los usuarios";
+                // Proporcionar una lista vacía en caso de error
                 return View(new List<UsuarioDTO>());
             }
         }
