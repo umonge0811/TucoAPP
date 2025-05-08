@@ -145,7 +145,7 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para crear un nuevo rol en el sistema
-    [HttpPost("CrearRol")]
+    [HttpPost]
     public async Task<IActionResult> CrearRol([FromBody] RoleDTO rolDTO)
     {
         try
@@ -165,8 +165,11 @@ public class ConfiguracionController : Controller
         }
     }
 
+
+
     // Endpoint API para actualizar un rol existente
-    [HttpPut("ActualizarRol/{id}")]
+    [HttpPut]
+    [Route("ActualizarRol/{id}")]  // Este es el cambio clave
     public async Task<IActionResult> ActualizarRol(int id, [FromBody] RoleDTO rolDTO)
     {
         try
@@ -181,8 +184,11 @@ public class ConfiguracionController : Controller
         }
     }
 
-    // Endpoint API para eliminar un rol del sistema
-    [HttpDelete]
+    
+
+
+// Endpoint API para eliminar un rol del sistema
+[HttpDelete]
     public async Task<IActionResult> EliminarRol(int id)
     {
         try

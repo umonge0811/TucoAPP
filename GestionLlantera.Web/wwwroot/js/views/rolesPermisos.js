@@ -375,8 +375,9 @@ async function guardarRol() {
 
         console.log('Permisos seleccionados:', permisoIds);
 
+        // Determinar la URL y método a usar
         const isEditing = rolId !== '0';
-        const url = isEditing ? `/Configuracion/ActualizarRol/${rolId}` : '/Configuracion/CrearRol';
+        const url = '/Configuracion/GuardarRol';
         const method = isEditing ? 'PUT' : 'POST';
 
         // Preparar los datos según si es edición o creación
