@@ -35,7 +35,9 @@ namespace GestionLlantera.Web.Controllers
 
                 // Pasar los roles a la vista usando ViewData o ViewBag
                 ViewBag.Roles = roles;
-                return View();
+
+                // Importante: Devolver una vista con un modelo vacío en lugar de null
+                return View(new CreateUsuarioDTO());
             }
             catch (Exception ex)
             {
