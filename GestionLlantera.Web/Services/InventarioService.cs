@@ -1,5 +1,8 @@
-﻿using GestionLlantera.Web.Models.DTOs.Inventario;
+﻿// Ubicación: GestionLlantera.Web/Services/InventarioService.cs
+
+using GestionLlantera.Web.Models.DTOs.Inventario;
 using GestionLlantera.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
@@ -9,20 +12,14 @@ namespace GestionLlantera.Web.Services
     public class InventarioService : IInventarioService
     {
         private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
         private readonly ILogger<InventarioService> _logger;
 
-        public InventarioService(
-            HttpClient httpClient,
-            IConfiguration configuration,
-            ILogger<InventarioService> logger)
+        public InventarioService(IHttpClientFactory httpClientFactory, ILogger<InventarioService> logger)
         {
-            _httpClient = httpClient;
-            _configuration = configuration;
+            _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
         }
 
-        // Obtener todos los productos
         public async Task<List<ProductoDTO>> ObtenerProductosAsync()
         {
             try
@@ -31,17 +28,15 @@ namespace GestionLlantera.Web.Services
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
-                var productos = JsonConvert.DeserializeObject<List<ProductoDTO>>(content);
-                return productos ?? new List<ProductoDTO>();
+                return JsonConvert.DeserializeObject<List<ProductoDTO>>(content);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener productos");
-                throw;
+                return new List<ProductoDTO>();
             }
         }
 
-        // Obtener un producto por ID
         public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id)
         {
             try
@@ -50,171 +45,121 @@ namespace GestionLlantera.Web.Services
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
-                var producto = JsonConvert.DeserializeObject<ProductoDTO>(content);
-                return producto ?? new ProductoDTO();
+                return JsonConvert.DeserializeObject<ProductoDTO>(content);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener producto por ID: {Id}", id);
-                throw;
+                return new ProductoDTO();
             }
         }
 
-        // Método en el servicio InventarioService para agregar un producto
-        // En GestionLlantera.Web/Services/InventarioService.cs
-
+        // Verificar que el servicio incluya esta lógica para agregar productos con imágenes
         public async Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes)
         {
             try
             {
-                _logger.LogInformation("Iniciando proceso de agregar producto: {NombreProducto}", producto.NombreProducto);
+                // 1. Convertir el producto a JSON y enviar al API
+                var json = JsonConvert.SerializeObject(producto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // 1. Crear el producto base
-                var productoJson = JsonConvert.SerializeObject(producto);
-                var productoContent = new StringContent(productoJson, Encoding.UTF8, "application/json");
-
-                _logger.LogInformation("Enviando solicitud para crear producto: {ProductoJson}", productoJson);
-
-                var response = await _httpClient.PostAsync("api/Inventario/productos", productoContent);
-                response.EnsureSuccessStatusCode();
-
-                // 2. Obtener ID del producto creado
-                var resultado = await response.Content.ReadFromJsonAsync<dynamic>();
-                int productoId = resultado.productoId;
-
-                _logger.LogInformation("Producto creado con ID: {ProductoId}", productoId);
-
-                // 3. Si hay imágenes, subirlas
-                if (imagenes != null && imagenes.Count > 0)
+                var response = await _httpClient.PostAsync("api/Inventario/productos", content);
+                if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("Iniciando carga de {CantidadImagenes} imágenes para producto {ProductoId}",
-                        imagenes.Count, productoId);
+                    return false;
+                }
 
-                    var formData = new MultipartFormDataContent();
+                // 2. Obtener el ID del producto creado
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                int productoId = (int)resultado.productoId;
 
+                // 3. Subir imágenes si hay alguna
+                if (imagenes != null && imagenes.Any())
+                {
+                    using var formContent = new MultipartFormDataContent();
                     foreach (var imagen in imagenes)
                     {
-                        if (imagen.Length > 0)
-                        {
-                            var streamContent = new StreamContent(imagen.OpenReadStream());
-                            streamContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
-                            formData.Add(streamContent, "imagenes", imagen.FileName);
-                        }
+                        var fileContent = new StreamContent(imagen.OpenReadStream());
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+                        formContent.Add(fileContent, "imagenes", imagen.FileName);
                     }
 
-                    var imagenesResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoId}/imagenes", formData);
+                    await _httpClient.PostAsync($"api/Inventario/productos/{productoId}/imagenes", formContent);
+                }
 
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes)
+        {
+            try
+            {
+                // 1. Actualizar el producto
+                var json = JsonConvert.SerializeObject(producto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"api/Inventario/productos/{id}", content);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Error al actualizar producto. Status: {Status}", response.StatusCode);
+                    return false;
+                }
+
+                // 2. Subir nuevas imágenes si hay alguna
+                if (nuevasImagenes != null && nuevasImagenes.Any())
+                {
+                    using var formContent = new MultipartFormDataContent();
+                    foreach (var imagen in nuevasImagenes)
+                    {
+                        var fileContent = new StreamContent(imagen.OpenReadStream());
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+                        formContent.Add(fileContent, "imagenes", imagen.FileName);
+                    }
+
+                    var imagenesResponse = await _httpClient.PostAsync($"api/Inventario/productos/{id}/imagenes", formContent);
                     if (!imagenesResponse.IsSuccessStatusCode)
                     {
-                        _logger.LogWarning("No se pudieron subir algunas imágenes del producto {ProductoId}", productoId);
-                        // Consideramos éxito parcial si al menos el producto se creó
+                        _logger.LogWarning("Error al subir imágenes. Status: {Status}", imagenesResponse.StatusCode);
+                        // No fallamos todo el proceso si solo fallan las imágenes
                     }
                 }
 
-                _logger.LogInformation("Proceso de agregar producto completado exitosamente: {ProductoId}", productoId);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al agregar producto: {NombreProducto}", producto.NombreProducto);
-                throw;
+                _logger.LogError(ex, "Error al actualizar producto");
+                return false;
             }
         }
 
-        // Método auxiliar para subir imágenes al producto
-        private async Task<bool> SubirImagenesProductoAsync(int productoId, List<IFormFile> imagenes)
+        public async Task<bool> AjustarStockAsync(int id, int cantidad, string tipoAjuste)
         {
             try
             {
-                // Verificar si hay imágenes para subir
-                if (imagenes == null || !imagenes.Any())
+                var ajuste = new
                 {
-                    _logger.LogInformation("No hay imágenes para subir al producto {ProductoId}", productoId);
-                    return true;
-                }
+                    Cantidad = cantidad,
+                    TipoAjuste = tipoAjuste
+                };
 
-                // Crear objeto MultipartFormDataContent para las imágenes
-                var formData = new MultipartFormDataContent();
+                var json = JsonConvert.SerializeObject(ajuste);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // Agregar cada imagen al form data
-                foreach (var imagen in imagenes)
-                {
-                    if (imagen.Length > 0)
-                    {
-                        _logger.LogInformation("Preparando imagen {NombreArchivo} ({Tamaño} bytes) para producto {ProductoId}",
-                            imagen.FileName, imagen.Length, productoId);
-
-                        // Verificar tipo de archivo para asegurar que sea una imagen
-                        if (!EsImagenValida(imagen))
-                        {
-                            _logger.LogWarning("Tipo de archivo no válido para imagen: {FileName}, {ContentType}",
-                                imagen.FileName, imagen.ContentType);
-                            continue;
-                        }
-
-                        // Crear stream content para la imagen
-                        var streamContent = new StreamContent(imagen.OpenReadStream());
-                        streamContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
-
-                        // Agregar al form data
-                        formData.Add(streamContent, "imagenes", imagen.FileName);
-                    }
-                }
-
-                // Si no hay imágenes válidas para subir
-                if (formData.Count() == 0)
-                {
-                    _logger.LogWarning("No se encontraron imágenes válidas para subir al producto {ProductoId}", productoId);
-                    return false;
-                }
-
-                // Enviar imágenes a la API
-                _logger.LogInformation("Enviando {NumImagenes} imágenes a la API para producto {ProductoId}",
-                    formData.Count(), productoId);
-
-                var response = await _httpClient.PostAsync($"api/Inventario/productos/{productoId}/imagenes", formData);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogInformation("Imágenes subidas exitosamente para producto {ProductoId}", productoId);
-                    return true;
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Error al subir imágenes: {StatusCode}, {ErrorContent}",
-                        response.StatusCode, errorContent);
-                    return false;
-                }
+                var response = await _httpClient.PostAsync($"api/Inventario/productos/{id}/ajuste-stock", content);
+                return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al subir imágenes para el producto {ProductoId}", productoId);
+                _logger.LogError(ex, "Error al ajustar stock. Producto ID: {Id}", id);
                 return false;
             }
-        }
-
-        // Método auxiliar para validar que un archivo sea una imagen
-        private bool EsImagenValida(IFormFile archivo)
-        {
-            // Lista de tipos MIME permitidos para imágenes
-            var tiposPermitidos = new[]
-            {
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/bmp",
-        "image/webp"
-    };
-
-            // Verificar extensión y tipo de contenido
-            if (string.IsNullOrEmpty(archivo.ContentType))
-            {
-                return false;
-            }
-
-            return tiposPermitidos.Contains(archivo.ContentType.ToLower());
         }
     }
 }

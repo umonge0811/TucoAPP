@@ -82,12 +82,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configurar soporte para archivos
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-    });
+//// Configurar soporte para archivos
+//builder.Services.AddControllers()
+//    .AddJsonOptions(options =>
+//    {
+//        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+//    });
 
 // Usar la política de CORS
 app.UseCors("PermitirNgrok");

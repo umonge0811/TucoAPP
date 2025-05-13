@@ -92,47 +92,27 @@ namespace GestionLlantera.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AgregarProducto(ProductoDTO producto)
         {
-            ViewData["Title"] = "Agregar Producto";
-            ViewData["Layout"] = "_AdminLayout";
-
-            try
+            if (!ModelState.IsValid)
             {
-                // Validación del modelo
-                if (!ModelState.IsValid)
-                {
-                    // Si hay errores, regresar a la vista con el modelo y los errores
-                    return View(producto);
-                }
-
-                // Procesar las imágenes del producto
-                var imagenes = Request.Form.Files.ToList();
-
-                // Llamar al servicio para agregar el producto
-                var exito = await _inventarioService.AgregarProductoAsync(producto, imagenes);
-
-                if (exito)
-                {
-                    // Éxito: redirigir al índice con mensaje de éxito
-                    TempData["Success"] = "Producto agregado exitosamente";
-                    return RedirectToAction(nameof(Index));
-                }
-                else
-                {
-                    // Error: volver a la vista con mensaje de error
-                    TempData["Error"] = "Error al agregar el producto";
-                    return View(producto);
-                }
-            }
-            catch (Exception ex)
-            {
-                // Registrar error detallado
-                _logger.LogError(ex, "Error al agregar producto. Detalles: {Message}", ex.Message);
-
-                // Mostrar mensaje de error genérico
-                TempData["Error"] = "Error al procesar la solicitud";
                 return View(producto);
             }
+
+            // Obtener los archivos de imágenes del formulario
+            var imagenes = Request.Form.Files.ToList();
+
+            // Llamar al servicio para guardar el producto con las imágenes
+            var exito = await _inventarioService.AgregarProductoAsync(producto, imagenes);
+
+            if (exito)
+            {
+                TempData["Success"] = "Producto agregado exitosamente";
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["Error"] = "Error al agregar el producto";
+            return View(producto);
         }
+
 
         // GET: /Inventario/Programaciones
         public IActionResult Programaciones()

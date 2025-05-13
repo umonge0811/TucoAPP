@@ -1,8 +1,4 @@
-﻿/**
- * Script para la vista de agregar producto
- */
-
-document.addEventListener('DOMContentLoaded', function () {
+﻿document.addEventListener('DOMContentLoaded', function () {
     // Referencias a elementos del DOM
     const esLlantaCheckbox = document.getElementById('esLlanta');
     const llantaFields = document.getElementById('llantaFields');
@@ -172,9 +168,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function updateFileInput() {
-            // Crear un nuevo FileList (no es posible directamente, así que usamos FormData)
-            // En una implementación real, esto se maneja al enviar el formulario
-            console.log(`Archivos válidos: ${validFiles.length}`);
+            // Crear un DataTransfer para simular una nueva selección de archivos
+            const dataTransfer = new DataTransfer();
+
+            // Agregar cada archivo válido al DataTransfer
+            validFiles.forEach(file => {
+                dataTransfer.items.add(file);
+            });
+
+            // Asignar los archivos al fileInput
+            fileInput.files = dataTransfer.files;
+
+            console.log(`Archivos válidos para subir: ${validFiles.length}`);
         }
     }
 
@@ -197,6 +202,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Manejar el envío del formulario
         form.addEventListener('submit', function (e) {
+            e.preventDefault(); // Siempre prevenir el envío por defecto para manejar manualmente
+
             // Validar todos los campos primero
             let formValido = true;
             formInputs.forEach(input => {
@@ -206,9 +213,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             if (!formValido) {
-                e.preventDefault();
-                e.stopPropagation();
-
                 // Mostrar mensaje de error
                 toastr.error('Por favor, complete todos los campos requeridos correctamente');
 
@@ -229,15 +233,59 @@ document.addEventListener('DOMContentLoaded', function () {
             normalState.style.display = 'none';
             loadingState.style.display = 'inline-flex';
 
-            // Si es una llanta y el checkbox no está marcado, limpiar los campos de llanta
+            // Crear FormData para enviar los datos del formulario
+            const formData = new FormData(form);
+
+            // Si no es una llanta, eliminar los datos de llanta del FormData
             if (esLlantaCheckbox && !esLlantaCheckbox.checked) {
-                const llantaInputs = llantaFields.querySelectorAll('input, select');
-                llantaInputs.forEach(input => {
-                    input.value = '';
-                });
+                for (let key of [...formData.keys()]) {
+                    if (key.startsWith('Llanta.')) {
+                        formData.delete(key);
+                    }
+                }
+
+                // Añadir un campo para indicar que no es una llanta
+                formData.append('Llanta', null);
             }
 
-            // El formulario se enviará normalmente
+            // Añadir las imágenes seleccionadas al FormData
+            if (fileInput.files.length > 0) {
+                // Limpiar cualquier valor previo para evitar duplicados
+                formData.delete('imagenes');
+
+                // Agregar cada archivo como una entrada separada con el mismo nombre
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    formData.append('imagenes', fileInput.files[i]);
+                }
+            }
+
+            // Enviar el formulario usando fetch o permitir que se envíe normalmente
+            // Si tu backend espera un envío normal de formulario multipart, usa:
+            form.submit();
+
+            // Si necesitas más control o manejar la respuesta, usa fetch en su lugar:
+            /*
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al guardar el producto');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Redirigir o mostrar mensaje de éxito
+                window.location.href = '/Inventario'; // O donde se deba redirigir
+            })
+            .catch(error => {
+                submitButton.disabled = false;
+                normalState.style.display = 'inline-flex';
+                loadingState.style.display = 'none';
+                toastr.error('Error al guardar el producto: ' + error.message);
+            });
+            */
         });
     }
 
