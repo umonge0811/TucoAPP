@@ -1,0 +1,282 @@
+﻿@model GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO
+@{
+    ViewData["Title"] = "Detalle de Producto";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-box-seam me-2"></i>
+            Detalle del Producto
+        </h2>
+        <div>
+            <a asp-controller="Inventario" asp-action="EditarProducto" asp-route-id="@Model.ProductoId" class="btn btn-primary me-2">
+                <i class="bi bi-pencil me-1"></i>
+                Editar
+            </a>
+            <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Información principal y galería -->
+        <div class="col-lg-8">
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h3>@Model.NombreProducto</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Carrusel de imágenes -->
+                        <div class="col-md-6 mb-4">
+                            @if (Model.Imagenes != null && Model.Imagenes.Any())
+                            {
+                                <div id="productoCarrusel" class="carousel slide" data-bs-ride="carousel">
+                                    <div class="carousel-inner">
+                                        @for (int i = 0; i < Model.Imagenes.Count; i++)
+                                        {
+                                            var imagen = Model.Imagenes[i];
+                                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                                <img src="@imagen.UrlImagen" class="d-block w-100 img-fluid rounded"
+                                                     alt="@Model.NombreProducto">
+                                            </div>
+                                        }
+                                    </div>
+                                    @if (Model.Imagenes.Count > 1)
+                                    {
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#productoCarrusel" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Anterior</span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button" data-bs-target="#productoCarrusel" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Siguiente</span>
+                                        </button>
+                                    }
+                                </div>
+
+                                <!-- Miniaturas -->
+                                @if (Model.Imagenes.Count > 1)
+                                {
+                                    <div class="row mt-2 g-2">
+                                        @for (int i = 0; i < Model.Imagenes.Count; i++)
+                                        {
+                                            var imagen = Model.Imagenes[i];
+                                            <div class="col-3">
+                                                <img src="@imagen.UrlImagen" class="img-thumbnail cursor-pointer"
+                                                     onclick="$('#productoCarrusel').carousel(@i)"
+                                                     alt="@Model.NombreProducto - Miniatura">
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="sin-imagen-grande">
+                                    <i class="bi bi-image"></i>
+                                    <p>No hay imágenes disponibles</p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Información del producto -->
+                        <div class="col-md-6">
+                            <h4 class="precio-detalle">₡@Model.Precio.ToString("N0")</h4>
+
+                            <div class="mb-3">
+                                <div class="stock-info @(Model.CantidadEnInventario <= Model.StockMinimo ? "text-danger" : "text-success")">
+                                    <i class="bi @(Model.CantidadEnInventario <= Model.StockMinimo ? "bi-exclamation-triangle" : "bi-check-circle")"></i>
+                                    <span>
+                                        @if (Model.CantidadEnInventario <= Model.StockMinimo)
+                                        {
+                                            <text>Stock bajo: </text>
+                                        }
+                                        else
+                                        {
+                                            <text>Disponible: </text>
+                                        }
+                                        @Model.CantidadEnInventario unidades
+                                    </span>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Descripcion))
+                            {
+                                <div class="mb-3">
+                                    <h5>Descripción</h5>
+                                    <p>@Model.Descripcion</p>
+                                </div>
+                            }
+
+                            <div class="mb-3">
+                                <h5>Información Adicional</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Stock Mínimo:</span>
+                                        <span>@Model.StockMinimo unidades</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Última Actualización:</span>
+@*                                         <span>@(Model.FechaUltimaActualizacion?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</span>
+ *@                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ajusteStockModal">
+                                    <i class="bi bi-plus-slash-minus me-2"></i>Ajustar Stock
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información específica de llantas y estadísticas -->
+        <div class="col-lg-4">
+            @if (Model.Llanta != null && Model.Llanta.LlantaId > 0)
+            {
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-car-front me-2"></i>
+                            Especificaciones de Llanta
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            @if (!string.IsNullOrEmpty(Model.Llanta.Marca))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Marca:</span>
+                                    <span>@Model.Llanta.Marca</span>
+                                </li>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Llanta.Modelo))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Modelo:</span>
+                                    <span>@Model.Llanta.Modelo</span>
+                                </li>
+                            }
+                            @if (Model.Llanta.Ancho.HasValue)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Medidas:</span>
+                                    <span>@Model.Llanta.Ancho/@Model.Llanta.Perfil R@Model.Llanta.Diametro</span>
+                                </li>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Llanta.IndiceVelocidad))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Índice de Velocidad:</span>
+                                    <span>@Model.Llanta.IndiceVelocidad</span>
+                                </li>
+                            }
+                            @if (Model.Llanta.Capas.HasValue)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Capas:</span>
+                                    <span>@Model.Llanta.Capas</span>
+                                </li>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Llanta.TipoTerreno))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Tipo de Terreno:</span>
+                                    <span>@Model.Llanta.TipoTerreno</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>
+                        <i class="bi bi-graph-up me-2"></i>
+                        Estadísticas
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5>Movimientos Recientes</h5>
+                        <div id="movimientosChart" style="width: 100%; height: 200px;"></div>
+                    </div>
+
+                    <h5>Información de Ventas</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Vendidos (Último mes):</span>
+                            <span>15 unidades</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Ingresos Generados:</span>
+                            <span>₡450,000</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Posición en Ventas:</span>
+                            <span>#5</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Ajuste de Stock -->
+<div class="modal fade" id="ajusteStockModal" tabindex="-1" aria-labelledby="ajusteStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ajusteStockModalLabel">Ajustar Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ajusteStockForm">
+                    <input type="hidden" id="productoId" value="@Model.ProductoId" />
+
+                    <div class="mb-3">
+                        <label for="tipoAjuste" class="form-label">Tipo de Ajuste</label>
+                        <select class="form-select" id="tipoAjuste" required>
+                            <option value="">Seleccione tipo de ajuste</option>
+                            <option value="entrada">Entrada de Mercancía</option>
+                            <option value="salida">Salida de Mercancía</option>
+                            <option value="ajuste">Ajuste de Inventario</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cantidad" class="form-label">Cantidad</label>
+                        <input type="number" class="form-control" id="cantidad" min="1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label">Comentario</label>
+                        <textarea class="form-control" id="comentario" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="guardarAjusteBtn">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Guardar Ajuste
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/views/inventario/detalleProducto.js"></script>
+}

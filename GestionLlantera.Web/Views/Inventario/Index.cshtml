@@ -1,4 +1,4 @@
-﻿@model List<GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO>
+﻿@* @model List<GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO>
 @{
     ViewData["Title"] = "Inventario de Productos";
     Layout = "_AdminLayout";
@@ -110,4 +110,4 @@
                                     }
                                 </div>
                                 <div class="producto-footer">
-                                    <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })" class="btn btn
+                                    <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })" class="btn btn *@

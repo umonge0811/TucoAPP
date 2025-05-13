@@ -1,0 +1,191 @@
+﻿@model GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO
+@{
+    ViewData["Title"] = "Agregar Producto";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-plus-circle me-2"></i>
+            Agregar Nuevo Producto
+        </h2>
+        <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Volver al Inventario
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <form id="formProducto" method="post" enctype="multipart/form-data">
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-info-circle me-2"></i>
+                            Información Básica
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="NombreProducto" class="form-label">Nombre del Producto</label>
+                                    <input asp-for="NombreProducto" class="form-control" required />
+                                    <span asp-validation-for="NombreProducto" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Precio" class="form-label">Precio</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₡</span>
+                                        <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" required />
+                                    </div>
+                                    <span asp-validation-for="Precio" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CantidadEnInventario" class="form-label">Cantidad en Inventario</label>
+                                    <input asp-for="CantidadEnInventario" type="number" min="0" class="form-control" required />
+                                    <span asp-validation-for="CantidadEnInventario" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="StockMinimo" class="form-label">Stock Mínimo</label>
+                                    <input asp-for="StockMinimo" type="number" min="0" class="form-control" required />
+                                    <div class="form-text">Cantidad mínima antes de emitir alertas</div>
+                                    <span asp-validation-for="StockMinimo" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label asp-for="Descripcion" class="form-label">Descripción</label>
+                                    <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                                    <span asp-validation-for="Descripcion" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-image me-2"></i>
+                            Imágenes del Producto
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="img-upload-container" id="dropArea">
+                            <i class="bi bi-cloud-arrow-up img-upload-icon"></i>
+                            <p class="img-upload-text">Arrastra imágenes aquí o haz clic para seleccionar</p>
+                            <input type="file" id="fileInput" name="ImagenesArchivos" multiple accept="image/*" class="d-none" />
+                            <button type="button" id="selectImagesBtn" class="btn btn-outline-primary">
+                                <i class="bi bi-plus-lg me-2"></i>Seleccionar Imágenes
+                            </button>
+                        </div>
+                        <div class="img-preview-container" id="previewContainer">
+                            <!-- Las previsualizaciones de imágenes se cargarán aquí dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Para Llantas - Mostrar campos adicionales si aplica -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>
+                            <i class="bi bi-car-front-fill me-2"></i>
+                            Información de Llantas
+                        </h3>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="esLlanta">
+                            <label class="form-check-label" for="esLlanta">¿Es una llanta?</label>
+                        </div>
+                    </div>
+                    <div class="card-body" id="llantaFields" style="display: none;">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Llanta.Ancho" class="form-label">Ancho</label>
+                                    <input asp-for="Llanta.Ancho" type="number" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Llanta.Perfil" class="form-label">Perfil</label>
+                                    <input asp-for="Llanta.Perfil" type="number" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Llanta.Diametro" class="form-label">Diámetro</label>
+                                    <input asp-for="Llanta.Diametro" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Llanta.Marca" class="form-label">Marca</label>
+                                    <input asp-for="Llanta.Marca" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Llanta.Modelo" class="form-label">Modelo</label>
+                                    <input asp-for="Llanta.Modelo" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label asp-for="Llanta.IndiceVelocidad" class="form-label">Índice de Velocidad</label>
+                                    <input asp-for="Llanta.IndiceVelocidad" class="form-control" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Llanta.TipoTerreno" class="form-label">Tipo de Terreno</label>
+                                    <select asp-for="Llanta.TipoTerreno" class="form-select">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Todo Terreno">Todo Terreno</option>
+                                        <option value="Carretera">Carretera</option>
+                                        <option value="Off-Road">Off-Road</option>
+                                        <option value="Nieve">Nieve</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Llanta.Capas" class="form-label">Capas</label>
+                                    <input asp-for="Llanta.Capas" type="number" class="form-control" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end mb-4">
+                    <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-lg me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary-custom" id="submitButton">
+                        <span class="normal-state">
+                            <i class="bi bi-save me-2"></i>Guardar Producto
+                        </span>
+                        <span class="loading-state" style="display: none;">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            Guardando...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="~/js/views/inventario/agregarProducto.js"></script>
+}

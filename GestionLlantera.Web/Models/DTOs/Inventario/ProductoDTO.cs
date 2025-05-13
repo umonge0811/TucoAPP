@@ -28,6 +28,7 @@ namespace GestionLlantera.Web.Models.DTOs.Inventario
         [Range(0, int.MaxValue, ErrorMessage = "El stock mínimo debe ser un número positivo")]
         public int StockMinimo { get; set; }
 
+
         // Imágenes del producto (para la carga)
         [Display(Name = "Imágenes del Producto")]
         public List<IFormFile> ImagenesArchivos { get; set; } = new List<IFormFile>();
