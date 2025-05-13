@@ -1,4 +1,4 @@
-﻿// Archivo: wwwroot/js/rolesPermisos.js
+﻿// Archivo: wwwroot/js/views/rolesPermisos.js
 console.log('ButtonUtils disponible:', typeof ButtonUtils !== 'undefined');
 // Variables globales para los modales
 let modalRol = null;
@@ -6,8 +6,6 @@ let modalPermiso = null;
 
 // Variable global para almacenar la URL base de la API
 const API_URL = 'https://localhost:7273';
-
-
 
 // Event listener principal para la inicialización
 document.addEventListener('DOMContentLoaded', async function () {
@@ -45,14 +43,32 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 });
 
+// Función para refrescar todas las tablas
+async function refrescarTablas() {
+    try {
+        console.log('Iniciando actualización de tablas...');
 
+        // Realizar ambas operaciones en paralelo y esperar a que ambas terminen
+        const [permisos, roles] = await Promise.all([
+            cargarPermisos(),
+            cargarRoles()
+        ]);
+
+        console.log('Tablas actualizadas exitosamente');
+        return { permisos, roles };
+    } catch (error) {
+        console.error('Error al refrescar tablas:', error);
+        toastr.error('Error al actualizar la información');
+        throw error;
+    }
+}
 // Función para cargar todos los permisos
 async function cargarPermisos() {
     try {
         console.log('Iniciando carga de permisos...');
 
-        // Llamada al nuevo endpoint del controlador
-        const response = await fetch('/Configuracion/ObtenerPermisos');
+        // Usar la nueva ruta del controlador
+        const response = await fetch('/Configuracion/permisos');
 
         if (!response.ok) {
             throw new Error('Error al cargar permisos');
@@ -72,17 +88,13 @@ async function cargarPermisos() {
     }
 }
 
-
-/**
- * Función para cargar y mostrar los roles en la tabla
- * Mantiene el mismo estilo que la tabla de permisos
- */
 // Función para cargar todos los roles
 async function cargarRoles() {
     try {
         console.log('Iniciando carga de roles...');
 
-        const response = await fetch('/Configuracion/ObtenerRoles');
+        // Usar la nueva ruta del controlador
+        const response = await fetch('/Configuracion/roles');
 
         if (!response.ok) {
             throw new Error('Error al cargar roles');
@@ -91,7 +103,7 @@ async function cargarRoles() {
         const roles = await response.json();
         console.log('Roles recibidos:', roles); // Verificar la estructura de los datos
 
-        const tbody = document.querySelector('#tablaRoles tbody');
+        const tbody = document.querySelector('#roles table tbody');
         if (!tbody) {
             console.error('No se encontró el elemento tbody de la tabla de roles');
             return;
@@ -103,38 +115,50 @@ async function cargarRoles() {
 
             return `
                 <tr>
-                    <td>${rol.nombreRol}</td>
+                    <td class="fw-semibold">${rol.nombreRol}</td>
                     <td>${rol.descripcionRol || '-'}</td>
                     <td>
-                        ${Array.isArray(rol.permisos) && rol.permisos.length > 0
+                        <div class="d-flex flex-wrap gap-1">
+                            ${Array.isArray(rol.permisos) && rol.permisos.length > 0
                     ? rol.permisos.map(permiso =>
-                        `<span class="badge bg-primary me-1">${permiso.nombrePermiso}</span>`
+                        `<span class="badge bg-light text-dark">
+                        <i class="bi bi-key-fill me-1 text-primary"></i>
+                        ${permiso.nombrePermiso}
+                    </span>`
                     ).join('')
                     : '<span class="text-muted">Sin permisos</span>'
                 }
+                        </div>
                     </td>
                     <td>
-                        <button class="btn btn-sm btn-primary me-2" onclick="editarRol(${rol.rolId})" title="Editar">
-                            <i class="bi bi-pencil-fill"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})" title="Eliminar">
-                            <i class="bi bi-trash-fill"></i>
-                        </button>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-primary" onclick="editarRol(${rol.rolId})">
+                                <i class="bi bi-pencil me-1"></i>
+                                Editar
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})">
+                                <i class="bi bi-trash me-1"></i>
+                                Eliminar
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
         }).join('');
 
+        return roles;
     } catch (error) {
         console.error('Error al cargar roles:', error);
         toastr.error('Error al cargar los roles');
+        throw error;
     }
 }
 
 
+
 // Función auxiliar para actualizar la tabla de roles
 function actualizarTablaRoles(roles) {
-    const tbody = document.querySelector('#tablaRoles tbody');
+    const tbody = document.querySelector('#roles table tbody');
     if (!tbody) {
         console.error('No se encontró la tabla de roles');
         return;
@@ -142,23 +166,32 @@ function actualizarTablaRoles(roles) {
 
     tbody.innerHTML = roles.map(rol => `
         <tr>
-            <td>${rol.nombreRol}</td>
+            <td class="fw-semibold">${rol.nombreRol}</td>
             <td>${rol.descripcionRol || '-'}</td>
             <td>
-                ${rol.permisos && rol.permisos.length > 0
+                <div class="d-flex flex-wrap gap-1">
+                    ${rol.permisos && rol.permisos.length > 0
             ? rol.permisos.map(permiso =>
-                `<span class="badge bg-primary me-1">${permiso.nombrePermiso}</span>`
+                `<span class="badge bg-light text-dark">
+                    <i class="bi bi-key-fill me-1 text-primary"></i>
+                    ${permiso.nombrePermiso}
+                </span>`
             ).join('')
             : '<span class="text-muted">Sin permisos</span>'
         }
+                </div>
             </td>
             <td>
-                <button class="btn btn-sm btn-primary me-2" onclick="editarRol(${rol.rolId})" title="Editar">
-                    <i class="bi bi-pencil-fill"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})" title="Eliminar">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-primary" onclick="editarRol(${rol.rolId})">
+                        <i class="bi bi-pencil me-1"></i>
+                        Editar
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})">
+                        <i class="bi bi-trash me-1"></i>
+                        Eliminar
+                    </button>
+                </div>
             </td>
         </tr>
     `).join('');
@@ -167,9 +200,9 @@ function actualizarTablaRoles(roles) {
 
 // Función auxiliar para actualizar la tabla de permisos
 function actualizarTablaPermisos(permisos) {
-    const tbody = document.getElementById('tablaPermisos');
+    const tbody = document.querySelector('#permisos table tbody');
     if (!tbody) {
-        console.error('No se encontró el elemento tablaPermisos');
+        console.error('No se encontró el elemento tabla de permisos');
         return;
     }
 
@@ -189,37 +222,6 @@ function actualizarTablaPermisos(permisos) {
     `).join('');
 }
 
-/**
- * Función auxiliar para formatear los permisos de un rol
- * @param {Array} permisos - Array de permisos asociados al rol
- * @returns {string} HTML formateado con los permisos
- */
-function formatearPermisos(permisos) {
-    if (!Array.isArray(permisos) || permisos.length === 0) {
-        return '<span class="text-muted">Sin permisos</span>';
-    }
-
-    return permisos
-        .map(rp => {
-            if (!rp || !rp.permiso) return '';
-            return `<span class="badge bg-primary me-1">
-                ${escapeHtml(rp.permiso.nombrePermiso || '')}
-            </span>`;
-        })
-        .join('');
-}
-
-/**
- * Función de utilidad para escapar HTML y prevenir XSS
- * @param {string} text - Texto a escapar
- * @returns {string} Texto escapado
- */
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 // Función para abrir el modal de nuevo rol
 async function abrirModalNuevoRol() {
     const submitButton = document.querySelector('.btn-primary-custom');
@@ -231,8 +233,8 @@ async function abrirModalNuevoRol() {
             ButtonUtils.startLoading(submitButton);
         }
 
-        // 1. Cargar los permisos primero
-        const response = await fetch('/Configuracion/ObtenerPermisos');
+        // 1. Cargar los permisos primero - usar la nueva ruta
+        const response = await fetch('/Configuracion/permisos');
         if (!response.ok) {
             throw new Error('Error al cargar permisos');
         }
@@ -265,8 +267,7 @@ async function abrirModalNuevoRol() {
         document.querySelector('#modalNuevoRol .modal-title').textContent = 'Nuevo Rol';
 
         // 5. Solo después de todo lo anterior, mostrar el modal
-        const modal = new bootstrap.Modal(document.getElementById('modalNuevoRol'));
-        modal.show();
+        modalRol.show();
 
     } catch (error) {
         console.error('Error al preparar modal de nuevo rol:', error);
@@ -290,17 +291,16 @@ async function abrirModalNuevoPermiso() {
         modalPermiso.show();
     } catch (error) {
         console.error('Error al preparar modal de nuevo permiso:', error);
-        mostrarNotificacion('Error al abrir el formulario', 'error');
+        toastr.error('Error al abrir el formulario');
     }
 }
-
 
 async function editarRol(rolId) {
     try {
         console.log(`Editando rol con ID: ${rolId}`);
 
-        // 1. Obtener los datos del rol
-        const response = await fetch(`/Configuracion/ObtenerRol?id=${rolId}`);
+        // 1. Obtener los datos del rol - usar la nueva ruta
+        const response = await fetch(`/Configuracion/rol/${rolId}`);
         if (!response.ok) {
             throw new Error('Error al obtener rol');
         }
@@ -330,8 +330,8 @@ async function editarRol(rolId) {
 // Función auxiliar para cargar los permisos de un rol
 async function cargarPermisosParaRol(rolId) {
     try {
-        // Cargar todos los permisos disponibles
-        const responsePermisos = await fetch('/Configuracion/ObtenerPermisos');
+        // Cargar todos los permisos disponibles - usar la nueva ruta
+        const responsePermisos = await fetch('/Configuracion/permisos');
         if (!responsePermisos.ok) {
             throw new Error('Error al cargar permisos');
         }
@@ -353,8 +353,8 @@ async function cargarPermisosParaRol(rolId) {
             </div>
         `).join('');
 
-        // Obtener los permisos del rol
-        const responseRolPermisos = await fetch(`/Configuracion/ObtenerPermisosDeRol?rolId=${rolId}`);
+        // Obtener los permisos del rol - usar la nueva ruta
+        const responseRolPermisos = await fetch(`/Configuracion/permisos-rol/${rolId}`);
         if (!responseRolPermisos.ok) {
             throw new Error('Error al cargar permisos del rol');
         }
@@ -375,7 +375,7 @@ async function cargarPermisosParaRol(rolId) {
     }
 }
 
-// Función para guardar un nuevo rol (solo creación)  
+// Función para guardar un nuevo rol
 async function guardarRol() {
     const submitButton = document.getElementById('btnGuardarRol');
 
@@ -391,6 +391,7 @@ async function guardarRol() {
         if (!nombreRol) {
             console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
+            ButtonUtils.stopLoading(submitButton);
             return;
         }
 
@@ -407,10 +408,11 @@ async function guardarRol() {
             permisoIds: permisoIds
         };
 
-        console.log('Enviando petición POST a /Configuracion/GuardarRol');
+        console.log('Enviando petición POST a /Configuracion/crear-rol');
         console.log('Datos a enviar:', dataRol);
 
-        const response = await fetch('/Configuracion/CrearRol', {
+        // Usar la nueva ruta del controlador
+        const response = await fetch('/Configuracion/crear-rol', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -425,8 +427,9 @@ async function guardarRol() {
             throw new Error('Error al guardar el rol');
         }
 
-        await cargarRoles();  // Recargar la tabla  
-        modalRol.hide();      // Cerrar el modal  
+        // Cerrar el modal y refrescar tablas
+        modalRol.hide();
+        await refrescarTablas();
         toastr.success('Rol creado exitosamente');
 
     } catch (error) {
@@ -437,7 +440,7 @@ async function guardarRol() {
     }
 }
 
-// Nueva función específica para actualizar un rol existente  
+// Función para actualizar un rol existente
 async function actualizarRol() {
     const submitButton = document.getElementById('btnGuardarRol');
 
@@ -454,6 +457,7 @@ async function actualizarRol() {
         if (!nombreRol) {
             console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
+            ButtonUtils.stopLoading(submitButton);
             return;
         }
 
@@ -471,8 +475,8 @@ async function actualizarRol() {
             permisoIds: permisoIds
         };
 
-        // URL específica para actualizar rol  
-        const url = `/Configuracion/ActualizarRol/${rolId}`;
+        // Usar la nueva ruta del controlador
+        const url = `/Configuracion/actualizar-rol/${rolId}`;
         console.log(`Enviando petición PUT a ${url}`);
         console.log('Datos a enviar:', dataRol);
 
@@ -491,8 +495,13 @@ async function actualizarRol() {
             throw new Error('Error al actualizar el rol');
         }
 
-        await cargarRoles();  // Recargar la tabla  
-        modalRol.hide();      // Cerrar el modal  
+        // Cerrar el modal primero
+        modalRol.hide();
+
+        // Asegurar que la tabla se actualice completamente con los datos nuevos
+        await refrescarTablas();
+
+        // Mostrar mensaje de éxito
         toastr.success('Rol actualizado exitosamente');
 
     } catch (error) {
@@ -520,9 +529,8 @@ async function eliminarRol(rolId) {
 
     if (result.isConfirmed) {
         try {
-
-            //HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
-            const response = await fetch(`${API_URL}/api/Roles/${rolId}`, {
+            // Usar la nueva ruta del controlador
+            const response = await fetch(`/Configuracion/eliminar-rol/${rolId}`, {
                 method: 'DELETE'
             });
 
@@ -531,7 +539,8 @@ async function eliminarRol(rolId) {
                 throw new Error(errorData.message || 'Error al eliminar el rol');
             }
 
-            await cargarRoles();
+            // Refrescar tablas
+            await refrescarTablas();
 
             // Mostrar mensaje de éxito con SweetAlert2
             await Swal.fire(
@@ -549,9 +558,7 @@ async function eliminarRol(rolId) {
             );
         }
     }
-
 }
-
 
 // Función para guardar permiso
 async function guardarPermiso() {
@@ -606,8 +613,10 @@ async function guardarPermiso() {
         }
 
         console.log('Permiso guardado exitosamente');
+
+        // Cerrar modal y refrescar tablas
         modalPermiso.hide();
-        await Promise.all([cargarPermisos(), cargarRoles()]);
+        await refrescarTablas();
         toastr.success('Permiso guardado exitosamente');
 
     } catch (error) {
@@ -622,8 +631,8 @@ async function guardarPermiso() {
 // Función para editar permiso
 async function editarPermiso(permisoId) {
     try {
-        // Obtener datos del permiso
-        const response = await fetch(`${API_URL}/api/Permisos/obtener-por-id/${permisoId}`); //HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
+        // Obtener datos del permiso - ahora usando ruta del controlador
+        const response = await fetch(`/Configuracion/permiso/${permisoId}`);
         if (!response.ok) throw new Error('Error al obtener permiso');
 
         const permiso = await response.json();
@@ -641,7 +650,7 @@ async function editarPermiso(permisoId) {
 
     } catch (error) {
         console.error('Error:', error);
-        mostrarNotificacion('Error al cargar el permiso', 'error');
+        toastr.error('Error al cargar el permiso');
     }
 }
 
@@ -661,16 +670,20 @@ async function eliminarPermiso(permisoId) {
         });
 
         if (result.isConfirmed) {
-            //HAY QUE MODIFICAR PORQUE SE ESTA COMUNICANDO DIRECTO CON LA API
-            const response = await fetch(`${API_URL}/api/Permisos/eliminar/${permisoId}`, {
-                method: 'DELETE'
+            // Usar la ruta del controlador
+            const response = await fetch(`/Configuracion/eliminar-permiso/${permisoId}`, {
+                method: 'DELETE',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
             });
 
             if (!response.ok) {
                 throw new Error('Error al eliminar el permiso');
             }
 
-             
+            // Refrescar tablas
+            await refrescarTablas();
 
             await Swal.fire(
                 '¡Eliminado!',
@@ -684,18 +697,6 @@ async function eliminarPermiso(permisoId) {
     }
 }
 
-// Funciones auxiliares
-function actualizarListaPermisosModal(permisos) {
-    const listaPermisos = document.getElementById('listaPermisos');
-    listaPermisos.innerHTML = permisos.map(permiso => `
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="${permiso.permisoId}" id="permiso${permiso.permisoId}">
-            <label class="form-check-label" for="permiso${permiso.permisoId}">
-                ${permiso.nombrePermiso}
-            </label>
-        </div>
-    `).join('');
-}
 
 // Función auxiliar para mostrar notificaciones al usuario
 function mostrarNotificacion(mensaje, tipo) {
@@ -708,6 +709,7 @@ function mostrarNotificacion(mensaje, tipo) {
         alert(mensaje);
     }
 }
+
 // Limpiar formularios al cerrar modales
 document.getElementById('modalNuevoRol').addEventListener('hidden.bs.modal', function () {
     document.getElementById('formRol').reset();

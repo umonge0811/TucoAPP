@@ -214,11 +214,14 @@ public class RolesController : ControllerBase
 
     #region Actualizar un rol existente
     [HttpPut("actualizarRole/{id}")]
-    public async Task<IActionResult> ActualizarRolporID(int id, [FromBody] RoleUpdateDTO rol)
+    public async Task<IActionResult> ActualizarRolporID(int id, [FromBody] RoleDTO rol)
     {
         try
         {
-            var rolExistente = await _context.Roles.FindAsync(id);
+            var rolExistente = await _context.Roles
+                .Include(r => r.RolPermiso)
+                .FirstOrDefaultAsync(r => r.RolId == id);
+
             if (rolExistente == null)
             {
                 // Registrar en el historial si el rol no existe
@@ -235,10 +238,28 @@ public class RolesController : ControllerBase
                 return NotFound(new { Message = "Rol no encontrado." });
             }
 
-            // Actualizar los campos necesarios
+            // Actualizar los campos básicos
             rolExistente.NombreRol = rol.NombreRol;
             rolExistente.DescripcionRol = rol.DescripcionRol;
 
+            // Actualizar permisos
+            // 1. Eliminar permisos actuales
+            _context.RolPermisos.RemoveRange(rolExistente.RolPermiso);
+
+            // 2. Agregar los nuevos permisos
+            if (rol.PermisoIds != null && rol.PermisoIds.Any())
+            {
+                foreach (var permisoId in rol.PermisoIds)
+                {
+                    rolExistente.RolPermiso.Add(new RolPermisoRE
+                    {
+                        RolID = id,
+                        PermisoID = permisoId
+                    });
+                }
+            }
+
+            // Guardar cambios en la base de datos
             await _context.SaveChangesAsync();
 
             // Registrar en el historial la actualización exitosa
@@ -247,7 +268,7 @@ public class RolesController : ControllerBase
                 usuarioId: 1,
                 tipoAccion: "Actualización de Roles",
                 modulo: "Roles",
-                detalle: $"Rol con ID '{id}' actualizado exitosamente.",
+                detalle: $"Rol con ID '{id}' actualizado exitosamente con {rol.PermisoIds?.Count ?? 0} permisos.",
                 estadoAccion: "Éxito"
             );
 

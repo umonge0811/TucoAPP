@@ -59,6 +59,7 @@ builder.Services.AddHttpClient<IUsuariosService, UsuariosService>(client =>
 // REGISTRO DE SERVICIOS
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRolesService, RolesService>(); // NUEVO
+builder.Services.AddScoped<IPermisosService, PermisosService>(); // NUEVO
 builder.Services.AddHttpClient<IUsuariosService, UsuariosService>();
 
 // Configuración de autenticación por cookies

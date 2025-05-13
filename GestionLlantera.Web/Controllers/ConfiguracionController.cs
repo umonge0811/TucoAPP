@@ -6,27 +6,32 @@ using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs;
+using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 
 // Controlador que maneja la configuración del sistema, incluyendo roles y permisos
 [Authorize] // Asegura que solo usuarios autenticados puedan acceder a este controlador
-[Route("[controller]")]  // Añade esta línea
+[Route("[controller]")]  // Ruta base
 public class ConfiguracionController : Controller
 {
     // Declaración de servicios y logger que se usarán en el controlador
     private readonly IRolesService _rolesService;        // Servicio para gestionar roles
+    private readonly IPermisosService _permisosService;  // Servicio para gestionar permisos
     private readonly ILogger<ConfiguracionController> _logger;  // Logger para registro de eventos
 
     // Constructor que recibe las dependencias necesarias mediante inyección
     public ConfiguracionController(
         IRolesService rolesService,
+        IPermisosService permisosService,
         ILogger<ConfiguracionController> logger)
     {
         // Inicialización de las dependencias
         _rolesService = rolesService;
+        _permisosService = permisosService;
         _logger = logger;
     }
 
     // Método que renderiza la vista principal de gestión de roles y permisos
+    [HttpGet]
     public async Task<IActionResult> RolesPermisos()
     {
         try
@@ -57,7 +62,7 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para obtener todos los roles del sistema
-    [HttpGet]
+    [HttpGet("roles")]
     public async Task<IActionResult> ObtenerRoles()
     {
         try
@@ -83,7 +88,7 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para obtener todos los permisos disponibles
-    [HttpGet]
+    [HttpGet("permisos")]
     public async Task<IActionResult> ObtenerPermisos()
     {
         try
@@ -111,7 +116,7 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para obtener un rol específico por su ID
-    [HttpGet]
+    [HttpGet("rol/{id}")]
     public async Task<IActionResult> ObtenerRol(int id)
     {
         try
@@ -146,7 +151,7 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para crear un nuevo rol en el sistema
-    [HttpPost]
+    [HttpPost("crear-rol")]
     public async Task<IActionResult> CrearRol([FromBody] RoleDTO rolDTO)
     {
         try
@@ -166,11 +171,8 @@ public class ConfiguracionController : Controller
         }
     }
 
-
-
     // Endpoint API para actualizar un rol existente
-    [HttpPut]
-    [Route("ActualizarRol/{id}")]  // Este es el cambio clave
+    [HttpPut("actualizar-rol/{id}")]
     public async Task<IActionResult> ActualizarRol(int id, [FromBody] RoleDTO rolDTO)
     {
         try
@@ -185,11 +187,8 @@ public class ConfiguracionController : Controller
         }
     }
 
-    
-
-
-// Endpoint API para eliminar un rol del sistema
-[HttpDelete]
+    // Endpoint API para eliminar un rol del sistema
+    [HttpDelete("eliminar-rol/{id}")]
     public async Task<IActionResult> EliminarRol(int id)
     {
         try
@@ -221,7 +220,7 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para asignar permisos a un rol específico
-    [HttpPost]
+    [HttpPost("asignar-permisos/{rolId}")]
     public async Task<IActionResult> AsignarPermisosARol(int rolId, [FromBody] List<int> permisoIds)
     {
         try
@@ -268,7 +267,7 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para actualizar los permisos existentes de un rol
-    [HttpPut]
+    [HttpPut("actualizar-permisos/{rolId}")]
     public async Task<IActionResult> ActualizarPermisosDeRol(int rolId, [FromBody] List<int> permisoIds)
     {
         try
@@ -315,7 +314,7 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para obtener los permisos de un rol específico
-    [HttpGet]
+    [HttpGet("permisos-rol/{rolId}")]
     public async Task<IActionResult> ObtenerPermisosDeRol(int rolId)
     {
         try
@@ -345,4 +344,71 @@ public class ConfiguracionController : Controller
     }
 
 
+    // Endpoint API para crear un nuevo permiso
+    [HttpPost("crear-permiso")]
+    public async Task<IActionResult> CrearPermiso([FromBody] PermisoDTO permisoDTO)
+    {
+        try
+        {
+            var resultado = await _permisosService.CrearPermiso(permisoDTO);
+            return Ok(new { message = "Permiso creado exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al crear permiso");
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
+    // Endpoint API para obtener un permiso específico por su ID
+    [HttpGet("permiso/{id}")]
+    public async Task<IActionResult> ObtenerPermiso(int id)
+    {
+        try
+        {
+            var permiso = await _permisosService.ObtenerPermisoPorId(id);
+            if (permiso == null)
+            {
+                return NotFound(new { message = "Permiso no encontrado" });
+            }
+            return Ok(permiso);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener permiso");
+            return StatusCode(500, new { message = "Error al obtener el permiso" });
+        }
+    }
+
+    // Endpoint API para actualizar un permiso existente
+    [HttpPut("actualizar-permiso/{id}")]
+    public async Task<IActionResult> ActualizarPermiso(int id, [FromBody] PermisoDTO permisoDTO)
+    {
+        try
+        {
+            var resultado = await _permisosService.ActualizarPermiso(id, permisoDTO);
+            return Ok(new { message = "Permiso actualizado exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar permiso");
+            return StatusCode(500, new { message = "Error al actualizar el permiso" });
+        }
+    }
+
+    // Endpoint API para eliminar un permiso
+    [HttpDelete("eliminar-permiso/{id}")]
+    public async Task<IActionResult> EliminarPermiso(int id)
+    {
+        try
+        {
+            var resultado = await _permisosService.EliminarPermiso(id);
+            return Ok(new { message = "Permiso eliminado exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar permiso");
+            return StatusCode(500, new { message = "Error al eliminar el permiso" });
+        }
+    }
 }
