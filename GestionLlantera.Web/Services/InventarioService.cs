@@ -61,21 +61,15 @@ namespace GestionLlantera.Web.Services
         }
 
         // Método en el servicio InventarioService para agregar un producto
+        // En GestionLlantera.Web/Services/InventarioService.cs
+
         public async Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes)
         {
             try
             {
                 _logger.LogInformation("Iniciando proceso de agregar producto: {NombreProducto}", producto.NombreProducto);
 
-                // 1. Validar si el producto ya existe (ejemplo para evitar duplicados)
-                // var productoExistente = await _httpClient.GetAsync($"api/Inventario/productos/verificar/{producto.NombreProducto}");
-                // if (productoExistente.IsSuccessStatusCode)
-                // {
-                //     _logger.LogWarning("Intento de agregar producto duplicado: {NombreProducto}", producto.NombreProducto);
-                //     return false;
-                // }
-
-                // 2. Crear primero el producto sin imágenes
+                // 1. Crear el producto base
                 var productoJson = JsonConvert.SerializeObject(producto);
                 var productoContent = new StringContent(productoJson, Encoding.UTF8, "application/json");
 
@@ -84,21 +78,33 @@ namespace GestionLlantera.Web.Services
                 var response = await _httpClient.PostAsync("api/Inventario/productos", productoContent);
                 response.EnsureSuccessStatusCode();
 
-                // 3. Obtener ID del producto creado
+                // 2. Obtener ID del producto creado
                 var resultado = await response.Content.ReadFromJsonAsync<dynamic>();
                 int productoId = resultado.productoId;
 
                 _logger.LogInformation("Producto creado con ID: {ProductoId}", productoId);
 
-                // 4. Si hay imágenes, subirlas
+                // 3. Si hay imágenes, subirlas
                 if (imagenes != null && imagenes.Count > 0)
                 {
                     _logger.LogInformation("Iniciando carga de {CantidadImagenes} imágenes para producto {ProductoId}",
                         imagenes.Count, productoId);
 
-                    var exito = await SubirImagenesProductoAsync(productoId, imagenes);
+                    var formData = new MultipartFormDataContent();
 
-                    if (!exito)
+                    foreach (var imagen in imagenes)
+                    {
+                        if (imagen.Length > 0)
+                        {
+                            var streamContent = new StreamContent(imagen.OpenReadStream());
+                            streamContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+                            formData.Add(streamContent, "imagenes", imagen.FileName);
+                        }
+                    }
+
+                    var imagenesResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoId}/imagenes", formData);
+
+                    if (!imagenesResponse.IsSuccessStatusCode)
                     {
                         _logger.LogWarning("No se pudieron subir algunas imágenes del producto {ProductoId}", productoId);
                         // Consideramos éxito parcial si al menos el producto se creó
