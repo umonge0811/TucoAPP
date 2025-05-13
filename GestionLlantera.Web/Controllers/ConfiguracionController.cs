@@ -9,6 +9,7 @@ using Tuco.Clases.DTOs;
 
 // Controlador que maneja la configuración del sistema, incluyendo roles y permisos
 [Authorize] // Asegura que solo usuarios autenticados puedan acceder a este controlador
+[Route("[controller]")]  // Añade esta línea
 public class ConfiguracionController : Controller
 {
     // Declaración de servicios y logger que se usarán en el controlador

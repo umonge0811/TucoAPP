@@ -22,7 +22,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     const btnGuardarPermiso = document.getElementById('btnGuardarPermiso');
 
     if (btnGuardarRol) {
-        btnGuardarRol.addEventListener('click', guardarRol);
+        btnGuardarRol.addEventListener('click', function () {
+            const rolId = document.getElementById('rolId').value;
+            if (rolId === '0') {
+                guardarRol();  // Para crear un nuevo rol
+            } else {
+                actualizarRol();  // Para actualizar un rol existente
+            }
+        });
     }
 
     if (btnGuardarPermiso) {
@@ -287,6 +294,87 @@ async function abrirModalNuevoPermiso() {
     }
 }
 
+
+async function editarRol(rolId) {
+    try {
+        console.log(`Editando rol con ID: ${rolId}`);
+
+        // 1. Obtener los datos del rol
+        const response = await fetch(`/Configuracion/ObtenerRol?id=${rolId}`);
+        if (!response.ok) {
+            throw new Error('Error al obtener rol');
+        }
+
+        const rol = await response.json();
+        console.log('Datos del rol obtenidos:', rol);
+
+        // 2. Llenar el formulario con los datos
+        document.getElementById('rolId').value = rol.rolId;
+        document.getElementById('nombreRol').value = rol.nombreRol;
+        document.getElementById('descripcionRol').value = rol.descripcionRol || '';
+
+        // 3. Cambiar el título del modal
+        document.querySelector('#modalNuevoRol .modal-title').textContent = 'Editar Rol';
+
+        // 4. Cargar y marcar los permisos del rol
+        await cargarPermisosParaRol(rolId);
+
+        // 5. Mostrar el modal
+        modalRol.show();
+    } catch (error) {
+        console.error('Error al editar rol:', error);
+        toastr.error('Error al cargar los datos del rol');
+    }
+}
+
+// Función auxiliar para cargar los permisos de un rol
+async function cargarPermisosParaRol(rolId) {
+    try {
+        // Cargar todos los permisos disponibles
+        const responsePermisos = await fetch('/Configuracion/ObtenerPermisos');
+        if (!responsePermisos.ok) {
+            throw new Error('Error al cargar permisos');
+        }
+
+        const permisos = await responsePermisos.json();
+        console.log('Permisos disponibles:', permisos);
+
+        // Generar los checkboxes
+        const listaPermisos = document.getElementById('listaPermisos');
+        listaPermisos.innerHTML = permisos.map(permiso => `
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" 
+                       value="${permiso.permisoId}" 
+                       id="permiso_${permiso.permisoId}">
+                <label class="form-check-label" for="permiso_${permiso.permisoId}">
+                    ${permiso.nombrePermiso}
+                </label>
+                <small class="text-muted d-block">${permiso.descripcionPermiso || ''}</small>
+            </div>
+        `).join('');
+
+        // Obtener los permisos del rol
+        const responseRolPermisos = await fetch(`/Configuracion/ObtenerPermisosDeRol?rolId=${rolId}`);
+        if (!responseRolPermisos.ok) {
+            throw new Error('Error al cargar permisos del rol');
+        }
+
+        const permisosDelRol = await responseRolPermisos.json();
+        console.log('Permisos del rol:', permisosDelRol);
+
+        // Marcar los permisos que tiene el rol
+        permisosDelRol.forEach(permiso => {
+            const checkbox = document.getElementById(`permiso_${permiso.permisoId}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    } catch (error) {
+        console.error('Error al cargar permisos para rol:', error);
+        throw error;
+    }
+}
+
 // Función para guardar un nuevo rol (solo creación)  
 async function guardarRol() {
     const submitButton = document.getElementById('btnGuardarRol');
@@ -322,7 +410,7 @@ async function guardarRol() {
         console.log('Enviando petición POST a /Configuracion/GuardarRol');
         console.log('Datos a enviar:', dataRol);
 
-        const response = await fetch('/Configuracion/GuardarRol', {
+        const response = await fetch('/Configuracion/CrearRol', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
