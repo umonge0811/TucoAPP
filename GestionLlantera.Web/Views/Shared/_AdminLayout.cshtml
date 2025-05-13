@@ -142,17 +142,13 @@
                                     <div class="user-avatar">
                                         <i class="bi bi-person-circle"></i>
                                     </div>
-                                    <div class="user-info d-none d-xl-block">
-                                        <div class="user-name">@User.Identity?.Name</div>
-                                        <div class="user-role">Administrador</div>
-                                    </div>
+                                    @await Component.InvokeAsync("UserInfo")
                                 </div>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <div class="dropdown-header">
-                                        <div class="fw-bold">@User.Identity?.Name</div>
-                                        <div class="text-muted small">Administrador</div>
+                                        @await Component.InvokeAsync("UserInfo")
                                     </div>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>

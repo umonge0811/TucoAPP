@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Org.BouncyCastle.Pqc.Crypto.Lms;
 using Microsoft.AspNetCore.Authorization;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -58,9 +59,63 @@ namespace GestionLlantera.Web.Controllers
         // POST: /Account/Login
         // Este método se ejecuta cuando el usuario envía el formulario de login
         // POST: /Account/Login
+        //[HttpPost]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> Login(LoginViewModel model)  // No tiene [FromBody]
+        //{
+        //    if (!ModelState.IsValid)
+        //        return View(model);
+
+        //    try
+        //    {
+        //        var (success, token, errorMessage) = await _authService.LoginAsync(model);
+
+        //        if (success && !string.IsNullOrEmpty(token))
+        //        {
+        //            // Guardar el token en una cookie segura
+        //            Response.Cookies.Append("JwtToken", token, new CookieOptions
+        //            {
+        //                HttpOnly = true,
+        //                Secure = true,
+        //                SameSite = SameSiteMode.Lax,
+        //                Expires = DateTime.Now.AddHours(1)
+        //            });
+
+        //            // Crear los claims para la identidad
+        //            var claims = new List<Claim>
+        //    {
+        //        new Claim(ClaimTypes.Name, model.Email),
+        //        new Claim("JwtToken", token)
+        //    };
+
+        //            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        //            var principal = new ClaimsPrincipal(identity);
+
+        //            await HttpContext.SignInAsync(
+        //                CookieAuthenticationDefaults.AuthenticationScheme,
+        //                principal,
+        //                new AuthenticationProperties
+        //                {
+        //                    IsPersistent = model.RecordarMe,
+        //                    ExpiresUtc = DateTime.UtcNow.AddHours(1)
+        //                });
+
+        //            return RedirectToAction("Index", "Dashboard");
+        //        }
+
+        //        ModelState.AddModelError(string.Empty, errorMessage ?? "Credenciales inválidas");
+        //        return View(model);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        ModelState.AddModelError(string.Empty, "Error al procesar el login");
+        //        return View(model);
+        //    }
+        //}
+
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginViewModel model)  // No tiene [FromBody]
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
@@ -80,12 +135,29 @@ namespace GestionLlantera.Web.Controllers
                         Expires = DateTime.Now.AddHours(1)
                     });
 
+                    // Decodificar el token para obtener los claims
+                    var handler = new JwtSecurityTokenHandler();
+                    var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+
                     // Crear los claims para la identidad
                     var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, model.Email),
                 new Claim("JwtToken", token)
             };
+
+                    // Añadir los roles desde el token JWT
+                    if (jwtToken != null)
+                    {
+                        // Buscar claims de rol (pueden venir como "role" o ClaimTypes.Role)
+                        var roleClaims = jwtToken.Claims
+                            .Where(c => c.Type == "role" || c.Type == "Role" || c.Type == ClaimTypes.Role);
+
+                        foreach (var roleClaim in roleClaims)
+                        {
+                            claims.Add(new Claim(ClaimTypes.Role, roleClaim.Value));
+                        }
+                    }
 
                     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var principal = new ClaimsPrincipal(identity);
@@ -107,6 +179,7 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error en login: {Message}", ex.Message);
                 ModelState.AddModelError(string.Empty, "Error al procesar el login");
                 return View(model);
             }

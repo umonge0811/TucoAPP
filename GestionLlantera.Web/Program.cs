@@ -1,121 +1,61 @@
+using System.Text;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Net.Http.Headers;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Win32;
-using Org.BouncyCastle.Math;
-using Microsoft.Extensions.DependencyInjection;
-using tuco.Clases.Models;
+using System.Security.Claims;
+using GestionLlantera.Web.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Registrar los servicios necesarios para MVC
+// Agregar servicios al contenedor.
 builder.Services.AddControllersWithViews();
 
-// CONFIGURACIÓN DE SERVICIOS HTTP Y API
-
-// 1. Servicio de Autenticación
-builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+// Configurar HTTP client para llamadas a la API
+builder.Services.AddHttpClient("APIClient", client =>
 {
-    var apiSettings = builder.Configuration.GetSection("ApiSettings").Get<ApiSettings>();
-    var baseUrl = apiSettings?.BaseUrl ??
-        throw new InvalidOperationException("API BaseUrl not configured");
-
-    client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Clear();
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
+    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
 });
 
-// Configuración del HttpClient
-// Configuración centralizada del HttpClient
-builder.Services.AddHttpClient("APIClient", (serviceProvider, client) =>
-{
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-var baseUrl = configuration.GetValue<string>("ApiSettings:BaseUrl")
-    ?? throw new InvalidOperationException("API BaseUrl not configured");
-
-client.BaseAddress = new Uri(baseUrl);
-client.DefaultRequestHeaders.Accept.Clear();
-client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-
-builder.Services.AddHttpClient<IUsuariosService, UsuariosService>(client =>
-{
-    var apiSettings = builder.Configuration.GetSection("ApiSettings").Get<ApiSettings>();
-    var baseUrl = apiSettings?.BaseUrl ??
-        throw new InvalidOperationException("API BaseUrl not configured");
-
-    client.BaseAddress = new Uri(baseUrl);
-    client.DefaultRequestHeaders.Accept.Clear();
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/json"));
-});
-
-// REGISTRO DE SERVICIOS
+// Registrar servicios
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IRolesService, RolesService>(); // NUEVO
-builder.Services.AddScoped<IPermisosService, PermisosService>(); // NUEVO
-builder.Services.AddHttpClient<IUsuariosService, UsuariosService>();
+builder.Services.AddScoped<IRolesService, RolesService>();
+builder.Services.AddScoped<IPermisosService, PermisosService>();
+builder.Services.AddScoped<IUsuariosService, UsuariosService>();
 
-// Configuración de autenticación por cookies
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-})
-.AddCookie(options =>
-{
-    options.LoginPath = "/Account/Login";
-    options.LogoutPath = "/Account/Logout";
-    options.AccessDeniedPath = "/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromHours(1);
-    options.SlidingExpiration = true;
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    // Esto es importante para prevenir redirects infinitos
-    options.Cookie.SameSite = SameSiteMode.Lax;
-});
-
-// Configuración de CORS (Cross-Origin Resource Sharing)
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", builder =>
+// Configurar autenticación y autorización
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
     {
-        builder
-            // Permite solicitudes desde cualquier origen
-            .AllowAnyOrigin()
-            // Permite todos los métodos HTTP (GET, POST, etc.)
-            .AllowAnyMethod()
-            // Permite todos los headers en la solicitud
-            .AllowAnyHeader();
+        options.Cookie.HttpOnly = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.SlidingExpiration = true;
     });
+
+builder.Services.AddAuthorization(options =>
+{
+    // Puedes añadir políticas personalizadas aquí
+    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
 });
 
 var app = builder.Build();
 
-// Configuración del pipeline HTTP
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-else
+// Configurar el pipeline de solicitudes HTTP.
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
-// Habilitar el uso de CORS con la política definida
-app.UseCors("AllowAll"); 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseRouting();
+
+// Añadir autenticación y autorización al pipeline
 app.UseAuthentication();
+app.UseJwtClaimsMiddleware();
 app.UseAuthorization();
 
 app.MapControllerRoute(
@@ -123,10 +63,3 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
-
-// Clase de configuración de la API
-public class ApiSettings
-{
-    public string BaseUrl { get; set; } = string.Empty;
-}
-

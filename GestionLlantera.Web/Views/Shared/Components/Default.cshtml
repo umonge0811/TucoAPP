@@ -1,0 +1,6 @@
+﻿@model GestionLlantera.Web.ViewComponents.UserInfoViewModel
+
+<div class="user-info">
+    <div class="user-name">@Model.UserName</div>
+    <div class="user-role">@(Model.Roles.FirstOrDefault() ?? "Usuario")</div>
+</div>
