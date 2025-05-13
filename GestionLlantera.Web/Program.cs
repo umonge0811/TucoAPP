@@ -21,6 +21,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IUsuariosService, UsuariosService>();
+builder.Services.AddScoped<IInventarioService, InventarioService>();
 
 // Configurar autenticación y autorización
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

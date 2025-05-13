@@ -1,0 +1,113 @@
+﻿@model List<GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO>
+@{
+    ViewData["Title"] = "Inventario de Productos";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-box-seam me-2"></i>
+            Inventario de Productos
+        </h2>
+        <a asp-controller="Inventario" asp-action="AgregarProducto" class="btn btn-new-user">
+            <i class="bi bi-plus-lg me-2"></i> Nuevo Producto
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-search me-2"></i>
+                        <h3 class="mb-0">Buscar Productos</h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="searchText" class="form-label">Buscar por nombre o descripción</label>
+                                <input type="text" id="searchText" class="form-control" placeholder="Buscar...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="filterStock" class="form-label">Filtrar por stock</label>
+                                <select id="filterStock" class="form-select">
+                                    <option value="">Todos</option>
+                                    <option value="low">Stock Bajo</option>
+                                    <option value="normal">Stock Normal</option>
+                                    <option value="high">Stock Alto</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="sortBy" class="form-label">Ordenar por</label>
+                                <select id="sortBy" class="form-select">
+                                    <option value="name">Nombre</option>
+                                    <option value="price_asc">Precio (menor a mayor)</option>
+                                    <option value="price_desc">Precio (mayor a menor)</option>
+                                    <option value="stock">Stock disponible</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3>
+                <i class="bi bi-grid-3x3-gap me-2"></i>
+                Productos (@Model.Count)
+            </h3>
+        </div>
+        <div class="card-body">
+            @if (Model == null || !Model.Any())
+            {
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <div>
+                        No hay productos registrados en el inventario. 
+                        <a asp-controller="Inventario" asp-action="AgregarProducto" class="alert-link">
+                            Agregar un producto
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="productos-grid">
+                    @foreach (var producto in Model)
+                    {
+                        <div class="producto-card">
+                            <div class="producto-img-container">
+                                @if (producto.Imagenes != null && producto.Imagenes.Any())
+                                {
+                                    <img src="@producto.Imagenes.First().UrlImagen" alt="@producto.NombreProducto" class="producto-img">
+                                }
+                                else
+                                {
+                                    <div class="sin-imagen">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+                                }
+                            </div>
+                            <div class="producto-body">
+                                <h5 class="producto-title">@producto.NombreProducto</h5>
+                                <p class="producto-description">@(string.IsNullOrEmpty(producto.Descripcion) ? "Sin descripción" : producto.Descripcion)</p>
+                                <div class="producto-price">₡@producto.Precio.ToString("N0")</div>
+                                <div class="producto-stock @(producto.CantidadEnInventario <= producto.StockMinimo ? "low" : "")">
+                                    Stock: @producto.CantidadEnInventario unidades
+                                    @if (producto.CantidadEnInventario <= producto.StockMinimo)
+                                    {
+                                        <span class="badge bg-danger ms-2">Stock bajo</span>
+                                    }
+                                </div>
+                                <div class="producto-footer">
+                                    <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })" class="btn btn

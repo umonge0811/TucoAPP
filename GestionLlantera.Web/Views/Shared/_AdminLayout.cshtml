@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="~/css/views/admin/dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/views/admin/usuarios.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/views/admin/rolesPermisos.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/views/admin/inventario.css" asp-append-version="true" />
 
 
     @* Librerías de terceros *@
@@ -43,27 +44,53 @@
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
+                    @* <!-- INVENTARIOS --> *@
                     <li class="nav-item">
-                       @if (User.IsInRole("Admin")) @* <!-- Solo muestra esta sección si el usuario tiene el rol Admin --> *@
-    {
-        <a class="nav-link" data-bs-toggle="collapse" href="#configMenu">
-            <i class="bi bi-gear"></i> Configuración
-        </a>
-        <div class="collapse submenu" id="configMenu">
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Configuracion" asp-action="RolesPermisos">
-                        <i class="bi bi-shield-check"></i> Roles y Permisos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
-                        <i class="bi bi-people"></i> Gestión de Usuarios
-                    </a>
-                </li>
-            </ul>
-        </div>
-    }
+                        <a class="nav-link" data-bs-toggle="collapse" href="#inventarioMenu">
+                            <i class="bi bi-box-seam"></i> Inventario
+                        </a>
+                        <div class="collapse submenu" id="inventarioMenu">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="Index">
+                                        <i class="bi bi-list-ul"></i> Ver Productos
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="AgregarProducto">
+                                        <i class="bi bi-plus-lg"></i> Agregar Producto
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="Programaciones">
+                                        <i class="bi bi-calendar-check"></i> Inventarios Programados
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                                           @if (User.IsInRole("Admin")) @* <!-- Solo muestra esta sección si el usuario tiene el rol Admin --> *@
+                        {
+                            <a class="nav-link" data-bs-toggle="collapse" href="#configMenu">
+                                <i class="bi bi-gear"></i> Configuración
+                            </a>
+                            <div class="collapse submenu" id="configMenu">
+                                <ul class="nav flex-column">
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-controller="Configuracion" asp-action="RolesPermisos">
+                                            <i class="bi bi-shield-check"></i> Roles y Permisos
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
+                                            <i class="bi bi-people"></i> Gestión de Usuarios
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
                     </li>
                 </ul>
 
@@ -203,7 +230,33 @@
                            asp-action="Index">
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
-                    </li>                    
+                    </li>
+                    <!-- INVENTARIOS, en la sección del mobileSidebar -->
+
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="collapse" href="#inventarioMenuMobile">
+                            <i class="bi bi-box-seam"></i> Inventario
+                        </a>
+                        <div class="collapse submenu" id="inventarioMenuMobile">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="Index">
+                                        <i class="bi bi-list-ul"></i> Ver Productos
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="AgregarProducto">
+                                        <i class="bi bi-plus-lg"></i> Agregar Producto
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="Programaciones">
+                                        <i class="bi bi-calendar-check"></i> Inventarios Programados
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
                         <!-- En _AdminLayout.cshtml, en la sección del mobileSidebar -->
                     <li class="nav-item">
                             @if (User.IsInRole("Admin"))
