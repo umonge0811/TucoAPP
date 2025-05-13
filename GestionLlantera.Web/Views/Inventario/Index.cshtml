@@ -1,4 +1,4 @@
-﻿@* @model List<GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO>
+﻿@model List<GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO>
 @{
     ViewData["Title"] = "Inventario de Productos";
     Layout = "_AdminLayout";
@@ -10,9 +10,36 @@
             <i class="bi bi-box-seam me-2"></i>
             Inventario de Productos
         </h2>
-        <a asp-controller="Inventario" asp-action="AgregarProducto" class="btn btn-new-user">
-            <i class="bi bi-plus-lg me-2"></i> Nuevo Producto
-        </a>
+        <div class="d-flex gap-2">
+            <div class="btn-group view-switcher d-none d-md-flex" role="group" aria-label="Cambiar vista">
+                <button type="button" class="btn btn-outline-secondary" id="btnVistaLista" title="Vista de lista">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary active" id="btnVistaTarjetas" title="Vista de tarjetas">
+                    <i class="bi bi-grid-3x3-gap"></i>
+                </button>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-download me-1"></i>Exportar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <button class="dropdown-item" id="btnExportarPDF">
+                            <i class="bi bi-file-pdf me-2 text-danger"></i>Exportar a PDF
+                        </button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item" id="btnExportarExcel">
+                            <i class="bi bi-file-excel me-2 text-success"></i>Exportar a Excel
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <a asp-controller="Inventario" asp-action="AgregarProducto" class="btn btn-primary-custom">
+                <i class="bi bi-plus-lg me-1"></i><span class="d-none d-md-inline">Nuevo Producto</span>
+            </a>
+        </div>
     </div>
 
     <div class="row mb-4">
@@ -21,15 +48,18 @@
                 <div class="card-header">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-search me-2"></i>
-                        <h3 class="mb-0">Buscar Productos</h3>
+                        <h3 class="mb-0">Filtros y Búsqueda</h3>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="form-group">
                                 <label for="searchText" class="form-label">Buscar por nombre o descripción</label>
-                                <input type="text" id="searchText" class="form-control" placeholder="Buscar...">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="searchText" class="form-control" placeholder="Buscar...">
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -44,6 +74,17 @@
                             </div>
                         </div>
                         <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="filterCategory" class="form-label">Categoría</label>
+                                <select id="filterCategory" class="form-select">
+                                    <option value="">Todas</option>
+                                    <option value="llantas">Llantas</option>
+                                    <option value="accesorios">Accesorios</option>
+                                    <option value="herramientas">Herramientas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
                             <div class="form-group">
                                 <label for="sortBy" class="form-label">Ordenar por</label>
                                 <select id="sortBy" class="form-select">
@@ -61,11 +102,19 @@
     </div>
 
     <div class="dashboard-card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
             <h3>
-                <i class="bi bi-grid-3x3-gap me-2"></i>
-                Productos (@Model.Count)
+                <i class="bi bi-box-seam me-2"></i>
+                Productos (<span id="contadorProductos">@Model.Count</span>)
             </h3>
+            <div class="d-flex gap-2 align-items-center">
+                <div class="d-none d-md-block">
+                    <div class="stock-indicator">
+                        <span class="badge bg-danger me-1">Stock Bajo</span>
+                        <span id="contadorStockBajo">@Model.Count(p => p.CantidadEnInventario <= p.StockMinimo)</span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="card-body">
             @if (Model == null || !Model.Any())
@@ -73,7 +122,7 @@
                 <div class="alert alert-info d-flex align-items-center" role="alert">
                     <i class="bi bi-info-circle me-2"></i>
                     <div>
-                        No hay productos registrados en el inventario. 
+                        No hay productos registrados en el inventario.
                         <a asp-controller="Inventario" asp-action="AgregarProducto" class="alert-link">
                             Agregar un producto
                         </a>
@@ -82,32 +131,155 @@
             }
             else
             {
-                <div class="productos-grid">
-                    @foreach (var producto in Model)
-                    {
-                        <div class="producto-card">
-                            <div class="producto-img-container">
-                                @if (producto.Imagenes != null && producto.Imagenes.Any())
+                <div class="productos-contenedor vista-tarjetas">
+                    <!-- Vista de Tarjetas -->
+                    <div class="productos-grid">
+                        @foreach (var producto in Model)
+                        {
+                            <div class="producto-card" data-categoria="@(producto.Llanta != null && producto.Llanta.LlantaId > 0 ? "llantas" : "accesorios")">
+                                <div class="producto-img-container">
+                                    @if (producto.Imagenes != null && producto.Imagenes.Any())
+                                    {
+                                        <img src="@producto.Imagenes.First().UrlImagen" alt="@producto.NombreProducto" class="producto-img">
+                                    }
+                                    else
+                                    {
+                                        <div class="sin-imagen">
+                                            <i class="bi bi-image"></i>
+                                        </div>
+                                    }
+                                    <div class="producto-acciones">
+                                        <button type="button" class="btn-accion" onclick="vistaRapida(@producto.ProductoId)"
+                                                data-bs-toggle="tooltip" title="Vista rápida">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn-accion" onclick="toggleFavorito(this, @producto.ProductoId)"
+                                                data-bs-toggle="tooltip" title="Añadir a favoritos">
+                                            <i class="bi bi-star"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="producto-body">
+                                    <h5 class="producto-title">@producto.NombreProducto</h5>
+                                    <p class="producto-description">@(string.IsNullOrEmpty(producto.Descripcion) ? "Sin descripción" : producto.Descripcion)</p>
+                                    <div class="producto-price">₡@producto.Precio.ToString("N0")</div>
+                                    <div class="producto-stock @(producto.CantidadEnInventario <= producto.StockMinimo ? "low" : "")">
+                                        Stock: @producto.CantidadEnInventario unidades
+                                        @if (producto.CantidadEnInventario <= producto.StockMinimo)
+                                        {
+                                            <span class="badge bg-danger ms-2">Stock bajo</span>
+                                        }
+                                    </div>
+                                    <div class="producto-footer">
+                                        <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })" class="btn btn-detail">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Ver detalles
+                                        </a>
+                                        <a href="@Url.Action("AgregarAlCarrito", "Carrito", new { id = producto.ProductoId })" class="btn btn-edit">
+                                            <i class="bi bi-cart-plus me-1"></i>
+                                            Añadir
+                                        </a>
+                                    </div>
+                                </div>
+                                @if (producto.Llanta != null && producto.Llanta.LlantaId > 0)
                                 {
-                                    <img src="@producto.Imagenes.First().UrlImagen" alt="@producto.NombreProducto" class="producto-img">
-                                }
-                                else
-                                {
-                                    <div class="sin-imagen">
-                                        <i class="bi bi-image"></i>
+                                    <div class="producto-badges">
+                                        <span class="badge bg-primary">Llanta</span>
+                                        @if (!string.IsNullOrEmpty(producto.Llanta.Marca))
+                                        {
+                                            <span class="badge bg-secondary">@producto.Llanta.Marca</span>
+                                        }
                                     </div>
                                 }
                             </div>
-                            <div class="producto-body">
-                                <h5 class="producto-title">@producto.NombreProducto</h5>
-                                <p class="producto-description">@(string.IsNullOrEmpty(producto.Descripcion) ? "Sin descripción" : producto.Descripcion)</p>
-                                <div class="producto-price">₡@producto.Precio.ToString("N0")</div>
-                                <div class="producto-stock @(producto.CantidadEnInventario <= producto.StockMinimo ? "low" : "")">
-                                    Stock: @producto.CantidadEnInventario unidades
-                                    @if (producto.CantidadEnInventario <= producto.StockMinimo)
+                        }
+                    </div>
+
+                    <!-- Vista de Lista -->
+                    <div class="productos-lista">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Categoría</th>
+                                        <th>Precio</th>
+                                        <th>Stock</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var producto in Model)
                                     {
-                                        <span class="badge bg-danger ms-2">Stock bajo</span>
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="producto-img-mini me-2">
+                                                        @if (producto.Imagenes != null && producto.Imagenes.Any())
+                                                        {
+                                                            <img src="@producto.Imagenes.First().UrlImagen" alt="@producto.NombreProducto">
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="sin-imagen-mini">
+                                                                <i class="bi bi-image"></i>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold">@producto.NombreProducto</div>
+                                                        <small class="text-muted">ID: @producto.ProductoId</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @if (producto.Llanta != null && producto.Llanta.LlantaId > 0)
+                                                {
+                                                    <span class="badge bg-primary">Llanta</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">Accesorio</span>
+                                                }
+                                            </td>
+                                            <td>₡@producto.Precio.ToString("N0")</td>
+                                            <td>
+                                                <span class="@(producto.CantidadEnInventario <= producto.StockMinimo ? "text-danger" : "")">
+                                                    @producto.CantidadEnInventario
+                                                    @if (producto.CantidadEnInventario <= producto.StockMinimo)
+                                                    {
+                                                        <i class="bi bi-exclamation-triangle-fill ms-1" data-bs-toggle="tooltip" title="Stock bajo"></i>
+                                                    }
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })"
+                                                       class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="Ver detalles">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })"
+                                                       class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                    <a href="@Url.Action("AgregarAlCarrito", "Carrito", new { id = producto.ProductoId })"
+                                                       class="btn btn-sm btn-success" data-bs-toggle="tooltip" title="Añadir al carrito">
+                                                        <i class="bi bi-cart-plus"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     }
-                                </div>
-                                <div class="producto-footer">
-                                    <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })" class="btn btn *@
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/views/inventario/inventario.js"></script>
+}
