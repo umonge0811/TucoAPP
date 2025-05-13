@@ -18,6 +18,8 @@
     <div class="row">
         <div class="col-12">
             <form id="formProducto" method="post" enctype="multipart/form-data">
+                @* Se requiere enctype="multipart/form-data" para poder subir archivos *@
+                
                 <div class="dashboard-card mb-4">
                     <div class="card-header">
                         <h3>
@@ -89,6 +91,12 @@
                         <div class="img-preview-container" id="previewContainer">
                             <!-- Las previsualizaciones de imágenes se cargarán aquí dinámicamente -->
                         </div>
+                        <div class="mt-3 text-muted">
+                            <small>
+                                <i class="bi bi-info-circle me-1"></i>
+                                Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB por imagen.
+                            </small>
+                        </div>
                     </div>
                 </div>
 
@@ -109,37 +117,72 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Ancho" class="form-label">Ancho</label>
-                                    <input asp-for="Llanta.Ancho" type="number" class="form-control" />
+                                    <div class="input-group">
+                                        <input asp-for="Llanta.Ancho" type="number" min="0" class="form-control" />
+                                        <span class="input-group-text">mm</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Perfil" class="form-label">Perfil</label>
-                                    <input asp-for="Llanta.Perfil" type="number" class="form-control" />
+                                    <div class="input-group">
+                                        <input asp-for="Llanta.Perfil" type="number" min="0" class="form-control" />
+                                        <span class="input-group-text">%</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Diametro" class="form-label">Diámetro</label>
-                                    <input asp-for="Llanta.Diametro" class="form-control" />
+                                    <div class="input-group">
+                                        <input asp-for="Llanta.Diametro" class="form-control" placeholder="Ej: 16, 17.5, 18" />
+                                        <span class="input-group-text">pulgadas</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Marca" class="form-label">Marca</label>
-                                    <input asp-for="Llanta.Marca" class="form-control" />
+                                    <select asp-for="Llanta.Marca" class="form-select">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="Michelin">Michelin</option>
+                                        <option value="Bridgestone">Bridgestone</option>
+                                        <option value="Continental">Continental</option>
+                                        <option value="Pirelli">Pirelli</option>
+                                        <option value="Goodyear">Goodyear</option>
+                                        <option value="Firestone">Firestone</option>
+                                        <option value="Dunlop">Dunlop</option>
+                                        <option value="Hankook">Hankook</option>
+                                        <option value="Kumho">Kumho</option>
+                                        <option value="Yokohama">Yokohama</option>
+                                        <option value="Otra">Otra</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Modelo" class="form-label">Modelo</label>
-                                    <input asp-for="Llanta.Modelo" class="form-control" />
+                                    <input asp-for="Llanta.Modelo" class="form-control" placeholder="Ej: Pilot Sport 4" />
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.IndiceVelocidad" class="form-label">Índice de Velocidad</label>
-                                    <input asp-for="Llanta.IndiceVelocidad" class="form-control" />
+                                    <select asp-for="Llanta.IndiceVelocidad" class="form-select">
+                                        <option value="">Seleccionar...</option>
+                                        <option value="N">N (140 km/h)</option>
+                                        <option value="P">P (150 km/h)</option>
+                                        <option value="Q">Q (160 km/h)</option>
+                                        <option value="R">R (170 km/h)</option>
+                                        <option value="S">S (180 km/h)</option>
+                                        <option value="T">T (190 km/h)</option>
+                                        <option value="U">U (200 km/h)</option>
+                                        <option value="H">H (210 km/h)</option>
+                                        <option value="V">V (240 km/h)</option>
+                                        <option value="W">W (270 km/h)</option>
+                                        <option value="Y">Y (300 km/h)</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -151,13 +194,15 @@
                                         <option value="Carretera">Carretera</option>
                                         <option value="Off-Road">Off-Road</option>
                                         <option value="Nieve">Nieve</option>
+                                        <option value="Barro">Barro</option>
+                                        <option value="Mixto">Mixto</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Capas" class="form-label">Capas</label>
-                                    <input asp-for="Llanta.Capas" type="number" class="form-control" />
+                                    <input asp-for="Llanta.Capas" type="number" min="0" class="form-control" />
                                 </div>
                             </div>
                         </div>

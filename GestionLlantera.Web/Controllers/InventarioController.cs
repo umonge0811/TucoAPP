@@ -63,15 +63,31 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // GET: /Inventario/AgregarProducto
-        public IActionResult AgregarProducto()
+        // Método GET para mostrar el formulario de agregar producto
+        [HttpGet]
+        public async Task<IActionResult> AgregarProducto()
         {
             ViewData["Title"] = "Agregar Producto";
             ViewData["Layout"] = "_AdminLayout";
-            return View(new ProductoDTO());
+
+            // Obtener las categorías disponibles (en una implementación real, esto vendría de la base de datos)
+            // Podríamos añadir esto si el modelo lo requiere
+            // ViewBag.Categorias = await _categoriaService.ObtenerTodasAsync();
+
+            // Crear un objeto vacío del modelo
+            var nuevoProducto = new ProductoDTO
+            {
+                // Valores predeterminados si son necesarios
+                CantidadEnInventario = 0,
+                StockMinimo = 5,
+                Imagenes = new List<ImagenProductoDTO>(),
+                Llanta = new LlantaDTO() // Inicializar para evitar posibles null references
+            };
+
+            return View(nuevoProducto);
         }
 
-        // POST: /Inventario/AgregarProducto
+        // Método POST para procesar el formulario
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AgregarProducto(ProductoDTO producto)
@@ -81,29 +97,39 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                // Validación del modelo
                 if (!ModelState.IsValid)
                 {
+                    // Si hay errores, regresar a la vista con el modelo y los errores
                     return View(producto);
                 }
 
+                // Procesar las imágenes del producto
                 var imagenes = Request.Form.Files.ToList();
+
+                // Llamar al servicio para agregar el producto
                 var exito = await _inventarioService.AgregarProductoAsync(producto, imagenes);
 
                 if (exito)
                 {
-                    TempData["Success"] = "Producto agregado exitosamente.";
+                    // Éxito: redirigir al índice con mensaje de éxito
+                    TempData["Success"] = "Producto agregado exitosamente";
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    TempData["Error"] = "Error al agregar el producto.";
+                    // Error: volver a la vista con mensaje de error
+                    TempData["Error"] = "Error al agregar el producto";
                     return View(producto);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al agregar producto");
-                TempData["Error"] = "Ocurrió un error al agregar el producto.";
+                // Registrar error detallado
+                _logger.LogError(ex, "Error al agregar producto. Detalles: {Message}", ex.Message);
+
+                // Mostrar mensaje de error genérico
+                TempData["Error"] = "Error al procesar la solicitud";
                 return View(producto);
             }
         }

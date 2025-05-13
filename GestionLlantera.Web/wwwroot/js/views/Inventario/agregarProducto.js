@@ -1,4 +1,7 @@
-﻿// Script para manejar la vista de agregar productos
+﻿/**
+ * Script para la vista de agregar producto
+ */
+
 document.addEventListener('DOMContentLoaded', function () {
     // Referencias a elementos del DOM
     const esLlantaCheckbox = document.getElementById('esLlanta');
@@ -10,13 +13,45 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('formProducto');
     const submitButton = document.getElementById('submitButton');
 
+    // Configuración de toastr
+    toastr.options = {
+        "closeButton": true,
+        "progressBar": true,
+        "positionClass": "toast-top-right",
+        "timeOut": "5000"
+    };
+
+    // Inicializar campos obligatorios
+    marcarCamposObligatorios();
+
     // Mostrar/ocultar campos de llanta dependiendo del checkbox
-    if (esLlantaCheckbox) {
+    if (esLlantaCheckbox && llantaFields) {
         esLlantaCheckbox.addEventListener('change', function () {
             if (this.checked) {
                 llantaFields.style.display = 'block';
+
+                // Hacer que los campos principales de llanta sean obligatorios
+                const camposObligatorios = [
+                    document.querySelector('[name="Llanta.Marca"]'),
+                    document.querySelector('[name="Llanta.Modelo"]'),
+                    document.querySelector('[name="Llanta.Diametro"]')
+                ];
+
+                camposObligatorios.forEach(campo => {
+                    if (campo) {
+                        campo.setAttribute('required', 'required');
+                        campo.closest('.mb-3').classList.add('required');
+                    }
+                });
             } else {
                 llantaFields.style.display = 'none';
+
+                // Quitar validación de campos de llanta
+                const llantaInputs = llantaFields.querySelectorAll('input, select');
+                llantaInputs.forEach(input => {
+                    input.removeAttribute('required');
+                    input.closest('.mb-3').classList.remove('required');
+                });
             }
         });
     }
@@ -30,7 +65,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Selección de archivos mediante el input
-        fileInput.addEventListener('change', handleFiles);
+        fileInput.addEventListener('change', function (e) {
+            handleFiles(e.target.files);
+        });
 
         // Eventos de arrastrar y soltar
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -51,51 +88,66 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         function highlight() {
-            dropArea.classList.add('highlight');
+            dropArea.classList.add('border-primary');
+            dropArea.classList.add('bg-light');
         }
 
         function unhighlight() {
-            dropArea.classList.remove('highlight');
+            dropArea.classList.remove('border-primary');
+            dropArea.classList.remove('bg-light');
         }
 
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
+        dropArea.addEventListener('drop', function (e) {
             const dt = e.dataTransfer;
             const files = dt.files;
             handleFiles(files);
-        }
+        });
 
-        function handleFiles(e) {
-            let files;
-            if (e.dataTransfer) {
-                files = e.dataTransfer.files;
-            } else if (e.target) {
-                files = e.target.files;
-            } else {
-                files = e;
+        // Array para mantener una lista de archivos válidos
+        let validFiles = [];
+
+        function handleFiles(files) {
+            // Validar tipos de archivo y tamaño
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+
+                // Validar tipo de archivo
+                if (!file.type.match('image.*')) {
+                    toastr.error(`${file.name} no es un archivo de imagen válido`);
+                    continue;
+                }
+
+                // Validar tamaño (5MB máximo)
+                if (file.size > 5 * 1024 * 1024) {
+                    toastr.error(`${file.name} excede el tamaño máximo permitido (5MB)`);
+                    continue;
+                }
+
+                // Verificar si el archivo ya está en la lista por nombre
+                const fileExists = validFiles.some(f => f.name === file.name && f.size === file.size);
+                if (fileExists) {
+                    toastr.warning(`El archivo ${file.name} ya ha sido agregado`);
+                    continue;
+                }
+
+                // Agregar a la lista de archivos válidos
+                validFiles.push(file);
+
+                // Crear previsualización
+                createPreview(file);
             }
 
-            // Validar tipos de archivo
-            const validFiles = Array.from(files).filter(file => {
-                if (!file.type.match('image.*')) {
-                    toastr.error(`${file.name} no es un archivo de imagen válido.`);
-                    return false;
-                }
-                return true;
-            });
-
-            validFiles.forEach(uploadFile);
+            // Actualizar el campo de archivos con los archivos válidos
+            updateFileInput();
         }
 
-        function uploadFile(file) {
-            // Crear la previsualización
+        function createPreview(file) {
             const reader = new FileReader();
             reader.onload = function (e) {
                 const preview = document.createElement('div');
                 preview.className = 'img-preview-item';
                 preview.innerHTML = `
-                    <img src="${e.target.result}" alt="Vista previa">
+                    <img src="${e.target.result}" alt="Vista previa de ${file.name}">
                     <div class="img-preview-remove" data-filename="${file.name}">
                         <i class="bi bi-x"></i>
                     </div>
@@ -105,8 +157,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Agregar evento para eliminar la previsualización
                 const removeBtn = preview.querySelector('.img-preview-remove');
                 removeBtn.addEventListener('click', function () {
+                    // Eliminar archivo de la lista
+                    const filename = this.getAttribute('data-filename');
+                    validFiles = validFiles.filter(f => f.name !== filename);
+
+                    // Eliminar previsualización
                     preview.remove();
-                    // Actualizar el input de archivos
+
+                    // Actualizar input
                     updateFileInput();
                 });
             };
@@ -114,46 +172,116 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function updateFileInput() {
-            // Esta función es un poco más compleja debido a que no se puede modificar directamente 
-            // el valor de un input file por seguridad. En una implementación real, 
-            // se usaría FormData para manejar los archivos.
-            console.log('Actualización de archivos');
+            // Crear un nuevo FileList (no es posible directamente, así que usamos FormData)
+            // En una implementación real, esto se maneja al enviar el formulario
+            console.log(`Archivos válidos: ${validFiles.length}`);
         }
     }
 
-    // Manejar el envío del formulario
-    if (form) {
-        form.addEventListener('submit', async function (e) {
-            e.preventDefault();
+    // Validación y envío del formulario
+    if (form && submitButton) {
+        // Mejorar la validación de campos al perder el foco
+        const formInputs = form.querySelectorAll('input, select, textarea');
+        formInputs.forEach(input => {
+            input.addEventListener('blur', function () {
+                validarCampo(this);
+            });
 
-            // Validación básica
-            if (!form.checkValidity()) {
+            input.addEventListener('input', function () {
+                // Si el campo tenía error y se corrigió, quitar el error
+                if (this.classList.contains('is-invalid') && this.checkValidity()) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+
+        // Manejar el envío del formulario
+        form.addEventListener('submit', function (e) {
+            // Validar todos los campos primero
+            let formValido = true;
+            formInputs.forEach(input => {
+                if (!validarCampo(input)) {
+                    formValido = false;
+                }
+            });
+
+            if (!formValido) {
+                e.preventDefault();
                 e.stopPropagation();
-                form.classList.add('was-validated');
+
+                // Mostrar mensaje de error
+                toastr.error('Por favor, complete todos los campos requeridos correctamente');
+
+                // Scroll al primer campo con error
+                const primerCampoError = form.querySelector('.is-invalid');
+                if (primerCampoError) {
+                    primerCampoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
                 return;
             }
 
-            try {
-                // Cambiar estado del botón
-                const normalState = submitButton.querySelector('.normal-state');
-                const loadingState = submitButton.querySelector('.loading-state');
-                submitButton.disabled = true;
-                normalState.style.display = 'none';
-                loadingState.style.display = 'inline-flex';
+            // Si el formulario es válido, mostrar spinner
+            const normalState = submitButton.querySelector('.normal-state');
+            const loadingState = submitButton.querySelector('.loading-state');
 
-                // Enviar el formulario normalmente (ya que incluye archivos)
-                form.submit();
-            } catch (error) {
-                console.error('Error:', error);
-                toastr.error('Ocurrió un error al guardar el producto');
+            submitButton.disabled = true;
+            normalState.style.display = 'none';
+            loadingState.style.display = 'inline-flex';
 
-                // Restaurar botón
-                const normalState = submitButton.querySelector('.normal-state');
-                const loadingState = submitButton.querySelector('.loading-state');
-                submitButton.disabled = false;
-                normalState.style.display = 'inline-flex';
-                loadingState.style.display = 'none';
+            // Si es una llanta y el checkbox no está marcado, limpiar los campos de llanta
+            if (esLlantaCheckbox && !esLlantaCheckbox.checked) {
+                const llantaInputs = llantaFields.querySelectorAll('input, select');
+                llantaInputs.forEach(input => {
+                    input.value = '';
+                });
+            }
+
+            // El formulario se enviará normalmente
+        });
+    }
+
+    // Funciones auxiliares
+
+    // Marcar visualmente los campos obligatorios
+    function marcarCamposObligatorios() {
+        const camposRequeridos = document.querySelectorAll('[required]');
+        camposRequeridos.forEach(campo => {
+            const formGroup = campo.closest('.mb-3');
+            if (formGroup) {
+                formGroup.classList.add('required');
             }
         });
+    }
+
+    // Validar un campo específico
+    function validarCampo(campo) {
+        // Si el campo no tiene validación, considerarlo válido
+        if (!campo.checkValidity) return true;
+
+        const esValido = campo.checkValidity();
+
+        // Solo aplicar estilos si el campo es visible (evitar validar campos ocultos)
+        if (esCampoVisible(campo)) {
+            if (!esValido) {
+                campo.classList.add('is-invalid');
+            } else {
+                campo.classList.remove('is-invalid');
+            }
+        }
+
+        return esValido;
+    }
+
+    // Verificar si un campo está visible (no está en un contenedor oculto)
+    function esCampoVisible(campo) {
+        // Si el campo es de llanta y el checkbox no está marcado, ignorar
+        if (esLlantaCheckbox && !esLlantaCheckbox.checked) {
+            if (llantaFields.contains(campo)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 });
