@@ -27,6 +27,10 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
 
         #region Login
         // GET: /Account/Login

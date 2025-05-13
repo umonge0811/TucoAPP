@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "Acceso Denegado";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Acceso Denegado</h1>
+        <p class="lead">No tienes los permisos necesarios para acceder a esta página.</p>
+        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary mt-3">
+            <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+        </a>
+    </div>
+</div>

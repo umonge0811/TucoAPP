@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GestionLlantera.Web.Controllers
 {
     [Authorize]
+    [Authorize(Roles = "Admin")] // Solo usuarios con rol Admin pueden acceder
     public class UsuariosController : Controller
     {
         private readonly IUsuariosService _usuariosService;
