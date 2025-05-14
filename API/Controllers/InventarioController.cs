@@ -150,7 +150,9 @@ namespace API.Controllers
                     return BadRequest(new { message = "No se proporcionaron imágenes" });
                 }
 
-                // Ruta para guardar las imágenes
+                _logger.LogInformation($"Recibidas {imagenes.Count} imágenes para el producto ID {id}");
+
+                // Ruta para guardar las imágenes en el servidor
                 string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "productos");
 
                 // Crear la carpeta si no existe
@@ -181,7 +183,7 @@ namespace API.Controllers
                         var imagenProducto = new ImagenesProducto
                         {
                             ProductoId = id,
-                            Urlimagen = $"/uploads/productos/{nombreArchivo}", // URL relativa
+                            Urlimagen = $"/uploads/productos/{nombreArchivo}",
                             Descripcion = $"Imagen de {producto.NombreProducto}",
                             FechaCreacion = DateTime.Now
                         };

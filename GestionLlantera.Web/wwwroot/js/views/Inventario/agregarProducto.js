@@ -1,13 +1,33 @@
 ﻿document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM cargado - inicializando script de agregar producto');
+
     // Referencias a elementos del DOM
+    const form = document.getElementById('formProducto');
+    const submitButton = document.getElementById('submitButton');
     const esLlantaCheckbox = document.getElementById('esLlanta');
     const llantaFields = document.getElementById('llantaFields');
     const dropArea = document.getElementById('dropArea');
     const fileInput = document.getElementById('fileInput');
     const previewContainer = document.getElementById('previewContainer');
     const selectImagesBtn = document.getElementById('selectImagesBtn');
-    const form = document.getElementById('formProducto');
-    const submitButton = document.getElementById('submitButton');
+
+    // Verificar si los elementos críticos existen
+    if (!form) {
+        console.error('Error crítico: No se encontró el formulario con ID "formProducto"');
+        return; // Detener ejecución
+    }
+
+    if (!submitButton) {
+        console.error('Error: No se encontró el botón de envío con ID "submitButton"');
+    }
+
+    console.log('Referencias a elementos obtenidas correctamente', {
+        form: !!form,
+        submitButton: !!submitButton,
+        esLlantaCheckbox: !!esLlantaCheckbox,
+        llantaFields: !!llantaFields,
+        fileInput: !!fileInput
+    });
 
     // Configuración de toastr
     toastr.options = {
@@ -202,7 +222,9 @@
 
         // Manejar el envío del formulario
         form.addEventListener('submit', function (e) {
-            e.preventDefault(); // Siempre prevenir el envío por defecto para manejar manualmente
+            e.preventDefault(); // Prevenir envío por defecto
+
+            console.log('Formulario enviado - iniciando validación');
 
             // Validar todos los campos primero
             let formValido = true;
@@ -213,6 +235,7 @@
             });
 
             if (!formValido) {
+                console.log('Formulario inválido - campos con errores');
                 // Mostrar mensaje de error
                 toastr.error('Por favor, complete todos los campos requeridos correctamente');
 
@@ -225,6 +248,8 @@
                 return;
             }
 
+            console.log('Formulario válido - preparando para enviar');
+
             // Si el formulario es válido, mostrar spinner
             const normalState = submitButton.querySelector('.normal-state');
             const loadingState = submitButton.querySelector('.loading-state');
@@ -236,56 +261,91 @@
             // Crear FormData para enviar los datos del formulario
             const formData = new FormData(form);
 
+            console.log('FormData creado - revisando elementos:');
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
+                } else {
+                    console.log(`${key}: ${value}`);
+                }
+            }
+
             // Si no es una llanta, eliminar los datos de llanta del FormData
             if (esLlantaCheckbox && !esLlantaCheckbox.checked) {
+                console.log('No es una llanta - eliminando campos de llanta');
                 for (let key of [...formData.keys()]) {
                     if (key.startsWith('Llanta.')) {
                         formData.delete(key);
                     }
                 }
-
-                // Añadir un campo para indicar que no es una llanta
-                formData.append('Llanta', null);
             }
 
             // Añadir las imágenes seleccionadas al FormData
             if (fileInput.files.length > 0) {
-                // Limpiar cualquier valor previo para evitar duplicados
+                console.log(`Agregando ${fileInput.files.length} imágenes al FormData`);
+
+                // Verificar el nombre actual del campo de imágenes
+                const inputName = fileInput.getAttribute('name');
+                console.log(`Nombre del campo de imágenes: ${inputName}`);
+
+                // Eliminar cualquier valor previo y añadir las imágenes
                 formData.delete('imagenes');
 
-                // Agregar cada archivo como una entrada separada con el mismo nombre
+                // Agregar cada archivo
                 for (let i = 0; i < fileInput.files.length; i++) {
+                    console.log(`Añadiendo imagen: ${fileInput.files[i].name} (${fileInput.files[i].size} bytes)`);
                     formData.append('imagenes', fileInput.files[i]);
                 }
             }
 
-            // Enviar el formulario usando fetch o permitir que se envíe normalmente
-            // Si tu backend espera un envío normal de formulario multipart, usa:
-            form.submit();
+            // Verificar y establecer la URL de acción si no está configurada
+            if (!form.action) {
+                console.warn('El formulario no tiene un atributo action configurado');
+                form.action = '/Inventario/AgregarProducto';
+            }
 
-            // Si necesitas más control o manejar la respuesta, usa fetch en su lugar:
-            /*
+            console.log('Enviando formulario al controlador en:', form.action);
+
+            // Enviar usando fetch para tener más control
             fetch(form.action, {
                 method: 'POST',
                 body: formData
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al guardar el producto');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Redirigir o mostrar mensaje de éxito
-                window.location.href = '/Inventario'; // O donde se deba redirigir
-            })
-            .catch(error => {
-                submitButton.disabled = false;
-                normalState.style.display = 'inline-flex';
-                loadingState.style.display = 'none';
-                toastr.error('Error al guardar el producto: ' + error.message);
-            });
-            */
+                .then(response => {
+                    console.log(`Respuesta recibida - status: ${response.status}`);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('Error en la respuesta:', text);
+                            throw new Error(`Error ${response.status}: ${text || 'Error al guardar el producto'}`);
+                        });
+                    }
+                    return response.text().then(text => {
+                        try {
+                            // Intentar analizar como JSON
+                            return text ? JSON.parse(text) : {};
+                        } catch (e) {
+                            // Si no es JSON, devolver el texto como respuesta
+                            return { message: text };
+                        }
+                    });
+                })
+                .then(data => {
+                    console.log('Producto guardado exitosamente:', data);
+                    // Mostrar mensaje de éxito
+                    toastr.success('Producto guardado exitosamente');
+
+                    // Redireccionar después de un breve retraso
+                    setTimeout(() => {
+                        window.location.href = '/Inventario/Index';
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error al guardar producto:', error);
+                    submitButton.disabled = false;
+                    normalState.style.display = 'inline-flex';
+                    loadingState.style.display = 'none';
+                    toastr.error('Error al guardar el producto: ' + error.message);
+                });
         });
     }
 

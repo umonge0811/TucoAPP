@@ -59,39 +59,55 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                // 1. Convertir el producto a JSON y enviar al API
-                var json = JsonConvert.SerializeObject(producto);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                // 1. Primero crear el producto básico
+                using var content = new StringContent(
+                    JsonConvert.SerializeObject(producto),
+                    Encoding.UTF8,
+                    "application/json");
 
-                var response = await _httpClient.PostAsync("api/Inventario/productos", content);
+                using var response = await _httpClient.PostAsync("api/Inventario/productos", content);
+
                 if (!response.IsSuccessStatusCode)
                 {
+                    _logger.LogError($"Error al crear producto: {response.StatusCode}");
                     return false;
                 }
 
                 // 2. Obtener el ID del producto creado
                 var responseContent = await response.Content.ReadAsStringAsync();
                 var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                int productoId = (int)resultado.productoId;
+                int productoId = resultado.productoId;
 
-                // 3. Subir imágenes si hay alguna
+                // 3. Si hay imágenes, subirlas como un segundo paso
                 if (imagenes != null && imagenes.Any())
                 {
+                    _logger.LogInformation($"Enviando {imagenes.Count} imágenes para el producto ID {productoId}");
+
                     using var formContent = new MultipartFormDataContent();
+
                     foreach (var imagen in imagenes)
                     {
-                        var fileContent = new StreamContent(imagen.OpenReadStream());
-                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
-                        formContent.Add(fileContent, "imagenes", imagen.FileName);
+                        var imageContent = new StreamContent(imagen.OpenReadStream());
+                        imageContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+
+                        // Importante: usar el nombre exacto que la API espera
+                        formContent.Add(imageContent, "imagenes", imagen.FileName);
                     }
 
-                    await _httpClient.PostAsync($"api/Inventario/productos/{productoId}/imagenes", formContent);
+                    var imageResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoId}/imagenes", formContent);
+
+                    if (!imageResponse.IsSuccessStatusCode)
+                    {
+                        _logger.LogWarning($"Error al subir imágenes: {imageResponse.StatusCode}");
+                        // No fallamos todo el proceso si solo fallan las imágenes
+                    }
                 }
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error al agregar producto");
                 return false;
             }
         }

@@ -92,27 +92,38 @@ namespace GestionLlantera.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AgregarProducto(ProductoDTO producto)
         {
-            if (!ModelState.IsValid)
+            try
             {
+                if (!ModelState.IsValid)
+                {
+                    return View(producto);
+                }
+
+                // Obtener las imágenes del formulario
+                var imagenes = Request.Form.Files.GetFiles("imagenes").ToList();
+
+                // Log para depuración
+                _logger.LogInformation($"Recibidas {imagenes.Count} imágenes");
+
+                // Llamar al servicio para guardar el producto con las imágenes
+                var resultado = await _inventarioService.AgregarProductoAsync(producto, imagenes);
+
+                if (resultado)
+                {
+                    TempData["Success"] = "Producto agregado exitosamente";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                TempData["Error"] = "Error al agregar el producto";
                 return View(producto);
             }
-
-            // Obtener los archivos de imágenes del formulario
-            var imagenes = Request.Form.Files.ToList();
-
-            // Llamar al servicio para guardar el producto con las imágenes
-            var exito = await _inventarioService.AgregarProductoAsync(producto, imagenes);
-
-            if (exito)
+            catch (Exception ex)
             {
-                TempData["Success"] = "Producto agregado exitosamente";
-                return RedirectToAction(nameof(Index));
+                _logger.LogError(ex, "Error al agregar producto");
+                TempData["Error"] = "Error al procesar la solicitud";
+                return View(producto);
             }
-
-            TempData["Error"] = "Error al agregar el producto";
-            return View(producto);
         }
-
 
         // GET: /Inventario/Programaciones
         public IActionResult Programaciones()
