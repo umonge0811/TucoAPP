@@ -7,6 +7,7 @@ using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
+using Newtonsoft.Json;
 
 namespace API.Controllers
 {
@@ -79,10 +80,18 @@ namespace API.Controllers
         {
             try
             {
-                // Validar modelo
+                // Validación más específica - mostrar los errores exactos
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errores = ModelState
+                        .Where(e => e.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+
+                    _logger.LogWarning($"Error de validación del modelo: {JsonConvert.SerializeObject(errores)}");
+                    return BadRequest(new { message = "Error de validación", errores });
                 }
 
                 // Crear producto
@@ -127,7 +136,7 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear producto: {Nombre}", productoDto.NombreProducto);
-                return StatusCode(500, new { message = "Error al crear producto" });
+                return StatusCode(500, new { message = $"Error al crear producto: {ex.Message}" });
             }
         }
 

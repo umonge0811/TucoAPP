@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\js\utils\" />
+    <Folder Include="wwwroot\uploads\productos\" />
   </ItemGroup>
 
 </Project>

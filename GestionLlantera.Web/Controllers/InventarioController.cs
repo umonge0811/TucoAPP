@@ -99,11 +99,18 @@ namespace GestionLlantera.Web.Controllers
                     return View(producto);
                 }
 
-                // Obtener las imágenes del formulario
-                var imagenes = Request.Form.Files.GetFiles("imagenes").ToList();
-
-                // Log para depuración
-                _logger.LogInformation($"Recibidas {imagenes.Count} imágenes");
+                // Obtener las imágenes del formulario, con manejo seguro
+                List<IFormFile> imagenes = new List<IFormFile>();
+                try
+                {
+                    imagenes = Request.Form.Files.GetFiles("imagenes").ToList();
+                    _logger.LogInformation($"Recibidas {imagenes.Count} imágenes");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning($"No se pudieron obtener imágenes: {ex.Message}");
+                    // Continuamos aunque no haya imágenes
+                }
 
                 // Llamar al servicio para guardar el producto con las imágenes
                 var resultado = await _inventarioService.AgregarProductoAsync(producto, imagenes);
@@ -124,7 +131,6 @@ namespace GestionLlantera.Web.Controllers
                 return View(producto);
             }
         }
-
         // GET: /Inventario/Programaciones
         public IActionResult Programaciones()
         {

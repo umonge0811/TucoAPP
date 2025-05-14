@@ -281,20 +281,17 @@
             }
 
             // Añadir las imágenes seleccionadas al FormData
-            if (fileInput.files.length > 0) {
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
                 console.log(`Agregando ${fileInput.files.length} imágenes al FormData`);
 
                 // Verificar el nombre actual del campo de imágenes
-                const inputName = fileInput.getAttribute('name');
+                const inputName = fileInput.getAttribute('name') || 'imagenes';
                 console.log(`Nombre del campo de imágenes: ${inputName}`);
 
-                // Eliminar cualquier valor previo y añadir las imágenes
-                formData.delete('imagenes');
-
-                // Agregar cada archivo
+                // Agregar cada archivo con el nombre correcto
                 for (let i = 0; i < fileInput.files.length; i++) {
                     console.log(`Añadiendo imagen: ${fileInput.files[i].name} (${fileInput.files[i].size} bytes)`);
-                    formData.append('imagenes', fileInput.files[i]);
+                    formData.append(inputName, fileInput.files[i]);
                 }
             }
 
