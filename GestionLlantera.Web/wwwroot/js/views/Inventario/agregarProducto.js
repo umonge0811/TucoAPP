@@ -17,6 +17,26 @@
         return; // Detener ejecución
     }
 
+    console.log('Formulario encontrado:', form);
+
+    // *** DEPURACIÓN ADICIONAL ***
+    // Imprimir todos los atributos del formulario
+    console.log('Atributos del formulario:');
+    Array.from(form.attributes).forEach(attr => {
+        console.log(`${attr.name}: ${attr.value}`);
+    });
+
+    // Verificar si hay otros formularios en la página
+    const todosLosFormularios = document.querySelectorAll('form');
+    console.log(`Total de formularios en la página: ${todosLosFormularios.length}`);
+
+    // Añadir un ID único temporal para depuración
+    const idTemporal = 'form_' + Date.now();
+    form.setAttribute('data-debug-id', idTemporal);
+    console.log(`ID de depuración asignado al formulario: ${idTemporal}`);
+
+    // *** FIN DE DEPURACIÓN ADICIONAL ***
+
     if (!submitButton) {
         console.error('Error: No se encontró el botón de envío con ID "submitButton"');
     }
@@ -220,9 +240,16 @@
             });
         });
 
-        // Manejar el envío del formulario
-        form.addEventListener('submit', function (e) {
-            e.preventDefault(); // Prevenir envío por defecto
+        // IMPORTANTE: Asegurarnos de capturar correctamente el evento submit
+        console.log('Configurando captura de evento submit para el formulario...');
+
+        // Añadir evento submit de forma directa
+        form.onsubmit = function (e) {
+            console.log('EVENTO SUBMIT CAPTURADO - Formulario:', this.getAttribute('data-debug-id'));
+            debugger; // Esto detendrá la ejecución justo aquí
+
+            // Prevenir el envío por defecto
+            e.preventDefault();
 
             console.log('Formulario enviado - iniciando validación');
 
@@ -245,7 +272,7 @@
                     primerCampoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
 
-                return;
+                return false;
             }
 
             console.log('Formulario válido - preparando para enviar');
@@ -295,16 +322,12 @@
                 }
             }
 
-            // Verificar y establecer la URL de acción si no está configurada
-            if (!form.action) {
-                console.warn('El formulario no tiene un atributo action configurado');
-                form.action = '/Inventario/AgregarProducto';
-            }
-
-            console.log('Enviando formulario al controlador en:', form.action);
+            // IMPORTANTE: Asegurar que la URL del formulario sea relativa
+            const formAction = '/Inventario/AgregarProducto'; // URL FIJA relativa
+            console.log('Enviando formulario al controlador en:', formAction);
 
             // Enviar usando fetch para tener más control
-            fetch(form.action, {
+            fetch(formAction, {
                 method: 'POST',
                 body: formData
             })
@@ -343,8 +366,19 @@
                     loadingState.style.display = 'none';
                     toastr.error('Error al guardar el producto: ' + error.message);
                 });
-        });
+
+            return false; // Impedir envío normal del formulario
+        };
     }
+
+    // IMPORTANTE: Añadir monitoreo de clics para depurar problemas con botones de submit
+    document.body.addEventListener('click', function (e) {
+        if (e.target.type === 'submit' || e.target.closest('button[type="submit"]')) {
+            const boton = e.target.type === 'submit' ? e.target : e.target.closest('button[type="submit"]');
+            console.log('Botón submit clickeado:', boton);
+            console.log('Formulario asociado:', boton.form);
+        }
+    });
 
     // Funciones auxiliares
 

@@ -14,6 +14,9 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient("APIClient", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
+    // Aumentar el timeout a 5 minutos para permitir subidas de archivos grandes o múltiples
+    // El timeout por defecto es 100 segundos, lo cual puede ser insuficiente para imágenes
+    client.Timeout = TimeSpan.FromMinutes(5);
 });
 
 // Registrar servicios

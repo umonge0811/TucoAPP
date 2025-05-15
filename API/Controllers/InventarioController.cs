@@ -80,7 +80,11 @@ namespace API.Controllers
         {
             try
             {
-                // Validación más específica - mostrar los errores exactos
+                // Registrar los datos recibidos
+                _logger.LogInformation("Datos recibidos: {Datos}",
+                    JsonConvert.SerializeObject(productoDto, Formatting.Indented));
+
+                // Validar el modelo
                 if (!ModelState.IsValid)
                 {
                     var errores = ModelState
@@ -90,8 +94,23 @@ namespace API.Controllers
                             kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
                         );
 
-                    _logger.LogWarning($"Error de validación del modelo: {JsonConvert.SerializeObject(errores)}");
+                    _logger.LogWarning("Error de validación del modelo: {Errores}",
+                        JsonConvert.SerializeObject(errores));
+
                     return BadRequest(new { message = "Error de validación", errores });
+                }
+
+                // Validar propiedades críticas
+                if (string.IsNullOrEmpty(productoDto.NombreProducto))
+                {
+                    _logger.LogWarning("Nombre de producto requerido");
+                    return BadRequest(new { message = "El nombre del producto es requerido" });
+                }
+
+                if (productoDto.Precio <= 0)
+                {
+                    _logger.LogWarning("Precio inválido: {Precio}", productoDto.Precio);
+                    return BadRequest(new { message = "El precio debe ser mayor que cero" });
                 }
 
                 // Crear producto
@@ -109,9 +128,13 @@ namespace API.Controllers
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Producto base creado exitosamente. ID: {Id}", producto.ProductoId);
+
                 // Si es una llanta, agregar la información de la llanta
                 if (productoDto.Llanta != null)
                 {
+                    _logger.LogInformation("Procesando datos de llanta para producto ID: {Id}", producto.ProductoId);
+
                     var llanta = new Llanta
                     {
                         ProductoId = producto.ProductoId,
@@ -127,6 +150,8 @@ namespace API.Controllers
 
                     _context.Llantas.Add(llanta);
                     await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Datos de llanta agregados exitosamente para producto ID: {Id}", producto.ProductoId);
                 }
 
                 // Retornar el producto creado con su ID
@@ -135,11 +160,20 @@ namespace API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear producto: {Nombre}", productoDto.NombreProducto);
+                _logger.LogError(ex, "Error al crear producto: {Nombre}", productoDto?.NombreProducto ?? "Desconocido");
+
+                // Si hay una excepción interna, registrarla también
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError("Excepción interna: {Mensaje}", ex.InnerException.Message);
+                }
+
                 return StatusCode(500, new { message = $"Error al crear producto: {ex.Message}" });
             }
         }
-
+        
+        
+        
         // POST: api/Inventario/productos/{id}/imagenes
         [HttpPost("productos/{id}/imagenes")]
         public async Task<IActionResult> SubirImagenesProducto(int id, [FromForm] List<IFormFile> imagenes)
@@ -161,13 +195,29 @@ namespace API.Controllers
 
                 _logger.LogInformation($"Recibidas {imagenes.Count} imágenes para el producto ID {id}");
 
-                // Ruta para guardar las imágenes en el servidor
-                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "productos");
+                // Asegurar que existe la carpeta wwwroot
+                string webRootPath = _webHostEnvironment.WebRootPath;
+                if (string.IsNullOrEmpty(webRootPath))
+                {
+                    // Si WebRootPath es nulo, usamos ContentRootPath y creamos la carpeta wwwroot
+                    webRootPath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
+                    Directory.CreateDirectory(webRootPath);
+                    _logger.LogWarning($"WebRootPath era nulo. Se creó la carpeta wwwroot en: {webRootPath}");
+                }
 
-                // Crear la carpeta si no existe
+                // Ruta para guardar las imágenes en el servidor
+                string uploadsFolder = Path.Combine(webRootPath, "uploads", "productos");
+
+                // Crear las carpetas si no existen
+                if (!Directory.Exists(Path.Combine(webRootPath, "uploads")))
+                {
+                    Directory.CreateDirectory(Path.Combine(webRootPath, "uploads"));
+                }
+
                 if (!Directory.Exists(uploadsFolder))
                 {
                     Directory.CreateDirectory(uploadsFolder);
+                    _logger.LogInformation($"Creando directorio para imágenes: {uploadsFolder}");
                 }
 
                 // Lista para las imágenes a guardar en la base de datos
@@ -181,6 +231,8 @@ namespace API.Controllers
                         // Generar un nombre único para la imagen
                         string nombreArchivo = $"{Guid.NewGuid()}_{Path.GetFileName(imagen.FileName)}";
                         string rutaArchivo = Path.Combine(uploadsFolder, nombreArchivo);
+
+                        _logger.LogInformation($"Guardando imagen: {nombreArchivo} en {rutaArchivo}");
 
                         // Guardar el archivo físicamente
                         using (var stream = new FileStream(rutaArchivo, FileMode.Create))
@@ -215,7 +267,7 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al subir imágenes para el producto ID: {Id}", id);
-                return StatusCode(500, new { message = "Error al subir imágenes" });
+                return StatusCode(500, new { message = "Error al subir imágenes", error = ex.Message });
             }
         }
 

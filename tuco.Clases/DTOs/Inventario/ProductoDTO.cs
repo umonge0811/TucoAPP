@@ -12,9 +12,9 @@ namespace Tuco.Clases.DTOs.Inventario
 
         [Required(ErrorMessage = "El nombre del producto es obligatorio")]
         [StringLength(100, ErrorMessage = "El nombre del producto no puede tener más de 100 caracteres")]
-        public string NombreProducto { get; set; }
+        public string NombreProducto { get; set; } = string.Empty; // Valor por defecto
 
-        public string Descripcion { get; set; }
+        public string? Descripcion { get; set; } // Ahora es nullable
 
         [Required(ErrorMessage = "El precio es obligatorio")]
         [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor que cero")]
@@ -30,8 +30,8 @@ namespace Tuco.Clases.DTOs.Inventario
 
         public DateTime? FechaUltimaActualizacion { get; set; }
 
-        // Propiedad específica para llantas
-        public LlantaDTO Llanta { get; set; }
+        // Propiedad específica para llantas - ahora nullable
+        public LlantaDTO? Llanta { get; set; }
 
         // Lista de imágenes asociadas
         public List<ImagenProductoDTO> Imagenes { get; set; } = new List<ImagenProductoDTO>();

@@ -1,6 +1,7 @@
 using API.Data;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -12,6 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddHttpClient();
+
+
+// Configurar límites de tamaño para subida de archivos (opcional)
+builder.Services.Configure<FormOptions>(options =>
+{
+    // Aumentar el límite a 50MB (ajusta según tus necesidades)
+    // Aumentar el límite a 20MB
+    options.MultipartBodyLengthLimit = 20 * 1024 * 1024;
+});
 
 // Configurar CORS
 builder.Services.AddCors(options =>
@@ -93,6 +103,7 @@ if (app.Environment.IsDevelopment())
 // Configurar middleware en el orden correcto
 app.UseHttpsRedirection();
 app.UseStaticFiles(); // Ahora está en la posición correcta
+app.UseRouting(); // Agrega esta línea después de UseStaticFiles
 
 // Usar la política de CORS
 app.UseCors("AllowAll"); // Usa la política definida correctamente

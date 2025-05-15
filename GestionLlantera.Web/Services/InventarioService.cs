@@ -24,11 +24,13 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync("api/Inventario/productos");
+                var response = await _httpClient.GetAsync("/api/Inventario/productos");
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<List<ProductoDTO>>(content);
+                var productos = JsonConvert.DeserializeObject<List<ProductoDTO>>(content);
+
+                return productos ?? new List<ProductoDTO>();
             }
             catch (Exception ex)
             {
@@ -41,75 +43,256 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"api/Inventario/productos/{id}");
+                var response = await _httpClient.GetAsync($"/api/Inventario/productos/{id}");
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ProductoDTO>(content);
+                var producto = JsonConvert.DeserializeObject<ProductoDTO>(content);
+
+                return producto ?? new ProductoDTO();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener producto por ID: {Id}", id);
+                _logger.LogError(ex, "Error al obtener producto ID: {Id}", id);
                 return new ProductoDTO();
             }
         }
 
-        // Verificar que el servicio incluya esta lógica para agregar productos con imágenes
         public async Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes)
         {
             try
             {
-                // 1. Primero crear el producto básico
-                using var content = new StringContent(
-                    JsonConvert.SerializeObject(producto),
-                    Encoding.UTF8,
-                    "application/json");
+                _logger.LogInformation("Iniciando proceso de agregar producto: {NombreProducto}", producto.NombreProducto);
 
-                using var response = await _httpClient.PostAsync("api/Inventario/productos", content);
+                // Crear un objeto exactamente con la estructura esperada por la API
+                var productoRequest = new
+                {
+                    productoId = 0, // siempre 0 para nuevos productos
+                    nombreProducto = producto.NombreProducto ?? "Sin nombre",
+                    descripcion = producto.Descripcion ?? "Sin descripción",
+                    precio = Math.Max(producto.Precio, 0.01m), // mínimo 0.01
+                    cantidadEnInventario = producto.CantidadEnInventario,
+                    stockMinimo = producto.StockMinimo,
+                    fechaUltimaActualizacion = DateTime.Now,
+                    llanta = producto.Llanta != null ? new
+                    {
+                        llantaId = 0, // siempre 0 para nuevas llantas
+                        productoId = 0, // se asignará después
+                        ancho = producto.Llanta.Ancho ?? 0,
+                        perfil = producto.Llanta.Perfil ?? 0,
+                        diametro = producto.Llanta.Diametro?.ToString() ?? string.Empty,
+                        marca = producto.Llanta.Marca ?? string.Empty,
+                        modelo = producto.Llanta.Modelo ?? string.Empty,
+                        capas = producto.Llanta.Capas ?? 0,
+                        indiceVelocidad = producto.Llanta.IndiceVelocidad ?? string.Empty,
+                        tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty
+                    } : null,
+                    imagenes = new List<object>() // lista vacía, se subirán después
+                };
+
+                // Serializar con la estructura exacta esperada
+                var jsonContent = JsonConvert.SerializeObject(productoRequest,
+                    new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Include
+                    });
+
+                _logger.LogInformation("JSON enviado a la API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // Obtener la URL base para verificarla
+                _logger.LogInformation("URL base del cliente HTTP: {BaseUrl}", _httpClient.BaseAddress?.ToString() ?? "null");
+
+                // Enviar la solicitud
+                var response = await _httpClient.PostAsync("/api/Inventario/productos", content);
+
+                // Capturar la respuesta completa
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta de la API. Status: {Status}, Contenido: {Content}",
+                    response.StatusCode, responseContent);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"Error al crear producto: {response.StatusCode}");
+                    _logger.LogError("Error al crear producto. Código: {StatusCode}, Error: {Error}",
+                        response.StatusCode, responseContent);
                     return false;
                 }
 
-                // 2. Obtener el ID del producto creado
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                int productoId = resultado.productoId;
+                // Extraer el ID del producto creado
+                dynamic? responseObj;
+                try
+                {
+                    responseObj = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    if (responseObj == null)
+                    {
+                        _logger.LogError("No se pudo deserializar la respuesta de la API");
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al deserializar respuesta: {Message}", ex.Message);
+                    return false;
+                }
 
-                // 3. Si hay imágenes, subirlas como un segundo paso
+                int productoId = responseObj.productoId;
+                _logger.LogInformation("Producto creado exitosamente. ID: {ProductoId}", productoId);
+
+                // Subir imágenes si existen
                 if (imagenes != null && imagenes.Any())
                 {
-                    _logger.LogInformation($"Enviando {imagenes.Count} imágenes para el producto ID {productoId}");
+                    _logger.LogInformation("Preparando para subir {Count} imágenes para el producto ID: {ProductoId}",
+                        imagenes.Count, productoId);
 
-                    using var formContent = new MultipartFormDataContent();
+                    using var formData = new MultipartFormDataContent();
 
                     foreach (var imagen in imagenes)
                     {
-                        var imageContent = new StreamContent(imagen.OpenReadStream());
-                        imageContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+                        if (imagen.Length > 0)
+                        {
+                            _logger.LogInformation("Procesando imagen: {FileName}, Tamaño: {Length} bytes",
+                                imagen.FileName, imagen.Length);
 
-                        // Importante: usar el nombre exacto que la API espera
-                        formContent.Add(imageContent, "imagenes", imagen.FileName);
+                            var streamContent = new StreamContent(imagen.OpenReadStream());
+                            streamContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+
+                            // Es importante que el nombre del campo coincida con el parámetro en la API
+                            formData.Add(streamContent, "imagenes", imagen.FileName);
+                        }
                     }
 
-                    var imageResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoId}/imagenes", formContent);
+                    var imageUploadUrl = $"/api/Inventario/productos/{productoId}/imagenes";
+                    _logger.LogInformation("Enviando solicitud POST a: {Url}", imageUploadUrl);
+
+                    var imageResponse = await _httpClient.PostAsync(imageUploadUrl, formData);
+                    var imageResponseContent = await imageResponse.Content.ReadAsStringAsync();
+
+                    _logger.LogInformation("Respuesta de subida de imágenes. Status: {Status}, Contenido: {Content}",
+                        imageResponse.StatusCode, imageResponseContent);
 
                     if (!imageResponse.IsSuccessStatusCode)
                     {
-                        _logger.LogWarning($"Error al subir imágenes: {imageResponse.StatusCode}");
-                        // No fallamos todo el proceso si solo fallan las imágenes
+                        _logger.LogWarning("No se pudieron subir todas las imágenes. Status: {Status}, Error: {Error}",
+                            imageResponse.StatusCode, imageResponseContent);
+                        // Continuamos porque el producto ya se creó, aunque las imágenes fallaran
                     }
+                    else
+                    {
+                        _logger.LogInformation("Imágenes subidas exitosamente para producto ID: {ProductoId}", productoId);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("No se proporcionaron imágenes para el producto");
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al agregar producto");
+                _logger.LogError(ex, "Error en el proceso de agregar producto: {Message}", ex.Message);
+
+                // Registrar también la excepción interna si existe
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError("Excepción interna: {Message}", ex.InnerException.Message);
+                }
+
                 return false;
             }
+        }
+
+        // Método privado para validar el producto antes de enviarlo
+        private void ValidarProducto(ProductoDTO producto)
+        {
+            _logger.LogInformation("Validando datos del producto");
+
+            // Verifica y arregla valores inválidos
+            if (string.IsNullOrEmpty(producto.NombreProducto))
+            {
+                _logger.LogWarning("Nombre de producto es nulo o vacío. Asignando valor predeterminado");
+                producto.NombreProducto = "Sin nombre";
+            }
+
+            if (producto.Precio <= 0)
+            {
+                _logger.LogWarning("Precio inválido ({Precio}). Asignando valor predeterminado", producto.Precio);
+                producto.Precio = 1;
+            }
+
+            if (producto.CantidadEnInventario < 0)
+            {
+                _logger.LogWarning("Cantidad en inventario inválida ({Cantidad}). Asignando valor predeterminado",
+                    producto.CantidadEnInventario);
+                producto.CantidadEnInventario = 0;
+            }
+
+            if (producto.StockMinimo < 0)
+            {
+                _logger.LogWarning("Stock mínimo inválido ({StockMinimo}). Asignando valor predeterminado",
+                    producto.StockMinimo);
+                producto.StockMinimo = 0;
+            }
+
+            // Verificar datos de llanta si existe
+            if (producto.Llanta != null)
+            {
+                _logger.LogInformation("Validando datos de llanta");
+
+                // Verifica y arregla valores inválidos en llanta
+                if (producto.Llanta.Ancho < 0)
+                {
+                    _logger.LogWarning("Ancho de llanta inválido ({Ancho}). Asignando null", producto.Llanta.Ancho);
+                    producto.Llanta.Ancho = null;
+                }
+
+                if (producto.Llanta.Perfil < 0)
+                {
+                    _logger.LogWarning("Perfil de llanta inválido ({Perfil}). Asignando null", producto.Llanta.Perfil);
+                    producto.Llanta.Perfil = null;
+                }
+
+                if (producto.Llanta.Capas < 0)
+                {
+                    _logger.LogWarning("Capas de llanta inválido ({Capas}). Asignando null", producto.Llanta.Capas);
+                    producto.Llanta.Capas = null;
+                }
+
+                // Verificar que propiedades string no sean nulas
+                // Diámetro como string puede ser número también
+                if (producto.Llanta.Diametro == null)
+                {
+                    _logger.LogWarning("Diámetro de llanta es null. Asignando cadena vacía");
+                    producto.Llanta.Diametro = string.Empty;
+                }
+
+                if (producto.Llanta.Marca == null)
+                {
+                    _logger.LogWarning("Marca de llanta es null. Asignando cadena vacía");
+                    producto.Llanta.Marca = string.Empty;
+                }
+
+                if (producto.Llanta.Modelo == null)
+                {
+                    _logger.LogWarning("Modelo de llanta es null. Asignando cadena vacía");
+                    producto.Llanta.Modelo = string.Empty;
+                }
+
+                if (producto.Llanta.IndiceVelocidad == null)
+                {
+                    _logger.LogWarning("Índice de velocidad de llanta es null. Asignando cadena vacía");
+                    producto.Llanta.IndiceVelocidad = string.Empty;
+                }
+
+                if (producto.Llanta.TipoTerreno == null)
+                {
+                    _logger.LogWarning("Tipo de terreno de llanta es null. Asignando cadena vacía");
+                    producto.Llanta.TipoTerreno = string.Empty;
+                }
+            }
+
+            _logger.LogInformation("Validación de producto completada");
         }
 
         public async Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes)
