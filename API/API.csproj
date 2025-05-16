@@ -28,12 +28,14 @@
     <Folder Include="wwwroot\uploads\productos\" />
   </ItemGroup>
 
+	
+	<!--
 	<ItemGroup>
 		<Content Include="wwwroot\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
-
+-->
   <ItemGroup>
     <ProjectReference Include="..\tuco.Clases\Tuco.Clases.csproj" />
   </ItemGroup>

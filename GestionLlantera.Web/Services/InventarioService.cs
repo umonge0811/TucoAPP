@@ -20,15 +20,46 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
         }
 
+        // En InventarioService.cs
         public async Task<List<ProductoDTO>> ObtenerProductosAsync()
         {
             try
             {
-                var response = await _httpClient.GetAsync("/api/Inventario/productos");
-                response.EnsureSuccessStatusCode();
+                _logger.LogInformation("Iniciando solicitud para obtener productos");
+
+                // Verificar la URL base del cliente
+                _logger.LogInformation($"URL base del cliente HTTP: {_httpClient.BaseAddress}");
+
+                // Realizar la petición
+                var response = await _httpClient.GetAsync("api/Inventario/productos"); // quitar el slash inicial
+
+                // Registrar resultado
+                _logger.LogInformation($"Respuesta recibida: StatusCode={response.StatusCode}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error obteniendo productos: {response.StatusCode} - {errorContent}");
+                    throw new Exception($"Error al obtener productos: {response.StatusCode}");
+                }
 
                 var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation($"Contenido recibido (primeros 100 caracteres): {(content.Length > 100 ? content.Substring(0, 100) + "..." : content)}");
+
                 var productos = JsonConvert.DeserializeObject<List<ProductoDTO>>(content);
+                _logger.LogInformation($"Productos deserializados: {productos?.Count ?? 0}");
+
+                if (productos != null && productos.Any())
+                {
+                    foreach (var producto in productos.Take(3)) // solo registrar los 3 primeros para no saturar logs
+                    {
+                        _logger.LogInformation($"Producto encontrado: ID={producto.ProductoId}, Nombre={producto.NombreProducto}, Precio={producto.Precio}");
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("No se encontraron productos o la deserialización devolvió nulo");
+                }
 
                 return productos ?? new List<ProductoDTO>();
             }
@@ -36,6 +67,114 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, "Error al obtener productos");
                 return new List<ProductoDTO>();
+            }
+        }
+
+        // Añade este método en InventarioService
+        private List<ProductoDTO> MapearRespuestaProductos(string jsonResponse)
+        {
+            try
+            {
+                // Deserializa a un objeto dinámico para inspeccionar la estructura
+                dynamic? rawData = JsonConvert.DeserializeObject<dynamic>(jsonResponse);
+
+                if (rawData == null)
+                {
+                    _logger.LogWarning("La respuesta se deserializó como null");
+                    return new List<ProductoDTO>();
+                }
+
+                // Crea una lista para almacenar los productos mapeados manualmente
+                var productos = new List<ProductoDTO>();
+
+                // Recorre la colección dinámica y mapea a tus DTOs
+                foreach (var item in rawData)
+                {
+                    try
+                    {
+                        var producto = new ProductoDTO
+                        {
+                            ProductoId = item.productoId ?? 0,
+                            NombreProducto = item.nombreProducto ?? "Sin nombre",
+                            Descripcion = item.descripcion,
+                            Precio = item.precio ?? 0,
+                            CantidadEnInventario = item.cantidadEnInventario ?? 0,
+                            StockMinimo = item.stockMinimo ?? 0,
+                            // Mapear imágenes si existen
+                            Imagenes = item.imagenesProductos != null ?
+                                MapearImagenes(item.imagenesProductos) :
+                                new List<ImagenProductoDTO>(),
+                            // Mapear llanta si existe
+                            Llanta = item.llanta != null ?
+                                MapearLlanta(item.llanta) :
+                                null
+                        };
+
+                        productos.Add(producto);
+                        _logger.LogInformation($"Producto mapeado: {producto.NombreProducto}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error al mapear un producto individual");
+                    }
+                }
+
+                return productos;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en el mapeo manual de productos");
+                return new List<ProductoDTO>();
+            }
+        }
+
+        private List<ImagenProductoDTO> MapearImagenes(dynamic imagenesObj)
+        {
+            var imagenes = new List<ImagenProductoDTO>();
+
+            try
+            {
+                foreach (var img in imagenesObj)
+                {
+                    imagenes.Add(new ImagenProductoDTO
+                    {
+                        ImagenId = img.imagenId ?? 0,
+                        ProductoId = img.productoId ?? 0,
+                        UrlImagen = img.urlimagen ?? "",
+                        Descripcion = img.descripcion
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al mapear imágenes");
+            }
+
+            return imagenes;
+        }
+
+        private LlantaDTO? MapearLlanta(dynamic llantaObj)
+        {
+            try
+            {
+                return new LlantaDTO
+                {
+                    LlantaId = llantaObj.llantaId ?? 0,
+                    ProductoId = llantaObj.productoId ?? 0,
+                    Ancho = llantaObj.ancho,
+                    Perfil = llantaObj.perfil,
+                    Diametro = llantaObj.diametro,
+                    Marca = llantaObj.marca,
+                    Modelo = llantaObj.modelo,
+                    Capas = llantaObj.capas,
+                    IndiceVelocidad = llantaObj.indiceVelocidad,
+                    TipoTerreno = llantaObj.tipoTerreno
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al mapear llanta");
+                return null;
             }
         }
 
