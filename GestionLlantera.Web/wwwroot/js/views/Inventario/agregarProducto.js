@@ -244,16 +244,12 @@
         console.log('Configurando captura de evento submit para el formulario...');
 
         // Añadir evento submit de forma directa
+        // Simplificar para diagnóstico
         form.onsubmit = function (e) {
-            console.log('EVENTO SUBMIT CAPTURADO - Formulario:', this.getAttribute('data-debug-id'));
-            debugger; // Esto detendrá la ejecución justo aquí
-
-            // Prevenir el envío por defecto
             e.preventDefault();
-
             console.log('Formulario enviado - iniciando validación');
 
-            // Validar todos los campos primero
+            // Validar campos
             let formValido = true;
             formInputs.forEach(input => {
                 if (!validarCampo(input)) {
@@ -263,31 +259,21 @@
 
             if (!formValido) {
                 console.log('Formulario inválido - campos con errores');
-                // Mostrar mensaje de error
                 toastr.error('Por favor, complete todos los campos requeridos correctamente');
-
-                // Scroll al primer campo con error
-                const primerCampoError = form.querySelector('.is-invalid');
-                if (primerCampoError) {
-                    primerCampoError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-
                 return false;
             }
 
             console.log('Formulario válido - preparando para enviar');
 
-            // Si el formulario es válido, mostrar spinner
-            const normalState = submitButton.querySelector('.normal-state');
-            const loadingState = submitButton.querySelector('.loading-state');
-
+            // Mostrar spinner
             submitButton.disabled = true;
-            normalState.style.display = 'none';
-            loadingState.style.display = 'inline-flex';
+            submitButton.querySelector('.normal-state').style.display = 'none';
+            submitButton.querySelector('.loading-state').style.display = 'inline-flex';
 
-            // Crear FormData para enviar los datos del formulario
+            // Crear FormData directamente del formulario
             const formData = new FormData(form);
 
+            // Depurar FormData
             console.log('FormData creado - revisando elementos:');
             for (let [key, value] of formData.entries()) {
                 if (value instanceof File) {
@@ -297,77 +283,41 @@
                 }
             }
 
-            // Si no es una llanta, eliminar los datos de llanta del FormData
-            if (esLlantaCheckbox && !esLlantaCheckbox.checked) {
-                console.log('No es una llanta - eliminando campos de llanta');
-                for (let key of [...formData.keys()]) {
-                    if (key.startsWith('Llanta.')) {
-                        formData.delete(key);
-                    }
-                }
-            }
-
-            // Añadir las imágenes seleccionadas al FormData
-            if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                console.log(`Agregando ${fileInput.files.length} imágenes al FormData`);
-
-                // Verificar el nombre actual del campo de imágenes
-                const inputName = fileInput.getAttribute('name') || 'imagenes';
-                console.log(`Nombre del campo de imágenes: ${inputName}`);
-
-                // Agregar cada archivo con el nombre correcto
-                for (let i = 0; i < fileInput.files.length; i++) {
-                    console.log(`Añadiendo imagen: ${fileInput.files[i].name} (${fileInput.files[i].size} bytes)`);
-                    formData.append(inputName, fileInput.files[i]);
-                }
-            }
-
-            // IMPORTANTE: Asegurar que la URL del formulario sea relativa
-            const formAction = '/Inventario/AgregarProducto'; // URL FIJA relativa
+            // Obtener la URL del formulario
+            const formAction = form.getAttribute('action');
             console.log('Enviando formulario al controlador en:', formAction);
 
-            // Enviar usando fetch para tener más control
+            // Enviar usando fetch
             fetch(formAction, {
                 method: 'POST',
                 body: formData
             })
-                .then(response => {
-                    console.log(`Respuesta recibida - status: ${response.status}`);
+                .then(async response => {
+                    console.log(`Respuesta: status=${response.status}, ok=${response.ok}`);
+
+                    const text = await response.text();
+                    console.log('Contenido de la respuesta:', text);
+
                     if (!response.ok) {
-                        return response.text().then(text => {
-                            console.error('Error en la respuesta:', text);
-                            throw new Error(`Error ${response.status}: ${text || 'Error al guardar el producto'}`);
-                        });
+                        throw new Error(`Error ${response.status}: ${text}`);
                     }
-                    return response.text().then(text => {
-                        try {
-                            // Intentar analizar como JSON
-                            return text ? JSON.parse(text) : {};
-                        } catch (e) {
-                            // Si no es JSON, devolver el texto como respuesta
-                            return { message: text };
-                        }
-                    });
-                })
-                .then(data => {
-                    console.log('Producto guardado exitosamente:', data);
-                    // Mostrar mensaje de éxito
+
                     toastr.success('Producto guardado exitosamente');
 
-                    // Redireccionar después de un breve retraso
+                    // Redireccionar
                     setTimeout(() => {
                         window.location.href = '/Inventario/Index';
                     }, 1000);
                 })
                 .catch(error => {
-                    console.error('Error al guardar producto:', error);
+                    console.error('Error:', error);
                     submitButton.disabled = false;
-                    normalState.style.display = 'inline-flex';
-                    loadingState.style.display = 'none';
+                    submitButton.querySelector('.normal-state').style.display = 'inline-flex';
+                    submitButton.querySelector('.loading-state').style.display = 'none';
                     toastr.error('Error al guardar el producto: ' + error.message);
                 });
 
-            return false; // Impedir envío normal del formulario
+            return false;
         };
     }
 

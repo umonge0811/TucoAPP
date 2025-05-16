@@ -87,32 +87,45 @@ namespace GestionLlantera.Web.Controllers
             return View(nuevoProducto);
         }
 
-        // Método POST para procesar el formulario
+
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AgregarProducto(ProductoDTO producto)
         {
             try
             {
+                // Registra información para diagnóstico
+                _logger.LogInformation("Método AgregarProducto llamado");
+                _logger.LogInformation($"Content-Type: {Request.ContentType}");
+                _logger.LogInformation($"Archivos: {Request.Form.Files.Count}");
+
+                // Verificar el modelo
+                if (producto != null)
+                {
+                    _logger.LogInformation($"ProductoDTO vinculado: NombreProducto={producto.NombreProducto}, Precio={producto.Precio}");
+                }
+                else
+                {
+                    _logger.LogWarning("El modelo ProductoDTO no se pudo vincular (es null)");
+                }
+
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("ModelState no es válido:");
+                    foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        _logger.LogWarning($"  - Error: {error.ErrorMessage}");
+                    }
                     return View(producto);
                 }
 
-                // Obtener las imágenes del formulario, con manejo seguro
-                List<IFormFile> imagenes = new List<IFormFile>();
-                try
-                {
-                    imagenes = Request.Form.Files.GetFiles("imagenes").ToList();
-                    _logger.LogInformation($"Recibidas {imagenes.Count} imágenes");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning($"No se pudieron obtener imágenes: {ex.Message}");
-                    // Continuamos aunque no haya imágenes
-                }
+                // Obtener las imágenes
+                var imagenes = Request.Form.Files.GetFiles("imagenes").ToList();
+                _logger.LogInformation($"Recibidas {imagenes.Count} imágenes");
 
-                // Llamar al servicio para guardar el producto con las imágenes
+                // Intentar guardar el producto
                 var resultado = await _inventarioService.AgregarProductoAsync(producto, imagenes);
 
                 if (resultado)
@@ -121,16 +134,18 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
+                // Si no se pudo guardar, mostrar error
                 TempData["Error"] = "Error al agregar el producto";
                 return View(producto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al agregar producto");
-                TempData["Error"] = "Error al procesar la solicitud";
+                _logger.LogError(ex, "Error en método AgregarProducto: {Message}", ex.Message);
+                TempData["Error"] = $"Error: {ex.Message}";
                 return View(producto);
             }
         }
+
         // GET: /Inventario/Programaciones
         public IActionResult Programaciones()
         {
