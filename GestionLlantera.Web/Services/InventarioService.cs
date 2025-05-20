@@ -62,15 +62,27 @@ namespace GestionLlantera.Web.Services
                     {
                         foreach (var img in item.imagenesProductos)
                         {
+                            // Obtener la URL de la API
+                            string apiBaseUrl = _httpClient.BaseAddress.ToString().TrimEnd('/');
+                            string imagenUrl = (string)img.urlimagen;
+
+                            // Si la URL de la imagen no comienza con http, combinarla con la URL base de la API
+                            if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                            {
+                                imagenUrl = $"{apiBaseUrl}{imagenUrl}";
+                            }
+
                             producto.Imagenes.Add(new ImagenProductoDTO
                             {
                                 ImagenId = (int)img.imagenId,
                                 ProductoId = (int)img.productoId,
-                                UrlImagen = (string)img.urlimagen,
+                                UrlImagen = imagenUrl,
                                 Descripcion = img.descripcion != null ? (string)img.descripcion : null
                             });
                         }
                     }
+
+
 
                     // Procesar llanta si existe (tomar solo el primer elemento del array)
                     if (item.llanta != null && item.llanta.Count > 0)
@@ -248,11 +260,21 @@ namespace GestionLlantera.Web.Services
                 {
                     foreach (var img in item.imagenesProductos)
                     {
+                        // Obtener la URL de la API
+                        string apiBaseUrl = _httpClient.BaseAddress.ToString().TrimEnd('/');
+                        string imagenUrl = (string)img.urlimagen;
+
+                        // Si la URL de la imagen no comienza con http, combinarla con la URL base de la API
+                        if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                        {
+                            imagenUrl = $"{apiBaseUrl}{imagenUrl}";
+                        }
+
                         producto.Imagenes.Add(new ImagenProductoDTO
                         {
                             ImagenId = (int)img.imagenId,
                             ProductoId = (int)img.productoId,
-                            UrlImagen = (string)img.urlimagen,
+                            UrlImagen = imagenUrl,
                             Descripcion = img.descripcion != null ? (string)img.descripcion : null
                         });
                     }

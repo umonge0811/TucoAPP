@@ -155,5 +155,54 @@ namespace GestionLlantera.Web.Controllers
             // Por ahora solo mostrará una vista vacía
             return View();
         }
+
+
+        // Asegúrate de que la ruta sea correcta
+        [HttpGet("ObtenerImagenesProducto/{id}")]
+        public async Task<IActionResult> ObtenerImagenesProducto(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Obteniendo imágenes para el producto ID: {id}");
+
+                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
+
+                if (producto == null || producto.ProductoId == 0)
+                {
+                    _logger.LogWarning($"Producto no encontrado o ID inválido: {id}");
+                    return Json(new List<object>());
+                }
+
+                _logger.LogInformation($"Imágenes encontradas: {producto.Imagenes?.Count ?? 0}");
+
+                // Devolver las imágenes en formato JSON
+                return Json(producto.Imagenes ?? new List<ImagenProductoDTO>());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener imágenes del producto {Id}", id);
+                return Json(new List<object>());
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> VerImagenes(int id)
+        {
+            try
+            {
+                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
+                if (producto == null || producto.ProductoId == 0)
+                {
+                    return PartialView("_ImagenesModal", null);
+                }
+
+                return PartialView("_ImagenesModal", producto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cargar imágenes del producto {Id}", id);
+                return PartialView("_Error", "No se pudieron cargar las imágenes del producto.");
+            }
+        }
     }
 }

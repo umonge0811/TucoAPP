@@ -1,0 +1,130 @@
+﻿/* Estilos para el modal del carrusel de imágenes de productos */
+
+/* Estilos generales del carrusel */
+.carrusel-productos .carousel-inner img {
+    max-height: 500px;
+    object-fit: contain;
+}
+
+/* Mejorar contraste de los botones de navegación */
+.carrusel-productos .carousel-control-prev,
+.carrusel-productos .carousel-control-next {
+    background-color: rgba(0, 0, 0, 0.3);
+    width: 10%;
+    transition: background-color 0.3s ease;
+}
+
+.carrusel-productos .carousel-control-prev {
+    border-radius: 0 5px 5px 0;
+}
+
+.carrusel-productos .carousel-control-next {
+    border-radius: 5px 0 0 5px;
+}
+
+    .carrusel-productos .carousel-control-prev:hover,
+    .carrusel-productos .carousel-control-next:hover {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+/* Estilos para los iconos de navegación */
+.carrusel-productos .carousel-control-prev-icon,
+.carrusel-productos .carousel-control-next-icon {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 15px;
+    border-radius: 50%;
+    border: 2px solid white;
+    transition: transform 0.2s ease;
+}
+
+    .carrusel-productos .carousel-control-prev-icon:hover,
+    .carrusel-productos .carousel-control-next-icon:hover {
+        transform: scale(1.1);
+    }
+
+/* Indicadores de posición */
+.carrusel-productos .carousel-indicators {
+    bottom: -40px;
+}
+
+    .carrusel-productos .carousel-indicators button {
+        background-color: #007bff;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin: 0 5px;
+        border: none;
+        opacity: 0.5;
+        transition: opacity 0.3s ease, transform 0.2s ease;
+    }
+
+        .carrusel-productos .carousel-indicators button.active {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+/* Estilos para la descripción de la imagen */
+.carrusel-productos .carousel-caption {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    padding: 10px;
+    bottom: 20px;
+}
+
+/* Estilos para el contenedor de información del producto */
+.carrusel-productos .producto-info {
+    margin-top: 50px;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+    .carrusel-productos .producto-info h6 {
+        border-bottom: 1px solid #eee;
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+        color: #495057;
+    }
+
+/* Estilos para cuando no hay imágenes */
+.carrusel-productos .no-imagenes {
+    padding: 30px;
+    text-align: center;
+}
+
+    .carrusel-productos .no-imagenes i {
+        font-size: 5rem;
+        color: #dee2e6;
+        margin-bottom: 15px;
+    }
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+    .carrusel-productos .carousel-control-prev,
+    .carrusel-productos .carousel-control-next {
+        width: 15%;
+    }
+
+    .carrusel-productos .carousel-control-prev-icon,
+    .carrusel-productos .carousel-control-next-icon {
+        padding: 10px;
+    }
+
+    .carrusel-productos .carousel-caption {
+        padding: 5px;
+        bottom: 10px;
+    }
+}
+
+/* Mejora de accesibilidad con focus */
+.carrusel-productos .carousel-control-prev:focus,
+.carrusel-productos .carousel-control-next:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Animación de transición */
+.carrusel-productos .carousel-item {
+    transition: transform 0.6s ease-in-out;
+}
