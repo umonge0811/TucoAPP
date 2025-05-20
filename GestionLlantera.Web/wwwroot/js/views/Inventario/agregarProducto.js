@@ -49,6 +49,8 @@
         fileInput: !!fileInput
     });
 
+    console.log(esLlantaCheckbox.checked);
+
     // Configuración de toastr
     toastr.options = {
         "closeButton": true,
@@ -61,12 +63,13 @@
     marcarCamposObligatorios();
 
     // Mostrar/ocultar campos de llanta dependiendo del checkbox
-    if (esLlantaCheckbox && llantaFields) {
+    if (!esLlantaCheckbox.checked) {
         esLlantaCheckbox.addEventListener('change', function () {
             if (this.checked) {
                 llantaFields.style.display = 'block';
 
                 // Hacer que los campos principales de llanta sean obligatorios
+                
                 const camposObligatorios = [
                     document.querySelector('[name="Llanta.Marca"]'),
                     document.querySelector('[name="Llanta.Modelo"]'),
@@ -365,7 +368,7 @@
     // Verificar si un campo está visible (no está en un contenedor oculto)
     function esCampoVisible(campo) {
         // Si el campo es de llanta y el checkbox no está marcado, ignorar
-        if (esLlantaCheckbox && !esLlantaCheckbox.checked) {
+        if (!esLlantaCheckbox.checked) {
             if (llantaFields.contains(campo)) {
                 return false;
             }

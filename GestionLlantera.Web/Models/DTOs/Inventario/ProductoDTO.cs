@@ -13,7 +13,7 @@ namespace GestionLlantera.Web.Models.DTOs.Inventario
         public string NombreProducto { get; set; }
 
         [Display(Name = "Descripción")]
-        public string Descripcion { get; set; }
+        public string? Descripcion { get; set; }
 
         [Required(ErrorMessage = "El precio es obligatorio")]
         [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor que cero")]
@@ -28,6 +28,7 @@ namespace GestionLlantera.Web.Models.DTOs.Inventario
         [Range(0, int.MaxValue, ErrorMessage = "El stock mínimo debe ser un número positivo")]
         public int StockMinimo { get; set; }
 
+        public bool EsLlanta { get; set; } = false;
 
         // Imágenes del producto (para la carga)
         [Display(Name = "Imágenes del Producto")]

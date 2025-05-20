@@ -325,7 +325,7 @@ namespace GestionLlantera.Web.Services
                     cantidadEnInventario = producto.CantidadEnInventario,
                     stockMinimo = producto.StockMinimo,
                     fechaUltimaActualizacion = DateTime.Now,
-                    llanta = producto.Llanta != null ? new
+                    llanta = producto.EsLlanta ? new
                     {
                         llantaId = 0, // siempre 0 para nuevas llantas
                         productoId = 0, // se asignará después
