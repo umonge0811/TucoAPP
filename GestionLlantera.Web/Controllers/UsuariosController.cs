@@ -73,7 +73,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-
         [HttpPost]
         public async Task<IActionResult> CrearUsuario([FromBody] CreateUsuarioDTO modelo)
         {
@@ -134,7 +133,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-
         [HttpPost]
         public async Task<IActionResult> GuardarRoles(int id, [FromBody] List<int> rolesIds)
         {
@@ -174,6 +172,7 @@ namespace GestionLlantera.Web.Controllers
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
+
         [HttpPost]
         public async Task<IActionResult> ActivarUsuario(int id)
         {
