@@ -611,5 +611,290 @@ namespace GestionLlantera.Web.Services
                 return false;
             }
         }
+
+        // Añadir estos métodos a la clase InventarioService.cs
+
+        /// <summary>
+        /// Obtiene todos los inventarios programados
+        /// </summary>
+        public async Task<List<InventarioProgramadoDTO>> ObtenerInventariosProgramadosAsync()
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo inventarios programados");
+
+                // Realizar la petición a la API
+                var response = await _httpClient.GetAsync("api/Inventario/inventarios-programados");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error obteniendo inventarios programados: {response.StatusCode} - {errorContent}");
+                    return new List<InventarioProgramadoDTO>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Contenido recibido de la API para inventarios programados");
+
+                // Deserializar a lista de inventarios programados
+                var inventarios = JsonConvert.DeserializeObject<List<InventarioProgramadoDTO>>(content);
+
+                // Si la API devuelve null, retornar una lista vacía
+                return inventarios ?? new List<InventarioProgramadoDTO>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener inventarios programados");
+                return new List<InventarioProgramadoDTO>();
+            }
+        }
+
+        /// <summary>
+        /// Obtiene un inventario programado por su ID
+        /// </summary>
+        public async Task<InventarioProgramadoDTO> ObtenerInventarioProgramadoPorIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Obteniendo inventario programado con ID: {id}");
+
+                // Realizar la petición a la API
+                var response = await _httpClient.GetAsync($"api/Inventario/inventarios-programados/{id}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error obteniendo inventario programado: {response.StatusCode} - {errorContent}");
+                    return new InventarioProgramadoDTO();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation($"Contenido recibido de la API para inventario programado ID {id}");
+
+                // Deserializar a InventarioProgramadoDTO
+                var inventario = JsonConvert.DeserializeObject<InventarioProgramadoDTO>(content);
+
+                // Si la API devuelve null, retornar un objeto vacío
+                return inventario ?? new InventarioProgramadoDTO();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al obtener inventario programado con ID: {id}");
+                return new InventarioProgramadoDTO();
+            }
+        }
+
+        /// <summary>
+        /// Guarda un nuevo inventario programado
+        /// </summary>
+        public async Task<bool> GuardarInventarioProgramadoAsync(InventarioProgramadoDTO inventario)
+        {
+            try
+            {
+                _logger.LogInformation("Guardando nuevo inventario programado");
+
+                // Realizar la petición a la API
+                var json = JsonConvert.SerializeObject(inventario);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync("api/Inventario/inventarios-programados", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error guardando inventario programado: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+
+                _logger.LogInformation("Inventario programado guardado exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al guardar inventario programado");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Actualiza un inventario programado existente
+        /// </summary>
+        public async Task<bool> ActualizarInventarioProgramadoAsync(int id, InventarioProgramadoDTO inventario)
+        {
+            try
+            {
+                _logger.LogInformation($"Actualizando inventario programado con ID: {id}");
+
+                // Realizar la petición a la API
+                var json = JsonConvert.SerializeObject(inventario);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PutAsync($"api/Inventario/inventarios-programados/{id}", content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error actualizando inventario programado: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+
+                _logger.LogInformation($"Inventario programado con ID {id} actualizado exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al actualizar inventario programado con ID: {id}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Inicia un inventario programado
+        /// </summary>
+        public async Task<bool> IniciarInventarioAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Iniciando inventario programado con ID: {id}");
+
+                // Realizar la petición a la API
+                var response = await _httpClient.PostAsync($"api/Inventario/inventarios-programados/{id}/iniciar", null);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error iniciando inventario programado: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+
+                _logger.LogInformation($"Inventario programado con ID {id} iniciado exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al iniciar inventario programado con ID: {id}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Cancela un inventario programado
+        /// </summary>
+        public async Task<bool> CancelarInventarioAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Cancelando inventario programado con ID: {id}");
+
+                // Realizar la petición a la API
+                var response = await _httpClient.PostAsync($"api/Inventario/inventarios-programados/{id}/cancelar", null);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error cancelando inventario programado: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+
+                _logger.LogInformation($"Inventario programado con ID {id} cancelado exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al cancelar inventario programado con ID: {id}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Completa un inventario programado
+        /// </summary>
+        public async Task<bool> CompletarInventarioAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Completando inventario programado con ID: {id}");
+
+                // Realizar la petición a la API
+                var response = await _httpClient.PostAsync($"api/Inventario/inventarios-programados/{id}/completar", null);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error completando inventario programado: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+
+                _logger.LogInformation($"Inventario programado con ID {id} completado exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al completar inventario programado con ID: {id}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Exporta los resultados de un inventario a Excel
+        /// </summary>
+        public async Task<Stream> ExportarResultadosInventarioExcelAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Exportando resultados de inventario a Excel para ID: {id}");
+
+                // Realizar la petición a la API
+                var response = await _httpClient.GetAsync($"api/Inventario/inventarios-programados/{id}/exportar-excel");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error exportando resultados a Excel: {response.StatusCode} - {errorContent}");
+                    throw new Exception($"Error al exportar resultados a Excel: {response.StatusCode}");
+                }
+
+                // Leer el contenido del archivo como un stream
+                var stream = await response.Content.ReadAsStreamAsync();
+
+                _logger.LogInformation($"Resultados de inventario ID {id} exportados a Excel exitosamente");
+                return stream;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al exportar resultados de inventario a Excel para ID: {id}");
+                throw; // Relanzar la excepción para que sea manejada en el controlador
+            }
+        }
+
+        /// <summary>
+        /// Exporta los resultados de un inventario a PDF
+        /// </summary>
+        public async Task<Stream> ExportarResultadosInventarioPDFAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Exportando resultados de inventario a PDF para ID: {id}");
+
+                // Realizar la petición a la API
+                var response = await _httpClient.GetAsync($"api/Inventario/inventarios-programados/{id}/exportar-pdf");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"Error exportando resultados a PDF: {response.StatusCode} - {errorContent}");
+                    throw new Exception($"Error al exportar resultados a PDF: {response.StatusCode}");
+                }
+
+                // Leer el contenido del archivo como un stream
+                var stream = await response.Content.ReadAsStreamAsync();
+
+                _logger.LogInformation($"Resultados de inventario ID {id} exportados a PDF exitosamente");
+                return stream;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error al exportar resultados de inventario a PDF para ID: {id}");
+                throw; // Relanzar la excepción para que sea manejada en el controlador
+            }
+        }
     }
 }

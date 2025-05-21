@@ -1,0 +1,527 @@
+﻿@model GestionLlantera.Web.Models.ViewModels.ProgramarInventarioViewModel
+@{
+    ViewData["Title"] = "Programar Inventario";
+    Layout = "_AdminLayout";
+}
+
+<link rel="stylesheet" href="~/css/views/inventario/programar-inventario.css" asp-append-version="true" />
+
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-calendar-check me-2"></i>
+            Programar Inventario
+        </h2>
+        <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Volver al Inventario
+        </a>
+    </div>
+
+    <!-- Tabs de navegación -->
+    <ul class="nav nav-tabs mb-4" id="inventarioTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="programados-tab" data-bs-toggle="tab" data-bs-target="#programados" type="button" role="tab" aria-controls="programados" aria-selected="true">
+                <i class="bi bi-list-check me-2"></i>Inventarios Programados
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="nuevo-tab" data-bs-toggle="tab" data-bs-target="#nuevo" type="button" role="tab" aria-controls="nuevo" aria-selected="false">
+                <i class="bi bi-plus-circle me-2"></i>Nuevo Inventario
+            </button>
+        </li>
+    </ul>
+
+    <!-- Contenido de los tabs -->
+    <div class="tab-content" id="inventarioTabsContent">
+        <!-- Tab de Inventarios Programados -->
+        <div class="tab-pane fade show active" id="programados" role="tabpanel" aria-labelledby="programados-tab">
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h3>
+                        <i class="bi bi-list-check me-2"></i>
+                        Inventarios Programados
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (Model.InventariosProgramados == null || !Model.InventariosProgramados.Any())
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No hay inventarios programados. Puedes crear uno nuevo en la pestaña "Nuevo Inventario".
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Título</th>
+                                        <th>Tipo</th>
+                                        <th>Fechas</th>
+                                        <th>Estado</th>
+                                        <th>Progreso</th>
+                                        <th>Usuarios</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var inventario in Model.InventariosProgramados)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@inventario.Titulo</strong>
+                                                @if (!string.IsNullOrEmpty(inventario.Descripcion))
+                                                {
+                                                    <div class="small text-muted">@(inventario.Descripcion.Length > 50 ? inventario.Descripcion.Substring(0, 50) + "..." : inventario.Descripcion)</div>
+                                                }
+                                            </td>
+                                            <td>@inventario.TipoInventario</td>
+                                            <td>
+                                                <div>Inicio: @inventario.FechaInicio.ToString("dd/MM/yyyy")</div>
+                                                <div>Fin: @inventario.FechaFin.ToString("dd/MM/yyyy")</div>
+                                            </td>
+                                            <td>
+                                                @switch (inventario.Estado)
+                                                {
+                                                    case "Programado":
+                                                        <span class="badge bg-primary">Programado</span>
+                                                        break;
+                                                    case "En Progreso":
+                                                        <span class="badge bg-warning text-dark">En Progreso</span>
+                                                        break;
+                                                    case "Completado":
+                                                        <span class="badge bg-success">Completado</span>
+                                                        break;
+                                                    case "Cancelado":
+                                                        <span class="badge bg-danger">Cancelado</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">@inventario.Estado</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (inventario.Estado == "En Progreso" || inventario.Estado == "Completado")
+                                                {
+                                                    <div class="progress">
+                                                        <div class="progress-bar @(inventario.Estado == "Completado" ? "bg-success" : "")"
+                                                             role="progressbar"
+                                                             style="width: @inventario.PorcentajeProgreso%;"
+                                                             aria-valuenow="@inventario.PorcentajeProgreso"
+                                                             aria-valuemin="0"
+                                                             aria-valuemax="100">
+                                                            @inventario.PorcentajeProgreso%
+                                                        </div>
+                                                    </div>
+                                                    <div class="small mt-1">
+                                                        <span class="text-nowrap">@inventario.ProductosContados de @inventario.TotalProductos productos</span>
+                                                        @if (inventario.Discrepancias > 0)
+                                                        {
+                                                            <span class="text-danger ms-2">
+                                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                @inventario.Discrepancias discrepancias
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">No iniciado</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="avatar-group">
+                                                    @foreach (var asignacion in inventario.AsignacionesUsuarios.Take(3))
+                                                    {
+                                                        <div class="avatar" data-bs-toggle="tooltip" title="@asignacion.NombreUsuario">
+                                                            <span class="avatar-initial rounded-circle bg-primary">
+                                                                @(asignacion.NombreUsuario.Substring(0, 1).ToUpper())
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                    @if (inventario.AsignacionesUsuarios.Count > 3)
+                                                    {
+                                                        <div class="avatar" data-bs-toggle="tooltip" title="@(inventario.AsignacionesUsuarios.Count - 3) más">
+                                                            <span class="avatar-initial rounded-circle bg-secondary">
+                                                                +@(inventario.AsignacionesUsuarios.Count - 3)
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="@Url.Action("DetalleInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
+                                                       class="btn btn-sm btn-info"
+                                                       data-bs-toggle="tooltip"
+                                                       title="Ver detalles">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    @if (inventario.Estado == "Programado")
+                                                    {
+                                                        <a href="@Url.Action("EditarInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
+                                                           class="btn btn-sm btn-primary"
+                                                           data-bs-toggle="tooltip"
+                                                           title="Editar">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-success iniciar-inventario-btn"
+                                                                data-id="@inventario.InventarioProgramadoId"
+                                                                data-bs-toggle="tooltip"
+                                                                title="Iniciar inventario">
+                                                            <i class="bi bi-play-fill"></i>
+                                                        </button>
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-danger cancelar-inventario-btn"
+                                                                data-id="@inventario.InventarioProgramadoId"
+                                                                data-bs-toggle="tooltip"
+                                                                title="Cancelar inventario">
+                                                            <i class="bi bi-x-lg"></i>
+                                                        </button>
+                                                    }
+                                                    @if (inventario.Estado == "En Progreso")
+                                                    {
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-success completar-inventario-btn"
+                                                                data-id="@inventario.InventarioProgramadoId"
+                                                                data-bs-toggle="tooltip"
+                                                                title="Completar inventario">
+                                                            <i class="bi bi-check-lg"></i>
+                                                        </button>
+                                                    }
+                                                    @if (inventario.Estado == "Completado")
+                                                    {
+                                                        <button type="button"
+                                                                class="btn btn-sm btn-primary exportar-inventario-btn"
+                                                                data-id="@inventario.InventarioProgramadoId"
+                                                                data-bs-toggle="tooltip"
+                                                                title="Exportar resultados">
+                                                            <i class="bi bi-download"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab de Nuevo Inventario -->
+        <div class="tab-pane fade" id="nuevo" role="tabpanel" aria-labelledby="nuevo-tab">
+            <form id="formNuevoInventario" asp-action="ProgramarInventario" method="post">
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-calendar-plus me-2"></i>
+                            Datos Generales
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="NuevoInventario.Titulo" class="form-label">Título del Inventario</label>
+                                    <input asp-for="NuevoInventario.Titulo" class="form-control" placeholder="Ej: Inventario Físico Anual 2025" required />
+                                    <span asp-validation-for="NuevoInventario.Titulo" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="NuevoInventario.TipoInventario" class="form-label">Tipo de Inventario</label>
+                                    <select asp-for="NuevoInventario.TipoInventario" class="form-select" required>
+                                        <option value="Completo">Inventario Completo</option>
+                                        <option value="Parcial">Inventario Parcial</option>
+                                        <option value="Cíclico">Inventario Cíclico</option>
+                                    </select>
+                                    <span asp-validation-for="NuevoInventario.TipoInventario" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="NuevoInventario.FechaInicio" class="form-label">Fecha de Inicio</label>
+                                    <input asp-for="NuevoInventario.FechaInicio" type="date" class="form-control" required />
+                                    <span asp-validation-for="NuevoInventario.FechaInicio" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="NuevoInventario.FechaFin" class="form-label">Fecha de Finalización</label>
+                                    <input asp-for="NuevoInventario.FechaFin" type="date" class="form-control" required />
+                                    <span asp-validation-for="NuevoInventario.FechaFin" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label asp-for="NuevoInventario.Descripcion" class="form-label">Descripción</label>
+                                    <textarea asp-for="NuevoInventario.Descripcion" class="form-control" rows="3" placeholder="Describe el propósito y alcance de este inventario"></textarea>
+                                    <span asp-validation-for="NuevoInventario.Descripcion" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-gear me-2"></i>
+                            Configuración Específica
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="NuevoInventario.UbicacionEspecifica" class="form-label">Ubicación Específica</label>
+                                    <select asp-for="NuevoInventario.UbicacionEspecifica" class="form-select">
+                                        <option value="">Todas las ubicaciones</option>
+                                        <option value="Bodega A">Bodega A</option>
+                                        <option value="Bodega B">Bodega B</option>
+                                        <option value="Exhibición">Área de Exhibición</option>
+                                        <option value="Taller">Taller</option>
+                                    </select>
+                                    <div class="form-text">
+                                        Déjelo en blanco para incluir todos los productos, o seleccione una ubicación específica.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch mt-4">
+                                    <input asp-for="NuevoInventario.IncluirStockBajo" class="form-check-input" type="checkbox" id="switchStockBajo">
+                                    <label class="form-check-label" for="switchStockBajo">
+                                        Incluir productos con stock bajo
+                                    </label>
+                                    <div class="form-text">
+                                        Active esta opción para incluir en el inventario los productos que están por debajo del stock mínimo.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>
+                            <i class="bi bi-people me-2"></i>
+                            Asignación de Usuarios
+                        </h3>
+                        <button type="button" class="btn btn-primary btn-sm" id="btnAgregarUsuario">
+                            <i class="bi bi-person-plus me-1"></i>
+                            Agregar Usuario
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Asigne usuarios para realizar este inventario y defina sus permisos.
+                        </div>
+
+                        <div id="usuariosAsignados" class="mt-3">
+                            <!-- Los usuarios asignados se agregarán aquí dinámicamente -->
+                            <div class="text-center text-muted py-3" id="noUsuariosMsg">
+                                <i class="bi bi-person-x d-block mb-2" style="font-size: 2rem;"></i>
+                                No hay usuarios asignados. Use el botón "Agregar Usuario" para asignar responsables.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-end mb-4">
+                    <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-lg me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary-custom" id="submitButton">
+                        <span class="normal-state">
+                            <i class="bi bi-calendar-check me-2"></i>Programar Inventario
+                        </span>
+                        <span class="loading-state" style="display: none;">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            Guardando...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar usuario -->
+<div class="modal fade" id="modalAgregarUsuario" tabindex="-1" aria-labelledby="modalAgregarUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAgregarUsuarioLabel">Agregar Usuario al Inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="selectUsuario" class="form-label">Seleccionar Usuario</label>
+                    <select id="selectUsuario" class="form-select">
+                        <option value="">Seleccione un usuario</option>
+                        @foreach (var usuario in Model.UsuariosDisponibles)
+                        {
+                            <option value="@usuario.UsuarioId" data-nombre="@usuario.NombreUsuario">@usuario.NombreUsuario (@usuario.Email)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Permisos</label>
+                    <div class="permisos-container">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="permisoConteo" checked>
+                            <label class="form-check-label" for="permisoConteo">
+                                <i class="bi bi-calculator me-1"></i> Conteo Físico
+                            </label>
+                            <small class="d-block text-muted">Permite realizar el conteo físico de los productos</small>
+                        </div>
+
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="permisoAjuste">
+                            <label class="form-check-label" for="permisoAjuste">
+                                <i class="bi bi-pencil-square me-1"></i> Ajuste de Stock
+                            </label>
+                            <small class="d-block text-muted">Permite ajustar el stock en el sistema</small>
+                        </div>
+
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" id="permisoValidacion">
+                            <label class="form-check-label" for="permisoValidacion">
+                                <i class="bi bi-check-circle me-1"></i> Validación Final
+                            </label>
+                            <small class="d-block text-muted">Permite validar y cerrar el inventario</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmarAgregarUsuario">
+                    <i class="bi bi-plus-circle me-1"></i> Agregar Usuario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Plantilla para usuario asignado -->
+<template id="template-usuario-asignado">
+    <div class="usuario-asignado card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h5 class="usuario-nombre mb-1"></h5>
+                    <div class="permisos-badges">
+                        <span class="badge bg-primary me-1 badge-conteo">
+                            <i class="bi bi-calculator me-1"></i> Conteo
+                        </span>
+                        <span class="badge bg-primary me-1 badge-ajuste" style="display: none;">
+                            <i class="bi bi-pencil-square me-1"></i> Ajuste
+                        </span>
+                        <span class="badge bg-primary me-1 badge-validacion" style="display: none;">
+                            <i class="bi bi-check-circle me-1"></i> Validación
+                        </span>
+                    </div>
+                </div>
+                <button type="button" class="btn-eliminar-usuario btn btn-outline-danger btn-sm">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+
+            <!-- Campos ocultos para enviar con el formulario -->
+            <input type="hidden" class="usuario-id-input" name="NuevoInventario.UsuariosAsignados[0].UsuarioId" value="">
+            <input type="hidden" class="usuario-nombre-input" name="NuevoInventario.UsuariosAsignados[0].NombreUsuario" value="">
+            <input type="hidden" class="permiso-conteo-input" name="NuevoInventario.UsuariosAsignados[0].PermisoConteo" value="true">
+            <input type="hidden" class="permiso-ajuste-input" name="NuevoInventario.UsuariosAsignados[0].PermisoAjuste" value="false">
+            <input type="hidden" class="permiso-validacion-input" name="NuevoInventario.UsuariosAsignados[0].PermisoValidacion" value="false">
+        </div>
+    </div>
+</template>
+
+<!-- Modal de confirmación para iniciar inventario -->
+<div class="modal fade" id="modalIniciarInventario" tabindex="-1" aria-labelledby="modalIniciarInventarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalIniciarInventarioLabel">Iniciar Inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea iniciar este inventario?</p>
+                <p>Al iniciar el inventario:</p>
+                <ul>
+                    <li>Se notificará por correo electrónico a todos los usuarios asignados</li>
+                    <li>Los usuarios podrán comenzar inmediatamente con el conteo físico</li>
+                    <li>El estado del inventario cambiará a "En Progreso"</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarIniciar">Iniciar Inventario</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para cancelar inventario -->
+<div class="modal fade" id="modalCancelarInventario" tabindex="-1" aria-labelledby="modalCancelarInventarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCancelarInventarioLabel">Cancelar Inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                </div>
+                <p>¿Está seguro de que desea cancelar este inventario programado?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, mantener el inventario</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarCancelar">Sí, cancelar inventario</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para completar inventario -->
+<div class="modal fade" id="modalCompletarInventario" tabindex="-1" aria-labelledby="modalCompletarInventarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCompletarInventarioLabel">Completar Inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea marcar este inventario como completado?</p>
+                <p>Al completar el inventario:</p>
+                <ul>
+                    <li>Ya no se podrán realizar más conteos o ajustes</li>
+                    <li>El estado del inventario cambiará a "Completado"</li>
+                    <li>Se generará un informe con las discrepancias encontradas</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarCompletar">Completar Inventario</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="~/js/views/inventario/programar-inventario.js" asp-append-version="true"></script>
+}

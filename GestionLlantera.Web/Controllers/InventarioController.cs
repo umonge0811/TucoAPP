@@ -10,6 +10,8 @@ using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using iTextSharp.text.pdf;
 using iTextSharp.tool.xml;
 using iTextSharp.text.html.simpleparser;
+using GestionLlantera.Web.Services;
+using GestionLlantera.Web.Models.ViewModels;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -17,14 +19,17 @@ namespace GestionLlantera.Web.Controllers
     public class InventarioController : Controller
     {
         private readonly IInventarioService _inventarioService;
+        private readonly IUsuariosService _usuariosService;
         private readonly ILogger<InventarioController> _logger;
 
         public InventarioController(
             IInventarioService inventarioService,
-            ILogger<InventarioController> logger)
+            ILogger<InventarioController> logger,
+            IUsuariosService usuariosService)
         {
             _inventarioService = inventarioService;
             _logger = logger;
+            _usuariosService = usuariosService;
         }
 
         // GET: /Inventario
@@ -95,9 +100,6 @@ namespace GestionLlantera.Web.Controllers
             return View(nuevoProducto);
         }
 
-
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AgregarProducto(ProductoDTO producto)
@@ -163,7 +165,6 @@ namespace GestionLlantera.Web.Controllers
             // Por ahora solo mostrará una vista vacía
             return View();
         }
-
 
         // Asegúrate de que la ruta sea correcta
         [HttpGet("ObtenerImagenesProducto/{id}")]
@@ -1062,6 +1063,296 @@ namespace GestionLlantera.Web.Controllers
                 // En caso de error, redireccionar con mensaje
                 TempData["Error"] = "No se pudo generar el archivo Excel. Inténtelo nuevamente.";
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // GET: /Inventario/ProgramarInventario
+        [HttpGet]
+        public async Task<IActionResult> ProgramarInventario()
+        {
+            ViewData["Title"] = "Programar Inventario";
+            ViewData["Layout"] = "_AdminLayout";
+
+            try
+            {
+                // Obtener la lista de usuarios para asignar responsabilidades
+                // En un escenario real, esto sería inyectado como un servicio
+                var usuarios = await _usuariosService.ObtenerTodosAsync();
+
+                // Obtener la lista de inventarios programados
+                var inventariosProgramados = await _inventarioService.ObtenerInventariosProgramadosAsync();
+
+                // Crear el modelo de vista
+                var viewModel = new ProgramarInventarioViewModel
+                {
+                    UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList(),
+                    InventariosProgramados = inventariosProgramados
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cargar la vista de programación de inventario");
+                TempData["Error"] = "Error al cargar la información para programar inventario.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: /Inventario/ProgramarInventario
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProgramarInventario(ProgramarInventarioViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    // Recargar los datos necesarios para la vista
+                    var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+
+                    return View(model);
+                }
+
+                // Crear nuevo inventario programado
+                var inventarioProgramado = new InventarioProgramadoDTO
+                {
+                    Titulo = model.NuevoInventario.Titulo,
+                    Descripcion = model.NuevoInventario.Descripcion,
+                    FechaInicio = model.NuevoInventario.FechaInicio,
+                    FechaFin = model.NuevoInventario.FechaFin,
+                    TipoInventario = model.NuevoInventario.TipoInventario,
+                    Estado = "Programado",
+                    FechaCreacion = DateTime.Now,
+                    UsuarioCreadorId = int.Parse(User.FindFirst("UserId")?.Value ?? "0"),
+                    AsignacionesUsuarios = model.NuevoInventario.UsuariosAsignados.Select(ua => new AsignacionUsuarioInventarioDTO
+                    {
+                        UsuarioId = ua.UsuarioId,
+                        PermisoConteo = ua.PermisoConteo,
+                        PermisoAjuste = ua.PermisoAjuste,
+                        PermisoValidacion = ua.PermisoValidacion
+                    }).ToList()
+                };
+
+                // Guardar el inventario programado
+                var resultado = await _inventarioService.GuardarInventarioProgramadoAsync(inventarioProgramado);
+
+                if (resultado)
+                {
+                    TempData["Success"] = "Inventario programado exitosamente.";
+                    return RedirectToAction(nameof(ProgramarInventario));
+                }
+
+                TempData["Error"] = "Error al programar el inventario.";
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al programar el inventario");
+                TempData["Error"] = "Error al programar el inventario: " + ex.Message;
+
+                // Recargar los datos necesarios para la vista
+                var usuarios = await _usuariosService.ObtenerTodosAsync();
+                model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+
+                return View(model);
+            }
+        }
+
+        // GET: /Inventario/DetalleInventarioProgramado/5
+        [HttpGet]
+        public async Task<IActionResult> DetalleInventarioProgramado(int id)
+        {
+            ViewData["Title"] = "Detalle de Inventario Programado";
+            ViewData["Layout"] = "_AdminLayout";
+
+            try
+            {
+                // Obtener el inventario programado
+                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id);
+                if (inventario == null || inventario.InventarioProgramadoId == 0)
+                {
+                    TempData["Error"] = "Inventario programado no encontrado.";
+                    return RedirectToAction(nameof(ProgramarInventario));
+                }
+
+                return View(inventario);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cargar detalle del inventario programado {Id}", id);
+                TempData["Error"] = "Error al cargar el detalle del inventario programado.";
+                return RedirectToAction(nameof(ProgramarInventario));
+            }
+        }
+
+        // GET: /Inventario/EditarInventarioProgramado/5
+        [HttpGet]
+        public async Task<IActionResult> EditarInventarioProgramado(int id)
+        {
+            ViewData["Title"] = "Editar Inventario Programado";
+            ViewData["Layout"] = "_AdminLayout";
+
+            try
+            {
+                // Obtener el inventario programado
+                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id);
+                if (inventario == null || inventario.InventarioProgramadoId == 0)
+                {
+                    TempData["Error"] = "Inventario programado no encontrado.";
+                    return RedirectToAction(nameof(ProgramarInventario));
+                }
+
+                // Verificar que el inventario no esté en progreso o completado
+                if (inventario.Estado != "Programado")
+                {
+                    TempData["Error"] = "No se puede editar un inventario que ya está en progreso o completado.";
+                    return RedirectToAction(nameof(ProgramarInventario));
+                }
+
+                // Obtener la lista de usuarios para asignar responsabilidades
+                var usuarios = await _usuariosService.ObtenerTodosAsync();
+
+                // Crear el modelo de vista para edición
+                var viewModel = new EditarInventarioViewModel
+                {
+                    InventarioProgramado = inventario,
+                    UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList()
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cargar la vista de edición del inventario programado {Id}", id);
+                TempData["Error"] = "Error al cargar el formulario de edición.";
+                return RedirectToAction(nameof(ProgramarInventario));
+            }
+        }
+
+        // POST: /Inventario/EditarInventarioProgramado/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarInventarioProgramado(int id, EditarInventarioViewModel model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    // Recargar los datos necesarios para la vista
+                    var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+
+                    return View(model);
+                }
+
+                // Actualizar el inventario programado
+                var resultado = await _inventarioService.ActualizarInventarioProgramadoAsync(id, model.InventarioProgramado);
+
+                if (resultado)
+                {
+                    TempData["Success"] = "Inventario programado actualizado exitosamente.";
+                    return RedirectToAction(nameof(ProgramarInventario));
+                }
+
+                TempData["Error"] = "Error al actualizar el inventario programado.";
+
+                // Recargar los datos necesarios para la vista
+                var usuariosRefresh = await _usuariosService.ObtenerTodosAsync();
+                model.UsuariosDisponibles = usuariosRefresh.Where(u => u.Activo).ToList();
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar el inventario programado {Id}", id);
+                TempData["Error"] = "Error al actualizar el inventario programado: " + ex.Message;
+
+                // Recargar los datos necesarios para la vista
+                var usuarios = await _usuariosService.ObtenerTodosAsync();
+                model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+
+                return View(model);
+            }
+        }
+
+        // POST: /Inventario/IniciarInventario/5
+        [HttpPost]
+        public async Task<IActionResult> IniciarInventario(int id)
+        {
+            try
+            {
+                var resultado = await _inventarioService.IniciarInventarioAsync(id);
+
+                return Json(new { success = resultado, message = resultado ? "Inventario iniciado exitosamente." : "No se pudo iniciar el inventario." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al iniciar inventario {Id}", id);
+                return Json(new { success = false, message = "Error al iniciar el inventario: " + ex.Message });
+            }
+        }
+
+        // POST: /Inventario/CancelarInventario/5
+        [HttpPost]
+        public async Task<IActionResult> CancelarInventario(int id)
+        {
+            try
+            {
+                var resultado = await _inventarioService.CancelarInventarioAsync(id);
+
+                return Json(new { success = resultado, message = resultado ? "Inventario cancelado exitosamente." : "No se pudo cancelar el inventario." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cancelar inventario {Id}", id);
+                return Json(new { success = false, message = "Error al cancelar el inventario: " + ex.Message });
+            }
+        }
+
+        // POST: /Inventario/CompletarInventario/5
+        [HttpPost]
+        public async Task<IActionResult> CompletarInventario(int id)
+        {
+            try
+            {
+                var resultado = await _inventarioService.CompletarInventarioAsync(id);
+
+                return Json(new { success = resultado, message = resultado ? "Inventario completado exitosamente." : "No se pudo completar el inventario." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al completar inventario {Id}", id);
+                return Json(new { success = false, message = "Error al completar el inventario: " + ex.Message });
+            }
+        }
+
+        // GET: /Inventario/ExportarResultadosInventario/5
+        [HttpGet]
+        public async Task<IActionResult> ExportarResultadosInventario(int id, string formato = "excel")
+        {
+            try
+            {
+                // Verificar el formato solicitado
+                if (formato.ToLower() == "pdf")
+                {
+                    // Exportar a PDF
+                    var pdfStream = await _inventarioService.ExportarResultadosInventarioPDFAsync(id);
+                    return File(pdfStream, "application/pdf", $"Resultados_Inventario_{id}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+                }
+                else
+                {
+                    // Por defecto, exportar a Excel
+                    var excelStream = await _inventarioService.ExportarResultadosInventarioExcelAsync(id);
+                    return File(excelStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Resultados_Inventario_{id}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al exportar resultados del inventario {Id}", id);
+                TempData["Error"] = "Error al exportar los resultados del inventario.";
+                return RedirectToAction(nameof(DetalleInventarioProgramado), new { id });
             }
         }
     }
