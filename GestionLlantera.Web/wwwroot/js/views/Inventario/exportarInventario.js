@@ -1,130 +1,129 @@
-﻿// Actualiza esta parte en tu archivo inventario.js
+﻿// Actualiza el código en exportarInventario.js
 document.addEventListener('DOMContentLoaded', function () {
     // Referencias a los botones de exportación
     const btnExportarExcel = document.getElementById('btnExportarExcel');
     const btnExportarPDF = document.getElementById('btnExportarPDF');
+    const btnIniciarExportacion = document.getElementById('btnIniciarExportacion');
 
-    // Botón para exportar a Excel
+    // Modal de exportación
+    const modalExportarInventario = new bootstrap.Modal(document.getElementById('modalExportarInventario'));
+
+    // Botón para exportar a Excel desde el dropdown
     if (btnExportarExcel) {
         btnExportarExcel.addEventListener('click', function () {
-            // Mostrar indicador de carga
-            const loadingId = mostrarCargando('Generando archivo Excel...');
+            // Seleccionar Excel por defecto
+            document.getElementById('formatoExcel').checked = true;
+            document.getElementById('formatoPDF').checked = false;
 
-            // Crear un iframe oculto para la descarga
-            const downloadFrame = crearIframeDescarga();
-
-            // Establecer la URL del iframe
-            downloadFrame.src = '/Inventario/ExportarExcel';
-
-            // Detectar cuando la descarga comienza
-            detectarDescarga(downloadFrame, loadingId);
+            // Mostrar el modal para ingresar información adicional
+            modalExportarInventario.show();
         });
     }
 
-    // Botón para exportar a PDF
+    // Botón para exportar a PDF desde el dropdown
     if (btnExportarPDF) {
         btnExportarPDF.addEventListener('click', function () {
-            // Mostrar indicador de carga
-            const loadingId = mostrarCargando('Generando archivo PDF...');
+            // Seleccionar PDF por defecto
+            document.getElementById('formatoExcel').checked = false;
+            document.getElementById('formatoPDF').checked = true;
 
-            // Crear un iframe oculto para la descarga
-            const downloadFrame = crearIframeDescarga();
-
-            // Establecer la URL del iframe
-            downloadFrame.src = '/Inventario/ExportarPDF';
-
-            // Detectar cuando la descarga comienza
-            detectarDescarga(downloadFrame, loadingId);
+            // Mostrar el modal para ingresar información adicional
+            modalExportarInventario.show();
         });
     }
 
-    // Función para crear un iframe oculto para la descarga
-    function crearIframeDescarga() {
-        // Eliminar iframe existente si hay uno
-        const existingFrame = document.getElementById('downloadFrame');
-        if (existingFrame) {
-            document.body.removeChild(existingFrame);
-        }
+    // Botón para iniciar la exportación después de completar el formulario
+    if (btnIniciarExportacion) {
+        btnIniciarExportacion.addEventListener('click', function () {
+            // Recopilar información del formulario
+            const responsable = document.getElementById('responsable').value;
+            const solicitante = document.getElementById('solicitante').value;
+            const fechaLimite = document.getElementById('fechaLimite').value;
 
-        // Crear nuevo iframe
-        const iframe = document.createElement('iframe');
-        iframe.id = 'downloadFrame';
-        iframe.style.display = 'none';
-        document.body.appendChild(iframe);
+            // Determinar formato seleccionado
+            const formatoExcel = document.getElementById('formatoExcel').checked;
 
-        return iframe;
+            // Construir la URL con parámetros
+            let url = formatoExcel ? '/Inventario/ExportarExcel' : '/Inventario/ExportarPDF';
+            url += `?responsable=${encodeURIComponent(responsable)}`;
+            url += `&solicitante=${encodeURIComponent(solicitante)}`;
+            url += `&fechaLimite=${encodeURIComponent(fechaLimite)}`;
+
+            // Cerrar el modal
+            modalExportarInventario.hide();
+
+            // Mostrar mensaje de carga
+            const mensaje = formatoExcel ? 'Generando archivo Excel...' : 'Generando archivo PDF...';
+
+            // Realizar la descarga
+            descargarArchivoConFetch(url, mensaje);
+        });
     }
 
-    // Función para detectar cuando se inicia la descarga
-    function detectarDescarga(iframe, loadingId) {
-        // Generar un ID único para esta operación de descarga
-        const operationId = Date.now().toString();
+    // Función mejorada para descargar archivos utilizando fetch API
+    function descargarArchivoConFetch(url, mensajeCarga) {
+        // Mostrar indicador de carga
+        const loadingId = mostrarCargando(mensajeCarga);
 
-        // Indicador de si la descarga fue detectada
-        let downloadDetected = false;
+        // Solicitar el archivo usando fetch con responseType blob
+        fetch(url, {
+            method: 'GET',
+            credentials: 'same-origin'
+        })
+            .then(response => {
+                // Verificar si la respuesta es exitosa
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
 
-        // Función para comprobar si la descarga ha comenzado
-        const checkDownload = () => {
-            try {
-                // Si podemos acceder al contenido del iframe, la descarga aún no ha comenzado
-                // (Esto fallará cuando comience la descarga debido a la política de seguridad)
-                const iframeContent = iframe.contentWindow.document;
+                // Obtener el nombre del archivo del header Content-Disposition
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'archivo_descarga';
 
-                // Si el contenido tiene una respuesta que indica descarga
-                if (iframeContent && iframeContent.body && iframeContent.body.innerHTML) {
-                    const content = iframeContent.body.innerHTML.toLowerCase();
-
-                    // Si detectamos que es un archivo de descarga (comprobamos palabras clave)
-                    if (content.includes('excel') || content.includes('pdf') ||
-                        content.includes('download') || content.includes('application/') ||
-                        content.includes('attachment')) {
-                        downloadDetected = true;
-                        ocultarCargando(loadingId);
-                        return;
-                    }
-
-                    // Si encontramos un mensaje de error
-                    if (content.includes('error') || content.includes('exception')) {
-                        downloadDetected = true;
-                        ocultarCargando(loadingId);
-                        mostrarError('Se produjo un error al generar el archivo. Por favor, inténtelo de nuevo.');
-                        return;
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1].replace(/['"]/g, '');
                     }
                 }
-            } catch (e) {
-                // Si se produce una excepción, probablemente la descarga ha comenzado
-                // (No podemos acceder al contenido por razones de seguridad)
-                downloadDetected = true;
-                ocultarCargando(loadingId);
 
-                // Limpiar el iframe después de un momento
+                // Cuando obtenemos la respuesta (incluso antes de que el blob esté completamente descargado),
+                // podemos empezar a ocultar el indicador de carga
                 setTimeout(() => {
-                    if (iframe && iframe.parentNode) {
-                        iframe.parentNode.removeChild(iframe);
-                    }
-                }, 5000);
+                    ocultarCargando(loadingId);
+                }, 500);
 
-                return;
-            }
+                // Convertir la respuesta a blob para descarga
+                return response.blob().then(blob => {
+                    return { blob, filename };
+                });
+            })
+            .then(({ blob, filename }) => {
+                // Crear un objeto URL para el blob
+                const url = window.URL.createObjectURL(blob);
 
-            // Si no se detectó la descarga aún, verificar nuevamente
-            if (!downloadDetected) {
-                setTimeout(checkDownload, 500);
-            }
-        };
+                // Crear un enlace invisible y hacer clic en él para iniciar la descarga
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
 
-        // Iniciar verificación después de un breve retraso
-        setTimeout(checkDownload, 1000);
+                // Iniciar la descarga
+                a.click();
 
-        // Establecer un límite de tiempo para mostrar el cargador (como respaldo)
-        setTimeout(() => {
-            if (!downloadDetected) {
+                // Limpiar
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            })
+            .catch(error => {
+                console.error('Error durante la descarga:', error);
                 ocultarCargando(loadingId);
-            }
-        }, 15000); // 15 segundos como tiempo máximo
+                mostrarError('Se produjo un error al generar el archivo: ' + error.message);
+            });
     }
 
-    // Función para mostrar indicador de carga (modificada para devolver ID)
+    // Función para mostrar indicador de carga
     function mostrarCargando(mensaje) {
         // Generar ID único para esta operación de carga
         const loadingId = 'loading-' + Date.now().toString();
@@ -140,118 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadingIndicator.dataset.operationId = loadingId;
 
             const content = document.createElement('div');
-            content.className = 'loading-content';
-
-            const spinner = document.createElement('div');
-            spinner.className = 'spinner-border text-primary';
-            spinner.setAttribute('role', 'status');
-
-            const span = document.createElement('span');
-            span.className = 'visually-hidden';
-            span.textContent = 'Cargando...';
-
-            const loadingMessage = document.createElement('p');
-            loadingMessage.className = 'mt-2';
-            loadingMessage.id = 'loadingMessage';
-            loadingMessage.textContent = mensaje || 'Procesando...';
-
-            spinner.appendChild(span);
-            content.appendChild(spinner);
-            content.appendChild(loadingMessage);
-            loadingIndicator.appendChild(content);
-
-            // Estilos para el overlay
-            loadingIndicator.style.position = 'fixed';
-            loadingIndicator.style.top = '0';
-            loadingIndicator.style.left = '0';
-            loadingIndicator.style.width = '100%';
-            loadingIndicator.style.height = '100%';
-            loadingIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-            loadingIndicator.style.display = 'flex';
-            loadingIndicator.style.justifyContent = 'center';
-            loadingIndicator.style.alignItems = 'center';
-            loadingIndicator.style.zIndex = '9999';
-
-            // Estilos para el contenido
-            content.style.backgroundColor = 'white';
-            content.style.padding = '20px';
-            content.style.borderRadius = '5px';
-            content.style.textAlign = 'center';
-
-            // Añadir al body
-            document.body.appendChild(loadingIndicator);
-        } else {
-            // Si ya existe, actualizamos el mensaje e ID
-            loadingIndicator.dataset.operationId = loadingId;
-            const loadingMessage = document.getElementById('loadingMessage');
-            if (loadingMessage) {
-                loadingMessage.textContent = mensaje || 'Procesando...';
-            }
-
-            // Mostrar el indicador existente
-            loadingIndicator.style.display = 'flex';
-        }
-
-        return loadingId;
-    }
-
-    // Función para ocultar el indicador de carga (modificada para verificar ID)
-    function ocultarCargando(operationId) {
-        const loadingIndicator = document.getElementById('loadingIndicator');
-
-        if (loadingIndicator) {
-            // Solo ocultar si el ID coincide o no se proporciona ID
-            if (!operationId || loadingIndicator.dataset.operationId === operationId) {
-                loadingIndicator.style.display = 'none';
-
-                // Opcionalmente eliminar después de ocultarlo
-                setTimeout(() => {
-                    if (loadingIndicator.parentNode) {
-                        loadingIndicator.parentNode.removeChild(loadingIndicator);
-                    }
-                }, 500);
-            }
-        }
-    }
-
-    // Función para mostrar mensajes de error
-    function mostrarError(mensaje) {
-        // Verificar si ya existe un elemento de alerta
-        let alertElement = document.getElementById('exportAlert');
-
-        if (!alertElement) {
-            // Crear un nuevo elemento de alerta
-            alertElement = document.createElement('div');
-            alertElement.id = 'exportAlert';
-            alertElement.className = 'alert alert-danger alert-dismissible fade show fixed-top mx-auto mt-3';
-            alertElement.style.maxWidth = '500px';
-            alertElement.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-            alertElement.setAttribute('role', 'alert');
-
-            // Agregar contenido
-            alertElement.innerHTML = `
-                <strong>Error:</strong> ${mensaje}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-            `;
-
-            // Agregar al body
-            document.body.appendChild(alertElement);
-
-            // Configurar desaparición automática
-            setTimeout(() => {
-                if (alertElement && alertElement.parentNode) {
-                    const bsAlert = new bootstrap.Alert(alertElement);
-                    bsAlert.close();
-                }
-            }, 5000);
-        }
-    }
-
-    // Configurar filtros y búsqueda
-    configureTableFilters();
-});
-
-// El resto del código para configureTableFilters() se mantiene igual
+            content.className =
 
 // Función para configurar filtros de la tabla
 function configureTableFilters() {

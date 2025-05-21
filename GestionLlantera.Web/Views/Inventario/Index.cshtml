@@ -295,6 +295,58 @@
     </div>
 </div>
 
+<!-- Añade este modal a tu vista Index.cshtml -->
+<div class="modal fade" id="modalExportarInventario" tabindex="-1" aria-labelledby="modalExportarInventarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalExportarInventarioLabel">Configuración de Exportación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formExportarInventario">
+                    <div class="mb-3">
+                        <label for="responsable" class="form-label">Responsable del Inventario</label>
+                        <input type="text" class="form-control" id="responsable" placeholder="Nombre del responsable">
+                        <div class="form-text">Persona encargada de realizar la toma física.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="solicitante" class="form-label">Solicitante</label>
+                        <input type="text" class="form-control" id="solicitante" placeholder="Nombre del solicitante">
+                        <div class="form-text">Persona o departamento que solicita el inventario.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaLimite" class="form-label">Fecha Límite</label>
+                        <input type="date" class="form-control" id="fechaLimite">
+                        <div class="form-text">Fecha límite para completar el inventario. Por defecto, 7 días desde hoy.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="formatoExport" class="form-label">Formato de Exportación</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="formatoExport" id="formatoExcel" value="excel" checked>
+                            <label class="form-check-label" for="formatoExcel">
+                                <i class="bi bi-file-excel me-2 text-success"></i>Excel (.xlsx)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="formatoExport" id="formatoPDF" value="pdf">
+                            <label class="form-check-label" for="formatoPDF">
+                                <i class="bi bi-file-pdf me-2 text-danger"></i>PDF (.pdf)
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnIniciarExportacion">
+                    <i class="bi bi-download me-2"></i>Descargar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal para Ajuste de Stock -->
 <div class="modal fade" id="ajusteStockModal" tabindex="-1" aria-labelledby="ajusteStockModalLabel" aria-hidden="true">
     <div class="modal-dialog">
