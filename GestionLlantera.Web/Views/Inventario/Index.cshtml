@@ -3,32 +3,7 @@
     ViewData["Title"] = "Inventario de Productos";
     Layout = "_AdminLayout";
 
-    // Código de depuración - eliminar después
-    <div class="alert alert-info" style="display:none;">
-        <h4>Depuración de datos:</h4>
-        <pre>
-            @foreach (var producto in Model.Take(3))
-            {
-                <text>
-                            ProductoID: @producto.ProductoId
-                            Nombre: @producto.NombreProducto
-                            Llanta es null?: @(producto.Llanta == null ? "Sí" : "No")
-                    @if (producto.Llanta != null)
-                    {
-                        <text>
-                                        LlantaID: @producto.Llanta.LlantaId
-                                        Ancho: @producto.Llanta.Ancho
-                                        Perfil: @producto.Llanta.Perfil
-                                        Diámetro: @producto.Llanta.Diametro
-                                        Marca: @producto.Llanta.Marca
-                                        Modelo: @producto.Llanta.Modelo
-                        </text>
-                    }
-                            --------------------
-                </text>
-            }
-                </pre>
-    </div>
+    <link rel="stylesheet" href="~/css/views/inventario/exportar.css">
 }
 <div class="container-fluid">
     <div class="page-header d-flex justify-content-between align-items-center mb-4">
@@ -448,6 +423,7 @@
 
 @section Scripts {
     <script src="~/js/views/inventario/inventario.js"></script>
+    <script src="~/js/views/inventario/exportarInventario.js"></script>
     <script>
         // Función para cargar imágenes de un producto
         function verImagenesProducto(productoId) {

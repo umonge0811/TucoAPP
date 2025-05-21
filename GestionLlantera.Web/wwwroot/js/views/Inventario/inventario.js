@@ -390,22 +390,7 @@ $(document).ready(function () {
         $("#contadorProductos").text(filasVisibles);
         $("#contadorStockBajo").text(filasStockBajo);
     }
-
-    // Exportar a Excel
-    $("#btnExportarExcel").click(function () {
-        exportarTabla('excel');
-    });
-
-    // Exportar a PDF
-    $("#btnExportarPDF").click(function () {
-        exportarTabla('pdf');
-    });
-
-    // Función placeholder para exportar (a implementar según necesidades)
-    function exportarTabla(formato) {
-        alert(`Esta función exportaría la tabla a ${formato.toUpperCase()}`);
-        // Aquí iría la implementación real de exportación
-    }
+        
 
     // Función para mostrar notificaciones
     function mostrarNotificacion(titulo, mensaje, tipo) {
