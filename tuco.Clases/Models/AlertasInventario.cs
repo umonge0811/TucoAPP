@@ -1,19 +1,47 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// tuco.Clases.Models/AlertaInventario.cs
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 
 namespace tuco.Clases.Models;
 
 public partial class AlertasInventario
 {
+    [Key]
     public int AlertaId { get; set; }
 
-    public int? ProductoId { get; set; }
+    [Required]
+    public int InventarioProgramadoId { get; set; }
 
-    public DateTime? FechaAlerta { get; set; }
+    [Required]
+    public int UsuarioId { get; set; }
 
-    public string? TipoAlerta { get; set; }
+    [Required]
+    [StringLength(50)]
+    public string TipoAlerta { get; set; } // 'Asignación', 'Inicio', 'Finalización', 'Discrepancia'
 
-    public string? Descripcion { get; set; }
+    [Required]
+    [StringLength(500)]
+    public string Mensaje { get; set; }
 
-    public virtual Producto? Producto { get; set; }
+    [Required]
+    public bool Leida { get; set; } = false;
+
+    [Required]
+    public DateTime FechaCreacion { get; set; }
+
+    public DateTime? FechaLectura { get; set; }
+
+    // Relaciones
+    [ForeignKey("InventarioProgramadoId")]
+    public virtual InventarioProgramado InventarioProgramado { get; set; }
+
+    [ForeignKey("UsuarioId")]
+    public virtual Usuario Usuario { get; set; }
+
+    public AlertasInventario()
+    {
+        FechaCreacion = DateTime.Now;
+    }
 }

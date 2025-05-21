@@ -1,68 +1,71 @@
-﻿/**
- * Script para la gestión de programación de inventarios
- */
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('Script de programación de inventario cargado');
+﻿// /wwwroot/js/views/inventario/programar-inventario.js
 
-    // Referencias a elementos del DOM
-    const formNuevoInventario = document.getElementById('formNuevoInventario');
+document.addEventListener('DOMContentLoaded', function () {
+    // Referencias a los modales
+    const modalAgregarUsuario = new bootstrap.Modal(document.getElementById('modalAgregarUsuario'));
+    const modalIniciarInventario = new bootstrap.Modal(document.getElementById('modalIniciarInventario'));
+    const modalCancelarInventario = new bootstrap.Modal(document.getElementById('modalCancelarInventario'));
+    const modalCompletarInventario = new bootstrap.Modal(document.getElementById('modalCompletarInventario'));
+
+    // Referencias a elementos del DOM para agregar usuarios
     const btnAgregarUsuario = document.getElementById('btnAgregarUsuario');
-    const modalAgregarUsuario = document.getElementById('modalAgregarUsuario');
+    const btnConfirmarAgregarUsuario = document.getElementById('btnConfirmarAgregarUsuario');
     const selectUsuario = document.getElementById('selectUsuario');
     const permisoConteo = document.getElementById('permisoConteo');
     const permisoAjuste = document.getElementById('permisoAjuste');
     const permisoValidacion = document.getElementById('permisoValidacion');
-    const btnConfirmarAgregarUsuario = document.getElementById('btnConfirmarAgregarUsuario');
     const usuariosAsignados = document.getElementById('usuariosAsignados');
     const noUsuariosMsg = document.getElementById('noUsuariosMsg');
-    const submitButton = document.getElementById('submitButton');
 
-    // Modales de confirmación
-    const modalIniciarInventario = document.getElementById('modalIniciarInventario');
-    const modalCancelarInventario = document.getElementById('modalCancelarInventario');
-    const modalCompletarInventario = document.getElementById('modalCompletarInventario');
-    const btnConfirmarIniciar = document.getElementById('btnConfirmarIniciar');
-    const btnConfirmarCancelar = document.getElementById('btnConfirmarCancelar');
-    const btnConfirmarCompletar = document.getElementById('btnConfirmarCompletar');
+    // Referencias para acciones en inventarios
+    const iniciarInventarioBtns = document.querySelectorAll('.iniciar-inventario-btn');
+    const cancelarInventarioBtns = document.querySelectorAll('.cancelar-inventario-btn');
+    const completarInventarioBtns = document.querySelectorAll('.completar-inventario-btn');
+    const exportarInventarioBtns = document.querySelectorAll('.exportar-inventario-btn');
 
-    // Variables para el manejo de datos
-    let usuariosAgregados = [];
-    let idInventarioActual = null;
+    let inventarioIdSeleccionado = 0;
+    let contadorUsuarios = 0;
 
-    // Mostrar el modal para agregar usuario
+    // Inicializar tooltips de Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Abrir modal para agregar usuario
     if (btnAgregarUsuario) {
         btnAgregarUsuario.addEventListener('click', function () {
-            // Limpiar selecciones previas
+            // Resetear selecciones en el modal
             selectUsuario.value = '';
             permisoConteo.checked = true;
             permisoAjuste.checked = false;
             permisoValidacion.checked = false;
 
-            // Mostrar el modal
-            const modal = new bootstrap.Modal(modalAgregarUsuario);
-            modal.show();
+            modalAgregarUsuario.show();
         });
     }
 
-    // Manejar la confirmación de agregar usuario
+    // Confirmar agregar usuario al inventario
     if (btnConfirmarAgregarUsuario) {
         btnConfirmarAgregarUsuario.addEventListener('click', function () {
             const usuarioId = selectUsuario.value;
-            const nombreUsuario = selectUsuario.options[selectUsuario.selectedIndex].getAttribute('data-nombre');
-
             if (!usuarioId) {
-                mostrarNotificacion('Por favor, seleccione un usuario', 'warning');
+                alert('Por favor seleccione un usuario');
                 return;
             }
 
             // Verificar si el usuario ya está agregado
-            if (usuariosAgregados.includes(parseInt(usuarioId))) {
-                mostrarNotificacion('Este usuario ya está asignado al inventario', 'warning');
+            const usuarioExistente = document.querySelector(`.usuario-asignado input.usuario-id-input[value="${usuarioId}"]`);
+            if (usuarioExistente) {
+                alert('Este usuario ya está asignado al inventario');
                 return;
             }
 
-            // Agregar a la lista de usuarios
-            agregarUsuarioAlFormulario(
+            // Obtener nombre del usuario
+            const nombreUsuario = selectUsuario.options[selectUsuario.selectedIndex].dataset.nombre;
+
+            // Crear nuevo elemento de usuario asignado
+            agregarUsuarioAsignado(
                 usuarioId,
                 nombreUsuario,
                 permisoConteo.checked,
@@ -70,182 +73,184 @@ document.addEventListener('DOMContentLoaded', function () {
                 permisoValidacion.checked
             );
 
-            // Cerrar el modal
-            bootstrap.Modal.getInstance(modalAgregarUsuario).hide();
-
-            // Mostrar notificación
-            mostrarNotificacion(`Usuario ${nombreUsuario} agregado al inventario`, 'success');
+            modalAgregarUsuario.hide();
         });
     }
 
-    // Función para agregar un usuario al formulario
-    function agregarUsuarioAlFormulario(usuarioId, nombreUsuario, tienePermisoConteo, tienePermisoAjuste, tienePermisoValidacion) {
-        // Ocultar el mensaje de "no hay usuarios"
+    // Función para agregar un usuario asignado al DOM
+    function agregarUsuarioAsignado(usuarioId, nombreUsuario, tienePermisoConteo, tienePermisoAjuste, tienePermisoValidacion) {
+        // Ocultar mensaje de "no hay usuarios"
         if (noUsuariosMsg) {
             noUsuariosMsg.style.display = 'none';
         }
 
-        // Agregar a la lista de usuarios agregados
-        usuariosAgregados.push(parseInt(usuarioId));
-
-        // Obtener la plantilla y clonarla
+        // Clonar la plantilla
         const template = document.getElementById('template-usuario-asignado');
-        const nuevoUsuario = document.importNode(template.content, true).querySelector('.usuario-asignado');
+        const nuevoUsuario = template.content.cloneNode(true);
 
-        // Asignar los valores
+        // Establecer datos en el elemento
         nuevoUsuario.querySelector('.usuario-nombre').textContent = nombreUsuario;
 
-        // Mostrar u ocultar las insignias de permisos
-        nuevoUsuario.querySelector('.badge-conteo').style.display = tienePermisoConteo ? 'inline-flex' : 'none';
-        nuevoUsuario.querySelector('.badge-ajuste').style.display = tienePermisoAjuste ? 'inline-flex' : 'none';
-        nuevoUsuario.querySelector('.badge-validacion').style.display = tienePermisoValidacion ? 'inline-flex' : 'none';
+        // Mostrar/ocultar badges según permisos
+        if (!tienePermisoConteo) {
+            nuevoUsuario.querySelector('.badge-conteo').style.display = 'none';
+        }
+        if (tienePermisoAjuste) {
+            nuevoUsuario.querySelector('.badge-ajuste').style.display = 'inline-block';
+        }
+        if (tienePermisoValidacion) {
+            nuevoUsuario.querySelector('.badge-validacion').style.display = 'inline-block';
+        }
 
-        // Configurar valores de los campos ocultos
-        const indice = usuariosAgregados.length - 1;
-        const usuarioIdInput = nuevoUsuario.querySelector('.usuario-id-input');
-        const usuarioNombreInput = nuevoUsuario.querySelector('.usuario-nombre-input');
-        const permisoConteoInput = nuevoUsuario.querySelector('.permiso-conteo-input');
-        const permisoAjusteInput = nuevoUsuario.querySelector('.permiso-ajuste-input');
-        const permisoValidacionInput = nuevoUsuario.querySelector('.permiso-validacion-input');
+        // Actualizar campos ocultos
+        const indexActual = contadorUsuarios;
+        nuevoUsuario.querySelector('.usuario-id-input').name = `NuevoInventario.UsuariosAsignados[${indexActual}].UsuarioId`;
+        nuevoUsuario.querySelector('.usuario-id-input').value = usuarioId;
 
-        usuarioIdInput.value = usuarioId;
-        usuarioIdInput.name = `NuevoInventario.UsuariosAsignados[${indice}].UsuarioId`;
+        nuevoUsuario.querySelector('.usuario-nombre-input').name = `NuevoInventario.UsuariosAsignados[${indexActual}].NombreUsuario`;
+        nuevoUsuario.querySelector('.usuario-nombre-input').value = nombreUsuario;
 
-        usuarioNombreInput.value = nombreUsuario;
-        usuarioNombreInput.name = `NuevoInventario.UsuariosAsignados[${indice}].NombreUsuario`;
+        nuevoUsuario.querySelector('.permiso-conteo-input').name = `NuevoInventario.UsuariosAsignados[${indexActual}].PermisoConteo`;
+        nuevoUsuario.querySelector('.permiso-conteo-input').value = tienePermisoConteo;
 
-        permisoConteoInput.value = tienePermisoConteo;
-        permisoConteoInput.name = `NuevoInventario.UsuariosAsignados[${indice}].PermisoConteo`;
+        nuevoUsuario.querySelector('.permiso-ajuste-input').name = `NuevoInventario.UsuariosAsignados[${indexActual}].PermisoAjuste`;
+        nuevoUsuario.querySelector('.permiso-ajuste-input').value = tienePermisoAjuste;
 
-        permisoAjusteInput.value = tienePermisoAjuste;
-        permisoAjusteInput.name = `NuevoInventario.UsuariosAsignados[${indice}].PermisoAjuste`;
+        nuevoUsuario.querySelector('.permiso-validacion-input').name = `NuevoInventario.UsuariosAsignados[${indexActual}].PermisoValidacion`;
+        nuevoUsuario.querySelector('.permiso-validacion-input').value = tienePermisoValidacion;
 
-        permisoValidacionInput.value = tienePermisoValidacion;
-        permisoValidacionInput.name = `NuevoInventario.UsuariosAsignados[${indice}].PermisoValidacion`;
-
-        // Configurar botón de eliminar
+        // Configurar botón para eliminar usuario
         const btnEliminar = nuevoUsuario.querySelector('.btn-eliminar-usuario');
         btnEliminar.addEventListener('click', function () {
-            eliminarUsuario(nuevoUsuario, usuarioId);
-        });
+            const card = this.closest('.usuario-asignado');
+            card.remove();
 
-        // Agregar al DOM
-        usuariosAsignados.appendChild(nuevoUsuario);
-    }
-
-    // Función para eliminar un usuario del formulario
-    function eliminarUsuario(elementoUsuario, usuarioId) {
-        // Eliminar del DOM
-        elementoUsuario.remove();
-
-        // Eliminar de la lista de usuarios agregados
-        const index = usuariosAgregados.indexOf(parseInt(usuarioId));
-        if (index !== -1) {
-            usuariosAgregados.splice(index, 1);
-        }
-
-        // Actualizar los índices de los elementos restantes
-        const usuariosRestantes = usuariosAsignados.querySelectorAll('.usuario-asignado');
-        usuariosRestantes.forEach((usuario, nuevoIndice) => {
-            // Actualizar los nombres de los campos
-            actualizarIndicesCampos(usuario, nuevoIndice);
-        });
-
-        // Mostrar el mensaje de "no hay usuarios" si no quedan usuarios
-        if (usuariosAgregados.length === 0 && noUsuariosMsg) {
-            noUsuariosMsg.style.display = 'block';
-        }
-
-        // Mostrar notificación
-        mostrarNotificacion('Usuario eliminado del inventario', 'info');
-    }
-
-    // Función para actualizar los índices de los campos de un usuario
-    function actualizarIndicesCampos(elementoUsuario, nuevoIndice) {
-        const usuarioIdInput = elementoUsuario.querySelector('.usuario-id-input');
-        const usuarioNombreInput = elementoUsuario.querySelector('.usuario-nombre-input');
-        const permisoConteoInput = elementoUsuario.querySelector('.permiso-conteo-input');
-        const permisoAjusteInput = elementoUsuario.querySelector('.permiso-ajuste-input');
-        const permisoValidacionInput = elementoUsuario.querySelector('.permiso-validacion-input');
-
-        usuarioIdInput.name = `NuevoInventario.UsuariosAsignados[${nuevoIndice}].UsuarioId`;
-        usuarioNombreInput.name = `NuevoInventario.UsuariosAsignados[${nuevoIndice}].NombreUsuario`;
-        permisoConteoInput.name = `NuevoInventario.UsuariosAsignados[${nuevoIndice}].PermisoConteo`;
-        permisoAjusteInput.name = `NuevoInventario.UsuariosAsignados[${nuevoIndice}].PermisoAjuste`;
-        permisoValidacionInput.name = `NuevoInventario.UsuariosAsignados[${nuevoIndice}].PermisoValidacion`;
-    }
-
-    // Validación del formulario antes de enviar
-    if (formNuevoInventario) {
-        formNuevoInventario.addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            // Validar que haya al menos un usuario asignado
-            if (usuariosAgregados.length === 0) {
-                mostrarNotificacion('Debe asignar al menos un usuario al inventario', 'warning');
-                return;
+            // Mostrar mensaje de "no hay usuarios" si no quedan usuarios
+            if (usuariosAsignados.querySelectorAll('.usuario-asignado').length === 0) {
+                noUsuariosMsg.style.display = 'block';
             }
 
-            // Validar las fechas
+            // Reordenar índices (importante para que el formulario funcione correctamente)
+            reordenarIndicesUsuarios();
+        });
+
+        // Agregar al contenedor
+        usuariosAsignados.appendChild(nuevoUsuario);
+
+        // Incrementar contador
+        contadorUsuarios++;
+    }
+
+    // Función para reordenar los índices de los usuarios asignados (después de eliminar uno)
+    function reordenarIndicesUsuarios() {
+        const cards = usuariosAsignados.querySelectorAll('.usuario-asignado');
+
+        cards.forEach((card, index) => {
+            card.querySelector('.usuario-id-input').name = `NuevoInventario.UsuariosAsignados[${index}].UsuarioId`;
+            card.querySelector('.usuario-nombre-input').name = `NuevoInventario.UsuariosAsignados[${index}].NombreUsuario`;
+            card.querySelector('.permiso-conteo-input').name = `NuevoInventario.UsuariosAsignados[${index}].PermisoConteo`;
+            card.querySelector('.permiso-ajuste-input').name = `NuevoInventario.UsuariosAsignados[${index}].PermisoAjuste`;
+            card.querySelector('.permiso-validacion-input').name = `NuevoInventario.UsuariosAsignados[${index}].PermisoValidacion`;
+        });
+    }
+
+    // Evento de submit del formulario
+    const formNuevoInventario = document.getElementById('formNuevoInventario');
+    if (formNuevoInventario) {
+        formNuevoInventario.addEventListener('submit', function (e) {
             const fechaInicio = new Date(document.getElementById('NuevoInventario_FechaInicio').value);
             const fechaFin = new Date(document.getElementById('NuevoInventario_FechaFin').value);
 
-            if (fechaInicio > fechaFin) {
-                mostrarNotificacion('La fecha de inicio no puede ser posterior a la fecha de fin', 'warning');
+            // Validar fechas
+            if (fechaFin < fechaInicio) {
+                e.preventDefault();
+                alert('La fecha de finalización no puede ser anterior a la fecha de inicio');
                 return;
             }
 
-            // Cambiar estado del botón
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.querySelector('.normal-state').style.display = 'none';
-                submitButton.querySelector('.loading-state').style.display = 'block';
+            // Validar que haya al menos un usuario asignado
+            if (usuariosAsignados.querySelectorAll('.usuario-asignado').length === 0) {
+                e.preventDefault();
+                alert('Debe asignar al menos un usuario al inventario');
+                return;
             }
 
-            // Enviar el formulario
-            this.submit();
+            // Mostrar estado de carga en el botón
+            const submitButton = document.getElementById('submitButton');
+            submitButton.querySelector('.normal-state').style.display = 'none';
+            submitButton.querySelector('.loading-state').style.display = 'inline-block';
+            submitButton.disabled = true;
         });
     }
 
-    // Manejar eventos de botones para inventarios programados
-    document.querySelectorAll('.iniciar-inventario-btn').forEach(btn => {
+    // Configurar botones de iniciar inventario
+    iniciarInventarioBtns.forEach(btn => {
         btn.addEventListener('click', function () {
-            idInventarioActual = this.getAttribute('data-id');
-            const modal = new bootstrap.Modal(modalIniciarInventario);
-            modal.show();
+            inventarioIdSeleccionado = this.dataset.id;
+            modalIniciarInventario.show();
         });
     });
 
-    document.querySelectorAll('.cancelar-inventario-btn').forEach(btn => {
+    // Configurar botones de cancelar inventario
+    cancelarInventarioBtns.forEach(btn => {
         btn.addEventListener('click', function () {
-            idInventarioActual = this.getAttribute('data-id');
-            const modal = new bootstrap.Modal(modalCancelarInventario);
-            modal.show();
+            inventarioIdSeleccionado = this.dataset.id;
+            modalCancelarInventario.show();
         });
     });
 
-    document.querySelectorAll('.completar-inventario-btn').forEach(btn => {
+    // Configurar botones de completar inventario
+    completarInventarioBtns.forEach(btn => {
         btn.addEventListener('click', function () {
-            idInventarioActual = this.getAttribute('data-id');
-            const modal = new bootstrap.Modal(modalCompletarInventario);
-            modal.show();
+            inventarioIdSeleccionado = this.dataset.id;
+            modalCompletarInventario.show();
         });
     });
 
-    document.querySelectorAll('.exportar-inventario-btn').forEach(btn => {
+    // Configurar botones de exportar resultados
+    exportarInventarioBtns.forEach(btn => {
         btn.addEventListener('click', function () {
-            const inventarioId = this.getAttribute('data-id');
-            window.location.href = `/Inventario/ExportarResultadosInventario/${inventarioId}`;
+            const id = this.dataset.id;
+            // Mostrar menú contextual para seleccionar formato
+            const menu = document.createElement('div');
+            menu.className = 'dropdown-menu show export-menu';
+            menu.style.position = 'absolute';
+            menu.style.top = (this.offsetTop + this.offsetHeight) + 'px';
+            menu.style.left = this.offsetLeft + 'px';
+
+            menu.innerHTML = `
+                <a class="dropdown-item" href="/Inventario/ExportarResultadosInventario/${id}?formato=excel">
+                    <i class="bi bi-file-earmark-excel me-2"></i>Exportar a Excel
+                </a>
+                <a class="dropdown-item" href="/Inventario/ExportarResultadosInventario/${id}?formato=pdf">
+                    <i class="bi bi-file-earmark-pdf me-2"></i>Exportar a PDF
+                </a>
+            `;
+
+            document.body.appendChild(menu);
+
+            // Cerrar el menú cuando se hace clic fuera
+            document.addEventListener('click', function closeMenu() {
+                document.body.removeChild(menu);
+                document.removeEventListener('click', closeMenu);
+            }, { once: true });
+
+            // Evitar que el clic en el menú cierre el menú
+            menu.addEventListener('click', function (e) {
+                e.stopPropagation();
+            });
         });
     });
 
-    // Manejar confirmaciones de modales
+    // Evento para confirmar inicio de inventario
+    const btnConfirmarIniciar = document.getElementById('btnConfirmarIniciar');
     if (btnConfirmarIniciar) {
         btnConfirmarIniciar.addEventListener('click', function () {
-            if (!idInventarioActual) return;
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando...';
 
-            // Hacer la petición AJAX para iniciar el inventario
-            fetch(`/Inventario/IniciarInventario/${idInventarioActual}`, {
+            // Enviar solicitud AJAX
+            fetch(`/Inventario/IniciarInventario/${inventarioIdSeleccionado}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -254,33 +259,40 @@ document.addEventListener('DOMContentLoaded', function () {
             })
                 .then(response => response.json())
                 .then(data => {
+                    modalIniciarInventario.hide();
+
                     if (data.success) {
-                        mostrarNotificacion('Inventario iniciado correctamente', 'success');
-                        // Recargar la página para ver los cambios
+                        // Mostrar mensaje de éxito y recargar la página
+                        showToast('Éxito', data.message, 'success');
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
                     } else {
-                        mostrarNotificacion(`Error: ${data.message}`, 'error');
+                        // Mostrar mensaje de error
+                        showToast('Error', data.message, 'danger');
+                        this.disabled = false;
+                        this.innerHTML = 'Iniciar Inventario';
                     }
-
-                    // Cerrar el modal
-                    bootstrap.Modal.getInstance(modalIniciarInventario).hide();
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    mostrarNotificacion('Error al iniciar el inventario', 'error');
-                    bootstrap.Modal.getInstance(modalIniciarInventario).hide();
+                    showToast('Error', 'Ocurrió un error al procesar la solicitud', 'danger');
+                    this.disabled = false;
+                    this.innerHTML = 'Iniciar Inventario';
+                    modalIniciarInventario.hide();
                 });
         });
     }
 
+    // Evento para confirmar cancelación de inventario
+    const btnConfirmarCancelar = document.getElementById('btnConfirmarCancelar');
     if (btnConfirmarCancelar) {
         btnConfirmarCancelar.addEventListener('click', function () {
-            if (!idInventarioActual) return;
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cancelando...';
 
-            // Hacer la petición AJAX para cancelar el inventario
-            fetch(`/Inventario/CancelarInventario/${idInventarioActual}`, {
+            // Enviar solicitud AJAX
+            fetch(`/Inventario/CancelarInventario/${inventarioIdSeleccionado}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -289,33 +301,40 @@ document.addEventListener('DOMContentLoaded', function () {
             })
                 .then(response => response.json())
                 .then(data => {
+                    modalCancelarInventario.hide();
+
                     if (data.success) {
-                        mostrarNotificacion('Inventario cancelado correctamente', 'success');
-                        // Recargar la página para ver los cambios
+                        // Mostrar mensaje de éxito y recargar la página
+                        showToast('Éxito', data.message, 'success');
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
                     } else {
-                        mostrarNotificacion(`Error: ${data.message}`, 'error');
+                        // Mostrar mensaje de error
+                        showToast('Error', data.message, 'danger');
+                        this.disabled = false;
+                        this.innerHTML = 'Sí, cancelar inventario';
                     }
-
-                    // Cerrar el modal
-                    bootstrap.Modal.getInstance(modalCancelarInventario).hide();
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    mostrarNotificacion('Error al cancelar el inventario', 'error');
-                    bootstrap.Modal.getInstance(modalCancelarInventario).hide();
+                    showToast('Error', 'Ocurrió un error al procesar la solicitud', 'danger');
+                    this.disabled = false;
+                    this.innerHTML = 'Sí, cancelar inventario';
+                    modalCancelarInventario.hide();
                 });
         });
     }
 
+    // Evento para confirmar completar inventario
+    const btnConfirmarCompletar = document.getElementById('btnConfirmarCompletar');
     if (btnConfirmarCompletar) {
         btnConfirmarCompletar.addEventListener('click', function () {
-            if (!idInventarioActual) return;
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Completando...';
 
-            // Hacer la petición AJAX para completar el inventario
-            fetch(`/Inventario/CompletarInventario/${idInventarioActual}`, {
+            // Enviar solicitud AJAX
+            fetch(`/Inventario/CompletarInventario/${inventarioIdSeleccionado}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -324,41 +343,95 @@ document.addEventListener('DOMContentLoaded', function () {
             })
                 .then(response => response.json())
                 .then(data => {
+                    modalCompletarInventario.hide();
+
                     if (data.success) {
-                        mostrarNotificacion('Inventario completado correctamente', 'success');
-                        // Recargar la página para ver los cambios
+                        // Mostrar mensaje de éxito y recargar la página
+                        showToast('Éxito', data.message, 'success');
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
                     } else {
-                        mostrarNotificacion(`Error: ${data.message}`, 'error');
+                        // Mostrar mensaje de error
+                        showToast('Error', data.message, 'danger');
+                        this.disabled = false;
+                        this.innerHTML = 'Completar Inventario';
                     }
-
-                    // Cerrar el modal
-                    bootstrap.Modal.getInstance(modalCompletarInventario).hide();
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    mostrarNotificacion('Error al completar el inventario', 'error');
-                    bootstrap.Modal.getInstance(modalCompletarInventario).hide();
+                    showToast('Error', 'Ocurrió un error al procesar la solicitud', 'danger');
+                    this.disabled = false;
+                    this.innerHTML = 'Completar Inventario';
+                    modalCompletarInventario.hide();
                 });
         });
     }
 
-    // Función para mostrar notificaciones
-    function mostrarNotificacion(mensaje, tipo) {
-        // Si existe toastr (librería de notificaciones), usarlo
-        if (typeof toastr !== 'undefined') {
-            toastr[tipo](mensaje);
-        } else {
-            // Si no, usar alert básico
-            alert(mensaje);
+    // Función para mostrar toast (notificación)
+    function showToast(title, message, type) {
+        // Verificar si ya existe un contenedor de toasts
+        let toastContainer = document.querySelector('.toast-container');
+
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
         }
+
+        // Crear un nuevo toast
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.id = toastId;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+
+        // Contenido del toast
+        toast.innerHTML = `
+           <div class="d-flex">
+               <div class="toast-body">
+                   <strong>${title}</strong>: ${message}
+               </div>
+               <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+           </div>
+       `;
+
+        // Agregar el toast al contenedor
+        toastContainer.appendChild(toast);
+
+        // Inicializar y mostrar el toast
+        const bsToast = new bootstrap.Toast(toast, {
+            autohide: true,
+            delay: 5000
+        });
+
+        bsToast.show();
+
+        // Eliminar el toast del DOM después de que se oculte
+        toast.addEventListener('hidden.bs.toast', function () {
+            this.remove();
+        });
     }
 
-    // Inicializar tooltips de Bootstrap
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    // Validación para fechas
+    const fechaInicio = document.getElementById('NuevoInventario_FechaInicio');
+    const fechaFin = document.getElementById('NuevoInventario_FechaFin');
+
+    if (fechaInicio && fechaFin) {
+        // Establecer la fecha mínima para inicio (hoy)
+        const today = new Date().toISOString().split('T')[0];
+        fechaInicio.min = today;
+
+        // Actualizar fecha mínima para fin cuando cambia inicio
+        fechaInicio.addEventListener('change', function () {
+            fechaFin.min = fechaInicio.value;
+
+            // Si la fecha de fin es anterior a la de inicio, actualizarla
+            if (fechaFin.value && fechaFin.value < fechaInicio.value) {
+                fechaFin.value = fechaInicio.value;
+            }
+        });
+    }
 });

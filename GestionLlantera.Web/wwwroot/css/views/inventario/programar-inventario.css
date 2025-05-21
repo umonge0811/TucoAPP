@@ -1,309 +1,129 @@
-﻿/* Estilos para la funcionalidad de programación de inventario */
+﻿/* /wwwroot/css/views/inventario/programar-inventario.css */
 
-/* Estilos para las tarjetas */
+/* Estilos para la tarjeta dashboard */
 .dashboard-card {
     background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 24px;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
     overflow: hidden;
 }
 
     .dashboard-card .card-header {
         background-color: #f8f9fa;
         border-bottom: 1px solid #e9ecef;
-        padding: 15px 20px;
+        padding: 1rem 1.25rem;
     }
 
         .dashboard-card .card-header h3 {
             margin: 0;
             font-size: 1.25rem;
             font-weight: 600;
-            color: #495057;
+            color: #344054;
         }
 
     .dashboard-card .card-body {
-        padding: 20px;
-    }
-
-/* Tabs mejorados */
-.nav-tabs .nav-link {
-    color: #6c757d;
-    font-weight: 500;
-    padding: 12px 20px;
-    border: none;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s ease;
-}
-
-    .nav-tabs .nav-link:hover {
-        border-color: transparent;
-        background-color: #f8f9fa;
-        color: #495057;
-    }
-
-    .nav-tabs .nav-link.active {
-        color: #0d6efd;
-        background-color: #fff;
-        border-bottom: 3px solid #0d6efd;
-    }
-
-/* Estilos para la tabla de inventarios */
-.table {
-    width: 100%;
-    margin-bottom: 0;
-}
-
-    .table th {
-        font-weight: 600;
-        color: #495057;
-    }
-
-    .table td {
-        vertical-align: middle;
+        padding: 1.25rem;
     }
 
 /* Estilos para los avatares */
 .avatar-group {
     display: flex;
+    align-items: center;
 }
 
 .avatar {
-    position: relative;
-    width: 32px;
-    height: 32px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
-    overflow: hidden;
-    margin-right: -10px;
-    background-color: #e9ecef;
-    border: 2px solid #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    z-index: 1;
-    transition: transform 0.2s ease;
+    margin-right: -10px;
+    border: 2px solid #fff;
+    position: relative;
+    overflow: hidden;
 }
 
-    .avatar:hover {
-        transform: translateY(-3px);
-        z-index: 2;
+    .avatar:last-child {
+        margin-right: 0;
     }
 
-.avatar-group .avatar:last-child {
-    margin-right: 0;
-}
-
 .avatar-initial {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: 600;
+    font-size: 1rem;
     color: #fff;
-    font-size: 14px;
 }
 
 /* Estilos para la barra de progreso */
 .progress {
-    height: 10px;
-    border-radius: 5px;
-    background-color: #e9ecef;
-    overflow: hidden;
+    height: 0.75rem;
+    border-radius: 0.375rem;
 }
 
-.progress-bar {
-    background-color: #0d6efd;
-    transition: width 0.3s ease;
-}
-
-/* Estilos para los badges */
-.badge {
-    font-weight: 500;
-    padding: 5px 10px;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-}
-
-/* Estilos para los formularios */
-.form-label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    color: #495057;
-}
-
-.form-control, .form-select {
-    border-radius: 4px;
-    border: 1px solid #ced4da;
-    padding: 0.375rem 0.75rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-    .form-control:focus, .form-select:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-    }
-
-.form-text {
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-.form-check-input {
-    width: 1.125em;
-    height: 1.125em;
-    margin-top: 0.2em;
-}
-
-.form-check-label {
-    font-weight: 500;
-}
-
-.form-check .form-text {
-    margin-left: 1.725em;
-}
-
-/* Estilos para el área de usuarios asignados */
+/* Estilos para las tarjetas de usuarios asignados */
 .usuario-asignado {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
     transition: all 0.2s ease;
 }
 
     .usuario-asignado:hover {
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
     }
 
     .usuario-asignado .card-body {
-        padding: 15px;
+        padding: 1rem;
     }
 
-    .usuario-asignado .usuario-nombre {
-        font-weight: 600;
-        color: #212529;
-    }
-
-.permisos-badges {
-    margin-top: 5px;
-}
-
-.btn-eliminar-usuario {
-    padding: 4px 8px;
-    font-size: 0.875rem;
-}
-
-/* Estilos para el botón de agregar usuario */
-#btnAgregarUsuario {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-}
-
-/* Estilos para los modales */
-.modal-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.modal-title {
-    font-weight: 600;
-    color: #212529;
-}
-
-.modal-footer {
-    border-top: 1px solid #dee2e6;
-    padding: 1rem 1.5rem;
-}
-
-/* Estilos para los permisos en el modal */
-.permisos-container {
-    padding: 15px;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-}
-
-/* Estilos para botones */
+/* Botón personalizado con el color de marca */
 .btn-primary-custom {
+    background-color: #0071bc;
+    border-color: #0071bc;
     color: #fff;
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    border-radius: 4px;
-    transition: all 0.2s ease;
 }
 
     .btn-primary-custom:hover {
-        background-color: #0b5ed7;
-        border-color: #0a58ca;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(13, 110, 253, 0.25);
+        background-color: #005a95;
+        border-color: #005a95;
+        color: #fff;
     }
 
-    .btn-primary-custom:active {
-        background-color: #0a58ca;
-        border-color: #0a53be;
-        transform: translateY(0);
-    }
-
-.btn-secondary {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: #fff;
-    transition: all 0.2s ease;
+/* Estilos para las pestañas */
+.nav-tabs .nav-link {
+    padding: 0.75rem 1.25rem;
+    font-weight: 600;
+    color: #6c757d;
+    border: none;
+    border-bottom: 3px solid transparent;
 }
 
-    .btn-secondary:hover {
-        background-color: #5c636a;
-        border-color: #565e64;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(108, 117, 125, 0.25);
+    .nav-tabs .nav-link:hover {
+        color: #0071bc;
+        border-bottom-color: #b6d9f2;
     }
 
-/* Estilos para dispositivos móviles */
-@media (max-width: 768px) {
-    .dashboard-card .card-header {
-        padding: 12px 15px;
+    .nav-tabs .nav-link.active {
+        color: #0071bc;
+        border-bottom-color: #0071bc;
+        background-color: transparent;
     }
 
-    .dashboard-card .card-body {
-        padding: 15px;
-    }
-
-    .nav-tabs .nav-link {
-        padding: 10px 15px;
-    }
-
-    .table th, .table td {
-        padding: 0.5rem;
-    }
-
-    .avatar {
-        width: 28px;
-        height: 28px;
-    }
-
-    .avatar-initial {
-        font-size: 12px;
-    }
+/* Estilos para la sección de permisos */
+.permisos-container {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
 }
 
-/* Estilos para la vista de dispositivos pequeños */
-@media (max-width: 576px) {
-    .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-        .page-header h2 {
-            margin-bottom: 10px;
-        }
-
-    .nav-tabs .nav-link {
-        padding: 8px 12px;
-        font-size: 0.875rem;
-    }
-
-    .modal-dialog {
-        margin: 0.5rem;
-    }
+/* Menú exportar */
+.export-menu {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }

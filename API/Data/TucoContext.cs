@@ -29,7 +29,10 @@ public partial class TucoContext : DbContext
         }
     }
 
-    public virtual DbSet<AlertasInventario> AlertasInventarios { get; set; }
+    public virtual DbSet<InventarioProgramado> InventariosProgramados { get; set; }
+    public virtual DbSet<AsignacionUsuarioInventario> AsignacionesUsuariosInventario { get; set; }
+    public virtual DbSet<DetalleInventarioProgramado> DetallesInventarioProgramado { get; set; }
+    public virtual DbSet<AlertasInventario> AlertasInventario { get; set; }
 
     public virtual DbSet<Cliente> Clientes { get; set; }
 
@@ -80,19 +83,47 @@ public partial class TucoContext : DbContext
             entity.ToTable("AlertasInventario");
 
             entity.Property(e => e.AlertaId).HasColumnName("AlertaID");
-            entity.Property(e => e.Descripcion).HasColumnType("text");
-            entity.Property(e => e.FechaAlerta)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.ProductoId).HasColumnName("ProductoID");
+
             entity.Property(e => e.TipoAlerta)
                 .HasMaxLength(50)
                 .IsUnicode(false)
-                .HasDefaultValue("Inventario Bajo");
+                .IsRequired();
 
-            entity.HasOne(d => d.Producto).WithMany(p => p.AlertasInventarios)
-                .HasForeignKey(d => d.ProductoId)
-                .HasConstraintName("FK__AlertasIn__Produ__0D7A0286");
+            entity.Property(e => e.Mensaje)
+                .HasMaxLength(500)
+                .IsRequired();
+
+            entity.Property(e => e.Leida)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.FechaCreacion)
+                .IsRequired()
+                .HasDefaultValueSql("(getdate())");
+
+            entity.Property(e => e.FechaLectura);
+
+            entity.Property(e => e.InventarioProgramadoId)
+                .IsRequired()
+                .HasColumnName("InventarioProgramadoID");
+
+            entity.Property(e => e.UsuarioId)
+                .IsRequired()
+                .HasColumnName("UsuarioID");
+
+            // Relación con InventarioProgramado
+            entity.HasOne(d => d.InventarioProgramado)
+                .WithMany(p => p.Alertas)
+                .HasForeignKey(d => d.InventarioProgramadoId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_AlertasInventario_InventariosProgramados");
+
+            // Relación con Usuario
+            entity.HasOne(d => d.Usuario)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_AlertasInventario_Usuarios");
         });
 
         modelBuilder.Entity<Cliente>(entity =>
@@ -523,6 +554,30 @@ public partial class TucoContext : DbContext
                       .OnDelete(DeleteBehavior.Cascade)
                       .HasConstraintName("FK_RolPermiso_Permiso");
             });
+
+            // Configuración para InventariosProgramados
+            modelBuilder.Entity<InventarioProgramado>()
+                .HasMany(ip => ip.AsignacionesUsuarios)
+                .WithOne(a => a.InventarioProgramado)
+                .HasForeignKey(a => a.InventarioProgramadoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InventarioProgramado>()
+                .HasMany(ip => ip.DetallesInventario)
+                .WithOne(d => d.InventarioProgramado)
+                .HasForeignKey(d => d.InventarioProgramadoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<InventarioProgramado>()
+                .HasMany(ip => ip.Alertas)
+                .WithOne(a => a.InventarioProgramado)
+                .HasForeignKey(a => a.InventarioProgramadoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configuración para AsignacionUsuarioInventario
+            modelBuilder.Entity<AsignacionUsuarioInventario>()
+                .HasIndex(a => new { a.InventarioProgramadoId, a.UsuarioId })
+                .IsUnique();
 
 
         });

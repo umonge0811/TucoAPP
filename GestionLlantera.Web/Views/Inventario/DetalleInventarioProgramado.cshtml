@@ -1,0 +1,461 @@
+﻿@model GestionLlantera.Web.Models.DTOs.Inventario.InventarioProgramadoDTO
+@{
+    ViewData["Title"] = "Detalle de Inventario Programado";
+    Layout = "_AdminLayout";
+}
+
+<link rel="stylesheet" href="~/css/views/inventario/detalle-inventario.css" asp-append-version="true" />
+
+<div class="container-fluid">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-clipboard-data me-2"></i>
+            Detalle de Inventario
+        </h2>
+        <div>
+            <a asp-controller="Inventario" asp-action="ProgramarInventario" class="btn btn-secondary me-2">
+                <i class="bi bi-arrow-left me-1"></i> Volver
+            </a>
+            
+            @if (Model.Estado == "Programado")
+            {
+                <a asp-action="EditarInventarioProgramado" asp-route-id="@Model.InventarioProgramadoId" class="btn btn-primary">
+                    <i class="bi bi-pencil me-1"></i> Editar
+                </a>
+            }
+            
+            @if (Model.Estado == "Completado")
+            {
+                <div class="btn-group">
+                    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-download me-1"></i> Exportar
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="@Url.Action("ExportarResultadosInventario", "Inventario", new { id = Model.InventarioProgramadoId, formato = "excel" })">
+                                <i class="bi bi-file-earmark-excel me-2"></i> Excel
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="@Url.Action("ExportarResultadosInventario", "Inventario", new { id = Model.InventarioProgramadoId, formato = "pdf" })">
+                                <i class="bi bi-file-earmark-pdf me-2"></i> PDF
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h3>
+                        <i class="bi bi-info-circle me-2"></i>
+                        Información General
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="detail-item">
+                        <span class="detail-label">Título:</span>
+                        <span class="detail-value">@Model.Titulo</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Estado:</span>
+                        <span class="detail-value">
+                            @switch (Model.Estado)
+                            {
+                                case "Programado":
+                                    <span class="badge bg-primary">Programado</span>
+                                    break;
+                                case "En Progreso":
+                                    <span class="badge bg-warning text-dark">En Progreso</span>
+                                    break;
+                                case "Completado":
+                                    <span class="badge bg-success">Completado</span>
+                                    break;
+                                case "Cancelado":
+                                    <span class="badge bg-danger">Cancelado</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">@Model.Estado</span>
+                                    break;
+                            }
+                        </span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Tipo:</span>
+                        <span class="detail-value">@Model.TipoInventario</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha Inicio:</span>
+                        <span class="detail-value">@Model.FechaInicio.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha Fin:</span>
+                        <span class="detail-value">@Model.FechaFin.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Creado por:</span>
+                        <span class="detail-value">@Model.UsuarioCreadorNombre</span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha Creación:</span>
+                        <span class="detail-value">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Descripcion))
+                    {
+                        <div class="detail-item description-item">
+                            <span class="detail-label">Descripción:</span>
+                            <span class="detail-value">@Model.Descripcion</span>
+                        </div>
+                    }
+                </div>
+            </div>
+            
+            <div class="dashboard-card mb-4">
+                <div class="card-header">
+                    <h3>
+                        <i class="bi bi-people me-2"></i>
+                        Usuarios Asignados
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (Model.AsignacionesUsuarios == null || !Model.AsignacionesUsuarios.Any())
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No hay usuarios asignados a este inventario.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="usuarios-list">
+                            @foreach (var asignacion in Model.AsignacionesUsuarios)
+                            {
+                                <div class="usuario-card">
+                                    <div class="usuario-header">
+                                        <div class="avatar">
+                                            <span class="avatar-initial rounded-circle bg-primary">
+                                                @(asignacion.NombreUsuario.Substring(0, 1).ToUpper())
+                                            </span>
+                                        </div>
+                                        <div class="usuario-info">
+                                            <h5 class="mb-0">@asignacion.NombreUsuario</h5>
+                                            <small class="text-muted">@asignacion.EmailUsuario</small>
+                                        </div>
+                                    </div>
+                                    <div class="permisos-badges mt-2">
+                                        @if (asignacion.PermisoConteo)
+                                        {
+                                            <span class="badge bg-primary me-1">
+                                                <i class="bi bi-calculator me-1"></i> Conteo
+                                            </span>
+                                        }
+                                        @if (asignacion.PermisoAjuste)
+                                        {
+                                            <span class="badge bg-primary me-1">
+                                                <i class="bi bi-pencil-square me-1"></i> Ajuste
+                                            </span>
+                                        }
+                                        @if (asignacion.PermisoValidacion)
+                                        {
+                                            <span class="badge bg-primary me-1">
+                                                <i class="bi bi-check-circle me-1"></i> Validación
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            @if (Model.Estado == "En Progreso" || Model.Estado == "Completado")
+            {
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-bar-chart me-2"></i>
+                            Progreso del Inventario
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="stat-card bg-primary text-white">
+                                    <div class="stat-icon">
+                                        <i class="bi bi-boxes"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>@Model.TotalProductos</h4>
+                                        <span>Total Productos</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-card bg-success text-white">
+                                    <div class="stat-icon">
+                                        <i class="bi bi-check-circle"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>@Model.ProductosContados</h4>
+                                        <span>Productos Contados</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="stat-card @(Model.Discrepancias > 0 ? "bg-danger" : "bg-info") text-white">
+                                    <div class="stat-icon">
+                                        <i class="bi @(Model.Discrepancias > 0 ? "bi-exclamation-triangle" : "bi-shield-check")"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>@Model.Discrepancias</h4>
+                                        <span>Discrepancias</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Barra de Progreso -->
+                        <div class="progress-status mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Progreso General</span>
+                                <span>@Model.PorcentajeProgreso%</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar @(Model.Estado == "Completado" ? "bg-success" : "")"
+                                     role="progressbar"
+                                     style="width: @Model.PorcentajeProgreso%;"
+                                     aria-valuenow="@Model.PorcentajeProgreso"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Resumen de Actividades -->
+                        <div class="activity-summary">
+                            <h5 class="mb-3">Actividad Reciente</h5>
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-point bg-primary"></div>
+                                    <div class="timeline-content">
+                                        <h6>Inventario Iniciado</h6>
+                                        <small class="text-muted">@Model.FechaInicio.ToString("dd/MM/yyyy HH:mm")</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Aquí se pueden agregar más eventos del timeline -->
+                                
+                                @if (Model.Estado == "Completado")
+                                {
+                                    <div class="timeline-item">
+                                        <div class="timeline-point bg-success"></div>
+                                        <div class="timeline-content">
+                                            <h6>Inventario Completado</h6>
+                                            <small class="text-muted">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Productos con Discrepancias -->
+                @if (Model.Discrepancias > 0)
+                {
+                    <div class="dashboard-card mb-4">
+                        <div class="card-header">
+                            <h3>
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Productos con Discrepancias
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Cantidad Sistema</th>
+                                            <th>Cantidad Física</th>
+                                            <th>Diferencia</th>
+                                            <th>Observaciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Esta parte se llenaría dinámicamente con datos reales -->
+                                        <tr>
+                                            <td>Llanta ejemplo con discrepancia</td>
+                                            <td>10</td>
+                                            <td>8</td>
+                                            <td class="text-danger">-2</td>
+                                            <td>Se encontraron 2 unidades con daños</td>
+                                        </tr>
+                                        <!-- Aquí pueden ir más filas de ejemplo -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else if (Model.Estado == "Programado")
+            {
+                <div class="dashboard-card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3>
+                            <i class="bi bi-clock-history me-2"></i>
+                            Estado: Programado
+                        </h3>
+                        <button type="button" class="btn btn-success iniciar-inventario-btn" data-id="@Model.InventarioProgramadoId">
+                            <i class="bi bi-play-fill me-1"></i> Iniciar Inventario
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Este inventario está programado pero aún no ha comenzado. Haga clic en "Iniciar Inventario" cuando esté listo para comenzar el conteo físico.
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h5>Información del Inventario Programado:</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Usuarios Asignados
+                                    <span class="badge bg-primary rounded-pill">@Model.AsignacionesUsuarios.Count</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Fecha Programada de Inicio
+                                    <span class="badge bg-primary rounded-pill">@Model.FechaInicio.ToString("dd/MM/yyyy")</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Fecha Programada de Finalización
+                                    <span class="badge bg-primary rounded-pill">@Model.FechaFin.ToString("dd/MM/yyyy")</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Nota:</strong> Al iniciar el inventario, se enviará una notificación a todos los usuarios asignados y se crearán registros para todos los productos que serán parte de este inventario.
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (Model.Estado == "Cancelado")
+            {
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-x-circle me-2"></i>
+                            Estado: Cancelado
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-circle me-2"></i>
+                            Este inventario ha sido cancelado y no se puede reactivar. Si desea realizar un inventario similar, puede crear uno nuevo.
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para iniciar inventario -->
+<div class="modal fade" id="modalIniciarInventario" tabindex="-1" aria-labelledby="modalIniciarInventarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalIniciarInventarioLabel">Iniciar Inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea iniciar este inventario?</p>
+                <p>Al iniciar el inventario:</p>
+                <ul>
+                    <li>Se notificará por correo electrónico a todos los usuarios asignados</li>
+                    <li>Los usuarios podrán comenzar inmediatamente con el conteo físico</li>
+                    <li>El estado del inventario cambiará a "En Progreso"</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarIniciar">Iniciar Inventario</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Modal de iniciar inventario
+            const modalIniciarInventario = new bootstrap.Modal(document.getElementById('modalIniciarInventario'));
+            
+            // Botón de iniciar inventario
+            const iniciarInventarioBtn = document.querySelector('.iniciar-inventario-btn');
+            if (iniciarInventarioBtn) {
+                iniciarInventarioBtn.addEventListener('click', function() {
+                    modalIniciarInventario.show();
+                });
+            }
+            
+            // Botón para confirmar inicio
+            const btnConfirmarIniciar = document.getElementById('btnConfirmarIniciar');
+            if (btnConfirmarIniciar) {
+                btnConfirmarIniciar.addEventListener('click', function() {
+                    const inventarioId = document.querySelector('.iniciar-inventario-btn').dataset.id;
+                    
+                    this.disabled = true;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando...';
+                    
+                    // Enviar solicitud AJAX
+                    fetch(`/Inventario/IniciarInventario/${inventarioId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        modalIniciarInventario.hide();
+                        
+                        if (data.success) {
+                            // Mostrar mensaje de éxito y recargar la página
+                            alert(data.message);
+                            window.location.reload();
+                        } else {
+                            // Mostrar mensaje de error
+                            alert('Error: ' + data.message);
+                            this.disabled = false;
+                            this.innerHTML = 'Iniciar Inventario';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Ocurrió un error al procesar la solicitud');
+                        this.disabled = false;
+                        this.innerHTML = 'Iniciar Inventario';
+                        modalIniciarInventario.hide();
+                    });
+                });
+            }
+        });
+    </script>
+}
