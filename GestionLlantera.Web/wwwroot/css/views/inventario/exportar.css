@@ -13,13 +13,22 @@
 
 /* Estilos para las opciones de formato de exportación */
 .form-check {
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    transition: background-color 0.2s;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    margin-bottom: 0.5rem;
+    border: 1px solid transparent;
+    cursor: pointer;
 }
 
     .form-check:hover {
+        background-color: #f0f0f0;
+    }
+
+    .form-check.active-format {
+        border: 1px solid #ced4da;
         background-color: #f8f9fa;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
 /* Estilo para la opción de Excel */
@@ -28,15 +37,59 @@
     font-weight: bold;
 }
 
+.form-check:has(#formatoExcel:checked) {
+    border-color: #107c41;
+    background-color: rgba(16, 124, 65, 0.05);
+}
+
 /* Estilo para la opción de PDF */
 #formatoPDF:checked ~ label {
     color: #c8372d; /* Color rojo de PDF */
     font-weight: bold;
 }
 
+.form-check:has(#formatoPDF:checked) {
+    border-color: #c8372d;
+    background-color: rgba(200, 55, 45, 0.05);
+}
+
 /* Estilos para el botón de exportación */
 #btnIniciarExportacion {
     min-width: 150px;
+}
+
+/* Estilo para los botones principales */
+.page-header .btn {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 140px;
+    transition: all 0.3s ease;
+}
+
+.page-header .btn-outline-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
+}
+
+.page-header .btn-info {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
+}
+
+    .page-header .btn-info:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(23, 162, 184, 0.15);
+    }
+
+.page-header .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
 }
 
 /* Estilos para el indicador de carga */
@@ -56,4 +109,23 @@
 
     #indicadorCarga .card {
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        border-radius: 0.5rem;
+        border: none;
+        width: 100%;
+        max-width: 300px;
+        text-align: center;
     }
+
+    #indicadorCarga .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        margin: 0 auto;
+        display: block;
+    }
+
+#mensajeCarga {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    width: 100%;
+}

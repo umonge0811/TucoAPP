@@ -4,17 +4,13 @@
 $(document).ready(function () {
     console.log('Script de exportación de inventario cargado');
 
-    // Mostrar modal de exportación al hacer clic en los botones
-    $("#btnExportarExcel, #btnExportarPDF").click(function (e) {
+    // Mostrar modal de exportación al hacer clic en el botón "Exportar"
+    $("#btnExportar").click(function (e) {
         e.preventDefault();
-        console.log('Botón de exportación clickeado:', this.id);
+        console.log('Botón de exportación clickeado');
 
-        // Establecer el formato seleccionado según el botón que se hizo clic
-        if (this.id === "btnExportarExcel") {
-            $("#formatoExcel").prop("checked", true);
-        } else if (this.id === "btnExportarPDF") {
-            $("#formatoPDF").prop("checked", true);
-        }
+        // Por defecto seleccionar Excel 
+        $("#formatoExcel").prop("checked", true);
 
         // Establecer fecha límite por defecto (7 días a partir de hoy)
         const fechaLimite = new Date();
@@ -71,21 +67,32 @@ $(document).ready(function () {
         }, 500);
     });
 
+    // Añadir un efecto visual al seleccionar el formato
+    $('input[name="formatoExport"]').change(function () {
+        // Eliminar clases activas de todos los contenedores
+        $('.form-check').removeClass('active-format');
+
+        // Añadir clase activa al formato seleccionado
+        $(this).closest('.form-check').addClass('active-format');
+    });
+
     // Funciones auxiliares para mostrar/ocultar indicador de carga
     function mostrarIndicadorCarga(mensaje) {
         // Verificar si ya existe un indicador de carga
         if ($("#indicadorCarga").length === 0) {
             // Crear el elemento HTML del indicador
             const indicadorHTML = `
-                <div id="indicadorCarga" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
-                    <div class="card p-4 text-center" style="max-width: 300px;">
+            <div id="indicadorCarga" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 9999;">
+                <div class="card p-4 text-center" style="max-width: 300px;">
+                    <div class="d-flex justify-content-center">
                         <div class="spinner-border text-primary mb-3" role="status">
                             <span class="visually-hidden">Cargando...</span>
                         </div>
-                        <h5 id="mensajeCarga">${mensaje}</h5>
                     </div>
+                    <h5 id="mensajeCarga" class="text-center">${mensaje}</h5>
                 </div>
-            `;
+            </div>
+        `;
 
             // Agregar el indicador al body
             $("body").append(indicadorHTML);
