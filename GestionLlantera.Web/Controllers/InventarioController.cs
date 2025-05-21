@@ -4,13 +4,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml; // Para manejar archivos Excel
 using OfficeOpenXml.Style;
-using System.Drawing;
+using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
 using System.IO;
-using iTextSharp.text;
+using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using iTextSharp.text.pdf;
 using iTextSharp.tool.xml;
 using iTextSharp.text.html.simpleparser;
-
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -214,7 +213,490 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ExportarPDF(string responsable = "", string solicitante = "", string fechaLimite = "")
+        {
+            try
+            {
+                _logger.LogInformation("Iniciando exportación a PDF para toma física de inventario");
 
+                // Parámetros por defecto si no se proporcionan
+                responsable = string.IsNullOrEmpty(responsable) ? User.Identity.Name ?? "No especificado" : responsable;
+                solicitante = string.IsNullOrEmpty(solicitante) ? "Administrador del Sistema" : solicitante;
+
+                // Parsear fecha límite o usar por defecto 7 días
+                DateTime fechaLimiteInventario;
+                if (!DateTime.TryParse(fechaLimite, out fechaLimiteInventario))
+                {
+                    fechaLimiteInventario = DateTime.Now.AddDays(7);
+                }
+
+                // Obtener los datos de productos
+                var productos = await _inventarioService.ObtenerProductosAsync();
+
+                // Identificador único para el inventario
+                string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+
+                // Crear documento PDF
+                using var memoryStream = new MemoryStream();
+                var document = new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
+                var writer = PdfWriter.GetInstance(document, memoryStream);
+
+                // Agregar eventos de encabezado y pie de página
+                writer.PageEvent = new InventarioPdfPageEvent(responsable, solicitante, idInventario);
+
+                // Metadatos
+                document.AddTitle("Formato para Toma Física de Inventario");
+                document.AddSubject("Inventario");
+                document.AddKeywords("inventario, toma física, productos");
+                document.AddCreator("Sistema de Gestión Llantera");
+                document.AddAuthor("Sistema de Gestión Llantera");
+                document.AddHeader("Empresa", "Llantera XYZ");
+
+                // Abrir documento
+                document.Open();
+
+                // Fuentes
+                var titleFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 16, new IText.BaseColor(255, 255, 255));
+                var subtitleFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 12, IText.BaseColor.BLACK);
+                var normalFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA, 10, IText.BaseColor.BLACK);
+                var smallFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA, 8, IText.BaseColor.BLACK);
+                var headerFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 10, new IText.BaseColor(255, 255, 255));
+                var tableFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA, 9, IText.BaseColor.BLACK);
+                var tableBoldFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 9, IText.BaseColor.BLACK);
+                var alertFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 9, IText.BaseColor.RED);
+
+                // Colores
+                IText.BaseColor headerColor = new IText.BaseColor(48, 84, 150);
+                IText.BaseColor lightGrayColor = new IText.BaseColor(240, 240, 240);
+                IText.BaseColor lightPinkColor = new IText.BaseColor(255, 200, 200);
+                IText.BaseColor lightYellowColor = new IText.BaseColor(255, 255, 200);
+
+                // Título principal con fondo
+                PdfPTable titleTable = new PdfPTable(1);
+                titleTable.WidthPercentage = 100;
+                titleTable.SpacingAfter = 10f;
+
+                PdfPCell titleCell = new PdfPCell(new IText.Phrase("FORMATO PARA TOMA DE INVENTARIO FÍSICO", titleFont));
+                titleCell.BackgroundColor = headerColor;
+                titleCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                titleCell.PaddingTop = 10f;
+                titleCell.PaddingBottom = 10f;
+                titleCell.BorderWidth = 0;
+                titleTable.AddCell(titleCell);
+
+                document.Add(titleTable);
+
+                // Información del inventario
+                PdfPTable infoTable = new PdfPTable(6);
+                infoTable.WidthPercentage = 100;
+                infoTable.SetWidths(new float[] { 1.5f, 2f, 1.5f, 2f, 1.5f, 2f });
+                infoTable.SpacingAfter = 15f;
+
+                // Primera fila
+                infoTable.AddCell(CreateInfoCell("Fecha Generación:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell(DateTime.Now.ToString("dd/MM/yyyy HH:mm"), tableFont));
+                infoTable.AddCell(CreateInfoCell("Solicitante:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell(solicitante, tableFont));
+                infoTable.AddCell(CreateInfoCell("Total Productos:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell(productos.Count.ToString(), tableFont));
+
+                // Segunda fila
+                infoTable.AddCell(CreateInfoCell("Fecha Inicio:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell(DateTime.Now.ToString("dd/MM/yyyy"), tableFont));
+                infoTable.AddCell(CreateInfoCell("Responsable:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell(responsable, tableFont));
+                infoTable.AddCell(CreateInfoCell("Ubicación:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell("Almacén Principal", tableFont));
+
+                // Tercera fila
+                infoTable.AddCell(CreateInfoCell("Fecha Límite:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell(fechaLimiteInventario.ToString("dd/MM/yyyy"), tableFont));
+                infoTable.AddCell(CreateInfoCell("ID Inventario:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell(idInventario, tableFont));
+                infoTable.AddCell(CreateInfoCell("Tipo:", tableBoldFont));
+                infoTable.AddCell(CreateInfoCell("Inventario Físico Total", tableFont));
+
+                document.Add(infoTable);
+
+                // Instrucciones
+                PdfPTable instructionsTable = new PdfPTable(1);
+                instructionsTable.WidthPercentage = 100;
+                instructionsTable.SpacingAfter = 15f;
+
+                PdfPCell instructionsTitleCell = new PdfPCell(new IText.Phrase("INSTRUCCIONES", tableBoldFont));
+                instructionsTitleCell.BackgroundColor = lightGrayColor;
+                instructionsTitleCell.PaddingTop = 5f;
+                instructionsTitleCell.PaddingBottom = 5f;
+                instructionsTitleCell.PaddingLeft = 5f;
+                instructionsTable.AddCell(instructionsTitleCell);
+
+                PdfPCell instructionsCell = new PdfPCell();
+                instructionsCell.PaddingTop = 5f;
+                instructionsCell.PaddingBottom = 5f;
+                instructionsCell.PaddingLeft = 5f;
+                instructionsCell.PaddingRight = 5f;
+
+                IText.Paragraph instructions = new IText.Paragraph();
+                instructions.Add(new IText.Chunk("1. Verifique la cantidad física de cada producto y anótela en la columna 'Cantidad Física'.\n", tableFont));
+                instructions.Add(new IText.Chunk("2. En caso de discrepancias, anote las observaciones en la columna correspondiente.\n", tableFont));
+                instructions.Add(new IText.Chunk("3. Los productos marcados en rojo tienen un stock por debajo del mínimo requerido.\n", tableFont));
+                instructions.Add(new IText.Chunk("4. Al finalizar el conteo, firme el documento y entreguelo al supervisor correspondiente.", tableFont));
+
+                instructionsCell.AddElement(instructions);
+                instructionsTable.AddCell(instructionsCell);
+
+                document.Add(instructionsTable);
+
+                // Tabla de productos
+                PdfPTable productTable = new PdfPTable(11);
+                productTable.WidthPercentage = 100;
+                productTable.SetWidths(new float[] { 0.6f, 0.8f, 2.2f, 1.0f, 1.0f, 1.2f, 0.8f, 0.8f, 0.8f, 0.8f, 2.0f });
+                productTable.SpacingAfter = 15f;
+
+                // Encabezados de tabla
+                productTable.AddCell(CreateHeaderCell("Código", headerFont));
+                productTable.AddCell(CreateHeaderCell("Categoría", headerFont));
+                productTable.AddCell(CreateHeaderCell("Producto", headerFont));
+                productTable.AddCell(CreateHeaderCell("Medidas", headerFont));
+                productTable.AddCell(CreateHeaderCell("Marca/Modelo", headerFont));
+                productTable.AddCell(CreateHeaderCell("Ubicación", headerFont));
+                productTable.AddCell(CreateHeaderCell("Cantidad Sistema", headerFont));
+                productTable.AddCell(CreateHeaderCell("Cantidad Física", headerFont));
+                productTable.AddCell(CreateHeaderCell("Diferencia", headerFont));
+                productTable.AddCell(CreateHeaderCell("Estado", headerFont));
+                productTable.AddCell(CreateHeaderCell("Observaciones", headerFont));
+
+                // Añadir productos
+                int rowCount = 0;
+                foreach (var producto in productos)
+                {
+                    // Determinar si la fila debe tener fondo alternado
+                    IText.BaseColor rowColor = null;
+                    if (producto.CantidadEnInventario <= producto.StockMinimo)
+                    {
+                        rowColor = lightPinkColor;
+                    }
+                    else if (rowCount % 2 == 0)
+                    {
+                        rowColor = lightGrayColor;
+                    }
+
+                    rowCount++;
+
+                    // Determinar la categoría del producto
+                    string categoria = producto.Llanta != null ? "Llanta" : "Accesorio";
+
+                    // Determinar ubicación ficticia para demostración
+                    string ubicacion = producto.Llanta != null
+                        ? $"Bodega A - P{(producto.ProductoId % 5) + 1} - E{(producto.ProductoId % 10) + 1}"
+                        : $"Bodega B - S{(producto.ProductoId % 3) + 1} - E{(producto.ProductoId % 8) + 1}";
+
+                    // ID del producto
+                    productTable.AddCell(CreateDataCell(producto.ProductoId.ToString(), tableFont, rowColor));
+
+                    // Categoría
+                    productTable.AddCell(CreateDataCell(categoria, tableFont, rowColor));
+
+                    // Nombre del producto
+                    PdfPCell productNameCell = CreateDataCell(producto.NombreProducto, tableBoldFont, rowColor);
+                    productNameCell.HorizontalAlignment = IText.Element.ALIGN_LEFT;
+                    productTable.AddCell(productNameCell);
+
+                    // Medidas (para llantas)
+                    string medidas = "N/A";
+                    if (producto.Llanta != null && producto.Llanta.Ancho.HasValue && producto.Llanta.Perfil.HasValue)
+                    {
+                        // Asegúrate de que Diametro sea un número válido o usa un valor predeterminado
+                        string diametro = producto.Llanta.Diametro ?? "0";
+                        medidas = $"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{diametro}";
+                    }
+                    productTable.AddCell(CreateDataCell(medidas, tableFont, rowColor));
+
+                    // Marca/Modelo
+                    string marcaModelo = "N/A";
+                    if (producto.Llanta != null)
+                    {
+                        if (!string.IsNullOrEmpty(producto.Llanta.Marca) && !string.IsNullOrEmpty(producto.Llanta.Modelo))
+                        {
+                            marcaModelo = $"{producto.Llanta.Marca}/{producto.Llanta.Modelo}";
+                        }
+                        else if (!string.IsNullOrEmpty(producto.Llanta.Marca))
+                        {
+                            marcaModelo = producto.Llanta.Marca;
+                        }
+                        else if (!string.IsNullOrEmpty(producto.Llanta.Modelo))
+                        {
+                            marcaModelo = producto.Llanta.Modelo;
+                        }
+                    }
+                    productTable.AddCell(CreateDataCell(marcaModelo, tableFont, rowColor));
+
+                    // Ubicación
+                    productTable.AddCell(CreateDataCell(ubicacion, tableFont, rowColor));
+
+                    // Cantidad en sistema
+                    PdfPCell stockCell = CreateDataCell(producto.CantidadEnInventario.ToString(), tableFont, rowColor);
+                    stockCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                    productTable.AddCell(stockCell);
+
+                    // Cantidad física (en blanco para llenar manualmente)
+                    PdfPCell fisicaCell = CreateDataCell("_______", tableFont, lightYellowColor);
+                    fisicaCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                    productTable.AddCell(fisicaCell);
+
+                    // Diferencia (en blanco para calcular manualmente)
+                    PdfPCell diffCell = CreateDataCell("_______", tableFont, rowColor);
+                    diffCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                    productTable.AddCell(diffCell);
+
+                    // Estado
+                    string estado = producto.CantidadEnInventario <= producto.StockMinimo ? "STOCK BAJO" : "Normal";
+                    IText.Font estadoFont = producto.CantidadEnInventario <= producto.StockMinimo ? alertFont : tableFont;
+                    productTable.AddCell(CreateDataCell(estado, estadoFont, rowColor));
+
+                    // Observaciones (celda en blanco)
+                    productTable.AddCell(CreateDataCell("", tableFont, rowColor));
+                }
+
+                document.Add(productTable);
+
+                // Sección de totales
+                PdfPTable totalsTable = new PdfPTable(6);
+                totalsTable.WidthPercentage = 60;
+                totalsTable.HorizontalAlignment = IText.Element.ALIGN_RIGHT;
+                totalsTable.SpacingAfter = 20f;
+
+                totalsTable.AddCell(CreateInfoCell("Total Productos:", tableBoldFont));
+                totalsTable.AddCell(CreateInfoCell(productos.Count.ToString(), tableFont));
+
+                totalsTable.AddCell(CreateInfoCell("Total Unidades Sistema:", tableBoldFont));
+                int totalUnidades = productos.Sum(p => p.CantidadEnInventario);
+                totalsTable.AddCell(CreateInfoCell(totalUnidades.ToString(), tableFont));
+
+                totalsTable.AddCell(CreateInfoCell("Productos con Stock Bajo:", tableBoldFont));
+                int stockBajo = productos.Count(p => p.CantidadEnInventario <= p.StockMinimo);
+                PdfPCell stockBajoCell = CreateInfoCell(stockBajo.ToString(), alertFont);
+                totalsTable.AddCell(stockBajoCell);
+
+                document.Add(totalsTable);
+
+                // Sección para firmas
+                PdfPTable signaturesTable = new PdfPTable(3);
+                signaturesTable.WidthPercentage = 100;
+                signaturesTable.SpacingBefore = 30f;
+
+                PdfPCell elaboradoTitle = new PdfPCell(new IText.Phrase("ELABORADO POR:", tableBoldFont));
+                elaboradoTitle.Border = IText.Rectangle.NO_BORDER;
+                elaboradoTitle.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(elaboradoTitle);
+
+                PdfPCell revisadoTitle = new PdfPCell(new IText.Phrase("REVISADO POR:", tableBoldFont));
+                revisadoTitle.Border = IText.Rectangle.NO_BORDER;
+                revisadoTitle.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(revisadoTitle);
+
+                PdfPCell aprobadoTitle = new PdfPCell(new IText.Phrase("APROBADO POR:", tableBoldFont));
+                aprobadoTitle.Border = IText.Rectangle.NO_BORDER;
+                aprobadoTitle.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(aprobadoTitle);
+
+                // Espacio para firmas
+                PdfPCell elaboradoSpace = new PdfPCell(new IText.Phrase(" "));
+                elaboradoSpace.Border = IText.Rectangle.NO_BORDER;
+                elaboradoSpace.FixedHeight = 40f;
+                signaturesTable.AddCell(elaboradoSpace);
+
+                PdfPCell revisadoSpace = new PdfPCell(new IText.Phrase(" "));
+                revisadoSpace.Border = IText.Rectangle.NO_BORDER;
+                revisadoSpace.FixedHeight = 40f;
+                signaturesTable.AddCell(revisadoSpace);
+
+                PdfPCell aprobadoSpace = new PdfPCell(new IText.Phrase(" "));
+                aprobadoSpace.Border = IText.Rectangle.NO_BORDER;
+                aprobadoSpace.FixedHeight = 40f;
+                signaturesTable.AddCell(aprobadoSpace);
+
+                // Líneas para firma
+                PdfPCell elaboradoLine = new PdfPCell(new IText.Phrase("_______________________"));
+                elaboradoLine.Border = IText.Rectangle.NO_BORDER;
+                elaboradoLine.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(elaboradoLine);
+
+                PdfPCell revisadoLine = new PdfPCell(new IText.Phrase("_______________________"));
+                revisadoLine.Border = IText.Rectangle.NO_BORDER;
+                revisadoLine.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(revisadoLine);
+
+                PdfPCell aprobadoLine = new PdfPCell(new IText.Phrase("_______________________"));
+                aprobadoLine.Border = IText.Rectangle.NO_BORDER;
+                aprobadoLine.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(aprobadoLine);
+
+                // Nombre y firma
+                PdfPCell elaboradoName = new PdfPCell(new IText.Phrase("Nombre y Firma", smallFont));
+                elaboradoName.Border = IText.Rectangle.NO_BORDER;
+                elaboradoName.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(elaboradoName);
+
+                PdfPCell revisadoName = new PdfPCell(new IText.Phrase("Nombre y Firma", smallFont));
+                revisadoName.Border = IText.Rectangle.NO_BORDER;
+                revisadoName.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(revisadoName);
+
+                PdfPCell aprobadoName = new PdfPCell(new IText.Phrase("Nombre y Firma", smallFont));
+                aprobadoName.Border = IText.Rectangle.NO_BORDER;
+                aprobadoName.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                signaturesTable.AddCell(aprobadoName);
+
+                document.Add(signaturesTable);
+
+                // Aviso de pie de página
+                IText.Paragraph disclaimer = new IText.Paragraph();
+                disclaimer.SpacingBefore = 50f;
+                disclaimer.Add(new IText.Chunk("Este documento es oficial para la toma física de inventario. Cualquier alteración o falsificación constituye una falta grave.", smallFont));
+                disclaimer.Alignment = IText.Element.ALIGN_CENTER;
+                document.Add(disclaimer);
+
+                // Cerrar documento
+                document.Close();
+                writer.Close();
+
+                // Nombre del archivo
+                string fileName = $"Inventario_Fisico_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+                _logger.LogInformation($"Exportación a PDF de inventario físico completada: {fileName}");
+
+                // Devolver el archivo
+                return File(memoryStream.ToArray(), "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al exportar a PDF para toma física de inventario");
+                // En caso de error, redireccionar con mensaje
+                TempData["Error"] = "No se pudo generar el archivo PDF. Inténtelo nuevamente.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // Métodos de ayuda para crear celdas - actualizados con los nuevos tipos
+        private PdfPCell CreateHeaderCell(string text, IText.Font font)
+        {
+            PdfPCell cell = new PdfPCell(new IText.Phrase(text, font));
+            cell.BackgroundColor = new IText.BaseColor(48, 84, 150);
+            cell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+            cell.VerticalAlignment = IText.Element.ALIGN_MIDDLE;
+            cell.PaddingTop = 5f;
+            cell.PaddingBottom = 5f;
+            cell.PaddingLeft = 3f;
+            cell.PaddingRight = 3f;
+            return cell;
+        }
+
+        private PdfPCell CreateDataCell(string text, IText.Font font, IText.BaseColor backgroundColor = null)
+        {
+            PdfPCell cell = new PdfPCell(new IText.Phrase(text, font));
+            if (backgroundColor != null)
+            {
+                cell.BackgroundColor = backgroundColor;
+            }
+            cell.HorizontalAlignment = IText.Element.ALIGN_LEFT;
+            cell.VerticalAlignment = IText.Element.ALIGN_MIDDLE;
+            cell.PaddingTop = 4f;
+            cell.PaddingBottom = 4f;
+            cell.PaddingLeft = 3f;
+            cell.PaddingRight = 3f;
+            return cell;
+        }
+
+        private PdfPCell CreateInfoCell(string text, IText.Font font)
+        {
+            PdfPCell cell = new PdfPCell(new IText.Phrase(text, font));
+            cell.Border = IText.Rectangle.BOX;
+            cell.BorderColor = IText.BaseColor.LIGHT_GRAY;
+            cell.BorderWidth = 0.5f;
+            cell.PaddingTop = 5f;
+            cell.PaddingBottom = 5f;
+            cell.PaddingLeft = 5f;
+            cell.PaddingRight = 5f;
+            return cell;
+        }
+
+        // Clase para manejar encabezados y pies de página
+        private class InventarioPdfPageEvent : PdfPageEventHelper
+        {
+            private readonly string _responsable;
+            private readonly string _solicitante;
+            private readonly string _idInventario;
+            private readonly IText.Font _smallFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA, 8, IText.BaseColor.DARK_GRAY);
+            private readonly IText.Font _headerFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 8, IText.BaseColor.DARK_GRAY);
+
+            public InventarioPdfPageEvent(string responsable, string solicitante, string idInventario)
+            {
+                _responsable = responsable;
+                _solicitante = solicitante;
+                _idInventario = idInventario;
+            }
+
+            public override void OnEndPage(PdfWriter writer, IText.Document document)
+            {
+                // Encabezado
+                /*
+                // Si tienes un logo, puedes agregarlo así:
+                string logoPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "logo.png");
+                if (File.Exists(logoPath))
+                {
+                    IText.Image logo = IText.Image.GetInstance(logoPath);
+                    logo.ScaleToFit(100f, 40f);
+                    logo.SetAbsolutePosition(document.LeftMargin, document.PageSize.Height - 50);
+                    writer.DirectContent.AddImage(logo);
+                }
+                */
+
+                PdfPTable headerTable = new PdfPTable(3);
+                headerTable.TotalWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin;
+                headerTable.DefaultCell.Border = IText.Rectangle.NO_BORDER;
+
+                PdfPCell logoCell = new PdfPCell(new IText.Phrase("LLANTERA XYZ", _headerFont));
+                logoCell.Border = IText.Rectangle.NO_BORDER;
+                headerTable.AddCell(logoCell);
+
+                PdfPCell titleCell = new PdfPCell(new IText.Phrase("FORMATO PARA TOMA FÍSICA DE INVENTARIO", _headerFont));
+                titleCell.Border = IText.Rectangle.NO_BORDER;
+                titleCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                headerTable.AddCell(titleCell);
+
+                PdfPCell pageCell = new PdfPCell(new IText.Phrase($"Página {writer.PageNumber}", _smallFont));
+                pageCell.Border = IText.Rectangle.NO_BORDER;
+                pageCell.HorizontalAlignment = IText.Element.ALIGN_RIGHT;
+                headerTable.AddCell(pageCell);
+
+                headerTable.WriteSelectedRows(0, -1, document.LeftMargin, document.PageSize.Height - 10, writer.DirectContent);
+
+                // Pie de página
+                PdfPTable footerTable = new PdfPTable(3);
+                footerTable.TotalWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin;
+                footerTable.DefaultCell.Border = IText.Rectangle.NO_BORDER;
+
+                PdfPCell idCell = new PdfPCell(new IText.Phrase($"ID Inventario: {_idInventario}", _smallFont));
+                idCell.Border = IText.Rectangle.NO_BORDER;
+                footerTable.AddCell(idCell);
+
+                PdfPCell responsableCell = new PdfPCell(new IText.Phrase($"Responsable: {_responsable}", _smallFont));
+                responsableCell.Border = IText.Rectangle.NO_BORDER;
+                responsableCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                footerTable.AddCell(responsableCell);
+
+                PdfPCell dateCell = new PdfPCell(new IText.Phrase($"Fecha: {DateTime.Now:dd/MM/yyyy}", _smallFont));
+                dateCell.Border = IText.Rectangle.NO_BORDER;
+                dateCell.HorizontalAlignment = IText.Element.ALIGN_RIGHT;
+                footerTable.AddCell(dateCell);
+
+                footerTable.WriteSelectedRows(0, -1, document.LeftMargin, document.BottomMargin, writer.DirectContent);
+            }
+        }
+
+        // Método para ExportarExcel
         [HttpGet]
         public async Task<IActionResult> ExportarExcel(string responsable = "", string solicitante = "", string fechaLimite = "")
         {
@@ -257,8 +739,8 @@ namespace GestionLlantera.Web.Controllers
                 worksheet.Cells[1, 1, 1, 13].Style.Font.Bold = true;
                 worksheet.Cells[1, 1, 1, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 worksheet.Cells[1, 1, 1, 13].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                worksheet.Cells[1, 1, 1, 13].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(48, 84, 150));
-                worksheet.Cells[1, 1, 1, 13].Style.Font.Color.SetColor(System.Drawing.Color.White);
+                worksheet.Cells[1, 1, 1, 13].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.FromArgb(48, 84, 150));
+                worksheet.Cells[1, 1, 1, 13].Style.Font.Color.SetColor(SystemDrawing.Color.White);
 
                 // Información del inventario
                 var currentRow = 3;
@@ -315,7 +797,7 @@ namespace GestionLlantera.Web.Controllers
                 worksheet.Cells[currentRow, 1].Style.Font.Bold = true;
                 worksheet.Cells[currentRow, 1, currentRow, 13].Merge = true;
                 worksheet.Cells[currentRow, 1, currentRow, 13].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                worksheet.Cells[currentRow, 1, currentRow, 13].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                worksheet.Cells[currentRow, 1, currentRow, 13].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.LightGray);
 
                 currentRow++;
 
@@ -354,8 +836,8 @@ namespace GestionLlantera.Web.Controllers
                 var headerRange = worksheet.Cells[headerRow, 1, headerRow, 13];
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.FromArgb(48, 84, 150));
-                headerRange.Style.Font.Color.SetColor(System.Drawing.Color.White);
+                headerRange.Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.FromArgb(48, 84, 150));
+                headerRange.Style.Font.Color.SetColor(SystemDrawing.Color.White);
                 headerRange.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 headerRange.Style.VerticalAlignment = ExcelVerticalAlignment.Center;
                 headerRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
@@ -427,7 +909,7 @@ namespace GestionLlantera.Web.Controllers
                     // Dejar en blanco para llenar manualmente
                     worksheet.Cells[row, 10].Value = "";
                     worksheet.Cells[row, 10].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 10].Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightYellow);
+                    worksheet.Cells[row, 10].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.LightYellow);
 
                     // Fórmula para calcular diferencia
                     worksheet.Cells[row, 11].Formula = $"J{row}-I{row}";
@@ -437,7 +919,7 @@ namespace GestionLlantera.Web.Controllers
                     if (producto.CantidadEnInventario <= producto.StockMinimo)
                     {
                         worksheet.Cells[row, 12].Value = "STOCK BAJO";
-                        worksheet.Cells[row, 12].Style.Font.Color.SetColor(System.Drawing.Color.Red);
+                        worksheet.Cells[row, 12].Style.Font.Color.SetColor(SystemDrawing.Color.Red);
                         worksheet.Cells[row, 12].Style.Font.Bold = true;
                     }
                     else
@@ -453,7 +935,7 @@ namespace GestionLlantera.Web.Controllers
                     {
                         var rowStyle = worksheet.Cells[row, 1, row, 13];
                         rowStyle.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        rowStyle.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightPink);
+                        rowStyle.Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.LightPink);
                     }
 
                     // Alternar colores de fila para mejor legibilidad
@@ -461,7 +943,7 @@ namespace GestionLlantera.Web.Controllers
                     {
                         var rowStyle = worksheet.Cells[row, 1, row, 13];
                         rowStyle.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        rowStyle.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.WhiteSmoke);
+                        rowStyle.Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.WhiteSmoke);
                     }
 
                     // Aplicar bordes a todas las celdas
@@ -582,508 +1064,6 @@ namespace GestionLlantera.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
-
-        [HttpGet]
-public async Task<IActionResult> ExportarPDF(string responsable = "", string solicitante = "", string fechaLimite = "")
-{
-    try
-    {
-        _logger.LogInformation("Iniciando exportación a PDF para toma física de inventario");
-        
-        // Parámetros por defecto si no se proporcionan
-        responsable = string.IsNullOrEmpty(responsable) ? User.Identity.Name ?? "No especificado" : responsable;
-        solicitante = string.IsNullOrEmpty(solicitante) ? "Administrador del Sistema" : solicitante;
-        
-        // Parsear fecha límite o usar por defecto 7 días
-        DateTime fechaLimiteInventario;
-        if (!DateTime.TryParse(fechaLimite, out fechaLimiteInventario))
-        {
-            fechaLimiteInventario = DateTime.Now.AddDays(7);
-        }
-        
-        // Obtener los datos de productos
-        var productos = await _inventarioService.ObtenerProductosAsync();
-        
-        // Identificador único para el inventario
-        string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
-        
-        // Crear documento PDF
-        using var memoryStream = new MemoryStream();
-        var document = new iTextSharp.text.Document(iTextSharp.text.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
-        var writer = iTextSharp.text.pdf.PdfWriter.GetInstance(document, memoryStream);
-        
-        // Agregar eventos de encabezado y pie de página
-        writer.PageEvent = new InventarioPdfPageEvent(responsable, solicitante, idInventario);
-        
-        // Metadatos
-        document.AddTitle("Formato para Toma Física de Inventario");
-        document.AddSubject("Inventario");
-        document.AddKeywords("inventario, toma física, productos");
-        document.AddCreator("Sistema de Gestión Llantera");
-        document.AddAuthor("Sistema de Gestión Llantera");
-        document.AddHeader("Empresa", "Llantera XYZ");
-        
-        // Abrir documento
-        document.Open();
-        
-        // Fuentes
-        var titleFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 16, iTextSharp.text.BaseColor.WHITE);
-        var subtitleFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 12, iTextSharp.text.BaseColor.BLACK);
-        var normalFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 10, iTextSharp.text.BaseColor.BLACK);
-        var smallFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 8, iTextSharp.text.BaseColor.BLACK);
-        var headerFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 10, iTextSharp.text.BaseColor.WHITE);
-        var tableFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 9, iTextSharp.text.BaseColor.BLACK);
-        var tableBoldFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 9, iTextSharp.text.BaseColor.BLACK);
-        var alertFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 9, iTextSharp.text.BaseColor.RED);
-        
-        // Colores
-        iTextSharp.text.BaseColor headerColor = new iTextSharp.text.BaseColor(48, 84, 150);
-        iTextSharp.text.BaseColor lightGrayColor = new iTextSharp.text.BaseColor(240, 240, 240);
-        iTextSharp.text.BaseColor lightPinkColor = new iTextSharp.text.BaseColor(255, 200, 200);
-        iTextSharp.text.BaseColor lightYellowColor = new iTextSharp.text.BaseColor(255, 255, 200);
-        
-        // Título principal con fondo
-        iTextSharp.text.pdf.PdfPTable titleTable = new iTextSharp.text.pdf.PdfPTable(1);
-        titleTable.WidthPercentage = 100;
-        titleTable.SpacingAfter = 10f;
-        
-        iTextSharp.text.pdf.PdfPCell titleCell = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("FORMATO PARA TOMA DE INVENTARIO FÍSICO", titleFont));
-        titleCell.BackgroundColor = headerColor;
-        titleCell.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        titleCell.PaddingTop = 10f;
-        titleCell.PaddingBottom = 10f;
-        titleCell.BorderWidth = 0;
-        titleTable.AddCell(titleCell);
-        
-        document.Add(titleTable);
-        
-        // Información del inventario
-        iTextSharp.text.pdf.PdfPTable infoTable = new iTextSharp.text.pdf.PdfPTable(6);
-        infoTable.WidthPercentage = 100;
-        infoTable.SetWidths(new float[] { 1.5f, 2f, 1.5f, 2f, 1.5f, 2f });
-        infoTable.SpacingAfter = 15f;
-        
-        // Primera fila
-        infoTable.AddCell(CreateInfoCell("Fecha Generación:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell(DateTime.Now.ToString("dd/MM/yyyy HH:mm"), tableFont));
-        infoTable.AddCell(CreateInfoCell("Solicitante:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell(solicitante, tableFont));
-        infoTable.AddCell(CreateInfoCell("Total Productos:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell(productos.Count.ToString(), tableFont));
-        
-        // Segunda fila
-        infoTable.AddCell(CreateInfoCell("Fecha Inicio:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell(DateTime.Now.ToString("dd/MM/yyyy"), tableFont));
-        infoTable.AddCell(CreateInfoCell("Responsable:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell(responsable, tableFont));
-        infoTable.AddCell(CreateInfoCell("Ubicación:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell("Almacén Principal", tableFont));
-        
-        // Tercera fila
-        infoTable.AddCell(CreateInfoCell("Fecha Límite:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell(fechaLimiteInventario.ToString("dd/MM/yyyy"), tableFont));
-        infoTable.AddCell(CreateInfoCell("ID Inventario:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell(idInventario, tableFont));
-        infoTable.AddCell(CreateInfoCell("Tipo:", tableBoldFont));
-        infoTable.AddCell(CreateInfoCell("Inventario Físico Total", tableFont));
-        
-        document.Add(infoTable);
-        
-        // Instrucciones
-        iTextSharp.text.pdf.PdfPTable instructionsTable = new iTextSharp.text.pdf.PdfPTable(1);
-        instructionsTable.WidthPercentage = 100;
-        instructionsTable.SpacingAfter = 15f;
-        
-        iTextSharp.text.pdf.PdfPCell instructionsTitleCell = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("INSTRUCCIONES", tableBoldFont));
-        instructionsTitleCell.BackgroundColor = lightGrayColor;
-                instructionsTitleCell.PaddingTop = 5f;
-        instructionsTitleCell.PaddingBottom = 5f;
-        instructionsTitleCell.PaddingLeft = 5f;
-        instructionsTable.AddCell(instructionsTitleCell);
-        
-        iTextSharp.text.pdf.PdfPCell instructionsCell = new iTextSharp.text.pdf.PdfPCell();
-        instructionsCell.PaddingTop = 5f;
-        instructionsCell.PaddingBottom = 5f;
-        instructionsCell.PaddingLeft = 5f;
-        instructionsCell.PaddingRight = 5f;
-        
-        iTextSharp.text.Paragraph instructions = new iTextSharp.text.Paragraph();
-        instructions.Add(new iTextSharp.text.Chunk("1. Verifique la cantidad física de cada producto y anótela en la columna 'Cantidad Física'.\n", tableFont));
-        instructions.Add(new iTextSharp.text.Chunk("2. En caso de discrepancias, anote las observaciones en la columna correspondiente.\n", tableFont));
-        instructions.Add(new iTextSharp.text.Chunk("3. Los productos marcados en rojo tienen un stock por debajo del mínimo requerido.\n", tableFont));
-        instructions.Add(new iTextSharp.text.Chunk("4. Al finalizar el conteo, firme el documento y entreguelo al supervisor correspondiente.", tableFont));
-        
-        instructionsCell.AddElement(instructions);
-        instructionsTable.AddCell(instructionsCell);
-        
-        document.Add(instructionsTable);
-        
-        // Tabla de productos
-        iTextSharp.text.pdf.PdfPTable productTable = new iTextSharp.text.pdf.PdfPTable(11);
-        productTable.WidthPercentage = 100;
-        productTable.SetWidths(new float[] { 0.6f, 0.8f, 2.2f, 1.0f, 1.0f, 1.2f, 0.8f, 0.8f, 0.8f, 0.8f, 2.0f });
-        productTable.SpacingAfter = 15f;
-        
-        // Encabezados de tabla
-        productTable.AddCell(CreateHeaderCell("Código", headerFont));
-        productTable.AddCell(CreateHeaderCell("Categoría", headerFont));
-        productTable.AddCell(CreateHeaderCell("Producto", headerFont));
-        productTable.AddCell(CreateHeaderCell("Medidas", headerFont));
-        productTable.AddCell(CreateHeaderCell("Marca/Modelo", headerFont));
-        productTable.AddCell(CreateHeaderCell("Ubicación", headerFont));
-        productTable.AddCell(CreateHeaderCell("Cantidad Sistema", headerFont));
-        productTable.AddCell(CreateHeaderCell("Cantidad Física", headerFont));
-        productTable.AddCell(CreateHeaderCell("Diferencia", headerFont));
-        productTable.AddCell(CreateHeaderCell("Estado", headerFont));
-        productTable.AddCell(CreateHeaderCell("Observaciones", headerFont));
-        
-        // Añadir productos
-        int rowCount = 0;
-        foreach (var producto in productos)
-        {
-            // Determinar si la fila debe tener fondo alternado
-            iTextSharp.text.BaseColor rowColor = null;
-            if (producto.CantidadEnInventario <= producto.StockMinimo)
-            {
-                rowColor = lightPinkColor;
-            }
-            else if (rowCount % 2 == 0)
-            {
-                rowColor = lightGrayColor;
-            }
-            
-            rowCount++;
-            
-            // Determinar la categoría del producto
-            string categoria = producto.Llanta != null ? "Llanta" : "Accesorio";
-            
-            // Determinar ubicación ficticia para demostración
-            string ubicacion = producto.Llanta != null
-                ? $"Bodega A - P{(producto.ProductoId % 5) + 1} - E{(producto.ProductoId % 10) + 1}"
-                : $"Bodega B - S{(producto.ProductoId % 3) + 1} - E{(producto.ProductoId % 8) + 1}";
-            
-            // ID del producto
-            productTable.AddCell(CreateDataCell(producto.ProductoId.ToString(), tableFont, rowColor));
-            
-            // Categoría
-            productTable.AddCell(CreateDataCell(categoria, tableFont, rowColor));
-            
-            // Nombre del producto
-            iTextSharp.text.pdf.PdfPCell productNameCell = CreateDataCell(producto.NombreProducto, tableBoldFont, rowColor);
-            productNameCell.HorizontalAlignment = iTextSharp.text.Element.ALIGN_LEFT;
-            productTable.AddCell(productNameCell);
-            
-            // Medidas (para llantas)
-            string medidas = "N/A";
-            if (producto.Llanta != null && producto.Llanta.Ancho.HasValue && producto.Llanta.Perfil.HasValue)
-            {
-                medidas = $"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}";
-            }
-            productTable.AddCell(CreateDataCell(medidas, tableFont, rowColor));
-            
-            // Marca/Modelo
-            string marcaModelo = "N/A";
-            if (producto.Llanta != null)
-            {
-                if (!string.IsNullOrEmpty(producto.Llanta.Marca) && !string.IsNullOrEmpty(producto.Llanta.Modelo))
-                {
-                    marcaModelo = $"{producto.Llanta.Marca}/{producto.Llanta.Modelo}";
-                }
-                else if (!string.IsNullOrEmpty(producto.Llanta.Marca))
-                {
-                    marcaModelo = producto.Llanta.Marca;
-                }
-                else if (!string.IsNullOrEmpty(producto.Llanta.Modelo))
-                {
-                    marcaModelo = producto.Llanta.Modelo;
-                }
-            }
-            productTable.AddCell(CreateDataCell(marcaModelo, tableFont, rowColor));
-            
-            // Ubicación
-            productTable.AddCell(CreateDataCell(ubicacion, tableFont, rowColor));
-            
-            // Cantidad en sistema
-            iTextSharp.text.pdf.PdfPCell stockCell = CreateDataCell(producto.CantidadEnInventario.ToString(), tableFont, rowColor);
-            stockCell.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-            productTable.AddCell(stockCell);
-            
-            // Cantidad física (en blanco para llenar manualmente)
-            iTextSharp.text.pdf.PdfPCell fisicaCell = CreateDataCell("_______", tableFont, lightYellowColor);
-            fisicaCell.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-            productTable.AddCell(fisicaCell);
-            
-            // Diferencia (en blanco para calcular manualmente)
-            iTextSharp.text.pdf.PdfPCell diffCell = CreateDataCell("_______", tableFont, rowColor);
-            diffCell.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-            productTable.AddCell(diffCell);
-            
-            // Estado
-            string estado = producto.CantidadEnInventario <= producto.StockMinimo ? "STOCK BAJO" : "Normal";
-            iTextSharp.text.Font estadoFont = producto.CantidadEnInventario <= producto.StockMinimo ? alertFont : tableFont;
-            productTable.AddCell(CreateDataCell(estado, estadoFont, rowColor));
-            
-            // Observaciones (celda en blanco)
-            productTable.AddCell(CreateDataCell("", tableFont, rowColor));
-        }
-        
-        document.Add(productTable);
-        
-        // Sección de totales
-        iTextSharp.text.pdf.PdfPTable totalsTable = new iTextSharp.text.pdf.PdfPTable(6);
-        totalsTable.WidthPercentage = 60;
-        totalsTable.HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT;
-        totalsTable.SpacingAfter = 20f;
-        
-        totalsTable.AddCell(CreateInfoCell("Total Productos:", tableBoldFont));
-        totalsTable.AddCell(CreateInfoCell(productos.Count.ToString(), tableFont));
-        
-        totalsTable.AddCell(CreateInfoCell("Total Unidades Sistema:", tableBoldFont));
-        int totalUnidades = productos.Sum(p => p.CantidadEnInventario);
-        totalsTable.AddCell(CreateInfoCell(totalUnidades.ToString(), tableFont));
-        
-        totalsTable.AddCell(CreateInfoCell("Productos con Stock Bajo:", tableBoldFont));
-        int stockBajo = productos.Count(p => p.CantidadEnInventario <= p.StockMinimo);
-        iTextSharp.text.pdf.PdfPCell stockBajoCell = CreateInfoCell(stockBajo.ToString(), alertFont);
-        totalsTable.AddCell(stockBajoCell);
-        
-        document.Add(totalsTable);
-        
-        // Sección para firmas
-        iTextSharp.text.pdf.PdfPTable signaturesTable = new iTextSharp.text.pdf.PdfPTable(3);
-        signaturesTable.WidthPercentage = 100;
-        signaturesTable.SpacingBefore = 30f;
-        
-        iTextSharp.text.pdf.PdfPCell elaboradoTitle = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("ELABORADO POR:", tableBoldFont));
-        elaboradoTitle.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        elaboradoTitle.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(elaboradoTitle);
-        
-        iTextSharp.text.pdf.PdfPCell revisadoTitle = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("REVISADO POR:", tableBoldFont));
-        revisadoTitle.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        revisadoTitle.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(revisadoTitle);
-        
-        iTextSharp.text.pdf.PdfPCell aprobadoTitle = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("APROBADO POR:", tableBoldFont));
-        aprobadoTitle.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        aprobadoTitle.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(aprobadoTitle);
-        
-        // Espacio para firmas
-        iTextSharp.text.pdf.PdfPCell elaboradoSpace = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(" "));
-        elaboradoSpace.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        elaboradoSpace.FixedHeight = 40f;
-        signaturesTable.AddCell(elaboradoSpace);
-        
-        iTextSharp.text.pdf.PdfPCell revisadoSpace = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(" "));
-        revisadoSpace.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        revisadoSpace.FixedHeight = 40f;
-        signaturesTable.AddCell(revisadoSpace);
-        
-        iTextSharp.text.pdf.PdfPCell aprobadoSpace = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(" "));
-        aprobadoSpace.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        aprobadoSpace.FixedHeight = 40f;
-        signaturesTable.AddCell(aprobadoSpace);
-        
-        // Líneas para firma
-        iTextSharp.text.pdf.PdfPCell elaboradoLine = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("_______________________"));
-        elaboradoLine.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        elaboradoLine.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(elaboradoLine);
-        
-        iTextSharp.text.pdf.PdfPCell revisadoLine = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("_______________________"));
-        revisadoLine.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        revisadoLine.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(revisadoLine);
-        
-        iTextSharp.text.pdf.PdfPCell aprobadoLine = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("_______________________"));
-        aprobadoLine.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        aprobadoLine.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(aprobadoLine);
-        
-        // Nombre y firma
-        iTextSharp.text.pdf.PdfPCell elaboradoName = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Nombre y Firma", smallFont));
-        elaboradoName.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        elaboradoName.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(elaboradoName);
-        
-        iTextSharp.text.pdf.PdfPCell revisadoName = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Nombre y Firma", smallFont));
-        revisadoName.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        revisadoName.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(revisadoName);
-        
-        iTextSharp.text.pdf.PdfPCell aprobadoName = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("Nombre y Firma", smallFont));
-        aprobadoName.Border = iTextSharp.text.Rectangle.NO_BORDER;
-        aprobadoName.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
-        signaturesTable.AddCell(aprobadoName);
-        
-        document.Add(signaturesTable);
-        
-        // Aviso de pie de página
-        iTextSharp.text.Paragraph disclaimer = new iTextSharp.text.Paragraph();
-        disclaimer.SpacingBefore = 50f;
-        disclaimer.Add(new iTextSharp.text.Chunk("Este documento es oficial para la toma física de inventario. Cualquier alteración o falsificación constituye una falta grave.", smallFont));
-        disclaimer.Alignment = iTextSharp.text.Element.ALIGN_CENTER;
-        document.Add(disclaimer);
-        
-        // Cerrar documento
-        document.Close();
-        writer.Close();
-        
-        // Nombre del archivo
-        string fileName = $"Inventario_Fisico_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-        
-        _logger.LogInformation($"Exportación a PDF de inventario físico completada: {fileName}");
-        
-        // Devolver el archivo
-        return File(memoryStream.ToArray(), "application/pdf", fileName);
-    }
-    catch (Exception ex)
-    {
-        _logger.LogError(ex, "Error al exportar a PDF para toma física de inventario");
-        // En caso de error, redireccionar con mensaje
-        TempData["Error"] = "No se pudo generar el archivo PDF. Inténtelo nuevamente.";
-        return RedirectToAction(nameof(Index));
     }
 }
-
-        // Métodos de ayuda para crear celdas
-        private PdfPCell CreateHeaderCell(string text, Font font)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text, font));
-            cell.BackgroundColor = new BaseColor(48, 84, 150);
-            cell.HorizontalAlignment = Element.ALIGN_CENTER;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.PaddingTop = 5f;
-            cell.PaddingBottom = 5f;
-            cell.PaddingLeft = 3f;
-            cell.PaddingRight = 3f;
-            return cell;
-        }
-
-        private PdfPCell CreateDataCell(string text, Font font, BaseColor backgroundColor = null)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text, font));
-            if (backgroundColor != null)
-            {
-                cell.BackgroundColor = backgroundColor;
-            }
-            cell.HorizontalAlignment = Element.ALIGN_LEFT;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.PaddingTop = 4f;
-            cell.PaddingBottom = 4f;
-            cell.PaddingLeft = 3f;
-            cell.PaddingRight = 3f;
-            return cell;
-        }
-
-        private PdfPCell CreateInfoCell(string text, Font font)
-        {
-            PdfPCell cell = new PdfPCell(new Phrase(text, font));
-            cell.Border = iTextSharp.text.Rectangle.BOX;
-            cell.BorderColor = BaseColor.LIGHT_GRAY;
-            cell.BorderWidth = 0.5f;
-            cell.PaddingTop = 5f;
-            cell.PaddingBottom = 5f;
-            cell.PaddingLeft = 5f;
-            cell.PaddingRight = 5f;
-            return cell;
-        }
-
-        // Clase para manejar encabezados y pies de página
-        private class InventarioPdfPageEvent : PdfPageEventHelper
-        {
-            private readonly string _responsable;
-            private readonly string _solicitante;
-            private readonly string _idInventario;
-            private readonly Font _smallFont = FontFactory.GetFont(FontFactory.HELVETICA, 8, BaseColor.DARK_GRAY);
-            private readonly Font _headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.DARK_GRAY);
-
-            public InventarioPdfPageEvent(string responsable, string solicitante, string idInventario)
-            {
-                _responsable = responsable;
-                _solicitante = solicitante;
-                _idInventario = idInventario;
-            }
-
-            public override void OnEndPage(PdfWriter writer, Document document)
-            {
-                // Encabezado
-                /*
-                // Si tienes un logo, puedes agregarlo así:
-                string logoPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "logo.png");
-                if (File.Exists(logoPath))
-                {
-                    iTextSharp.text.Image logo = iTextSharp.text.Image.GetInstance(logoPath);
-                    logo.ScaleToFit(100f, 40f);
-                    logo.SetAbsolutePosition(document.LeftMargin, document.PageSize.Height - 50);
-                    writer.DirectContent.AddImage(logo);
-                }
-                */
-
-                PdfPTable headerTable = new PdfPTable(3);
-                headerTable.TotalWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin;
-                headerTable.DefaultCell.Border = Rectangle.NO_BORDER;
-
-                PdfPCell logoCell = new PdfPCell(new Phrase("LLANTERA XYZ", _headerFont));
-                logoCell.Border = Rectangle.NO_BORDER;
-                headerTable.AddCell(logoCell);
-
-                PdfPCell titleCell = new PdfPCell(new Phrase("FORMATO PARA TOMA FÍSICA DE INVENTARIO", _headerFont));
-                titleCell.Border = Rectangle.NO_BORDER;
-                titleCell.HorizontalAlignment = Element.ALIGN_CENTER;
-                headerTable.AddCell(titleCell);
-
-                PdfPCell pageCell = new PdfPCell(new Phrase($"Página {writer.PageNumber}", _smallFont));
-                pageCell.Border = Rectangle.NO_BORDER;
-                pageCell.HorizontalAlignment = Element.ALIGN_RIGHT;
-                headerTable.AddCell(pageCell);
-
-                headerTable.WriteSelectedRows(0, -1, document.LeftMargin, document.PageSize.Height - 10, writer.DirectContent);
-
-                // Pie de página
-                PdfPTable footerTable = new PdfPTable(3);
-                footerTable.TotalWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin;
-                footerTable.DefaultCell.Border = Rectangle.NO_BORDER;
-
-                PdfPCell idCell = new PdfPCell(new Phrase($"ID Inventario: {_idInventario}", _smallFont));
-                idCell.Border = Rectangle.NO_BORDER;
-                footerTable.AddCell(idCell);
-
-                PdfPCell responsableCell = new PdfPCell(new Phrase($"Responsable: {_responsable}", _smallFont));
-                responsableCell.Border = Rectangle.NO_BORDER;
-                responsableCell.HorizontalAlignment = Element.ALIGN_CENTER;
-                footerTable.AddCell(responsableCell);
-
-                PdfPCell dateCell = new PdfPCell(new Phrase($"Fecha: {DateTime.Now:dd/MM/yyyy}", _smallFont));
-                dateCell.Border = Rectangle.NO_BORDER;
-                dateCell.HorizontalAlignment = Element.ALIGN_RIGHT;
-                footerTable.AddCell(dateCell);
-
-                footerTable.WriteSelectedRows(0, -1, document.LeftMargin, document.BottomMargin, writer.DirectContent);
-            }
-        }
-
-        // Método auxiliar para agregar encabezados a la tabla PDF
-        private void AddHeaderCell(PdfPTable table, string text, iTextSharp.text.Font font)
-        {
-            var cell = new PdfPCell(new Phrase(text, font));
-            cell.HorizontalAlignment = Element.ALIGN_CENTER;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.BackgroundColor = new BaseColor(51, 122, 183); // Color azul
-            cell.Padding = 5f;
-            table.AddCell(cell);
-        }
-
-        // Método auxiliar para agregar celdas a la tabla PDF
-        private void AddCell(PdfPTable table, string text, iTextSharp.text.Font font)
-        {
-            var cell = new PdfPCell(new Phrase(text, font));
-            cell.HorizontalAlignment = Element.ALIGN_LEFT;
-            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
-            cell.Padding = 5f;
-            table.AddCell(cell);
-        }
-
-    }
-}
+    

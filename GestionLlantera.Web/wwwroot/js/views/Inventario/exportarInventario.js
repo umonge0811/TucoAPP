@@ -60,6 +60,46 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Inicializar la fecha límite con 7 días desde hoy por defecto
+    const fechaLimiteInput = document.getElementById('fechaLimite');
+    if (fechaLimiteInput) {
+        const fechaHoy = new Date();
+        const fechaLimite = new Date();
+        fechaLimite.setDate(fechaHoy.getDate() + 7);
+
+        // Formatear la fecha como YYYY-MM-DD para el input date
+        const year = fechaLimite.getFullYear();
+        let month = fechaLimite.getMonth() + 1;
+        let day = fechaLimite.getDate();
+
+        // Asegurar que el mes y día tengan dos dígitos
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+
+        fechaLimiteInput.value = `${year}-${month}-${day}`;
+    }
+
+    // También vincular el botón "Programar Inventario" para que muestre el modal de exportación
+    const btnProgramarInventario = document.getElementById('btnProgramarInventario');
+    if (btnProgramarInventario) {
+        btnProgramarInventario.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Seleccionar Excel por defecto
+            document.getElementById('formatoExcel').checked = true;
+            document.getElementById('formatoPDF').checked = false;
+
+            // Cambiar el título del modal para reflejar que es para programar un inventario
+            const modalTitle = document.getElementById('modalExportarInventarioLabel');
+            if (modalTitle) {
+                modalTitle.textContent = 'Programar Toma de Inventario';
+            }
+
+            // Mostrar el modal
+            modalExportarInventario.show();
+        });
+    }
+
     // Función mejorada para descargar archivos utilizando fetch API
     function descargarArchivoConFetch(url, mensajeCarga) {
         // Mostrar indicador de carga
