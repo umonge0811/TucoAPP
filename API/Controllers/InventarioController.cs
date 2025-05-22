@@ -170,9 +170,7 @@ namespace API.Controllers
 
                 return StatusCode(500, new { message = $"Error al crear producto: {ex.Message}" });
             }
-        }
-        
-        
+        }               
         
         // POST: api/Inventario/productos/{id}/imagenes
         [HttpPost("productos/{id}/imagenes")]
@@ -465,6 +463,7 @@ namespace API.Controllers
         {
             try
             {
+                _logger.LogInformation("=== INICIANDO CREACIÓN ===");
                 // Validar los datos
                 if (dto.FechaInicio > dto.FechaFin)
                 {
@@ -521,20 +520,30 @@ namespace API.Controllers
                             FechaCreacion = DateTime.Now
                         };
 
-                        _context.AlertasInventario.Add(alerta);
+                        _context.AlertasInventarioProgramado.Add(alerta);
                     }
 
                     await _context.SaveChangesAsync();
                 }
-
-                return CreatedAtAction(nameof(ObtenerInventarioProgramadoPorId),
-                    new { id = inventario.InventarioProgramadoId },
-                    new { message = "Inventario programado creado exitosamente", inventarioId = inventario.InventarioProgramadoId });
+                _logger.LogInformation("=== ANTES DE RETURN ===");
+                return Ok(new
+                {
+                    message = "Inventario programado creado exitosamente",
+                    inventarioId = inventario.InventarioProgramadoId,
+                    success = true
+                });
             }
             catch (Exception ex)
             {
+                _logger.LogError("ERROR COMPLETO: {Error}", ex.ToString());
+                _logger.LogError("STACK TRACE: {StackTrace}", ex.StackTrace);
+                _logger.LogError("INNER EXCEPTION: {Inner}", ex.InnerException?.ToString() ?? "No inner exception");
                 _logger.LogError(ex, "Error al crear inventario programado");
-                return StatusCode(500, new { message = "Error al crear inventario programado" });
+                return StatusCode(500, new
+                {
+                    message = "Error detallado: " + ex.Message,
+                    details = ex.ToString()
+                });
             }
         }
 
@@ -601,7 +610,7 @@ namespace API.Controllers
                                 FechaCreacion = DateTime.Now
                             };
 
-                            _context.AlertasInventario.Add(alerta);
+                            _context.AlertasInventarioProgramado.Add(alerta);
                         }
                     }
                 }
@@ -686,7 +695,7 @@ namespace API.Controllers
                         FechaCreacion = DateTime.Now
                     };
 
-                    _context.AlertasInventario.Add(alerta);
+                    _context.AlertasInventarioProgramado.Add(alerta);
                 }
 
                 await _context.SaveChangesAsync();
@@ -736,7 +745,7 @@ namespace API.Controllers
                         FechaCreacion = DateTime.Now
                     };
 
-                    _context.AlertasInventario.Add(alerta);
+                    _context.AlertasInventarioProgramado.Add(alerta);
                 }
 
                 await _context.SaveChangesAsync();
@@ -798,7 +807,7 @@ namespace API.Controllers
                         FechaCreacion = DateTime.Now
                     };
 
-                    _context.AlertasInventario.Add(alerta);
+                    _context.AlertasInventarioProgramado.Add(alerta);
                 }
 
                 await _context.SaveChangesAsync();
@@ -943,7 +952,7 @@ namespace API.Controllers
                             FechaCreacion = DateTime.Now
                         };
 
-                        _context.AlertasInventario.Add(alerta);
+                        _context.AlertasInventarioProgramado.Add(alerta);
                     }
 
                     await _context.SaveChangesAsync();

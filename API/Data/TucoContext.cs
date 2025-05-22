@@ -32,8 +32,7 @@ public partial class TucoContext : DbContext
     public virtual DbSet<InventarioProgramado> InventariosProgramados { get; set; }
     public virtual DbSet<AsignacionUsuarioInventario> AsignacionesUsuariosInventario { get; set; }
     public virtual DbSet<DetalleInventarioProgramado> DetallesInventarioProgramado { get; set; }
-    public virtual DbSet<AlertasInventario> AlertasInventario { get; set; }
-
+    public virtual DbSet<AlertasInventario> AlertasInventarioProgramado { get; set; }
     public virtual DbSet<Cliente> Clientes { get; set; }
 
     public virtual DbSet<DetalleDocumento> DetalleDocumentos { get; set; }
@@ -76,55 +75,7 @@ public partial class TucoContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AlertasInventario>(entity =>
-        {
-            entity.HasKey(e => e.AlertaId).HasName("PK__AlertasI__D9EF47E5A95249BE");
-
-            entity.ToTable("AlertasInventario");
-
-            entity.Property(e => e.AlertaId).HasColumnName("AlertaID");
-
-            entity.Property(e => e.TipoAlerta)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .IsRequired();
-
-            entity.Property(e => e.Mensaje)
-                .HasMaxLength(500)
-                .IsRequired();
-
-            entity.Property(e => e.Leida)
-                .IsRequired()
-                .HasDefaultValue(false);
-
-            entity.Property(e => e.FechaCreacion)
-                .IsRequired()
-                .HasDefaultValueSql("(getdate())");
-
-            entity.Property(e => e.FechaLectura);
-
-            entity.Property(e => e.InventarioProgramadoId)
-                .IsRequired()
-                .HasColumnName("InventarioProgramadoID");
-
-            entity.Property(e => e.UsuarioId)
-                .IsRequired()
-                .HasColumnName("UsuarioID");
-
-            // Relación con InventarioProgramado
-            entity.HasOne(d => d.InventarioProgramado)
-                .WithMany(p => p.Alertas)
-                .HasForeignKey(d => d.InventarioProgramadoId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("FK_AlertasInventario_InventariosProgramados");
-
-            // Relación con Usuario
-            entity.HasOne(d => d.Usuario)
-                .WithMany()
-                .HasForeignKey(d => d.UsuarioId)
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("FK_AlertasInventario_Usuarios");
-        });
+        
 
         modelBuilder.Entity<Cliente>(entity =>
         {
@@ -153,6 +104,59 @@ public partial class TucoContext : DbContext
                 .HasConstraintName("FK__Clientes__Usuari__5070F446");
         });
 
+        // ELIMINAR cualquier configuración anterior de AlertasInventario
+        // Y REEMPLAZAR con esta configuración limpia:
+
+        modelBuilder.Entity<AlertasInventario>(entity =>
+        {
+            entity.ToTable("AlertasInventarioProgramado");
+
+            entity.HasKey(e => e.AlertaId);
+
+            entity.Property(e => e.AlertaId)
+                .HasColumnName("AlertaID")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.InventarioProgramadoId)
+                .HasColumnName("InventarioProgramadoID")
+                .IsRequired();
+
+            entity.Property(e => e.UsuarioId)
+                .HasColumnName("UsuarioID")
+                .IsRequired();
+
+            entity.Property(e => e.TipoAlerta)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(e => e.Mensaje)
+                .HasMaxLength(500)
+                .IsRequired();
+
+            entity.Property(e => e.Leida)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.FechaCreacion)
+                .IsRequired()
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("(getdate())");
+
+            entity.Property(e => e.FechaLectura)
+                .HasColumnType("datetime");
+
+            // Configurar relaciones
+            entity.HasOne(d => d.InventarioProgramado)
+                .WithMany(p => p.Alertas)
+                .HasForeignKey(d => d.InventarioProgramadoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Usuario)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<DetalleDocumento>(entity =>
         {
             entity.HasKey(e => e.DetalleId).HasName("PK__DetalleD__6E19D6FA7BF4A9E6");
@@ -169,9 +173,7 @@ public partial class TucoContext : DbContext
                 .HasForeignKey(d => d.DocumentoId)
                 .HasConstraintName("FK__DetalleDo__Docum__619B8048");
 
-            entity.HasOne(d => d.Producto).WithMany(p => p.DetalleDocumentos)
-                .HasForeignKey(d => d.ProductoId)
-                .HasConstraintName("FK__DetalleDo__Produ__628FA481");
+            
         });
 
         modelBuilder.Entity<DetalleInventario>(entity =>

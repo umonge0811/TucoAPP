@@ -2,7 +2,7 @@
 
 using System.Collections.Generic;
 using GestionLlantera.Web.Models.DTOs;
-using GestionLlantera.Web.Models.DTOs.Inventario;
+using Tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Models.ViewModels
 {

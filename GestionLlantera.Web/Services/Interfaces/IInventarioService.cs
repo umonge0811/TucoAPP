@@ -1,6 +1,6 @@
 ﻿// Ubicación: GestionLlantera.Web/Services/Interfaces/IInventarioService.cs
 
-using GestionLlantera.Web.Models.DTOs.Inventario;
+using Tuco.Clases.DTOs.Inventario;
 using Microsoft.AspNetCore.Http;
 
 namespace GestionLlantera.Web.Services.Interfaces

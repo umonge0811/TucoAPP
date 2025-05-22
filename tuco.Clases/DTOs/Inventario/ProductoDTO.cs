@@ -28,6 +28,8 @@ namespace Tuco.Clases.DTOs.Inventario
         [Range(0, int.MaxValue, ErrorMessage = "El stock mínimo debe ser un número positivo")]
         public int StockMinimo { get; set; }
 
+        public bool EsLlanta { get; set; } = false;
+
         public DateTime? FechaUltimaActualizacion { get; set; }
 
         // Propiedad específica para llantas - ahora nullable

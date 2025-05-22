@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using GestionLlantera.Web.Models.DTOs;
-using GestionLlantera.Web.Models.DTOs.Inventario;
-
+using Tuco.Clases.DTOs.Inventario;
 namespace GestionLlantera.Web.Models.ViewModels
 {
     public class ProgramarInventarioViewModel

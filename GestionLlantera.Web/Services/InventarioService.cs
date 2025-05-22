@@ -1,6 +1,5 @@
 ﻿// Ubicación: GestionLlantera.Web/Services/InventarioService.cs
-
-using GestionLlantera.Web.Models.DTOs.Inventario;
+using Tuco.Clases.DTOs.Inventario;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -691,17 +690,28 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("Guardando nuevo inventario programado");
+                _logger.LogInformation("Guardando nuevo inventario programado: {Titulo}", inventario.Titulo);
 
-                // Realizar la petición a la API
-                var json = JsonConvert.SerializeObject(inventario);
+                // Serializar el objeto para enviarlo a la API
+                var json = JsonConvert.SerializeObject(inventario, new JsonSerializerSettings
+                {
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("JSON enviado a la API: {Json}", json);
+
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PostAsync("api/Inventario/inventarios-programados", content);
 
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta de la API - Status: {Status}, Content: {Content}",
+                    response.StatusCode, responseContent);
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"Error guardando inventario programado: {response.StatusCode} - {errorContent}");
+                    _logger.LogError("Error guardando inventario programado: {Status} - {Content}",
+                        response.StatusCode, responseContent);
                     return false;
                 }
 
@@ -710,7 +720,7 @@ namespace GestionLlantera.Web.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al guardar inventario programado");
+                _logger.LogError(ex, "Error al guardar inventario programado: {Message}", ex.Message);
                 return false;
             }
         }

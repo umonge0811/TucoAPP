@@ -1,5 +1,4 @@
-﻿using GestionLlantera.Web.Models.DTOs.Inventario;
-using GestionLlantera.Web.Services.Interfaces;
+﻿using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml; // Para manejar archivos Excel
@@ -12,6 +11,7 @@ using iTextSharp.tool.xml;
 using iTextSharp.text.html.simpleparser;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Models.ViewModels;
+using Tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -1106,60 +1106,144 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                _logger.LogInformation("Iniciando proceso de creación de inventario programado");
+
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("ModelState no es válido para crear inventario programado");
+
                     // Recargar los datos necesarios para la vista
                     var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+
                     model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+                    model.InventariosProgramados = inventarios;
+
+                    // Mostrar errores específicos en el log
+                    foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        _logger.LogWarning($"Error de validación: {error.ErrorMessage}");
+                    }
+
+                    TempData["Error"] = "Por favor corrija los errores en el formulario.";
+                    return View(model);
+                }
+
+                // Validaciones adicionales
+                if (model.NuevoInventario.FechaInicio < DateTime.Today)
+                {
+                    ModelState.AddModelError("NuevoInventario.FechaInicio", "La fecha de inicio no puede ser anterior a hoy");
+                    TempData["Error"] = "La fecha de inicio no puede ser anterior a hoy.";
+
+                    // Recargar datos
+                    var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+                    model.InventariosProgramados = inventarios;
 
                     return View(model);
                 }
 
-                // Crear nuevo inventario programado
+                if (model.NuevoInventario.FechaFin <= model.NuevoInventario.FechaInicio)
+                {
+                    ModelState.AddModelError("NuevoInventario.FechaFin", "La fecha de fin debe ser posterior a la fecha de inicio");
+                    TempData["Error"] = "La fecha de fin debe ser posterior a la fecha de inicio.";
+
+                    // Recargar datos
+                    var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+                    model.InventariosProgramados = inventarios;
+
+                    return View(model);
+                }
+
+                if (model.NuevoInventario.UsuariosAsignados == null || !model.NuevoInventario.UsuariosAsignados.Any())
+                {
+                    TempData["Error"] = "Debe asignar al menos un usuario al inventario.";
+
+                    // Recargar datos
+                    var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+                    model.InventariosProgramados = inventarios;
+
+                    return View(model);
+                }
+
+                // Obtener el ID del usuario actual (deberías tener esto en tu sistema de autenticación)
+                var usuarioActualId = int.Parse(User.FindFirst("UserId")?.Value ?? "1"); // Por ahora usamos 1 como fallback
+
+                // Crear el DTO para el inventario programado
                 var inventarioProgramado = new InventarioProgramadoDTO
                 {
                     Titulo = model.NuevoInventario.Titulo,
-                    Descripcion = model.NuevoInventario.Descripcion,
+                    Descripcion = model.NuevoInventario.Descripcion ?? string.Empty,
                     FechaInicio = model.NuevoInventario.FechaInicio,
                     FechaFin = model.NuevoInventario.FechaFin,
                     TipoInventario = model.NuevoInventario.TipoInventario,
                     Estado = "Programado",
                     FechaCreacion = DateTime.Now,
-                    UsuarioCreadorId = int.Parse(User.FindFirst("UserId")?.Value ?? "0"),
+                    UsuarioCreadorId = usuarioActualId,
+                    UbicacionEspecifica = model.NuevoInventario.UbicacionEspecifica ?? string.Empty,
+                    IncluirStockBajo = model.NuevoInventario.IncluirStockBajo,
                     AsignacionesUsuarios = model.NuevoInventario.UsuariosAsignados.Select(ua => new AsignacionUsuarioInventarioDTO
                     {
                         UsuarioId = ua.UsuarioId,
+                        NombreUsuario = ua.NombreUsuario ?? string.Empty,
                         PermisoConteo = ua.PermisoConteo,
                         PermisoAjuste = ua.PermisoAjuste,
-                        PermisoValidacion = ua.PermisoValidacion
+                        PermisoValidacion = ua.PermisoValidacion,
+                        FechaAsignacion = DateTime.Now
                     }).ToList()
                 };
 
-                // Guardar el inventario programado
+                _logger.LogInformation($"Enviando inventario programado al servicio: {inventarioProgramado.Titulo}");
+
+                // Guardar el inventario programado usando el servicio
                 var resultado = await _inventarioService.GuardarInventarioProgramadoAsync(inventarioProgramado);
 
                 if (resultado)
                 {
+                    _logger.LogInformation("Inventario programado creado exitosamente");
                     TempData["Success"] = "Inventario programado exitosamente.";
                     return RedirectToAction(nameof(ProgramarInventario));
                 }
+                else
+                {
+                    _logger.LogError("Error al guardar el inventario programado en el servicio");
+                    TempData["Error"] = "Error al programar el inventario.";
 
-                TempData["Error"] = "Error al programar el inventario.";
-                return View(model);
+                    // Recargar datos
+                    var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+                    model.InventariosProgramados = inventarios;
+
+                    return View(model);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al programar el inventario");
+                _logger.LogError(ex, "Error al programar el inventario: {Message}", ex.Message);
                 TempData["Error"] = "Error al programar el inventario: " + ex.Message;
 
-                // Recargar los datos necesarios para la vista
-                var usuarios = await _usuariosService.ObtenerTodosAsync();
-                model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+                // Recargar los datos necesarios para la vista en caso de error
+                try
+                {
+                    var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
+                    model.InventariosProgramados = inventarios;
+                }
+                catch (Exception innerEx)
+                {
+                    _logger.LogError(innerEx, "Error adicional al recargar datos para la vista");
+                }
 
                 return View(model);
             }
         }
-
         // GET: /Inventario/DetalleInventarioProgramado/5
         [HttpGet]
         public async Task<IActionResult> DetalleInventarioProgramado(int id)

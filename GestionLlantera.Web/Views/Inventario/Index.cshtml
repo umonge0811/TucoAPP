@@ -15,9 +15,9 @@
             <button type="button" class="btn btn-outline-primary" id="btnExportar">
                 <i class="bi bi-download me-2"></i>Exportar
             </button>
-            <button type="button" class="btn btn-info" id="btnProgramarInventario">
+            <a asp-controller="Inventario" asp-action="ProgramarInventario" class="btn btn-info">
                 <i class="bi bi-calendar-check me-2"></i>Programar Inventario
-            </button>
+            </a>
             <a asp-controller="Inventario" asp-action="AgregarProducto" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-2"></i>Nuevo Producto
             </a>
@@ -244,7 +244,7 @@
     </div>
 </div>
 
-<!-- Modal para Programar Inventario -->
+@* <!-- Modal para Programar Inventario -->
 <div class="modal fade" id="programarInventarioModal" tabindex="-1" aria-labelledby="programarInventarioModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -280,7 +280,7 @@
         </div>
     </div>
 </div>
-
+ *@
 <!-- Añade este modal a tu vista Index.cshtml -->
 <div class="modal fade" id="modalExportarInventario" tabindex="-1" aria-labelledby="modalExportarInventarioLabel" aria-hidden="true">
     <div class="modal-dialog">
