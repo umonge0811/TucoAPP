@@ -41,6 +41,10 @@ namespace GestionLlantera.Web.Models.ViewModels
         [Display(Name = "Incluir Productos con Stock Bajo")]
         public bool IncluirStockBajo { get; set; } = true;
 
+        // ✅ AGREGAR ESTA PROPIEDAD
+    [Required]
+    public int UsuarioId { get; set; }
+
         [Display(Name = "Usuarios Asignados")]
         public List<AsignacionUsuarioViewModel> UsuariosAsignados { get; set; } = new List<AsignacionUsuarioViewModel>();
     }

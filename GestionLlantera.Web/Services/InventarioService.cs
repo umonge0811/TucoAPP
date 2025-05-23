@@ -690,8 +690,25 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("Guardando nuevo inventario programado: {Titulo}", inventario.Titulo);
+                // ✅ AGREGAR ESTE LOGGING TEMPORAL
+                Console.WriteLine("=== DATOS ENVIADOS A LA API ===");
+                Console.WriteLine($"Título: {inventario.Titulo}");
+                Console.WriteLine($"UsuarioCreadorId: {inventario.UsuarioCreadorId}");
+                Console.WriteLine($"UsuarioCreadorNombre: '{inventario.UsuarioCreadorNombre}'");
+                Console.WriteLine($"Asignaciones count: {inventario.AsignacionesUsuarios?.Count ?? 0}");
 
+                if (inventario.AsignacionesUsuarios != null)
+                {
+                    for (int i = 0; i < inventario.AsignacionesUsuarios.Count; i++)
+                    {
+                        var asignacion = inventario.AsignacionesUsuarios[i];
+                        Console.WriteLine($"Asignación [{i}]:");
+                        Console.WriteLine($"  - UsuarioId: {asignacion.UsuarioId}");
+                        Console.WriteLine($"  - NombreUsuario: '{asignacion.NombreUsuario}'");
+                        Console.WriteLine($"  - EmailUsuario: '{asignacion.EmailUsuario}'");
+                    }
+                }
+                Console.WriteLine("=== FIN DATOS ===");
                 // Serializar el objeto para enviarlo a la API
                 var json = JsonConvert.SerializeObject(inventario, new JsonSerializerSettings
                 {

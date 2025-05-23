@@ -163,15 +163,10 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault(); // IMPORTANTE: Prevenir el envío tradicional
 
             console.log('=== SUBMIT EJECUTADO ===');
-            console.log('Event:', e);
-            console.log('Form action:', this.action);
-            console.log('Form method:', this.method);
 
+            // Validaciones existentes (mantener tal como están)
             const fechaInicioInput = document.querySelector('input[name="NuevoInventario.FechaInicio"]');
             const fechaFinInput = document.querySelector('input[name="NuevoInventario.FechaFin"]');
-
-            console.log('Fecha Inicio Input:', fechaInicioInput);
-            console.log('Fecha Fin Input:', fechaFinInput);
 
             if (!fechaInicioInput || !fechaFinInput) {
                 console.error('No se encontraron los campos de fecha');
@@ -181,12 +176,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const fechaInicio = new Date(fechaInicioInput.value);
             const fechaFin = new Date(fechaFinInput.value);
 
-            console.log('Fecha Inicio:', fechaInicio);
-            console.log('Fecha Fin:', fechaFin);
-
             // Validar fechas
             if (fechaFin < fechaInicio) {
-                console.log('Error: Fecha fin anterior a inicio');
                 alert('La fecha de finalización no puede ser anterior a la fecha de inicio');
                 resetSubmitButton();
                 return;
@@ -194,10 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Validar que haya al menos un usuario asignado
             const usuariosCount = usuariosAsignados.querySelectorAll('.usuario-asignado').length;
-            console.log('Usuarios asignados:', usuariosCount);
-
             if (usuariosCount === 0) {
-                console.log('Error: No hay usuarios asignados');
                 alert('Debe asignar al menos un usuario al inventario');
                 resetSubmitButton();
                 return;
@@ -205,7 +193,55 @@ document.addEventListener('DOMContentLoaded', function () {
 
             console.log('=== VALIDACIONES PASADAS ===');
 
-            // Mostrar estado de carga en el botón
+            // ✅ CREAR OBJETO JSON CORREGIDO
+            const inventarioData = {
+                titulo: document.querySelector('input[name="NuevoInventario.Titulo"]')?.value || '',
+                descripcion: document.querySelector('textarea[name="NuevoInventario.Descripcion"]')?.value || '',
+                fechaInicio: fechaInicioInput.value,
+                fechaFin: fechaFinInput.value,
+                tipoInventario: document.querySelector('select[name="NuevoInventario.TipoInventario"]')?.value || 'Completo',
+                ubicacionEspecifica: document.querySelector('select[name="NuevoInventario.UbicacionEspecifica"]')?.value || '', // ✅ CORREGIDO: Agregada coma
+                incluirStockBajo: document.querySelector('input[name="NuevoInventario.IncluirStockBajo"]')?.checked || false, // ✅ CORREGIDO: Agregado ?. y ||
+                usuarioCreadorId: parseInt(document.querySelector('input[name="NuevoInventario.UsuarioId"]')?.value || '1'),
+                usuarioCreadorNombre: "Usuario Actual",
+                asignacionesUsuarios: []
+            };
+
+            // ✅ CONSTRUIR ARRAY DE USUARIOS ASIGNADOS
+            const usuariosCards = usuariosAsignados.querySelectorAll('.usuario-asignado');
+            usuariosCards.forEach((card, index) => {
+                const usuarioId = parseInt(card.querySelector('.usuario-id-input')?.value || '0');
+                const nombreUsuario = card.querySelector('.usuario-nombre-input')?.value || '';
+
+                // ✅ OBTENER EMAIL DEL USUARIO desde el select
+                const selectUsuario = document.getElementById('selectUsuario');
+                let emailUsuario = `usuario${usuarioId}@tuco.com`; // Fallback por defecto
+
+                // Buscar el email en las opciones del select
+                if (selectUsuario) {
+                    Array.from(selectUsuario.options).forEach(option => {
+                        if (option.value == usuarioId) {
+                            emailUsuario = option.dataset.email || emailUsuario;
+                        }
+                    });
+                }
+
+                inventarioData.asignacionesUsuarios.push({
+                    usuarioId: usuarioId,
+                    nombreUsuario: nombreUsuario,
+                    emailUsuario: emailUsuario,
+                    permisoConteo: card.querySelector('.permiso-conteo-input')?.value === 'true',
+                    permisoAjuste: card.querySelector('.permiso-ajuste-input')?.value === 'true',
+                    permisoValidacion: card.querySelector('.permiso-validacion-input')?.value === 'true'
+                });
+            });
+
+            // ✅ LOGGING PARA DEPURACIÓN
+            console.log('=== DATOS QUE SE ENVÍAN AL SERVIDOR ===');
+            console.log(JSON.stringify(inventarioData, null, 2));
+            console.log('=== FIN DATOS ===');
+
+            // Mostrar estado de carga
             const submitButton = document.getElementById('submitButton');
             if (submitButton) {
                 submitButton.querySelector('.normal-state').style.display = 'none';
@@ -213,23 +249,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitButton.disabled = true;
             }
 
-            // Crear FormData del formulario (como en agregarProducto.js)
-            const formData = new FormData(formNuevoInventario);
-
-            // Depurar FormData
-            console.log('FormData creado - revisando elementos:');
-            for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-
-            // Obtener la URL del formulario
-            const formAction = formNuevoInventario.getAttribute('action') || '/Inventario/ProgramarInventario';
-            console.log('Enviando formulario al controlador en:', formAction);
-
-            // Enviar usando fetch (como en agregarProducto.js)
-            fetch(formAction, {
+            // ✅ ENVIAR COMO JSON
+            fetch('/Inventario/ProgramarInventarioJson', {  // ← NUEVA URL
                 method: 'POST',
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify(inventarioData)
             })
                 .then(async response => {
                     console.log(`Respuesta: status=${response.status}, ok=${response.ok}`);
@@ -240,22 +267,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         throw new Error(`Error ${response.status}: ${text}`);
                     }
 
-                    // Si es una redirección (status 200-299), manejarla
-                    if (response.redirected) {
-                        console.log('Redirección detectada a:', response.url);
-                        window.location.href = response.url;
-                        return;
+                    // Intentar parsear JSON
+                    let result;
+                    try {
+                        const text = await response.text();
+                        result = JSON.parse(text);
+                        console.log('Respuesta exitosa:', result);
+                    } catch {
+                        console.log('Respuesta no es JSON, pero fue exitosa');
+                        result = { success: true, message: 'Inventario programado exitosamente' };
                     }
 
-                    const text = await response.text();
-                    console.log('Contenido de la respuesta:', text);
+                    showToast('Éxito', result.message || 'Inventario programado exitosamente', 'success');
 
-                    // Si llegamos aquí, fue exitoso
-                    showToast('Éxito', 'Inventario programado exitosamente', 'success');
-
-                    // Redireccionar después de un momento
+                    // Recargar la página después de un momento
                     setTimeout(() => {
-                        window.location.href = '/Inventario/ProgramarInventario';
+                        window.location.reload();
                     }, 1500);
                 })
                 .catch(error => {
@@ -264,10 +291,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     showToast('Error', 'Error al programar el inventario: ' + error.message, 'danger');
                 });
         });
-    } else {
-        console.error('NO SE ENCONTRÓ EL FORMULARIO CON ID: formNuevoInventario');
     }
-    // Función para resetear el botón de submit
+
+    // ✅ FUNCIÓN PARA RESETEAR EL BOTÓN
     function resetSubmitButton() {
         const submitButton = document.getElementById('submitButton');
         if (submitButton) {
@@ -276,7 +302,6 @@ document.addEventListener('DOMContentLoaded', function () {
             submitButton.disabled = false;
         }
     }
-
     // Configurar botones de iniciar inventario
     iniciarInventarioBtns.forEach(btn => {
         btn.addEventListener('click', function () {

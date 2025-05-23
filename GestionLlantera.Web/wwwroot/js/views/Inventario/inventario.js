@@ -1,4 +1,4 @@
-﻿/**
+﻿ /**
  * Funcionalidad para la gestión de inventario
  */
 $(document).ready(function () {

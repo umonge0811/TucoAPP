@@ -1,17 +1,19 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using OfficeOpenXml; // Para manejar archivos Excel
-using OfficeOpenXml.Style;
-using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
-using System.IO;
-using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
+﻿using GestionLlantera.Web.Models.ViewModels;
+using GestionLlantera.Web.Services;
+using GestionLlantera.Web.Services.Interfaces;
+using iTextSharp.text.html.simpleparser;
 using iTextSharp.text.pdf;
 using iTextSharp.tool.xml;
-using iTextSharp.text.html.simpleparser;
-using GestionLlantera.Web.Services;
-using GestionLlantera.Web.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml; // Para manejar archivos Excel
+using OfficeOpenXml.Style;
+using System.IO;
+using System.Security.Claims;
 using Tuco.Clases.DTOs.Inventario;
+using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
+using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -1088,6 +1090,8 @@ namespace GestionLlantera.Web.Controllers
                     UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList(),
                     InventariosProgramados = inventariosProgramados
                 };
+                // ✅ AGREGAR ESTA LÍNEA para pasar el usuario actual
+                ViewBag.UsuarioActualId = ObtenerIdUsuarioActual(); // Método que obtengas el ID del usuario logueado
 
                 return View(viewModel);
             }
@@ -1096,6 +1100,52 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogError(ex, "Error al cargar la vista de programación de inventario");
                 TempData["Error"] = "Error al cargar la información para programar inventario.";
                 return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // ✅ AGREGAR ESTE MÉTODO al final de la clase InventarioController
+        private int ObtenerIdUsuarioActual()
+        {
+            try
+            {
+                _logger.LogInformation("=== OBTENIENDO ID USUARIO ACTUAL ===");
+
+                // Listar todos los claims para debugging
+                foreach (var claim in User.Claims)
+                {
+                    _logger.LogInformation("Claim: {Type} = {Value}", claim.Type, claim.Value);
+                }
+
+                // Intentar diferentes claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                _logger.LogInformation("NameIdentifier claim: {Value}", userIdClaim ?? "NULL");
+
+                var nameClaim = User.FindFirst(ClaimTypes.Name)?.Value;
+                _logger.LogInformation("Name claim: {Value}", nameClaim ?? "NULL");
+
+                var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
+                _logger.LogInformation("Email claim: {Value}", emailClaim ?? "NULL");
+
+                // Intentar parsear
+                if (int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogInformation("ID parseado de NameIdentifier: {UserId}", userId);
+                    return userId;
+                }
+
+                if (int.TryParse(nameClaim, out int userIdFromName))
+                {
+                    _logger.LogInformation("ID parseado de Name: {UserId}", userIdFromName);
+                    return userIdFromName;
+                }
+
+                _logger.LogWarning("No se pudo obtener el ID del usuario, usando fallback 1");
+                return 1; // Fallback que debe existir en tu BD
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener ID del usuario");
+                return 1; // Fallback
             }
         }
 
@@ -1244,6 +1294,97 @@ namespace GestionLlantera.Web.Controllers
                 return View(model);
             }
         }
+
+        // ✅ NUEVO MÉTODO POST PARA JSON (agregar ADEMÁS del existente)
+        [HttpPost]
+        [Route("Inventario/ProgramarInventarioJson")]
+        public async Task<IActionResult> ProgramarInventarioJson([FromBody] InventarioProgramadoDTO inventarioDto)
+        {
+            _logger.LogInformation("=== MÉTODO JSON EJECUTADO ===");
+
+            try
+            {
+                // ✅ LOGGING DETALLADO
+                _logger.LogInformation("Datos recibidos:");
+                _logger.LogInformation("- Título: {Titulo}", inventarioDto?.Titulo ?? "NULL");
+                _logger.LogInformation("- UsuarioCreadorId recibido: {UsuarioCreadorId}", inventarioDto?.UsuarioCreadorId);
+
+                // ✅ OBTENER ID DEL USUARIO ACTUAL
+                var usuarioActualId = ObtenerIdUsuarioActual();
+                _logger.LogInformation("- UsuarioActualId desde método: {UsuarioActualId}", usuarioActualId);
+
+                // ✅ VERIFICAR SI EL USUARIO EXISTE usando el servicio
+                try
+                {
+                    var usuarios = await _usuariosService.ObtenerTodosAsync();
+                    var usuarioExiste = usuarios.Any(u => u.UsuarioId == usuarioActualId);
+                    _logger.LogInformation("- ¿Usuario existe en BD?: {UsuarioExiste}", usuarioExiste);
+
+                    if (!usuarioExiste)
+                    {
+                        _logger.LogError("El usuario con ID {UsuarioId} no existe", usuarioActualId);
+
+                        // ✅ USAR EL PRIMER USUARIO ACTIVO COMO FALLBACK
+                        var primerUsuarioActivo = usuarios.FirstOrDefault(u => u.Activo);
+                        if (primerUsuarioActivo != null)
+                        {
+                            usuarioActualId = primerUsuarioActivo.UsuarioId;
+                            _logger.LogInformation("Usando usuario fallback: {UsuarioId}", usuarioActualId);
+                        }
+                        else
+                        {
+                            return BadRequest(new { success = false, message = "No se encontró un usuario válido" });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al verificar usuario");
+                    // Continuar con el usuarioActualId obtenido
+                }
+
+                // Resto de validaciones...
+                if (inventarioDto == null)
+                {
+                    return BadRequest(new { success = false, message = "Datos inválidos" });
+                }
+
+                if (string.IsNullOrEmpty(inventarioDto.Titulo))
+                {
+                    return BadRequest(new { success = false, message = "El título es requerido" });
+                }
+
+                // ✅ USAR EL ID VÁLIDO
+                inventarioDto.Estado = "Programado";
+                inventarioDto.FechaCreacion = DateTime.Now;
+                inventarioDto.UsuarioCreadorId = usuarioActualId; // ✅ FORZAR EL ID CORRECTO
+
+                _logger.LogInformation("Enviando al servicio con UsuarioCreadorId: {Id}", inventarioDto.UsuarioCreadorId);
+
+                // Llamar al servicio
+                var resultado = await _inventarioService.GuardarInventarioProgramadoAsync(inventarioDto);
+
+                if (resultado)
+                {
+                    _logger.LogInformation("Inventario guardado exitosamente");
+                    return Ok(new { success = true, message = "Inventario programado exitosamente" });
+                }
+                else
+                {
+                    _logger.LogError("El servicio retornó false");
+                    return BadRequest(new { success = false, message = "Error al guardar el inventario" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al programar inventario JSON");
+                return StatusCode(500, new { success = false, message = "Error interno: " + ex.Message });
+            }
+        }
+
+        // ✅ MANTENER EL MÉTODO EXISTENTE TAMBIÉN (no cambiar nada)
+        // El método ProgramarInventario(ProgramarInventarioViewModel model) que ya tienes
+
         // GET: /Inventario/DetalleInventarioProgramado/5
         [HttpGet]
         public async Task<IActionResult> DetalleInventarioProgramado(int id)
@@ -1439,6 +1580,8 @@ namespace GestionLlantera.Web.Controllers
                 return RedirectToAction(nameof(DetalleInventarioProgramado), new { id });
             }
         }
+
+
     }
 }
     

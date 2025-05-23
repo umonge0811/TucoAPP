@@ -348,6 +348,8 @@
                         </span>
                     </button>
                 </div>
+                <!-- ✅ AGREGAR ESTOS CAMPOS OCULTOS -->
+                <input type="hidden" asp-for="NuevoInventario.UsuarioId" value="@ViewBag.UsuarioActualId" />
             </form>
         </div>
     </div>
@@ -368,7 +370,11 @@
                         <option value="">Seleccione un usuario</option>
                         @foreach (var usuario in Model.UsuariosDisponibles)
                         {
-                            <option value="@usuario.UsuarioId" data-nombre="@usuario.NombreUsuario">@usuario.NombreUsuario (@usuario.Email)</option>
+                            <option value="@usuario.UsuarioId"
+                                    data-nombre="@usuario.NombreUsuario"
+                                    data-email="@usuario.Email">
+                                @usuario.NombreUsuario (@usuario.Email)
+                            </option>
                         }
                     </select>
                 </div>
