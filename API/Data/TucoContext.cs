@@ -504,11 +504,11 @@ public partial class TucoContext : DbContext
                     "UsuarioRol",
                     r => r.HasOne<Role>().WithMany()
                         .HasForeignKey("RolId")
-                        .OnDelete(DeleteBehavior.Restrict) // CAMBIAR A Restrict
+                        .OnDelete(DeleteBehavior.NoAction) // CAMBIAR A NoAction
                         .HasConstraintName("FK__UsuarioRo__RolID__04E4BC85"),
                     l => l.HasOne<Usuario>().WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict) // CAMBIAR A Restrict
+                        .OnDelete(DeleteBehavior.NoAction) // CAMBIAR A NoAction
                         .HasConstraintName("FK__UsuarioRo__Usuar__03F0984C"),
                     j =>
                     {
@@ -526,13 +526,13 @@ public partial class TucoContext : DbContext
             entity.HasOne(ur => ur.Usuario)
                 .WithMany(u => u.UsuarioRoles)
                 .HasForeignKey(ur => ur.UsuarioId)
-                .OnDelete(DeleteBehavior.Restrict) // CAMBIAR A Restrict
+                .OnDelete(DeleteBehavior.NoAction) // CAMBIAR A NoAction
                 .HasConstraintName("FK_UsuarioRol_Usuario");
 
             entity.HasOne(ur => ur.Rol)
                 .WithMany(r => r.UsuarioRoles)
                 .HasForeignKey(ur => ur.RolId)
-                .OnDelete(DeleteBehavior.Restrict) // CAMBIAR A Restrict
+                .OnDelete(DeleteBehavior.NoAction) // CAMBIAR A NoAction
                 .HasConstraintName("FK_UsuarioRol_Rol");
         });
 
@@ -546,13 +546,13 @@ public partial class TucoContext : DbContext
             entity.HasOne(up => up.Usuario)
                   .WithMany(u => u.UsuarioPermiso)
                   .HasForeignKey(up => up.UsuarioID)
-                  .OnDelete(DeleteBehavior.Restrict); // CAMBIAR A Restrict
+                  .OnDelete(DeleteBehavior.NoAction); // CAMBIAR A NoAction
 
             // Relación con Permiso
             entity.HasOne(up => up.Permiso)
                   .WithMany(p => p.UsuarioPermiso)
                   .HasForeignKey(up => up.PermisoID)
-                  .OnDelete(DeleteBehavior.Restrict); // CAMBIAR A Restrict
+                  .OnDelete(DeleteBehavior.NoAction); // CAMBIAR A NoAction
         });
 
         modelBuilder.Entity<RolPermisoRE>(entity =>
@@ -600,11 +600,11 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.FechaAsignacion)
                 .HasDefaultValueSql("(getdate())");
 
-            // ✅ Relación con Usuario usando Restrict
+            // ✅ Relación con Usuario usando NoAction
             entity.HasOne(d => d.Usuario)
                 .WithMany()
                 .HasForeignKey(d => d.UsuarioId)
-                .OnDelete(DeleteBehavior.Restrict); // CAMBIAR A Restrict
+                .OnDelete(DeleteBehavior.NoAction); // CAMBIAR A NoAction
 
             // Índice único
             entity.HasIndex(e => new { e.InventarioProgramadoId, e.UsuarioId })

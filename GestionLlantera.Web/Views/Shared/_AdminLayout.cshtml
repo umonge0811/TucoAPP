@@ -72,7 +72,7 @@
                     </li>
 
                     <li class="nav-item">
-                                           @if (User.IsInRole("Admin")) @* <!-- Solo muestra esta sección si el usuario tiene el rol Admin --> *@
+                                           @if (User.IsInRole("Administrador")) @* <!-- Solo muestra esta sección si el usuario tiene el rol Admin --> *@
                         {
                             <a class="nav-link" data-bs-toggle="collapse" href="#configMenu">
                                 <i class="bi bi-gear"></i> Configuración
@@ -260,7 +260,7 @@
                     </li>
                         <!-- En _AdminLayout.cshtml, en la sección del mobileSidebar -->
                     <li class="nav-item">
-                            @if (User.IsInRole("Admin"))
+                            @if (User.IsInRole("Administrador"))
                             {
                             <a class="nav-link" data-bs-toggle="collapse" href="#configMenuMobile">
                                 <i class="bi bi-gear"></i> Configuración

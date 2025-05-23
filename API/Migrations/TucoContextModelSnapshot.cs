@@ -1059,13 +1059,13 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Permiso", "Permiso")
                         .WithMany("UsuarioPermiso")
                         .HasForeignKey("PermisoID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("UsuarioPermiso")
                         .HasForeignKey("UsuarioID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Permiso");
@@ -1078,14 +1078,14 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Role", "Rol")
                         .WithMany("UsuarioRoles")
                         .HasForeignKey("RolId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_UsuarioRol_Rol");
 
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("UsuarioRoles")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_UsuarioRol_Usuario");
 
@@ -1099,14 +1099,14 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Role", null)
                         .WithMany()
                         .HasForeignKey("RolId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK__UsuarioRo__RolID__04E4BC85");
 
                     b.HasOne("tuco.Clases.Models.Usuario", null)
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK__UsuarioRo__Usuar__03F0984C");
                 });
@@ -1122,7 +1122,7 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("InventarioProgramado");
