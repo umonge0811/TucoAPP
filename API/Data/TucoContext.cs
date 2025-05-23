@@ -37,7 +37,7 @@ public partial class TucoContext : DbContext
 
     //public virtual DbSet<AlertasInventarioProgramado> AlertasInventarioProgramado { get; set; }
 
-    public virtual DbSet<AlertasInvProgramado> AlertasInvProgramado { get; set; }
+    //public virtual DbSet<AlertasInvProgramado> AlertasInvProgramado { get; set; }
 
 
     public virtual DbSet<Cliente> Clientes { get; set; }
@@ -111,59 +111,59 @@ public partial class TucoContext : DbContext
                 .HasConstraintName("FK__Clientes__Usuari__5070F446");
         });
 
-        // ===== CONFIGURACIÓN FINAL PARA ALERTAS =====
+        //// ===== CONFIGURACIÓN FINAL PARA ALERTAS =====
 
-        modelBuilder.Entity<AlertasInvProgramado>(entity =>
-        {
-            //entity.ToTable("AlertasInventarioProgramado");
+        //modelBuilder.Entity<AlertasInvProgramado>(entity =>
+        //{
+        //    //entity.ToTable("AlertasInventarioProgramado");
 
-            entity.HasKey(e => e.AlertaId);
+        //    entity.HasKey(e => e.AlertaId);
 
-            entity.Property(e => e.AlertaId)
-                .HasColumnName("AlertaID")
-                .ValueGeneratedOnAdd();
+        //    entity.Property(e => e.AlertaId)
+        //        .HasColumnName("AlertaID")
+        //        .ValueGeneratedOnAdd();
 
-            entity.Property(e => e.InventarioProgramadoId)
-                .HasColumnName("InventarioProgramadoID")
-                .IsRequired();
+        //    entity.Property(e => e.InventarioProgramadoId)
+        //        .HasColumnName("InventarioProgramadoID")
+        //        .IsRequired();
 
-            entity.Property(e => e.UsuarioId)
-                .HasColumnName("UsuarioID")
-                .IsRequired();
+        //    entity.Property(e => e.UsuarioId)
+        //        .HasColumnName("UsuarioID")
+        //        .IsRequired();
 
-            entity.Property(e => e.TipoAlerta)
-                .HasMaxLength(50)
-                .IsRequired();
+        //    entity.Property(e => e.TipoAlerta)
+        //        .HasMaxLength(50)
+        //        .IsRequired();
 
-            entity.Property(e => e.Mensaje)
-                .HasMaxLength(500)
-                .IsRequired();
+        //    entity.Property(e => e.Mensaje)
+        //        .HasMaxLength(500)
+        //        .IsRequired();
 
-            entity.Property(e => e.Leida)
-                .IsRequired()
-                .HasDefaultValue(false);
+        //    entity.Property(e => e.Leida)
+        //        .IsRequired()
+        //        .HasDefaultValue(false);
 
-            entity.Property(e => e.FechaCreacion)
-                .HasColumnType("datetime")
-                .IsRequired()
-                .HasDefaultValueSql("(getdate())");
+        //    entity.Property(e => e.FechaCreacion)
+        //        .HasColumnType("datetime")
+        //        .IsRequired()
+        //        .HasDefaultValueSql("(getdate())");
 
-            entity.Property(e => e.FechaLectura)
-                .HasColumnType("datetime");
+        //    entity.Property(e => e.FechaLectura)
+        //        .HasColumnType("datetime");
 
-            //// Relaciones
-            //entity.HasOne(d => d.InventarioProgramado)
-            //    .WithMany(p => p.Alertas)
-            //    .HasForeignKey(d => d.InventarioProgramadoId)
-            //    .OnDelete(DeleteBehavior.Cascade)
-            //    .HasConstraintName("FK_AlertasInventarioProgramado_InventariosProgramados");
+        //    //// Relaciones
+        //    //entity.HasOne(d => d.InventarioProgramado)
+        //    //    .WithMany(p => p.Alertas)
+        //    //    .HasForeignKey(d => d.InventarioProgramadoId)
+        //    //    .OnDelete(DeleteBehavior.Cascade)
+        //    //    .HasConstraintName("FK_AlertasInventarioProgramado_InventariosProgramados");
 
-            //entity.HasOne(d => d.Usuario)
-            //    .WithMany(p => p.AlertasRecibidas)
-            //    .HasForeignKey(d => d.UsuarioId)
-            //    .OnDelete(DeleteBehavior.Restrict)
-            //    .HasConstraintName("FK_AlertasInventarioProgramado_Usuarios");
-        });
+        //    //entity.HasOne(d => d.Usuario)
+        //    //    .WithMany(p => p.AlertasRecibidas)
+        //    //    .HasForeignKey(d => d.UsuarioId)
+        //    //    .OnDelete(DeleteBehavior.Restrict)
+        //    //    .HasConstraintName("FK_AlertasInventarioProgramado_Usuarios");
+        //});
 
 
         modelBuilder.Entity<DetalleDocumento>(entity =>
@@ -597,11 +597,11 @@ public partial class TucoContext : DbContext
                 .HasForeignKey(d => d.InventarioProgramadoId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<InventarioProgramado>()
-                .HasMany(ip => ip.Alertas)
-                .WithOne(a => a.InventarioProgramado)
-                .HasForeignKey(a => a.InventarioProgramadoId)
-                .OnDelete(DeleteBehavior.Cascade);
+            //modelBuilder.Entity<InventarioProgramado>()
+            //    .HasMany(ip => ip.Alertas)
+            //    .WithOne(a => a.InventarioProgramado)
+            //    .HasForeignKey(a => a.InventarioProgramadoId)
+            //    .OnDelete(DeleteBehavior.Cascade);
 
             // Configuración para AsignacionUsuarioInventario
             modelBuilder.Entity<AsignacionUsuarioInventario>()

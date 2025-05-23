@@ -537,17 +537,7 @@ namespace API.Controllers
 
                         puntoFallo = $"Creando alerta para usuario ID: {asignacion.UsuarioId}";
 
-                        var alerta = new AlertasInvProgramado
-                        {
-                            InventarioProgramadoId = inventario.InventarioProgramadoId,
-                            UsuarioId = asignacion.UsuarioId,
-                            TipoAlerta = "Asignación",
-                            Mensaje = $"Se te ha asignado al inventario: {inventario.Titulo}",
-                            FechaCreacion = DateTime.Now
-                        };
-
-                        puntoFallo = $"Agregando alerta para usuario {asignacion.UsuarioId} al contexto";
-                        _context.AlertasInvProgramado.Add(alerta);
+                       
                     }
 
                     puntoFallo = "Guardando alertas en base de datos";
@@ -632,16 +622,16 @@ namespace API.Controllers
                         // Crear alerta para nuevo usuario asignado
                         if (!inventario.AsignacionesUsuarios.Any(a => a.UsuarioId == asignacion.UsuarioId))
                         {
-                            var alerta = new AlertasInvProgramado
-                            {
-                                InventarioProgramadoId = id,
-                                UsuarioId = asignacion.UsuarioId,
-                                TipoAlerta = "Asignación",
-                                Mensaje = $"Se te ha asignado al inventario: {inventario.Titulo}",
-                                FechaCreacion = DateTime.Now
-                            };
+                            //var alerta = new AlertasInvProgramado
+                            //{
+                            //    InventarioProgramadoId = id,
+                            //    UsuarioId = asignacion.UsuarioId,
+                            //    TipoAlerta = "Asignación",
+                            //    Mensaje = $"Se te ha asignado al inventario: {inventario.Titulo}",
+                            //    FechaCreacion = DateTime.Now
+                            //};
 
-                            _context.AlertasInvProgramado.Add(alerta);
+                            //_context.AlertasInvProgramado.Add(alerta);
                         }
                     }
                 }
@@ -717,16 +707,7 @@ namespace API.Controllers
                 // Crear alertas para todos los usuarios asignados
                 foreach (var asignacion in inventario.AsignacionesUsuarios)
                 {
-                    var alerta = new AlertasInvProgramado
-                    {
-                        InventarioProgramadoId = id,
-                        UsuarioId = asignacion.UsuarioId,
-                        TipoAlerta = "Inicio",
-                        Mensaje = $"El inventario '{inventario.Titulo}' ha sido iniciado y está disponible para conteo.",
-                        FechaCreacion = DateTime.Now
-                    };
-
-                    _context.AlertasInvProgramado.Add(alerta);
+                   
                 }
 
                 await _context.SaveChangesAsync();
@@ -767,16 +748,16 @@ namespace API.Controllers
                 // Crear alertas para todos los usuarios asignados
                 foreach (var asignacion in inventario.AsignacionesUsuarios)
                 {
-                    var alerta = new AlertasInvProgramado
-                    {
-                        InventarioProgramadoId = id,
-                        UsuarioId = asignacion.UsuarioId,
-                        TipoAlerta = "Cancelación",
-                        Mensaje = $"El inventario '{inventario.Titulo}' ha sido cancelado.",
-                        FechaCreacion = DateTime.Now
-                    };
+                    //var alerta = new AlertasInvProgramado
+                    //{
+                    //    InventarioProgramadoId = id,
+                    //    UsuarioId = asignacion.UsuarioId,
+                    //    TipoAlerta = "Cancelación",
+                    //    Mensaje = $"El inventario '{inventario.Titulo}' ha sido cancelado.",
+                    //    FechaCreacion = DateTime.Now
+                    //};
 
-                    _context.AlertasInvProgramado.Add(alerta);
+                    //_context.AlertasInvProgramado.Add(alerta);
                 }
 
                 await _context.SaveChangesAsync();
@@ -829,16 +810,16 @@ namespace API.Controllers
                 // Crear alertas para todos los usuarios asignados
                 foreach (var asignacion in inventario.AsignacionesUsuarios)
                 {
-                    var alerta = new AlertasInvProgramado
-                    {
-                        InventarioProgramadoId = id,
-                        UsuarioId = asignacion.UsuarioId,
-                        TipoAlerta = "Finalización",
-                        Mensaje = $"El inventario '{inventario.Titulo}' ha sido completado.",
-                        FechaCreacion = DateTime.Now
-                    };
+                    //var alerta = new AlertasInvProgramado
+                    //{
+                    //    InventarioProgramadoId = id,
+                    //    UsuarioId = asignacion.UsuarioId,
+                    //    TipoAlerta = "Finalización",
+                    //    Mensaje = $"El inventario '{inventario.Titulo}' ha sido completado.",
+                    //    FechaCreacion = DateTime.Now
+                    //};
 
-                    _context.AlertasInvProgramado.Add(alerta);
+                    //_context.AlertasInvProgramado.Add(alerta);
                 }
 
                 await _context.SaveChangesAsync();
@@ -974,16 +955,16 @@ namespace API.Controllers
 
                     foreach (var usuarioId in usuariosValidacion)
                     {
-                        var alerta = new AlertasInvProgramado
-                        {
-                            InventarioProgramadoId = dto.InventarioProgramadoId,
-                            UsuarioId = usuarioId,
-                            TipoAlerta = "Discrepancia",
-                            Mensaje = $"Discrepancia en '{nombreProducto}'. Sistema: {detalle.CantidadSistema}, Físico: {detalle.CantidadFisica}, Diferencia: {detalle.Diferencia}",
-                            FechaCreacion = DateTime.Now
-                        };
+                        //var alerta = new AlertasInvProgramado
+                        //{
+                        //    InventarioProgramadoId = dto.InventarioProgramadoId,
+                        //    UsuarioId = usuarioId,
+                        //    TipoAlerta = "Discrepancia",
+                        //    Mensaje = $"Discrepancia en '{nombreProducto}'. Sistema: {detalle.CantidadSistema}, Físico: {detalle.CantidadFisica}, Diferencia: {detalle.Diferencia}",
+                        //    FechaCreacion = DateTime.Now
+                        //};
 
-                        _context.AlertasInvProgramado.Add(alerta);
+                        //_context.AlertasInvProgramado.Add(alerta);
                     }
 
                     await _context.SaveChangesAsync();

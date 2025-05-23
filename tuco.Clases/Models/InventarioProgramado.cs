@@ -54,7 +54,7 @@ namespace tuco.Clases.Models
 
         //public virtual ICollection<AlertasInventario> Alertas { get; set; }
 
-        public virtual ICollection<AlertasInvProgramado> Alertas { get; set; } = new List<AlertasInvProgramado>();
+        //public virtual ICollection<AlertasInvProgramado> Alertas { get; set; } = new List<AlertasInvProgramado>();
 
 
 
@@ -62,7 +62,7 @@ namespace tuco.Clases.Models
         {
             AsignacionesUsuarios = new HashSet<AsignacionUsuarioInventario>();
             DetallesInventario = new HashSet<DetalleInventarioProgramado>();
-            Alertas = new HashSet<AlertasInvProgramado>();
+            //Alertas = new HashSet<AlertasInvProgramado>();
             FechaCreacion = DateTime.Now;
             Estado = "Programado";
         }

@@ -38,7 +38,7 @@ namespace Tuco.Clases.Models
 
         public DateTime? FechaLectura { get; set; }
 
-        public virtual InventarioProgramado InventarioProgramado { get; set; }
+        //public virtual InventarioProgramado InventarioProgramado { get; set; }
 
         public virtual Usuario Usuario { get; set; }
 
