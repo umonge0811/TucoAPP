@@ -139,27 +139,22 @@ namespace GestionLlantera.Web.Controllers
                         Expires = DateTime.Now.AddHours(1)
                     });
 
-                    // Decodificar el token para obtener los claims
+                    // ✅ MEJORAR: Decodificar el token y transferir TODOS los claims
                     var handler = new JwtSecurityTokenHandler();
                     var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
 
-                    // Crear los claims para la identidad
                     var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, model.Email),
-                new Claim("JwtToken", token)
+                new Claim("JwtToken", token) // Mantener referencia al token
             };
 
-                    // Añadir los roles desde el token JWT
+                    // ✅ TRANSFERIR TODOS LOS CLAIMS DEL JWT A LA COOKIE DE AUTENTICACIÓN
                     if (jwtToken != null)
                     {
-                        // Buscar claims de rol (pueden venir como "role" o ClaimTypes.Role)
-                        var roleClaims = jwtToken.Claims
-                            .Where(c => c.Type == "role" || c.Type == "Role" || c.Type == ClaimTypes.Role);
-
-                        foreach (var roleClaim in roleClaims)
+                        foreach (var claim in jwtToken.Claims)
                         {
-                            claims.Add(new Claim(ClaimTypes.Role, roleClaim.Value));
+                            // Agregar todos los claims del JWT
+                            claims.Add(new Claim(claim.Type, claim.Value));
                         }
                     }
 
@@ -175,6 +170,7 @@ namespace GestionLlantera.Web.Controllers
                             ExpiresUtc = DateTime.UtcNow.AddHours(1)
                         });
 
+                    _logger.LogInformation("Login exitoso para usuario: {Email}", model.Email);
                     return RedirectToAction("Index", "Dashboard");
                 }
 

@@ -1,13 +1,14 @@
 ﻿using API.Data;
+using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.IO;
 using System.Net;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
-using System.IO;
-using Microsoft.AspNetCore.Hosting;
-using Newtonsoft.Json;
 using Tuco.Clases.Models;
 
 namespace API.Controllers
@@ -19,16 +20,21 @@ namespace API.Controllers
         private readonly TucoContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<InventarioController> _logger;
+        private readonly INotificacionService _notificacionService; // ← Agregar esta línea
+
 
         public InventarioController(
             TucoContext context,
             IWebHostEnvironment webHostEnvironment,
-            ILogger<InventarioController> logger)
+            ILogger<InventarioController> logger,
+            INotificacionService notificacionService) // ← Agregar este parámetro
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
+            _notificacionService = notificacionService; // ← Agregar esta línea
         }
+
 
         // GET: api/Inventario/productos
         [HttpGet("productos")]
@@ -529,6 +535,26 @@ namespace API.Controllers
                     puntoFallo = "Guardando asignaciones de usuarios en base de datos";
                     await _context.SaveChangesAsync();
 
+                    // ✅ NUEVO: Enviar notificaciones de asignación
+                    puntoFallo = "Enviando notificaciones de asignación";
+                    foreach (var asignacion in dto.AsignacionesUsuarios)
+                    {
+                        var titulo = "📋 Inventario Asignado";
+                        var mensaje = $"Te han asignado al inventario: {inventario.Titulo}";
+                        var urlAccion = $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}";
+
+                        await _notificacionService.CrearNotificacionAsync(
+                            usuarioId: asignacion.UsuarioId,
+                            titulo: titulo,
+                            mensaje: mensaje,
+                            tipo: "info",
+                            icono: "fas fa-clipboard-list",
+                            urlAccion: urlAccion,
+                            entidadTipo: "InventarioProgramado",
+                            entidadId: inventario.InventarioProgramadoId
+                        );
+                    }
+
                     puntoFallo = "Procesando alertas para usuarios";
 
                     // Crear alertas para usuarios asignados
@@ -619,20 +645,7 @@ namespace API.Controllers
 
                         _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);
 
-                        // Crear alerta para nuevo usuario asignado
-                        if (!inventario.AsignacionesUsuarios.Any(a => a.UsuarioId == asignacion.UsuarioId))
-                        {
-                            //var alerta = new AlertasInvProgramado
-                            //{
-                            //    InventarioProgramadoId = id,
-                            //    UsuarioId = asignacion.UsuarioId,
-                            //    TipoAlerta = "Asignación",
-                            //    Mensaje = $"Se te ha asignado al inventario: {inventario.Titulo}",
-                            //    FechaCreacion = DateTime.Now
-                            //};
-
-                            //_context.AlertasInvProgramado.Add(alerta);
-                        }
+                       
                     }
                 }
 
@@ -703,12 +716,24 @@ namespace API.Controllers
 
                     _context.DetallesInventarioProgramado.Add(detalle);
                 }
+                // ✅ NUEVO: Enviar notificaciones de inicio
+                var usuariosAsignados = inventario.AsignacionesUsuarios.Select(a => a.UsuarioId).ToList();
 
-                // Crear alertas para todos los usuarios asignados
-                foreach (var asignacion in inventario.AsignacionesUsuarios)
-                {
-                   
-                }
+                var titulo = "🚀 Inventario Iniciado";
+                var mensaje = $"El inventario '{inventario.Titulo}' ha comenzado. ¡Puedes empezar a contar!";
+                var urlAccion = $"/Inventario/DetalleInventarioProgramado/{id}";
+
+                await _notificacionService.CrearNotificacionesAsync(
+                    usuariosIds: usuariosAsignados,
+                    titulo: titulo,
+                    mensaje: mensaje,
+                    tipo: "success",
+                    icono: "fas fa-play-circle",
+                    urlAccion: urlAccion,
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: id
+                );
+
 
                 await _context.SaveChangesAsync();
 
@@ -745,20 +770,23 @@ namespace API.Controllers
                 // Cambiar estado a "Cancelado"
                 inventario.Estado = "Cancelado";
 
-                // Crear alertas para todos los usuarios asignados
-                foreach (var asignacion in inventario.AsignacionesUsuarios)
-                {
-                    //var alerta = new AlertasInvProgramado
-                    //{
-                    //    InventarioProgramadoId = id,
-                    //    UsuarioId = asignacion.UsuarioId,
-                    //    TipoAlerta = "Cancelación",
-                    //    Mensaje = $"El inventario '{inventario.Titulo}' ha sido cancelado.",
-                    //    FechaCreacion = DateTime.Now
-                    //};
+                // ✅ NUEVO: Enviar notificaciones de cancelación
+                var usuariosAsignados = inventario.AsignacionesUsuarios.Select(a => a.UsuarioId).ToList();
 
-                    //_context.AlertasInvProgramado.Add(alerta);
-                }
+                var titulo = "❌ Inventario Cancelado";
+                var mensaje = $"El inventario '{inventario.Titulo}' ha sido cancelado.";
+                var urlAccion = $"/Inventario/DetalleInventarioProgramado/{id}";
+
+                await _notificacionService.CrearNotificacionesAsync(
+                    usuariosIds: usuariosAsignados,
+                    titulo: titulo,
+                    mensaje: mensaje,
+                    tipo: "warning",
+                    icono: "fas fa-times-circle",
+                    urlAccion: urlAccion,
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: id
+                );
 
                 await _context.SaveChangesAsync();
 
@@ -807,20 +835,32 @@ namespace API.Controllers
                     detalle.Diferencia = 0;
                 }
 
-                // Crear alertas para todos los usuarios asignados
-                foreach (var asignacion in inventario.AsignacionesUsuarios)
-                {
-                    //var alerta = new AlertasInvProgramado
-                    //{
-                    //    InventarioProgramadoId = id,
-                    //    UsuarioId = asignacion.UsuarioId,
-                    //    TipoAlerta = "Finalización",
-                    //    Mensaje = $"El inventario '{inventario.Titulo}' ha sido completado.",
-                    //    FechaCreacion = DateTime.Now
-                    //};
+                // ✅ NUEVO: Calcular estadísticas para la notificación
+                var detalles = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == id)
+                    .ToListAsync();
 
-                    //_context.AlertasInvProgramado.Add(alerta);
-                }
+                var totalProductos = detalles.Count;
+                var discrepancias = detalles.Count(d => d.Diferencia != 0 && d.Diferencia != null);
+
+                // Enviar notificaciones de finalización
+                var usuariosAsignados = inventario.AsignacionesUsuarios.Select(a => a.UsuarioId).ToList();
+
+                var titulo = "✅ Inventario Completado";
+                var mensaje = $"El inventario '{inventario.Titulo}' ha sido completado. " +
+                             $"Total: {totalProductos} productos, Discrepancias: {discrepancias}";
+                var urlAccion = $"/Inventario/DetalleInventarioProgramado/{id}";
+
+                await _notificacionService.CrearNotificacionesAsync(
+                    usuariosIds: usuariosAsignados,
+                    titulo: titulo,
+                    mensaje: mensaje,
+                    tipo: discrepancias > 0 ? "warning" : "success",
+                    icono: "fas fa-check-circle",
+                    urlAccion: urlAccion,
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: id
+                );
 
                 await _context.SaveChangesAsync();
 
@@ -947,24 +987,29 @@ namespace API.Controllers
 
                     string nombreProducto = producto?.NombreProducto ?? $"Producto ID: {dto.ProductoId}";
 
-                    // Crear alerta para usuarios con permiso de validación
+                    // ✅ NUEVO: Crear notificación para usuarios con permiso de validación
                     var usuariosValidacion = await _context.AsignacionesUsuariosInventario
                         .Where(a => a.InventarioProgramadoId == dto.InventarioProgramadoId && a.PermisoValidacion)
                         .Select(a => a.UsuarioId)
                         .ToListAsync();
 
-                    foreach (var usuarioId in usuariosValidacion)
+                    if (usuariosValidacion.Any())
                     {
-                        //var alerta = new AlertasInvProgramado
-                        //{
-                        //    InventarioProgramadoId = dto.InventarioProgramadoId,
-                        //    UsuarioId = usuarioId,
-                        //    TipoAlerta = "Discrepancia",
-                        //    Mensaje = $"Discrepancia en '{nombreProducto}'. Sistema: {detalle.CantidadSistema}, Físico: {detalle.CantidadFisica}, Diferencia: {detalle.Diferencia}",
-                        //    FechaCreacion = DateTime.Now
-                        //};
+                        var titulo = "⚠️ Discrepancia Detectada";
+                        var mensaje = $"Discrepancia en '{nombreProducto}': Sistema={detalle.CantidadSistema}, " +
+                                     $"Físico={detalle.CantidadFisica}, Diferencia={detalle.Diferencia}";
+                        var urlAccion = $"/Inventario/DetalleInventarioProgramado/{dto.InventarioProgramadoId}";
 
-                        //_context.AlertasInvProgramado.Add(alerta);
+                        await _notificacionService.CrearNotificacionesAsync(
+                            usuariosIds: usuariosValidacion,
+                            titulo: titulo,
+                            mensaje: mensaje,
+                            tipo: "warning",
+                            icono: "fas fa-exclamation-triangle",
+                            urlAccion: urlAccion,
+                            entidadTipo: "InventarioProgramado",
+                            entidadId: dto.InventarioProgramadoId
+                        );
                     }
 
                     await _context.SaveChangesAsync();

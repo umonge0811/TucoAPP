@@ -206,8 +206,7 @@ public class AuthController : ControllerBase
         });
     }
 
-    #endregion
-    
+    #endregion    
 
     #region Generar Token
     /// <summary>
@@ -244,7 +243,10 @@ public class AuthController : ControllerBase
             var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, usuario.NombreUsuario),
-            new Claim(ClaimTypes.Email, usuario.Email)
+            new Claim(ClaimTypes.Email, usuario.Email),
+             // ✅ AGREGAR EL ID DEL USUARIO
+            new Claim(ClaimTypes.NameIdentifier, usuario.UsuarioId.ToString()),
+            new Claim("userId", usuario.UsuarioId.ToString()) // Claim personalizado también
         };
 
             // Agregar roles y permisos solo si existen
@@ -274,7 +276,6 @@ public class AuthController : ControllerBase
         }
     }
     #endregion
-
 
     #region Regenerar Token
     /// <summary>

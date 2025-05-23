@@ -1,5 +1,6 @@
 using API.Data;
 using API.Services;
+using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Configurar servicios de email
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<EmailService>();
+// Configurar servicios de notificaciones
+builder.Services.AddScoped<INotificacionService, NotificacionService>();
 builder.Services.AddHttpClient();
+
 
 
 // Configurar límites de tamaño para subida de archivos (opcional)

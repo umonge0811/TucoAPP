@@ -1,14 +1,22 @@
-using System.Text;
+using API.Data;
+using GestionLlantera.Web.Middleware;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using GestionLlantera.Web.Middleware;
+using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ? AGREGAR ESTA LÍNEA - Configuración de la base de datos
+builder.Services.AddDbContext<TucoContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // Agregar servicios al contenedor.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 
 // Configurar HTTP client para llamadas a la API
 builder.Services.AddHttpClient("APIClient", client =>
@@ -25,17 +33,48 @@ builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IUsuariosService, UsuariosService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
+//builder.Services.AddScoped<INotificacionService, NotificacionService>();
 
-// Configurar autenticación y autorización
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.Cookie.HttpOnly = true;
-        options.ExpireTimeSpan = TimeSpan.FromHours(1);
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
         options.SlidingExpiration = true;
     });
+
+
+// Servicios HTTP Client existentes (estos se mantienen igual)
+builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7273/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHttpClient<IUsuariosService, UsuariosService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7273/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHttpClient<IRolesService, RolesService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7273/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHttpClient<IPermisosService, PermisosService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7273/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHttpClient<IInventarioService, InventarioService>(client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7273/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 builder.Services.AddAuthorization(options =>
 {

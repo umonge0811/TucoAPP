@@ -1,0 +1,117 @@
+﻿@model GestionLlantera.Web.ViewComponents.NotificacionesViewModel
+@using GestionLlantera.Web.Models.DTOs
+
+<!-- Botón de notificaciones -->
+<button class="btn btn-icon position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#notificationsPanel">
+    <i class="bi bi-bell"></i>
+    @if (Model.ConteoNoLeidas > 0)
+    {
+        <span class="notification-badge">@(Model.ConteoNoLeidas > 99 ? "99+" : Model.ConteoNoLeidas.ToString())</span>
+    }
+</button>
+
+<script>
+    // Función para obtener el token CSRF
+    function getCSRFToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    }
+
+    // Función global para marcar como leída
+    window.marcarNotificacionComoLeida = async function(notificacionId) {
+        try {
+            const response = await fetch(`/api/notificaciones/${notificacionId}/marcar-leida`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getCSRFToken()
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    // Actualizar visualmente la notificación
+                    const elemento = document.querySelector(`[data-notification-id="${notificacionId}"]`);
+                    if (elemento) {
+                        elemento.classList.remove('unread');
+                        const badge = elemento.querySelector('.unread-indicator');
+                        if (badge) badge.remove();
+                    }
+
+                    // Actualizar contador en tiempo real
+                    actualizarContadorNotificaciones();
+                }
+            }
+        } catch (error) {
+            console.error('Error al marcar notificación como leída:', error);
+        }
+    }
+
+    // Función para marcar todas como leídas
+    window.marcarTodasComoLeidas = async function() {
+        try {
+            const response = await fetch('/api/notificaciones/marcar-todas-leidas', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': getCSRFToken()
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                    // Recargar solo el componente de notificaciones
+                    location.reload();
+                }
+            }
+        } catch (error) {
+            console.error('Error al marcar todas como leídas:', error);
+        }
+    }
+
+    // Función para manejar click en notificación
+    window.manejarClickNotificacion = function(notificacionId, urlAccion) {
+        // Marcar como leída (sin esperar respuesta para mejor UX)
+        marcarNotificacionComoLeida(notificacionId);
+
+        // Cerrar el panel
+        const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('notificationsPanel'));
+        if (offcanvas) {
+            offcanvas.hide();
+        }
+
+        // Navegar si tiene URL de acción
+        if (urlAccion && urlAccion !== 'null' && urlAccion.trim() !== '') {
+            setTimeout(() => {
+                window.location.href = urlAccion;
+            }, 200);
+        }
+    }
+
+    // Función para actualizar el contador sin recargar toda la página
+    async function actualizarContadorNotificaciones() {
+        try {
+            const response = await fetch('/api/notificaciones/conteo-no-leidas');
+            if (response.ok) {
+                const conteo = await response.json();
+
+                // Actualizar todos los badges de notificaciones
+                const badges = document.querySelectorAll('.notification-badge');
+                badges.forEach(badge => {
+                    if (conteo > 0) {
+                        badge.textContent = conteo > 99 ? '99+' : conteo.toString();
+                        badge.style.display = '';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error al actualizar contador:', error);
+        }
+    }
+
+    // Actualizar notificaciones cada 30 segundos
+    setInterval(actualizarContadorNotificaciones, 30000);
+</script>
