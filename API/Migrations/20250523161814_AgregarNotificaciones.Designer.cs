@@ -4,6 +4,7 @@ using API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace API.Migrations
 {
     [DbContext(typeof(TucoContext))]
-    partial class TucoContextModelSnapshot : ModelSnapshot
+    [Migration("20250523161814_AgregarNotificaciones")]
+    partial class AgregarNotificaciones
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -221,9 +224,7 @@ namespace API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AsignacionId"));
 
                     b.Property<DateTime>("FechaAsignacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("InventarioProgramadoId")
                         .HasColumnType("int");
@@ -651,9 +652,7 @@ namespace API.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("FechaCreacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("FechaFin")
                         .HasColumnType("datetime2");
@@ -995,14 +994,14 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Permiso", null)
                         .WithMany()
                         .HasForeignKey("PermisoId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK__RolPermis__Permi__01142BA1");
 
                     b.HasOne("tuco.Clases.Models.Role", null)
                         .WithMany()
                         .HasForeignKey("RolId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK__RolPermis__RolID__00200768");
                 });
@@ -1027,7 +1026,7 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Usuario");
@@ -1038,14 +1037,14 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Permiso", "Permiso")
                         .WithMany("RolPermiso")
                         .HasForeignKey("PermisoID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_RolPermiso_Permiso");
 
                     b.HasOne("tuco.Clases.Models.Role", "Rol")
                         .WithMany("RolPermiso")
                         .HasForeignKey("RolID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_RolPermiso_Rol");
 
@@ -1059,13 +1058,13 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Permiso", "Permiso")
                         .WithMany("UsuarioPermiso")
                         .HasForeignKey("PermisoID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("UsuarioPermiso")
                         .HasForeignKey("UsuarioID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Permiso");
@@ -1078,14 +1077,14 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Role", "Rol")
                         .WithMany("UsuarioRoles")
                         .HasForeignKey("RolId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_UsuarioRol_Rol");
 
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("UsuarioRoles")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_UsuarioRol_Usuario");
 
@@ -1099,14 +1098,14 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Role", null)
                         .WithMany()
                         .HasForeignKey("RolId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK__UsuarioRo__RolID__04E4BC85");
 
                     b.HasOne("tuco.Clases.Models.Usuario", null)
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK__UsuarioRo__Usuar__03F0984C");
                 });
@@ -1122,7 +1121,7 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("InventarioProgramado");
@@ -1135,7 +1134,6 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("Clientes")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK__Clientes__Usuari__5070F446");
 
                     b.Navigation("Usuario");
@@ -1146,7 +1144,6 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Documento", "Documento")
                         .WithMany("DetalleDocumentos")
                         .HasForeignKey("DocumentoId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("FK__DetalleDo__Docum__619B8048");
 
                     b.HasOne("tuco.Clases.Models.Producto", "Producto")
@@ -1204,13 +1201,11 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.PedidosProveedor", "Pedido")
                         .WithMany("DetallePedidos")
                         .HasForeignKey("PedidoId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("FK__DetallePe__Pedid__6C190EBB");
 
                     b.HasOne("tuco.Clases.Models.Producto", "Producto")
                         .WithMany("DetallePedidos")
                         .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK__DetallePe__Produ__6D0D32F4");
 
                     b.Navigation("Pedido");
@@ -1223,13 +1218,11 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Cliente", "Cliente")
                         .WithMany("Documentos")
                         .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK__Documento__Clien__5629CD9C");
 
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("Documentos")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK__Documento__Usuar__571DF1D5");
 
                     b.Navigation("Cliente");
@@ -1242,7 +1235,7 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("HistorialAcciones")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK__Historial__Usuar__114A936A");
 
@@ -1254,7 +1247,6 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Producto", "Producto")
                         .WithMany("ImagenesProductos")
                         .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("FK__ImagenesP__Produ__73BA3083");
 
                     b.Navigation("Producto");
@@ -1265,7 +1257,6 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("Inventarios")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK__Inventari__Usuar__778AC167");
 
                     b.Navigation("Usuario");
@@ -1287,7 +1278,6 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Producto", "Producto")
                         .WithMany("Llanta")
                         .HasForeignKey("ProductoId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .HasConstraintName("FK__Llantas__Product__6FE99F9F");
 
                     b.Navigation("Producto");
@@ -1298,13 +1288,11 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Proveedore", "Proveedor")
                         .WithMany("PedidosProveedors")
                         .HasForeignKey("ProveedorId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK__PedidosPr__Prove__68487DD7");
 
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("PedidosProveedors")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK__PedidosPr__Usuar__693CA210");
 
                     b.Navigation("Proveedor");
@@ -1317,7 +1305,6 @@ namespace API.Migrations
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
                         .WithMany("SesionUsuarios")
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK__SesionUsu__Usuar__08B54D69");
 
                     b.Navigation("Usuario");
