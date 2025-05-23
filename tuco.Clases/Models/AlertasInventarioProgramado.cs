@@ -6,7 +6,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace tuco.Clases.Models;
 
-public partial class AlertasInventario
+[Table("AlertasInventarioProgramado")]
+public partial class AlertasInventarioProgramado
 {
     [Key]
     public int AlertaId { get; set; }
@@ -40,7 +41,7 @@ public partial class AlertasInventario
     [ForeignKey("UsuarioId")]
     public virtual Usuario Usuario { get; set; }
 
-    public AlertasInventario()
+    public AlertasInventarioProgramado()
     {
         FechaCreacion = DateTime.Now;
     }

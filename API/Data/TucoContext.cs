@@ -30,9 +30,16 @@ public partial class TucoContext : DbContext
     }
 
     public virtual DbSet<InventarioProgramado> InventariosProgramados { get; set; }
+
     public virtual DbSet<AsignacionUsuarioInventario> AsignacionesUsuariosInventario { get; set; }
+
     public virtual DbSet<DetalleInventarioProgramado> DetallesInventarioProgramado { get; set; }
-    public virtual DbSet<AlertasInventario> AlertasInventarioProgramado { get; set; }
+
+    //public virtual DbSet<AlertasInventarioProgramado> AlertasInventarioProgramado { get; set; }
+
+    public virtual DbSet<AlertasInvProgramado> AlertasInvProgramado { get; set; }
+
+
     public virtual DbSet<Cliente> Clientes { get; set; }
 
     public virtual DbSet<DetalleDocumento> DetalleDocumentos { get; set; }
@@ -104,12 +111,11 @@ public partial class TucoContext : DbContext
                 .HasConstraintName("FK__Clientes__Usuari__5070F446");
         });
 
-        // ELIMINAR cualquier configuración anterior de AlertasInventario
-        // Y REEMPLAZAR con esta configuración limpia:
+        // ===== CONFIGURACIÓN FINAL PARA ALERTAS =====
 
-        modelBuilder.Entity<AlertasInventario>(entity =>
+        modelBuilder.Entity<AlertasInvProgramado>(entity =>
         {
-            entity.ToTable("AlertasInventarioProgramado");
+            //entity.ToTable("AlertasInventarioProgramado");
 
             entity.HasKey(e => e.AlertaId);
 
@@ -138,24 +144,27 @@ public partial class TucoContext : DbContext
                 .HasDefaultValue(false);
 
             entity.Property(e => e.FechaCreacion)
-                .IsRequired()
                 .HasColumnType("datetime")
+                .IsRequired()
                 .HasDefaultValueSql("(getdate())");
 
             entity.Property(e => e.FechaLectura)
                 .HasColumnType("datetime");
 
-            // Configurar relaciones
-            entity.HasOne(d => d.InventarioProgramado)
-                .WithMany(p => p.Alertas)
-                .HasForeignKey(d => d.InventarioProgramadoId)
-                .OnDelete(DeleteBehavior.Cascade);
+            //// Relaciones
+            //entity.HasOne(d => d.InventarioProgramado)
+            //    .WithMany(p => p.Alertas)
+            //    .HasForeignKey(d => d.InventarioProgramadoId)
+            //    .OnDelete(DeleteBehavior.Cascade)
+            //    .HasConstraintName("FK_AlertasInventarioProgramado_InventariosProgramados");
 
-            entity.HasOne(d => d.Usuario)
-                .WithMany()
-                .HasForeignKey(d => d.UsuarioId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //entity.HasOne(d => d.Usuario)
+            //    .WithMany(p => p.AlertasRecibidas)
+            //    .HasForeignKey(d => d.UsuarioId)
+            //    .OnDelete(DeleteBehavior.Restrict)
+            //    .HasConstraintName("FK_AlertasInventarioProgramado_Usuarios");
         });
+
 
         modelBuilder.Entity<DetalleDocumento>(entity =>
         {
@@ -176,25 +185,43 @@ public partial class TucoContext : DbContext
             
         });
 
-        modelBuilder.Entity<DetalleInventario>(entity =>
+        // Configuración para DetalleInventarioProgramado
+        modelBuilder.Entity<DetalleInventarioProgramado>(entity =>
         {
-            entity.HasKey(e => e.DetalleInventarioId).HasName("PK__DetalleI__C8A00126F5F24ACE");
+            entity.ToTable("DetallesInventarioProgramado");
 
-            entity.ToTable("DetalleInventario");
+            entity.HasKey(e => e.DetalleId);
 
-            entity.Property(e => e.DetalleInventarioId).HasColumnName("DetalleInventarioID");
-            entity.Property(e => e.Comentario).HasColumnType("text");
-            entity.Property(e => e.Diferencia).HasComputedColumnSql("([CantidadContada]-[CantidadRegistrada])", false);
-            entity.Property(e => e.InventarioId).HasColumnName("InventarioID");
-            entity.Property(e => e.ProductoId).HasColumnName("ProductoID");
+            entity.Property(e => e.DetalleId)
+                .ValueGeneratedOnAdd();
 
-            entity.HasOne(d => d.Inventario).WithMany(p => p.DetalleInventarios)
-                .HasForeignKey(d => d.InventarioId)
-                .HasConstraintName("FK__DetalleIn__Inven__7A672E12");
+            entity.Property(e => e.InventarioProgramadoId)
+                .IsRequired();
 
-            entity.HasOne(d => d.Producto).WithMany(p => p.DetalleInventarios)
+            entity.Property(e => e.ProductoId)
+                .IsRequired();
+
+            entity.Property(e => e.CantidadSistema)
+                .IsRequired();
+
+            entity.Property(e => e.Observaciones)
+                .HasMaxLength(500);
+
+            // Configurar relaciones
+            entity.HasOne(d => d.InventarioProgramado)
+                .WithMany(p => p.DetallesInventario)
+                .HasForeignKey(d => d.InventarioProgramadoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Producto)
+                .WithMany()
                 .HasForeignKey(d => d.ProductoId)
-                .HasConstraintName("FK__DetalleIn__Produ__7B5B524B");
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.UsuarioConteo)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioConteoId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<DetallePedido>(entity =>

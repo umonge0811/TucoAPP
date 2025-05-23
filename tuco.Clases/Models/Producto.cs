@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Tuco.Clases.Models;
 
 namespace tuco.Clases.Models;
 
@@ -19,7 +20,7 @@ public partial class Producto
 
     public int? StockMinimo { get; set; }
 
-    public virtual ICollection<AlertasInventario> AlertasInventarios { get; set; } = new List<AlertasInventario>();
+    public virtual ICollection<AlertasInvProgramado> AlertasInventarios { get; set; } = new List<AlertasInvProgramado>();
 
     public virtual ICollection<DetalleDocumento> DetalleDocumentos { get; set; } = new List<DetalleDocumento>();
 

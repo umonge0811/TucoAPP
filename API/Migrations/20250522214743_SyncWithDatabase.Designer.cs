@@ -4,6 +4,7 @@ using API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace API.Migrations
 {
     [DbContext(typeof(TucoContext))]
-    partial class TucoContextModelSnapshot : ModelSnapshot
+    [Migration("20250522214743_SyncWithDatabase")]
+    partial class SyncWithDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,7 +111,7 @@ namespace API.Migrations
                     b.ToTable("UsuarioRol", (string)null);
                 });
 
-            modelBuilder.Entity("tuco.Clases.Models.AlertasInventarioProgramado", b =>
+            modelBuilder.Entity("tuco.Clases.Models.AlertasInventario", b =>
                 {
                     b.Property<int>("AlertaId")
                         .ValueGeneratedOnAdd()
@@ -1031,7 +1034,7 @@ namespace API.Migrations
                         .HasConstraintName("FK__UsuarioRo__Usuar__03F0984C");
                 });
 
-            modelBuilder.Entity("tuco.Clases.Models.AlertasInventarioProgramado", b =>
+            modelBuilder.Entity("tuco.Clases.Models.AlertasInventario", b =>
                 {
                     b.HasOne("tuco.Clases.Models.InventarioProgramado", "InventarioProgramado")
                         .WithMany("Alertas")
@@ -1045,9 +1048,9 @@ namespace API.Migrations
                         .HasForeignKey("ProductoId");
 
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
-                        .WithMany("AlertasRecibidas")
+                        .WithMany()
                         .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_AlertasInventarioProgramado_Usuarios");
 
@@ -1321,8 +1324,6 @@ namespace API.Migrations
 
             modelBuilder.Entity("tuco.Clases.Models.Usuario", b =>
                 {
-                    b.Navigation("AlertasRecibidas");
-
                     b.Navigation("Clientes");
 
                     b.Navigation("Documentos");

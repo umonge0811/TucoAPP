@@ -46,6 +46,8 @@ public partial class Usuario
     // Propiedad de navegación para la relación muchos a muchos con Permisos
     public virtual ICollection<UsuarioPermisoRE> UsuarioPermiso { get; set; } = new List<UsuarioPermisoRE>();
 
-    
+    public virtual ICollection<AlertasInvProgramado> AlertasRecibidas { get; set; } = new List<AlertasInvProgramado>();
+
+
 
 }

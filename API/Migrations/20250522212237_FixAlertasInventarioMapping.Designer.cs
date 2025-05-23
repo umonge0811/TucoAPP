@@ -4,6 +4,7 @@ using API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace API.Migrations
 {
     [DbContext(typeof(TucoContext))]
-    partial class TucoContextModelSnapshot : ModelSnapshot
+    [Migration("20250522212237_FixAlertasInventarioMapping")]
+    partial class FixAlertasInventarioMapping
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,7 +111,7 @@ namespace API.Migrations
                     b.ToTable("UsuarioRol", (string)null);
                 });
 
-            modelBuilder.Entity("tuco.Clases.Models.AlertasInventarioProgramado", b =>
+            modelBuilder.Entity("tuco.Clases.Models.AlertasInventario", b =>
                 {
                     b.Property<int>("AlertaId")
                         .ValueGeneratedOnAdd()
@@ -118,9 +121,7 @@ namespace API.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AlertaId"));
 
                     b.Property<DateTime>("FechaCreacion")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
+                        .HasColumnType("datetime");
 
                     b.Property<DateTime?>("FechaLectura")
                         .HasColumnType("datetime");
@@ -1031,25 +1032,23 @@ namespace API.Migrations
                         .HasConstraintName("FK__UsuarioRo__Usuar__03F0984C");
                 });
 
-            modelBuilder.Entity("tuco.Clases.Models.AlertasInventarioProgramado", b =>
+            modelBuilder.Entity("tuco.Clases.Models.AlertasInventario", b =>
                 {
                     b.HasOne("tuco.Clases.Models.InventarioProgramado", "InventarioProgramado")
                         .WithMany("Alertas")
                         .HasForeignKey("InventarioProgramadoId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_AlertasInventarioProgramado_InventariosProgramados");
+                        .IsRequired();
 
                     b.HasOne("tuco.Clases.Models.Producto", null)
                         .WithMany("AlertasInventarios")
                         .HasForeignKey("ProductoId");
 
                     b.HasOne("tuco.Clases.Models.Usuario", "Usuario")
-                        .WithMany("AlertasRecibidas")
+                        .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_AlertasInventarioProgramado_Usuarios");
+                        .IsRequired();
 
                     b.Navigation("InventarioProgramado");
 
@@ -1321,8 +1320,6 @@ namespace API.Migrations
 
             modelBuilder.Entity("tuco.Clases.Models.Usuario", b =>
                 {
-                    b.Navigation("AlertasRecibidas");
-
                     b.Navigation("Clientes");
 
                     b.Navigation("Documentos");

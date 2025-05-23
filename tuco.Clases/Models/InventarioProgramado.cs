@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Tuco.Clases.Models;
 
 namespace tuco.Clases.Models
 {
@@ -51,13 +52,17 @@ namespace tuco.Clases.Models
 
         public virtual ICollection<DetalleInventarioProgramado> DetallesInventario { get; set; }
 
-        public virtual ICollection<AlertasInventario> Alertas { get; set; }
+        //public virtual ICollection<AlertasInventario> Alertas { get; set; }
+
+        public virtual ICollection<AlertasInvProgramado> Alertas { get; set; } = new List<AlertasInvProgramado>();
+
+
 
         public InventarioProgramado()
         {
             AsignacionesUsuarios = new HashSet<AsignacionUsuarioInventario>();
             DetallesInventario = new HashSet<DetalleInventarioProgramado>();
-            Alertas = new HashSet<AlertasInventario>();
+            Alertas = new HashSet<AlertasInvProgramado>();
             FechaCreacion = DateTime.Now;
             Estado = "Programado";
         }

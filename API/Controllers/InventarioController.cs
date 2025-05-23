@@ -8,6 +8,7 @@ using Tuco.Clases.DTOs.Inventario;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Newtonsoft.Json;
+using Tuco.Clases.Models;
 
 namespace API.Controllers
 {
@@ -459,11 +460,13 @@ namespace API.Controllers
 
         // POST: api/InventarioProgramado
         [HttpPost("inventarios-programados")]
-        public async Task<ActionResult<InventarioProgramadoDTO>> CrearInventarioProgramado([FromBody] InventarioProgramadoDTO dto)
+        public async Task<IActionResult> CrearInventarioProgramado([FromBody] InventarioProgramadoDTO dto)
         {
+            string puntoFallo = "Iniciando proceso";
             try
             {
-                _logger.LogInformation("=== INICIANDO CREACIÓN ===");
+                puntoFallo = "Validando datos de entrada";
+
                 // Validar los datos
                 if (dto.FechaInicio > dto.FechaFin)
                 {
@@ -474,6 +477,8 @@ namespace API.Controllers
                 {
                     return BadRequest(new { message = "El título es obligatorio" });
                 }
+
+                puntoFallo = "Creando entidad InventarioProgramado";
 
                 // Crear entidad de inventario programado
                 var inventario = new InventarioProgramado
@@ -490,14 +495,23 @@ namespace API.Controllers
                     IncluirStockBajo = dto.IncluirStockBajo
                 };
 
+                puntoFallo = "Agregando InventarioProgramado al contexto";
                 _context.InventariosProgramados.Add(inventario);
+
+                puntoFallo = "Guardando InventarioProgramado en base de datos";
                 await _context.SaveChangesAsync();
 
-                // Crear asignaciones de usuarios
+                puntoFallo = "Procesando asignaciones de usuarios";
+
+                //// Crear asignaciones de usuarios
                 if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
                 {
+                    puntoFallo = "Iterando asignaciones de usuarios";
+
                     foreach (var asignacion in dto.AsignacionesUsuarios)
                     {
+                        puntoFallo = $"Creando asignación para usuario ID: {asignacion.UsuarioId}";
+
                         var nuevaAsignacion = new AsignacionUsuarioInventario
                         {
                             InventarioProgramadoId = inventario.InventarioProgramadoId,
@@ -508,10 +522,22 @@ namespace API.Controllers
                             FechaAsignacion = DateTime.Now
                         };
 
+                        puntoFallo = $"Agregando asignación de usuario {asignacion.UsuarioId} al contexto";
                         _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);
+                    }
 
-                        // Crear alerta para el usuario asignado
-                        var alerta = new AlertasInventario
+                    puntoFallo = "Guardando asignaciones de usuarios en base de datos";
+                    await _context.SaveChangesAsync();
+
+                    puntoFallo = "Procesando alertas para usuarios";
+
+                    // Crear alertas para usuarios asignados
+                    foreach (var asignacion in dto.AsignacionesUsuarios)
+                    {
+
+                        puntoFallo = $"Creando alerta para usuario ID: {asignacion.UsuarioId}";
+
+                        var alerta = new AlertasInvProgramado
                         {
                             InventarioProgramadoId = inventario.InventarioProgramadoId,
                             UsuarioId = asignacion.UsuarioId,
@@ -520,32 +546,37 @@ namespace API.Controllers
                             FechaCreacion = DateTime.Now
                         };
 
-                        _context.AlertasInventarioProgramado.Add(alerta);
+                        puntoFallo = $"Agregando alerta para usuario {asignacion.UsuarioId} al contexto";
+                        _context.AlertasInvProgramado.Add(alerta);
                     }
 
+                    puntoFallo = "Guardando alertas en base de datos";
                     await _context.SaveChangesAsync();
                 }
-                _logger.LogInformation("=== ANTES DE RETURN ===");
+
+                puntoFallo = "Proceso completado exitosamente";
+
                 return Ok(new
                 {
                     message = "Inventario programado creado exitosamente",
                     inventarioId = inventario.InventarioProgramadoId,
-                    success = true
+                    success = true,
+                    puntoCompletado = puntoFallo
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError("ERROR COMPLETO: {Error}", ex.ToString());
-                _logger.LogError("STACK TRACE: {StackTrace}", ex.StackTrace);
-                _logger.LogError("INNER EXCEPTION: {Inner}", ex.InnerException?.ToString() ?? "No inner exception");
-                _logger.LogError(ex, "Error al crear inventario programado");
                 return StatusCode(500, new
                 {
-                    message = "Error detallado: " + ex.Message,
-                    details = ex.ToString()
+                    message = $"Error en: {puntoFallo}",
+                    errorDetallado = ex.Message,
+                    stackTrace = ex.StackTrace,
+                    innerException = ex.InnerException?.Message,
+                    success = false
                 });
             }
         }
+
 
         // PUT: api/InventarioProgramado/5
         [HttpPut("inventarios-programados/{id}")]
@@ -601,7 +632,7 @@ namespace API.Controllers
                         // Crear alerta para nuevo usuario asignado
                         if (!inventario.AsignacionesUsuarios.Any(a => a.UsuarioId == asignacion.UsuarioId))
                         {
-                            var alerta = new AlertasInventario
+                            var alerta = new AlertasInvProgramado
                             {
                                 InventarioProgramadoId = id,
                                 UsuarioId = asignacion.UsuarioId,
@@ -610,7 +641,7 @@ namespace API.Controllers
                                 FechaCreacion = DateTime.Now
                             };
 
-                            _context.AlertasInventarioProgramado.Add(alerta);
+                            _context.AlertasInvProgramado.Add(alerta);
                         }
                     }
                 }
@@ -686,7 +717,7 @@ namespace API.Controllers
                 // Crear alertas para todos los usuarios asignados
                 foreach (var asignacion in inventario.AsignacionesUsuarios)
                 {
-                    var alerta = new AlertasInventario
+                    var alerta = new AlertasInvProgramado
                     {
                         InventarioProgramadoId = id,
                         UsuarioId = asignacion.UsuarioId,
@@ -695,7 +726,7 @@ namespace API.Controllers
                         FechaCreacion = DateTime.Now
                     };
 
-                    _context.AlertasInventarioProgramado.Add(alerta);
+                    _context.AlertasInvProgramado.Add(alerta);
                 }
 
                 await _context.SaveChangesAsync();
@@ -736,7 +767,7 @@ namespace API.Controllers
                 // Crear alertas para todos los usuarios asignados
                 foreach (var asignacion in inventario.AsignacionesUsuarios)
                 {
-                    var alerta = new AlertasInventario
+                    var alerta = new AlertasInvProgramado
                     {
                         InventarioProgramadoId = id,
                         UsuarioId = asignacion.UsuarioId,
@@ -745,7 +776,7 @@ namespace API.Controllers
                         FechaCreacion = DateTime.Now
                     };
 
-                    _context.AlertasInventarioProgramado.Add(alerta);
+                    _context.AlertasInvProgramado.Add(alerta);
                 }
 
                 await _context.SaveChangesAsync();
@@ -798,7 +829,7 @@ namespace API.Controllers
                 // Crear alertas para todos los usuarios asignados
                 foreach (var asignacion in inventario.AsignacionesUsuarios)
                 {
-                    var alerta = new AlertasInventario
+                    var alerta = new AlertasInvProgramado
                     {
                         InventarioProgramadoId = id,
                         UsuarioId = asignacion.UsuarioId,
@@ -807,7 +838,7 @@ namespace API.Controllers
                         FechaCreacion = DateTime.Now
                     };
 
-                    _context.AlertasInventarioProgramado.Add(alerta);
+                    _context.AlertasInvProgramado.Add(alerta);
                 }
 
                 await _context.SaveChangesAsync();
@@ -943,7 +974,7 @@ namespace API.Controllers
 
                     foreach (var usuarioId in usuariosValidacion)
                     {
-                        var alerta = new AlertasInventario
+                        var alerta = new AlertasInvProgramado
                         {
                             InventarioProgramadoId = dto.InventarioProgramadoId,
                             UsuarioId = usuarioId,
@@ -952,7 +983,7 @@ namespace API.Controllers
                             FechaCreacion = DateTime.Now
                         };
 
-                        _context.AlertasInventarioProgramado.Add(alerta);
+                        _context.AlertasInvProgramado.Add(alerta);
                     }
 
                     await _context.SaveChangesAsync();
