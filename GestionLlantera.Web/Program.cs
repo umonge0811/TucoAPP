@@ -1,4 +1,4 @@
-using API.Data;
+ï»¿using API.Data;
 using GestionLlantera.Web.Middleware;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
@@ -7,34 +7,20 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-// ? AGREGAR ESTA LÍNEA - Configuración de la base de datos
+// âœ… ConfiguraciÃ³n de la base de datos para acceso directo
 builder.Services.AddDbContext<TucoContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Agregar servicios al contenedor.
+// Agregar servicios al contenedor
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
-// Configurar HTTP client para llamadas a la API
-builder.Services.AddHttpClient("APIClient", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
-    // Aumentar el timeout a 5 minutos para permitir subidas de archivos grandes o múltiples
-    // El timeout por defecto es 100 segundos, lo cual puede ser insuficiente para imágenes
-    client.Timeout = TimeSpan.FromMinutes(5);
-});
+// âœ… SOLO EL SERVICIO DIRECTO (sin HTTP)
+builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
 
-// Registrar servicios
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IRolesService, RolesService>();
-builder.Services.AddScoped<IPermisosService, PermisosService>();
-builder.Services.AddScoped<IUsuariosService, UsuariosService>();
-builder.Services.AddScoped<IInventarioService, InventarioService>();
-//builder.Services.AddScoped<INotificacionService, NotificacionService>();
-
+// âœ… CONFIGURACIÃ“N DE AUTENTICACIÃ“N
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -44,47 +30,32 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
+// âœ… REGISTRAR SERVICIOS PRIMERO
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUsuariosService, UsuariosService>();
+builder.Services.AddScoped<IRolesService, RolesService>();
+builder.Services.AddScoped<IPermisosService, PermisosService>();
+builder.Services.AddScoped<IInventarioService, InventarioService>();
 
-// Servicios HTTP Client existentes (estos se mantienen igual)
-builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+// âœ… HTTPCLIENT FACTORY (mÃ¡s simple y confiable)
+builder.Services.AddHttpClient();
+
+// âœ… CONFIGURACIÃ“N ADICIONAL DE HTTP CLIENT (opcional - se puede mantener o eliminar)
+builder.Services.AddHttpClient("APIClient", client =>
 {
-    client.BaseAddress = new Uri("https://localhost:7273/");
-    client.Timeout = TimeSpan.FromSeconds(30);
+    client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"]);
+    client.Timeout = TimeSpan.FromMinutes(5);
 });
 
-builder.Services.AddHttpClient<IUsuariosService, UsuariosService>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7273/");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddHttpClient<IRolesService, RolesService>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7273/");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddHttpClient<IPermisosService, PermisosService>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7273/");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-builder.Services.AddHttpClient<IInventarioService, InventarioService>(client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7273/");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
+// âœ… AUTORIZACIÃ“N
 builder.Services.AddAuthorization(options =>
 {
-    // Puedes añadir políticas personalizadas aquí
     options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
 });
 
 var app = builder.Build();
 
-// Configurar el pipeline de solicitudes HTTP.
+// Configurar el pipeline de solicitudes HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -93,10 +64,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-// Añadir autenticación y autorización al pipeline
+// Pipeline de autenticaciÃ³n y autorizaciÃ³n
 app.UseAuthentication();
 app.UseJwtClaimsMiddleware();
 app.UseAuthorization();

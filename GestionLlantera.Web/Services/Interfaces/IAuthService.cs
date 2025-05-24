@@ -1,5 +1,6 @@
 ﻿// Services/Interfaces/IAuthService.cs
 using GestionLlantera.Web.Models.ViewModels;
+using GestionLlantera.Web.Services.Interfaces;
 
 namespace GestionLlantera.Web.Services.Interfaces
 {

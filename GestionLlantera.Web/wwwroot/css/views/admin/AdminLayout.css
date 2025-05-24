@@ -479,3 +479,22 @@
     flex-shrink: 0;
     margin-left: auto;
 }
+
+
+/* Ocultar indicadores automáticos de colapso */
+.nav-link[data-bs-toggle="collapse"]::after {
+    display: none !important;
+}
+
+/* O si quieres personalizarlos */
+.nav-link[data-bs-toggle="collapse"]::after {
+    content: "\f282" !important; /* Ícono de Bootstrap Icons */
+    font-family: "bootstrap-icons" !important;
+    font-size: 0.8rem;
+    margin-left: auto;
+    transition: transform 0.2s ease;
+}
+
+.nav-link[data-bs-toggle="collapse"][aria-expanded="true"]::after {
+    transform: rotate(90deg);
+}
