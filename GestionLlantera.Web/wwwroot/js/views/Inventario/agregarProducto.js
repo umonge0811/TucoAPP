@@ -11,104 +11,362 @@
     const previewContainer = document.getElementById('previewContainer');
     const selectImagesBtn = document.getElementById('selectImagesBtn');
 
+    // *** ELEMENTOS PARA UTILIDAD - CORREGIDOS PARA TU VISTA ***
+    const tipoProductoInfo = document.getElementById('tipoProductoInfo');
+    const textoTipoProducto = document.getElementById('textoTipoProducto');
+    const modoAutomaticoRadio = document.getElementById('modoAutomatico');
+    const modoManualRadio = document.getElementById('modoManual');
+    const cardAutomatico = document.getElementById('cardAutomatico');
+    const cardManual = document.getElementById('cardManual');
+    const camposAutomaticos = document.getElementById('camposAutomaticos');
+    const campoManual = document.getElementById('campoManual');
+    const inputCosto = document.getElementById('inputCosto');
+    const inputUtilidad = document.getElementById('inputUtilidad');
+    const inputPrecioManual = document.getElementById('inputPrecioManual');
+    const precioCalculado = document.getElementById('precioCalculado');
+    const desglosePrecio = document.getElementById('desglosePrecio');
+    const textoResumen = document.getElementById('textoResumen');
+
     // Verificar si los elementos críticos existen
     if (!form) {
         console.error('Error crítico: No se encontró el formulario con ID "formProducto"');
-        return; // Detener ejecución
+        return;
     }
 
-    console.log('Formulario encontrado:', form);
+    console.log('Referencias a elementos obtenidas correctamente');
 
-    // *** DEPURACIÓN ADICIONAL ***
-    // Imprimir todos los atributos del formulario
-    console.log('Atributos del formulario:');
-    Array.from(form.attributes).forEach(attr => {
-        console.log(`${attr.name}: ${attr.value}`);
-    });
-
-    // Verificar si hay otros formularios en la página
-    const todosLosFormularios = document.querySelectorAll('form');
-    console.log(`Total de formularios en la página: ${todosLosFormularios.length}`);
-
-    // Añadir un ID único temporal para depuración
-    const idTemporal = 'form_' + Date.now();
-    form.setAttribute('data-debug-id', idTemporal);
-    console.log(`ID de depuración asignado al formulario: ${idTemporal}`);
-
-    // *** FIN DE DEPURACIÓN ADICIONAL ***
-
-    if (!submitButton) {
-        console.error('Error: No se encontró el botón de envío con ID "submitButton"');
-    }
-
-    console.log('Referencias a elementos obtenidas correctamente', {
-        form: !!form,
-        submitButton: !!submitButton,
-        esLlantaCheckbox: !!esLlantaCheckbox,
-        llantaFields: !!llantaFields,
-        fileInput: !!fileInput
-    });
-
-    console.log(esLlantaCheckbox.checked);
+    // DIAGNÓSTICO - Verificar elementos de utilidad
+    console.log('=== DIAGNÓSTICO DE ELEMENTOS DE UTILIDAD ===');
+    console.log('modoAutomaticoRadio:', !!modoAutomaticoRadio);
+    console.log('modoManualRadio:', !!modoManualRadio);
+    console.log('inputCosto:', !!inputCosto);
+    console.log('inputUtilidad:', !!inputUtilidad);
+    console.log('precioCalculado:', !!precioCalculado);
+    console.log('desglosePrecio:', !!desglosePrecio);
+    console.log('textoResumen:', !!textoResumen);
 
     // Configuración de toastr
-    toastr.options = {
-        "closeButton": true,
-        "progressBar": true,
-        "positionClass": "toast-top-right",
-        "timeOut": "5000"
-    };
+    if (typeof toastr !== 'undefined') {
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "5000"
+        };
+    }
 
-    // Inicializar campos obligatorios
+    // ========================================
+    // FUNCIONES AUXILIARES
+    // ========================================
+
+    function marcarCamposObligatorios() {
+        const camposRequeridos = document.querySelectorAll('[required]');
+        camposRequeridos.forEach(campo => {
+            const formGroup = campo.closest('.mb-3');
+            if (formGroup) {
+                formGroup.classList.add('required');
+            }
+        });
+    }
+
+    function validarCampo(campo) {
+        if (!campo.checkValidity) return true;
+
+        const esValido = campo.checkValidity();
+
+        if (esCampoVisible(campo)) {
+            if (!esValido) {
+                campo.classList.add('is-invalid');
+                campo.classList.remove('is-valid');
+            } else {
+                campo.classList.remove('is-invalid');
+                campo.classList.add('is-valid');
+            }
+        }
+
+        return esValido;
+    }
+
+    function esCampoVisible(campo) {
+        // Si el campo es de llanta y el checkbox no está marcado, ignorar
+        if (!esLlantaCheckbox.checked && llantaFields && llantaFields.contains(campo)) {
+            return false;
+        }
+
+        // Si es modo manual y el campo es de cálculo automático, ignorar
+        if (modoManualRadio && modoManualRadio.checked && camposAutomaticos && camposAutomaticos.contains(campo)) {
+            return false;
+        }
+
+        // Si es modo automático y el campo es de precio manual, ignorar
+        if (modoAutomaticoRadio && modoAutomaticoRadio.checked && campoManual && campoManual.contains(campo)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // ========================================
+    // INICIALIZACIÓN
+    // ========================================
+
     marcarCamposObligatorios();
 
-    // Mostrar/ocultar campos de llanta dependiendo del checkbox
-    if (!esLlantaCheckbox.checked) {
-        esLlantaCheckbox.addEventListener('change', function () {
-            if (this.checked) {
-                llantaFields.style.display = 'block';
+    // ========================================
+    // GESTIÓN DE TIPO DE PRODUCTO (LLANTA)
+    // ========================================
 
-                // Hacer que los campos principales de llanta sean obligatorios
-                
-                const camposObligatorios = [
+    if (esLlantaCheckbox && llantaFields && tipoProductoInfo && textoTipoProducto) {
+        function actualizarTipoProducto() {
+            if (esLlantaCheckbox.checked) {
+                llantaFields.style.display = 'block';
+                tipoProductoInfo.className = 'alert alert-primary d-flex align-items-center mb-0';
+                textoTipoProducto.innerHTML = '<i class="bi bi-car-front-fill me-1"></i> Producto tipo Llanta - campos específicos habilitados';
+
+                // Hacer obligatorios algunos campos de llanta
+                const camposObligatoriosLlanta = [
                     document.querySelector('[name="Llanta.Marca"]'),
-                    document.querySelector('[name="Llanta.Modelo"]'),
+                    document.querySelector('[name="Llanta.Ancho"]'),
+                    document.querySelector('[name="Llanta.Perfil"]'),
                     document.querySelector('[name="Llanta.Diametro"]')
                 ];
 
-                camposObligatorios.forEach(campo => {
+                camposObligatoriosLlanta.forEach(campo => {
                     if (campo) {
                         campo.setAttribute('required', 'required');
-                        campo.closest('.mb-3').classList.add('required');
+                        const formGroup = campo.closest('.mb-3');
+                        if (formGroup) formGroup.classList.add('required');
                     }
                 });
             } else {
                 llantaFields.style.display = 'none';
+                tipoProductoInfo.className = 'alert alert-info d-flex align-items-center mb-0';
+                textoTipoProducto.innerHTML = '<i class="bi bi-box me-1"></i> Producto general - información básica';
 
                 // Quitar validación de campos de llanta
                 const llantaInputs = llantaFields.querySelectorAll('input, select');
                 llantaInputs.forEach(input => {
                     input.removeAttribute('required');
-                    input.closest('.mb-3').classList.remove('required');
+                    const formGroup = input.closest('.mb-3');
+                    if (formGroup) formGroup.classList.remove('required');
+                });
+            }
+        }
+
+        esLlantaCheckbox.addEventListener('change', actualizarTipoProducto);
+        actualizarTipoProducto(); // Inicializar estado
+    }
+
+    // ========================================
+    // GESTIÓN DE PRECIO Y UTILIDAD
+    // ========================================
+
+    if (modoAutomaticoRadio && modoManualRadio) {
+        console.log('Inicializando funcionalidad de precio...');
+
+        function actualizarEstilosTarjetas() {
+            if (cardAutomatico && cardManual) {
+                if (modoAutomaticoRadio.checked) {
+                    cardAutomatico.classList.add('border-primary', 'bg-light');
+                    cardManual.classList.remove('border-warning', 'bg-light');
+                } else {
+                    cardManual.classList.add('border-warning', 'bg-light');
+                    cardAutomatico.classList.remove('border-primary', 'bg-light');
+                }
+            }
+        }
+
+        function calcularPrecio() {
+            if (!modoAutomaticoRadio.checked || !inputCosto || !inputUtilidad || !precioCalculado) {
+                console.log('No se puede calcular precio - elementos faltantes o modo manual activo');
+                return;
+            }
+
+            const costo = parseFloat(inputCosto.value) || 0;
+            const porcentajeUtilidad = parseFloat(inputUtilidad.value) || 0;
+
+            console.log(`Calculando precio: Costo=₡${costo}, Utilidad=${porcentajeUtilidad}%`);
+
+            if (costo > 0 && porcentajeUtilidad >= 0) {
+                const utilidadDinero = costo * (porcentajeUtilidad / 100);
+                const precioFinal = costo + utilidadDinero;
+
+                // Animación suave
+                precioCalculado.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    precioCalculado.style.transform = 'scale(1)';
+                }, 200);
+
+                precioCalculado.value = precioFinal.toLocaleString('es-CR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                if (desglosePrecio) {
+                    desglosePrecio.innerHTML = `
+                        <i class="bi bi-calculator me-1"></i>
+                        Costo: ₡${costo.toLocaleString('es-CR', { minimumFractionDigits: 2 })} + 
+                        Utilidad: ₡${utilidadDinero.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
+                    `;
+                }
+
+                if (textoResumen) {
+                    const margenClass = porcentajeUtilidad >= 30 ? 'text-success' : porcentajeUtilidad >= 15 ? 'text-warning' : 'text-danger';
+                    textoResumen.innerHTML = `
+                        <i class="bi bi-check-circle me-1 text-success"></i>
+                        <strong>Precio final: ₡${precioFinal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong> 
+                        <span class="${margenClass}">(${porcentajeUtilidad}% de utilidad)</span>
+                    `;
+                }
+
+                console.log(`✅ Precio calculado exitosamente: ₡${precioFinal.toFixed(2)}`);
+            } else if (costo > 0 && porcentajeUtilidad === 0) {
+                precioCalculado.value = costo.toLocaleString('es-CR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                if (desglosePrecio) {
+                    desglosePrecio.innerHTML = `
+                        <i class="bi bi-info-circle me-1"></i>
+                        Costo: ₡${costo.toLocaleString('es-CR', { minimumFractionDigits: 2 })} + Utilidad: ₡0.00
+                    `;
+                }
+
+                if (textoResumen) {
+                    textoResumen.innerHTML = `
+                        <i class="bi bi-exclamation-triangle me-1 text-warning"></i>
+                        Precio sin utilidad: ₡${costo.toLocaleString('es-CR', { minimumFractionDigits: 2 })} (0% ganancia)
+                    `;
+                }
+            } else {
+                precioCalculado.value = '0.00';
+
+                if (desglosePrecio) {
+                    desglosePrecio.innerHTML = `
+                        <i class="bi bi-dash-circle me-1"></i>
+                        Costo: ₡0.00 + Utilidad: ₡0.00
+                    `;
+                }
+
+                if (textoResumen) {
+                    textoResumen.innerHTML = `
+                        <i class="bi bi-info-circle me-1"></i>
+                        Ingrese el costo y porcentaje de utilidad para calcular el precio automáticamente
+                    `;
+                }
+            }
+        }
+
+        // Eventos para cambio de modo
+        modoAutomaticoRadio.addEventListener('change', function () {
+            if (this.checked) {
+                console.log('Cambiando a modo automático');
+                if (camposAutomaticos) camposAutomaticos.style.display = 'block';
+                if (campoManual) campoManual.style.display = 'none';
+
+                if (inputCosto) inputCosto.setAttribute('required', 'required');
+                if (inputUtilidad) inputUtilidad.setAttribute('required', 'required');
+                if (inputPrecioManual) inputPrecioManual.removeAttribute('required');
+
+                actualizarEstilosTarjetas();
+                calcularPrecio();
+            }
+        });
+
+        modoManualRadio.addEventListener('change', function () {
+            if (this.checked) {
+                console.log('Cambiando a modo manual');
+                if (camposAutomaticos) camposAutomaticos.style.display = 'none';
+                if (campoManual) campoManual.style.display = 'block';
+
+                if (inputPrecioManual) inputPrecioManual.setAttribute('required', 'required');
+                if (inputCosto) inputCosto.removeAttribute('required');
+                if (inputUtilidad) inputUtilidad.removeAttribute('required');
+
+                actualizarEstilosTarjetas();
+                if (textoResumen) {
+                    textoResumen.innerHTML = '<i class="bi bi-pencil me-1"></i> Precio establecido manualmente';
+                }
+            }
+        });
+
+        // Eventos para cálculo en tiempo real
+        if (inputCosto) {
+            inputCosto.addEventListener('input', calcularPrecio);
+            inputCosto.addEventListener('blur', calcularPrecio);
+            console.log('✅ Event listeners agregados a inputCosto');
+        }
+
+        if (inputUtilidad) {
+            inputUtilidad.addEventListener('input', calcularPrecio);
+            inputUtilidad.addEventListener('blur', calcularPrecio);
+            console.log('✅ Event listeners agregados a inputUtilidad');
+        }
+
+        // Efectos visuales para las tarjetas
+        if (cardAutomatico && cardManual) {
+            [cardAutomatico, cardManual].forEach(card => {
+                card.addEventListener('mouseenter', function () {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                });
+
+                card.addEventListener('mouseleave', function () {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '';
+                });
+
+                card.addEventListener('click', function () {
+                    const radio = this.querySelector('input[type="radio"]');
+                    if (radio) {
+                        radio.checked = true;
+                        radio.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+        }
+
+        // Efectos para los inputs
+        [inputCosto, inputUtilidad, inputPrecioManual].forEach(input => {
+            if (input) {
+                input.addEventListener('focus', function () {
+                    this.style.transform = 'scale(1.02)';
+                });
+
+                input.addEventListener('blur', function () {
+                    this.style.transform = 'scale(1)';
                 });
             }
         });
+
+        // Inicializar estilos y cálculo
+        actualizarEstilosTarjetas();
+        calcularPrecio();
+
+        console.log('✅ Funcionalidad de precio inicializada correctamente');
+    } else {
+        console.error('❌ No se pudieron encontrar los elementos de precio');
+        console.log('modoAutomaticoRadio existe:', !!modoAutomaticoRadio);
+        console.log('modoManualRadio existe:', !!modoManualRadio);
     }
 
-    // Eventos para la carga de imágenes
-    if (dropArea && fileInput && selectImagesBtn) {
-        // Abrir el selector de archivos al hacer clic en el botón
+    // ========================================
+    // GESTIÓN DE IMÁGENES
+    // ========================================
+
+    if (dropArea && fileInput && selectImagesBtn && previewContainer) {
+        let validFiles = [];
+
         selectImagesBtn.addEventListener('click', function (e) {
             e.preventDefault();
             fileInput.click();
         });
 
-        // Selección de archivos mediante el input
         fileInput.addEventListener('change', function (e) {
             handleFiles(e.target.files);
         });
 
-        // Eventos de arrastrar y soltar
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, preventDefaults, false);
         });
@@ -127,13 +385,11 @@
         });
 
         function highlight() {
-            dropArea.classList.add('border-primary');
-            dropArea.classList.add('bg-light');
+            dropArea.classList.add('border-primary', 'bg-light');
         }
 
         function unhighlight() {
-            dropArea.classList.remove('border-primary');
-            dropArea.classList.remove('bg-light');
+            dropArea.classList.remove('border-primary', 'bg-light');
         }
 
         dropArea.addEventListener('drop', function (e) {
@@ -142,41 +398,36 @@
             handleFiles(files);
         });
 
-        // Array para mantener una lista de archivos válidos
-        let validFiles = [];
-
         function handleFiles(files) {
-            // Validar tipos de archivo y tamaño
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
 
-                // Validar tipo de archivo
                 if (!file.type.match('image.*')) {
-                    toastr.error(`${file.name} no es un archivo de imagen válido`);
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(`${file.name} no es un archivo de imagen válido`);
+                    }
                     continue;
                 }
 
-                // Validar tamaño (5MB máximo)
                 if (file.size > 5 * 1024 * 1024) {
-                    toastr.error(`${file.name} excede el tamaño máximo permitido (5MB)`);
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error(`${file.name} excede el tamaño máximo permitido (5MB)`);
+                    }
                     continue;
                 }
 
-                // Verificar si el archivo ya está en la lista por nombre
                 const fileExists = validFiles.some(f => f.name === file.name && f.size === file.size);
                 if (fileExists) {
-                    toastr.warning(`El archivo ${file.name} ya ha sido agregado`);
+                    if (typeof toastr !== 'undefined') {
+                        toastr.warning(`El archivo ${file.name} ya ha sido agregado`);
+                    }
                     continue;
                 }
 
-                // Agregar a la lista de archivos válidos
                 validFiles.push(file);
-
-                // Crear previsualización
                 createPreview(file);
             }
 
-            // Actualizar el campo de archivos con los archivos válidos
             updateFileInput();
         }
 
@@ -193,17 +444,11 @@
                 `;
                 previewContainer.appendChild(preview);
 
-                // Agregar evento para eliminar la previsualización
                 const removeBtn = preview.querySelector('.img-preview-remove');
                 removeBtn.addEventListener('click', function () {
-                    // Eliminar archivo de la lista
                     const filename = this.getAttribute('data-filename');
                     validFiles = validFiles.filter(f => f.name !== filename);
-
-                    // Eliminar previsualización
                     preview.remove();
-
-                    // Actualizar input
                     updateFileInput();
                 });
             };
@@ -211,72 +456,87 @@
         }
 
         function updateFileInput() {
-            // Crear un DataTransfer para simular una nueva selección de archivos
             const dataTransfer = new DataTransfer();
-
-            // Agregar cada archivo válido al DataTransfer
             validFiles.forEach(file => {
                 dataTransfer.items.add(file);
             });
-
-            // Asignar los archivos al fileInput
             fileInput.files = dataTransfer.files;
-
             console.log(`Archivos válidos para subir: ${validFiles.length}`);
         }
     }
 
-    // Validación y envío del formulario
+    // ========================================
+    // VALIDACIÓN Y ENVÍO DEL FORMULARIO
+    // ========================================
+
     if (form && submitButton) {
-        // Mejorar la validación de campos al perder el foco
         const formInputs = form.querySelectorAll('input, select, textarea');
+
         formInputs.forEach(input => {
             input.addEventListener('blur', function () {
                 validarCampo(this);
             });
 
             input.addEventListener('input', function () {
-                // Si el campo tenía error y se corrigió, quitar el error
                 if (this.classList.contains('is-invalid') && this.checkValidity()) {
                     this.classList.remove('is-invalid');
                 }
             });
         });
 
-        // IMPORTANTE: Asegurarnos de capturar correctamente el evento submit
-        console.log('Configurando captura de evento submit para el formulario...');
+        function validarFormularioCompleto() {
+            let esValido = true;
 
-        // Añadir evento submit de forma directa
-        // Simplificar para diagnóstico
+            // Validar campos básicos
+            formInputs.forEach(input => {
+                if (!validarCampo(input)) {
+                    esValido = false;
+                }
+            });
+
+            // Validar precio según el modo seleccionado
+            if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
+                if (!inputCosto.value || parseFloat(inputCosto.value) <= 0) {
+                    inputCosto.classList.add('is-invalid');
+                    esValido = false;
+                }
+                if (!inputUtilidad.value || parseFloat(inputUtilidad.value) < 0) {
+                    inputUtilidad.classList.add('is-invalid');
+                    esValido = false;
+                }
+            } else if (modoManualRadio && modoManualRadio.checked) {
+                if (!inputPrecioManual.value || parseFloat(inputPrecioManual.value) <= 0) {
+                    inputPrecioManual.classList.add('is-invalid');
+                    esValido = false;
+                }
+            }
+
+            return esValido;
+        }
+
         form.onsubmit = function (e) {
             e.preventDefault();
             console.log('Formulario enviado - iniciando validación');
 
-            // Validar campos
-            let formValido = true;
-            formInputs.forEach(input => {
-                if (!validarCampo(input)) {
-                    formValido = false;
-                }
-            });
-
-            if (!formValido) {
+            if (!validarFormularioCompleto()) {
                 console.log('Formulario inválido - campos con errores');
-                toastr.error('Por favor, complete todos los campos requeridos correctamente');
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Por favor, complete todos los campos requeridos correctamente');
+                }
                 return false;
             }
 
             console.log('Formulario válido - preparando para enviar');
 
-            // Mostrar spinner
             submitButton.disabled = true;
-            submitButton.querySelector('.normal-state').style.display = 'none';
-            submitButton.querySelector('.loading-state').style.display = 'inline-flex';
+            const normalState = submitButton.querySelector('.normal-state');
+            const loadingState = submitButton.querySelector('.loading-state');
 
-            // Crear FormData directamente del formulario
+            if (normalState) normalState.style.display = 'none';
+            if (loadingState) loadingState.style.display = 'inline-flex';
+
             const formData = new FormData(form);
 
-            // Depurar FormData
             console.log('FormData creado - revisando elementos:');
             for (let [key, value] of formData.entries()) {
                 if (value instanceof File) {
@@ -286,11 +546,9 @@
                 }
             }
 
-            // Obtener la URL del formulario
             const formAction = form.getAttribute('action');
             console.log('Enviando formulario al controlador en:', formAction);
 
-            // Enviar usando fetch
             fetch(formAction, {
                 method: 'POST',
                 body: formData
@@ -305,9 +563,10 @@
                         throw new Error(`Error ${response.status}: ${text}`);
                     }
 
-                    toastr.success('Producto guardado exitosamente');
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success('Producto guardado exitosamente');
+                    }
 
-                    // Redireccionar
                     setTimeout(() => {
                         window.location.href = '/Inventario/Index';
                     }, 1000);
@@ -315,67 +574,17 @@
                 .catch(error => {
                     console.error('Error:', error);
                     submitButton.disabled = false;
-                    submitButton.querySelector('.normal-state').style.display = 'inline-flex';
-                    submitButton.querySelector('.loading-state').style.display = 'none';
-                    toastr.error('Error al guardar el producto: ' + error.message);
+                    if (normalState) normalState.style.display = 'inline-flex';
+                    if (loadingState) loadingState.style.display = 'none';
+
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Error al guardar el producto: ' + error.message);
+                    }
                 });
 
             return false;
         };
     }
 
-    // IMPORTANTE: Añadir monitoreo de clics para depurar problemas con botones de submit
-    document.body.addEventListener('click', function (e) {
-        if (e.target.type === 'submit' || e.target.closest('button[type="submit"]')) {
-            const boton = e.target.type === 'submit' ? e.target : e.target.closest('button[type="submit"]');
-            console.log('Botón submit clickeado:', boton);
-            console.log('Formulario asociado:', boton.form);
-        }
-    });
-
-    // Funciones auxiliares
-
-    // Marcar visualmente los campos obligatorios
-    function marcarCamposObligatorios() {
-        const camposRequeridos = document.querySelectorAll('[required]');
-        camposRequeridos.forEach(campo => {
-            const formGroup = campo.closest('.mb-3');
-            if (formGroup) {
-                formGroup.classList.add('required');
-            }
-        });
-    }
-
-    // Validar un campo específico
-    function validarCampo(campo) {
-        // Si el campo no tiene validación, considerarlo válido
-        if (!campo.checkValidity) return true;
-
-        const esValido = campo.checkValidity();
-
-        // Solo aplicar estilos si el campo es visible (evitar validar campos ocultos)
-        if (esCampoVisible(campo)) {
-            if (!esValido) {
-                campo.classList.add('is-invalid');
-            } else {
-                campo.classList.remove('is-invalid');
-            }
-        }
-
-        return esValido;
-    }
-
-    // Verificar si un campo está visible (no está en un contenedor oculto)
-    function esCampoVisible(campo) {
-        // Si el campo es de llanta y el checkbox no está marcado, ignorar
-        if (!esLlantaCheckbox.checked) {
-            if (llantaFields.contains(campo)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-
+    console.log('✅ Script de agregar producto inicializado correctamente');
 });
