@@ -62,10 +62,27 @@ $(document).ready(function () {
         // Establecer datos básicos en el modal
         $("#nombreProductoDetalle").text(nombre);
         $("#descripcionProductoDetalle").text(descripcion);
-        $("#precioProductoDetalle").text(precio);
         $("#stockProductoDetalle").text(stock);
         $("#minStockProductoDetalle").text(stockMin);
 
+        // Obtener datos de precios de las celdas de la tabla
+        const costoTexto = fila.find("td:eq(5)").text().trim(); // Columna de Costo
+        const utilidadTexto = fila.find("td:eq(6)").text().trim(); // Columna de Utilidad %
+        const precioFinalTexto = fila.find("td:eq(7)").text().trim(); // Columna de Precio Final
+        const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim(); // Tipo de precio
+
+        // Establecer información de precios
+        $("#costoProductoDetalle").text(costoTexto !== "-" ? costoTexto : "No especificado");
+        $("#utilidadProductoDetalle").text(utilidadTexto !== "-" ? utilidadTexto : "-");
+        $("#precioProductoDetalle").text(precioFinalTexto.split('\n')[0] || precio); // Primera línea del precio final
+        $("#tipoPrecioDetalle").text(tipoPrecioTexto || "Manual");
+
+        // Ajustar colores según el tipo de precio
+        if (tipoPrecioTexto === "Calculado") {
+            $("#precioProductoDetalle").removeClass("text-primary").addClass("text-success");
+        } else {
+            $("#precioProductoDetalle").removeClass("text-success").addClass("text-primary");
+        }
         // Obtener la URL de la imagen
         const imagenUrl = fila.find("td:eq(1) img").attr("src");
         if (imagenUrl) {
@@ -181,6 +198,10 @@ $(document).ready(function () {
         $("#tipoTerrenoLlantaDetalle").text("-");
         $("#imagenProductoDetalle").html('<i class="bi bi-image" style="font-size: 3rem; color: #aaa;"></i>');
         $("#galeriaMiniaturas").empty();
+        $("#costoProductoDetalle").text("-");
+        $("#utilidadProductoDetalle").text("-");
+        $("#tipoPrecioDetalle").text("-");
+        $("#precioProductoDetalle").removeClass("text-success text-primary");
     }
 
     // Guardar ajuste de stock

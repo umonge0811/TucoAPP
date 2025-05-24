@@ -1,4 +1,4 @@
-﻿@model GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO
+﻿@model Tuco.Clases.DTOs.Inventario.ProductoDTO
 @{
     ViewData["Title"] = "Detalle de Producto";
     Layout = "_AdminLayout";
@@ -86,8 +86,43 @@
 
                         <!-- Información del producto -->
                         <div class="col-md-6">
-                            <h4 class="precio-detalle">₡@Model.Precio.ToString("N0")</h4>
-
+<div class="precio-section mb-3">
+    @if (Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue)
+    {
+        <!-- Precio calculado automáticamente -->
+        <h4 class="precio-detalle text-success">₡@((Model.PrecioCalculado ?? 0).ToString("N0"))</h4>
+        <small class="text-success fw-bold"><i class="bi bi-calculator me-1"></i>Precio Calculado Automáticamente</small>
+        
+        <div class="row mt-2">
+            <div class="col-4">
+                <small class="text-muted">Costo:</small><br>
+                <span class="text-muted">₡@Model.Costo.Value.ToString("N0")</span>
+            </div>
+            <div class="col-4">
+                <small class="text-muted">Utilidad:</small><br>
+                <span class="badge bg-info">@Model.PorcentajeUtilidad.Value.ToString("0.0")%</span>
+            </div>
+            <div class="col-4">
+                <small class="text-muted">Ganancia:</small><br>
+                <span class="text-success">₡@Model.UtilidadEnDinero.Value.ToString("N0")</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Precio manual -->
+        <h4 class="precio-detalle text-primary">₡@((Model.Precio ?? 0).ToString("N0"))</h4>
+        <small class="text-primary fw-bold"><i class="bi bi-pencil me-1"></i>Precio Manual</small>
+        
+        @if (Model.Costo.HasValue || Model.PorcentajeUtilidad.HasValue)
+        {
+            <div class="alert alert-warning mt-2" role="alert">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                <small>Información de costo/utilidad incompleta. Configure ambos valores para cálculo automático.</small>
+            </div>
+        }
+    }
+</div>
                             <div class="mb-3">
                                 <div class="stock-info @(Model.CantidadEnInventario <= Model.StockMinimo ? "text-danger" : "text-success")">
                                     <i class="bi @(Model.CantidadEnInventario <= Model.StockMinimo ? "bi-exclamation-triangle" : "bi-check-circle")"></i>
@@ -114,18 +149,36 @@
                             }
 
                             <div class="mb-3">
-                                <h5>Información Adicional</h5>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Stock Mínimo:</span>
-                                        <span>@Model.StockMinimo unidades</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between">
-                                        <span>Última Actualización:</span>
-@*                                         <span>@(Model.FechaUltimaActualizacion?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</span>
- *@                                    </li>
-                                </ul>
-                            </div>
+    <h5>Información Adicional</h5>
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between">
+            <span>Stock Mínimo:</span>
+            <span>@Model.StockMinimo unidades</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between">
+            <span>Última Actualización:</span>
+@*             <span>@(Model.FechaUltimaActualizacion?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</span>
+ *@        </li>
+        @if (Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue)
+        {
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Método de Precio:</span>
+                <span class="badge bg-success">Cálculo Automático</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Margen de Ganancia:</span>
+                <span class="text-success fw-bold">₡@Model.UtilidadEnDinero.Value.ToString("N0")</span>
+            </li>
+        }
+        else
+        {
+            <li class="list-group-item d-flex justify-content-between">
+                <span>Método de Precio:</span>
+                <span class="badge bg-primary">Manual</span>
+            </li>
+        }
+    </ul>
+</div>
 
                             <div class="mt-4">
                                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ajusteStockModal">
