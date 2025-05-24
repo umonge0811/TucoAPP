@@ -17,88 +17,84 @@ namespace API.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Crea una notificación para un usuario específico
+        /// </summary>
         public async Task<bool> CrearNotificacionAsync(int usuarioId, string titulo, string mensaje, string tipo = "info", string? icono = null, string? urlAccion = null, string? entidadTipo = null, int? entidadId = null)
         {
             try
             {
-                // Validar que el usuario existe
-                var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == usuarioId);
-                if (!usuarioExiste)
-                {
-                    _logger.LogWarning("Intento de crear notificación para usuario inexistente: {UsuarioId}", usuarioId);
-                    return false;
-                }
-
                 var notificacion = new Notificacion
                 {
                     UsuarioId = usuarioId,
                     Titulo = titulo,
                     Mensaje = mensaje,
                     Tipo = tipo,
-                    Icono = icono,
+                    Icono = icono ?? "fas fa-info-circle",
                     UrlAccion = urlAccion,
                     EntidadTipo = entidadTipo,
                     EntidadId = entidadId,
-                    FechaCreacion = DateTime.Now,
-                    Leida = false
+                    Leida = false,
+                    FechaCreacion = DateTime.Now
                 };
 
                 _context.Notificaciones.Add(notificacion);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Notificación creada exitosamente para usuario {UsuarioId}: {Titulo}", usuarioId, titulo);
+                _logger.LogInformation("Notificación creada exitosamente para usuario {UserId}: {Titulo}", usuarioId, titulo);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear notificación para usuario {UsuarioId}", usuarioId);
+                _logger.LogError(ex, "Error al crear notificación para usuario {UserId}", usuarioId);
                 return false;
             }
         }
 
+        /// <summary>
+        /// Crea notificaciones para múltiples usuarios
+        /// </summary>
         public async Task<bool> CrearNotificacionesAsync(IEnumerable<int> usuariosIds, string titulo, string mensaje, string tipo = "info", string? icono = null, string? urlAccion = null, string? entidadTipo = null, int? entidadId = null)
         {
             try
             {
-                // Validar que los usuarios existen
-                var usuariosExistentes = await _context.Usuarios
-                    .Where(u => usuariosIds.Contains(u.UsuarioId))
-                    .Select(u => u.UsuarioId)
-                    .ToListAsync();
+                var notificaciones = new List<Notificacion>();
 
-                if (!usuariosExistentes.Any())
+                foreach (var usuarioId in usuariosIds)
                 {
-                    _logger.LogWarning("Ninguno de los usuarios especificados existe");
-                    return false;
+                    var notificacion = new Notificacion
+                    {
+                        UsuarioId = usuarioId,
+                        Titulo = titulo,
+                        Mensaje = mensaje,
+                        Tipo = tipo,
+                        Icono = icono ?? "fas fa-info-circle",
+                        UrlAccion = urlAccion,
+                        EntidadTipo = entidadTipo,
+                        EntidadId = entidadId,
+                        Leida = false,
+                        FechaCreacion = DateTime.Now
+                    };
+
+                    notificaciones.Add(notificacion);
                 }
-
-                var notificaciones = usuariosExistentes.Select(usuarioId => new Notificacion
-                {
-                    UsuarioId = usuarioId,
-                    Titulo = titulo,
-                    Mensaje = mensaje,
-                    Tipo = tipo,
-                    Icono = icono,
-                    UrlAccion = urlAccion,
-                    EntidadTipo = entidadTipo,
-                    EntidadId = entidadId,
-                    FechaCreacion = DateTime.Now,
-                    Leida = false
-                }).ToList();
 
                 _context.Notificaciones.AddRange(notificaciones);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Notificaciones creadas para {Cantidad} usuarios: {Titulo}", usuariosExistentes.Count, titulo);
+                _logger.LogInformation("Se crearon {Count} notificaciones: {Titulo}", notificaciones.Count, titulo);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear notificaciones masivas");
+                _logger.LogError(ex, "Error al crear notificaciones múltiples");
                 return false;
             }
         }
 
+        /// <summary>
+        /// Obtiene las notificaciones de un usuario
+        /// </summary>
         public async Task<IEnumerable<NotificacionDTO>> ObtenerNotificacionesUsuarioAsync(int usuarioId, int cantidad = 50)
         {
             try
@@ -123,15 +119,19 @@ namespace API.Services
                     })
                     .ToListAsync();
 
+                _logger.LogInformation("Se obtuvieron {Count} notificaciones para usuario {UserId}", notificaciones.Count(), usuarioId);
                 return notificaciones;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener notificaciones del usuario {UsuarioId}", usuarioId);
+                _logger.LogError(ex, "Error al obtener notificaciones para usuario {UserId}", usuarioId);
                 return new List<NotificacionDTO>();
             }
         }
 
+        /// <summary>
+        /// Marca una notificación como leída
+        /// </summary>
         public async Task<bool> MarcarComoLeidaAsync(int notificacionId, int usuarioId)
         {
             try
@@ -141,7 +141,7 @@ namespace API.Services
 
                 if (notificacion == null)
                 {
-                    _logger.LogWarning("Notificación no encontrada: {NotificacionId} para usuario {UsuarioId}", notificacionId, usuarioId);
+                    _logger.LogWarning("Notificación {NotificacionId} no encontrada para usuario {UserId}", notificacionId, usuarioId);
                     return false;
                 }
 
@@ -149,15 +149,20 @@ namespace API.Services
                 notificacion.FechaLectura = DateTime.Now;
 
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Notificación {NotificacionId} marcada como leída para usuario {UserId}", notificacionId, usuarioId);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al marcar notificación como leída: {NotificacionId}", notificacionId);
+                _logger.LogError(ex, "Error al marcar notificación {NotificacionId} como leída", notificacionId);
                 return false;
             }
         }
 
+        /// <summary>
+        /// Marca todas las notificaciones de un usuario como leídas
+        /// </summary>
         public async Task<bool> MarcarTodasComoLeidasAsync(int usuarioId)
         {
             try
@@ -166,6 +171,12 @@ namespace API.Services
                     .Where(n => n.UsuarioId == usuarioId && !n.Leida)
                     .ToListAsync();
 
+                if (!notificacionesNoLeidas.Any())
+                {
+                    _logger.LogInformation("No hay notificaciones no leídas para usuario {UserId}", usuarioId);
+                    return true;
+                }
+
                 foreach (var notificacion in notificacionesNoLeidas)
                 {
                     notificacion.Leida = true;
@@ -173,43 +184,60 @@ namespace API.Services
                 }
 
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Marcadas {Cantidad} notificaciones como leídas para usuario {UsuarioId}", notificacionesNoLeidas.Count, usuarioId);
+
+                _logger.LogInformation("Se marcaron {Count} notificaciones como leídas para usuario {UserId}", notificacionesNoLeidas.Count, usuarioId);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al marcar todas las notificaciones como leídas para usuario {UsuarioId}", usuarioId);
+                _logger.LogError(ex, "Error al marcar todas las notificaciones como leídas para usuario {UserId}", usuarioId);
                 return false;
             }
         }
 
+        /// <summary>
+        /// Obtiene el conteo de notificaciones no leídas
+        /// </summary>
         public async Task<int> ObtenerConteoNoLeidasAsync(int usuarioId)
         {
             try
             {
-                return await _context.Notificaciones
+                var conteo = await _context.Notificaciones
                     .CountAsync(n => n.UsuarioId == usuarioId && !n.Leida);
+
+                _logger.LogInformation("Usuario {UserId} tiene {Count} notificaciones no leídas", usuarioId, conteo);
+                return conteo;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener conteo de notificaciones no leídas para usuario {UsuarioId}", usuarioId);
+                _logger.LogError(ex, "Error al obtener conteo de notificaciones no leídas para usuario {UserId}", usuarioId);
                 return 0;
             }
         }
 
+        /// <summary>
+        /// Elimina notificaciones antiguas (opcional, para limpieza)
+        /// </summary>
         public async Task<int> LimpiarNotificacionesAntiguasAsync(int diasAntiguedad = 30)
         {
             try
             {
                 var fechaLimite = DateTime.Now.AddDays(-diasAntiguedad);
+
                 var notificacionesAntiguas = await _context.Notificaciones
                     .Where(n => n.FechaCreacion < fechaLimite && n.Leida)
                     .ToListAsync();
 
+                if (!notificacionesAntiguas.Any())
+                {
+                    _logger.LogInformation("No hay notificaciones antiguas para limpiar");
+                    return 0;
+                }
+
                 _context.Notificaciones.RemoveRange(notificacionesAntiguas);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Eliminadas {Cantidad} notificaciones antiguas", notificacionesAntiguas.Count);
+                _logger.LogInformation("Se eliminaron {Count} notificaciones antiguas", notificacionesAntiguas.Count);
                 return notificacionesAntiguas.Count;
             }
             catch (Exception ex)

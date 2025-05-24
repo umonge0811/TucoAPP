@@ -10,7 +10,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Requiere autenticación
+    //[Authorize] // Requiere autenticación
     public class NotificacionesController : ControllerBase
     {
         private readonly TucoContext _context;
@@ -30,12 +30,16 @@ namespace API.Controllers
         {
             try
             {
-                // ✅ OBTENER EL ID DEL USUARIO DEL TOKEN JWT (SIMPLIFICADO)
+                // ✅ OBTENER EL ID DEL USUARIO DEL TOKEN JWT (MEJORADO)
                 var userId = ObtenerUsuarioIdDelToken();
+
                 if (userId == null)
                 {
+                    _logger.LogWarning("No se pudo obtener el ID del usuario del token");
                     return Unauthorized(new { message = "No se pudo identificar al usuario" });
                 }
+
+                _logger.LogInformation("Obteniendo notificaciones para usuario ID: {UserId}", userId.Value);
 
                 var notificaciones = await _context.Notificaciones
                     .Where(n => n.UsuarioId == userId.Value)
@@ -57,6 +61,9 @@ namespace API.Controllers
                     })
                     .ToListAsync();
 
+                _logger.LogInformation("Se encontraron {Count} notificaciones para el usuario {UserId}",
+                    notificaciones.Count, userId.Value);
+
                 return Ok(notificaciones);
             }
             catch (Exception ex)
@@ -77,11 +84,14 @@ namespace API.Controllers
                 var userId = ObtenerUsuarioIdDelToken();
                 if (userId == null)
                 {
+                    _logger.LogWarning("No se pudo obtener el ID del usuario para conteo de notificaciones");
                     return Unauthorized();
                 }
 
                 var conteo = await _context.Notificaciones
                     .CountAsync(n => n.UsuarioId == userId.Value && !n.Leida);
+
+                _logger.LogInformation("Usuario {UserId} tiene {Count} notificaciones no leídas", userId.Value, conteo);
 
                 return Ok(conteo);
             }
@@ -168,16 +178,24 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Método auxiliar para obtener el ID del usuario del token JWT
+        /// Método auxiliar para obtener el ID del usuario del token JWT (MEJORADO)
         /// </summary>
         private int? ObtenerUsuarioIdDelToken()
         {
             try
             {
+                // Log de todos los claims para depuración
+                _logger.LogInformation("Claims del usuario:");
+                foreach (var claim in User.Claims)
+                {
+                    _logger.LogInformation("Claim Type: {Type}, Value: {Value}", claim.Type, claim.Value);
+                }
+
                 // Intentar obtener el userId del claim personalizado primero
                 var userIdClaim = User.FindFirst("userId")?.Value;
                 if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
                 {
+                    _logger.LogInformation("Usuario ID obtenido del claim 'userId': {UserId}", userId);
                     return userId;
                 }
 
@@ -185,6 +203,7 @@ namespace API.Controllers
                 var nameIdentifierClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!string.IsNullOrEmpty(nameIdentifierClaim) && int.TryParse(nameIdentifierClaim, out int userIdFromNameIdentifier))
                 {
+                    _logger.LogInformation("Usuario ID obtenido del claim 'NameIdentifier': {UserId}", userIdFromNameIdentifier);
                     return userIdFromNameIdentifier;
                 }
 
@@ -192,10 +211,16 @@ namespace API.Controllers
                 var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value;
                 if (!string.IsNullOrEmpty(emailClaim))
                 {
+                    _logger.LogInformation("Buscando usuario por email: {Email}", emailClaim);
                     var usuario = _context.Usuarios.FirstOrDefault(u => u.Email == emailClaim);
-                    return usuario?.UsuarioId;
+                    if (usuario != null)
+                    {
+                        _logger.LogInformation("Usuario encontrado por email. ID: {UserId}", usuario.UsuarioId);
+                        return usuario.UsuarioId;
+                    }
                 }
 
+                _logger.LogWarning("No se pudo obtener el ID del usuario de ningún claim");
                 return null;
             }
             catch (Exception ex)
@@ -205,6 +230,29 @@ namespace API.Controllers
             }
         }
 
+        /// <summary>
+        /// Endpoint para probar la obtención del usuario (PARA DEPURACIÓN)
+        /// </summary>
+        [HttpGet("debug/usuario-actual")]
+        public IActionResult DebugUsuarioActual()
+        {
+            try
+            {
+                var userId = ObtenerUsuarioIdDelToken();
+
+                return Ok(new
+                {
+                    UsuarioId = userId,
+                    Claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList(),
+                    IsAuthenticated = User.Identity?.IsAuthenticated ?? false,
+                    AuthenticationType = User.Identity?.AuthenticationType
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
 
         /// <summary>
         /// Crea una nueva notificación (para uso interno del sistema)

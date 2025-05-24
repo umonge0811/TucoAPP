@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GestionLlantera.Web.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("web/api/[controller]")]
     public class NotificacionesController : Controller
     {
         private readonly INotificacionService _notificacionService;

@@ -19,7 +19,8 @@
     // Función global para marcar como leída
     window.marcarNotificacionComoLeida = async function(notificacionId) {
         try {
-            const response = await fetch(`/api/notificaciones/${notificacionId}/marcar-leida`, {
+            // ✅ CORREGIR LA RUTA - Con N mayúscula
+            const response = await fetch(`/web/api/Notificaciones/${notificacionId}/marcar-leida`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -30,15 +31,12 @@
             if (response.ok) {
                 const result = await response.json();
                 if (result.success) {
-                    // Actualizar visualmente la notificación
                     const elemento = document.querySelector(`[data-notification-id="${notificacionId}"]`);
                     if (elemento) {
                         elemento.classList.remove('unread');
                         const badge = elemento.querySelector('.unread-indicator');
                         if (badge) badge.remove();
                     }
-
-                    // Actualizar contador en tiempo real
                     actualizarContadorNotificaciones();
                 }
             }
@@ -47,10 +45,10 @@
         }
     }
 
-    // Función para marcar todas como leídas
     window.marcarTodasComoLeidas = async function() {
         try {
-            const response = await fetch('/api/notificaciones/marcar-todas-leidas', {
+            // ✅ CORREGIR LA RUTA - Con N mayúscula
+            const response = await fetch('/web/api/Notificaciones/marcar-todas-leidas', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,7 +59,6 @@
             if (response.ok) {
                 const result = await response.json();
                 if (result.success) {
-                    // Recargar solo el componente de notificaciones
                     location.reload();
                 }
             }
@@ -70,18 +67,14 @@
         }
     }
 
-    // Función para manejar click en notificación
     window.manejarClickNotificacion = function(notificacionId, urlAccion) {
-        // Marcar como leída (sin esperar respuesta para mejor UX)
         marcarNotificacionComoLeida(notificacionId);
 
-        // Cerrar el panel
         const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('notificationsPanel'));
         if (offcanvas) {
             offcanvas.hide();
         }
 
-        // Navegar si tiene URL de acción
         if (urlAccion && urlAccion !== 'null' && urlAccion.trim() !== '') {
             setTimeout(() => {
                 window.location.href = urlAccion;
@@ -89,14 +82,13 @@
         }
     }
 
-    // Función para actualizar el contador sin recargar toda la página
     async function actualizarContadorNotificaciones() {
         try {
-            const response = await fetch('/api/notificaciones/conteo-no-leidas');
+            // ✅ CORREGIR LA RUTA - Con N mayúscula
+            const response = await fetch('/web/api/Notificaciones/conteo-no-leidas');
             if (response.ok) {
                 const conteo = await response.json();
 
-                // Actualizar todos los badges de notificaciones
                 const badges = document.querySelectorAll('.notification-badge');
                 badges.forEach(badge => {
                     if (conteo > 0) {
@@ -112,6 +104,5 @@
         }
     }
 
-    // Actualizar notificaciones cada 30 segundos
     setInterval(actualizarContadorNotificaciones, 30000);
 </script>

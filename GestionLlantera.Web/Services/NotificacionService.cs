@@ -3,7 +3,6 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
-using System.Text;
 
 namespace GestionLlantera.Web.Services
 {
@@ -20,13 +19,11 @@ namespace GestionLlantera.Web.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-
         private void ConfigurarAuthorizationHeader()
         {
             try
             {
-                // ✅ CORREGIR EL NOMBRE DE LA COOKIE
-                var token = _httpContextAccessor.HttpContext?.Request.Cookies["JwtToken"]; // ← Cambiar a "JwtToken"
+                var token = _httpContextAccessor.HttpContext?.Request.Cookies["JwtToken"];
 
                 if (!string.IsNullOrEmpty(token))
                 {
@@ -36,8 +33,6 @@ namespace GestionLlantera.Web.Services
                 else
                 {
                     _logger.LogWarning("No se encontró token JWT en cookies");
-
-                    // Debug: Mostrar todas las cookies disponibles
                     var cookies = _httpContextAccessor.HttpContext?.Request.Cookies;
                     if (cookies != null)
                     {
@@ -56,12 +51,10 @@ namespace GestionLlantera.Web.Services
             try
             {
                 ConfigurarAuthorizationHeader();
-
                 _logger.LogInformation("Obteniendo notificaciones del usuario...");
 
-                // ✅ AHORA LA URL NO NECESITA EL userId - LA API LO OBTIENE DEL TOKEN
-                var response = await _httpClient.GetAsync("api/notificaciones/mis-notificaciones");
-
+                // ✅ CORREGIR LA RUTA - Con N mayúscula
+                var response = await _httpClient.GetAsync("api/Notificaciones/mis-notificaciones");
                 _logger.LogInformation($"Respuesta API: {response.StatusCode}");
 
                 if (response.IsSuccessStatusCode)
@@ -93,7 +86,8 @@ namespace GestionLlantera.Web.Services
             {
                 ConfigurarAuthorizationHeader();
 
-                var response = await _httpClient.GetAsync("api/notificaciones/conteo-no-leidas");
+                // ✅ CORREGIR LA RUTA - Con N mayúscula
+                var response = await _httpClient.GetAsync("api/Notificaciones/conteo-no-leidas");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -110,14 +104,14 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-
         public async Task<bool> MarcarComoLeidaAsync(int notificacionId)
         {
             try
             {
                 ConfigurarAuthorizationHeader();
 
-                var response = await _httpClient.PutAsync($"api/notificaciones/{notificacionId}/marcar-leida", null);
+                // ✅ CORREGIR LA RUTA - Con N mayúscula
+                var response = await _httpClient.PutAsync($"api/Notificaciones/{notificacionId}/marcar-leida", null);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -133,7 +127,8 @@ namespace GestionLlantera.Web.Services
             {
                 ConfigurarAuthorizationHeader();
 
-                var response = await _httpClient.PutAsync("api/notificaciones/marcar-todas-leidas", null);
+                // ✅ CORREGIR LA RUTA - Con N mayúscula
+                var response = await _httpClient.PutAsync("api/Notificaciones/marcar-todas-leidas", null);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
