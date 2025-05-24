@@ -404,7 +404,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
-    <script>
+@*     <script>
         // Variables globales para notificaciones
         let notificacionesCache = [];
         let conteoNoLeidas = 0;
@@ -651,6 +651,8 @@
             // Actualizar conteo cada 30 segundos
             setInterval(cargarConteoNotificaciones, 30000);
         });
+
+
     </script>
-</body>
+ *@</body>
 </html>
