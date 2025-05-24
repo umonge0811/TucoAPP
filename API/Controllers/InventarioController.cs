@@ -35,16 +35,61 @@ namespace API.Controllers
             _notificacionService = notificacionService; // ← Agregar esta línea
         }
 
-
         // GET: api/Inventario/productos
         [HttpGet("productos")]
-        public async Task<ActionResult<IEnumerable<Producto>>> ObtenerProductos()
+        public async Task<ActionResult<IEnumerable<object>>> ObtenerProductos()
         {
             try
             {
                 var productos = await _context.Productos
                     .Include(p => p.ImagenesProductos)
                     .Include(p => p.Llanta)
+                    .Select(p => new
+                    {
+                        p.ProductoId,
+                        p.NombreProducto,
+                        p.Descripcion,
+                        // ✅ NUEVO: Incluir costo y utilidad
+                        p.Costo,
+                        p.PorcentajeUtilidad,
+                        p.Precio,
+                        p.CantidadEnInventario,
+                        p.StockMinimo,
+                        p.FechaUltimaActualizacion,
+
+                        // ✅ NUEVO: Propiedades calculadas
+                        UtilidadEnDinero = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue
+                            ? p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m)
+                            : (decimal?)null,
+
+                        PrecioCalculado = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue
+                            ? p.Costo.Value + (p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m))
+                            : p.Precio,
+
+                        UsarCalculoAutomatico = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue,
+
+                        // Propiedades existentes
+                        ImagenesProductos = p.ImagenesProductos.Select(img => new
+                        {
+                            img.ImagenId,
+                            img.Urlimagen,
+                            img.Descripcion,
+                            img.FechaCreacion
+                        }),
+
+                        Llanta = p.Llanta.Select(l => new
+                        {
+                            l.LlantaId,
+                            l.Ancho,
+                            l.Perfil,
+                            l.Diametro,
+                            l.Marca,
+                            l.Modelo,
+                            l.Capas,
+                            l.IndiceVelocidad,
+                            l.TipoTerreno
+                        }).FirstOrDefault()
+                    })
                     .ToListAsync();
 
                 return Ok(productos);
@@ -58,14 +103,61 @@ namespace API.Controllers
 
         // GET: api/Inventario/productos/{id}
         [HttpGet("productos/{id}")]
-        public async Task<ActionResult<Producto>> ObtenerProductoPorId(int id)
+        public async Task<ActionResult<object>> ObtenerProductoPorId(int id)
         {
             try
             {
                 var producto = await _context.Productos
                     .Include(p => p.ImagenesProductos)
                     .Include(p => p.Llanta)
-                    .FirstOrDefaultAsync(p => p.ProductoId == id);
+                    .Where(p => p.ProductoId == id)
+                    .Select(p => new
+                    {
+                        p.ProductoId,
+                        p.NombreProducto,
+                        p.Descripcion,
+                        // ✅ NUEVO: Incluir costo y utilidad
+                        p.Costo,
+                        p.PorcentajeUtilidad,
+                        p.Precio,
+                        p.CantidadEnInventario,
+                        p.StockMinimo,
+                        p.FechaUltimaActualizacion,
+
+                        // ✅ NUEVO: Propiedades calculadas
+                        UtilidadEnDinero = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue
+                            ? p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m)
+                            : (decimal?)null,
+
+                        PrecioCalculado = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue
+                            ? p.Costo.Value + (p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m))
+                            : p.Precio,
+
+                        UsarCalculoAutomatico = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue,
+
+                        // Propiedades existentes
+                        ImagenesProductos = p.ImagenesProductos.Select(img => new
+                        {
+                            img.ImagenId,
+                            img.Urlimagen,
+                            img.Descripcion,
+                            img.FechaCreacion
+                        }),
+
+                        Llanta = p.Llanta.Select(l => new
+                        {
+                            l.LlantaId,
+                            l.Ancho,
+                            l.Perfil,
+                            l.Diametro,
+                            l.Marca,
+                            l.Modelo,
+                            l.Capas,
+                            l.IndiceVelocidad,
+                            l.TipoTerreno
+                        }).FirstOrDefault()
+                    })
+                    .FirstOrDefaultAsync();
 
                 if (producto == null)
                 {
@@ -120,11 +212,20 @@ namespace API.Controllers
                     return BadRequest(new { message = "El precio debe ser mayor que cero" });
                 }
 
+                // ✅ NUEVO: Validar lógica de precio/costo/utilidad
+                var precioFinal = CalcularPrecioFinal(productoDto);
+                if (precioFinal <= 0)
+                {
+                    return BadRequest(new { message = "Debe especificar un precio válido o un costo con utilidad" });
+                }
+
                 // Crear producto
                 var producto = new Producto
                 {
                     NombreProducto = productoDto.NombreProducto,
                     Descripcion = productoDto.Descripcion,
+                    Costo = productoDto.Costo,
+                    PorcentajeUtilidad = productoDto.PorcentajeUtilidad,
                     Precio = productoDto.Precio,
                     CantidadEnInventario = productoDto.CantidadEnInventario,
                     StockMinimo = productoDto.StockMinimo,
@@ -177,8 +278,21 @@ namespace API.Controllers
 
                 return StatusCode(500, new { message = $"Error al crear producto: {ex.Message}" });
             }
-        }               
-        
+        }
+        // ✅ NUEVO: Método auxiliar para calcular el precio final
+        private decimal CalcularPrecioFinal(ProductoDTO dto)
+        {
+            // Si tiene costo y utilidad, calcular automáticamente
+            if (dto.Costo.HasValue && dto.PorcentajeUtilidad.HasValue)
+            {
+                var utilidad = dto.Costo.Value * (dto.PorcentajeUtilidad.Value / 100m);
+                return dto.Costo.Value + utilidad;
+            }
+
+            // Si no, usar el precio manual o 0 si es null
+            return dto.Precio.GetValueOrDefault(0m);
+        }
+
         // POST: api/Inventario/productos/{id}/imagenes
         [HttpPost("productos/{id}/imagenes")]
         public async Task<IActionResult> SubirImagenesProducto(int id, [FromForm] List<IFormFile> imagenes)

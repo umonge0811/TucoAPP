@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using tuco.Clases.Models;
 using Tuco.Clases.Enums;
 using Tuco.Clases.Models;
+using static iTextSharp.text.pdf.events.IndexEvents;
 
 namespace API.Data;
 
@@ -393,16 +394,37 @@ public partial class TucoContext : DbContext
             entity.HasKey(e => e.ProductoId).HasName("PK__Producto__A430AE83EF23006D");
 
             entity.Property(e => e.ProductoId).HasColumnName("ProductoID");
+
             entity.Property(e => e.Descripcion).HasColumnType("text");
+
             entity.Property(e => e.FechaUltimaActualizacion)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
+
             entity.Property(e => e.NombreProducto)
                 .HasMaxLength(100)
                 .IsUnicode(false);
+
+            // ✅ NUEVO: Configuración para Costo
+            entity.Property(e => e.Costo)
+                .HasColumnType("decimal(10, 2)")
+                .HasComment("Precio de compra del producto");
+
+            // ✅ NUEVO: Configuración para PorcentajeUtilidad
+            entity.Property(e => e.PorcentajeUtilidad)
+                .HasColumnType("decimal(5, 2)")
+                .HasComment("Porcentaje de utilidad (ej: 30.50 para 30.5%)");
+
+            // Configuración existente para Precio
             entity.Property(e => e.Precio).HasColumnType("decimal(10, 2)");
+
             entity.Property(e => e.StockMinimo).HasDefaultValue(0);
+
+            // ✅ NUEVO: Ignorar propiedades calculadas (no se guardan en BD)
+            entity.Ignore(e => e.UtilidadEnDinero);
+            entity.Ignore(e => e.PrecioCalculado);
         });
+
 
         modelBuilder.Entity<Proveedore>(entity =>
         {

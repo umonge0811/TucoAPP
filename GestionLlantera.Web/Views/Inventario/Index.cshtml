@@ -205,7 +205,7 @@
                                             <span class="text-muted">N/A</span>
                                         }
                                     </td>
-                                    <td class="text-end fw-bold">₡@producto.Precio.ToString("N0")</td>
+                                    <td class="text-end fw-bold">₡@((producto.Precio ?? 0).ToString("N0"))</td>
                                     <td class="text-center">
                                         <span class="@(producto.CantidadEnInventario <= producto.StockMinimo ? "text-danger fw-bold" : "")">
                                             @producto.CantidadEnInventario
@@ -408,7 +408,7 @@
                                         <h6 class="mb-0">Información de Stock</h6>
                                     </div>
                                     <div class="card-body">
-                                        <p class="mb-1"><strong>Precio:</strong> <span id="precioProductoDetalle">₡0</span></p>
+                                        <p class="mb-1"><strong>Precio:</strong> <span id="precioProductoDetalle">₡0</span></p>  
                                         <p class="mb-1"><strong>Stock Actual:</strong> <span id="stockProductoDetalle">0</span></p>
                                         <p class="mb-0"><strong>Stock Mínimo:</strong> <span id="minStockProductoDetalle">0</span></p>
                                     </div>

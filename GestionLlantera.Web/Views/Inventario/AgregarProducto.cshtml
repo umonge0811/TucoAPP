@@ -4,6 +4,9 @@
     Layout = "_AdminLayout";
 }
 
+<link rel="stylesheet" href="~/css/views/inventario/agregarProducto.css">
+
+
 <div class="container-fluid">
     <div class="page-header d-flex justify-content-between align-items-center mb-4">
         <h2>
@@ -19,9 +22,40 @@
         <div class="col-12">
             <form id="formProducto" action="/Inventario/AgregarProducto" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
-                @* Se requiere enctype="multipart/form-data" para poder subir archivos *@
-               
-                
+
+                <!-- ✅ PASO 1: TIPO DE PRODUCTO (¿Es Llanta?) -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-tags me-2"></i>
+                            Tipo de Producto
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input" type="checkbox" id="esLlanta" asp-for="EsLlanta" style="font-size: 1.5em;">
+                                    <label class="form-check-label fw-bold" for="esLlanta" style="font-size: 1.1em;">
+                                        <i class="bi bi-car-front-fill me-2"></i>
+                                        ¿Es una llanta?
+                                    </label>
+                                </div>
+                                <div class="form-text mt-2">
+                                    Active esta opción si el producto es una llanta para habilitar campos específicos
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-info d-flex align-items-center mb-0" id="tipoProductoInfo">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <span id="textoTipoProducto">Producto general - se solicitará información básica</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ PASO 2: INFORMACIÓN BÁSICA -->
                 <div class="dashboard-card mb-4">
                     <div class="card-header">
                         <h3>
@@ -36,16 +70,6 @@
                                     <label asp-for="NombreProducto" class="form-label">Nombre del Producto</label>
                                     <input asp-for="NombreProducto" class="form-control" required />
                                     <span asp-validation-for="NombreProducto" class="text-danger"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Precio" class="form-label">Precio</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">₡</span>
-                                        <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" required />
-                                    </div>
-                                    <span asp-validation-for="Precio" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -66,7 +90,7 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label asp-for="Descripcion" class="form-label">Descripción</label>
-                                    <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                                    <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Describe las características principales del producto..."></textarea>
                                     <span asp-validation-for="Descripcion" class="text-danger"></span>
                                 </div>
                             </div>
@@ -74,53 +98,33 @@
                     </div>
                 </div>
 
-                <div class="dashboard-card mb-4">
-                    <div class="card-header">
-                        <h3>
-                            <i class="bi bi-image me-2"></i>
-                            Imágenes del Producto
+                <!-- ✅ PASO 3: ESPECIFICACIONES DE LLANTA (Solo si es llanta) -->
+                <div class="dashboard-card mb-4" id="llantaFields" style="display: none;">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-car-front-fill me-2"></i>
+                            Especificaciones de Llanta
                         </h3>
                     </div>
                     <div class="card-body">
-                        <div class="img-upload-container" id="dropArea">
-                            <i class="bi bi-cloud-arrow-up img-upload-icon"></i>
-                            <p class="img-upload-text">Arrastra imágenes aquí o haz clic para seleccionar</p>
-                            <input type="file" id="fileInput" name="imagenes" multiple accept="image/*" class="d-none" />  
-                            <button type="button" id="selectImagesBtn" class="btn btn-outline-primary">
-                                <i class="bi bi-plus-lg me-2"></i>Seleccionar Imágenes
-                            </button>
+                        <div class="alert alert-primary d-flex align-items-center mb-4">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <span>Complete la información técnica de la llanta para una mejor categorización</span>
                         </div>
-                        <div class="img-preview-container" id="previewContainer">
-                            <!-- Las previsualizaciones de imágenes se cargarán aquí dinámicamente -->
-                        </div>
-                        <div class="mt-3 text-muted">
-                            <small>
-                                <i class="bi bi-info-circle me-1"></i>
-                                Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB por imagen.
-                            </small>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Para Llantas - Mostrar campos adicionales si aplica -->
-                <div class="dashboard-card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h3>
-                            <i class="bi bi-car-front-fill me-2"></i>
-                            Información de Llantas
-                        </h3>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="esLlanta" asp-for="EsLlanta" >
-                            <label class="form-check-label" for="esLlanta">¿Es una llanta?</label>
-                        </div>
-                    </div>
-                    <div class="card-body" id="llantaFields" style="display: none;">
                         <div class="row g-3">
+                            <!-- Medidas principales -->
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="bi bi-rulers me-2"></i>
+                                    Medidas
+                                </h5>
+                            </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Ancho" class="form-label">Ancho</label>
                                     <div class="input-group">
-                                        <input asp-for="Llanta.Ancho" type="number" min="0" class="form-control" />
+                                        <input asp-for="Llanta.Ancho" type="number" min="0" class="form-control" placeholder="225" />
                                         <span class="input-group-text">mm</span>
                                     </div>
                                 </div>
@@ -129,7 +133,7 @@
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Perfil" class="form-label">Perfil</label>
                                     <div class="input-group">
-                                        <input asp-for="Llanta.Perfil" type="number" min="0" class="form-control" />
+                                        <input asp-for="Llanta.Perfil" type="number" min="0" class="form-control" placeholder="60" />
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
@@ -138,16 +142,25 @@
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Diametro" class="form-label">Diámetro</label>
                                     <div class="input-group">
-                                        <input asp-for="Llanta.Diametro" class="form-control" placeholder="Ej: 16, 17.5, 18" />
+                                        <input asp-for="Llanta.Diametro" class="form-control" placeholder="16" />
                                         <span class="input-group-text">pulgadas</span>
                                     </div>
+                                    <div class="form-text">Ejemplo: 225/60/R16</div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+
+                            <!-- Información del fabricante -->
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3 mt-3">
+                                    <i class="bi bi-building me-2"></i>
+                                    Fabricante
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Marca" class="form-label">Marca</label>
                                     <select asp-for="Llanta.Marca" class="form-select">
-                                        <option value="">Seleccionar...</option>
+                                        <option value="">Seleccionar marca...</option>
                                         <option value="Michelin">Michelin</option>
                                         <option value="Bridgestone">Bridgestone</option>
                                         <option value="Continental">Continental</option>
@@ -162,11 +175,19 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Modelo" class="form-label">Modelo</label>
-                                    <input asp-for="Llanta.Modelo" class="form-control" placeholder="Ej: Pilot Sport 4" />
+                                    <input asp-for="Llanta.Modelo" class="form-control" placeholder="Pilot Sport 4" />
                                 </div>
+                            </div>
+
+                            <!-- Especificaciones técnicas -->
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3 mt-3">
+                                    <i class="bi bi-gear me-2"></i>
+                                    Especificaciones Técnicas
+                                </h5>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
@@ -187,13 +208,13 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.TipoTerreno" class="form-label">Tipo de Terreno</label>
                                     <select asp-for="Llanta.TipoTerreno" class="form-select">
                                         <option value="">Seleccionar...</option>
-                                        <option value="Todo Terreno">Todo Terreno</option>
                                         <option value="Carretera">Carretera</option>
+                                        <option value="Todo Terreno">Todo Terreno</option>
                                         <option value="Off-Road">Off-Road</option>
                                         <option value="Nieve">Nieve</option>
                                         <option value="Barro">Barro</option>
@@ -201,21 +222,183 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Capas" class="form-label">Capas</label>
-                                    <input asp-for="Llanta.Capas" type="number" min="0" class="form-control" />
+                                    <input asp-for="Llanta.Capas" type="number" min="0" class="form-control" placeholder="4" />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- ✅ PASO 4: CONFIGURACIÓN DE PRECIO -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-calculator me-2"></i>
+                            Configuración de Precio
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Selector de modo de precio -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Método de Configuración de Precio</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card h-100" id="cardAutomatico">
+                                        <div class="card-body text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="modoPrecio" id="modoAutomatico" value="automatico" checked>
+                                                <label class="form-check-label fw-bold" for="modoAutomatico">
+                                                    <i class="bi bi-gear-fill text-primary me-2" style="font-size: 1.5em;"></i>
+                                                    <div>Cálculo Automático</div>
+                                                    <small class="text-muted">Costo + Porcentaje de Utilidad</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100" id="cardManual">
+                                        <div class="card-body text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="modoPrecio" id="modoManual" value="manual">
+                                                <label class="form-check-label fw-bold" for="modoManual">
+                                                    <i class="bi bi-pencil-fill text-warning me-2" style="font-size: 1.5em;"></i>
+                                                    <div>Precio Manual</div>
+                                                    <small class="text-muted">Establecer precio directamente</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campos para cálculo automático -->
+                        <div id="camposAutomaticos">
+                            <div class="alert alert-info d-flex align-items-center mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <span>El precio se calculará automáticamente: <strong>Precio = Costo + (Costo × % Utilidad)</strong></span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="Costo" class="form-label fw-bold">
+                                            <i class="bi bi-cash-coin me-1"></i>
+                                            Costo del Producto
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text">₡</span>
+                                            <input asp-for="Costo" type="number" step="0.01" min="0" class="form-control" id="inputCosto" placeholder="0.00" />
+                                        </div>
+                                        <div class="form-text">Precio al que se compra el producto</div>
+                                        <span asp-validation-for="Costo" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="PorcentajeUtilidad" class="form-label fw-bold">
+                                            <i class="bi bi-percent me-1"></i>
+                                            Porcentaje de Utilidad
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <input asp-for="PorcentajeUtilidad" type="number" step="0.01" min="0" max="999" class="form-control" id="inputUtilidad" placeholder="0.00" />
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <div class="form-text">Porcentaje de ganancia deseado</div>
+                                        <span asp-validation-for="PorcentajeUtilidad" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-success">
+                                            <i class="bi bi-currency-dollar me-1"></i>
+                                            Precio Final
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-success text-white">₡</span>
+                                            <input type="text" class="form-control bg-light text-success fw-bold" id="precioCalculado" readonly value="0.00" style="font-size: 1.2em;" />
+                                        </div>
+                                        <div class="form-text">
+                                            <small id="desglosePrecio" class="text-muted">
+                                                Costo: ₡0.00 + Utilidad: ₡0.00
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo para precio manual -->
+                        <div id="campoManual" style="display: none;">
+                            <div class="alert alert-warning d-flex align-items-center mb-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <span>Estableciendo precio manualmente. No se calculará automáticamente el margen de utilidad.</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Precio" class="form-label fw-bold">
+                                            <i class="bi bi-tag me-1"></i>
+                                            Precio de Venta
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text">₡</span>
+                                            <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" id="inputPrecioManual" placeholder="0.00" />
+                                        </div>
+                                        <span asp-validation-for="Precio" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumen visual -->
+                        <div class="alert alert-success d-flex align-items-center" id="resumenPrecio">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span id="textoResumen" class="fw-bold">Ingrese el costo y porcentaje de utilidad para calcular el precio automáticamente</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ PASO 5: IMÁGENES DEL PRODUCTO -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-image me-2"></i>
+                            Imágenes del Producto
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="img-upload-container" id="dropArea">
+                            <i class="bi bi-cloud-arrow-up img-upload-icon"></i>
+                            <p class="img-upload-text">Arrastra imágenes aquí o haz clic para seleccionar</p>
+                            <input type="file" id="fileInput" name="imagenes" multiple accept="image/*" class="d-none" />
+                            <button type="button" id="selectImagesBtn" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-plus-lg me-2"></i>Seleccionar Imágenes
+                            </button>
+                        </div>
+                        <div class="img-preview-container" id="previewContainer">
+                            <!-- Las previsualizaciones de imágenes se cargarán aquí dinámicamente -->
+                        </div>
+                        <div class="mt-3 text-muted">
+                            <small>
+                                <i class="bi bi-info-circle me-1"></i>
+                                Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB por imagen.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ BOTONES DE ACCIÓN -->
                 <div class="d-flex gap-2 justify-content-end mb-4">
-                    <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
+                    <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary btn-lg">
                         <i class="bi bi-x-lg me-2"></i>Cancelar
                     </a>
-                    <button type="submit" class="btn btn-primary-custom" id="submitButton">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitButton">
                         <span class="normal-state">
                             <i class="bi bi-save me-2"></i>Guardar Producto
                         </span>

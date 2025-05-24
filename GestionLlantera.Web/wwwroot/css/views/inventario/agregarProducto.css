@@ -1,0 +1,259 @@
+﻿/* ✅ CSS PARA LA VISTA REORGANIZADA DE AGREGAR PRODUCTO */
+
+/* === ESTILOS PARA EL SWITCH DE TIPO DE PRODUCTO === */
+.form-switch-lg .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    border-radius: 3rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+}
+
+    .form-switch-lg .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+/* === ESTILOS PARA LAS TARJETAS DE MODO DE PRECIO === */
+#cardAutomatico, #cardManual {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+}
+
+    #cardAutomatico:hover, #cardManual:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    #cardAutomatico.border-primary {
+        border-color: #0d6efd !important;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    #cardManual.border-warning {
+        border-color: #ffc107 !important;
+        background-color: rgba(255, 193, 7, 0.05);
+    }
+
+/* === ESTILOS PARA LOS CAMPOS DE PRECIO === */
+#precioCalculado {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #198754 !important;
+    background-color: #f8f9fa !important;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+#inputCosto, #inputUtilidad, #inputPrecioManual {
+    transition: all 0.3s ease;
+}
+
+    #inputCosto:focus, #inputUtilidad:focus, #inputPrecioManual:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        transform: scale(1.02);
+    }
+
+/* === ESTILOS PARA EL DESGLOSE DE PRECIO === */
+#desglosePrecio {
+    font-size: 0.9em;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* === ESTILOS PARA EL RESUMEN DE PRECIO === */
+#resumenPrecio {
+    border-left: 4px solid #198754;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transition: all 0.3s ease;
+}
+
+/* === ESTILOS PARA LAS SECCIONES DE LLANTA === */
+#llantaFields {
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === ESTILOS PARA LOS HEADERS DE SECCIÓN === */
+.dashboard-card .card-header.bg-primary h3,
+.dashboard-card .card-header.bg-success h3,
+.dashboard-card .card-header.bg-info h3 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* === ESTILOS PARA CAMPOS VÁLIDOS E INVÁLIDOS === */
+.form-control.is-valid {
+    border-color: #198754;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='m2.3 6.73.66.66.66-.66L4.5 5.84l1.24-1.24-.66-.66L4.5 4.52 3.96 3.96l-.66.66.66.66L2.3 6.73z'/%3e%3c/svg%3e");
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+}
+
+/* === ESTILOS PARA LA CARGA DE IMÁGENES === */
+.img-upload-container {
+    border: 3px dashed #6c757d;
+    border-radius: 10px;
+    padding: 3rem 2rem;
+    text-align: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+    .img-upload-container:hover {
+        border-color: #0d6efd;
+        background: linear-gradient(135deg, #e7f3ff 0%, #cce7ff 100%);
+    }
+
+    .img-upload-container.border-primary {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+.img-upload-icon {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.img-upload-text {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+/* === ESTILOS PARA VISTA PREVIA DE IMÁGENES === */
+.img-preview-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.img-preview-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+    .img-preview-item:hover {
+        transform: scale(1.05);
+    }
+
+    .img-preview-item img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+
+.img-preview-remove {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+    .img-preview-remove:hover {
+        background: #dc3545;
+        transform: scale(1.1);
+    }
+
+/* === ESTILOS PARA LOS BOTONES === */
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+    .form-switch-lg .form-check-input {
+        width: 2.5rem;
+        height: 1.25rem;
+    }
+
+    #cardAutomatico, #cardManual {
+        margin-bottom: 1rem;
+    }
+
+    .img-preview-container {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .img-preview-item img {
+        height: 120px;
+    }
+}
+
+/* === ANIMACIONES === */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+    }
+}
+
+.form-control:focus {
+    animation: pulse 1.5s infinite;
+}
+
+/* === ESTILOS PARA ALERTAS === */
+.alert {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-primary {
+    background: linear-gradient(135deg, #cfe2ff 0%, #b6d7ff 100%);
+    color: #084298;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    color: #0c5460;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d1e7dd 0%, #badbcc 100%);
+    color: #0f5132;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #664d03;
+}

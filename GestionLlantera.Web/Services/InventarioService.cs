@@ -314,30 +314,36 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("Iniciando proceso de agregar producto: {NombreProducto}", producto.NombreProducto);
 
-                // Crear un objeto exactamente con la estructura esperada por la API
+                // ✅ NUEVO: Calcular el precio final usando la misma lógica del controlador
+                var precioFinal = CalcularPrecioFinal(producto);
+
+                // ✅ CORREGIDO: Crear un objeto con la estructura EXACTA esperada por la API
                 var productoRequest = new
                 {
                     productoId = 0, // siempre 0 para nuevos productos
                     nombreProducto = producto.NombreProducto ?? "Sin nombre",
                     descripcion = producto.Descripcion ?? "Sin descripción",
-                    precio = Math.Max(producto.Precio, 0.01m), // mínimo 0.01
-                    cantidadEnInventario = producto.CantidadEnInventario,
-                    stockMinimo = producto.StockMinimo,
+                    precio = Math.Max(precioFinal, 0.01m), // mínimo 0.01
+                    costo = producto.Costo,
+                    porcentajeUtilidad = producto.PorcentajeUtilidad,
+                    cantidadEnInventario = producto.CantidadEnInventario, // ✅ SIN ?? porque no es nullable
+                    stockMinimo = producto.StockMinimo, // ✅ SIN ?? porque no es nullable
+                    esLlanta = producto.EsLlanta, // ✅ AGREGADO: faltaba esta propiedad
                     fechaUltimaActualizacion = DateTime.Now,
-                    llanta = producto.EsLlanta ? new
+                    llanta = producto.EsLlanta && producto.Llanta != null ? new
                     {
                         llantaId = 0, // siempre 0 para nuevas llantas
                         productoId = 0, // se asignará después
                         ancho = producto.Llanta.Ancho ?? 0,
                         perfil = producto.Llanta.Perfil ?? 0,
-                        diametro = producto.Llanta.Diametro?.ToString() ?? string.Empty,
+                        diametro = producto.Llanta.Diametro ?? string.Empty,
                         marca = producto.Llanta.Marca ?? string.Empty,
                         modelo = producto.Llanta.Modelo ?? string.Empty,
                         capas = producto.Llanta.Capas ?? 0,
                         indiceVelocidad = producto.Llanta.IndiceVelocidad ?? string.Empty,
                         tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty
                     } : null,
-                    imagenes = new List<object>() // lista vacía, se subirán después
+                    imagenes = new List<object>() // lista vacía, se subirán después por separado
                 };
 
                 // Serializar con la estructura exacta esperada
@@ -451,6 +457,20 @@ namespace GestionLlantera.Web.Services
 
                 return false;
             }
+        }
+
+        // ✅ NUEVO: Método auxiliar para calcular precio (agregar al final de la clase)
+        private decimal CalcularPrecioFinal(ProductoDTO dto)
+        {
+            // Si tiene costo y utilidad, calcular automáticamente
+            if (dto.Costo.HasValue && dto.PorcentajeUtilidad.HasValue)
+            {
+                var utilidad = dto.Costo.Value * (dto.PorcentajeUtilidad.Value / 100m);
+                return dto.Costo.Value + utilidad;
+            }
+
+            // Si no, usar el precio manual o 0 si es null
+            return dto.Precio.GetValueOrDefault(0m);
         }
 
         // Método privado para validar el producto antes de enviarlo
