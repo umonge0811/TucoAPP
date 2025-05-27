@@ -20,101 +20,136 @@ namespace GestionLlantera.Web.Services
         }
 
         // En InventarioService.cs
+        // REEMPLAZA COMPLETAMENTE el método ObtenerProductosAsync() en InventarioService.cs:
+
         public async Task<List<ProductoDTO>> ObtenerProductosAsync()
         {
             try
             {
                 _logger.LogInformation("Iniciando solicitud para obtener productos");
 
-                // Realizar la petición
                 var response = await _httpClient.GetAsync("api/Inventario/productos");
 
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogError($"Error obteniendo productos: {response.StatusCode} - {errorContent}");
-                    throw new Exception($"Error al obtener productos: {response.StatusCode}");
+                    return new List<ProductoDTO>();
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation($"Contenido recibido de la API");
+                _logger.LogInformation($"Respuesta recibida de la API, procesando {content.Length} caracteres...");
 
-                // Deserializar a un objeto dinámico para manejar manualmente el mapeo
+                // Deserializar la respuesta JSON
                 var rawData = JsonConvert.DeserializeObject<dynamic>(content);
                 var productos = new List<ProductoDTO>();
 
-                foreach (var item in rawData)
+                if (rawData == null)
                 {
-                    var producto = new ProductoDTO
-                    {
-                        ProductoId = (int)item.productoId,
-                        NombreProducto = (string)item.nombreProducto,
-                        Descripcion = (string)item.descripcion,
-                        Precio = (decimal)item.precio,
-                        CantidadEnInventario = (int)item.cantidadEnInventario,
-                        StockMinimo = (int)item.stockMinimo,
-                        Imagenes = new List<ImagenProductoDTO>()
-                    };
-
-                    // Procesar imágenes si existen
-                    if (item.imagenesProductos != null && item.imagenesProductos.Count > 0)
-                    {
-                        foreach (var img in item.imagenesProductos)
-                        {
-                            // Obtener la URL de la API
-                            string apiBaseUrl = _httpClient.BaseAddress.ToString().TrimEnd('/');
-                            string imagenUrl = (string)img.urlimagen;
-
-                            // Si la URL de la imagen no comienza con http, combinarla con la URL base de la API
-                            if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                            {
-                                imagenUrl = $"{apiBaseUrl}{imagenUrl}";
-                            }
-
-                            producto.Imagenes.Add(new ImagenProductoDTO
-                            {
-                                ImagenId = (int)img.imagenId,
-                                ProductoId = (int)img.productoId,
-                                UrlImagen = imagenUrl,
-                                Descripcion = img.descripcion != null ? (string)img.descripcion : null
-                            });
-                        }
-                    }
-
-
-
-                    // Procesar llanta si existe (tomar solo el primer elemento del array)
-                    if (item.llanta != null && item.llanta.Count > 0)
-                    {
-                        var llantaItem = item.llanta[0]; // Tomar el primer elemento
-                        producto.Llanta = new LlantaDTO
-                        {
-                            LlantaId = (int)llantaItem.llantaId,
-                            ProductoId = (int)llantaItem.productoId,
-                            Ancho = llantaItem.ancho != null ? (int?)llantaItem.ancho : null,
-                            Perfil = llantaItem.perfil != null ? (int?)llantaItem.perfil : null,
-                            Diametro = llantaItem.diametro != null ? (string)llantaItem.diametro : null,
-                            Marca = llantaItem.marca != null ? (string)llantaItem.marca : null,
-                            Modelo = llantaItem.modelo != null ? (string)llantaItem.modelo : null,
-                            Capas = llantaItem.capas != null ? (int?)llantaItem.capas : null,
-                            IndiceVelocidad = llantaItem.indiceVelocidad != null ? (string)llantaItem.indiceVelocidad : null,
-                            TipoTerreno = llantaItem.tipoTerreno != null ? (string)llantaItem.tipoTerreno : null
-                        };
-                    }
-
-                    productos.Add(producto);
+                    _logger.LogWarning("La respuesta de la API es null");
+                    return new List<ProductoDTO>();
                 }
 
-                _logger.LogInformation($"Productos procesados: {productos.Count}");
+                foreach (var item in rawData)
+                {
+                    try
+                    {
+                        // ✅ Mapeo directo basado en tu ProductoDTO
+                        var producto = new ProductoDTO
+                        {
+                            ProductoId = (int)item.productoId,
+                            NombreProducto = (string)item.nombreProducto ?? "Sin nombre",
+                            Descripcion = item.descripcion?.ToString(), // nullable
+
+                            // ✅ Campos de costo y utilidad (nullable en tu DTO)
+                            Costo = item.costo != null ? (decimal?)item.costo : null,
+                            PorcentajeUtilidad = item.porcentajeUtilidad != null ? (decimal?)item.porcentajeUtilidad : null,
+
+                            // ✅ Precio - usar el precio calculado de la API o el precio normal
+                            Precio = item.precioCalculado != null ? (decimal?)item.precioCalculado :
+                                     item.precio != null ? (decimal?)item.precio : null,
+
+                            CantidadEnInventario = (int)item.cantidadEnInventario,
+                            StockMinimo = (int)item.stockMinimo,
+
+                            FechaUltimaActualizacion = item.fechaUltimaActualizacion != null ?
+                                DateTime.Parse(item.fechaUltimaActualizacion.ToString()) : (DateTime?)null,
+
+                            EsLlanta = item.llanta != null, // Se determina por la presencia de datos de llanta
+
+                            Imagenes = new List<ImagenProductoDTO>()
+                        };
+
+                        // ✅ Procesar imágenes
+                        if (item.imagenesProductos != null)
+                        {
+                            foreach (var img in item.imagenesProductos)
+                            {
+                                var imagenUrl = img.urlimagen?.ToString() ?? "";
+
+                                // Construir URL completa para las imágenes
+                                if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http"))
+                                {
+                                    string apiBaseUrl = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? "";
+                                    imagenUrl = $"{apiBaseUrl}{imagenUrl}";
+                                }
+
+                                producto.Imagenes.Add(new ImagenProductoDTO
+                                {
+                                    ImagenId = (int)img.imagenId,
+                                    ProductoId = producto.ProductoId, // Usar el ProductoId del producto
+                                    UrlImagen = imagenUrl,
+                                    Descripcion = img.descripcion?.ToString() ?? ""
+                                });
+                            }
+                        }
+
+                        // ✅ Procesar llanta (objeto directo en tu API)
+                        if (item.llanta != null)
+                        {
+                            var llantaData = item.llanta;
+
+                            producto.Llanta = new LlantaDTO
+                            {
+                                LlantaId = (int)llantaData.llantaId,
+                                ProductoId = producto.ProductoId,
+                                Ancho = llantaData.ancho != null ? (int?)llantaData.ancho : null,
+                                Perfil = llantaData.perfil != null ? (int?)llantaData.perfil : null,
+                                Diametro = llantaData.diametro?.ToString() ?? "",
+                                Marca = llantaData.marca?.ToString() ?? "",
+                                Modelo = llantaData.modelo?.ToString() ?? "",
+                                Capas = llantaData.capas != null ? (int?)llantaData.capas : null,
+                                IndiceVelocidad = llantaData.indiceVelocidad?.ToString() ?? "",
+                                TipoTerreno = llantaData.tipoTerreno?.ToString() ?? ""
+                            };
+
+                            producto.EsLlanta = true;
+                        }
+
+                        productos.Add(producto);
+
+                        // Log cada producto procesado
+                        _logger.LogInformation($"✅ Producto procesado: {producto.NombreProducto} " +
+                            $"(ID: {producto.ProductoId}, Precio: {producto.Precio}, " +
+                            $"Stock: {producto.CantidadEnInventario}, Es Llanta: {producto.EsLlanta})");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"❌ Error procesando producto individual: {ex.Message}");
+                        // Continuar con el siguiente producto sin fallar todo el proceso
+                    }
+                }
+
+                _logger.LogInformation($"🎉 PROCESO COMPLETADO: {productos.Count} productos procesados exitosamente");
                 return productos;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener productos");
+                _logger.LogError(ex, "💥 Error general al obtener productos");
                 return new List<ProductoDTO>();
             }
         }
-
+        
         // Añade este método en InventarioService
         private List<ProductoDTO> MapearRespuestaProductos(string jsonResponse)
         {

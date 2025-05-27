@@ -128,12 +128,14 @@
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <!-- Modificación en la sección de la tabla -->
                         <tbody>
                             @foreach (var producto in Model)
                             {
                                 <tr class="@(producto.CantidadEnInventario <= producto.StockMinimo ? "table-danger" : "")" data-id="@producto.ProductoId">
+                                    <!-- 1. ID -->
                                     <td>@producto.ProductoId</td>
+
+                                    <!-- 2. Imagen -->
                                     <td>
                                         <div class="producto-img-mini" style="width: 50px; height: 50px; cursor: pointer;">
                                             @if (producto.Imagenes != null && producto.Imagenes.Any())
@@ -150,6 +152,8 @@
                                             }
                                         </div>
                                     </td>
+
+                                    <!-- 3. Producto -->
                                     <td>
                                         <strong>@producto.NombreProducto</strong>
                                         @if (!string.IsNullOrEmpty(producto.Descripcion))
@@ -161,6 +165,29 @@
                                             <span class="badge bg-primary">Llanta</span>
                                         }
                                     </td>
+
+                                    <!-- 4. Medidas -->
+                                    <td>
+                                        @if (producto.Llanta != null)
+                                        {
+                                            <span class="medida-llanta">
+                                                @if (producto.Llanta.Ancho.HasValue && producto.Llanta.Perfil.HasValue && !string.IsNullOrEmpty(producto.Llanta.Diametro))
+                                                {
+                                                    @($"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}")
+                                                }
+                                                else
+                                                {
+                                                    <text>-</text>
+                                                }
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+
+                                    <!-- 5. Marca/Modelo -->
                                     <td>
                                         @if (producto.Llanta != null)
                                         {
@@ -168,6 +195,10 @@
                                                 @if (!string.IsNullOrEmpty(producto.Llanta.Marca) && !string.IsNullOrEmpty(producto.Llanta.Modelo))
                                                 {
                                                     <span>@($"{producto.Llanta.Marca}/{producto.Llanta.Modelo}")</span>
+                                                    @if (!string.IsNullOrEmpty(producto.Llanta.TipoTerreno))
+                                                    {
+                                                        <div class="small text-muted">@producto.Llanta.TipoTerreno</div>
+                                                    }
                                                 }
                                                 else if (!string.IsNullOrEmpty(producto.Llanta.Marca))
                                                 {
@@ -188,29 +219,8 @@
                                             <span class="text-muted">N/A</span>
                                         }
                                     </td>
-                                    <td>
-                                    <td>
-                                        @if (producto.Llanta != null)
-                                        {
-                                            <span class="medida-llanta">
-                                                @if (producto.Llanta.Ancho.HasValue && producto.Llanta.Perfil.HasValue && !string.IsNullOrEmpty(producto.Llanta.Diametro))
-                                                {
-                                                    @($"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}")
-                                                }
-                                                else
-                                                {
-                                                    <text>-</text>
-                                                }
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">N/A</span>
-                                        }
-                                    </td>
-                                    </td>
-@*                                     <td class="text-end fw-bold">₡@((producto.Precio ?? 0).ToString("N0"))</td>
- *@                                    <!-- Nueva celda: Costo -->
+
+                                    <!-- 6. Costo -->
                                     <td class="text-end">
                                         @if (producto.Costo.HasValue)
                                         {
@@ -222,11 +232,15 @@
                                         }
                                     </td>
 
-                                    <!-- Nueva celda: Utilidad % -->
+                                    <!-- 7. Utilidad % -->
                                     <td class="text-center">
                                         @if (producto.PorcentajeUtilidad.HasValue)
                                         {
                                             <span class="badge bg-info">@producto.PorcentajeUtilidad.Value.ToString("0.0")%</span>
+                                            @if (producto.UtilidadEnDinero.HasValue)
+                                            {
+                                                <div class="small text-muted">₡@producto.UtilidadEnDinero.Value.ToString("N0")</div>
+                                            }
                                         }
                                         else
                                         {
@@ -234,13 +248,13 @@
                                         }
                                     </td>
 
-                                    <!-- Nueva celda: Precio Final -->
+                                    <!-- 8. Precio Final -->
                                     <td class="text-end fw-bold">
-                                        @if (producto.Costo.HasValue && producto.PorcentajeUtilidad.HasValue)
+                                        @if (producto.UsarCalculoAutomatico)
                                         {
                                             <!-- Precio calculado automáticamente -->
                                             <span class="text-success">₡@((producto.PrecioCalculado ?? 0).ToString("N0"))</span>
-                                            <small class="d-block text-muted">Calculado</small>
+                                            <small class="d-block text-success">Calculado</small>
                                         }
                                         else
                                         {
@@ -249,6 +263,8 @@
                                             <small class="d-block text-muted">Manual</small>
                                         }
                                     </td>
+
+                                    <!-- 9. Stock -->
                                     <td class="text-center">
                                         <span class="@(producto.CantidadEnInventario <= producto.StockMinimo ? "text-danger fw-bold" : "")">
                                             @producto.CantidadEnInventario
@@ -258,9 +274,13 @@
                                             }
                                         </span>
                                     </td>
+
+                                    <!-- 10. Stock Mín -->
                                     <td class="text-center">
                                         @producto.StockMinimo
                                     </td>
+
+                                    <!-- 11. Acciones -->
                                     <td>
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-sm btn-info ver-detalles-btn"
