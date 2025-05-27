@@ -536,74 +536,31 @@
     <script src="~/js/views/inventario/inventario.js"></script>
     <script src="~/js/views/inventario/exportarInventario.js"></script>
     <script>
-        // Función para cargar imágenes de un producto
-        function verImagenesProducto(productoId) {
-            // Obtener el elemento del modal
-            const modalContent = document.getElementById('modalContent');
+        $(document).ready(function() {
+            console.log('🚀 Configurando eventos de redirección');
 
-            // Mostrar spinner de carga
-            modalContent.innerHTML = `
-                <div class="modal-body text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2">Cargando imágenes...</p>
-                </div>
-            `;
+            // ✅ SOLO CONFIGURAR CLICK EN IMÁGENES (los botones ya están en inventario.js)
+            $(document).on('click', '.producto-img-mini', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-            // Mostrar el modal
-            const modal = new bootstrap.Modal(document.getElementById('imagenModal'));
-            modal.show();
+                console.log('🖼️ Click en imagen detectado');
 
-            // Cargar el contenido mediante AJAX
-            fetch(`/Inventario/VerImagenes/${productoId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Error del servidor: ${response.status}`);
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    // Actualizar el contenido del modal con la respuesta
-                    modalContent.innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error al cargar imágenes:', error);
-                    modalContent.innerHTML = `
-                        <div class="modal-header">
-                            <h5 class="modal-title">Error</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="alert alert-danger">
-                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                Ocurrió un error al cargar las imágenes: ${error.message}
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        </div>
-                    `;
-                });
-        }
+                const $fila = $(this).closest('tr');
+                const productoId = $fila.attr('data-id');
 
-        // Añadir evento click a todas las miniaturas de imagen
-        document.addEventListener('DOMContentLoaded', function() {
-            const imagenesMiniatura = document.querySelectorAll('.producto-img-mini');
+                console.log(`📦 ProductoId: ${productoId}`);
 
-            imagenesMiniatura.forEach(miniatura => {
-                miniatura.addEventListener('click', function() {
-                    // Obtener ID del producto desde el atributo data-id más cercano
-                    const fila = this.closest('tr');
-                    const productoId = fila.getAttribute('data-id');
-
-                    if (productoId) {
-                        verImagenesProducto(productoId);
-                    } else {
-                        console.error('No se pudo encontrar el ID del producto');
-                    }
-                });
+                if (productoId) {
+                    const url = `/Inventario/DetalleProducto/${productoId}`;
+                    console.log(`🌐 Redirigiendo a: ${url}`);
+                    window.location.href = url;
+                } else {
+                    console.error('❌ ProductoId no encontrado');
+                }
             });
+
+            console.log('✅ Eventos configurados');
         });
     </script>
 }

@@ -54,6 +54,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         // GET: /Inventario/DetalleProducto/5
+        // En InventarioController.cs - método DetalleProducto
         public async Task<IActionResult> DetalleProducto(int id)
         {
             ViewData["Title"] = "Detalle de Producto";
@@ -62,6 +63,23 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
+
+                // ✅ AGREGAR ESTE LOG TEMPORAL
+                _logger.LogInformation("=== DIAGNÓSTICO DETALLE PRODUCTO ===");
+                _logger.LogInformation("Producto ID: {Id}", producto?.ProductoId ?? 0);
+                _logger.LogInformation("Nombre: {Nombre}", producto?.NombreProducto ?? "NULL");
+                _logger.LogInformation("¿Tiene imágenes?: {TieneImagenes}", producto?.Imagenes != null);
+                _logger.LogInformation("Cantidad imágenes: {Cantidad}", producto?.Imagenes?.Count ?? 0);
+
+                if (producto?.Imagenes != null && producto.Imagenes.Any())
+                {
+                    foreach (var img in producto.Imagenes)
+                    {
+                        _logger.LogInformation("URL imagen: {Url}", img.UrlImagen);
+                    }
+                }
+                _logger.LogInformation("=== FIN DIAGNÓSTICO ===");
+
                 if (producto == null || producto.ProductoId == 0)
                 {
                     TempData["Error"] = "Producto no encontrado.";

@@ -4,6 +4,27 @@
     Layout = "_AdminLayout";
 }
 
+<!-- ✅ CÓDIGO DE DIAGNÓSTICO TEMPORAL - AGREGAR ESTO -->
+<div style="background: #f0f0f0; padding: 10px; margin: 10px; border: 1px solid #ccc;">
+    <h4>🔍 DIAGNÓSTICO TEMPORAL</h4>
+    <p><strong>Producto ID:</strong> @Model.ProductoId</p>
+    <p><strong>Nombre:</strong> @Model.NombreProducto</p>
+    <p><strong>¿Tiene imágenes?:</strong> @(Model.Imagenes != null ? "SÍ" : "NO")</p>
+    <p><strong>Cantidad de imágenes:</strong> @(Model.Imagenes?.Count ?? 0)</p>
+    
+    @if (Model.Imagenes != null && Model.Imagenes.Any())
+    {
+        <p><strong>URLs de imágenes:</strong></p>
+        <ul>
+            @foreach (var img in Model.Imagenes)
+            {
+                <li>@img.UrlImagen</li>
+            }
+        </ul>
+    }
+</div>
+<!-- ✅ FIN CÓDIGO DE DIAGNÓSTICO -->
+
 <div class="container-fluid">
     <div class="page-header d-flex justify-content-between align-items-center mb-4">
         <h2>
@@ -31,21 +52,34 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
+
+                        <!-- ✅ DIAGNÓSTICO DEL CARRUSEL -->
+<div style="background: yellow; padding: 5px; margin: 5px;">
+    <p>🎠 DIAGNÓSTICO CARRUSEL: Model.Imagenes = @(Model.Imagenes?.Count ?? 0) imágenes</p>
+</div>
                         <!-- Carrusel de imágenes -->
                         <div class="col-md-6 mb-4">
                             @if (Model.Imagenes != null && Model.Imagenes.Any())
                             {
                                 <div id="productoCarrusel" class="carousel slide" data-bs-ride="carousel">
-                                    <div class="carousel-inner">
-                                        @for (int i = 0; i < Model.Imagenes.Count; i++)
-                                        {
-                                            var imagen = Model.Imagenes[i];
-                                            <div class="carousel-item @(i == 0 ? "active" : "")">
-                                                <img src="@imagen.UrlImagen" class="d-block w-100 img-fluid rounded"
-                                                     alt="@Model.NombreProducto">
-                                            </div>
-                                        }
-                                    </div>
+                                     <div class="carousel-inner">
+            @for (int i = 0; i < Model.Imagenes.Count; i++)
+            {
+                var imagen = Model.Imagenes[i];
+                <div class="carousel-item @(i == 0 ? "active" : "")">
+                    <!-- ✅ AGREGAR INFORMACIÓN DE DEBUG -->
+                    <div style="background: red; color: white; padding: 5px;">
+                        Debug: URL = @imagen.UrlImagen
+                    </div>
+                    
+                    <img src="@imagen.UrlImagen" 
+                         class="d-block w-100 img-fluid rounded"
+                         alt="@Model.NombreProducto"
+                         onerror="console.error('Error cargando imagen:', this.src); this.style.border='3px solid red';"
+                         onload="console.log('Imagen cargada OK:', this.src);">
+                </div>
+            }
+        </div>
                                     @if (Model.Imagenes.Count > 1)
                                     {
                                         <button class="carousel-control-prev" type="button" data-bs-target="#productoCarrusel" data-bs-slide="prev">
@@ -328,8 +362,26 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/views/inventario/detalleProducto.js"></script>
+    
+    <!-- ✅ SCRIPT DE DIAGNÓSTICO TEMPORAL -->
+    <script>
+        console.log('🔍 DIAGNÓSTICO JS - Vista cargada');
+        console.log('🔍 Bootstrap disponible:', typeof bootstrap !== 'undefined');
+        console.log('🔍 jQuery disponible:', typeof $ !== 'undefined');
+        
+        $(document).ready(function() {
+            console.log('🔍 Document ready ejecutado');
+            
+            // Verificar si hay carrusel
+            const carrusel = document.getElementById('productoCarrusel');
+            console.log('🔍 Carrusel encontrado:', carrusel !== null);
+            
+            if (carrusel) {
+                console.log('🔍 Items del carrusel:', carrusel.querySelectorAll('.carousel-item').length);
+            }
+        });
+    </script>
 }

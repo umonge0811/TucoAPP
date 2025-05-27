@@ -30,95 +30,95 @@ $(document).ready(function () {
         }, 500);
     });
 
-    // Configuración de los botones para ver detalles
-    $(".ver-detalles-btn").click(function () {
-        const productoId = $(this).data("id");
-        cargarDetallesProducto(productoId);
-    });
+    //// Configuración de los botones para ver detalles
+    //$(".ver-detalles-btn").click(function () {
+    //    const productoId = $(this).data("id");
+    //    cargarDetallesProducto(productoId);
+    //});
 
     // Función para cargar los detalles del producto
     // Función para cargar los detalles del producto desde la tabla
-    function cargarDetallesProducto(productoId) {
-        resetFormularioDetalles();
+    //function cargarDetallesProducto(productoId) {
+    //    resetFormularioDetalles();
 
-        // Configurar el ID para el ajuste de stock
-        $("#productoId").val(productoId);
+    //    // Configurar el ID para el ajuste de stock
+    //    $("#productoId").val(productoId);
 
-        // Buscar la fila del producto en la tabla
-        const fila = $(`button.ver-detalles-btn[data-id="${productoId}"]`).closest("tr");
+    //    // Buscar la fila del producto en la tabla
+    //    const fila = $(`button.ver-detalles-btn[data-id="${productoId}"]`).closest("tr");
 
-        if (fila.length === 0) {
-            mostrarNotificacion("Error", "No se encontró el producto en la tabla", "danger");
-            return;
-        }
+    //    if (fila.length === 0) {
+    //        mostrarNotificacion("Error", "No se encontró el producto en la tabla", "danger");
+    //        return;
+    //    }
 
-        // Obtener datos básicos
-        const nombre = fila.find("td:eq(2) strong").text();
-        const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción";
-        const precio = fila.find("td:eq(5)").text();
-        const stock = fila.find("td:eq(6)").text().trim().split(' ')[0].replace(/[^\d]/g, ''); // Extraer solo el número
-        const stockMin = fila.find("td:eq(7)").text().trim();
+    //    // Obtener datos básicos
+    //    const nombre = fila.find("td:eq(2) strong").text();
+    //    const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción";
+    //    const precio = fila.find("td:eq(5)").text();
+    //    const stock = fila.find("td:eq(6)").text().trim().split(' ')[0].replace(/[^\d]/g, ''); // Extraer solo el número
+    //    const stockMin = fila.find("td:eq(7)").text().trim();
 
-        // Establecer datos básicos en el modal
-        $("#nombreProductoDetalle").text(nombre);
-        $("#descripcionProductoDetalle").text(descripcion);
-        $("#stockProductoDetalle").text(stock);
-        $("#minStockProductoDetalle").text(stockMin);
+    //    // Establecer datos básicos en el modal
+    //    $("#nombreProductoDetalle").text(nombre);
+    //    $("#descripcionProductoDetalle").text(descripcion);
+    //    $("#stockProductoDetalle").text(stock);
+    //    $("#minStockProductoDetalle").text(stockMin);
 
-        // Obtener datos de precios de las celdas de la tabla
-        const costoTexto = fila.find("td:eq(5)").text().trim(); // Columna de Costo
-        const utilidadTexto = fila.find("td:eq(6)").text().trim(); // Columna de Utilidad %
-        const precioFinalTexto = fila.find("td:eq(7)").text().trim(); // Columna de Precio Final
-        const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim(); // Tipo de precio
+    //    // Obtener datos de precios de las celdas de la tabla
+    //    const costoTexto = fila.find("td:eq(5)").text().trim(); // Columna de Costo
+    //    const utilidadTexto = fila.find("td:eq(6)").text().trim(); // Columna de Utilidad %
+    //    const precioFinalTexto = fila.find("td:eq(7)").text().trim(); // Columna de Precio Final
+    //    const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim(); // Tipo de precio
 
-        // Establecer información de precios
-        $("#costoProductoDetalle").text(costoTexto !== "-" ? costoTexto : "No especificado");
-        $("#utilidadProductoDetalle").text(utilidadTexto !== "-" ? utilidadTexto : "-");
-        $("#precioProductoDetalle").text(precioFinalTexto.split('\n')[0] || precio); // Primera línea del precio final
-        $("#tipoPrecioDetalle").text(tipoPrecioTexto || "Manual");
+    //    // Establecer información de precios
+    //    $("#costoProductoDetalle").text(costoTexto !== "-" ? costoTexto : "No especificado");
+    //    $("#utilidadProductoDetalle").text(utilidadTexto !== "-" ? utilidadTexto : "-");
+    //    $("#precioProductoDetalle").text(precioFinalTexto.split('\n')[0] || precio); // Primera línea del precio final
+    //    $("#tipoPrecioDetalle").text(tipoPrecioTexto || "Manual");
 
-        // Ajustar colores según el tipo de precio
-        if (tipoPrecioTexto === "Calculado") {
-            $("#precioProductoDetalle").removeClass("text-primary").addClass("text-success");
-        } else {
-            $("#precioProductoDetalle").removeClass("text-success").addClass("text-primary");
-        }
-        // Obtener la URL de la imagen
-        const imagenUrl = fila.find("td:eq(1) img").attr("src");
-        if (imagenUrl) {
-            $("#imagenProductoDetalle").html(`<img src="${imagenUrl}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">`);
-        }
+    //    // Ajustar colores según el tipo de precio
+    //    if (tipoPrecioTexto === "Calculado") {
+    //        $("#precioProductoDetalle").removeClass("text-primary").addClass("text-success");
+    //    } else {
+    //        $("#precioProductoDetalle").removeClass("text-success").addClass("text-primary");
+    //    }
+    //    // Obtener la URL de la imagen
+    //    const imagenUrl = fila.find("td:eq(1) img").attr("src");
+    //    if (imagenUrl) {
+    //        $("#imagenProductoDetalle").html(`<img src="${imagenUrl}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">`);
+    //    }
 
-        // Configurar el enlace para editar
-        $("#btnEditarProductoDetalle").attr("href", `/Inventario/EditarProducto/${productoId}`);
+    //    // Configurar el enlace para editar
+    //    $("#btnEditarProductoDetalle").attr("href", `/Inventario/EditarProducto/${productoId}`);
 
-        // Verificar si es una llanta
-        const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
-        if (esLlanta) {
-            // Mostrar sección de detalles de llanta
-            $("#detallesLlanta").show();
+    //    // Verificar si es una llanta
+    //    const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
+    //    if (esLlanta) {
+    //        // Mostrar sección de detalles de llanta
+    //        $("#detallesLlanta").show();
 
-            // Obtener datos específicos de la llanta
-            const medidas = fila.find("td:eq(3) .medida-llanta").text().trim();
-            const marcaModelo = fila.find("td:eq(4) .marca-modelo").text().trim();
-            const tipoTerreno = fila.find("td:eq(4) .text-muted").text().trim();
+    //        // Obtener datos específicos de la llanta
+    //        const medidas = fila.find("td:eq(3) .medida-llanta").text().trim();
+    //        const marcaModelo = fila.find("td:eq(4) .marca-modelo").text().trim();
+    //        const tipoTerreno = fila.find("td:eq(4) .text-muted").text().trim();
 
-            // Establecer datos de la llanta en el modal
-            $("#medidasLlantaDetalle").text(medidas !== "N/A" ? medidas : "No disponible");
-            $("#marcaModeloLlantaDetalle").text(marcaModelo !== "N/A" ? marcaModelo : "No disponible");
-            $("#tipoTerrenoLlantaDetalle").text(tipoTerreno !== "N/A" ? tipoTerreno : "No disponible");
-            $("#indiceVelocidadLlantaDetalle").text("No disponible en vista de tabla"); // Este dato no aparece en la tabla
+    //        // Establecer datos de la llanta en el modal
+    //        $("#medidasLlantaDetalle").text(medidas !== "N/A" ? medidas : "No disponible");
+    //        $("#marcaModeloLlantaDetalle").text(marcaModelo !== "N/A" ? marcaModelo : "No disponible");
+    //        $("#tipoTerrenoLlantaDetalle").text(tipoTerreno !== "N/A" ? tipoTerreno : "No disponible");
+    //        $("#indiceVelocidadLlantaDetalle").text("No disponible en vista de tabla"); // Este dato no aparece en la tabla
 
-            // Configurar el botón de ajuste de stock en el modal
-            $(".ajuste-stock-detalle-btn").data("id", productoId);
-        } else {
-            // Ocultar sección de detalles de llanta
-            $("#detallesLlanta").hide();
-        }
+    //        // Configurar el botón de ajuste de stock en el modal
+    //        $(".ajuste-stock-detalle-btn").data("id", productoId);
+    //    } else {
+    //        // Ocultar sección de detalles de llanta
+    //        $("#detallesLlanta").hide();
+    //    }
 
-        // Mostrar el modal
-        $("#detallesProductoModal").modal("show");
-    }
+    //    // Mostrar el modal
+    //    $("#detallesProductoModal").modal("show");
+    //}
 
     // Función para cargar detalles desde la tabla (método alternativo)
     function cargarDetallesDesdeLaTabla(productoId) {
