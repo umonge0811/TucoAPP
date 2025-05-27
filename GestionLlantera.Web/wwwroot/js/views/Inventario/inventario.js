@@ -2,8 +2,9 @@
  * Funcionalidad para la gestión de inventario
  */
 
-     Función para cargar los detalles del producto desde la tabla
+    // Función para cargar los detalles del producto desde la tabla
 function cargarDetallesProducto(productoId) {
+    console.log(`🔍 Función cargarDetallesProducto llamada con ID: ${productoId}`);
     resetFormularioDetalles();
 
     // Configurar el ID para el ajuste de stock

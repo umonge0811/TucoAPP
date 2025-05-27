@@ -343,25 +343,57 @@
     </div>
 </div>
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="~/js/views/inventario/detalleProducto.js"></script>
-    
-    <!-- ✅ SCRIPT DE DIAGNÓSTICO TEMPORAL -->
+    <script src="~/js/views/inventario/imagenes.js"></script>
+    <script src="~/js/views/inventario/exportarInventario.js"></script>
     <script>
-        console.log('🔍 DIAGNÓSTICO JS - Vista cargada');
-        console.log('🔍 Bootstrap disponible:', typeof bootstrap !== 'undefined');
-        console.log('🔍 jQuery disponible:', typeof $ !== 'undefined');
-        
         $(document).ready(function() {
-            console.log('🔍 Document ready ejecutado');
-            
-            // Verificar si hay carrusel
-            const carrusel = document.getElementById('productoCarrusel');
-            console.log('🔍 Carrusel encontrado:', carrusel !== null);
-            
-            if (carrusel) {
-                console.log('🔍 Items del carrusel:', carrusel.querySelectorAll('.carousel-item').length);
-            }
+            console.log('🚀 DIAGNÓSTICO AVANZADO - Index.cshtml');
+
+            // ✅ DIAGNÓSTICO: Ver qué elementos existen en la página
+            console.log('📊 Elementos encontrados:');
+            console.log('- .producto-img-mini:', $('.producto-img-mini').length);
+            console.log('- .producto-img-mini img:', $('.producto-img-mini img').length);
+            console.log('- .sin-imagen-mini:', $('.sin-imagen-mini').length);
+
+            // ✅ EVENTO CON MÁXIMO DIAGNÓSTICO
+            $(document).on('click', '.producto-img-mini', function(e) {
+                console.log('🎯 =================================');
+                console.log('🖼️ CLICK DETECTADO EN .producto-img-mini');
+                console.log('🎯 Elemento clickeado:', e.target);
+                console.log('🎯 Elemento actual (this):', this);
+                console.log('🎯 Tiene imagen:', $(this).find('img').length > 0);
+                console.log('🎯 Es sin-imagen:', $(this).find('.sin-imagen-mini').length > 0);
+                
+                e.preventDefault();
+                e.stopPropagation();
+
+                const $fila = $(this).closest('tr');
+                const productoId = $fila.attr('data-id');
+
+                console.log(`📦 Fila encontrada:`, $fila.length > 0 ? 'SÍ' : 'NO');
+                console.log(`📦 ProductoId: ${productoId}`);
+
+                if (productoId) {
+                    const url = `/Inventario/DetalleProducto/${productoId}`;
+                    console.log(`🌐 NAVEGANDO A: ${url}`);
+                    window.location.href = url;
+                } else {
+                    console.error('❌ ProductoId no encontrado');
+                }
+                console.log('🎯 =================================');
+            });
+
+            // ✅ EVENTO ADICIONAL PARA IMÁGENES INTERNAS (por si acaso)
+            $(document).on('click', '.producto-img-mini img', function(e) {
+                console.log('🖼️ CLICK DIRECTO EN IMG - Redirigiendo a contenedor padre');
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Trigger del evento en el contenedor padre
+                $(this).closest('.producto-img-mini').trigger('click');
+            });
+
+            console.log('✅ Diagnóstico configurado');
         });
     </script>
 }
