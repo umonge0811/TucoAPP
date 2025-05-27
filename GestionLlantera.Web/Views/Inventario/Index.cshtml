@@ -537,9 +537,9 @@
     <script src="~/js/views/inventario/exportarInventario.js"></script>
     <script>
         $(document).ready(function() {
-            console.log('🚀 Configurando eventos de redirección');
+            console.log('🚀 Index.cshtml - Solo configurando evento de imágenes');
 
-            // ✅ SOLO CONFIGURAR CLICK EN IMÁGENES (los botones ya están en inventario.js)
+            // ✅ SOLO EVENTO PARA IMÁGENES - Redirige a vista completa
             $(document).on('click', '.producto-img-mini', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -556,11 +556,11 @@
                     console.log(`🌐 Redirigiendo a: ${url}`);
                     window.location.href = url;
                 } else {
-                    console.error('❌ ProductoId no encontrado');
+                    console.error('❌ ProductoId no encontrado en imagen');
                 }
             });
 
-            console.log('✅ Eventos configurados');
+            console.log('✅ Solo eventos de imágenes configurados');
         });
     </script>
 }

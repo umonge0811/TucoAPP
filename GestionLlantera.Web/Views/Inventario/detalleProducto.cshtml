@@ -4,26 +4,6 @@
     Layout = "_AdminLayout";
 }
 
-<!-- ✅ CÓDIGO DE DIAGNÓSTICO TEMPORAL - AGREGAR ESTO -->
-<div style="background: #f0f0f0; padding: 10px; margin: 10px; border: 1px solid #ccc;">
-    <h4>🔍 DIAGNÓSTICO TEMPORAL</h4>
-    <p><strong>Producto ID:</strong> @Model.ProductoId</p>
-    <p><strong>Nombre:</strong> @Model.NombreProducto</p>
-    <p><strong>¿Tiene imágenes?:</strong> @(Model.Imagenes != null ? "SÍ" : "NO")</p>
-    <p><strong>Cantidad de imágenes:</strong> @(Model.Imagenes?.Count ?? 0)</p>
-    
-    @if (Model.Imagenes != null && Model.Imagenes.Any())
-    {
-        <p><strong>URLs de imágenes:</strong></p>
-        <ul>
-            @foreach (var img in Model.Imagenes)
-            {
-                <li>@img.UrlImagen</li>
-            }
-        </ul>
-    }
-</div>
-<!-- ✅ FIN CÓDIGO DE DIAGNÓSTICO -->
 
 <div class="container-fluid">
     <div class="page-header d-flex justify-content-between align-items-center mb-4">

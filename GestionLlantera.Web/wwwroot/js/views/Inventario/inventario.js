@@ -1,6 +1,137 @@
 ﻿ /**
  * Funcionalidad para la gestión de inventario
  */
+
+     Función para cargar los detalles del producto desde la tabla
+function cargarDetallesProducto(productoId) {
+    resetFormularioDetalles();
+
+    // Configurar el ID para el ajuste de stock
+    $("#productoId").val(productoId);
+
+    // Buscar la fila del producto en la tabla
+    const fila = $(`button.ver-detalles-btn[data-id="${productoId}"]`).closest("tr");
+
+    if (fila.length === 0) {
+        mostrarNotificacion("Error", "No se encontró el producto en la tabla", "danger");
+        return;
+    }
+
+    // Obtener datos básicos
+    const nombre = fila.find("td:eq(2) strong").text();
+    const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción";
+    const precio = fila.find("td:eq(5)").text();
+    const stock = fila.find("td:eq(6)").text().trim().split(' ')[0].replace(/[^\d]/g, ''); // Extraer solo el número
+    const stockMin = fila.find("td:eq(7)").text().trim();
+
+    // Establecer datos básicos en el modal
+    $("#nombreProductoDetalle").text(nombre);
+    $("#descripcionProductoDetalle").text(descripcion);
+    $("#stockProductoDetalle").text(stock);
+    $("#minStockProductoDetalle").text(stockMin);
+
+    // Obtener datos de precios de las celdas de la tabla
+    const costoTexto = fila.find("td:eq(5)").text().trim(); // Columna de Costo
+    const utilidadTexto = fila.find("td:eq(6)").text().trim(); // Columna de Utilidad %
+    const precioFinalTexto = fila.find("td:eq(7)").text().trim(); // Columna de Precio Final
+    const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim(); // Tipo de precio
+
+    // Establecer información de precios
+    $("#costoProductoDetalle").text(costoTexto !== "-" ? costoTexto : "No especificado");
+    $("#utilidadProductoDetalle").text(utilidadTexto !== "-" ? utilidadTexto : "-");
+    $("#precioProductoDetalle").text(precioFinalTexto.split('\n')[0] || precio); // Primera línea del precio final
+    $("#tipoPrecioDetalle").text(tipoPrecioTexto || "Manual");
+
+    // Ajustar colores según el tipo de precio
+    if (tipoPrecioTexto === "Calculado") {
+        $("#precioProductoDetalle").removeClass("text-primary").addClass("text-success");
+    } else {
+        $("#precioProductoDetalle").removeClass("text-success").addClass("text-primary");
+    }
+    // Obtener la URL de la imagen
+    const imagenUrl = fila.find("td:eq(1) img").attr("src");
+    if (imagenUrl) {
+        $("#imagenProductoDetalle").html(`<img src="${imagenUrl}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">`);
+    }
+
+    // Configurar el enlace para editar
+    $("#btnEditarProductoDetalle").attr("href", `/Inventario/EditarProducto/${productoId}`);
+
+    // Verificar si es una llanta
+    const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
+    if (esLlanta) {
+        // Mostrar sección de detalles de llanta
+        $("#detallesLlanta").show();
+
+        // Obtener datos específicos de la llanta
+        const medidas = fila.find("td:eq(3) .medida-llanta").text().trim();
+        const marcaModelo = fila.find("td:eq(4) .marca-modelo").text().trim();
+        const tipoTerreno = fila.find("td:eq(4) .text-muted").text().trim();
+
+        // Establecer datos de la llanta en el modal
+        $("#medidasLlantaDetalle").text(medidas !== "N/A" ? medidas : "No disponible");
+        $("#marcaModeloLlantaDetalle").text(marcaModelo !== "N/A" ? marcaModelo : "No disponible");
+        $("#tipoTerrenoLlantaDetalle").text(tipoTerreno !== "N/A" ? tipoTerreno : "No disponible");
+        $("#indiceVelocidadLlantaDetalle").text("No disponible en vista de tabla"); // Este dato no aparece en la tabla
+
+        // Configurar el botón de ajuste de stock en el modal
+        $(".ajuste-stock-detalle-btn").data("id", productoId);
+    } else {
+        // Ocultar sección de detalles de llanta
+        $("#detallesLlanta").hide();
+    }
+
+    // Mostrar el modal
+    $("#detallesProductoModal").modal("show");
+}
+
+
+// Función para resetear el formulario de detalles
+function resetFormularioDetalles() {
+    $("#nombreProductoDetalle").text("Cargando...");
+    $("#descripcionProductoDetalle").text("Cargando...");
+    $("#precioProductoDetalle").text("₡0");
+    $("#stockProductoDetalle").text("0");
+    $("#minStockProductoDetalle").text("0");
+    $("#medidasLlantaDetalle").text("-");
+    $("#marcaModeloLlantaDetalle").text("-");
+    $("#indiceVelocidadLlantaDetalle").text("-");
+    $("#tipoTerrenoLlantaDetalle").text("-");
+    $("#imagenProductoDetalle").html('<i class="bi bi-image" style="font-size: 3rem; color: #aaa;"></i>');
+    $("#galeriaMiniaturas").empty();
+    $("#costoProductoDetalle").text("-");
+    $("#utilidadProductoDetalle").text("-");
+    $("#tipoPrecioDetalle").text("-");
+    $("#precioProductoDetalle").removeClass("text-success text-primary");
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(titulo, mensaje, tipo) {
+    // Esta función se puede implementar con toastr, SweetAlert2, o alerts de Bootstrap
+
+    // Implementación sencilla con alert de Bootstrap
+    const alertHtml = `
+            <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                <strong>${titulo}:</strong> ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+
+    // Crear un contenedor para alertas si no existe
+    if ($("#alertContainer").length === 0) {
+        $("body").prepend('<div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
+    }
+
+    // Agregar la alerta
+    const $alert = $(alertHtml).appendTo("#alertContainer");
+
+    // Eliminar automáticamente después de 5 segundos
+    setTimeout(() => {
+        $alert.alert('close');
+    }, 5000);
+}
+
+
 $(document).ready(function () {
     // Inicializar tooltips de Bootstrap
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -30,95 +161,58 @@ $(document).ready(function () {
         }, 500);
     });
 
-    //// Configuración de los botones para ver detalles
-    //$(".ver-detalles-btn").click(function () {
-    //    const productoId = $(this).data("id");
-    //    cargarDetallesProducto(productoId);
-    //});
+    // Configuración de los botones para ver detalles
+    $(document).on('click', '.ver-detalles-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const productoId = $(this).data("id");
+        console.log(`👁️ Botón ver detalles clickeado - ID: ${productoId}`);
+        console.log(`🔍 Función disponible: ${typeof cargarDetallesProducto}`);
 
-    // Función para cargar los detalles del producto
-    // Función para cargar los detalles del producto desde la tabla
-    //function cargarDetallesProducto(productoId) {
-    //    resetFormularioDetalles();
+        if (typeof cargarDetallesProducto === 'function') {
+            cargarDetallesProducto(productoId);
+        } else {
+            console.error('❌ La función cargarDetallesProducto NO está definida');
+        }
+    });
 
-    //    // Configurar el ID para el ajuste de stock
-    //    $("#productoId").val(productoId);
+    // Guardar ajuste de stock
+    $("#guardarAjusteBtn").click(function () {
+        if (!validarFormularioAjuste()) {
+            return;
+        }
 
-    //    // Buscar la fila del producto en la tabla
-    //    const fila = $(`button.ver-detalles-btn[data-id="${productoId}"]`).closest("tr");
+        const productoId = $("#productoId").val();
+        const tipoAjuste = $("#tipoAjuste").val();
+        const cantidad = $("#cantidad").val();
+        const comentario = $("#comentario").val();
 
-    //    if (fila.length === 0) {
-    //        mostrarNotificacion("Error", "No se encontró el producto en la tabla", "danger");
-    //        return;
-    //    }
+        // Objeto con los datos a enviar
+        const datos = {
+            cantidad: parseInt(cantidad),
+            tipoAjuste: tipoAjuste
+        };
 
-    //    // Obtener datos básicos
-    //    const nombre = fila.find("td:eq(2) strong").text();
-    //    const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción";
-    //    const precio = fila.find("td:eq(5)").text();
-    //    const stock = fila.find("td:eq(6)").text().trim().split(' ')[0].replace(/[^\d]/g, ''); // Extraer solo el número
-    //    const stockMin = fila.find("td:eq(7)").text().trim();
-
-    //    // Establecer datos básicos en el modal
-    //    $("#nombreProductoDetalle").text(nombre);
-    //    $("#descripcionProductoDetalle").text(descripcion);
-    //    $("#stockProductoDetalle").text(stock);
-    //    $("#minStockProductoDetalle").text(stockMin);
-
-    //    // Obtener datos de precios de las celdas de la tabla
-    //    const costoTexto = fila.find("td:eq(5)").text().trim(); // Columna de Costo
-    //    const utilidadTexto = fila.find("td:eq(6)").text().trim(); // Columna de Utilidad %
-    //    const precioFinalTexto = fila.find("td:eq(7)").text().trim(); // Columna de Precio Final
-    //    const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim(); // Tipo de precio
-
-    //    // Establecer información de precios
-    //    $("#costoProductoDetalle").text(costoTexto !== "-" ? costoTexto : "No especificado");
-    //    $("#utilidadProductoDetalle").text(utilidadTexto !== "-" ? utilidadTexto : "-");
-    //    $("#precioProductoDetalle").text(precioFinalTexto.split('\n')[0] || precio); // Primera línea del precio final
-    //    $("#tipoPrecioDetalle").text(tipoPrecioTexto || "Manual");
-
-    //    // Ajustar colores según el tipo de precio
-    //    if (tipoPrecioTexto === "Calculado") {
-    //        $("#precioProductoDetalle").removeClass("text-primary").addClass("text-success");
-    //    } else {
-    //        $("#precioProductoDetalle").removeClass("text-success").addClass("text-primary");
-    //    }
-    //    // Obtener la URL de la imagen
-    //    const imagenUrl = fila.find("td:eq(1) img").attr("src");
-    //    if (imagenUrl) {
-    //        $("#imagenProductoDetalle").html(`<img src="${imagenUrl}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">`);
-    //    }
-
-    //    // Configurar el enlace para editar
-    //    $("#btnEditarProductoDetalle").attr("href", `/Inventario/EditarProducto/${productoId}`);
-
-    //    // Verificar si es una llanta
-    //    const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
-    //    if (esLlanta) {
-    //        // Mostrar sección de detalles de llanta
-    //        $("#detallesLlanta").show();
-
-    //        // Obtener datos específicos de la llanta
-    //        const medidas = fila.find("td:eq(3) .medida-llanta").text().trim();
-    //        const marcaModelo = fila.find("td:eq(4) .marca-modelo").text().trim();
-    //        const tipoTerreno = fila.find("td:eq(4) .text-muted").text().trim();
-
-    //        // Establecer datos de la llanta en el modal
-    //        $("#medidasLlantaDetalle").text(medidas !== "N/A" ? medidas : "No disponible");
-    //        $("#marcaModeloLlantaDetalle").text(marcaModelo !== "N/A" ? marcaModelo : "No disponible");
-    //        $("#tipoTerrenoLlantaDetalle").text(tipoTerreno !== "N/A" ? tipoTerreno : "No disponible");
-    //        $("#indiceVelocidadLlantaDetalle").text("No disponible en vista de tabla"); // Este dato no aparece en la tabla
-
-    //        // Configurar el botón de ajuste de stock en el modal
-    //        $(".ajuste-stock-detalle-btn").data("id", productoId);
-    //    } else {
-    //        // Ocultar sección de detalles de llanta
-    //        $("#detallesLlanta").hide();
-    //    }
-
-    //    // Mostrar el modal
-    //    $("#detallesProductoModal").modal("show");
-    //}
+        // Envío de la solicitud AJAX
+        $.ajax({
+            url: `/api/Inventario/productos/${productoId}/ajuste-stock`,
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(datos),
+            success: function (respuesta) {
+                mostrarNotificacion("Éxito", "Stock ajustado correctamente", "success");
+                $("#ajusteStockModal").modal("hide");
+                // Recargar la página para mostrar los datos actualizados
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            },
+            error: function (xhr, status, error) {
+                console.error("Error al ajustar stock:", error);
+                mostrarNotificacion("Error", "No se pudo ajustar el stock", "danger");
+            }
+        });
+    });
 
     // Función para cargar detalles desde la tabla (método alternativo)
     function cargarDetallesDesdeLaTabla(productoId) {
@@ -185,62 +279,6 @@ $(document).ready(function () {
         $("#detallesProductoModal").modal("show");
     }
 
-    // Función para resetear el formulario de detalles
-    function resetFormularioDetalles() {
-        $("#nombreProductoDetalle").text("Cargando...");
-        $("#descripcionProductoDetalle").text("Cargando...");
-        $("#precioProductoDetalle").text("₡0");
-        $("#stockProductoDetalle").text("0");
-        $("#minStockProductoDetalle").text("0");
-        $("#medidasLlantaDetalle").text("-");
-        $("#marcaModeloLlantaDetalle").text("-");
-        $("#indiceVelocidadLlantaDetalle").text("-");
-        $("#tipoTerrenoLlantaDetalle").text("-");
-        $("#imagenProductoDetalle").html('<i class="bi bi-image" style="font-size: 3rem; color: #aaa;"></i>');
-        $("#galeriaMiniaturas").empty();
-        $("#costoProductoDetalle").text("-");
-        $("#utilidadProductoDetalle").text("-");
-        $("#tipoPrecioDetalle").text("-");
-        $("#precioProductoDetalle").removeClass("text-success text-primary");
-    }
-
-    // Guardar ajuste de stock
-    $("#guardarAjusteBtn").click(function () {
-        if (!validarFormularioAjuste()) {
-            return;
-        }
-
-        const productoId = $("#productoId").val();
-        const tipoAjuste = $("#tipoAjuste").val();
-        const cantidad = $("#cantidad").val();
-        const comentario = $("#comentario").val();
-
-        // Objeto con los datos a enviar
-        const datos = {
-            cantidad: parseInt(cantidad),
-            tipoAjuste: tipoAjuste
-        };
-
-        // Envío de la solicitud AJAX
-        $.ajax({
-            url: `/api/Inventario/productos/${productoId}/ajuste-stock`,
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(datos),
-            success: function (respuesta) {
-                mostrarNotificacion("Éxito", "Stock ajustado correctamente", "success");
-                $("#ajusteStockModal").modal("hide");
-                // Recargar la página para mostrar los datos actualizados
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            },
-            error: function (xhr, status, error) {
-                console.error("Error al ajustar stock:", error);
-                mostrarNotificacion("Error", "No se pudo ajustar el stock", "danger");
-            }
-        });
-    });
 
     // Validación del formulario de ajuste de stock
     function validarFormularioAjuste() {
@@ -413,31 +451,7 @@ $(document).ready(function () {
     }
         
 
-    // Función para mostrar notificaciones
-    function mostrarNotificacion(titulo, mensaje, tipo) {
-        // Esta función se puede implementar con toastr, SweetAlert2, o alerts de Bootstrap
-
-        // Implementación sencilla con alert de Bootstrap
-        const alertHtml = `
-            <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
-                <strong>${titulo}:</strong> ${mensaje}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-
-        // Crear un contenedor para alertas si no existe
-        if ($("#alertContainer").length === 0) {
-            $("body").prepend('<div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
-        }
-
-        // Agregar la alerta
-        const $alert = $(alertHtml).appendTo("#alertContainer");
-
-        // Eliminar automáticamente después de 5 segundos
-        setTimeout(() => {
-            $alert.alert('close');
-        }, 5000);
-    }
+   
 
     // Inicializar el modal de detalles
     $("#detallesProductoModal").on("hidden.bs.modal", function () {
