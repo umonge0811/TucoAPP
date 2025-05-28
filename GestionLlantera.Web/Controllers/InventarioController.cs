@@ -250,31 +250,49 @@ namespace GestionLlantera.Web.Controllers
             return View();
         }
 
-        // Asegúrate de que la ruta sea correcta
-        [HttpGet("ObtenerImagenesProducto/{id}")]
+        [HttpGet]
+        [Route("Inventario/ObtenerImagenesProducto/{id}")]
         public async Task<IActionResult> ObtenerImagenesProducto(int id)
         {
             try
             {
-                _logger.LogInformation($"Obteniendo imágenes para el producto ID: {id}");
+                _logger.LogInformation($"🖼️ Obteniendo imágenes para el producto ID: {id}");
 
                 var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
 
                 if (producto == null || producto.ProductoId == 0)
                 {
-                    _logger.LogWarning($"Producto no encontrado o ID inválido: {id}");
-                    return Json(new List<object>());
+                    _logger.LogWarning($"❌ Producto no encontrado: {id}");
+                    return Json(new List<string>());
                 }
 
-                _logger.LogInformation($"Imágenes encontradas: {producto.Imagenes?.Count ?? 0}");
+                _logger.LogInformation($"📦 Producto encontrado: {producto.NombreProducto}");
+                _logger.LogInformation($"📊 Imágenes disponibles: {producto.Imagenes?.Count ?? 0}");
 
-                // Devolver las imágenes en formato JSON
-                return Json(producto.Imagenes ?? new List<ImagenProductoDTO>());
+                // Extraer solo las URLs de las imágenes válidas
+                var imagenesUrls = new List<string>();
+
+                if (producto.Imagenes != null && producto.Imagenes.Any())
+                {
+                    foreach (var imagen in producto.Imagenes)
+                    {
+                        if (!string.IsNullOrEmpty(imagen.UrlImagen))
+                        {
+                            imagenesUrls.Add(imagen.UrlImagen);
+                            _logger.LogInformation($"✅ Imagen agregada: {imagen.UrlImagen}");
+                        }
+                    }
+                }
+
+                _logger.LogInformation($"🎯 Total URLs válidas: {imagenesUrls.Count}");
+
+                // Retornar solo las URLs como un array de strings
+                return Json(imagenesUrls);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener imágenes del producto {Id}", id);
-                return Json(new List<object>());
+                _logger.LogError(ex, "💥 Error al obtener imágenes del producto {Id}", id);
+                return Json(new List<string>());
             }
         }
 
@@ -1464,10 +1482,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // ✅ MANTENER EL MÉTODO EXISTENTE TAMBIÉN (no cambiar nada)
-        // El método ProgramarInventario(ProgramarInventarioViewModel model) que ya tienes
-
-        // GET: /Inventario/DetalleInventarioProgramado/5
         [HttpGet]
         public async Task<IActionResult> DetalleInventarioProgramado(int id)
         {

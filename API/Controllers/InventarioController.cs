@@ -279,6 +279,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = $"Error al crear producto: {ex.Message}" });
             }
         }
+
         // ✅ NUEVO: Método auxiliar para calcular el precio final
         private decimal CalcularPrecioFinal(ProductoDTO dto)
         {

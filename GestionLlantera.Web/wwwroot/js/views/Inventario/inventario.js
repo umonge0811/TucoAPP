@@ -1,6 +1,6 @@
 ﻿/**
- * Funcionalidad para la gestión de inventario - CORREGIDO
- * Solución para el problema de navegación en imágenes
+ * Funcionalidad para la gestión de inventario - VERSIÓN CORREGIDA COMPLETA
+ * Imagen miniatura -> Modal | Botón ojo -> Página de detalles
  */
 
 // ✅ FUNCIONES GLOBALES (fuera del document.ready)
@@ -20,86 +20,203 @@ function cargarDetallesProducto(productoId) {
         return;
     }
 
-    // Obtener datos básicos
+    // ✅ DATOS BÁSICOS DEL PRODUCTO
     const nombre = fila.find("td:eq(2) strong").text();
-    const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción";
-    const precio = fila.find("td:eq(5)").text();
-    const stock = fila.find("td:eq(6)").text().trim().split(' ')[0].replace(/[^\d]/g, '');
-    const stockMin = fila.find("td:eq(7)").text().trim();
+    const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción adicional";
+    const stock = parseInt(fila.find("td:eq(8)").text().trim().split(' ')[0].replace(/[^\d]/g, '')) || 0;
+    const stockMin = parseInt(fila.find("td:eq(9)").text().trim()) || 0;
 
-    // Establecer datos básicos en el modal
-    $("#nombreProductoDetalle").text(nombre);
-    $("#descripcionProductoDetalle").text(descripcion);
-    $("#stockProductoDetalle").text(stock);
-    $("#minStockProductoDetalle").text(stockMin);
-
-    // Obtener datos de precios de las celdas de la tabla
-    const costoTexto = fila.find("td:eq(5)").text().trim();
-    const utilidadTexto = fila.find("td:eq(6)").text().trim();
+    // ✅ DATOS DE PRECIOS
     const precioFinalTexto = fila.find("td:eq(7)").text().trim();
     const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim();
 
-    // Establecer información de precios
-    $("#costoProductoDetalle").text(costoTexto !== "-" ? costoTexto : "No especificado");
-    $("#utilidadProductoDetalle").text(utilidadTexto !== "-" ? utilidadTexto : "-");
-    $("#precioProductoDetalle").text(precioFinalTexto.split('\n')[0] || precio);
-    $("#tipoPrecioDetalle").text(tipoPrecioTexto || "Manual");
+    // ✅ CARGAR INFORMACIÓN BÁSICA EN EL MODAL
+    $("#nombreProductoVistaRapida").text(nombre);
+    $("#descripcionVistaRapida").text(descripcion);
+    $("#stockProductoVistaRapida").text(stock);
+    $("#stockMinimoVistaRapida").text(stockMin);
+    $("#precioProductoVistaRapida").text(precioFinalTexto.split('\n')[0] || "₡0");
+    $("#tipoPrecioVistaRapida").text(tipoPrecioTexto || "Precio manual");
 
-    // Ajustar colores según el tipo de precio
+    // ✅ CONFIGURAR COLORES DEL PRECIO
     if (tipoPrecioTexto === "Calculado") {
-        $("#precioProductoDetalle").removeClass("text-primary").addClass("text-success");
+        $("#precioProductoVistaRapida").removeClass("text-primary").addClass("text-success");
     } else {
-        $("#precioProductoDetalle").removeClass("text-success").addClass("text-primary");
+        $("#precioProductoVistaRapida").removeClass("text-success").addClass("text-primary");
     }
 
-    // Obtener la URL de la imagen
-    const imagenUrl = fila.find("td:eq(1) img").attr("src");
-    if (imagenUrl) {
-        $("#imagenProductoDetalle").html(`<img src="${imagenUrl}" style="max-width: 100%; max-height: 200px; border-radius: 8px; pointer-events: none;">`);
-    }
+    // ✅ CONFIGURAR INDICADOR VISUAL DE STOCK
+    configurarIndicadorStock(stock, stockMin);
 
-    // Configurar el enlace para editar
-    $("#btnEditarProductoDetalle").attr("href", `/Inventario/EditarProducto/${productoId}`);
+    // ✅ CARGAR IMÁGENES DEL PRODUCTO
+    cargarImagenesEnModal(fila, productoId);
 
-    // Verificar si es una llanta
+    // ✅ VERIFICAR SI ES UNA LLANTA Y MOSTRAR INFO ESPECÍFICA
     const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
     if (esLlanta) {
-        $("#detallesLlanta").show();
+        $("#infoLlantaVistaRapida").show();
         const medidas = fila.find("td:eq(3) .medida-llanta").text().trim();
-        const marcaModelo = fila.find("td:eq(4) .marca-modelo").text().trim();
-        const tipoTerreno = fila.find("td:eq(4) .text-muted").text().trim();
+        const marcaModelo = fila.find("td:eq(4) .marca-modelo span").first().text().trim();
 
-        $("#medidasLlantaDetalle").text(medidas !== "N/A" ? medidas : "No disponible");
-        $("#marcaModeloLlantaDetalle").text(marcaModelo !== "N/A" ? marcaModelo : "No disponible");
-        $("#tipoTerrenoLlantaDetalle").text(tipoTerreno !== "N/A" ? tipoTerreno : "No disponible");
-        $("#indiceVelocidadLlantaDetalle").text("No disponible en vista de tabla");
-
-        $(".ajuste-stock-detalle-btn").data("id", productoId);
+        $("#medidasVistaRapida").text(medidas !== "N/A" && medidas ? medidas : "No disponible");
+        $("#marcaVistaRapida").text(marcaModelo !== "N/A" && marcaModelo ? marcaModelo : "No disponible");
     } else {
-        $("#detallesLlanta").hide();
+        $("#infoLlantaVistaRapida").hide();
     }
 
-    // Mostrar el modal
+    // ✅ CONFIGURAR BOTONES
+    $("#btnVerDetallesCompletos").attr("href", `/Inventario/DetalleProducto/${productoId}`);
+    $("#btnAjustarStockVistaRapida").data("id", productoId);
+
+    // ✅ MOSTRAR EL MODAL
     $("#detallesProductoModal").modal("show");
+}
+
+// ✅ NUEVA FUNCIÓN: Configurar indicador visual de stock
+function configurarIndicadorStock(stock, stockMin) {
+    const porcentajeStock = stockMin > 0 ? Math.min((stock / (stockMin * 2)) * 100, 100) : 50;
+
+    // Configurar barra de progreso
+    $("#barraProgresoStock").css("width", `${porcentajeStock}%`);
+
+    // Configurar colores según el nivel de stock
+    if (stock <= stockMin) {
+        $("#barraProgresoStock").removeClass("bg-warning bg-success").addClass("bg-danger");
+        $("#alertaStockBajo").show();
+        $("#stockProductoVistaRapida").addClass("text-danger fw-bold");
+    } else if (stock <= stockMin * 1.5) {
+        $("#barraProgresoStock").removeClass("bg-danger bg-success").addClass("bg-warning");
+        $("#alertaStockBajo").hide();
+        $("#stockProductoVistaRapida").removeClass("text-danger fw-bold").addClass("text-warning");
+    } else {
+        $("#barraProgresoStock").removeClass("bg-danger bg-warning").addClass("bg-success");
+        $("#alertaStockBajo").hide();
+        $("#stockProductoVistaRapida").removeClass("text-danger text-warning fw-bold").addClass("text-success");
+    }
+}
+
+// ✅ NUEVA FUNCIÓN: Cargar imágenes en el modal con soporte para carrusel
+function cargarImagenesEnModal(fila, productoId) {
+    const $contenedorImagenes = $("#contenedorImagenesModal");
+    const $indicadores = $("#indicadoresModal");
+    const $btnPrev = $("#btnPrevModal");
+    const $btnNext = $("#btnNextModal");
+
+    // Limpiar contenido anterior
+    $contenedorImagenes.empty();
+    $indicadores.empty();
+    $btnPrev.hide();
+    $btnNext.hide();
+    $indicadores.hide();
+
+    $.ajax({
+        url: `/Inventario/ObtenerImagenesProducto/${productoId}`,
+        type: "GET",
+        success: function (imagenes) {
+            console.log('🖼️ Imágenes recibidas:', imagenes);
+            procesarImagenesDelProducto(imagenes);
+        },
+        error: function (xhr, status, error) {
+            console.warn('⚠️ Error al cargar imágenes desde servidor, usando imagen de tabla:', error);
+            // Fallback: usar la imagen de la tabla si falla
+            const imagenDeTabla = fila.find("td:eq(1) img").attr("src");
+            const imagenesFallback = imagenDeTabla ? [imagenDeTabla] : [];
+            procesarImagenesDelProducto(imagenesFallback);
+        }
+    });
+}
+
+// ✅ FUNCIÓN SEPARADA: Procesar imágenes del producto
+function procesarImagenesDelProducto(imagenes) {
+    const $contenedorImagenes = $("#contenedorImagenesModal");
+    const $indicadores = $("#indicadoresModal");
+    const $btnPrev = $("#btnPrevModal");
+    const $btnNext = $("#btnNextModal");
+
+    if (imagenes.length === 0) {
+        // Sin imágenes - mostrar placeholder
+        $contenedorImagenes.html(`
+            <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                <div class="text-center">
+                    <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                    <p class="text-muted mt-3">No hay imágenes disponibles</p>
+                </div>
+            </div>
+        `);
+    } else if (imagenes.length === 1) {
+        // Una sola imagen
+        $contenedorImagenes.html(`
+            <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                <img src="${imagenes[0]}" 
+                     class="img-fluid" 
+                     style="max-height: 400px; max-width: 100%; object-fit: contain;"
+                     alt="Imagen del producto"
+                     onerror="console.log('Error cargando imagen:', this.src); this.style.display='none';">
+            </div>
+        `);
+    } else {
+        // Múltiples imágenes - configurar carrusel completo
+        let imagenesHtml = '';
+        let indicadoresHtml = '';
+
+        imagenes.forEach((imagen, index) => {
+            const activo = index === 0 ? 'active' : '';
+
+            imagenesHtml += `
+    <div class="carousel-item ${activo}">
+        <div class="d-flex align-items-center justify-content-center" style="min-height: 400px;">
+            <img src="${imagen}" 
+                 class="img-fluid" 
+                 style="max-height: 400px; max-width: 100%; object-fit: contain;"
+                 alt="Imagen del producto ${index + 1}"
+                 onerror="console.log('Error cargando imagen:', this.src); this.style.display='none';">
+        </div>
+    </div>
+`;
+
+            indicadoresHtml += `
+                <button type="button" data-bs-target="#carruselImagenesModal" data-bs-slide-to="${index}" 
+                        class="${activo}" aria-current="${index === 0 ? 'true' : 'false'}" 
+                        aria-label="Slide ${index + 1}"></button>
+            `;
+        });
+
+        $contenedorImagenes.html(imagenesHtml);
+        $indicadores.html(indicadoresHtml);
+        $indicadores.show();
+        $btnPrev.show();
+        $btnNext.show();
+    }
 }
 
 // Función para resetear el formulario de detalles
 function resetFormularioDetalles() {
-    $("#nombreProductoDetalle").text("Cargando...");
-    $("#descripcionProductoDetalle").text("Cargando...");
-    $("#precioProductoDetalle").text("₡0");
-    $("#stockProductoDetalle").text("0");
-    $("#minStockProductoDetalle").text("0");
-    $("#medidasLlantaDetalle").text("-");
-    $("#marcaModeloLlantaDetalle").text("-");
-    $("#indiceVelocidadLlantaDetalle").text("-");
-    $("#tipoTerrenoLlantaDetalle").text("-");
-    $("#imagenProductoDetalle").html('<i class="bi bi-image" style="font-size: 3rem; color: #aaa;"></i>');
-    $("#galeriaMiniaturas").empty();
-    $("#costoProductoDetalle").text("-");
-    $("#utilidadProductoDetalle").text("-");
-    $("#tipoPrecioDetalle").text("-");
-    $("#precioProductoDetalle").removeClass("text-success text-primary");
+    $("#nombreProductoVistaRapida").text("Cargando...");
+    $("#descripcionVistaRapida").text("Cargando...");
+    $("#precioProductoVistaRapida").text("₡0").removeClass("text-success text-primary");
+    $("#tipoPrecioVistaRapida").text("Cargando...");
+    $("#stockProductoVistaRapida").text("0").removeClass("text-danger text-warning text-success fw-bold");
+    $("#stockMinimoVistaRapida").text("0");
+    $("#alertaStockBajo").hide();
+    $("#barraProgresoStock").css("width", "0%").removeClass("bg-danger bg-warning bg-success");
+    $("#medidasVistaRapida").text("-");
+    $("#marcaVistaRapida").text("-");
+    $("#infoLlantaVistaRapida").hide();
+
+    // Resetear carrusel
+    $("#contenedorImagenesModal").html(`
+        <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="text-muted">Cargando imágenes...</p>
+            </div>
+        </div>
+    `);
+    $("#indicadoresModal").empty().hide();
+    $("#btnPrevModal").hide();
+    $("#btnNextModal").hide();
 }
 
 // Función para mostrar notificaciones
@@ -121,18 +238,18 @@ function mostrarNotificacion(titulo, mensaje, tipo) {
     }, 5000);
 }
 
-// ✅ DOCUMENT READY - SOLUCIÓN CORREGIDA
+// ✅ DOCUMENT READY - NUEVOS COMPORTAMIENTOS
 $(document).ready(function () {
-    console.log('🚀 Inventario - Configuración iniciada');
+    console.log('🚀 Inventario - Configuración iniciada con nuevos comportamientos');
 
     // ✅ LIMPIAR TODOS LOS EVENTOS PREVIOS PARA EVITAR CONFLICTOS
     $(document).off('click', '.producto-img-mini');
     $(document).off('click', '.producto-img-link');
     $(document).off('click', '.producto-img-mini img');
+    $(document).off('click', '.ver-detalles-btn');
 
-    // ✅ SOLUCIÓN: Usar un SOLO manejador de eventos con delegación
-    // Interceptar clicks en toda la celda de imagen
-    $(document).on('click', 'td:has(.producto-img-link)', function (e) {
+    // ✅ NUEVO COMPORTAMIENTO 1: IMAGEN MINIATURA -> ABRE MODAL
+    $(document).on('click', 'td:has(.producto-img-container)', function (e) {
         // Solo actuar si no se hizo click en un botón u otro elemento interactivo
         if ($(e.target).closest('button, .btn').length === 0) {
             e.preventDefault();
@@ -141,24 +258,27 @@ $(document).ready(function () {
             const $fila = $(this).closest('tr[data-id]');
             const productoId = $fila.attr('data-id');
 
-            console.log('🖼️ Click en imagen - Producto ID:', productoId);
+            console.log('🖼️ Click en imagen - Abriendo modal para Producto ID:', productoId);
 
-            if (productoId) {
-                const url = `/Inventario/DetalleProducto/${productoId}`;
-                console.log('🌐 Navegando a:', url);
-                window.location.href = url;
+            if (productoId && typeof cargarDetallesProducto === 'function') {
+                cargarDetallesProducto(productoId);
             }
         }
     });
 
-    // ✅ EVENTOS DE BOTONES "VER DETALLES" - Abrir modal
+    // ✅ NUEVO COMPORTAMIENTO 2: BOTÓN OJO -> NAVEGA A PÁGINA DE DETALLES
     $(document).on('click', '.ver-detalles-btn', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
         const productoId = $(this).data("id");
-        if (typeof cargarDetallesProducto === 'function') {
-            cargarDetallesProducto(productoId);
+
+        console.log('👁️ Click en botón ojo - Navegando a página de detalles para Producto ID:', productoId);
+
+        if (productoId) {
+            const url = `/Inventario/DetalleProducto/${productoId}`;
+            console.log('🌐 Navegando a:', url);
+            window.location.href = url;
         }
     });
 
@@ -176,6 +296,16 @@ $(document).ready(function () {
     });
 
     $(".ajuste-stock-detalle-btn").click(function () {
+        $("#detallesProductoModal").modal("hide");
+        setTimeout(() => {
+            $("#ajusteStockModal").modal("show");
+        }, 500);
+    });
+
+    // ✅ EVENTO PARA EL NUEVO BOTÓN DE AJUSTAR STOCK EN VISTA RÁPIDA
+    $("#btnAjustarStockVistaRapida").click(function () {
+        const productoId = $(this).data("id");
+        $("#productoId").val(productoId);
         $("#detallesProductoModal").modal("hide");
         setTimeout(() => {
             $("#ajusteStockModal").modal("show");
@@ -257,15 +387,15 @@ $(document).ready(function () {
         } else if (valor === "normal") {
             $("tbody tr").hide();
             $("tbody tr").not(".table-danger").filter(function () {
-                const stock = parseInt($(this).find("td:eq(6)").text().trim());
-                const minStock = parseInt($(this).find("td:eq(7)").text().trim());
+                const stock = parseInt($(this).find("td:eq(8)").text().trim());
+                const minStock = parseInt($(this).find("td:eq(9)").text().trim());
                 return stock > minStock && stock < minStock * 2;
             }).show();
         } else if (valor === "high") {
             $("tbody tr").hide();
             $("tbody tr").filter(function () {
-                const stock = parseInt($(this).find("td:eq(6)").text().trim());
-                const minStock = parseInt($(this).find("td:eq(7)").text().trim());
+                const stock = parseInt($(this).find("td:eq(8)").text().trim());
+                const minStock = parseInt($(this).find("td:eq(9)").text().trim());
                 return stock >= minStock * 2;
             }).show();
         }
@@ -303,16 +433,16 @@ $(document).ready(function () {
                 valorB = $(b).find("td:eq(2) strong").text().toLowerCase();
                 return valorA.localeCompare(valorB);
             } else if (valor === "price_asc") {
-                valorA = parseFloat($(a).find("td:eq(5)").text().replace(/[^\d.]/g, ''));
-                valorB = parseFloat($(b).find("td:eq(5)").text().replace(/[^\d.]/g, ''));
+                valorA = parseFloat($(a).find("td:eq(7)").text().replace(/[^\d.]/g, ''));
+                valorB = parseFloat($(b).find("td:eq(7)").text().replace(/[^\d.]/g, ''));
                 return valorA - valorB;
             } else if (valor === "price_desc") {
-                valorA = parseFloat($(a).find("td:eq(5)").text().replace(/[^\d.]/g, ''));
-                valorB = parseFloat($(b).find("td:eq(5)").text().replace(/[^\d.]/g, ''));
+                valorA = parseFloat($(a).find("td:eq(7)").text().replace(/[^\d.]/g, ''));
+                valorB = parseFloat($(b).find("td:eq(7)").text().replace(/[^\d.]/g, ''));
                 return valorB - valorA;
             } else if (valor === "stock") {
-                valorA = parseInt($(a).find("td:eq(6)").text().trim());
-                valorB = parseInt($(b).find("td:eq(6)").text().trim());
+                valorA = parseInt($(a).find("td:eq(8)").text().trim());
+                valorB = parseInt($(b).find("td:eq(8)").text().trim());
                 return valorA - valorB;
             }
 
@@ -338,5 +468,5 @@ $(document).ready(function () {
         resetFormularioDetalles();
     });
 
-    console.log('✅ Inventario - Configuración completada');
+    console.log('✅ Inventario - Configuración completada con nuevos comportamientos');
 });
