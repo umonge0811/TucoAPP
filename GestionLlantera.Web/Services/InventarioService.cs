@@ -265,83 +265,341 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        //public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id)
+        //{
+        //    try
+        //    {
+        //        var response = await _httpClient.GetAsync($"/api/Inventario/productos/{id}");
+        //        response.EnsureSuccessStatusCode();
+
+        //        var content = await response.Content.ReadAsStringAsync();
+        //        _logger.LogInformation($"Respuesta al obtener producto ID {id}: {content}");
+
+        //        // Deserializar a un objeto dinámico
+        //        var item = JsonConvert.DeserializeObject<dynamic>(content);
+
+        //        var producto = new ProductoDTO
+        //        {
+        //            ProductoId = (int)item.productoId,
+        //            NombreProducto = (string)item.nombreProducto,
+        //            Descripcion = (string)item.descripcion,
+        //            Precio = (decimal)item.precio,
+        //            CantidadEnInventario = (int)item.cantidadEnInventario,
+        //            StockMinimo = (int)item.stockMinimo,
+        //            Imagenes = new List<ImagenProductoDTO>()
+        //        };
+
+        //        // Procesar imágenes si existen
+        //        if (item.imagenesProductos != null && item.imagenesProductos.Count > 0)
+        //        {
+        //            foreach (var img in item.imagenesProductos)
+        //            {
+        //                // Obtener la URL de la API
+        //                string apiBaseUrl = _httpClient.BaseAddress.ToString().TrimEnd('/');
+        //                string imagenUrl = (string)img.urlimagen;
+
+        //                // Si la URL de la imagen no comienza con http, combinarla con la URL base de la API
+        //                if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        //                {
+        //                    imagenUrl = $"{apiBaseUrl}{imagenUrl}";
+        //                }
+
+        //                producto.Imagenes.Add(new ImagenProductoDTO
+        //                {
+        //                    ImagenId = (int)img.imagenId,
+        //                    ProductoId = (int)img.productoId,
+        //                    UrlImagen = imagenUrl,
+        //                    Descripcion = img.descripcion != null ? (string)img.descripcion : null
+        //                });
+        //            }
+        //        }
+
+        //        // Procesar llanta si existe (tomar solo el primer elemento del array)
+        //        if (item.llanta != null && item.llanta.Count > 0)
+        //        {
+        //            var llantaItem = item.llanta[0]; // Tomar el primer elemento
+        //            producto.Llanta = new LlantaDTO
+        //            {
+        //                LlantaId = (int)llantaItem.llantaId,
+        //                ProductoId = (int)llantaItem.productoId,
+        //                Ancho = llantaItem.ancho != null ? (int?)llantaItem.ancho : null,
+        //                Perfil = llantaItem.perfil != null ? (int?)llantaItem.perfil : null,
+        //                Diametro = llantaItem.diametro != null ? (string)llantaItem.diametro : null,
+        //                Marca = llantaItem.marca != null ? (string)llantaItem.marca : null,
+        //                Modelo = llantaItem.modelo != null ? (string)llantaItem.modelo : null,
+        //                Capas = llantaItem.capas != null ? (int?)llantaItem.capas : null,
+        //                IndiceVelocidad = llantaItem.indiceVelocidad != null ? (string)llantaItem.indiceVelocidad : null,
+        //                TipoTerreno = llantaItem.tipoTerreno != null ? (string)llantaItem.tipoTerreno : null
+        //            };
+        //        }
+
+        //        return producto;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error al obtener producto ID: {Id}", id);
+        //        return new ProductoDTO();
+        //    }
+        //}
+
         public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/api/Inventario/productos/{id}");
-                response.EnsureSuccessStatusCode();
+                _logger.LogInformation("🔍 Iniciando ObtenerProductoPorIdAsync para ID: {Id}", id);
+
+                // ✅ CORREGIR: Quitar la barra inicial de la URL
+                var response = await _httpClient.GetAsync($"api/Inventario/productos/{id}");
+
+                _logger.LogInformation("📡 Respuesta del servidor: {StatusCode}", response.StatusCode);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error del servidor: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                    return new ProductoDTO { ProductoId = 0 }; // Retornar objeto vacío pero válido
+                }
 
                 var content = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation($"Respuesta al obtener producto ID {id}: {content}");
+                _logger.LogInformation("📄 Contenido recibido ({Length} chars): {Content}",
+                    content.Length, content.Length > 500 ? content.Substring(0, 500) + "..." : content);
 
-                // Deserializar a un objeto dinámico
+                // ✅ MANEJO SEGURO DE DESERIALIZACIÓN
                 var item = JsonConvert.DeserializeObject<dynamic>(content);
 
+                if (item == null)
+                {
+                    _logger.LogError("❌ Error: La deserialización retornó null");
+                    return new ProductoDTO { ProductoId = 0 };
+                }
+
+                // ✅ MAPEO SEGURO DEL PRODUCTO PRINCIPAL
                 var producto = new ProductoDTO
                 {
-                    ProductoId = (int)item.productoId,
-                    NombreProducto = (string)item.nombreProducto,
-                    Descripcion = (string)item.descripcion,
-                    Precio = (decimal)item.precio,
-                    CantidadEnInventario = (int)item.cantidadEnInventario,
-                    StockMinimo = (int)item.stockMinimo,
+                    ProductoId = GetSafeInt(item.productoId, 0),
+                    NombreProducto = GetSafeString(item.nombreProducto, "Sin nombre"),
+                    Descripcion = GetSafeString(item.descripcion, null),
+                    Precio = GetSafeDecimal(item.precio, null),
+                    Costo = GetSafeDecimal(item.costo, null),
+                    PorcentajeUtilidad = GetSafeDecimal(item.porcentajeUtilidad, null),
+                    CantidadEnInventario = GetSafeInt(item.cantidadEnInventario, 0),
+                    StockMinimo = GetSafeInt(item.stockMinimo, 0),
+                    EsLlanta = false, // Se determinará después
+                    FechaUltimaActualizacion = GetSafeDateTime(item.fechaUltimaActualizacion),
                     Imagenes = new List<ImagenProductoDTO>()
                 };
 
-                // Procesar imágenes si existen
-                if (item.imagenesProductos != null && item.imagenesProductos.Count > 0)
-                {
-                    foreach (var img in item.imagenesProductos)
-                    {
-                        // Obtener la URL de la API
-                        string apiBaseUrl = _httpClient.BaseAddress.ToString().TrimEnd('/');
-                        string imagenUrl = (string)img.urlimagen;
+                _logger.LogInformation("✅ Producto base mapeado: {Nombre} (ID: {Id})", producto.NombreProducto, producto.ProductoId);
 
-                        // Si la URL de la imagen no comienza con http, combinarla con la URL base de la API
-                        if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                // ✅ PROCESAR IMÁGENES DE FORMA SEGURA
+                try
+                {
+                    if (item.imagenesProductos != null)
+                    {
+                        _logger.LogInformation("🖼️ Procesando imágenes...");
+
+                        // Obtener la URL base una sola vez
+                        string apiBaseUrl = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? "";
+                        _logger.LogInformation("🔗 URL base de la API: {BaseUrl}", apiBaseUrl);
+
+                        int imagenesCount = 0;
+                        foreach (var img in item.imagenesProductos)
                         {
-                            imagenUrl = $"{apiBaseUrl}{imagenUrl}";
+                            try
+                            {
+                                var imagenUrl = GetSafeString(img.urlimagen, "");
+
+                                if (!string.IsNullOrEmpty(imagenUrl))
+                                {
+                                    // ✅ CONSTRUCCIÓN SEGURA DE URL
+                                    if (!imagenUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        // Asegurar que la URL empiece con /
+                                        if (!imagenUrl.StartsWith("/"))
+                                        {
+                                            imagenUrl = "/" + imagenUrl;
+                                        }
+                                        imagenUrl = $"{apiBaseUrl}{imagenUrl}";
+                                    }
+
+                                    var imagen = new ImagenProductoDTO
+                                    {
+                                        ImagenId = GetSafeInt(img.imagenId, 0),
+                                        ProductoId = producto.ProductoId,
+                                        UrlImagen = imagenUrl,
+                                        Descripcion = GetSafeString(img.descripcion, "")
+                                    };
+
+                                    producto.Imagenes.Add(imagen);
+                                    imagenesCount++;
+
+                                    //_logger.LogInformation("🖼️ Imagen {Index} procesada: {Url}", imagenesCount, imagenUrl);
+                                }
+                            }
+                            catch (Exception imgEx)
+                            {
+                                _logger.LogWarning(imgEx, "⚠️ Error procesando imagen individual, continuando...");
+                            }
                         }
 
-                        producto.Imagenes.Add(new ImagenProductoDTO
-                        {
-                            ImagenId = (int)img.imagenId,
-                            ProductoId = (int)img.productoId,
-                            UrlImagen = imagenUrl,
-                            Descripcion = img.descripcion != null ? (string)img.descripcion : null
-                        });
+                        _logger.LogInformation("✅ Total de imágenes procesadas: {Count}", imagenesCount);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("ℹ️ No hay imágenes para este producto");
                     }
                 }
-
-                // Procesar llanta si existe (tomar solo el primer elemento del array)
-                if (item.llanta != null && item.llanta.Count > 0)
+                catch (Exception imgEx)
                 {
-                    var llantaItem = item.llanta[0]; // Tomar el primer elemento
-                    producto.Llanta = new LlantaDTO
-                    {
-                        LlantaId = (int)llantaItem.llantaId,
-                        ProductoId = (int)llantaItem.productoId,
-                        Ancho = llantaItem.ancho != null ? (int?)llantaItem.ancho : null,
-                        Perfil = llantaItem.perfil != null ? (int?)llantaItem.perfil : null,
-                        Diametro = llantaItem.diametro != null ? (string)llantaItem.diametro : null,
-                        Marca = llantaItem.marca != null ? (string)llantaItem.marca : null,
-                        Modelo = llantaItem.modelo != null ? (string)llantaItem.modelo : null,
-                        Capas = llantaItem.capas != null ? (int?)llantaItem.capas : null,
-                        IndiceVelocidad = llantaItem.indiceVelocidad != null ? (string)llantaItem.indiceVelocidad : null,
-                        TipoTerreno = llantaItem.tipoTerreno != null ? (string)llantaItem.tipoTerreno : null
-                    };
+                    _logger.LogError(imgEx, "❌ Error procesando imágenes, pero continuando...");
+                    // Continuar sin imágenes en lugar de fallar
                 }
+
+                // ✅ PROCESAR LLANTA DE FORMA SEGURA Y UNIFICADA
+                try
+                {
+                    if (item.llanta != null)
+                    {
+                        _logger.LogInformation("🚗 Procesando datos de llanta...");
+
+                        dynamic llantaData = null;
+
+                        // ✅ MANEJAR TANTO ARRAY COMO OBJETO DIRECTO
+                        if (item.llanta is Newtonsoft.Json.Linq.JArray)
+                        {
+                            var llantaArray = item.llanta as Newtonsoft.Json.Linq.JArray;
+                            if (llantaArray != null && llantaArray.Count > 0)
+                            {
+                                llantaData = llantaArray[0];
+                                _logger.LogInformation("🔄 Llanta procesada como array, tomando primer elemento");
+                            }
+                        }
+                        else
+                        {
+                            llantaData = item.llanta;
+                            _logger.LogInformation("🔄 Llanta procesada como objeto directo");
+                        }
+
+                        if (llantaData != null)
+                        {
+                            producto.Llanta = new LlantaDTO
+                            {
+                                LlantaId = GetSafeInt(llantaData.llantaId, 0),
+                                ProductoId = producto.ProductoId,
+                                Ancho = GetSafeNullableInt(llantaData.ancho),
+                                Perfil = GetSafeNullableInt(llantaData.perfil),
+                                Diametro = GetSafeString(llantaData.diametro, ""),
+                                Marca = GetSafeString(llantaData.marca, ""),
+                                Modelo = GetSafeString(llantaData.modelo, ""),
+                                Capas = GetSafeNullableInt(llantaData.capas),
+                                IndiceVelocidad = GetSafeString(llantaData.indiceVelocidad, ""),
+                                TipoTerreno = GetSafeString(llantaData.tipoTerreno, "")
+                            };
+
+                            producto.EsLlanta = true;
+                            _logger.LogInformation("✅ Llanta procesada: {Marca} {Modelo}", producto.Llanta.Marca, producto.Llanta.Modelo);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("ℹ️ Este producto no es una llanta");
+                    }
+                }
+                catch (Exception llantaEx)
+                {
+                    _logger.LogError(llantaEx, "❌ Error procesando llanta, pero continuando...");
+                    // Continuar sin datos de llanta en lugar de fallar
+                }
+
+                _logger.LogInformation("🎉 Producto completamente procesado: {Nombre} (Imágenes: {ImageCount}, Es Llanta: {EsLlanta})",
+                    producto.NombreProducto, producto.Imagenes.Count, producto.EsLlanta);
 
                 return producto;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener producto ID: {Id}", id);
-                return new ProductoDTO();
+                _logger.LogError(ex, "💥 Error general al obtener producto ID: {Id} - {Message}", id, ex.Message);
+
+                // En lugar de retornar un objeto vacío, crear uno básico con el ID
+                return new ProductoDTO
+                {
+                    ProductoId = 0, // Indica que hubo error
+                    NombreProducto = "Error al cargar producto",
+                    Imagenes = new List<ImagenProductoDTO>()
+                };
+            }
+        }// ✅ MÉTODOS AUXILIARES PARA MAPEO SEGURO
+        private static string GetSafeString(dynamic value, string defaultValue = "")
+        {
+            try
+            {
+                return value?.ToString() ?? defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
             }
         }
 
+        private static int GetSafeInt(dynamic value, int defaultValue = 0)
+        {
+            try
+            {
+                if (value == null) return defaultValue;
+                if (int.TryParse(value.ToString(), out int result))
+                    return result;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static decimal? GetSafeDecimal(dynamic value, decimal? defaultValue = null)
+        {
+            try
+            {
+                if (value == null) return defaultValue;
+                if (decimal.TryParse(value.ToString(), out decimal result))
+                    return result;
+                return defaultValue;
+            }
+            catch
+            {
+                return defaultValue;
+            }
+        }
+
+        private static int? GetSafeNullableInt(dynamic value)
+        {
+            try
+            {
+                if (value == null) return null;
+                if (int.TryParse(value.ToString(), out int result))
+                    return result;
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static DateTime? GetSafeDateTime(dynamic value)
+        {
+            try
+            {
+                if (value == null) return null;
+                if (DateTime.TryParse(value.ToString(), out DateTime result))
+                    return result;
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
 
         public async Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes)
         {

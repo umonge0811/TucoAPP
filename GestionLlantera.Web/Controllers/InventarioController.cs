@@ -55,6 +55,7 @@ namespace GestionLlantera.Web.Controllers
 
         // GET: /Inventario/DetalleProducto/5
         // En InventarioController.cs - método DetalleProducto
+
         public async Task<IActionResult> DetalleProducto(int id)
         {
             ViewData["Title"] = "Detalle de Producto";
@@ -62,36 +63,99 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                _logger.LogInformation("🔍 === INICIANDO DETALLE PRODUCTO ===");
+                _logger.LogInformation("📋 Producto ID solicitado: {Id}", id);
+
+                // ✅ VALIDACIÓN BÁSICA
+                if (id <= 0)
+                {
+                    _logger.LogWarning("❌ ID de producto inválido: {Id}", id);
+                    TempData["Error"] = "ID de producto inválido.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
 
-                // ✅ AGREGAR ESTE LOG TEMPORAL
-                _logger.LogInformation("=== DIAGNÓSTICO DETALLE PRODUCTO ===");
-                _logger.LogInformation("Producto ID: {Id}", producto?.ProductoId ?? 0);
-                _logger.LogInformation("Nombre: {Nombre}", producto?.NombreProducto ?? "NULL");
-                _logger.LogInformation("¿Tiene imágenes?: {TieneImagenes}", producto?.Imagenes != null);
-                _logger.LogInformation("Cantidad imágenes: {Cantidad}", producto?.Imagenes?.Count ?? 0);
+                // ✅ LOGGING DETALLADO PERO SEGURO
+                _logger.LogInformation("📊 === RESULTADO DE SERVICIO ===");
+                _logger.LogInformation("✅ Producto recibido: {Recibido}", producto != null ? "SÍ" : "NO");
 
-                if (producto?.Imagenes != null && producto.Imagenes.Any())
+                if (producto != null)
                 {
-                    foreach (var img in producto.Imagenes)
+                    _logger.LogInformation("📝 ID: {ProductoId}", producto.ProductoId);
+                    _logger.LogInformation("📝 Nombre: '{Nombre}'", producto.NombreProducto ?? "NULL");
+                    _logger.LogInformation("📝 ¿Tiene imágenes?: {TieneImagenes}", producto.Imagenes != null);
+                    _logger.LogInformation("📝 Cantidad imágenes: {Cantidad}", producto.Imagenes?.Count ?? 0);
+                    _logger.LogInformation("📝 ¿Es llanta?: {EsLlanta}", producto.EsLlanta);
+                    _logger.LogInformation("📝 ¿Tiene datos llanta?: {TieneLlanta}", producto.Llanta != null);
+
+                    // ✅ LOGGING SEGURO DE IMÁGENES
+                    if (producto.Imagenes != null && producto.Imagenes.Any())
                     {
-                        _logger.LogInformation("URL imagen: {Url}", img.UrlImagen);
+                        for (int i = 0; i < Math.Min(producto.Imagenes.Count, 3); i++) // Solo las primeras 3
+                        {
+                            var img = producto.Imagenes[i];
+                            _logger.LogInformation("🖼️ Imagen {Index}: ID={ImagenId}, URL='{Url}'",
+                                i + 1, img.ImagenId, img.UrlImagen ?? "NULL");
+                        }
+
+                        if (producto.Imagenes.Count > 3)
+                        {
+                            _logger.LogInformation("🖼️ ... y {Count} imágenes más", producto.Imagenes.Count - 3);
+                        }
                     }
                 }
-                _logger.LogInformation("=== FIN DIAGNÓSTICO ===");
 
-                if (producto == null || producto.ProductoId == 0)
+                _logger.LogInformation("📊 === FIN RESULTADO ===");
+
+                // ✅ VALIDACIONES MEJORADAS
+                if (producto == null)
                 {
+                    _logger.LogError("❌ El servicio retornó NULL para producto ID: {Id}", id);
+                    TempData["Error"] = "Error al obtener los datos del producto.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (producto.ProductoId == 0)
+                {
+                    _logger.LogWarning("⚠️ Producto no encontrado o error en servicio. ID: {Id}", id);
                     TempData["Error"] = "Producto no encontrado.";
                     return RedirectToAction(nameof(Index));
                 }
+
+                if (string.IsNullOrEmpty(producto.NombreProducto) || producto.NombreProducto == "Error al cargar producto")
+                {
+                    _logger.LogError("❌ Error detectado en la carga del producto ID: {Id}", id);
+                    TempData["Error"] = "Error al cargar los datos del producto.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // ✅ VALIDACIÓN ADICIONAL DE INTEGRIDAD
+                if (producto.Imagenes == null)
+                {
+                    _logger.LogWarning("⚠️ Imágenes es NULL, inicializando lista vacía");
+                    producto.Imagenes = new List<ImagenProductoDTO>();
+                }
+
+                _logger.LogInformation("🎉 === PRODUCTO VÁLIDO - ENVIANDO A VISTA ===");
+                _logger.LogInformation("📋 Resumen final: '{Nombre}' con {ImageCount} imágenes",
+                    producto.NombreProducto, producto.Imagenes.Count);
 
                 return View(producto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cargar detalle del producto {Id}", id);
-                TempData["Error"] = "Error al cargar el detalle del producto.";
+                _logger.LogError(ex, "💥 === ERROR CRÍTICO EN DETALLE PRODUCTO ===");
+                _logger.LogError("💥 ID: {Id}", id);
+                _logger.LogError("💥 Mensaje: {Message}", ex.Message);
+                _logger.LogError("💥 Stack Trace: {StackTrace}", ex.StackTrace);
+
+                if (ex.InnerException != null)
+                {
+                    _logger.LogError("💥 Inner Exception: {InnerMessage}", ex.InnerException.Message);
+                }
+
+                TempData["Error"] = "Error interno al cargar el detalle del producto.";
                 return RedirectToAction(nameof(Index));
             }
         }

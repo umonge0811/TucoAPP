@@ -33,33 +33,25 @@
                 <div class="card-body">
                     <div class="row">
 
-                        <!-- ✅ DIAGNÓSTICO DEL CARRUSEL -->
-<div style="background: yellow; padding: 5px; margin: 5px;">
-    <p>🎠 DIAGNÓSTICO CARRUSEL: Model.Imagenes = @(Model.Imagenes?.Count ?? 0) imágenes</p>
-</div>
                         <!-- Carrusel de imágenes -->
                         <div class="col-md-6 mb-4">
                             @if (Model.Imagenes != null && Model.Imagenes.Any())
                             {
                                 <div id="productoCarrusel" class="carousel slide" data-bs-ride="carousel">
                                      <div class="carousel-inner">
-            @for (int i = 0; i < Model.Imagenes.Count; i++)
-            {
-                var imagen = Model.Imagenes[i];
-                <div class="carousel-item @(i == 0 ? "active" : "")">
-                    <!-- ✅ AGREGAR INFORMACIÓN DE DEBUG -->
-                    <div style="background: red; color: white; padding: 5px;">
-                        Debug: URL = @imagen.UrlImagen
-                    </div>
+                                        @for (int i = 0; i < Model.Imagenes.Count; i++)
+                                        {
+                                            var imagen = Model.Imagenes[i];
+                                            <div class="carousel-item @(i == 0 ? "active" : "")">
                     
-                    <img src="@imagen.UrlImagen" 
-                         class="d-block w-100 img-fluid rounded"
-                         alt="@Model.NombreProducto"
-                         onerror="console.error('Error cargando imagen:', this.src); this.style.border='3px solid red';"
-                         onload="console.log('Imagen cargada OK:', this.src);">
-                </div>
-            }
-        </div>
+                                                <img src="@imagen.UrlImagen" 
+                                                     class="d-block w-100 img-fluid rounded"
+                                                     alt="@Model.NombreProducto"
+                                                     onerror="console.error('Error cargando imagen:', this.src); this.style.border='3px solid red';"
+                                                     onload="console.log('Imagen cargada OK:', this.src);">
+                                            </div>
+                                        }
+                                    </div>
                                     @if (Model.Imagenes.Count > 1)
                                     {
                                         <button class="carousel-control-prev" type="button" data-bs-target="#productoCarrusel" data-bs-slide="prev">

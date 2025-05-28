@@ -136,20 +136,41 @@
                                     <td>@producto.ProductoId</td>
 
                                     <!-- 2. Imagen -->
-                                    <td>
-                                        <div class="producto-img-mini" style="width: 50px; height: 50px; cursor: pointer;">
-                                            @if (producto.Imagenes != null && producto.Imagenes.Any())
-                                            {
-                                                <img src="@producto.Imagenes.First().UrlImagen" alt="@producto.NombreProducto"
-                                                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
-                                            }
-                                            else
-                                            {
-                                                <div class="sin-imagen-mini d-flex align-items-center justify-content-center"
-                                                     style="width: 100%; height: 100%; background-color: #f5f5f5; border-radius: 4px;">
-                                                    <i class="bi bi-image" style="font-size: 1.5rem;"></i>
-                                                </div>
-                                            }
+                                    <td style="cursor: pointer; padding: 8px;">
+                                        <div class="producto-img-container"
+                                             style="width: 50px; height: 50px; position: relative; display: flex; align-items: center; justify-content: center;">
+
+                                            <!-- Enlace invisible para SEO y accesibilidad -->
+                                            <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })"
+                                               class="producto-img-link"
+                                               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0;"
+                                               aria-label="Ver detalles de @producto.NombreProducto">
+                                            </a>
+
+                                            <!-- Contenedor de imagen visual -->
+                                            <div class="producto-img-mini"
+                                                 style="width: 100%; height: 100%; position: relative; z-index: 2; pointer-events: none;">
+                                                @if (producto.Imagenes != null && producto.Imagenes.Any())
+                                                {
+                                                    <img src="@producto.Imagenes.First().UrlImagen"
+                                                         alt="@producto.NombreProducto"
+                                                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;">
+                                                }
+                                                else
+                                                {
+                                                    <div class="sin-imagen-mini d-flex align-items-center justify-content-center"
+                                                         style="width: 100%; height: 100%; background-color: #f5f5f5; border-radius: 4px; border: 2px dashed #dee2e6;">
+                                                        <i class="bi bi-image" style="font-size: 1.5rem; color: #6c757d;"></i>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            <!-- Overlay hover para mejor UX -->
+                                            <div class="hover-overlay"
+                                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                            background: rgba(0,123,255,0.1); border-radius: 4px;
+                            opacity: 0; transition: opacity 0.2s; z-index: 3; pointer-events: none;">
+                                            </div>
                                         </div>
                                     </td>
 
@@ -532,35 +553,31 @@
     </div>
 </div>
 
+
+
+<style>
+    /* CSS adicional para mejorar la experiencia */
+    .producto-img-container:hover .hover-overlay {
+        opacity: 1;
+    }
+
+    .producto-img-container:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s ease;
+    }
+
+    /* Asegurar que la celda sea clickeable */
+    td:has(.producto-img-container) {
+        position: relative;
+        user-select: none;
+    }
+
+        td:has(.producto-img-container):hover {
+            background-color: rgba(0,123,255,0.05);
+        }
+</style>
+
 @section Scripts {
-    <script src="~/js/views/inventario/inventario.js"></script>
-    <script src="~/js/views/inventario/exportarInventario.js"></script>
-    <script>
-        $(document).ready(function() {
-            console.log('🚀 Index.cshtml - Solo configurando evento de imágenes');
-
-            // ✅ SOLO EVENTO PARA IMÁGENES - Redirige a vista completa
-            $(document).on('click', '.producto-img-mini', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                console.log('🖼️ Click en imagen detectado');
-
-                const $fila = $(this).closest('tr');
-                const productoId = $fila.attr('data-id');
-
-                console.log(`📦 ProductoId: ${productoId}`);
-
-                if (productoId) {
-                    const url = `/Inventario/DetalleProducto/${productoId}`;
-                    console.log(`🌐 Redirigiendo a: ${url}`);
-                    window.location.href = url;
-                } else {
-                    console.error('❌ ProductoId no encontrado en imagen');
-                }
-            });
-
-            console.log('✅ Solo eventos de imágenes configurados');
-        });
-    </script>
+     <script src="~/js/views/inventario/inventario.js"></script>
+    <script src="~/js/views/inventario/exportarInventario.js"></script> 
 }
