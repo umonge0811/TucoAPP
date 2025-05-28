@@ -123,3 +123,79 @@ td:has(.producto-img-container) {
 }
 
 
+/* ✅ ENCABEZADO DE TABLA FIJO */
+.table-container {
+    position: relative;
+    max-height: 70vh;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.table-fixed-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+    .table-fixed-header th {
+        border-top: none;
+        vertical-align: middle;
+        white-space: nowrap;
+        font-weight: 600;
+        background-color: #f8f9fa !important;
+    }
+
+/* Mejorar scroll */
+.table-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+/* ✅ ESTILOS PARA ORDENAMIENTO */
+.sortable {
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+    .sortable:hover {
+        background-color: rgba(0, 123, 255, 0.1) !important;
+    }
+
+.sort-icon {
+    font-size: 0.8rem;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+}
+
+.sortable:hover .sort-icon {
+    opacity: 1;
+}
+
+.sortable.active .sort-icon {
+    opacity: 1;
+    color: #007bff;
+}
+
+.sortable.asc .sort-icon:before {
+    content: '\f148'; /* bi-arrow-up */
+}
+
+.sortable.desc .sort-icon:before {
+    content: '\f149'; /* bi-arrow-down */
+}

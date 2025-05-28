@@ -312,6 +312,17 @@ $(document).ready(function () {
         }, 500);
     });
 
+    // ✅ EVENTOS PARA COMPARTIR DESDE EL MODAL
+    $("#btnCompartirWhatsApp").click(function (e) {
+        e.preventDefault();
+        compartirPorWhatsApp();
+    });
+
+    $("#btnCompartirEmail").click(function (e) {
+        e.preventDefault();
+        compartirPorEmail();
+    });
+
     // ✅ GUARDAR AJUSTE DE STOCK
     $("#guardarAjusteBtn").click(function () {
         if (!validarFormularioAjuste()) {
@@ -345,6 +356,74 @@ $(document).ready(function () {
             }
         });
     });
+
+    // ✅ FUNCIONES DE COMPARTIR
+    function compartirPorWhatsApp() {
+        try {
+            const nombre = $("#nombreProductoVistaRapida").text();
+            const precio = $("#precioProductoVistaRapida").text();
+            const stock = $("#stockProductoVistaRapida").text();
+            const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
+
+            // Construir URL del producto
+            const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
+
+            // Mensaje para WhatsApp
+            const mensaje = `🛞 *${nombre}*\n\n💰 Precio: ${precio}\n📦 Stock disponible: ${stock} unidades\n\n🔗 Ver más detalles:\n${urlProducto}`;
+
+            // URL de WhatsApp
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+
+            // Abrir WhatsApp
+            window.open(whatsappUrl, '_blank');
+
+            console.log('✅ Compartido por WhatsApp');
+        } catch (error) {
+            console.error('❌ Error al compartir por WhatsApp:', error);
+            mostrarNotificacion("Error", "No se pudo compartir por WhatsApp", "danger");
+        }
+    }
+
+    function compartirPorEmail() {
+        try {
+            const nombre = $("#nombreProductoVistaRapida").text();
+            const precio = $("#precioProductoVistaRapida").text();
+            const stock = $("#stockProductoVistaRapida").text();
+            const descripcion = $("#descripcionVistaRapida").text();
+            const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
+
+            // Construir URL del producto
+            const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
+
+            // Asunto y cuerpo del email
+            const asunto = `Producto: ${nombre}`;
+            const cuerpo = `Hola,
+
+Te comparto información sobre este producto:
+
+🛞 PRODUCTO: ${nombre}
+
+💰 PRECIO: ${precio}
+📦 STOCK DISPONIBLE: ${stock} unidades
+📝 DESCRIPCIÓN: ${descripcion}
+
+🔗 Ver detalles completos:
+${urlProducto}
+
+Saludos.`;
+
+            // URL de mailto
+            const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+
+            // Abrir cliente de email
+            window.location.href = emailUrl;
+
+            console.log('✅ Compartido por Email');
+        } catch (error) {
+            console.error('❌ Error al compartir por Email:', error);
+            mostrarNotificacion("Error", "No se pudo compartir por Email", "danger");
+        }
+    }
 
     // ✅ FUNCIONES DE VALIDACIÓN
     function validarFormularioAjuste() {

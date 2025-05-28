@@ -112,20 +112,38 @@
             }
             else
             {
-                <div class="table-responsive">
+                <div class="table-container">
                     <table class="table table-hover">
-                        <thead class="table-light">
+                        <thead class="table-light table-fixed-header">
                             <tr>
-                                <th>ID</th>
+                                <th class="sortable" data-column="id" style="cursor: pointer;">
+                                    ID <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
                                 <th>Imagen</th>
-                                <th>Producto</th>
-                                <th>Medidas</th>
-                                <th>Marca/Modelo</th>
-                                <th>Costo</th>
-                                <th>Utilidad %</th>
-                                <th>Precio Final</th>
-                                <th>Stock</th>
-                                <th>Stock Mín</th>
+                                <th class="sortable" data-column="producto" style="cursor: pointer;">
+                                    Producto <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="medidas" style="cursor: pointer;">
+                                    Medidas <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="marca" style="cursor: pointer;">
+                                    Marca/Modelo <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="costo" style="cursor: pointer;">
+                                    Costo <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="utilidad" style="cursor: pointer;">
+                                    Utilidad % <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="precio" style="cursor: pointer;">
+                                    Precio Final <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="stock" style="cursor: pointer;">
+                                    Stock <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
+                                <th class="sortable" data-column="stockmin" style="cursor: pointer;">
+                                    Stock Mín <i class="bi bi-arrow-down-up ms-1 sort-icon"></i>
+                                </th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -544,6 +562,26 @@
                         <button type="button" class="btn btn-success" id="btnAjustarStockVistaRapida">
                             <i class="bi bi-plus-slash-minus me-1"></i>Ajustar Stock
                         </button>
+
+                        <!-- Botones de compartir -->
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-share me-1"></i>Compartir
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="#" id="btnCompartirWhatsApp">
+                                        <i class="bi bi-whatsapp text-success me-2"></i>WhatsApp
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" id="btnCompartirEmail">
+                                        <i class="bi bi-envelope text-primary me-2"></i>Email
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
                         <a href="#" class="btn btn-primary" id="btnVerDetallesCompletos">
                             <i class="bi bi-info-circle me-1"></i>Ver Detalles Completos
                         </a>
