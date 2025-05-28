@@ -70,6 +70,29 @@ function actualizarFilasVisibles() {
     console.log(`📊 Productos que cumplen filtros: ${paginacionConfig.totalProductos}, Páginas: ${paginacionConfig.totalPaginas}`);
 }
 
+// ✅ FUNCIÓN COMPATIBLE CON EL SISTEMA DE FILTROS AVANZADOS
+function verificarSiCumpleFiltros($fila) {
+    // Verificar si las funciones de filtros están disponibles
+    if (typeof cumpleFiltroTexto !== 'function') {
+        // Fallback: usar lógica básica si no están cargados los filtros avanzados
+        return true;
+    }
+
+    // Usar la lógica de filtros avanzados
+    let cumpleTodos = true;
+
+    if (!cumpleFiltroTexto($fila)) cumpleTodos = false;
+    if (!cumpleFiltroCategoria($fila)) cumpleTodos = false;
+    if (!cumpleFiltroStock($fila)) cumpleTodos = false;
+    if (!cumpleFiltroMarca($fila)) cumpleTodos = false;
+    if (!cumpleFiltrosPrecio($fila)) cumpleTodos = false;
+    if (!cumpleFiltrosStockRango($fila)) cumpleTodos = false;
+    if (!cumpleFiltrosUtilidad($fila)) cumpleTodos = false;
+    if (!cumpleFiltrosLlantas($fila)) cumpleTodos = false;
+
+    return cumpleTodos;
+}
+
 // Función para configurar todos los eventos de paginación
 function configurarEventosPaginacion() {
     // Cambio en productos por página

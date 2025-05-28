@@ -231,13 +231,13 @@ function actualizarFiltrosRango() {
     filtrosConfig.activos.utilidadMax = parseFloat($("#utilidadMax").val()) || null;
 }
 
-// Función principal para aplicar todos los filtros
+// Función principal para aplicar todos los filtros - VERSIÓN MEJORADA
 function aplicarTodosLosFiltros() {
-    console.log('🔄 Aplicando todos los filtros:', filtrosConfig.activos);
+    console.log('🔄 Aplicando filtros en tabla y cards:', filtrosConfig.activos);
 
     let productosVisibles = 0;
 
-    // Recorrer todas las filas y aplicar filtros
+    // ✅ FILTRAR TABLA (Vista Desktop)
     $("tbody tr").each(function () {
         const $fila = $(this);
         let cumpleTodosLosFiltros = true;
@@ -252,7 +252,7 @@ function aplicarTodosLosFiltros() {
         if (!cumpleFiltrosUtilidad($fila)) cumpleTodosLosFiltros = false;
         if (!cumpleFiltrosLlantas($fila)) cumpleTodosLosFiltros = false;
 
-        // Mostrar/ocultar fila según resultado
+        // Mostrar/ocultar fila
         if (cumpleTodosLosFiltros) {
             $fila.show();
             productosVisibles++;
@@ -261,17 +261,41 @@ function aplicarTodosLosFiltros() {
         }
     });
 
-    // Actualizar indicadores visuales
-    actualizarIndicadoresFiltros();
+    // ✅ FILTRAR CARDS (Vista Móvil) - NUEVO
+    $(".producto-card").each(function () {
+        const $card = $(this);
+        let cumpleTodosLosFiltros = true;
 
-    // Integrar con paginación
-    if (typeof actualizarFilasVisibles === 'function') {
-        actualizarFilasVisibles();
-        renderizarPagina(1); // Volver a primera página después de filtrar
+        // Aplicar cada filtro al card
+        if (!cumpleFiltroTextoCard($card)) cumpleTodosLosFiltros = false;
+        if (!cumpleFiltroCategoríaCard($card)) cumpleTodosLosFiltros = false;
+    if (!cumpleFiltroStockCard($card)) cumpleTodosLosFiltros = false;
+    if (!cumpleFiltroMarcaCard($card)) cumpleTodosLosFiltros = false;
+    if (!cumpleFiltrosPrecioCard($card)) cumpleTodosLosFiltros = false;
+    if (!cumpleFiltrosStockRangoCard($card)) cumpleTodosLosFiltros = false;
+    if (!cumpleFiltrosUtilidadCard($card)) cumpleTodosLosFiltros = false;
+    if (!cumpleFiltrosLlantasCard($card)) cumpleTodosLosFiltros = false;
+
+    // Mostrar/ocultar card
+    if (cumpleTodosLosFiltros) {
+        $card.show();
+    } else {
+        $card.hide();
     }
+});
 
-    console.log(`✅ Filtros aplicados. Productos visibles: ${productosVisibles}`);
+// Actualizar indicadores visuales
+actualizarIndicadoresFiltros();
+
+// Integrar con paginación
+if (typeof actualizarFilasVisibles === 'function') {
+    actualizarFilasVisibles();
+    renderizarPagina(1);
 }
+
+console.log(`✅ Filtros aplicados. Productos visibles: ${productosVisibles}`);
+}
+
 
 // ✅ FUNCIONES INDIVIDUALES DE FILTROS
 
@@ -548,22 +572,144 @@ function configurarColapsarFiltros() {
     });
 }
 
-// ✅ FUNCIÓN COMPATIBLE CON EL SISTEMA EXISTENTE
-// Esta función reemplaza la lógica anterior de verificarSiCumpleFiltros
-function verificarSiCumpleFiltros($fila) {
-    // Usar la nueva lógica de filtros avanzados
-    let cumpleTodos = true;
 
-    if (!cumpleFiltroTexto($fila)) cumpleTodos = false;
-    if (!cumpleFiltroCategoria($fila)) cumpleTodos = false;
-    if (!cumpleFiltroStock($fila)) cumpleTodos = false;
-    if (!cumpleFiltroMarca($fila)) cumpleTodos = false;
-    if (!cumpleFiltrosPrecio($fila)) cumpleTodos = false;
-    if (!cumpleFiltrosStockRango($fila)) cumpleTodos = false;
-    if (!cumpleFiltrosUtilidad($fila)) cumpleTodos = false;
-    if (!cumpleFiltrosLlantas($fila)) cumpleTodos = false;
+// ✅ NUEVAS FUNCIONES DE FILTROS PARA CARDS MÓVIL
 
-    return cumpleTodos;
+// Filtro por texto en cards
+function cumpleFiltroTextoCard($card) {
+    if (!filtrosConfig.activos.texto) return true;
+    
+    const textoCard = $card.text().toLowerCase();
+    return textoCard.indexOf(filtrosConfig.activos.texto) !== -1;
+}
+
+// Filtro por categoría en cards
+function cumpleFiltroCategoríaCard($card) {
+    if (!filtrosConfig.activos.categoria) return true;
+    
+    const tieneTextoLlanta = $card.find('.badge:contains("Llanta")').length > 0;
+    
+    if (filtrosConfig.activos.categoria === "llantas") {
+        return tieneTextoLlanta;
+    } else if (filtrosConfig.activos.categoria === "accesorios" || filtrosConfig.activos.categoria === "herramientas") {
+        return !tieneTextoLlanta;
+    }
+    
+    return true;
+}
+
+// Filtro por stock en cards
+function cumpleFiltroStockCard($card) {
+    if (!filtrosConfig.activos.stock) return true;
+    
+    const esStockBajo = $card.hasClass("stock-bajo");
+    const stockTexto = $card.find('.producto-detalle-valor').filter(function() {
+        return $(this).hasClass('stock-bajo') || $(this).hasClass('stock-normal') || 
+               $(this).parent().find('.producto-detalle-label:contains("Stock")').length > 0;
+    }).first().text().trim();
+    
+    const stock = parseInt(stockTexto);
+    
+    // Extraer stock mínimo del texto "Mín: X"
+    const stockMinTexto = $card.find('small:contains("Mín:")').text();
+    const stockMinMatch = stockMinTexto.match(/Mín:\s*(\d+)/);
+    const stockMin = stockMinMatch ? parseInt(stockMinMatch[1]) : 0;
+    
+    switch (filtrosConfig.activos.stock) {
+        case "low":
+            return esStockBajo;
+        case "normal":
+            return !esStockBajo && stock < stockMin * 2;
+        case "high":
+            return stock >= stockMin * 2;
+        default:
+            return true;
+    }
+}
+
+// Filtro por marca en cards
+function cumpleFiltroMarcaCard($card) {
+    if (!filtrosConfig.activos.marca) return true;
+    
+    const marcaTexto = $card.find('.producto-card-medidas div:contains("Marca:")').text().toLowerCase();
+    const tituloTexto = $card.find('.producto-card-titulo').text().toLowerCase();
+    
+    return marcaTexto.indexOf(filtrosConfig.activos.marca) !== -1 || 
+           tituloTexto.indexOf(filtrosConfig.activos.marca) !== -1;
+}
+
+// Filtro por precio en cards
+function cumpleFiltrosPrecioCard($card) {
+    const precioTexto = $card.find('.producto-detalle-valor.precio span').first().text().trim();
+    const match = precioTexto.match(/₡([\d,]+)/);
+    
+    if (!match) return true;
+    
+    const precio = parseFloat(match[1].replace(/,/g, ''));
+    
+    if (filtrosConfig.activos.precioMin !== null && precio < filtrosConfig.activos.precioMin) {
+        return false;
+    }
+    
+    if (filtrosConfig.activos.precioMax !== null && precio > filtrosConfig.activos.precioMax) {
+        return false;
+    }
+    
+    return true;
+}
+
+// Filtro por rango de stock en cards
+function cumpleFiltrosStockRangoCard($card) {
+    const stockTexto = $card.find('.producto-detalle-valor').filter(function() {
+        return $(this).hasClass('stock-bajo') || $(this).hasClass('stock-normal') || 
+               $(this).parent().find('.producto-detalle-label:contains("Stock")').length > 0;
+    }).first().text().trim();
+    
+    const stock = parseInt(stockTexto);
+    
+    if (filtrosConfig.activos.stockMin !== null && stock < filtrosConfig.activos.stockMin) {
+        return false;
+    }
+    
+    if (filtrosConfig.activos.stockMax !== null && stock > filtrosConfig.activos.stockMax) {
+        return false;
+    }
+    
+    return true;
+}
+
+// Filtro por utilidad en cards (si existe información)
+function cumpleFiltrosUtilidadCard($card) {
+    // Por ahora, los cards no muestran utilidad detallada, así que retornamos true
+    // Se puede implementar cuando agregues esta info a los cards
+    return true;
+}
+
+// Filtros específicos de llantas en cards
+function cumpleFiltrosLlantasCard($card) {
+    const tieneInfoLlanta = $card.find('.producto-card-llantas').length > 0;
+    
+    // Si no es llanta, verificar si hay filtros de llanta activos
+    if (!tieneInfoLlanta) {
+        const hayFiltrosLlanta = filtrosConfig.activos.ancho || filtrosConfig.activos.perfil || 
+                                filtrosConfig.activos.diametro || filtrosConfig.activos.tipoTerreno || 
+                                filtrosConfig.activos.velocidad;
+        return !hayFiltrosLlanta;
+    }
+    
+    // Extraer medidas del card
+    const medidasTexto = $card.find('.producto-card-medidas div:contains("Medidas:")').text();
+    const match = medidasTexto.match(/(\d+)\/(\d+)\/R?(\d+)/);
+    
+    if (match) {
+        const [, ancho, perfil, diametro] = match;
+        
+        if (filtrosConfig.activos.ancho && ancho !== filtrosConfig.activos.ancho) return false;
+        if (filtrosConfig.activos.perfil && perfil !== filtrosConfig.activos.perfil) return false;
+        if (filtrosConfig.activos.diametro && diametro !== filtrosConfig.activos.diametro) return false;
+    }
+    
+    return true;
 }
 
 // ✅ INICIALIZACIÓN AL CARGAR LA PÁGINA
