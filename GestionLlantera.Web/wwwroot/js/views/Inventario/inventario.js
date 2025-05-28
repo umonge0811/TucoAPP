@@ -1,18 +1,315 @@
 ﻿/**
- * Funcionalidad para la gestión de inventario - VERSIÓN CORREGIDA COMPLETA
- * Imagen miniatura -> Modal | Botón ojo -> Página de detalles
+ * Funcionalidad para la gestión de inventario - VERSIÓN FINAL
+ * Ordenamiento + Paginación + Filtros integrados
  */
 
-// ✅ FUNCIONES GLOBALES (fuera del document.ready)
+// ✅ VARIABLES GLOBALES
+let estadoOrdenamiento = {
+    columna: null,
+    direccion: 'asc'
+};
+
+let paginacionConfig = {
+    paginaActual: 1,
+    productosPorPagina: 25,
+    totalProductos: 0,
+    totalPaginas: 0,
+    filasVisibles: []
+};
+
+// ✅ FUNCIONES GLOBALES DE PAGINACIÓN
+
+// Función principal para inicializar la paginación
+function inicializarPaginacion() {
+    console.log('📄 Inicializando sistema de paginación');
+
+    // Actualizar total de productos
+    actualizarFilasVisibles();
+
+    // Configurar eventos
+    configurarEventosPaginacion();
+
+    // Renderizar primera página
+    renderizarPagina(1);
+
+    console.log('✅ Paginación inicializada correctamente');
+}
+
+// Función para actualizar la lista de filas visibles (respetando filtros)
+function actualizarFilasVisibles() {
+    // ✅ CORRIGIENDO: Contar TODAS las filas que cumplen filtros, no solo las visibles por paginación
+    paginacionConfig.filasVisibles = $("tbody tr").filter(function () {
+        // Una fila está "disponible" si no está oculta por filtros
+        // (pero puede estar oculta por paginación)
+        const $fila = $(this);
+
+        // Verificar si está oculta por filtros (no por paginación)
+        // Si display es 'none' debido a filtros, no la contamos
+        // Si display es 'none' debido a paginación, sí la contamos
+
+        // Temporarily show all rows to check filter status
+        const originalDisplay = $fila.css('display');
+        $fila.show();
+
+        // Check if it passes current filters
+        const cumpleFiltros = verificarSiCumpleFiltros($fila);
+
+        // Restore original display
+        if (originalDisplay === 'none') {
+            $fila.hide();
+        }
+
+        return cumpleFiltros;
+    }).get();
+
+    paginacionConfig.totalProductos = paginacionConfig.filasVisibles.length;
+    paginacionConfig.totalPaginas = paginacionConfig.productosPorPagina === 'all'
+        ? 1
+        : Math.ceil(paginacionConfig.totalProductos / paginacionConfig.productosPorPagina);
+
+    console.log(`📊 Productos que cumplen filtros: ${paginacionConfig.totalProductos}, Páginas: ${paginacionConfig.totalPaginas}`);
+}
+
+// Función auxiliar para verificar si una fila cumple con los filtros actuales
+function verificarSiCumpleFiltros($fila) {
+    // Verificar filtro de búsqueda de texto
+    const textoBusqueda = $("#searchText").val().toLowerCase();
+    if (textoBusqueda && $fila.text().toLowerCase().indexOf(textoBusqueda) === -1) {
+        return false;
+    }
+
+    // Verificar filtro de stock
+    const filtroStock = $("#filterStock").val();
+    if (filtroStock) {
+        const stock = parseInt($fila.find("td:eq(8)").text().trim());
+        const minStock = parseInt($fila.find("td:eq(9)").text().trim());
+        const esStockBajo = $fila.hasClass("table-danger");
+
+        if (filtroStock === "low" && !esStockBajo) {
+            return false;
+        } else if (filtroStock === "normal" && (esStockBajo || stock >= minStock * 2)) {
+            return false;
+        } else if (filtroStock === "high" && stock < minStock * 2) {
+            return false;
+        }
+    }
+
+    // Verificar filtro de categoría
+    const filtroCategoria = $("#filterCategory").val();
+    if (filtroCategoria) {
+        const tieneTextoLlanta = $fila.text().indexOf('Llanta') !== -1;
+
+        if (filtroCategoria === "llantas" && !tieneTextoLlanta) {
+            return false;
+        } else if (filtroCategoria !== "llantas" && filtroCategoria !== "" && tieneTextoLlanta) {
+            return false;
+        }
+    }
+
+    return true; // Cumple todos los filtros
+}
+// Función para configurar todos los eventos de paginación
+function configurarEventosPaginacion() {
+    // Cambio en productos por página
+    $("#productosPorPagina").off('change').on('change', function () {
+        const valor = $(this).val();
+        paginacionConfig.productosPorPagina = valor === 'all' ? 'all' : parseInt(valor);
+        paginacionConfig.paginaActual = 1;
+
+        console.log(`🔄 Cambiando a ${paginacionConfig.productosPorPagina} productos por página`);
+
+        actualizarFilasVisibles();
+        renderizarPagina(1);
+    });
+
+    // Navegación: Primera página
+    $("#btn-primera").off('click').on('click', function (e) {
+        e.preventDefault();
+        if (!$(this).hasClass('disabled')) {
+            renderizarPagina(1);
+        }
+    });
+
+    // Navegación: Página anterior
+    $("#btn-anterior").off('click').on('click', function (e) {
+        e.preventDefault();
+        if (!$(this).hasClass('disabled')) {
+            renderizarPagina(paginacionConfig.paginaActual - 1);
+        }
+    });
+
+    // Navegación: Página siguiente
+    $("#btn-siguiente").off('click').on('click', function (e) {
+        e.preventDefault();
+        if (!$(this).hasClass('disabled')) {
+            renderizarPagina(paginacionConfig.paginaActual + 1);
+        }
+    });
+
+    // Navegación: Última página
+    $("#btn-ultima").off('click').on('click', function (e) {
+        e.preventDefault();
+        if (!$(this).hasClass('disabled')) {
+            renderizarPagina(paginacionConfig.totalPaginas);
+        }
+    });
+
+    // Navegación: Números de página
+    $("#paginacion-botones").off('click', '.page-link[data-pagina]').on('click', '.page-link[data-pagina]', function (e) {
+        e.preventDefault();
+        const pagina = parseInt($(this).data('pagina'));
+        if (pagina && pagina !== paginacionConfig.paginaActual) {
+            renderizarPagina(pagina);
+        }
+    });
+}
+
+// Función principal para renderizar una página específica
+function renderizarPagina(numeroPagina) {
+    console.log(`🎯 Renderizando página ${numeroPagina}`);
+
+    // Validar número de página
+    if (numeroPagina < 1 || (numeroPagina > paginacionConfig.totalPaginas && paginacionConfig.totalPaginas > 0)) {
+        console.warn(`⚠️ Página ${numeroPagina} inválida. Total páginas: ${paginacionConfig.totalPaginas}`);
+        return;
+    }
+
+    paginacionConfig.paginaActual = numeroPagina;
+
+    // Mostrar/ocultar filas según la página
+    mostrarFilasDePagina();
+
+    // Actualizar botones de navegación
+    actualizarBotonesNavegacion();
+
+    // Actualizar información de estado
+    actualizarInformacionPaginacion();
+
+    // Actualizar contadores generales
+    actualizarContadores();
+
+    console.log(`✅ Página ${numeroPagina} renderizada correctamente`);
+}
+
+// Función para mostrar solo las filas de la página actual
+function mostrarFilasDePagina() {
+    // Ocultar todas las filas primero
+    $("tbody tr").hide();
+
+    if (paginacionConfig.productosPorPagina === 'all') {
+        // Mostrar todas las filas visibles
+        $(paginacionConfig.filasVisibles).show();
+    } else {
+        // Calcular rango de filas a mostrar
+        const inicio = (paginacionConfig.paginaActual - 1) * paginacionConfig.productosPorPagina;
+        const fin = inicio + paginacionConfig.productosPorPagina;
+
+        // Mostrar solo las filas del rango actual
+        const filasAPaginar = paginacionConfig.filasVisibles.slice(inicio, fin);
+        $(filasAPaginar).show();
+
+        console.log(`👁️ Mostrando filas ${inicio + 1} a ${Math.min(fin, paginacionConfig.totalProductos)}`);
+    }
+}
+
+// Función para actualizar el estado de los botones de navegación
+function actualizarBotonesNavegacion() {
+    const $btnPrimera = $("#btn-primera");
+    const $btnAnterior = $("#btn-anterior");
+    const $btnSiguiente = $("#btn-siguiente");
+    const $btnUltima = $("#btn-ultima");
+
+    // Deshabilitar/habilitar botones según la página actual
+    if (paginacionConfig.paginaActual <= 1) {
+        $btnPrimera.addClass('disabled');
+        $btnAnterior.addClass('disabled');
+    } else {
+        $btnPrimera.removeClass('disabled');
+        $btnAnterior.removeClass('disabled');
+    }
+
+    if (paginacionConfig.paginaActual >= paginacionConfig.totalPaginas || paginacionConfig.productosPorPagina === 'all') {
+        $btnSiguiente.addClass('disabled');
+        $btnUltima.addClass('disabled');
+    } else {
+        $btnSiguiente.removeClass('disabled');
+        $btnUltima.removeClass('disabled');
+    }
+
+    // Generar números de página
+    generarNumerosPagina();
+}
+
+// Función para generar los números de página dinámicamente
+function generarNumerosPagina() {
+    const $contenedor = $("#paginacion-botones");
+
+    // Remover números de página existentes (conservar botones de navegación)
+    $contenedor.find('.page-item[id^="pagina-"]').remove();
+    $contenedor.find('.page-item:has(.page-link:contains("..."))').remove();
+
+    if (paginacionConfig.productosPorPagina === 'all' || paginacionConfig.totalPaginas <= 1) {
+        return; // No mostrar números si es "todos" o solo hay 1 página
+    }
+
+    const paginaActual = paginacionConfig.paginaActual;
+    const totalPaginas = paginacionConfig.totalPaginas;
+
+    // Calcular rango de páginas a mostrar (máximo 5 números)
+    let inicio = Math.max(1, paginaActual - 2);
+    let fin = Math.min(totalPaginas, inicio + 4);
+
+    // Ajustar si estamos cerca del final
+    if (fin - inicio < 4) {
+        inicio = Math.max(1, fin - 4);
+    }
+
+    // Insertar números de página antes del botón "siguiente"
+    const $btnSiguiente = $("#btn-siguiente");
+
+    for (let i = inicio; i <= fin; i++) {
+        const esActiva = i === paginaActual ? 'active' : '';
+        const $nuevaPagina = $(`
+            <li class="page-item ${esActiva}" id="pagina-${i}">
+                <a class="page-link" href="#" data-pagina="${i}">${i}</a>
+            </li>
+        `);
+
+        $nuevaPagina.insertBefore($btnSiguiente);
+    }
+
+    // Agregar puntos suspensivos si es necesario
+    if (inicio > 1) {
+        $(`<li class="page-item disabled"><span class="page-link">...</span></li>`).insertAfter($("#btn-anterior"));
+    }
+
+    if (fin < totalPaginas) {
+        $(`<li class="page-item disabled"><span class="page-link">...</span></li>`).insertBefore($("#btn-siguiente"));
+    }
+}
+
+// Función para actualizar la información de paginación
+function actualizarInformacionPaginacion() {
+    const inicio = paginacionConfig.productosPorPagina === 'all'
+        ? 1
+        : ((paginacionConfig.paginaActual - 1) * paginacionConfig.productosPorPagina) + 1;
+
+    const fin = paginacionConfig.productosPorPagina === 'all'
+        ? paginacionConfig.totalProductos
+        : Math.min(paginacionConfig.paginaActual * paginacionConfig.productosPorPagina, paginacionConfig.totalProductos);
+
+    $("#paginacion-inicio").text(paginacionConfig.totalProductos > 0 ? inicio : 0);
+    $("#paginacion-fin").text(fin);
+    $("#paginacion-total").text(paginacionConfig.totalProductos);
+}
+
+// ✅ FUNCIONES GLOBALES DE PRODUCTOS Y MODALES
 
 // Función para cargar los detalles del producto desde la tabla
 function cargarDetallesProducto(productoId) {
     resetFormularioDetalles();
-
-    // Configurar el ID para el ajuste de stock
     $("#productoId").val(productoId);
 
-    // Buscar la fila del producto en la tabla
     const fila = $(`button.ver-detalles-btn[data-id="${productoId}"]`).closest("tr");
 
     if (fila.length === 0) {
@@ -20,17 +317,17 @@ function cargarDetallesProducto(productoId) {
         return;
     }
 
-    // ✅ DATOS BÁSICOS DEL PRODUCTO
+    // Datos básicos del producto
     const nombre = fila.find("td:eq(2) strong").text();
     const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción adicional";
     const stock = parseInt(fila.find("td:eq(8)").text().trim().split(' ')[0].replace(/[^\d]/g, '')) || 0;
     const stockMin = parseInt(fila.find("td:eq(9)").text().trim()) || 0;
 
-    // ✅ DATOS DE PRECIOS
+    // Datos de precios
     const precioFinalTexto = fila.find("td:eq(7)").text().trim();
     const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim();
 
-    // ✅ CARGAR INFORMACIÓN BÁSICA EN EL MODAL
+    // Cargar información básica en el modal
     $("#nombreProductoVistaRapida").text(nombre);
     $("#descripcionVistaRapida").text(descripcion);
     $("#stockProductoVistaRapida").text(stock);
@@ -38,20 +335,20 @@ function cargarDetallesProducto(productoId) {
     $("#precioProductoVistaRapida").text(precioFinalTexto.split('\n')[0] || "₡0");
     $("#tipoPrecioVistaRapida").text(tipoPrecioTexto || "Precio manual");
 
-    // ✅ CONFIGURAR COLORES DEL PRECIO
+    // Configurar colores del precio
     if (tipoPrecioTexto === "Calculado") {
         $("#precioProductoVistaRapida").removeClass("text-primary").addClass("text-success");
     } else {
         $("#precioProductoVistaRapida").removeClass("text-success").addClass("text-primary");
     }
 
-    // ✅ CONFIGURAR INDICADOR VISUAL DE STOCK
+    // Configurar indicador visual de stock
     configurarIndicadorStock(stock, stockMin);
 
-    // ✅ CARGAR IMÁGENES DEL PRODUCTO
+    // Cargar imágenes del producto
     cargarImagenesEnModal(fila, productoId);
 
-    // ✅ VERIFICAR SI ES UNA LLANTA Y MOSTRAR INFO ESPECÍFICA
+    // Verificar si es una llanta y mostrar info específica
     const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
     if (esLlanta) {
         $("#infoLlantaVistaRapida").show();
@@ -64,22 +361,20 @@ function cargarDetallesProducto(productoId) {
         $("#infoLlantaVistaRapida").hide();
     }
 
-    // ✅ CONFIGURAR BOTONES
+    // Configurar botones
     $("#btnVerDetallesCompletos").attr("href", `/Inventario/DetalleProducto/${productoId}`);
     $("#btnAjustarStockVistaRapida").data("id", productoId);
 
-    // ✅ MOSTRAR EL MODAL
+    // Mostrar el modal
     $("#detallesProductoModal").modal("show");
 }
 
-// ✅ NUEVA FUNCIÓN: Configurar indicador visual de stock
+// Función para configurar indicador visual de stock
 function configurarIndicadorStock(stock, stockMin) {
     const porcentajeStock = stockMin > 0 ? Math.min((stock / (stockMin * 2)) * 100, 100) : 50;
 
-    // Configurar barra de progreso
     $("#barraProgresoStock").css("width", `${porcentajeStock}%`);
 
-    // Configurar colores según el nivel de stock
     if (stock <= stockMin) {
         $("#barraProgresoStock").removeClass("bg-warning bg-success").addClass("bg-danger");
         $("#alertaStockBajo").show();
@@ -95,14 +390,13 @@ function configurarIndicadorStock(stock, stockMin) {
     }
 }
 
-// ✅ NUEVA FUNCIÓN: Cargar imágenes en el modal con soporte para carrusel
+// Función para cargar imágenes en el modal
 function cargarImagenesEnModal(fila, productoId) {
     const $contenedorImagenes = $("#contenedorImagenesModal");
     const $indicadores = $("#indicadoresModal");
     const $btnPrev = $("#btnPrevModal");
     const $btnNext = $("#btnNextModal");
 
-    // Limpiar contenido anterior
     $contenedorImagenes.empty();
     $indicadores.empty();
     $btnPrev.hide();
@@ -117,8 +411,7 @@ function cargarImagenesEnModal(fila, productoId) {
             procesarImagenesDelProducto(imagenes);
         },
         error: function (xhr, status, error) {
-            console.warn('⚠️ Error al cargar imágenes desde servidor, usando imagen de tabla:', error);
-            // Fallback: usar la imagen de la tabla si falla
+            console.warn('⚠️ Error al cargar imágenes desde servidor:', error);
             const imagenDeTabla = fila.find("td:eq(1) img").attr("src");
             const imagenesFallback = imagenDeTabla ? [imagenDeTabla] : [];
             procesarImagenesDelProducto(imagenesFallback);
@@ -126,7 +419,7 @@ function cargarImagenesEnModal(fila, productoId) {
     });
 }
 
-// ✅ FUNCIÓN SEPARADA: Procesar imágenes del producto
+// Función para procesar imágenes del producto
 function procesarImagenesDelProducto(imagenes) {
     const $contenedorImagenes = $("#contenedorImagenesModal");
     const $indicadores = $("#indicadoresModal");
@@ -134,7 +427,6 @@ function procesarImagenesDelProducto(imagenes) {
     const $btnNext = $("#btnNextModal");
 
     if (imagenes.length === 0) {
-        // Sin imágenes - mostrar placeholder
         $contenedorImagenes.html(`
             <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
                 <div class="text-center">
@@ -144,36 +436,30 @@ function procesarImagenesDelProducto(imagenes) {
             </div>
         `);
     } else if (imagenes.length === 1) {
-        // Una sola imagen
         $contenedorImagenes.html(`
             <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
                 <img src="${imagenes[0]}" 
                      class="img-fluid" 
                      style="max-height: 400px; max-width: 100%; object-fit: contain;"
-                     alt="Imagen del producto"
-                     onerror="console.log('Error cargando imagen:', this.src); this.style.display='none';">
+                     alt="Imagen del producto">
             </div>
         `);
     } else {
-        // Múltiples imágenes - configurar carrusel completo
         let imagenesHtml = '';
         let indicadoresHtml = '';
 
         imagenes.forEach((imagen, index) => {
             const activo = index === 0 ? 'active' : '';
-
             imagenesHtml += `
-    <div class="carousel-item ${activo}">
-        <div class="d-flex align-items-center justify-content-center" style="min-height: 400px;">
-            <img src="${imagen}" 
-                 class="img-fluid" 
-                 style="max-height: 400px; max-width: 100%; object-fit: contain;"
-                 alt="Imagen del producto ${index + 1}"
-                 onerror="console.log('Error cargando imagen:', this.src); this.style.display='none';">
-        </div>
-    </div>
-`;
-
+                <div class="carousel-item ${activo}">
+                    <div class="d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                        <img src="${imagen}" 
+                             class="img-fluid" 
+                             style="max-height: 400px; max-width: 100%; object-fit: contain;"
+                             alt="Imagen del producto ${index + 1}">
+                    </div>
+                </div>
+            `;
             indicadoresHtml += `
                 <button type="button" data-bs-target="#carruselImagenesModal" data-bs-slide-to="${index}" 
                         class="${activo}" aria-current="${index === 0 ? 'true' : 'false'}" 
@@ -203,7 +489,6 @@ function resetFormularioDetalles() {
     $("#marcaVistaRapida").text("-");
     $("#infoLlantaVistaRapida").hide();
 
-    // Resetear carrusel
     $("#contenedorImagenesModal").html(`
         <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
             <div class="text-center">
@@ -238,20 +523,230 @@ function mostrarNotificacion(titulo, mensaje, tipo) {
     }, 5000);
 }
 
-// ✅ DOCUMENT READY - NUEVOS COMPORTAMIENTOS
-$(document).ready(function () {
-    console.log('🚀 Inventario - Configuración iniciada con nuevos comportamientos');
+// ✅ FUNCIONES DE ORDENAMIENTO
 
-    // ✅ LIMPIAR TODOS LOS EVENTOS PREVIOS PARA EVITAR CONFLICTOS
+// Función principal para ordenar por columna
+function ordenarPorColumna(columna, tipo) {
+    console.log(`🔄 Ordenando por columna: ${columna}, tipo: ${tipo}`);
+
+    if (estadoOrdenamiento.columna === columna) {
+        estadoOrdenamiento.direccion = estadoOrdenamiento.direccion === 'asc' ? 'desc' : 'asc';
+    } else {
+        estadoOrdenamiento.direccion = 'asc';
+        estadoOrdenamiento.columna = columna;
+    }
+
+    actualizarIndicadoresOrdenamiento(columna);
+
+    // ✅ CORRIGIENDO: Mostrar todas las filas temporalmente para ordenar
+    const tabla = $("table tbody");
+
+    // Guardar estado de visibilidad actual
+    const estadosVisibilidad = [];
+    tabla.find("tr").each(function (index) {
+        estadosVisibilidad[index] = $(this).is(':visible');
+    });
+
+    // Mostrar todas las filas temporalmente para el ordenamiento
+    tabla.find("tr").show();
+
+    // Obtener y ordenar TODAS las filas
+    const filas = tabla.find("tr").get();
+
+    filas.sort(function (a, b) {
+        return compararValores(a, b, columna, tipo, estadoOrdenamiento.direccion);
+    });
+
+    // Reordenar filas en la tabla
+    $.each(filas, function (indice, fila) {
+        tabla.append(fila);
+    });
+
+    // ✅ CORRIGIENDO: Actualizar paginación sin afectar el conteo total
+    actualizarFilasVisibles();
+    renderizarPagina(paginacionConfig.paginaActual);
+
+    console.log(`✅ Ordenamiento completado: ${columna} ${estadoOrdenamiento.direccion}`);
+}
+// Función para actualizar indicadores visuales
+function actualizarIndicadoresOrdenamiento(columnaActiva) {
+    $('.sortable').removeClass('active asc desc');
+    $('.sortable .sort-icon').removeClass('text-primary').addClass('opacity-50');
+
+    const $columnaActiva = $(`.sortable[data-column="${columnaActiva}"]`);
+    $columnaActiva.addClass('active');
+    $columnaActiva.addClass(estadoOrdenamiento.direccion);
+
+    const $icono = $columnaActiva.find('.sort-icon');
+    $icono.removeClass('opacity-50').addClass('text-primary');
+
+    if (estadoOrdenamiento.direccion === 'asc') {
+        $icono.removeClass('bi-arrow-down-up bi-arrow-down').addClass('bi-arrow-up');
+    } else {
+        $icono.removeClass('bi-arrow-down-up bi-arrow-up').addClass('bi-arrow-down');
+    }
+}
+
+// Función principal de comparación
+function compararValores(filaA, filaB, columna, tipo, direccion) {
+    let valorA, valorB;
+
+    switch (columna) {
+        case 'id':
+            valorA = obtenerValorId(filaA);
+            valorB = obtenerValorId(filaB);
+            break;
+        case 'producto':
+            valorA = obtenerValorProducto(filaA);
+            valorB = obtenerValorProducto(filaB);
+            break;
+        case 'medidas':
+            valorA = obtenerValorMedidas(filaA);
+            valorB = obtenerValorMedidas(filaB);
+            break;
+        case 'marca':
+            valorA = obtenerValorMarca(filaA);
+            valorB = obtenerValorMarca(filaB);
+            break;
+        case 'costo':
+            valorA = obtenerValorCosto(filaA);
+            valorB = obtenerValorCosto(filaB);
+            break;
+        case 'utilidad':
+            valorA = obtenerValorUtilidad(filaA);
+            valorB = obtenerValorUtilidad(filaB);
+            break;
+        case 'precio':
+            valorA = obtenerValorPrecio(filaA);
+            valorB = obtenerValorPrecio(filaB);
+            break;
+        case 'stock':
+            valorA = obtenerValorStock(filaA);
+            valorB = obtenerValorStock(filaB);
+            break;
+        case 'stockmin':
+            valorA = obtenerValorStockMin(filaA);
+            valorB = obtenerValorStockMin(filaB);
+            break;
+        default:
+            return 0;
+    }
+
+    let resultado = 0;
+    if (tipo === 'number' || tipo === 'currency' || tipo === 'percentage') {
+        resultado = valorA - valorB;
+    } else {
+        resultado = valorA.localeCompare(valorB);
+    }
+
+    return direccion === 'desc' ? -resultado : resultado;
+}
+
+// ✅ FUNCIONES EXTRACTORAS DE VALORES
+
+function obtenerValorId(fila) {
+    const texto = $(fila).find("td:eq(0)").text().trim();
+    return parseInt(texto) || 0;
+}
+
+function obtenerValorProducto(fila) {
+    const texto = $(fila).find("td:eq(2) strong").text().trim();
+    return texto.toLowerCase();
+}
+
+function obtenerValorMedidas(fila) {
+    const texto = $(fila).find("td:eq(3)").text().trim();
+    return (texto === "N/A" || texto === "-") ? "" : texto.toLowerCase();
+}
+
+function obtenerValorMarca(fila) {
+    const texto = $(fila).find("td:eq(4)").text().trim();
+    return (texto === "N/A" || texto === "Sin información") ? "" : texto.toLowerCase();
+}
+
+function obtenerValorCosto(fila) {
+    const texto = $(fila).find("td:eq(5)").text().trim();
+    const numero = texto.replace(/[₡,\s-]/g, '');
+    return parseFloat(numero) || 0;
+}
+
+function obtenerValorUtilidad(fila) {
+    const badge = $(fila).find("td:eq(6) .badge").text().trim();
+    if (badge && badge !== "-") {
+        const numero = badge.replace('%', '');
+        return parseFloat(numero) || 0;
+    }
+    return 0;
+}
+
+function obtenerValorPrecio(fila) {
+    const textoCompleto = $(fila).find("td:eq(7)").text().trim();
+    const match = textoCompleto.match(/₡([\d,]+)/);
+    if (match) {
+        const numero = match[1].replace(/,/g, '');
+        return parseFloat(numero) || 0;
+    }
+    return 0;
+}
+
+function obtenerValorStock(fila) {
+    const texto = $(fila).find("td:eq(8)").text().trim();
+    const numero = texto.split(' ')[0].replace(/[^\d]/g, '');
+    return parseInt(numero) || 0;
+}
+
+function obtenerValorStockMin(fila) {
+    const texto = $(fila).find("td:eq(9)").text().trim();
+    return parseInt(texto) || 0;
+}
+
+// Función para actualizar contadores
+function actualizarContadores() {
+    const filasVisibles = $("tbody tr:visible").length;
+    const filasStockBajo = $("tbody tr.table-danger:visible").length;
+
+    $("#contadorProductos").text(filasVisibles);
+    $("#contadorStockBajo").text(filasStockBajo);
+}
+
+// ✅ DOCUMENT READY - CONFIGURACIÓN E INICIALIZACIÓN
+$(document).ready(function () {
+    console.log('🚀 Inventario - Inicializando sistema completo');
+
+    // Limpiar eventos previos
     $(document).off('click', '.producto-img-mini');
     $(document).off('click', '.producto-img-link');
     $(document).off('click', '.producto-img-mini img');
     $(document).off('click', '.ver-detalles-btn');
+    $(document).off('click', '.sortable');
 
-    // ✅ NUEVO COMPORTAMIENTO 1: IMAGEN MINIATURA -> ABRE MODAL
+    // Evento para ordenamiento por columnas
+    $(document).on('click', '.sortable', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const columna = $(this).data('column');
+        const tipo = $(this).data('type');
+
+        console.log(`🖱️ Click detectado en columna: ${columna}, tipo: ${tipo}`);
+
+        if (columna && tipo) {
+            ordenarPorColumna(columna, tipo);
+        } else {
+            console.error('❌ Faltan datos en el encabezado:', {
+                columna: columna,
+                tipo: tipo,
+                elemento: this
+            });
+        }
+    });
+
+    // Mejorar cursor para indicar clickeable
+    $('.sortable').css('cursor', 'pointer');
+
+    // Evento para imagen miniatura -> modal
     $(document).on('click', 'td:has(.producto-img-container)', function (e) {
-        // Solo actuar si no se hizo click en un botón u otro elemento interactivo
-        if ($(e.target).closest('button, .btn').length === 0) {
+        if ($(e.target).closest('button, .btn, .sortable').length === 0) {
             e.preventDefault();
             e.stopPropagation();
 
@@ -266,7 +761,7 @@ $(document).ready(function () {
         }
     });
 
-    // ✅ NUEVO COMPORTAMIENTO 2: BOTÓN OJO -> NAVEGA A PÁGINA DE DETALLES
+    // Evento para botón ojo -> página de detalles
     $(document).on('click', '.ver-detalles-btn', function (e) {
         e.preventDefault();
         e.stopPropagation();
@@ -282,13 +777,13 @@ $(document).ready(function () {
         }
     });
 
-    // ✅ INICIALIZAR TOOLTIPS
+    // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl)
     });
 
-    // ✅ EVENTOS DE AJUSTE DE STOCK
+    // Eventos de ajuste de stock
     $(".ajuste-stock-btn").click(function () {
         const productoId = $(this).data("id");
         $("#productoId").val(productoId);
@@ -302,7 +797,6 @@ $(document).ready(function () {
         }, 500);
     });
 
-    // ✅ EVENTO PARA EL NUEVO BOTÓN DE AJUSTAR STOCK EN VISTA RÁPIDA
     $("#btnAjustarStockVistaRapida").click(function () {
         const productoId = $(this).data("id");
         $("#productoId").val(productoId);
@@ -312,7 +806,7 @@ $(document).ready(function () {
         }, 500);
     });
 
-    // ✅ EVENTOS PARA COMPARTIR DESDE EL MODAL
+    // Eventos para compartir desde el modal
     $("#btnCompartirWhatsApp").click(function (e) {
         e.preventDefault();
         compartirPorWhatsApp();
@@ -323,7 +817,7 @@ $(document).ready(function () {
         compartirPorEmail();
     });
 
-    // ✅ GUARDAR AJUSTE DE STOCK
+    // Guardar ajuste de stock
     $("#guardarAjusteBtn").click(function () {
         if (!validarFormularioAjuste()) {
             return;
@@ -357,7 +851,7 @@ $(document).ready(function () {
         });
     });
 
-    // ✅ FUNCIONES DE COMPARTIR
+    // Funciones de compartir
     function compartirPorWhatsApp() {
         try {
             const nombre = $("#nombreProductoVistaRapida").text();
@@ -365,18 +859,11 @@ $(document).ready(function () {
             const stock = $("#stockProductoVistaRapida").text();
             const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
 
-            // Construir URL del producto
             const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
-
-            // Mensaje para WhatsApp
             const mensaje = `🛞 *${nombre}*\n\n💰 Precio: ${precio}\n📦 Stock disponible: ${stock} unidades\n\n🔗 Ver más detalles:\n${urlProducto}`;
-
-            // URL de WhatsApp
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
 
-            // Abrir WhatsApp
             window.open(whatsappUrl, '_blank');
-
             console.log('✅ Compartido por WhatsApp');
         } catch (error) {
             console.error('❌ Error al compartir por WhatsApp:', error);
@@ -392,10 +879,7 @@ $(document).ready(function () {
             const descripcion = $("#descripcionVistaRapida").text();
             const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
 
-            // Construir URL del producto
             const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
-
-            // Asunto y cuerpo del email
             const asunto = `Producto: ${nombre}`;
             const cuerpo = `Hola,
 
@@ -412,12 +896,8 @@ ${urlProducto}
 
 Saludos.`;
 
-            // URL de mailto
             const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
-
-            // Abrir cliente de email
             window.location.href = emailUrl;
-
             console.log('✅ Compartido por Email');
         } catch (error) {
             console.error('❌ Error al compartir por Email:', error);
@@ -425,7 +905,7 @@ Saludos.`;
         }
     }
 
-    // ✅ FUNCIONES DE VALIDACIÓN
+    // Función de validación
     function validarFormularioAjuste() {
         let esValido = true;
 
@@ -446,13 +926,15 @@ Saludos.`;
         return esValido;
     }
 
-    // ✅ FILTROS Y BÚSQUEDA
+    // Filtros integrados con paginación
     $("#searchText").on("keyup", function () {
         const valor = $(this).val().toLowerCase();
         $("tbody tr").filter(function () {
             $(this).toggle($(this).text().toLowerCase().indexOf(valor) > -1);
         });
-        actualizarContadores();
+
+        actualizarFilasVisibles();
+        renderizarPagina(1);
     });
 
     $("#filterStock").on("change", function () {
@@ -479,7 +961,8 @@ Saludos.`;
             }).show();
         }
 
-        actualizarContadores();
+        actualizarFilasVisibles();
+        renderizarPagina(1);
     });
 
     $("#filterCategory").on("change", function () {
@@ -495,10 +978,11 @@ Saludos.`;
             $("tbody tr").not(":contains('Llanta')").show();
         }
 
-        actualizarContadores();
+        actualizarFilasVisibles();
+        renderizarPagina(1);
     });
 
-    // ✅ ORDENAMIENTO
+    // Ordenamiento original por select (mantener compatibilidad)
     $("#sortBy").on("change", function () {
         const valor = $(this).val();
         const tabla = $("table");
@@ -531,21 +1015,19 @@ Saludos.`;
         $.each(filas, function (indice, fila) {
             tabla.find("tbody").append(fila);
         });
+
+        // Actualizar paginación después del ordenamiento
+        actualizarFilasVisibles();
+        renderizarPagina(paginacionConfig.paginaActual);
     });
 
-    // ✅ FUNCIÓN PARA ACTUALIZAR CONTADORES
-    function actualizarContadores() {
-        const filasVisibles = $("tbody tr:visible").length;
-        const filasStockBajo = $("tbody tr.table-danger:visible").length;
-
-        $("#contadorProductos").text(filasVisibles);
-        $("#contadorStockBajo").text(filasStockBajo);
-    }
-
-    // ✅ LIMPIAR MODAL AL CERRAR
+    // Limpiar modal al cerrar
     $("#detallesProductoModal").on("hidden.bs.modal", function () {
         resetFormularioDetalles();
     });
 
-    console.log('✅ Inventario - Configuración completada con nuevos comportamientos');
+    // ✅ INICIALIZAR PAGINACIÓN AL FINAL
+    inicializarPaginacion();
+
+    console.log('✅ Inventario - Sistema completo inicializado correctamente');
 });
