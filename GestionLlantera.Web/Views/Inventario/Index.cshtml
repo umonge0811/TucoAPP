@@ -5,6 +5,9 @@
 
     <link rel="stylesheet" href="~/css/views/inventario/exportar.css">
     <link rel="stylesheet" href="~/css/views/inventario/imagenes/imagenesModal.css">
+    <link rel="stylesheet" href="~/css/views/inventario/filtrosAvanzados.css">
+
+    <!-- ✅ NUEVA LÍNEA -->
 }
 <div class="container-fluid">
     <div class="page-header d-flex justify-content-between align-items-center mb-4">
@@ -25,57 +28,198 @@
         </div>
     </div>
 
+    <!-- ✅ FILTROS AVANZADOS MEJORADOS -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="dashboard-card">
                 <div class="card-header">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-search me-2"></i>
-                        <h3 class="mb-0">Filtros y Búsqueda</h3>
+                    <div class="filtros-header">
+                        <div class="filtros-titulo">
+                            <i class="bi bi-funnel me-2"></i>
+                            <h3 class="mb-0">Filtros Avanzados</h3>
+                            <span class="badge bg-primary ms-2" id="contadorFiltrosActivos" style="display: none;">0 activos</span>
+                        </div>
+                        <div class="filtros-controles">
+                            <button type="button" class="btn btn-outline-danger btn-sm" id="btnLimpiarFiltros">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar Filtros
+                            </button>
+                            <button type="button" class="btn-colapsar-filtros" data-bs-toggle="collapse" data-bs-target="#filtrosAvanzados" aria-expanded="true">
+                                <i class="bi bi-chevron-up" id="iconoColapsarFiltros"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="searchText" class="form-label">Buscar por nombre o descripción</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" id="searchText" class="form-control" placeholder="Buscar...">
+                <div class="card-body collapse show" id="filtrosAvanzados">
+                    <!-- Fila 1: Búsqueda y filtros básicos -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-lg-4">
+                            <label for="searchText" class="form-label">
+                                <i class="bi bi-search me-1"></i>Buscar productos
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="searchText" class="form-control" placeholder="Nombre, descripción, ID...">
+                                <button class="btn btn-outline-secondary" type="button" id="btnLimpiarBusqueda">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="filterCategory" class="form-label">
+                                <i class="bi bi-tags me-1"></i>Categoría
+                            </label>
+                            <select id="filterCategory" class="form-select">
+                                <option value="">Todas las categorías</option>
+                                <option value="llantas">🛞 Llantas</option>
+                                <option value="accesorios">🔧 Accesorios</option>
+                                <option value="herramientas">🛠️ Herramientas</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="filterStock" class="form-label">
+                                <i class="bi bi-box-seam me-1"></i>Nivel de Stock
+                            </label>
+                            <select id="filterStock" class="form-select">
+                                <option value="">Todos los niveles</option>
+                                <option value="low">📉 Stock Bajo</option>
+                                <option value="normal">📊 Stock Normal</option>
+                                <option value="high">📈 Stock Alto</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="sortBy" class="form-label">
+                                <i class="bi bi-sort-down me-1"></i>Ordenar por
+                            </label>
+                            <select id="sortBy" class="form-select">
+                                <option value="name">Nombre A-Z</option>
+                                <option value="price_asc">Precio ↑</option>
+                                <option value="price_desc">Precio ↓</option>
+                                <option value="stock">Stock ↑</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fila 2: Filtros avanzados -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-lg-3">
+                            <label for="filterMarca" class="form-label">
+                                <i class="bi bi-award me-1"></i>Marca/Modelo
+                            </label>
+                            <div class="position-relative">
+                                <input type="text" id="filterMarca" class="form-control" placeholder="Buscar marca o modelo..." list="listaMarcas">
+                                <datalist id="listaMarcas">
+                                    <!-- Se llenará dinámicamente -->
+                                </datalist>
+                                <button class="btn btn-outline-secondary btn-sm position-absolute top-50 end-0 translate-middle-y me-1" type="button" id="btnLimpiarMarca" style="display: none;">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <label class="form-label">
+                                <i class="bi bi-currency-dollar me-1"></i>Rango de Precio
+                            </label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₡</span>
+                                        <input type="number" id="precioMin" class="form-control" placeholder="Mínimo" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">₡</span>
+                                        <input type="number" id="precioMax" class="form-control" placeholder="Máximo" min="0">
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="filterStock" class="form-label">Filtrar por stock</label>
-                                <select id="filterStock" class="form-select">
-                                    <option value="">Todos</option>
-                                    <option value="low">Stock Bajo</option>
-                                    <option value="normal">Stock Normal</option>
-                                    <option value="high">Stock Alto</option>
-                                </select>
+                        <div class="col-lg-3">
+                            <label class="form-label">
+                                <i class="bi bi-box me-1"></i>Rango de Stock
+                            </label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" id="stockMin" class="form-control form-control-sm" placeholder="Mín" min="0">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" id="stockMax" class="form-control form-control-sm" placeholder="Máx" min="0">
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="filterCategory" class="form-label">Categoría</label>
-                                <select id="filterCategory" class="form-select">
-                                    <option value="">Todas</option>
-                                    <option value="llantas">Llantas</option>
-                                    <option value="accesorios">Accesorios</option>
-                                    <option value="herramientas">Herramientas</option>
-                                </select>
+                        <div class="col-lg-2">
+                            <label class="form-label">
+                                <i class="bi bi-percent me-1"></i>Utilidad %
+                            </label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" id="utilidadMin" class="form-control form-control-sm" placeholder="Mín %" min="0" max="100">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" id="utilidadMax" class="form-control form-control-sm" placeholder="Máx %" min="0" max="100">
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label for="sortBy" class="form-label">Ordenar por</label>
-                                <select id="sortBy" class="form-select">
-                                    <option value="name">Nombre</option>
-                                    <option value="price_asc">Precio (menor a mayor)</option>
-                                    <option value="price_desc">Precio (mayor a menor)</option>
-                                    <option value="stock">Stock disponible</option>
-                                </select>
+                    </div>
+
+                    <!-- Fila 3: Filtros específicos para llantas -->
+                    <div class="row g-3" id="filtrosLlantas">
+                        <div class="col-12">
+                            <hr class="my-2">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-car-front me-1"></i>Filtros Específicos para Llantas
+                            </h6>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterAncho" class="form-label">Ancho</label>
+                            <select id="filterAncho" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                                <!-- Se llenará dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterPerfil" class="form-label">Perfil</label>
+                            <select id="filterPerfil" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                                <!-- Se llenará dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterDiametro" class="form-label">Diámetro</label>
+                            <select id="filterDiametro" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                                <!-- Se llenará dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="filterTipoTerreno" class="form-label">Tipo de Terreno</label>
+                            <select id="filterTipoTerreno" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                                <option value="carretera">Carretera</option>
+                                <option value="mixto">Mixto</option>
+                                <option value="todoterreno">Todo Terreno</option>
+                                <option value="barro">Barro y Nieve</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-3">
+                            <label for="filterVelocidad" class="form-label">Índice de Velocidad</label>
+                            <select id="filterVelocidad" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                                <option value="H">H (210 km/h)</option>
+                                <option value="V">V (240 km/h)</option>
+                                <option value="W">W (270 km/h)</option>
+                                <option value="Y">Y (300 km/h)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Indicadores de filtros activos -->
+                    <div class="row mt-3" id="indicadoresFiltros" style="display: none;">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <small class="text-muted">Filtros activos:</small>
+                                <div id="tagsFilttrosActivos" class="d-flex gap-1 flex-wrap">
+                                    <!-- Los tags se generarán dinámicamente -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -711,5 +855,6 @@
 
 @section Scripts {
      <script src="~/js/views/inventario/inventario.js"></script>
-    <script src="~/js/views/inventario/exportarInventario.js"></script> 
+    <script src="~/js/views/inventario/exportarInventario.js"></script>
+    <script src="~/js/views/inventario/filtrosAvanzados.js"></script>
 }

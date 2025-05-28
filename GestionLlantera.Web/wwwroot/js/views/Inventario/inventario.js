@@ -70,44 +70,6 @@ function actualizarFilasVisibles() {
     console.log(`📊 Productos que cumplen filtros: ${paginacionConfig.totalProductos}, Páginas: ${paginacionConfig.totalPaginas}`);
 }
 
-// Función auxiliar para verificar si una fila cumple con los filtros actuales
-function verificarSiCumpleFiltros($fila) {
-    // Verificar filtro de búsqueda de texto
-    const textoBusqueda = $("#searchText").val().toLowerCase();
-    if (textoBusqueda && $fila.text().toLowerCase().indexOf(textoBusqueda) === -1) {
-        return false;
-    }
-
-    // Verificar filtro de stock
-    const filtroStock = $("#filterStock").val();
-    if (filtroStock) {
-        const stock = parseInt($fila.find("td:eq(8)").text().trim());
-        const minStock = parseInt($fila.find("td:eq(9)").text().trim());
-        const esStockBajo = $fila.hasClass("table-danger");
-
-        if (filtroStock === "low" && !esStockBajo) {
-            return false;
-        } else if (filtroStock === "normal" && (esStockBajo || stock >= minStock * 2)) {
-            return false;
-        } else if (filtroStock === "high" && stock < minStock * 2) {
-            return false;
-        }
-    }
-
-    // Verificar filtro de categoría
-    const filtroCategoria = $("#filterCategory").val();
-    if (filtroCategoria) {
-        const tieneTextoLlanta = $fila.text().indexOf('Llanta') !== -1;
-
-        if (filtroCategoria === "llantas" && !tieneTextoLlanta) {
-            return false;
-        } else if (filtroCategoria !== "llantas" && filtroCategoria !== "" && tieneTextoLlanta) {
-            return false;
-        }
-    }
-
-    return true; // Cumple todos los filtros
-}
 // Función para configurar todos los eventos de paginación
 function configurarEventosPaginacion() {
     // Cambio en productos por página
@@ -564,6 +526,12 @@ function ordenarPorColumna(columna, tipo) {
 
     // ✅ CORRIGIENDO: Actualizar paginación sin afectar el conteo total
     actualizarFilasVisibles();
+
+    // REEMPLAZAR CON:
+    if (typeof actualizarFilasVisibles === 'function') {
+        actualizarFilasVisibles();
+    }
+
     renderizarPagina(paginacionConfig.paginaActual);
 
     console.log(`✅ Ordenamiento completado: ${columna} ${estadoOrdenamiento.direccion}`);
@@ -926,61 +894,10 @@ Saludos.`;
         return esValido;
     }
 
-    // Filtros integrados con paginación
-    $("#searchText").on("keyup", function () {
-        const valor = $(this).val().toLowerCase();
-        $("tbody tr").filter(function () {
-            $(this).toggle($(this).text().toLowerCase().indexOf(valor) > -1);
-        });
+    
 
-        actualizarFilasVisibles();
-        renderizarPagina(1);
-    });
+   
 
-    $("#filterStock").on("change", function () {
-        const valor = $(this).val();
-
-        if (valor === "") {
-            $("tbody tr").show();
-        } else if (valor === "low") {
-            $("tbody tr").hide();
-            $("tbody tr.table-danger").show();
-        } else if (valor === "normal") {
-            $("tbody tr").hide();
-            $("tbody tr").not(".table-danger").filter(function () {
-                const stock = parseInt($(this).find("td:eq(8)").text().trim());
-                const minStock = parseInt($(this).find("td:eq(9)").text().trim());
-                return stock > minStock && stock < minStock * 2;
-            }).show();
-        } else if (valor === "high") {
-            $("tbody tr").hide();
-            $("tbody tr").filter(function () {
-                const stock = parseInt($(this).find("td:eq(8)").text().trim());
-                const minStock = parseInt($(this).find("td:eq(9)").text().trim());
-                return stock >= minStock * 2;
-            }).show();
-        }
-
-        actualizarFilasVisibles();
-        renderizarPagina(1);
-    });
-
-    $("#filterCategory").on("change", function () {
-        const valor = $(this).val();
-
-        if (valor === "") {
-            $("tbody tr").show();
-        } else if (valor === "llantas") {
-            $("tbody tr").hide();
-            $("tbody tr:contains('Llanta')").show();
-        } else {
-            $("tbody tr").hide();
-            $("tbody tr").not(":contains('Llanta')").show();
-        }
-
-        actualizarFilasVisibles();
-        renderizarPagina(1);
-    });
 
     // Ordenamiento original por select (mantener compatibilidad)
     $("#sortBy").on("change", function () {
