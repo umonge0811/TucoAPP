@@ -34,6 +34,8 @@ namespace GestionLlantera.Web.Controllers
             _usuariosService = usuariosService;
         }
 
+
+
         // GET: /Inventario
         public async Task<IActionResult> Index()
         {

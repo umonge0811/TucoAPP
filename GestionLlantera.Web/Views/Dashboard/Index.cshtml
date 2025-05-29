@@ -1,4 +1,5 @@
-﻿@{
+﻿
+@{
     ViewData["Title"] = "Dashboard";
     Layout = "_AdminLayout";
 }
@@ -18,9 +19,28 @@
                         <div class="stat-comparison">
                             <span>₡850,000 este mes</span>
                         </div>
+                      
                     </div>
+                    
                 </div>
+                
             </div>
+
+            @* <div class="alert alert-info mb-3">
+                <h5>🔍 Debug Info del Usuario:</h5>
+                <p><strong>Autenticado:</strong> @User.Identity.IsAuthenticated</p>
+                <p><strong>Nombre:</strong> @(User.Identity.Name ?? "Sin nombre")</p>
+                <p><strong>Roles:</strong> @string.Join(", ", User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value))</p>
+                <p><strong>Claims totales:</strong> @User.Claims.Count()</p>
+            </div>
+
+            <div asp-solo-admin="true">
+                <div class="alert alert-danger">
+                    <p>🔒 Solo los administradores ven esto</p>
+                </div>
+            </div> *@
+
+
             <div class="col-12 col-sm-6 col-xl-3">
                 <div class="stat-card inventory">
                     <div class="stat-icon">

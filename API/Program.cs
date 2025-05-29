@@ -7,23 +7,30 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Tuco.Clases.Models.Emails;
+using API.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configurar servicios de email
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<EmailService>();
+
 // Configurar servicios de notificaciones
 builder.Services.AddScoped<INotificacionService, NotificacionService>();
+
+// ? SERVICIOS DE PERMISOS
+builder.Services.AddScoped<IPermisosService, PermisosService>();
+builder.Services.AddMemoryCache(); // Para el caché de permisos
+
+// ? HANDLER DE AUTORIZACIÓN DINÁMICO
+builder.Services.AddScoped<IAuthorizationHandler, PermisoAuthorizationHandler>();
+
 builder.Services.AddHttpClient();
 
-
-
-// Configurar límites de tamaño para subida de archivos (opcional)
+// Configurar límites de tamaño para subida de archivos
 builder.Services.Configure<FormOptions>(options =>
 {
-    // Aumentar el límite a 50MB (ajusta según tus necesidades)
-    // Aumentar el límite a 20MB
     options.MultipartBodyLengthLimit = 20 * 1024 * 1024;
 });
 
@@ -37,11 +44,10 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
-
     options.AddPolicy("AllowWeb", policyBuilder =>
     {
         policyBuilder
-            .WithOrigins("https://localhost:7038") // URL de la aplicación web
+            .WithOrigins("https://localhost:7038")
             .AllowAnyMethod()
             .AllowAnyHeader();
     });
@@ -87,11 +93,37 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// Configurar autorización
+// ? CONFIGURACIÓN DE AUTORIZACIÓN DINÁMICA
 builder.Services.AddAuthorization(options =>
 {
+    // ? POLICIES BÁSICAS
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Administrador"));
+
     options.AddPolicy("AdminPolicy", policy =>
-        policy.RequireRole("Admin"));
+        policy.RequireRole("Admin")); // Mantener por compatibilidad
+
+    // ? POLICIES DINÁMICAS PARA INVENTARIO
+    options.AgregarPolicyPermiso("PuedeVerCostos", "VerCostos");
+    options.AgregarPolicyPermiso("PuedeVerUtilidades", "VerUtilidades");
+    options.AgregarPolicyPermiso("PuedeProgramarInventario", "ProgramarInventario");
+    options.AgregarPolicyPermiso("PuedeEditarProductos", "EditarProductos");
+    options.AgregarPolicyPermiso("PuedeEliminarProductos", "EliminarProductos");
+    options.AgregarPolicyPermiso("PuedeAjustarStock", "AjustarStock");
+
+    // ? POLICIES DINÁMICAS GENERALES
+    options.AgregarPolicyPermiso("PuedeVerReportes", "VerReportes");
+    options.AgregarPolicyPermiso("PuedeGestionarUsuarios", "GestionUsuarios");
+    options.AgregarPolicyPermiso("PuedeConfigurarSistema", "ConfiguracionSistema");
+
+    // ? POLICIES DINÁMICAS PARA VENTAS (preparado para futuro)
+    options.AgregarPolicyPermiso("PuedeCrearVentas", "CrearVentas");
+    options.AgregarPolicyPermiso("PuedeVerVentas", "VerVentas");
+    options.AgregarPolicyPermiso("PuedeAnularVentas", "AnularVentas");
+
+    // ? POLICIES DINÁMICAS PARA CLIENTES (preparado para futuro)
+    options.AgregarPolicyPermiso("PuedeGestionarClientes", "GestionClientes");
+    options.AgregarPolicyPermiso("PuedeVerClientes", "VerClientes");
 });
 
 // Construir la aplicación
@@ -106,12 +138,11 @@ if (app.Environment.IsDevelopment())
 
 // Configurar middleware en el orden correcto
 app.UseHttpsRedirection();
-app.UseStaticFiles(); // Ahora está en la posición correcta
-app.UseRouting(); // Agrega esta línea después de UseStaticFiles
+app.UseStaticFiles();
+app.UseRouting();
 
 // Usar la política de CORS
-app.UseCors("AllowAll"); // Usa la política definida correctamente
-
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 

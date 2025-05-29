@@ -15,6 +15,7 @@ namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+
     public class InventarioController : ControllerBase
     {
         private readonly TucoContext _context;

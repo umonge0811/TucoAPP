@@ -20,5 +20,7 @@ namespace GestionLlantera.Web.Controllers
             ViewData["Layout"] = "_AdminLayout";
             return View();
         }
+
+
     }
 }
