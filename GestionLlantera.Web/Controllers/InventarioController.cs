@@ -44,7 +44,20 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
-                var productos = await _inventarioService.ObtenerProductosAsync();
+                // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
+                var token = ObtenerTokenJWT();
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // 📤 PASAR EL TOKEN AL SERVICIO
+                var productos = await _inventarioService.ObtenerProductosAsync(token);
+
+                _logger.LogInformation("✅ Se obtuvieron {Cantidad} productos para mostrar", productos.Count);
+
                 return View(productos);
             }
             catch (Exception ex)
@@ -53,6 +66,28 @@ namespace GestionLlantera.Web.Controllers
                 TempData["Error"] = "Error al cargar los productos.";
                 return View(new List<ProductoDTO>());
             }
+        }
+
+        /// <summary>
+        /// Método auxiliar para obtener el token JWT del usuario autenticado
+        /// </summary>
+        /// <returns>El token JWT o null si no se encuentra</returns>
+        private string? ObtenerTokenJWT()
+        {
+            var token = User.FindFirst("JwtToken")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+            }
+            else
+            {
+                _logger.LogDebug("✅ Token JWT obtenido correctamente para usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+            }
+
+            return token;
         }
 
         // GET: /Inventario/DetalleProducto/5
@@ -325,6 +360,15 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("Iniciando exportación a PDF para toma física de inventario");
 
+                // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
+                var token = ObtenerTokenJWT();
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
                 // Parámetros por defecto si no se proporcionan
                 responsable = string.IsNullOrEmpty(responsable) ? User.Identity.Name ?? "No especificado" : responsable;
                 solicitante = string.IsNullOrEmpty(solicitante) ? "Administrador del Sistema" : solicitante;
@@ -336,8 +380,8 @@ namespace GestionLlantera.Web.Controllers
                     fechaLimiteInventario = DateTime.Now.AddDays(7);
                 }
 
-                // Obtener los datos de productos
-                var productos = await _inventarioService.ObtenerProductosAsync();
+                // 📤 OBTENER LOS DATOS DE PRODUCTOS CON TOKEN
+                var productos = await _inventarioService.ObtenerProductosAsync(token);
 
                 // Identificador único para el inventario
                 string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
@@ -809,6 +853,14 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("Iniciando exportación a Excel para toma física de inventario");
 
+                // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
                 // Parámetros por defecto si no se proporcionan
                 responsable = string.IsNullOrEmpty(responsable) ? User.Identity.Name ?? "No especificado" : responsable;
                 solicitante = string.IsNullOrEmpty(solicitante) ? "Administrador del Sistema" : solicitante;
@@ -820,8 +872,10 @@ namespace GestionLlantera.Web.Controllers
                     fechaLimiteInventario = DateTime.Now.AddDays(7);
                 }
 
-                // Obtener los datos de productos
-                var productos = await _inventarioService.ObtenerProductosAsync();
+
+                // 📤 OBTENER LOS DATOS DE PRODUCTOS CON TOKEN
+                var productos = await _inventarioService.ObtenerProductosAsync(token);
+
 
                 // Configurar licencia de EPPlus
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;

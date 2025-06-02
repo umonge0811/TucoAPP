@@ -7,7 +7,7 @@ namespace GestionLlantera.Web.Services.Interfaces
 {
     public interface IInventarioService
     {
-        Task<List<ProductoDTO>> ObtenerProductosAsync();
+        Task<List<ProductoDTO>> ObtenerProductosAsync(string jwtToken);
         Task<ProductoDTO> ObtenerProductoPorIdAsync(int id);
         Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes);
         Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes);

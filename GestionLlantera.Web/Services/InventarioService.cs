@@ -22,18 +22,31 @@ namespace GestionLlantera.Web.Services
         // En InventarioService.cs
         // REEMPLAZA COMPLETAMENTE el método ObtenerProductosAsync() en InventarioService.cs:
 
-        public async Task<List<ProductoDTO>> ObtenerProductosAsync()
+        public async Task<List<ProductoDTO>> ObtenerProductosAsync(string jwtToken)
         {
             try
             {
-                _logger.LogInformation("Iniciando solicitud para obtener productos");
+                _logger.LogInformation("🚀 Iniciando solicitud para obtener productos con autenticación");
+
+                // 🔑 CONFIGURAR EL TOKEN EN EL HEADER DE AUTORIZACIÓN
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+
+                _logger.LogInformation("🔐 Token JWT configurado en headers de autorización");
 
                 var response = await _httpClient.GetAsync("api/Inventario/productos");
-
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"Error obteniendo productos: {response.StatusCode} - {errorContent}");
+                    _logger.LogError($"❌ Error obteniendo productos: {response.StatusCode} - {errorContent}");
+
+                    // 🔍 LOG ADICIONAL PARA DEBUGGING
+                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        _logger.LogWarning("🚫 Error 401: Token JWT inválido o expirado");
+                    }
+
                     return new List<ProductoDTO>();
                 }
 

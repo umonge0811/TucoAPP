@@ -43,7 +43,7 @@ namespace API.Controllers
 
         // GET: api/Inventario/productos
         [HttpGet("productos")]
-        [Authorize] // Solo requiere autenticación
+        [Authorize]
         public async Task<ActionResult<IEnumerable<object>>> ObtenerProductos()
         {
             try
