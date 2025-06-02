@@ -1,4 +1,6 @@
 ﻿using API.Data;
+using API.Extensions; // ✅ AGREGAR ESTA LÍNEA
+using API.Services;
 using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
@@ -10,7 +12,6 @@ using System.Net;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
-
 namespace API.Controllers
 {
     [ApiController]
@@ -22,26 +23,38 @@ namespace API.Controllers
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<InventarioController> _logger;
         private readonly INotificacionService _notificacionService; // ← Agregar esta línea
+        private readonly IPermisosService _permisosService; // ← Agregar este parámetro para permisos
+
 
 
         public InventarioController(
-            TucoContext context,
-            IWebHostEnvironment webHostEnvironment,
-            ILogger<InventarioController> logger,
-            INotificacionService notificacionService) // ← Agregar este parámetro
+        TucoContext context,
+        IWebHostEnvironment webHostEnvironment,
+        ILogger<InventarioController> logger,
+        INotificacionService notificacionService,
+        IPermisosService permisosService) // ✅ AGREGAR ESTE PARÁMETRO
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
-            _notificacionService = notificacionService; // ← Agregar esta línea
+            _notificacionService = notificacionService;
+            _permisosService = permisosService; // ✅ AGREGAR ESTA ASIGNACIÓN
         }
 
         // GET: api/Inventario/productos
         [HttpGet("productos")]
+        [Authorize] // Solo requiere autenticación
         public async Task<ActionResult<IEnumerable<object>>> ObtenerProductos()
         {
             try
             {
+                // ✅ VERIFICACIÓN DINÁMICA DE PERMISOS
+                var puedeVerCostos = await this.TienePermisoAsync(_permisosService, "VerCostos");
+                var puedeVerUtilidades = await this.TienePermisoAsync(_permisosService, "VerUtilidades");
+
+                _logger.LogInformation("🔍 Usuario {Usuario} - VerCostos: {VerCostos}, VerUtilidades: {VerUtilidades}",
+                    User.Identity?.Name ?? "Anónimo", puedeVerCostos, puedeVerUtilidades);
+
                 var productos = await _context.Productos
                     .Include(p => p.ImagenesProductos)
                     .Include(p => p.Llanta)
@@ -50,26 +63,36 @@ namespace API.Controllers
                         p.ProductoId,
                         p.NombreProducto,
                         p.Descripcion,
-                        // ✅ NUEVO: Incluir costo y utilidad
-                        p.Costo,
-                        p.PorcentajeUtilidad,
-                        p.Precio,
+
+                        // ✅ INFORMACIÓN SENSIBLE - SOLO SI TIENE PERMISOS (CORREGIDO)
+                        Costo = puedeVerCostos ? p.Costo : null,                         // ← CORREGIDO
+                        PorcentajeUtilidad = puedeVerUtilidades ? p.PorcentajeUtilidad : null, // ← CORREGIDO
+
+                        // ✅ CÁLCULOS SENSIBLES - SOLO SI TIENE AMBOS PERMISOS (CORREGIDO)
+                        UtilidadEnDinero = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue)
+                            ? p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m)
+                            : (decimal?)null,
+
+                        PrecioCalculado = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue)
+                            ? p.Costo.Value + (p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m))
+                            : p.Precio,
+
+                        UsarCalculoAutomatico = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue),
+
+                        // ✅ INFORMACIÓN SIEMPRE VISIBLE
+                        p.Precio, // Precio de venta siempre visible
                         p.CantidadEnInventario,
                         p.StockMinimo,
                         p.FechaUltimaActualizacion,
 
-                        // ✅ NUEVO: Propiedades calculadas
-                        UtilidadEnDinero = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue
-                            ? p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m)
-                            : (decimal?)null,
+                        // ✅ METADATOS DE PERMISOS (útil para el frontend - opcional)
+                        Permisos = new
+                        {
+                            PuedeVerCostos = puedeVerCostos,
+                            PuedeVerUtilidades = puedeVerUtilidades
+                        },
 
-                        PrecioCalculado = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue
-                            ? p.Costo.Value + (p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m))
-                            : p.Precio,
-
-                        UsarCalculoAutomatico = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue,
-
-                        // Propiedades existentes
+                        // ✅ PROPIEDADES EXISTENTES
                         ImagenesProductos = p.ImagenesProductos.Select(img => new
                         {
                             img.ImagenId,
@@ -93,21 +116,32 @@ namespace API.Controllers
                     })
                     .ToListAsync();
 
+                _logger.LogInformation("✅ Se obtuvieron {Cantidad} productos. Usuario: {Usuario}",
+                    productos.Count, User.Identity?.Name ?? "Anónimo");
+
                 return Ok(productos);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener productos");
-                return StatusCode(500, new { message = "Error al obtener productos" });
+                _logger.LogError(ex, "❌ Error al obtener productos");
+                return StatusCode(500, new
+                {
+                    message = "Error al obtener productos",
+                    timestamp = DateTime.Now
+                });
             }
         }
-
         // GET: api/Inventario/productos/{id}
         [HttpGet("productos/{id}")]
+        [Authorize] // Solo requiere autenticación
         public async Task<ActionResult<object>> ObtenerProductoPorId(int id)
         {
             try
             {
+                // ✅ VERIFICACIÓN DINÁMICA DE PERMISOS
+                var puedeVerCostos = await this.TienePermisoAsync(_permisosService, "VerCostos");
+                var puedeVerUtilidades = await this.TienePermisoAsync(_permisosService, "VerUtilidades");
+
                 var producto = await _context.Productos
                     .Include(p => p.ImagenesProductos)
                     .Include(p => p.Llanta)
@@ -117,26 +151,32 @@ namespace API.Controllers
                         p.ProductoId,
                         p.NombreProducto,
                         p.Descripcion,
-                        // ✅ NUEVO: Incluir costo y utilidad
-                        p.Costo,
-                        p.PorcentajeUtilidad,
+
+                        // ✅ INFORMACIÓN SENSIBLE - SOLO PARA USUARIOS CON PERMISOS
+                        Costo = puedeVerCostos ? p.Costo : null,
+                        PorcentajeUtilidad = puedeVerUtilidades ? p.PorcentajeUtilidad : null,
+
+                        UtilidadEnDinero = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue)
+                            ? p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m)
+                            : (decimal?)null,
+
+                        PrecioCalculado = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue)
+                            ? p.Costo.Value + (p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m))
+                            : p.Precio,
+
+                        // ✅ INFORMACIÓN SIEMPRE VISIBLE
                         p.Precio,
                         p.CantidadEnInventario,
                         p.StockMinimo,
                         p.FechaUltimaActualizacion,
 
-                        // ✅ NUEVO: Propiedades calculadas
-                        UtilidadEnDinero = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue
-                            ? p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m)
-                            : (decimal?)null,
+                        // ✅ METADATOS DE PERMISOS
+                        Permisos = new
+                        {
+                            PuedeVerCostos = puedeVerCostos,
+                            PuedeVerUtilidades = puedeVerUtilidades
+                        },
 
-                        PrecioCalculado = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue
-                            ? p.Costo.Value + (p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m))
-                            : p.Precio,
-
-                        UsarCalculoAutomatico = p.Costo.HasValue && p.PorcentajeUtilidad.HasValue,
-
-                        // Propiedades existentes
                         ImagenesProductos = p.ImagenesProductos.Select(img => new
                         {
                             img.ImagenId,
@@ -176,15 +216,21 @@ namespace API.Controllers
 
         // POST: api/Inventario/productos
         [HttpPost("productos")]
-        public async Task<ActionResult<Producto>> CrearProducto([FromBody] ProductoDTO productoDto)
+        [Authorize] // Solo requiere autenticación
+        public async Task<IActionResult> CrearProducto([FromBody] ProductoDTO productoDto)
         {
+            // ✅ VERIFICACIÓN DINÁMICA DEL PERMISO PARA EDITAR PRODUCTOS
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "EditarProductos",
+                "Solo usuarios con permiso 'EditarProductos' pueden crear productos");
+            if (validacionPermiso != null) return validacionPermiso;
+
             try
             {
                 // Registrar los datos recibidos
-                _logger.LogInformation("Datos recibidos: {Datos}",
-                    JsonConvert.SerializeObject(productoDto, Formatting.Indented));
+                _logger.LogInformation("Usuario {Usuario} creando producto: {Nombre}",
+                    User.Identity?.Name, productoDto.NombreProducto);
 
-                // Validar el modelo
+                // ✅ EL RESTO DE TU CÓDIGO EXISTENTE SE MANTIENE IGUAL
                 if (!ModelState.IsValid)
                 {
                     var errores = ModelState
@@ -200,27 +246,22 @@ namespace API.Controllers
                     return BadRequest(new { message = "Error de validación", errores });
                 }
 
-                // Validar propiedades críticas
                 if (string.IsNullOrEmpty(productoDto.NombreProducto))
                 {
-                    _logger.LogWarning("Nombre de producto requerido");
                     return BadRequest(new { message = "El nombre del producto es requerido" });
                 }
 
                 if (productoDto.Precio <= 0)
                 {
-                    _logger.LogWarning("Precio inválido: {Precio}", productoDto.Precio);
                     return BadRequest(new { message = "El precio debe ser mayor que cero" });
                 }
 
-                // ✅ NUEVO: Validar lógica de precio/costo/utilidad
                 var precioFinal = CalcularPrecioFinal(productoDto);
                 if (precioFinal <= 0)
                 {
                     return BadRequest(new { message = "Debe especificar un precio válido o un costo con utilidad" });
                 }
 
-                // Crear producto
                 var producto = new Producto
                 {
                     NombreProducto = productoDto.NombreProducto,
@@ -233,17 +274,14 @@ namespace API.Controllers
                     FechaUltimaActualizacion = DateTime.Now
                 };
 
-                // Agregar producto a la base de datos
                 _context.Productos.Add(producto);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Producto base creado exitosamente. ID: {Id}", producto.ProductoId);
+                _logger.LogInformation("Producto creado exitosamente. ID: {Id}, Usuario: {Usuario}",
+                    producto.ProductoId, User.Identity?.Name);
 
-                // Si es una llanta, agregar la información de la llanta
                 if (productoDto.Llanta != null)
                 {
-                    _logger.LogInformation("Procesando datos de llanta para producto ID: {Id}", producto.ProductoId);
-
                     var llanta = new Llanta
                     {
                         ProductoId = producto.ProductoId,
@@ -259,28 +297,18 @@ namespace API.Controllers
 
                     _context.Llantas.Add(llanta);
                     await _context.SaveChangesAsync();
-
-                    _logger.LogInformation("Datos de llanta agregados exitosamente para producto ID: {Id}", producto.ProductoId);
                 }
 
-                // Retornar el producto creado con su ID
                 return CreatedAtAction(nameof(ObtenerProductoPorId), new { id = producto.ProductoId },
                     new { productoId = producto.ProductoId, message = "Producto creado exitosamente" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al crear producto: {Nombre}", productoDto?.NombreProducto ?? "Desconocido");
-
-                // Si hay una excepción interna, registrarla también
-                if (ex.InnerException != null)
-                {
-                    _logger.LogError("Excepción interna: {Mensaje}", ex.InnerException.Message);
-                }
-
                 return StatusCode(500, new { message = $"Error al crear producto: {ex.Message}" });
             }
         }
-
+        
         // ✅ NUEVO: Método auxiliar para calcular el precio final
         private decimal CalcularPrecioFinal(ProductoDTO dto)
         {
@@ -394,11 +422,19 @@ namespace API.Controllers
 
         // PUT: api/Inventario/productos/{id}
         [HttpPut("productos/{id}")]
+        [Authorize] // Solo requiere autenticación
         public async Task<IActionResult> ActualizarProducto(int id, [FromBody] ProductoDTO productoDto)
         {
+            // ✅ VERIFICACIÓN DINÁMICA DEL PERMISO PARA EDITAR PRODUCTOS
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "EditarProductos",
+                "Solo usuarios con permiso 'EditarProductos' pueden actualizar productos");
+            if (validacionPermiso != null) return validacionPermiso;
+
             try
             {
-                // Obtener el producto existente
+                _logger.LogInformation("Usuario {Usuario} actualizando producto ID: {Id}",
+                    User.Identity?.Name, id);
+
                 var producto = await _context.Productos
                     .Include(p => p.Llanta)
                     .FirstOrDefaultAsync(p => p.ProductoId == id);
@@ -408,7 +444,7 @@ namespace API.Controllers
                     return NotFound(new { message = "Producto no encontrado" });
                 }
 
-                // Actualizar propiedades
+                // ✅ EL RESTO DE TU CÓDIGO EXISTENTE SE MANTIENE IGUAL
                 producto.NombreProducto = productoDto.NombreProducto;
                 producto.Descripcion = productoDto.Descripcion;
                 producto.Precio = productoDto.Precio;
@@ -416,12 +452,10 @@ namespace API.Controllers
                 producto.StockMinimo = productoDto.StockMinimo;
                 producto.FechaUltimaActualizacion = DateTime.Now;
 
-                // Actualizar llanta si existe
                 if (productoDto.Llanta != null)
                 {
                     if (producto.Llanta.Any())
                     {
-                        // Actualizar llanta existente
                         var llanta = producto.Llanta.First();
                         llanta.Ancho = productoDto.Llanta.Ancho;
                         llanta.Perfil = productoDto.Llanta.Perfil;
@@ -434,7 +468,6 @@ namespace API.Controllers
                     }
                     else
                     {
-                        // Crear nueva llanta
                         var llanta = new Llanta
                         {
                             ProductoId = id,
@@ -453,12 +486,143 @@ namespace API.Controllers
 
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Producto actualizado exitosamente. ID: {Id}, Usuario: {Usuario}",
+                    id, User.Identity?.Name);
+
                 return Ok(new { message = "Producto actualizado exitosamente" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al actualizar producto ID: {Id}", id);
                 return StatusCode(500, new { message = "Error al actualizar producto" });
+            }
+        }
+
+        // POST: api/Inventario/inventarios-programados
+        [HttpPost("inventarios-programados")]
+        [Authorize] // ✅ Solo requiere autenticación
+        public async Task<IActionResult> CrearInventarioProgramado([FromBody] InventarioProgramadoDTO dto)
+        {
+            // ✅ VERIFICACIÓN DINÁMICA DEL PERMISO
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "ProgramarInventario",
+                "Solo usuarios con permiso 'ProgramarInventario' pueden crear inventarios programados");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            _logger.LogInformation("Usuario {Usuario} iniciando creación de inventario programado: {Titulo}",
+                User.Identity?.Name, dto.Titulo);
+
+            string puntoFallo = "Iniciando proceso";
+            try
+            {
+                puntoFallo = "Validando datos de entrada";
+
+                // Validar los datos
+                if (dto.FechaInicio > dto.FechaFin)
+                {
+                    return BadRequest(new { message = "La fecha de inicio no puede ser posterior a la fecha de fin" });
+                }
+
+                if (string.IsNullOrEmpty(dto.Titulo))
+                {
+                    return BadRequest(new { message = "El título es obligatorio" });
+                }
+
+                // ✅ EL RESTO DE TU CÓDIGO EXISTENTE SE MANTIENE IGUAL
+                puntoFallo = "Creando entidad InventarioProgramado";
+
+                var inventario = new InventarioProgramado
+                {
+                    Titulo = dto.Titulo,
+                    Descripcion = dto.Descripcion,
+                    FechaInicio = dto.FechaInicio,
+                    FechaFin = dto.FechaFin,
+                    TipoInventario = dto.TipoInventario,
+                    Estado = "Programado",
+                    FechaCreacion = DateTime.Now,
+                    UsuarioCreadorId = dto.UsuarioCreadorId,
+                    UbicacionEspecifica = dto.UbicacionEspecifica,
+                    IncluirStockBajo = dto.IncluirStockBajo
+                };
+
+                puntoFallo = "Agregando InventarioProgramado al contexto";
+                _context.InventariosProgramados.Add(inventario);
+
+                puntoFallo = "Guardando InventarioProgramado en base de datos";
+                await _context.SaveChangesAsync();
+
+                puntoFallo = "Procesando asignaciones de usuarios";
+
+                // Crear asignaciones de usuarios
+                if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
+                {
+                    puntoFallo = "Iterando asignaciones de usuarios";
+
+                    foreach (var asignacion in dto.AsignacionesUsuarios)
+                    {
+                        puntoFallo = $"Creando asignación para usuario ID: {asignacion.UsuarioId}";
+
+                        var nuevaAsignacion = new AsignacionUsuarioInventario
+                        {
+                            InventarioProgramadoId = inventario.InventarioProgramadoId,
+                            UsuarioId = asignacion.UsuarioId,
+                            PermisoConteo = asignacion.PermisoConteo,
+                            PermisoAjuste = asignacion.PermisoAjuste,
+                            PermisoValidacion = asignacion.PermisoValidacion,
+                            FechaAsignacion = DateTime.Now
+                        };
+
+                        puntoFallo = $"Agregando asignación de usuario {asignacion.UsuarioId} al contexto";
+                        _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);
+                    }
+
+                    puntoFallo = "Guardando asignaciones de usuarios en base de datos";
+                    await _context.SaveChangesAsync();
+
+                    // ✅ ENVIAR NOTIFICACIONES
+                    puntoFallo = "Enviando notificaciones de asignación";
+                    foreach (var asignacion in dto.AsignacionesUsuarios)
+                    {
+                        var titulo = "📋 Inventario Asignado";
+                        var mensaje = $"Te han asignado al inventario: {inventario.Titulo}";
+                        var urlAccion = $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}";
+
+                        await _notificacionService.CrearNotificacionAsync(
+                            usuarioId: asignacion.UsuarioId,
+                            titulo: titulo,
+                            mensaje: mensaje,
+                            tipo: "info",
+                            icono: "fas fa-clipboard-list",
+                            urlAccion: urlAccion,
+                            entidadTipo: "InventarioProgramado",
+                            entidadId: inventario.InventarioProgramadoId
+                        );
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
+                puntoFallo = "Proceso completado exitosamente";
+
+                _logger.LogInformation("Inventario programado creado exitosamente. ID: {Id}, Usuario: {Usuario}",
+                    inventario.InventarioProgramadoId, User.Identity?.Name);
+
+                return Ok(new
+                {
+                    message = "Inventario programado creado exitosamente",
+                    inventarioId = inventario.InventarioProgramadoId,
+                    success = true,
+                    usuario = User.Identity?.Name
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear inventario programado en: {Punto}", puntoFallo);
+                return StatusCode(500, new
+                {
+                    message = $"Error en: {puntoFallo}",
+                    errorDetallado = ex.Message,
+                    success = false
+                });
             }
         }
 
@@ -579,136 +743,6 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al obtener inventario programado" });
             }
         }
-
-        // POST: api/InventarioProgramado
-        [HttpPost("inventarios-programados")]
-        public async Task<IActionResult> CrearInventarioProgramado([FromBody] InventarioProgramadoDTO dto)
-        {
-            string puntoFallo = "Iniciando proceso";
-            try
-            {
-                puntoFallo = "Validando datos de entrada";
-
-                // Validar los datos
-                if (dto.FechaInicio > dto.FechaFin)
-                {
-                    return BadRequest(new { message = "La fecha de inicio no puede ser posterior a la fecha de fin" });
-                }
-
-                if (string.IsNullOrEmpty(dto.Titulo))
-                {
-                    return BadRequest(new { message = "El título es obligatorio" });
-                }
-
-                puntoFallo = "Creando entidad InventarioProgramado";
-
-                // Crear entidad de inventario programado
-                var inventario = new InventarioProgramado
-                {
-                    Titulo = dto.Titulo,
-                    Descripcion = dto.Descripcion,
-                    FechaInicio = dto.FechaInicio,
-                    FechaFin = dto.FechaFin,
-                    TipoInventario = dto.TipoInventario,
-                    Estado = "Programado",
-                    FechaCreacion = DateTime.Now,
-                    UsuarioCreadorId = dto.UsuarioCreadorId,
-                    UbicacionEspecifica = dto.UbicacionEspecifica,
-                    IncluirStockBajo = dto.IncluirStockBajo
-                };
-
-                puntoFallo = "Agregando InventarioProgramado al contexto";
-                _context.InventariosProgramados.Add(inventario);
-
-                puntoFallo = "Guardando InventarioProgramado en base de datos";
-                await _context.SaveChangesAsync();
-
-                puntoFallo = "Procesando asignaciones de usuarios";
-
-                //// Crear asignaciones de usuarios
-                if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
-                {
-                    puntoFallo = "Iterando asignaciones de usuarios";
-
-                    foreach (var asignacion in dto.AsignacionesUsuarios)
-                    {
-                        puntoFallo = $"Creando asignación para usuario ID: {asignacion.UsuarioId}";
-
-                        var nuevaAsignacion = new AsignacionUsuarioInventario
-                        {
-                            InventarioProgramadoId = inventario.InventarioProgramadoId,
-                            UsuarioId = asignacion.UsuarioId,
-                            PermisoConteo = asignacion.PermisoConteo,
-                            PermisoAjuste = asignacion.PermisoAjuste,
-                            PermisoValidacion = asignacion.PermisoValidacion,
-                            FechaAsignacion = DateTime.Now
-                        };
-
-                        puntoFallo = $"Agregando asignación de usuario {asignacion.UsuarioId} al contexto";
-                        _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);
-                    }
-
-                    puntoFallo = "Guardando asignaciones de usuarios en base de datos";
-                    await _context.SaveChangesAsync();
-
-                    // ✅ NUEVO: Enviar notificaciones de asignación
-                    puntoFallo = "Enviando notificaciones de asignación";
-                    foreach (var asignacion in dto.AsignacionesUsuarios)
-                    {
-                        var titulo = "📋 Inventario Asignado";
-                        var mensaje = $"Te han asignado al inventario: {inventario.Titulo}";
-                        var urlAccion = $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}";
-
-                        await _notificacionService.CrearNotificacionAsync(
-                            usuarioId: asignacion.UsuarioId,
-                            titulo: titulo,
-                            mensaje: mensaje,
-                            tipo: "info",
-                            icono: "fas fa-clipboard-list",
-                            urlAccion: urlAccion,
-                            entidadTipo: "InventarioProgramado",
-                            entidadId: inventario.InventarioProgramadoId
-                        );
-                    }
-
-                    puntoFallo = "Procesando alertas para usuarios";
-
-                    // Crear alertas para usuarios asignados
-                    foreach (var asignacion in dto.AsignacionesUsuarios)
-                    {
-
-                        puntoFallo = $"Creando alerta para usuario ID: {asignacion.UsuarioId}";
-
-                       
-                    }
-
-                    puntoFallo = "Guardando alertas en base de datos";
-                    await _context.SaveChangesAsync();
-                }
-
-                puntoFallo = "Proceso completado exitosamente";
-
-                return Ok(new
-                {
-                    message = "Inventario programado creado exitosamente",
-                    inventarioId = inventario.InventarioProgramadoId,
-                    success = true,
-                    puntoCompletado = puntoFallo
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    message = $"Error en: {puntoFallo}",
-                    errorDetallado = ex.Message,
-                    stackTrace = ex.StackTrace,
-                    innerException = ex.InnerException?.Message,
-                    success = false
-                });
-            }
-        }
-
 
         // PUT: api/InventarioProgramado/5
         [HttpPut("inventarios-programados/{id}")]

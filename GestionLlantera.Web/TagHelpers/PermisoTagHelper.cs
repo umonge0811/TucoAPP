@@ -1,116 +1,132 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
-using Microsoft.AspNetCore.Razor.TagHelpers;
+﻿using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace GestionLlantera.Web.TagHelpers
 {
     /// <summary>
-    /// Tag Helper para mostrar/ocultar contenido basado en permisos
+    /// TagHelper para el proyecto Web que verifica permisos basándose en los claims del usuario
+    /// ✅ Funciona con la información del token JWT sin necesidad de servicios externos
     /// </summary>
-    [HtmlTargetElement("*", Attributes = PermisoAttributeName)]
-    [HtmlTargetElement("*", Attributes = SoloAdministradorAttributeName)]
-    [HtmlTargetElement("inventario-elemento", Attributes = "tipo")]
+    [HtmlTargetElement("*", Attributes = "asp-permiso")]
     public class PermisoTagHelper : TagHelper
     {
-        private const string PermisoAttributeName = "asp-permiso";
-        private const string SoloAdministradorAttributeName = "asp-solo-admin";
-
-        private readonly IPermisosService _permisosService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<PermisoTagHelper> _logger;
 
-        public PermisoTagHelper(IPermisosService permisosService, ILogger<PermisoTagHelper> logger)
+        public PermisoTagHelper(IHttpContextAccessor httpContextAccessor, ILogger<PermisoTagHelper> logger)
         {
-            _permisosService = permisosService;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
         /// <summary>
-        /// Permiso requerido para mostrar el elemento
+        /// Nombre del permiso requerido - debe coincidir con los claims "Permission" del token JWT
         /// </summary>
-        [HtmlAttributeName(PermisoAttributeName)]
-        public string? Permiso { get; set; }
+        [HtmlAttributeName("asp-permiso")]
+        public string Permiso { get; set; }
 
         /// <summary>
-        /// Si es true, solo muestra el elemento para administradores
+        /// Mensaje alternativo cuando no tiene permisos
         /// </summary>
-        [HtmlAttributeName(SoloAdministradorAttributeName)]
-        public bool SoloAdministrador { get; set; } = false;
+        [HtmlAttributeName("asp-mensaje-sin-permiso")]
+        public string MensajeSinPermiso { get; set; }
 
-        /// <summary>
-        /// Tipo de elemento para inventario-elemento
-        /// </summary>
-        [HtmlAttributeName("tipo")]
-        public string Tipo { get; set; } = "";
-
-        public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
+        public override Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
+            // Si no se especifica permiso, mostrar normalmente
+            if (string.IsNullOrEmpty(Permiso))
+            {
+                return Task.CompletedTask;
+            }
+
+            var user = _httpContextAccessor.HttpContext?.User;
+            
+            // Usuario no autenticado - ocultar
+            if (user == null || !user.Identity.IsAuthenticated)
+            {
+                _logger.LogDebug("TagHelper: Usuario no autenticado - ocultando elemento con permiso {Permiso}", Permiso);
+                output.SuppressOutput();
+                return Task.CompletedTask;
+            }
+
             try
             {
-                _logger.LogInformation("🔍 TAG HELPER EJECUTÁNDOSE - SoloAdmin: {SoloAdmin}, Permiso: {Permiso}, Tipo: {Tipo}",
-                    SoloAdministrador, Permiso, Tipo);
-
-                var permisos = await _permisosService.ObtenerPermisosUsuarioActualAsync();
-
-                _logger.LogInformation("📊 PERMISOS OBTENIDOS - EsAdmin: {EsAdmin}, VerCostos: {VerCostos}, VerUtilidades: {VerUtilidades}",
-                    permisos.EsAdministrador, permisos.PuedeVerCostos, permisos.PuedeVerUtilidades);
-
-                bool tienePermiso = true;
-
-                // ✅ Para el tag inventario-elemento
-                if (output.TagName == "inventario-elemento")
-                {
-                    tienePermiso = Tipo.ToLower() switch
-                    {
-                        "costo" or "costos" => permisos.PuedeVerCostos,
-                        "utilidad" or "utilidades" => permisos.PuedeVerUtilidades,
-                        "programar" => permisos.PuedeProgramarInventario,
-                        "editar" => permisos.PuedeEditarProductos,
-                        "eliminar" => permisos.PuedeEliminarProductos,
-                        "ajustar" => permisos.PuedeAjustarStock,
-                        _ => permisos.EsAdministrador
-                    };
-
-                    _logger.LogInformation("🏷️ INVENTARIO ELEMENTO - Tipo: {Tipo}, Tiene Permiso: {TienePermiso}", Tipo, tienePermiso);
-
-                    if (tienePermiso)
-                    {
-                        output.TagName = "td";
-                        output.Attributes.RemoveAll("tipo");
-                    }
-                    else
-                    {
-                        output.SuppressOutput();
-                    }
-                    return;
-                }
-
-                // ✅ Para elementos normales con permisos
-                if (SoloAdministrador)
-                {
-                    tienePermiso = permisos.EsAdministrador;
-                    _logger.LogInformation("🔐 SOLO ADMIN - Es Administrador: {EsAdmin}, Tiene Permiso: {TienePermiso}",
-                        permisos.EsAdministrador, tienePermiso);
-                }
-                else if (!string.IsNullOrEmpty(Permiso))
-                {
-                    tienePermiso = await _permisosService.TienePermisoAsync(Permiso);
-                    _logger.LogInformation("🎯 PERMISO ESPECÍFICO - Permiso: {Permiso}, Tiene Permiso: {TienePermiso}",
-                        Permiso, tienePermiso);
-                }
+                // ✅ VERIFICAR DIRECTAMENTE EN LOS CLAIMS DEL TOKEN JWT
+                var tienePermiso = VerificarPermisoEnClaims(user, Permiso);
+                
+                _logger.LogDebug("TagHelper: Usuario {Usuario} - Permiso '{Permiso}' = {TienePermiso}", 
+                    user.Identity.Name ?? "Desconocido", Permiso, tienePermiso);
 
                 if (!tienePermiso)
                 {
-                    _logger.LogInformation("❌ OCULTANDO ELEMENTO - No tiene permiso");
-                    output.SuppressOutput();
-                }
-                else
-                {
-                    _logger.LogInformation("✅ MOSTRANDO ELEMENTO - Tiene permiso");
+                    ProcesarSinPermiso(output);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 ERROR EN TAG HELPER");
-                // ✅ En caso de error, ocultar por seguridad
+                _logger.LogError(ex, "Error verificando permiso '{Permiso}' para usuario {Usuario}", 
+                    Permiso, user.Identity?.Name ?? "Desconocido");
+                
+                // En caso de error, ocultar por seguridad
+                output.SuppressOutput();
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Verifica si el usuario tiene el permiso basándose en los claims del token JWT
+        /// </summary>
+        private bool VerificarPermisoEnClaims(ClaimsPrincipal user, string nombrePermiso)
+        {
+            // Verificar en los claims "Permission" del token JWT
+            var permisoClaims = user.Claims
+                .Where(c => c.Type == "Permission")
+                .Select(c => c.Value)
+                .ToList();
+
+            _logger.LogDebug("Permisos del usuario: {Permisos}", string.Join(", ", permisoClaims));
+
+            // Verificar si tiene el permiso específico
+            bool tienePermiso = permisoClaims.Contains(nombrePermiso);
+
+            // ✅ TAMBIÉN VERIFICAR SI ES ADMINISTRADOR (tiene todos los permisos)
+            if (!tienePermiso)
+            {
+                var roles = user.Claims
+                    .Where(c => c.Type == ClaimTypes.Role)
+                    .Select(c => c.Value)
+                    .ToList();
+
+                tienePermiso = roles.Contains("Administrador") || roles.Contains("Admin");
+                
+                if (tienePermiso)
+                {
+                    _logger.LogDebug("Usuario es Administrador - permiso concedido automáticamente");
+                }
+            }
+
+            return tienePermiso;
+        }
+
+        /// <summary>
+        /// Procesa el elemento cuando el usuario no tiene permisos
+        /// </summary>
+        private void ProcesarSinPermiso(TagHelperOutput output)
+        {
+            if (!string.IsNullOrEmpty(MensajeSinPermiso))
+            {
+                // Mostrar mensaje personalizado
+                output.TagName = "div";
+                output.Attributes.Clear();
+                output.Attributes.Add("class", "alert alert-warning d-inline-block");
+                output.Attributes.Add("style", "padding: 5px 10px; margin: 2px; font-size: 0.9em;");
+                output.Content.SetContent(MensajeSinPermiso);
+            }
+            else
+            {
+                // Comportamiento por defecto: ocultar completamente
                 output.SuppressOutput();
             }
         }

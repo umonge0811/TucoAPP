@@ -20,7 +20,7 @@
             <button type="button" class="btn btn-outline-primary" id="btnExportar">
                 <i class="bi bi-download me-2"></i>Exportar
             </button>
-            <a asp-controller="Inventario" asp-action="ProgramarInventario" class="btn btn-info">
+            <a asp-controller="Inventario" asp-action="ProgramarInventario" class="btn btn-info" asp-permiso="ProgramarInventario">
                 <i class="bi bi-calendar-check me-2"></i>Programar Inventario
             </a>
             <a asp-controller="Inventario" asp-action="AgregarProducto" class="btn btn-primary">
@@ -278,11 +278,11 @@
                                     Marca/Modelo
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
-                                <th class="sortable" data-column="costo" data-type="currency">
+                                <th class="sortable" data-column="costo" data-type="currency" asp-permiso="VerCostos">
                                     Costo
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
-                                <th class="sortable" data-column="utilidad" data-type="percentage">
+                                <th class="sortable" data-column="utilidad" data-type="percentage" asp-permiso="VerUtilidades">
                                     Utilidad %
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
@@ -416,7 +416,7 @@
                                     </td>
 
                                     <!-- 6. Costo -->
-                                    <td class="text-end">
+                                    <td class="text-end" asp-permiso="VerCostos">
                                         @if (producto.Costo.HasValue)
                                         {
                                             <span class="text-muted small">₡@producto.Costo.Value.ToString("N0")</span>
@@ -428,7 +428,7 @@
                                     </td>
 
                                     <!-- 7. Utilidad % -->
-                                    <td class="text-center">
+                                    <td class="text-center" asp-permiso="VerUtilidades">
                                         @if (producto.PorcentajeUtilidad.HasValue)
                                         {
                                             <span class="badge bg-info">@producto.PorcentajeUtilidad.Value.ToString("0.0")%</span>
@@ -483,7 +483,7 @@
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                             <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })"
-                                               class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar">
+                                               class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar" asp-permiso="EditarProductos">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-success ajuste-stock-btn"
