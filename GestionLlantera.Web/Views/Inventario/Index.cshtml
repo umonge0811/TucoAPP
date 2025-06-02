@@ -20,12 +20,15 @@
             <button type="button" class="btn btn-outline-primary" id="btnExportar">
                 <i class="bi bi-download me-2"></i>Exportar
             </button>
-            <a asp-controller="Inventario" asp-action="ProgramarInventario" class="btn btn-info" asp-permiso="ProgramarInventario">
+            <a asp-controller="Inventario" asp-action="ProgramarInventario"
+               class="btn btn-info" asp-permiso="Programar Inventario">
                 <i class="bi bi-calendar-check me-2"></i>Programar Inventario
             </a>
-            <a asp-controller="Inventario" asp-action="AgregarProducto" class="btn btn-primary">
+            <a asp-controller="Inventario" asp-action="AgregarProducto"
+               class="btn btn-primary" asp-permiso="Editar Productos">
                 <i class="bi bi-plus-lg me-2"></i>Nuevo Producto
             </a>
+
         </div>
     </div>
 
@@ -230,6 +233,8 @@
     </div>
 
     <div class="dashboard-card">
+
+
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3>
                 <i class="bi bi-box-seam me-2"></i>
@@ -282,7 +287,7 @@
                                     Costo
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
-                                <th class="sortable" data-column="utilidad" data-type="percentage" asp-permiso="VerUtilidades">
+                                <th class="sortable" data-column="utilidad" data-type="percentage" asp-permiso="Ver Utilidades">
                                     Utilidad %
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
@@ -342,8 +347,8 @@
                                             <!-- Overlay hover para mejor UX -->
                                             <div class="hover-overlay"
                                                  style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                            background: rgba(0,123,255,0.1); border-radius: 4px;
-                            opacity: 0; transition: opacity 0.2s; z-index: 3; pointer-events: none;">
+                                                    background: rgba(0,123,255,0.1); border-radius: 4px;
+                                                    opacity: 0; transition: opacity 0.2s; z-index: 3; pointer-events: none;">
                                             </div>
                                         </div>
                                     </td>
@@ -428,7 +433,7 @@
                                     </td>
 
                                     <!-- 7. Utilidad % -->
-                                    <td class="text-center" asp-permiso="VerUtilidades">
+                                    <td class="text-center" asp-permiso="Ver Utilidades">
                                         @if (producto.PorcentajeUtilidad.HasValue)
                                         {
                                             <span class="badge bg-info">@producto.PorcentajeUtilidad.Value.ToString("0.0")%</span>
@@ -478,17 +483,20 @@
                                     <!-- 11. Acciones -->
                                     <td>
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-info ver-detalles-btn"
-                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ver detalles">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
                                             <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })"
-                                               class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar" asp-permiso="EditarProductos">
+                                               class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar"
+                                               asp-permiso="Editar Productos">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-success ajuste-stock-btn"
-                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ajustar stock">
+                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ajustar stock"
+                                                    asp-permiso="Ajustar Stock">
                                                 <i class="bi bi-plus-slash-minus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger eliminar-producto-btn"
+                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Eliminar"
+                                                    asp-permiso="Eliminar Productos">
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
                                     </td>

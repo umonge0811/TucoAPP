@@ -1,4 +1,5 @@
-﻿using GestionLlantera.Web.Models.ViewModels;
+﻿using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Models.ViewModels;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using iTextSharp.text.html.simpleparser;
@@ -32,6 +33,23 @@ namespace GestionLlantera.Web.Controllers
             _inventarioService = inventarioService;
             _logger = logger;
             _usuariosService = usuariosService;
+        }
+
+        public async Task<IActionResult> TestPermiso()
+        {
+            // Probar método básico
+            var tienePermiso = await this.TienePermisoAsync("VerCostos");
+            ViewBag.TienePermiso = tienePermiso;
+
+            // Probar si es admin
+            var esAdmin = await this.EsAdministradorAsync();
+            ViewBag.EsAdmin = esAdmin;
+
+            // Obtener todos los permisos
+            var misPermisos = await this.ObtenerMisPermisosAsync();
+            ViewBag.MisPermisos = misPermisos;
+
+            return View();
         }
 
 
@@ -201,6 +219,11 @@ namespace GestionLlantera.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> AgregarProducto()
         {
+            // ✅ RESTRICCIÓN PARA AGREGAR PRODUCTOS
+            var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
+                "No tienes permisos para agregar productos.");
+            if (validacion != null) return validacion;
+
             ViewData["Title"] = "Agregar Producto";
             ViewData["Layout"] = "_AdminLayout";
 
@@ -227,6 +250,11 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ TAMBIÉN EN POST
+                var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
+                    "No tienes permisos para crear productos.");
+                if (validacion != null) return validacion;
+
                 // Registra información para diagnóstico
                 _logger.LogInformation("Método AgregarProducto llamado");
                 _logger.LogInformation($"Content-Type: {Request.ContentType}");
@@ -358,6 +386,11 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ RESTRICCIÓN PARA EXPORTAR
+                var validacion = await this.ValidarPermisoMvcAsync("Ver Reportes",
+                    "No tienes permisos para exportar reportes.");
+                if (validacion != null) return validacion;
+
                 _logger.LogInformation("Iniciando exportación a PDF para toma física de inventario");
 
                 // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
@@ -851,6 +884,11 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ RESTRICCIÓN PARA EXPORTAR
+                var validacion = await this.ValidarPermisoMvcAsync("Ver Reportes",
+                    "No tienes permisos para exportar reportes.");
+                if (validacion != null) return validacion;
+
                 _logger.LogInformation("Iniciando exportación a Excel para toma física de inventario");
 
                 // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
@@ -1233,6 +1271,10 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                // ✅ PASO 1: VERIFICACIÓN DE PERMISOS (SEGURIDAD PRINCIPAL)
+                var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
+                    "No tienes permisos para programar inventarios. Contacta al administrador.");
+                if (validacion != null) return validacion;
                 // Obtener la lista de usuarios para asignar responsabilidades
                 // En un escenario real, esto sería inyectado como un servicio
                 var usuarios = await _usuariosService.ObtenerTodosAsync();
@@ -1312,6 +1354,11 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ VERIFICACIÓN TAMBIÉN EN POST
+                var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
+                    "No tienes permisos para crear inventarios programados.");
+                if (validacion != null) return validacion;
+
                 _logger.LogInformation("Iniciando proceso de creación de inventario programado");
 
                 if (!ModelState.IsValid)

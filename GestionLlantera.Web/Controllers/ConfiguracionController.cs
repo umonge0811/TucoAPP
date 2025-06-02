@@ -1,9 +1,10 @@
 ﻿// Controllers/ConfiguracionController.cs
 
 // Importaciones necesarias para el controlador
+using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using GestionLlantera.Web.Services.Interfaces;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
@@ -37,6 +38,12 @@ public class ConfiguracionController : Controller
     {
         try
         {
+
+            var validacion = await this.ValidarPermisoMvcAsync("Gestión Completa",
+       "Solo administradores pueden gestionar roles y permisos del sistema.");
+            if (validacion != null) return validacion;
+
+
             // Registramos el inicio de la carga de la vista
             _logger.LogInformation("Iniciando carga de la vista de roles y permisos");
 

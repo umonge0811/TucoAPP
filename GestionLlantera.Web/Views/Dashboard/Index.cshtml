@@ -4,10 +4,15 @@
     Layout = "_AdminLayout";
 }
 
+
+
 <div class="dashboard-container">
     @* Estadísticas Principales *@
     <div class="dashboard-section">
         <div class="row g-4">
+
+            @await Html.PartialAsync("_AlertasSistema")
+
             <div class="col-12 col-sm-6 col-xl-3">
                 <div class="stat-card sales">
                     <div class="stat-icon">
@@ -25,6 +30,7 @@
                 </div>
                 
             </div>
+
 
             @* <div class="alert alert-info mb-3">
                 <h5>🔍 Debug Info del Usuario:</h5>

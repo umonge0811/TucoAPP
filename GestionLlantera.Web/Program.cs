@@ -4,6 +4,7 @@ using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using GestionLlantera.Web.Middleware;
 using System.Security.Claims;
 using System.Text;
 
@@ -39,6 +40,13 @@ builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
 
+
+// ✅ NUEVO: Servicio global de permisos
+builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();
+
+// ✅ NUEVO: Agregar cache en memoria para optimización
+builder.Services.AddMemoryCache();
+
 // ✅ HTTPCLIENT FACTORY (más simple y confiable)
 builder.Services.AddHttpClient();
 
@@ -72,6 +80,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseJwtClaimsMiddleware();
 app.UseAuthorization();
+
+// ✅ NUEVO: Middleware de auditoría de permisos
+app.UsePermisosAuditoria();
 
 app.MapControllerRoute(
     name: "default",
