@@ -52,10 +52,6 @@ namespace GestionLlantera.Web.Controllers
             return View();
         }
 
-
-
-
-
         // GET: /Inventario
         public async Task<IActionResult> Index()
         {
@@ -339,46 +335,81 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation($"🖼️ Obteniendo imágenes para el producto ID: {id}");
+                _logger.LogInformation($"🖼️ === INICIANDO OBTENCIÓN DE IMÁGENES ===");
+                _logger.LogInformation($"📋 Producto ID solicitado: {id}");
 
-                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
+                // ✅ OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Json(new List<string>());
+                }
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente");
+
+                // ✅ LLAMAR AL SERVICIO CON TOKEN
+                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id, token);
+                _logger.LogInformation($"📊 === RESULTADO DEL SERVICIO ===");
+                _logger.LogInformation($"✅ Producto recibido: {(producto != null ? "SÍ" : "NO")}");
 
                 if (producto == null || producto.ProductoId == 0)
                 {
-                    _logger.LogWarning($"❌ Producto no encontrado: {id}");
+                    _logger.LogWarning($"❌ Producto no encontrado o inválido: {id}");
                     return Json(new List<string>());
                 }
 
-                _logger.LogInformation($"📦 Producto encontrado: {producto.NombreProducto}");
-                _logger.LogInformation($"📊 Imágenes disponibles: {producto.Imagenes?.Count ?? 0}");
+                _logger.LogInformation($"📝 Nombre del producto: '{producto.NombreProducto}'");
+                _logger.LogInformation($"📝 ¿Tiene colección de imágenes?: {(producto.Imagenes != null ? "SÍ" : "NO")}");
+                _logger.LogInformation($"📝 Cantidad de imágenes: {producto.Imagenes?.Count ?? 0}");
 
-                // Extraer solo las URLs de las imágenes válidas
+                // ✅ PROCESAR IMÁGENES
                 var imagenesUrls = new List<string>();
 
                 if (producto.Imagenes != null && producto.Imagenes.Any())
                 {
+                    _logger.LogInformation("🔄 Procesando imágenes...");
+
                     foreach (var imagen in producto.Imagenes)
                     {
+                        _logger.LogInformation($"🖼️ Procesando imagen ID: {imagen.ImagenId}");
+                        _logger.LogInformation($"🖼️ URL original: '{imagen.UrlImagen}'");
+
                         if (!string.IsNullOrEmpty(imagen.UrlImagen))
                         {
                             imagenesUrls.Add(imagen.UrlImagen);
                             _logger.LogInformation($"✅ Imagen agregada: {imagen.UrlImagen}");
                         }
+                        else
+                        {
+                            _logger.LogWarning($"⚠️ Imagen con URL vacía o nula. ID: {imagen.ImagenId}");
+                        }
                     }
                 }
+                else
+                {
+                    _logger.LogWarning("⚠️ No hay imágenes en la colección del producto");
+                }
 
+                _logger.LogInformation($"🎯 === RESULTADO FINAL ===");
                 _logger.LogInformation($"🎯 Total URLs válidas: {imagenesUrls.Count}");
+
+                foreach (var url in imagenesUrls)
+                {
+                    _logger.LogInformation($"🎯 URL final: {url}");
+                }
 
                 // Retornar solo las URLs como un array de strings
                 return Json(imagenesUrls);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error al obtener imágenes del producto {Id}", id);
+                _logger.LogError(ex, "💥 === ERROR CRÍTICO ===");
+                _logger.LogError("💥 Producto ID: {Id}", id);
+                _logger.LogError("💥 Mensaje: {Message}", ex.Message);
+                _logger.LogError("💥 Stack Trace: {StackTrace}", ex.StackTrace);
                 return Json(new List<string>());
             }
         }
-
         [HttpGet]
         public async Task<IActionResult> VerImagenes(int id)
         {

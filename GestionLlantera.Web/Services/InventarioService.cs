@@ -278,88 +278,32 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        //public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id)
-        //{
-        //    try
-        //    {
-        //        var response = await _httpClient.GetAsync($"/api/Inventario/productos/{id}");
-        //        response.EnsureSuccessStatusCode();
+        // ✅ AGREGAR ESTE MÉTODO AL FINAL DE LA CLASE InventarioService
+        private string? ObtenerTokenJWT()
+        {
+            // En el servicio no tenemos acceso directo al User
+            // El token debe pasarse desde el controlador
+            return null;
+        }
 
-        //        var content = await response.Content.ReadAsStringAsync();
-        //        _logger.LogInformation($"Respuesta al obtener producto ID {id}: {content}");
-
-        //        // Deserializar a un objeto dinámico
-        //        var item = JsonConvert.DeserializeObject<dynamic>(content);
-
-        //        var producto = new ProductoDTO
-        //        {
-        //            ProductoId = (int)item.productoId,
-        //            NombreProducto = (string)item.nombreProducto,
-        //            Descripcion = (string)item.descripcion,
-        //            Precio = (decimal)item.precio,
-        //            CantidadEnInventario = (int)item.cantidadEnInventario,
-        //            StockMinimo = (int)item.stockMinimo,
-        //            Imagenes = new List<ImagenProductoDTO>()
-        //        };
-
-        //        // Procesar imágenes si existen
-        //        if (item.imagenesProductos != null && item.imagenesProductos.Count > 0)
-        //        {
-        //            foreach (var img in item.imagenesProductos)
-        //            {
-        //                // Obtener la URL de la API
-        //                string apiBaseUrl = _httpClient.BaseAddress.ToString().TrimEnd('/');
-        //                string imagenUrl = (string)img.urlimagen;
-
-        //                // Si la URL de la imagen no comienza con http, combinarla con la URL base de la API
-        //                if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-        //                {
-        //                    imagenUrl = $"{apiBaseUrl}{imagenUrl}";
-        //                }
-
-        //                producto.Imagenes.Add(new ImagenProductoDTO
-        //                {
-        //                    ImagenId = (int)img.imagenId,
-        //                    ProductoId = (int)img.productoId,
-        //                    UrlImagen = imagenUrl,
-        //                    Descripcion = img.descripcion != null ? (string)img.descripcion : null
-        //                });
-        //            }
-        //        }
-
-        //        // Procesar llanta si existe (tomar solo el primer elemento del array)
-        //        if (item.llanta != null && item.llanta.Count > 0)
-        //        {
-        //            var llantaItem = item.llanta[0]; // Tomar el primer elemento
-        //            producto.Llanta = new LlantaDTO
-        //            {
-        //                LlantaId = (int)llantaItem.llantaId,
-        //                ProductoId = (int)llantaItem.productoId,
-        //                Ancho = llantaItem.ancho != null ? (int?)llantaItem.ancho : null,
-        //                Perfil = llantaItem.perfil != null ? (int?)llantaItem.perfil : null,
-        //                Diametro = llantaItem.diametro != null ? (string)llantaItem.diametro : null,
-        //                Marca = llantaItem.marca != null ? (string)llantaItem.marca : null,
-        //                Modelo = llantaItem.modelo != null ? (string)llantaItem.modelo : null,
-        //                Capas = llantaItem.capas != null ? (int?)llantaItem.capas : null,
-        //                IndiceVelocidad = llantaItem.indiceVelocidad != null ? (string)llantaItem.indiceVelocidad : null,
-        //                TipoTerreno = llantaItem.tipoTerreno != null ? (string)llantaItem.tipoTerreno : null
-        //            };
-        //        }
-
-        //        return producto;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error al obtener producto ID: {Id}", id);
-        //        return new ProductoDTO();
-        //    }
-        //}
-
-        public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id)
+        public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation("🔍 Iniciando ObtenerProductoPorIdAsync para ID: {Id}", id);
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para la petición");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT");
+                }
+
 
                 // ✅ CORREGIR: Quitar la barra inicial de la URL
                 var response = await _httpClient.GetAsync($"api/Inventario/productos/{id}");
