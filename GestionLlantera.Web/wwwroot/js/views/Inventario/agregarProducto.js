@@ -311,6 +311,10 @@
                     if (formGroup) formGroup.classList.remove('required');
                 }
 
+                setTimeout(() => {
+                    inicializarAutocompletado();
+                }, 100);
+
                 console.log('✅ Modo llanta activado - Validaciones transferidas a campos de llanta');
             } else {
 
@@ -819,4 +823,227 @@
     }
 
     console.log('✅ Script de agregar producto inicializado correctamente');
+
+
+    // ========================================
+    // AUTOCOMPLETADO DE MARCA Y MODELO
+    // ========================================
+
+    let marcasDisponibles = [];
+    let modelosDisponibles = [];
+
+    // Cargar marcas al inicializar
+    // Cargar marcas al inicializar
+    async function cargarMarcas() {
+        try {
+            console.log('🔄 Cargando marcas...');
+
+            const response = await fetch('/api/Inventario/marcas-llantas', {
+                method: 'GET',
+                credentials: 'include', // ✅ Esto incluye las cookies de autenticación
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log('📡 Respuesta marcas:', response.status);
+
+            if (response.ok) {
+                marcasDisponibles = await response.json();
+                console.log('✅ Marcas cargadas:', marcasDisponibles.length, marcasDisponibles);
+            } else {
+                const errorText = await response.text();
+                console.error('❌ Error respuesta marcas:', response.status, errorText);
+            }
+        } catch (error) {
+            console.error('❌ Error cargando marcas:', error);
+        }
+    }
+
+    // Cargar modelos por marca
+    async function cargarModelos(marca) {
+        try {
+            console.log(`🔄 Cargando modelos para marca: ${marca}`);
+
+            const response = await fetch(`/api/Inventario/modelos-llantas/${encodeURIComponent(marca)}`, {
+                method: 'GET',
+                credentials: 'include', // ✅ Esto incluye las cookies de autenticación
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log('📡 Respuesta modelos:', response.status);
+
+            if (response.ok) {
+                modelosDisponibles = await response.json();
+                console.log(`✅ Modelos cargados para ${marca}:`, modelosDisponibles.length, modelosDisponibles);
+            } else {
+                const errorText = await response.text();
+                console.error('❌ Error respuesta modelos:', response.status, errorText);
+                modelosDisponibles = [];
+            }
+        } catch (error) {
+            console.error('❌ Error cargando modelos:', error);
+            modelosDisponibles = [];
+        }
+    }
+    // Función para obtener el token JWT
+    function obtenerTokenJWT() {
+        // Implementa según como tengas almacenado el token
+        // Esto es un ejemplo, ajusta según tu implementación
+        return null;
+    }
+
+    // Configurar autocompletado para marca
+    function configurarAutocompletadoMarca() {
+        const marcaInput = document.getElementById('marcaInput');
+        const marcaSuggestions = document.getElementById('marcaSuggestions');
+
+        if (!marcaInput || !marcaSuggestions) return;
+
+        marcaInput.addEventListener('input', function () {
+            const valor = this.value.toLowerCase().trim();
+
+            if (valor.length < 1) {
+                marcaSuggestions.style.display = 'none';
+                return;
+            }
+
+            // Filtrar marcas que coincidan
+            const marcasFiltradas = marcasDisponibles.filter(marca =>
+                marca.toLowerCase().includes(valor)
+            );
+
+            // Mostrar sugerencias
+            mostrarSugerencias(marcaSuggestions, marcasFiltradas, valor, marcaInput, 'marca');
+        });
+
+        // Ocultar sugerencias al hacer clic fuera
+        document.addEventListener('click', function (e) {
+            if (!marcaInput.contains(e.target) && !marcaSuggestions.contains(e.target)) {
+                marcaSuggestions.style.display = 'none';
+            }
+        });
+    }
+
+    // Configurar autocompletado para modelo
+    function configurarAutocompletadoModelo() {
+        const modeloInput = document.getElementById('modeloInput');
+        const modeloSuggestions = document.getElementById('modeloSuggestions');
+
+        if (!modeloInput || !modeloSuggestions) return;
+
+        modeloInput.addEventListener('input', function () {
+            const valor = this.value.toLowerCase().trim();
+
+            if (valor.length < 1) {
+                modeloSuggestions.style.display = 'none';
+                return;
+            }
+
+            // Filtrar modelos que coincidan
+            const modelosFiltrados = modelosDisponibles.filter(modelo =>
+                modelo.toLowerCase().includes(valor)
+            );
+
+            // Mostrar sugerencias
+            mostrarSugerencias(modeloSuggestions, modelosFiltrados, valor, modeloInput, 'modelo');
+        });
+
+        // Ocultar sugerencias al hacer clic fuera
+        document.addEventListener('click', function (e) {
+            if (!modeloInput.contains(e.target) && !modeloSuggestions.contains(e.target)) {
+                modeloSuggestions.style.display = 'none';
+            }
+        });
+    }
+
+    // Función para mostrar sugerencias
+    function mostrarSugerencias(container, items, valorBuscado, input, tipo) {
+        console.log(`🔍 Mostrando sugerencias para ${tipo}:`, items);
+
+        container.innerHTML = '';
+
+        if (items.length === 0) {
+            console.log(`📝 No hay ${tipo}s existentes, mostrando opción crear nueva`);
+            // Mostrar opción para crear nuevo
+            const newItem = document.createElement('div');
+            newItem.className = 'suggestion-item suggestion-new';
+            newItem.innerHTML = `<i class="bi bi-plus-circle me-2"></i>Crear nueva ${tipo}: "${valorBuscado}"`;
+            newItem.addEventListener('click', function () {
+                input.value = valorBuscado;
+                container.style.display = 'none';
+                console.log(`✅ Nueva ${tipo} seleccionada: ${valorBuscado}`);
+
+                // Si es marca nueva, limpiar modelos
+                if (tipo === 'marca') {
+                    const modeloInput = document.getElementById('modeloInput');
+                    if (modeloInput) modeloInput.value = '';
+                    modelosDisponibles = [];
+                }
+            });
+            container.appendChild(newItem);
+        } else {
+            console.log(`📋 Mostrando ${items.length} ${tipo}s existentes`);
+            // Mostrar sugerencias existentes
+            items.forEach(item => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.className = 'suggestion-item';
+                suggestionItem.textContent = item;
+                suggestionItem.addEventListener('click', function () {
+                    input.value = item;
+                    container.style.display = 'none';
+                    console.log(`✅ ${tipo} existente seleccionada: ${item}`);
+
+                    // Si se selecciona una marca, cargar sus modelos
+                    if (tipo === 'marca') {
+                        cargarModelos(item);
+                        const modeloInput = document.getElementById('modeloInput');
+                        if (modeloInput) modeloInput.value = '';
+                    }
+                });
+                container.appendChild(suggestionItem);
+            });
+
+            // Agregar opción para crear nuevo al final
+            const newItem = document.createElement('div');
+            newItem.className = 'suggestion-item suggestion-new';
+            newItem.innerHTML = `<i class="bi bi-plus-circle me-2"></i>Crear nueva ${tipo}: "${valorBuscado}"`;
+            newItem.addEventListener('click', function () {
+                input.value = valorBuscado;
+                container.style.display = 'none';
+                console.log(`✅ Nueva ${tipo} creada: ${valorBuscado}`);
+            });
+            container.appendChild(newItem);
+        }
+
+        container.style.display = 'block';
+        console.log(`👁️ Dropdown de ${tipo} mostrado`);
+    }
+    // Inicializar autocompletado cuando se muestre la sección de llantas
+    function inicializarAutocompletado() {
+        cargarMarcas();
+        configurarAutocompletadoMarca();
+        configurarAutocompletadoModelo();
+
+        // Configurar evento para cargar modelos cuando se selecciona marca
+        const marcaInput = document.getElementById('marcaInput');
+        if (marcaInput) {
+            marcaInput.addEventListener('blur', function () {
+                if (this.value.trim()) {
+                    cargarModelos(this.value.trim());
+                }
+            });
+        }
+    }
+
+    // Llamar la inicialización cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar autocompletado si estamos en la página correcta
+        if (document.getElementById('marcaInput')) {
+            inicializarAutocompletado();
+        }
+    });
+
 });

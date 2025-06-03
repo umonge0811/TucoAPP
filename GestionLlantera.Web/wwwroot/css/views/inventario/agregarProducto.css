@@ -296,3 +296,44 @@
     .form-switch-custom .form-check-input:checked::after {
         transform: translateX(1.5rem);
     }
+
+/* Estilos para autocompletado */
+.dropdown-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+    .suggestion-item:hover,
+    .suggestion-item.active {
+        background-color: #f8f9fa;
+    }
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+.suggestion-new {
+    color: #28a745;
+    font-style: italic;
+}
+
+.position-relative {
+    position: relative;
+}

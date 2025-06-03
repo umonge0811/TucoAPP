@@ -197,26 +197,21 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Marca" class="form-label">Marca</label>
-                                    <select asp-for="Llanta.Marca" class="form-select">
-                                        <option value="">Seleccionar marca...</option>
-                                        <option value="Michelin">Michelin</option>
-                                        <option value="Bridgestone">Bridgestone</option>
-                                        <option value="Continental">Continental</option>
-                                        <option value="Pirelli">Pirelli</option>
-                                        <option value="Goodyear">Goodyear</option>
-                                        <option value="Firestone">Firestone</option>
-                                        <option value="Dunlop">Dunlop</option>
-                                        <option value="Hankook">Hankook</option>
-                                        <option value="Kumho">Kumho</option>
-                                        <option value="Yokohama">Yokohama</option>
-                                        <option value="Otra">Otra</option>
-                                    </select>
+                                    <div class="position-relative">
+                                        <input asp-for="Llanta.Marca" class="form-control" id="marcaInput" placeholder="Escriba o seleccione una marca..." autocomplete="off" />
+                                        <div class="dropdown-suggestions" id="marcaSuggestions" style="display: none;"></div>
+                                    </div>
+                                    <span asp-validation-for="Llanta.Marca" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Modelo" class="form-label">Modelo</label>
-                                    <input asp-for="Llanta.Modelo" class="form-control" placeholder="Pilot Sport 4" />
+                                    <div class="position-relative">
+                                        <input asp-for="Llanta.Modelo" class="form-control" id="modeloInput" placeholder="Escriba o seleccione un modelo..." autocomplete="off" />
+                                        <div class="dropdown-suggestions" id="modeloSuggestions" style="display: none;"></div>
+                                    </div>
+                                    <span asp-validation-for="Llanta.Modelo" class="text-danger"></span>
                                 </div>
                             </div>
 

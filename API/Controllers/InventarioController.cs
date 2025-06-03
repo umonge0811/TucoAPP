@@ -1241,7 +1241,55 @@ namespace API.Controllers
                return StatusCode(500, new { message = "Error al ajustar stock" });
            }
        }
-   }
+
+        // GET: api/Inventario/marcas-llantas
+        [HttpGet("marcas-llantas")]
+        [Authorize]
+        public async Task<ActionResult<List<string>>> ObtenerMarcasLlantas()
+        {
+            try
+            {
+                var marcas = await _context.Llantas
+                    .Where(l => !string.IsNullOrEmpty(l.Marca))
+                    .Select(l => l.Marca)
+                    .Distinct()
+                    .OrderBy(m => m)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} marcas únicas", marcas.Count);
+                return Ok(marcas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener marcas de llantas");
+                return StatusCode(500, new { message = "Error al obtener marcas" });
+            }
+        }
+
+        // GET: api/Inventario/modelos-llantas/{marca}
+        [HttpGet("modelos-llantas/{marca}")]
+        [Authorize]
+        public async Task<ActionResult<List<string>>> ObtenerModelosPorMarca(string marca)
+        {
+            try
+            {
+                var modelos = await _context.Llantas
+                    .Where(l => l.Marca == marca && !string.IsNullOrEmpty(l.Modelo))
+                    .Select(l => l.Modelo)
+                    .Distinct()
+                    .OrderBy(m => m)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} modelos para marca {Marca}", modelos.Count, marca);
+                return Ok(modelos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener modelos para marca: {Marca}", marca);
+                return StatusCode(500, new { message = "Error al obtener modelos" });
+            }
+        }
+    }
 }
             
         
