@@ -12,6 +12,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes, string jwtToken = null);
         Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes);
         Task<bool> AjustarStockAsync(int id, int cantidad, string tipoAjuste);
+        Task<List<string>> BuscarMarcasLlantasAsync(string filtro = "", string jwtToken = null);
 
         // En IInventarioService.cs, añadir estos métodos:
 

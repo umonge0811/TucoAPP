@@ -826,224 +826,243 @@
 
 
     // ========================================
-    // AUTOCOMPLETADO DE MARCA Y MODELO
+    // AUTOCOMPLETADO INTELIGENTE DE MARCA
     // ========================================
 
-    let marcasDisponibles = [];
-    let modelosDisponibles = [];
+    let timeoutBusqueda = null; // Para evitar múltiples peticiones
 
-    // Cargar marcas al inicializar
-    // Cargar marcas al inicializar
-    async function cargarMarcas() {
-        try {
-            console.log('🔄 Cargando marcas...');
-
-            const response = await fetch('/api/Inventario/marcas-llantas', {
-                method: 'GET',
-                credentials: 'include', // ✅ Esto incluye las cookies de autenticación
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            console.log('📡 Respuesta marcas:', response.status);
-
-            if (response.ok) {
-                marcasDisponibles = await response.json();
-                console.log('✅ Marcas cargadas:', marcasDisponibles.length, marcasDisponibles);
-            } else {
-                const errorText = await response.text();
-                console.error('❌ Error respuesta marcas:', response.status, errorText);
-            }
-        } catch (error) {
-            console.error('❌ Error cargando marcas:', error);
-        }
+    // Función principal para inicializar autocompletado
+    function inicializarAutocompletado() {
+        console.log('🚀 Inicializando autocompletado inteligente...');
+        configurarAutocompletadoMarca();
     }
 
-    // Cargar modelos por marca
-    async function cargarModelos(marca) {
-        try {
-            console.log(`🔄 Cargando modelos para marca: ${marca}`);
-
-            const response = await fetch(`/api/Inventario/modelos-llantas/${encodeURIComponent(marca)}`, {
-                method: 'GET',
-                credentials: 'include', // ✅ Esto incluye las cookies de autenticación
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            console.log('📡 Respuesta modelos:', response.status);
-
-            if (response.ok) {
-                modelosDisponibles = await response.json();
-                console.log(`✅ Modelos cargados para ${marca}:`, modelosDisponibles.length, modelosDisponibles);
-            } else {
-                const errorText = await response.text();
-                console.error('❌ Error respuesta modelos:', response.status, errorText);
-                modelosDisponibles = [];
-            }
-        } catch (error) {
-            console.error('❌ Error cargando modelos:', error);
-            modelosDisponibles = [];
-        }
-    }
-    // Función para obtener el token JWT
-    function obtenerTokenJWT() {
-        // Implementa según como tengas almacenado el token
-        // Esto es un ejemplo, ajusta según tu implementación
-        return null;
-    }
-
-    // Configurar autocompletado para marca
+    // Configurar autocompletado para marca con búsqueda en tiempo real
     function configurarAutocompletadoMarca() {
         const marcaInput = document.getElementById('marcaInput');
         const marcaSuggestions = document.getElementById('marcaSuggestions');
 
-        if (!marcaInput || !marcaSuggestions) return;
+        if (!marcaInput || !marcaSuggestions) {
+            console.warn('⚠️ Elementos de autocompletado no encontrados');
+            return;
+        }
 
+        console.log('✅ Configurando autocompletado para marca');
+
+        // Evento principal: cuando el usuario escribe
         marcaInput.addEventListener('input', function () {
-            const valor = this.value.toLowerCase().trim();
+            const valor = this.value.trim();
+            console.log(`🔤 Usuario escribió: "${valor}"`);
 
-            if (valor.length < 1) {
-                marcaSuggestions.style.display = 'none';
+            // Limpiar timeout anterior
+            if (timeoutBusqueda) {
+                clearTimeout(timeoutBusqueda);
+            }
+
+            // Si está vacío, ocultar sugerencias
+            if (valor.length === 0) {
+                ocultarSugerencias(marcaSuggestions);
                 return;
             }
 
-            // Filtrar marcas que coincidan
-            const marcasFiltradas = marcasDisponibles.filter(marca =>
-                marca.toLowerCase().includes(valor)
-            );
+            // Si es muy corto, esperar más caracteres
+            if (valor.length < 2) {
+                mostrarMensaje(marcaSuggestions, '💡 Escriba al menos 2 caracteres...');
+                return;
+            }
 
-            // Mostrar sugerencias
-            mostrarSugerencias(marcaSuggestions, marcasFiltradas, valor, marcaInput, 'marca');
+            // Mostrar indicador de carga
+            mostrarCargando(marcaSuggestions);
+
+            // Hacer búsqueda con delay para evitar spam de peticiones
+            timeoutBusqueda = setTimeout(() => {
+                buscarMarcasEnTiempoReal(valor, marcaSuggestions, marcaInput);
+            }, 300); // 300ms de delay
+        });
+
+        // Manejar focus - mostrar sugerencias si ya hay texto
+        marcaInput.addEventListener('focus', function () {
+            const valor = this.value.trim();
+            if (valor.length >= 2) {
+                buscarMarcasEnTiempoReal(valor, marcaSuggestions, marcaInput);
+            }
         });
 
         // Ocultar sugerencias al hacer clic fuera
         document.addEventListener('click', function (e) {
             if (!marcaInput.contains(e.target) && !marcaSuggestions.contains(e.target)) {
-                marcaSuggestions.style.display = 'none';
+                ocultarSugerencias(marcaSuggestions);
             }
+        });
+
+        // Manejar teclas especiales (Escape, Enter, flechas)
+        marcaInput.addEventListener('keydown', function (e) {
+            manejarTeclasEspeciales(e, marcaSuggestions);
         });
     }
 
-    // Configurar autocompletado para modelo
-    function configurarAutocompletadoModelo() {
-        const modeloInput = document.getElementById('modeloInput');
-        const modeloSuggestions = document.getElementById('modeloSuggestions');
+    // Función para buscar marcas en tiempo real
+    async function buscarMarcasEnTiempoReal(filtro, container, input) {
+        try {
+            console.log(`🔍 Buscando marcas con filtro: "${filtro}"`);
 
-        if (!modeloInput || !modeloSuggestions) return;
+            // Realizar petición AJAX
+            const response = await fetch(`/Inventario/BuscarMarcas?filtro=${encodeURIComponent(filtro)}`, {
+                method: 'GET',
+                credentials: 'include', // Incluir cookies de autenticación
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        modeloInput.addEventListener('input', function () {
-            const valor = this.value.toLowerCase().trim();
+            console.log(`📡 Respuesta del servidor: ${response.status}`);
 
-            if (valor.length < 1) {
-                modeloSuggestions.style.display = 'none';
-                return;
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
 
-            // Filtrar modelos que coincidan
-            const modelosFiltrados = modelosDisponibles.filter(modelo =>
-                modelo.toLowerCase().includes(valor)
-            );
+            const marcas = await response.json();
+            console.log(`✅ Marcas recibidas:`, marcas);
 
-            // Mostrar sugerencias
-            mostrarSugerencias(modeloSuggestions, modelosFiltrados, valor, modeloInput, 'modelo');
-        });
+            // Mostrar resultados
+            mostrarSugerenciasMarca(container, marcas, filtro, input);
 
-        // Ocultar sugerencias al hacer clic fuera
-        document.addEventListener('click', function (e) {
-            if (!modeloInput.contains(e.target) && !modeloSuggestions.contains(e.target)) {
-                modeloSuggestions.style.display = 'none';
-            }
-        });
+        } catch (error) {
+            console.error('❌ Error al buscar marcas:', error);
+            mostrarError(container, 'Error al buscar marcas. Intente nuevamente.');
+        }
     }
 
-    // Función para mostrar sugerencias
-    function mostrarSugerencias(container, items, valorBuscado, input, tipo) {
-        console.log(`🔍 Mostrando sugerencias para ${tipo}:`, items);
+    // Función para mostrar las sugerencias de marca
+    function mostrarSugerenciasMarca(container, marcas, valorBuscado, input) {
+        console.log(`📋 Mostrando ${marcas.length} sugerencias`);
 
         container.innerHTML = '';
 
-        if (items.length === 0) {
-            console.log(`📝 No hay ${tipo}s existentes, mostrando opción crear nueva`);
-            // Mostrar opción para crear nuevo
-            const newItem = document.createElement('div');
-            newItem.className = 'suggestion-item suggestion-new';
-            newItem.innerHTML = `<i class="bi bi-plus-circle me-2"></i>Crear nueva ${tipo}: "${valorBuscado}"`;
-            newItem.addEventListener('click', function () {
-                input.value = valorBuscado;
-                container.style.display = 'none';
-                console.log(`✅ Nueva ${tipo} seleccionada: ${valorBuscado}`);
-
-                // Si es marca nueva, limpiar modelos
-                if (tipo === 'marca') {
-                    const modeloInput = document.getElementById('modeloInput');
-                    if (modeloInput) modeloInput.value = '';
-                    modelosDisponibles = [];
-                }
-            });
-            container.appendChild(newItem);
+        if (marcas.length === 0) {
+            // No hay resultados existentes - mostrar opción para crear nueva
+            const nuevoItem = crearItemSugerencia(
+                `<i class="bi bi-plus-circle me-2 text-success"></i>Crear nueva marca: "<strong>${valorBuscado}</strong>"`,
+                'suggestion-new',
+                () => seleccionarMarca(valorBuscado, input, container, true)
+            );
+            container.appendChild(nuevoItem);
         } else {
-            console.log(`📋 Mostrando ${items.length} ${tipo}s existentes`);
-            // Mostrar sugerencias existentes
-            items.forEach(item => {
-                const suggestionItem = document.createElement('div');
-                suggestionItem.className = 'suggestion-item';
-                suggestionItem.textContent = item;
-                suggestionItem.addEventListener('click', function () {
-                    input.value = item;
-                    container.style.display = 'none';
-                    console.log(`✅ ${tipo} existente seleccionada: ${item}`);
-
-                    // Si se selecciona una marca, cargar sus modelos
-                    if (tipo === 'marca') {
-                        cargarModelos(item);
-                        const modeloInput = document.getElementById('modeloInput');
-                        if (modeloInput) modeloInput.value = '';
-                    }
-                });
-                container.appendChild(suggestionItem);
+            // Mostrar marcas existentes
+            marcas.forEach(marca => {
+                const item = crearItemSugerencia(
+                    `<i class="bi bi-tag me-2 text-primary"></i>${marca}`,
+                    'suggestion-existing',
+                    () => seleccionarMarca(marca, input, container, false)
+                );
+                container.appendChild(item);
             });
 
-            // Agregar opción para crear nuevo al final
-            const newItem = document.createElement('div');
-            newItem.className = 'suggestion-item suggestion-new';
-            newItem.innerHTML = `<i class="bi bi-plus-circle me-2"></i>Crear nueva ${tipo}: "${valorBuscado}"`;
-            newItem.addEventListener('click', function () {
-                input.value = valorBuscado;
-                container.style.display = 'none';
-                console.log(`✅ Nueva ${tipo} creada: ${valorBuscado}`);
-            });
-            container.appendChild(newItem);
+            // Agregar opción para crear nueva al final si el texto no coincide exactamente
+            const coincidenciaExacta = marcas.some(m => m.toLowerCase() === valorBuscado.toLowerCase());
+            if (!coincidenciaExacta) {
+                const separador = document.createElement('div');
+                separador.className = 'suggestion-separator';
+                separador.innerHTML = '<hr class="my-1">';
+                container.appendChild(separador);
+
+                const nuevoItem = crearItemSugerencia(
+                    `<i class="bi bi-plus-circle me-2 text-success"></i>Crear nueva marca: "<strong>${valorBuscado}</strong>"`,
+                    'suggestion-new',
+                    () => seleccionarMarca(valorBuscado, input, container, true)
+                );
+                container.appendChild(nuevoItem);
+            }
         }
 
+        mostrarContainer(container);
+    }
+
+    // Función auxiliar para crear elementos de sugerencia
+    function crearItemSugerencia(contenidoHTML, claseCSS, onClickCallback) {
+        const item = document.createElement('div');
+        item.className = `suggestion-item ${claseCSS}`;
+        item.innerHTML = contenidoHTML;
+        item.addEventListener('click', onClickCallback);
+
+        // Efectos hover
+        item.addEventListener('mouseenter', function () {
+            this.classList.add('suggestion-hover');
+        });
+        item.addEventListener('mouseleave', function () {
+            this.classList.remove('suggestion-hover');
+        });
+
+        return item;
+    }
+
+    // Función para seleccionar una marca
+    function seleccionarMarca(marca, input, container, esNueva) {
+        console.log(`✅ Marca seleccionada: "${marca}" (Nueva: ${esNueva})`);
+
+        input.value = marca;
+        ocultarSugerencias(container);
+
+        // Mostrar feedback visual
+        input.classList.add('input-success');
+        setTimeout(() => {
+            input.classList.remove('input-success');
+        }, 1000);
+
+        // Mostrar notificación
+        if (esNueva && typeof toastr !== 'undefined') {
+            toastr.info(`Nueva marca "${marca}" será agregada al guardar el producto`);
+        }
+
+        // Trigger evento para que otros sistemas sepan que cambió
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Funciones auxiliares para estados del dropdown
+    function mostrarCargando(container) {
+        container.innerHTML = `
+            <div class="suggestion-item suggestion-loading">
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Buscando marcas...
+            </div>
+        `;
+        mostrarContainer(container);
+    }
+
+    function mostrarMensaje(container, mensaje) {
+        container.innerHTML = `
+            <div class="suggestion-item suggestion-info">
+                ${mensaje}
+            </div>
+        `;
+        mostrarContainer(container);
+    }
+
+    function mostrarError(container, mensaje) {
+        container.innerHTML = `
+            <div class="suggestion-item suggestion-error">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                ${mensaje}
+            </div>
+        `;
+        mostrarContainer(container);
+    }
+
+    function mostrarContainer(container) {
         container.style.display = 'block';
-        console.log(`👁️ Dropdown de ${tipo} mostrado`);
-    }
-    // Inicializar autocompletado cuando se muestre la sección de llantas
-    function inicializarAutocompletado() {
-        cargarMarcas();
-        configurarAutocompletadoMarca();
-        configurarAutocompletadoModelo();
-
-        // Configurar evento para cargar modelos cuando se selecciona marca
-        const marcaInput = document.getElementById('marcaInput');
-        if (marcaInput) {
-            marcaInput.addEventListener('blur', function () {
-                if (this.value.trim()) {
-                    cargarModelos(this.value.trim());
-                }
-            });
-        }
     }
 
-    // Llamar la inicialización cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function () {
-        // Inicializar autocompletado si estamos en la página correcta
-        if (document.getElementById('marcaInput')) {
-            inicializarAutocompletado();
+    function ocultarSugerencias(container) {
+        container.style.display = 'none';
+    }
+
+    // Manejar teclas especiales (Escape, Enter, flechas)
+    function manejarTeclasEspeciales(event, container) {
+        if (event.key === 'Escape') {
+            ocultarSugerencias(container);
+            event.preventDefault();
         }
-    });
+        // Aquí podrías agregar navegación con flechas en el futuro
+    }
 
 });

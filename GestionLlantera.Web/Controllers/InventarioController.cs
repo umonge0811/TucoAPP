@@ -1798,7 +1798,37 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        // GET: /Inventario/BuscarMarcas?filtro=text
+        [HttpGet]
+        [Route("Inventario/BuscarMarcas")]
+        public async Task<IActionResult> BuscarMarcas(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Búsqueda de marcas solicitada con filtro: '{Filtro}'", filtro);
 
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado");
+                    return Json(new List<string>());
+                }
+
+                // Llamar al servicio para obtener las marcas
+                var marcas = await _inventarioService.BuscarMarcasLlantasAsync(filtro, token);
+
+                _logger.LogInformation("✅ Devolviendo {Count} marcas encontradas", marcas.Count);
+
+                // Devolver JSON directamente
+                return Json(marcas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar marcas en controlador web");
+                return Json(new List<string>());
+            }
+        }
     }
 }
     

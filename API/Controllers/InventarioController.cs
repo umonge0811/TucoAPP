@@ -1289,6 +1289,41 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al obtener modelos" });
             }
         }
+
+        // GET: api/Inventario/marcas-busqueda?filtro=text
+        [HttpGet("marcas-busqueda")]
+        [Authorize]
+        public async Task<ActionResult<List<string>>> BuscarMarcasLlantas(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando marcas con filtro: '{Filtro}'", filtro);
+
+                IQueryable<string> query = _context.Llantas
+                    .Where(l => !string.IsNullOrEmpty(l.Marca))
+                    .Select(l => l.Marca)
+                    .Distinct();
+
+                // Aplicar filtro si se proporciona
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    query = query.Where(m => m.Contains(filtro));
+                }
+
+                var marcas = await query
+                    .OrderBy(m => m)
+                    .Take(10) // Limitar a 10 resultados para mejor rendimiento
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} marcas", marcas.Count);
+                return Ok(marcas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar marcas");
+                return StatusCode(500, new { message = "Error al buscar marcas" });
+            }
+        }
     }
 }
             

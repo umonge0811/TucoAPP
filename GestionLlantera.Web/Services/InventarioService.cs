@@ -615,8 +615,6 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-
-
         public async Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes, string jwtToken = null)
         {
             try
@@ -1264,6 +1262,58 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, $"Error al exportar resultados de inventario a PDF para ID: {id}");
                 throw; // Relanzar la excepción para que sea manejada en el controlador
+            }
+        }
+
+        /// <summary>
+        /// Busca marcas de llantas que coincidan con el filtro proporcionado
+        /// </summary>
+        /// <param name="filtro">Texto para filtrar las marcas</param>
+        /// <param name="jwtToken">Token de autenticación</param>
+        /// <returns>Lista de marcas que coinciden con el filtro</returns>
+        public async Task<List<string>> BuscarMarcasLlantasAsync(string filtro = "", string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando marcas con filtro: '{Filtro}'", filtro);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Construir URL con parámetro de consulta
+                string url = "api/Inventario/marcas-busqueda";
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    url += $"?filtro={Uri.EscapeDataString(filtro)}";
+                }
+
+                _logger.LogInformation("📡 Realizando petición a: {Url}", url);
+
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error obteniendo marcas: {StatusCode} - {Error}",
+                        response.StatusCode, errorContent);
+                    return new List<string>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var marcas = JsonConvert.DeserializeObject<List<string>>(content) ?? new List<string>();
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} marcas", marcas.Count);
+                return marcas;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar marcas en el servicio");
+                return new List<string>();
             }
         }
     }
