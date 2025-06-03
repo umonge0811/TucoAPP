@@ -127,8 +127,17 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
+                // ✅ OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para DetalleProducto");
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
 
+                // ✅ LLAMAR AL SERVICIO CON TOKEN
+                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id, token);
                 // ✅ LOGGING DETALLADO PERO SEGURO
                 _logger.LogInformation("📊 === RESULTADO DE SERVICIO ===");
                 _logger.LogInformation("✅ Producto recibido: {Recibido}", producto != null ? "SÍ" : "NO");

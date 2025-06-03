@@ -751,36 +751,57 @@ $(document).ready(function () {
     // Mejorar cursor para indicar clickeable
     $('.sortable').css('cursor', 'pointer');
 
-    // Evento para imagen miniatura -> modal
+    // ✅ EVENTO MEJORADO PARA IMAGEN MINIATURA -> MODAL
     $(document).on('click', 'td:has(.producto-img-container)', function (e) {
-        if ($(e.target).closest('button, .btn, .sortable').length === 0) {
-            e.preventDefault();
-            e.stopPropagation();
+        console.log('🖼️ === CLICK EN IMAGEN ===');
 
-            const $fila = $(this).closest('tr[data-id]');
-            const productoId = $fila.attr('data-id');
-
-            console.log('🖼️ Click en imagen - Abriendo modal para Producto ID:', productoId);
-
-            if (productoId && typeof cargarDetallesProducto === 'function') {
-                cargarDetallesProducto(productoId);
-            }
+        // ✅ VERIFICAR QUE NO SE HIZO CLICK EN BOTONES
+        if ($(e.target).closest('button, .btn, .sortable, a').length > 0) {
+            console.log('🚫 Click interceptado por otro elemento, ignorando...');
+            return; // No hacer nada si se clickeó un botón
         }
-    });
 
-    // Evento para botón ojo -> página de detalles
-    $(document).on('click', '.ver-detalles-btn', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
+        const $fila = $(this).closest('tr[data-id]');
+        const productoId = $fila.attr('data-id');
+
+        console.log('🖼️ Abriendo modal para Producto ID:', productoId);
+
+        if (productoId && typeof cargarDetallesProducto === 'function') {
+            cargarDetallesProducto(productoId);
+        } else {
+            console.error('❌ ProductoId inválido o función no disponible');
+        }
+    });
+
+    // ✅ EVENTO MEJORADO PARA BOTÓN OJO -> PÁGINA DE DETALLES
+    $(document).on('click', '.ver-detalles-btn', function (e) {
+        console.log('👁️ === CLICK EN BOTÓN VER DETALLES ===');
+
+        // ✅ PREVENIR COMPORTAMIENTOS NO DESEADOS
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
         const productoId = $(this).data("id");
+        console.log('📋 ProductoId obtenido:', productoId);
 
-        console.log('👁️ Click en botón ojo - Navegando a página de detalles para Producto ID:', productoId);
+        if (!productoId) {
+            console.error('❌ No se pudo obtener el ProductoId');
+            return;
+        }
 
-        if (productoId) {
+        try {
             const url = `/Inventario/DetalleProducto/${productoId}`;
             console.log('🌐 Navegando a:', url);
+
+            // ✅ NAVEGACIÓN DIRECTA SIN AJAX
             window.location.href = url;
+
+        } catch (error) {
+            console.error('❌ Error en navegación:', error);
         }
     });
 

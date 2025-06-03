@@ -734,17 +734,25 @@
 
                             <!-- Acciones -->
                             <div class="producto-card-acciones">
-                                <button type="button" class="btn btn-info ver-detalles-btn" data-id="@producto.ProductoId">
+                                <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })"
+                                   class="btn btn-info">
                                     <i class="bi bi-eye"></i>
                                     Ver
-                                </button>
-                                <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })" class="btn btn-primary">
+                                </a>
+                                <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })"
+                                   class="btn btn-primary" asp-permiso="Editar Productos">
                                     <i class="bi bi-pencil"></i>
                                     Editar
                                 </a>
-                                <button type="button" class="btn btn-success ajuste-stock-btn" data-id="@producto.ProductoId">
+                                <button type="button" class="btn btn-success ajuste-stock-btn"
+                                        data-id="@producto.ProductoId" asp-permiso="Ajustar Stock">
                                     <i class="bi bi-plus-slash-minus"></i>
                                     Stock
+                                </button>
+                                <button type="button" class="btn btn-danger eliminar-producto-btn"
+                                        data-id="@producto.ProductoId" asp-permiso="Eliminar Productos">
+                                    <i class="bi bi-trash"></i>
+                                    Eliminar
                                 </button>
                             </div>
                         </div>
