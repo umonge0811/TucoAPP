@@ -1,116 +1,136 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
-using Microsoft.AspNetCore.Razor.TagHelpers;
+﻿using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.AspNetCore.Http;
+using GestionLlantera.Web.Services.Interfaces;
 
 namespace GestionLlantera.Web.TagHelpers
 {
     /// <summary>
-    /// Tag Helper para mostrar/ocultar contenido basado en permisos
+    /// TagHelper GLOBAL para verificar permisos en todo el sistema
+    /// ✅ Se conecta dinámicamente con la API
+    /// ✅ Funciona con todos los módulos del sistema
+    /// ✅ Cache integrado para optimización
     /// </summary>
-    [HtmlTargetElement("*", Attributes = PermisoAttributeName)]
-    [HtmlTargetElement("*", Attributes = SoloAdministradorAttributeName)]
-    [HtmlTargetElement("inventario-elemento", Attributes = "tipo")]
+    [HtmlTargetElement("*", Attributes = "asp-permiso")]
     public class PermisoTagHelper : TagHelper
     {
-        private const string PermisoAttributeName = "asp-permiso";
-        private const string SoloAdministradorAttributeName = "asp-solo-admin";
-
-        private readonly IPermisosService _permisosService;
+        private readonly IPermisosGlobalService _permisosService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<PermisoTagHelper> _logger;
 
-        public PermisoTagHelper(IPermisosService permisosService, ILogger<PermisoTagHelper> logger)
+        public PermisoTagHelper(
+            IPermisosGlobalService permisosService,
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<PermisoTagHelper> logger)
         {
             _permisosService = permisosService;
+            _httpContextAccessor = httpContextAccessor;
             _logger = logger;
         }
 
         /// <summary>
-        /// Permiso requerido para mostrar el elemento
+        /// Nombre del permiso requerido
+        /// Ejemplo: asp-permiso="VerCostos"
         /// </summary>
-        [HtmlAttributeName(PermisoAttributeName)]
-        public string? Permiso { get; set; }
+        [HtmlAttributeName("asp-permiso")]
+        public string Permiso { get; set; }
 
         /// <summary>
-        /// Si es true, solo muestra el elemento para administradores
+        /// Mensaje alternativo cuando no tiene permisos
+        /// Ejemplo: asp-mensaje-sin-permiso="Solo administradores"
         /// </summary>
-        [HtmlAttributeName(SoloAdministradorAttributeName)]
-        public bool SoloAdministrador { get; set; } = false;
+        [HtmlAttributeName("asp-mensaje-sin-permiso")]
+        public string MensajeSinPermiso { get; set; }
 
         /// <summary>
-        /// Tipo de elemento para inventario-elemento
+        /// Comportamiento inverso: mostrar solo si NO tiene el permiso
+        /// Ejemplo: asp-invertir="true"
         /// </summary>
-        [HtmlAttributeName("tipo")]
-        public string Tipo { get; set; } = "";
+        [HtmlAttributeName("asp-invertir")]
+        public bool Invertir { get; set; } = false;
+
+        /// <summary>
+        /// Aplicar estilos específicos cuando no tiene permisos
+        /// Ejemplo: asp-clase-sin-permiso="disabled opacity-50"
+        /// </summary>
+        [HtmlAttributeName("asp-clase-sin-permiso")]
+        public string ClaseSinPermiso { get; set; }
 
         public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
+            // Si no se especifica permiso, mostrar normalmente
+            if (string.IsNullOrEmpty(Permiso))
+            {
+                _logger.LogDebug("TagHelper usado sin especificar permiso en elemento {TagName}", output.TagName);
+                return;
+            }
+
+            var user = _httpContextAccessor.HttpContext?.User;
+
+            // Usuario no autenticado - ocultar por seguridad
+            if (user == null || !user.Identity.IsAuthenticated)
+            {
+                _logger.LogDebug("TagHelper: Usuario no autenticado - procesando elemento con permiso {Permiso}", Permiso);
+                ProcesarSinPermiso(output);
+                return;
+            }
+
             try
             {
-                _logger.LogInformation("🔍 TAG HELPER EJECUTÁNDOSE - SoloAdmin: {SoloAdmin}, Permiso: {Permiso}, Tipo: {Tipo}",
-                    SoloAdministrador, Permiso, Tipo);
+                // ✅ VERIFICACIÓN GLOBAL USANDO EL SERVICIO
+                var tienePermiso = await _permisosService.TienePermisoAsync(Permiso);
 
-                var permisos = await _permisosService.ObtenerPermisosUsuarioActualAsync();
+                _logger.LogDebug("TagHelper: Usuario {Usuario} - Permiso '{Permiso}' = {TienePermiso}",
+                    user.Identity.Name ?? "Desconocido", Permiso, tienePermiso);
 
-                _logger.LogInformation("📊 PERMISOS OBTENIDOS - EsAdmin: {EsAdmin}, VerCostos: {VerCostos}, VerUtilidades: {VerUtilidades}",
-                    permisos.EsAdministrador, permisos.PuedeVerCostos, permisos.PuedeVerUtilidades);
+                // Aplicar lógica según configuración
+                var debeOcultar = Invertir ? tienePermiso : !tienePermiso;
 
-                bool tienePermiso = true;
-
-                // ✅ Para el tag inventario-elemento
-                if (output.TagName == "inventario-elemento")
+                if (debeOcultar)
                 {
-                    tienePermiso = Tipo.ToLower() switch
-                    {
-                        "costo" or "costos" => permisos.PuedeVerCostos,
-                        "utilidad" or "utilidades" => permisos.PuedeVerUtilidades,
-                        "programar" => permisos.PuedeProgramarInventario,
-                        "editar" => permisos.PuedeEditarProductos,
-                        "eliminar" => permisos.PuedeEliminarProductos,
-                        "ajustar" => permisos.PuedeAjustarStock,
-                        _ => permisos.EsAdministrador
-                    };
-
-                    _logger.LogInformation("🏷️ INVENTARIO ELEMENTO - Tipo: {Tipo}, Tiene Permiso: {TienePermiso}", Tipo, tienePermiso);
-
-                    if (tienePermiso)
-                    {
-                        output.TagName = "td";
-                        output.Attributes.RemoveAll("tipo");
-                    }
-                    else
-                    {
-                        output.SuppressOutput();
-                    }
-                    return;
-                }
-
-                // ✅ Para elementos normales con permisos
-                if (SoloAdministrador)
-                {
-                    tienePermiso = permisos.EsAdministrador;
-                    _logger.LogInformation("🔐 SOLO ADMIN - Es Administrador: {EsAdmin}, Tiene Permiso: {TienePermiso}",
-                        permisos.EsAdministrador, tienePermiso);
-                }
-                else if (!string.IsNullOrEmpty(Permiso))
-                {
-                    tienePermiso = await _permisosService.TienePermisoAsync(Permiso);
-                    _logger.LogInformation("🎯 PERMISO ESPECÍFICO - Permiso: {Permiso}, Tiene Permiso: {TienePermiso}",
-                        Permiso, tienePermiso);
-                }
-
-                if (!tienePermiso)
-                {
-                    _logger.LogInformation("❌ OCULTANDO ELEMENTO - No tiene permiso");
-                    output.SuppressOutput();
+                    ProcesarSinPermiso(output);
                 }
                 else
                 {
-                    _logger.LogInformation("✅ MOSTRANDO ELEMENTO - Tiene permiso");
+                    // Si tiene permiso y no hay que ocultar, el elemento se muestra normalmente
+                    _logger.LogDebug("TagHelper: Mostrando elemento - Usuario tiene permiso {Permiso}", Permiso);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 ERROR EN TAG HELPER");
-                // ✅ En caso de error, ocultar por seguridad
+                _logger.LogError(ex, "Error verificando permiso '{Permiso}' para usuario {Usuario}",
+                    Permiso, user.Identity?.Name ?? "Desconocido");
+
+                // En caso de error, ocultar por seguridad (a menos que sea comportamiento invertido)
+                if (!Invertir)
+                {
+                    ProcesarSinPermiso(output);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Procesa el elemento cuando el usuario no tiene permisos
+        /// </summary>
+        private void ProcesarSinPermiso(TagHelperOutput output)
+        {
+            if (!string.IsNullOrEmpty(MensajeSinPermiso))
+            {
+                // Mostrar mensaje personalizado
+                output.TagName = "div";
+                output.Attributes.Clear();
+                output.Attributes.Add("class", "alert alert-warning d-inline-block");
+                output.Attributes.Add("style", "padding: 5px 10px; margin: 2px; font-size: 0.9em;");
+                output.Content.SetContent(MensajeSinPermiso);
+            }
+            else if (!string.IsNullOrEmpty(ClaseSinPermiso))
+            {
+                // Aplicar clase CSS personalizada en lugar de ocultar
+                var claseActual = output.Attributes["class"]?.Value?.ToString() ?? "";
+                output.Attributes.SetAttribute("class", $"{claseActual} {ClaseSinPermiso}".Trim());
+            }
+            else
+            {
+                // Comportamiento por defecto: ocultar completamente
                 output.SuppressOutput();
             }
         }

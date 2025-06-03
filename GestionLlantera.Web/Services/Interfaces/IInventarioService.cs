@@ -7,13 +7,16 @@ namespace GestionLlantera.Web.Services.Interfaces
 {
     public interface IInventarioService
     {
-        Task<List<ProductoDTO>> ObtenerProductosAsync();
+        Task<List<ProductoDTO>> ObtenerProductosAsync(string jwtToken);
         Task<ProductoDTO> ObtenerProductoPorIdAsync(int id);
-        Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes);
+        Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes, string jwtToken = null);
         Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes);
         Task<bool> AjustarStockAsync(int id, int cantidad, string tipoAjuste);
+        Task<List<string>> BuscarMarcasLlantasAsync(string filtro = "", string jwtToken = null);
+        Task<List<string>> BuscarModelosLlantasAsync(string filtro = "", string marca = "", string jwtToken = null);
+        Task<List<string>> BuscarIndicesVelocidadAsync(string filtro = "", string jwtToken = null);
+        Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null);
 
-        // En IInventarioService.cs, añadir estos métodos:
 
         // Métodos para manejo de inventarios programados
         Task<List<InventarioProgramadoDTO>> ObtenerInventariosProgramadosAsync();

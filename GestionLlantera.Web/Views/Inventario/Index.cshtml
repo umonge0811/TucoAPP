@@ -20,12 +20,15 @@
             <button type="button" class="btn btn-outline-primary" id="btnExportar">
                 <i class="bi bi-download me-2"></i>Exportar
             </button>
-            <a asp-controller="Inventario" asp-action="ProgramarInventario" class="btn btn-info">
+            <a asp-controller="Inventario" asp-action="ProgramarInventario"
+               class="btn btn-info" asp-permiso="Programar Inventario">
                 <i class="bi bi-calendar-check me-2"></i>Programar Inventario
             </a>
-            <a asp-controller="Inventario" asp-action="AgregarProducto" class="btn btn-primary">
+            <a asp-controller="Inventario" asp-action="AgregarProducto"
+               class="btn btn-primary" asp-permiso="Editar Productos">
                 <i class="bi bi-plus-lg me-2"></i>Nuevo Producto
             </a>
+
         </div>
     </div>
 
@@ -44,13 +47,13 @@
                             <button type="button" class="btn btn-outline-danger btn-sm" id="btnLimpiarFiltros">
                                 <i class="bi bi-x-circle me-1"></i>Limpiar Filtros
                             </button>
-                            <button type="button" class="btn-colapsar-filtros" data-bs-toggle="collapse" data-bs-target="#filtrosAvanzados" aria-expanded="true">
-                                <i class="bi bi-chevron-up" id="iconoColapsarFiltros"></i>
+                            <button type="button" class="btn-colapsar-filtros" data-bs-toggle="collapse" data-bs-target="#filtrosAvanzados" aria-expanded="false">
+                                <i class="bi bi-chevron-down" id="iconoColapsarFiltros"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="card-body collapse show" id="filtrosAvanzados">
+                <div class="card-body collapse" id="filtrosAvanzados">
                     <!-- Fila 1: Búsqueda y filtros básicos -->
                     <div class="row g-3 mb-3">
                         <div class="col-lg-4">
@@ -230,6 +233,8 @@
     </div>
 
     <div class="dashboard-card">
+
+
         <div class="card-header d-flex justify-content-between align-items-center">
             <h3>
                 <i class="bi bi-box-seam me-2"></i>
@@ -278,11 +283,11 @@
                                     Marca/Modelo
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
-                                <th class="sortable" data-column="costo" data-type="currency">
+                                <th class="sortable" data-column="costo" data-type="currency" asp-permiso="VerCostos">
                                     Costo
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
-                                <th class="sortable" data-column="utilidad" data-type="percentage">
+                                <th class="sortable" data-column="utilidad" data-type="percentage" asp-permiso="Ver Utilidades">
                                     Utilidad %
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
@@ -342,8 +347,8 @@
                                             <!-- Overlay hover para mejor UX -->
                                             <div class="hover-overlay"
                                                  style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                            background: rgba(0,123,255,0.1); border-radius: 4px;
-                            opacity: 0; transition: opacity 0.2s; z-index: 3; pointer-events: none;">
+                                                    background: rgba(0,123,255,0.1); border-radius: 4px;
+                                                    opacity: 0; transition: opacity 0.2s; z-index: 3; pointer-events: none;">
                                             </div>
                                         </div>
                                     </td>
@@ -360,19 +365,27 @@
                                             <span class="badge bg-primary">Llanta</span>
                                         }
                                     </td>
-
                                     <!-- 4. Medidas -->
                                     <td>
                                         @if (producto.Llanta != null)
                                         {
                                             <span class="medida-llanta">
-                                                @if (producto.Llanta.Ancho.HasValue && producto.Llanta.Perfil.HasValue && !string.IsNullOrEmpty(producto.Llanta.Diametro))
+                                                @if (producto.Llanta.Ancho.HasValue && !string.IsNullOrEmpty(producto.Llanta.Diametro))
                                                 {
-                                                    @($"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}")
+                                                    @if (producto.Llanta.Perfil.HasValue && producto.Llanta.Perfil.Value > 0)
+                                                    {
+                                                        <!-- Formato completo: 225/60/R16 -->
+                                                        @($"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}")
+                                                    }
+                                                    else
+                                                    {
+                                                        <!-- Formato sin perfil: 225/R16 -->
+                                                        @($"{producto.Llanta.Ancho}/R{producto.Llanta.Diametro}")
+                                                    }
                                                 }
                                                 else
                                                 {
-                                                    <text>-</text>
+                                                    <span>N/A</span>
                                                 }
                                             </span>
                                         }
@@ -416,7 +429,7 @@
                                     </td>
 
                                     <!-- 6. Costo -->
-                                    <td class="text-end">
+                                    <td class="text-end" asp-permiso="VerCostos">
                                         @if (producto.Costo.HasValue)
                                         {
                                             <span class="text-muted small">₡@producto.Costo.Value.ToString("N0")</span>
@@ -428,7 +441,7 @@
                                     </td>
 
                                     <!-- 7. Utilidad % -->
-                                    <td class="text-center">
+                                    <td class="text-center" asp-permiso="Ver Utilidades">
                                         @if (producto.PorcentajeUtilidad.HasValue)
                                         {
                                             <span class="badge bg-info">@producto.PorcentajeUtilidad.Value.ToString("0.0")%</span>
@@ -478,17 +491,20 @@
                                     <!-- 11. Acciones -->
                                     <td>
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-info ver-detalles-btn"
-                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ver detalles">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
                                             <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })"
-                                               class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar">
+                                               class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar"
+                                               asp-permiso="Editar Productos">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-success ajuste-stock-btn"
-                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ajustar stock">
+                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ajustar stock"
+                                                    asp-permiso="Ajustar Stock">
                                                 <i class="bi bi-plus-slash-minus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger eliminar-producto-btn"
+                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Eliminar"
+                                                    asp-permiso="Eliminar Productos">
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
                                     </td>

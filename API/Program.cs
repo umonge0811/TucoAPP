@@ -19,11 +19,11 @@ builder.Services.AddScoped<EmailService>();
 // Configurar servicios de notificaciones
 builder.Services.AddScoped<INotificacionService, NotificacionService>();
 
-// ? SERVICIOS DE PERMISOS
+// ? SERVICIOS DE PERMISOS - Sistema completamente dinámico
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddMemoryCache(); // Para el caché de permisos
 
-// ? HANDLER DE AUTORIZACIÓN DINÁMICO
+// ? HANDLER DE AUTORIZACIÓN DINÁMICO - Mantener para funcionalidades específicas
 builder.Services.AddScoped<IAuthorizationHandler, PermisoAuthorizationHandler>();
 
 builder.Services.AddHttpClient();
@@ -64,10 +64,47 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-// Configurar Swagger
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+// ? SERVICIOS NECESARIOS PARA EL SISTEMA DINÁMICO
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddRazorPages(); // Para TagHelpers
 
+// Configurar Swagger
+// ? DESPUÉS (configuración completa):
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Tuco API",
+        Version = "v1",
+        Description = "API del sistema Tuco con autenticación JWT"
+    });
+
+    // ? CONFIGURACIÓN JWT PARA SWAGGER
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header usando el esquema Bearer. Ejemplo: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 // Configurar HttpClient
 builder.Services.AddHttpClient("TucoApi", client =>
 {
@@ -93,37 +130,27 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// ? CONFIGURACIÓN DE AUTORIZACIÓN DINÁMICA
+// ? CONFIGURACIÓN DE AUTORIZACIÓN 100% DINÁMICA
+// ?? TODO SE MANEJA DESDE LA BASE DE DATOS - SIN HARDCODEO
 builder.Services.AddAuthorization(options =>
 {
-    // ? POLICIES BÁSICAS
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("Administrador"));
+    // ? ÚNICA POLICY BÁSICA: Solo requiere autenticación
+    options.AddPolicy("RequireAuthentication", policy =>
+        policy.RequireAuthenticatedUser());
 
-    options.AddPolicy("AdminPolicy", policy =>
-        policy.RequireRole("Admin")); // Mantener por compatibilidad
-
-    // ? POLICIES DINÁMICAS PARA INVENTARIO
-    options.AgregarPolicyPermiso("PuedeVerCostos", "VerCostos");
-    options.AgregarPolicyPermiso("PuedeVerUtilidades", "VerUtilidades");
-    options.AgregarPolicyPermiso("PuedeProgramarInventario", "ProgramarInventario");
-    options.AgregarPolicyPermiso("PuedeEditarProductos", "EditarProductos");
-    options.AgregarPolicyPermiso("PuedeEliminarProductos", "EliminarProductos");
-    options.AgregarPolicyPermiso("PuedeAjustarStock", "AjustarStock");
-
-    // ? POLICIES DINÁMICAS GENERALES
-    options.AgregarPolicyPermiso("PuedeVerReportes", "VerReportes");
-    options.AgregarPolicyPermiso("PuedeGestionarUsuarios", "GestionUsuarios");
-    options.AgregarPolicyPermiso("PuedeConfigurarSistema", "ConfiguracionSistema");
-
-    // ? POLICIES DINÁMICAS PARA VENTAS (preparado para futuro)
-    options.AgregarPolicyPermiso("PuedeCrearVentas", "CrearVentas");
-    options.AgregarPolicyPermiso("PuedeVerVentas", "VerVentas");
-    options.AgregarPolicyPermiso("PuedeAnularVentas", "AnularVentas");
-
-    // ? POLICIES DINÁMICAS PARA CLIENTES (preparado para futuro)
-    options.AgregarPolicyPermiso("PuedeGestionarClientes", "GestionClientes");
-    options.AgregarPolicyPermiso("PuedeVerClientes", "VerClientes");
+    // ? YA NO HAY MÁS POLICIES ESTÁTICAS
+    // ?? Todos los permisos y roles se gestionan dinámicamente desde:
+    //    - Interfaz de usuario para crear/editar roles
+    //    - Interfaz de usuario para crear/editar permisos  
+    //    - TagHelper automático: asp-permiso="CualquierPermiso"
+    //    - Controladores: await this.ValidarPermisoAsync(_permisosService, "CualquierPermiso")
+    //
+    // ?? VENTAJAS DEL SISTEMA DINÁMICO:
+    //    ? Crear permiso en interfaz ? Funciona inmediatamente
+    //    ? Crear rol en interfaz ? Funciona inmediatamente
+    //    ? Asignar permisos a roles ? Funciona inmediatamente
+    //    ? Sin tocar código nunca más
+    //    ? Sistema escalable y mantenible
 });
 
 // Construir la aplicación

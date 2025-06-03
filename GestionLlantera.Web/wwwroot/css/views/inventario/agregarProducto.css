@@ -1,7 +1,7 @@
 ﻿/* ✅ CSS PARA LA VISTA REORGANIZADA DE AGREGAR PRODUCTO */
 
 /* === ESTILOS PARA EL SWITCH DE TIPO DE PRODUCTO === */
-.form-switch-lg .form-check-input {
+/*.form-switch-lg .form-check-input {
     width: 3rem;
     height: 1.5rem;
     border-radius: 3rem;
@@ -11,7 +11,7 @@
     .form-switch-lg .form-check-input:checked {
         background-color: #0d6efd;
         border-color: #0d6efd;
-    }
+    }*/
 
 /* === ESTILOS PARA LAS TARJETAS DE MODO DE PRECIO === */
 #cardAutomatico, #cardManual {
@@ -256,4 +256,379 @@
 .alert-warning {
     background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
     color: #664d03;
+}
+
+/* Toggle Switch Personalizado */
+.form-switch-custom .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    background-color: #e9ecef;
+    border: 2px solid #dee2e6;
+    border-radius: 2rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+    .form-switch-custom .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .form-switch-custom .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        border-color: #86b7fe;
+    }
+
+    .form-switch-custom .form-check-input::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 1.25rem;
+        height: 1.25rem;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .form-switch-custom .form-check-input:checked::after {
+        transform: translateX(1.5rem);
+    }
+
+/* Estilos para autocompletado */
+.dropdown-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s;
+}
+
+    .suggestion-item:hover,
+    .suggestion-item.active {
+        background-color: #f8f9fa;
+    }
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+.suggestion-new {
+    color: #28a745;
+    font-style: italic;
+}
+
+.position-relative {
+    position: relative;
+}
+
+/* ========================================
+   ESTILOS PARA AUTOCOMPLETADO INTELIGENTE
+   ======================================== */
+
+/* Contenedor principal del input con sugerencias */
+.position-relative {
+    position: relative;
+}
+
+/* Contenedor del dropdown de sugerencias */
+.dropdown-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #e0e6ed;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+    animation: slideDown 0.2s ease-out;
+}
+
+/* Animación de aparición del dropdown */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Elemento individual de sugerencia */
+.suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Estados hover para sugerencias */
+    .suggestion-item:hover,
+    .suggestion-item.suggestion-hover {
+        background-color: #f8f9fa;
+        transform: translateX(2px);
+    }
+
+/* Sugerencias existentes (marcas que ya existen) */
+.suggestion-existing {
+    color: #495057;
+}
+
+    .suggestion-existing:hover {
+        background-color: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .suggestion-existing .bi-tag {
+        color: #1976d2;
+    }
+
+/* Sugerencias nuevas (crear nueva marca) */
+.suggestion-new {
+    color: #28a745;
+    font-weight: 500;
+    border-top: 1px solid #e9ecef;
+    background-color: #f8fff9;
+}
+
+    .suggestion-new:hover {
+        background-color: #d4edda;
+        color: #155724;
+        transform: translateX(4px);
+    }
+
+    .suggestion-new .bi-plus-circle {
+        color: #28a745;
+    }
+
+/* Estado de carga */
+.suggestion-loading {
+    color: #6c757d;
+    background-color: #f8f9fa;
+    cursor: default;
+    font-style: italic;
+}
+
+    .suggestion-loading:hover {
+        background-color: #f8f9fa;
+        transform: none;
+    }
+
+    .suggestion-loading .spinner-border-sm {
+        width: 14px;
+        height: 14px;
+        border-width: 1px;
+    }
+
+/* Mensajes informativos */
+.suggestion-info {
+    color: #6c757d;
+    background-color: #f8f9fa;
+    cursor: default;
+    font-style: italic;
+    text-align: center;
+}
+
+    .suggestion-info:hover {
+        background-color: #f8f9fa;
+        transform: none;
+    }
+
+/* Mensajes de error */
+.suggestion-error {
+    color: #dc3545;
+    background-color: #f8d7da;
+    cursor: default;
+    font-weight: 500;
+}
+
+    .suggestion-error:hover {
+        background-color: #f8d7da;
+        transform: none;
+    }
+
+/* Separador entre secciones */
+.suggestion-separator {
+    margin: 0;
+    padding: 0;
+}
+
+    .suggestion-separator hr {
+        margin: 4px 0;
+        border-color: #dee2e6;
+        opacity: 0.5;
+    }
+
+/* Efectos en el input cuando tiene foco */
+.form-control:focus + .dropdown-suggestions {
+    border-color: #80bdff;
+}
+
+/* Animación de éxito cuando se selecciona */
+.input-success {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+    animation: successPulse 0.6s ease-out;
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.02);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Scroll personalizado para el dropdown */
+.dropdown-suggestions::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-suggestions::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.dropdown-suggestions::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+    .dropdown-suggestions::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+/* Responsive: En pantallas pequeñas */
+@media (max-width: 576px) {
+    .dropdown-suggestions {
+        max-height: 200px;
+        font-size: 13px;
+    }
+
+    .suggestion-item {
+        padding: 10px 12px;
+    }
+}
+
+/* Estados especiales del input */
+.form-control.searching {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%236c757d' d='M8 0C3.58 0 0 3.58 0 8c0 4.42 3.58 8 8 8 4.42 0 8-3.58 8-8 0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+}
+
+/* Efectos adicionales para mejor UX */
+.suggestion-item i {
+    flex-shrink: 0;
+    margin-right: 8px;
+    transition: transform 0.2s ease;
+}
+
+.suggestion-item:hover i {
+    transform: scale(1.1);
+}
+
+/* Indicador visual cuando el dropdown está activo */
+.form-control.dropdown-active {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: #e0e6ed;
+}
+
+/* Animación sutil para los íconos */
+.suggestion-item .bi-tag,
+.suggestion-item .bi-plus-circle {
+    transition: all 0.2s ease;
+}
+
+.suggestion-existing:hover .bi-tag {
+    transform: rotate(5deg) scale(1.1);
+}
+
+.suggestion-new:hover .bi-plus-circle {
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* Mejora visual para texto resaltado */
+.suggestion-item strong {
+    color: inherit;
+    font-weight: 600;
+}
+
+.suggestion-new strong {
+    color: #155724;
+}
+
+/* Estado de foco mejorado */
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    transition: all 0.15s ease-in-out;
+}
+
+/* Mejoras adicionales para accesibilidad */
+.suggestion-item:focus {
+    outline: 2px solid #007bff;
+    outline-offset: -2px;
+}
+
+/* Animación suave para el contenedor */
+.dropdown-suggestions.show {
+    display: block;
+    animation: slideDown 0.2s ease-out forwards;
+}
+
+.dropdown-suggestions.hide {
+    animation: slideUp 0.15s ease-in forwards;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
 }

@@ -17,6 +17,22 @@ let paginacionConfig = {
     filasVisibles: []
 };
 
+document.addEventListener('DOMContentLoaded', function () {
+    const filtrosAvanzados = document.getElementById('filtrosAvanzados');
+    const iconoColapsar = document.getElementById('iconoColapsarFiltros');
+
+    if (filtrosAvanzados && iconoColapsar) {
+        // ✅ Evento cuando se abre/cierra el panel
+        filtrosAvanzados.addEventListener('show.bs.collapse', function () {
+            iconoColapsar.className = 'bi bi-chevron-up';
+        });
+
+        filtrosAvanzados.addEventListener('hide.bs.collapse', function () {
+            iconoColapsar.className = 'bi bi-chevron-down';
+        });
+    }
+});
+
 // ✅ FUNCIONES GLOBALES DE PAGINACIÓN
 
 // Función principal para inicializar la paginación

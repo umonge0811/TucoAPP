@@ -1,4 +1,5 @@
-﻿using GestionLlantera.Web.Models.ViewModels;
+﻿using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Models.ViewModels;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using iTextSharp.text.html.simpleparser;
@@ -34,6 +35,25 @@ namespace GestionLlantera.Web.Controllers
             _usuariosService = usuariosService;
         }
 
+        public async Task<IActionResult> TestPermiso()
+        {
+            // Probar método básico
+            var tienePermiso = await this.TienePermisoAsync("VerCostos");
+            ViewBag.TienePermiso = tienePermiso;
+
+            // Probar si es admin
+            var esAdmin = await this.EsAdministradorAsync();
+            ViewBag.EsAdmin = esAdmin;
+
+            // Obtener todos los permisos
+            var misPermisos = await this.ObtenerMisPermisosAsync();
+            ViewBag.MisPermisos = misPermisos;
+
+            return View();
+        }
+
+
+
 
 
         // GET: /Inventario
@@ -44,7 +64,20 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
-                var productos = await _inventarioService.ObtenerProductosAsync();
+                // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
+                var token = ObtenerTokenJWT();
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // 📤 PASAR EL TOKEN AL SERVICIO
+                var productos = await _inventarioService.ObtenerProductosAsync(token);
+
+                _logger.LogInformation("✅ Se obtuvieron {Cantidad} productos para mostrar", productos.Count);
+
                 return View(productos);
             }
             catch (Exception ex)
@@ -53,6 +86,28 @@ namespace GestionLlantera.Web.Controllers
                 TempData["Error"] = "Error al cargar los productos.";
                 return View(new List<ProductoDTO>());
             }
+        }
+
+        /// <summary>
+        /// Método auxiliar para obtener el token JWT del usuario autenticado
+        /// </summary>
+        /// <returns>El token JWT o null si no se encuentra</returns>
+        private string? ObtenerTokenJWT()
+        {
+            var token = User.FindFirst("JwtToken")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+            }
+            else
+            {
+                _logger.LogDebug("✅ Token JWT obtenido correctamente para usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+            }
+
+            return token;
         }
 
         // GET: /Inventario/DetalleProducto/5
@@ -166,6 +221,11 @@ namespace GestionLlantera.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> AgregarProducto()
         {
+            // ✅ RESTRICCIÓN PARA AGREGAR PRODUCTOS
+            var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
+                "No tienes permisos para agregar productos.");
+            if (validacion != null) return validacion;
+
             ViewData["Title"] = "Agregar Producto";
             ViewData["Layout"] = "_AdminLayout";
 
@@ -192,45 +252,66 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // Registra información para diagnóstico
-                _logger.LogInformation("Método AgregarProducto llamado");
-                _logger.LogInformation($"Content-Type: {Request.ContentType}");
-                _logger.LogInformation($"Archivos: {Request.Form.Files.Count}");
+                // ✅ VERIFICACIÓN DE PERMISOS
+                var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
+                    "No tienes permisos para crear productos.");
+                if (validacion != null) return validacion;
 
-                // Verificar el modelo
-                if (producto != null)
-                {
-                    _logger.LogInformation($"ProductoDTO vinculado: NombreProducto={producto.NombreProducto}, Precio={producto.Precio}");
-                }
-                else
-                {
-                    _logger.LogWarning("El modelo ProductoDTO no se pudo vincular (es null)");
-                }
+                _logger.LogInformation("=== INICIANDO AGREGAR PRODUCTO ===");
+                _logger.LogInformation($"NombreProducto: {producto.NombreProducto}");
+                _logger.LogInformation($"CantidadEnInventario: {producto.CantidadEnInventario}");
+                _logger.LogInformation($"StockMinimo: {producto.StockMinimo}");
+                _logger.LogInformation($"EsLlanta: {producto.EsLlanta}");
 
-                if (!ModelState.IsValid)
-                {
+                if(!ModelState.IsValid)
+{
                     _logger.LogWarning("ModelState no es válido:");
-                    foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                    foreach (var kvp in ModelState)
                     {
-                        _logger.LogWarning($"  - Error: {error.ErrorMessage}");
+                        var key = kvp.Key;
+                        var value = kvp.Value;
+
+                        if (value.Errors.Count > 0)
+                        {
+                            _logger.LogWarning($"Campo: {key}");
+                            foreach (var error in value.Errors)
+                            {
+                                _logger.LogWarning($"  - Error: {error.ErrorMessage}");
+                            }
+                        }
                     }
+
+                    // TAMBIÉN MOSTRAR EN LA VISTA PARA DEBUG
+                    ViewBag.ModelStateErrors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToList()
+                        );
+
                     return View(producto);
+                }
+
+                // ✅ OBTENER TOKEN - ESTO FALTABA
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
                 }
 
                 // Obtener las imágenes
                 var imagenes = Request.Form.Files.GetFiles("imagenes").ToList();
                 _logger.LogInformation($"Recibidas {imagenes.Count} imágenes");
 
-                // Intentar guardar el producto
-                var resultado = await _inventarioService.AgregarProductoAsync(producto, imagenes);
-
+                // ✅ PASAR EL TOKEN AL SERVICIO
+                var resultado = await _inventarioService.AgregarProductoAsync(producto, imagenes, token);
                 if (resultado)
                 {
                     TempData["Success"] = "Producto agregado exitosamente";
                     return RedirectToAction(nameof(Index));
                 }
 
-                // Si no se pudo guardar, mostrar error
                 TempData["Error"] = "Error al agregar el producto";
                 return View(producto);
             }
@@ -323,7 +404,21 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ RESTRICCIÓN PARA EXPORTAR
+                var validacion = await this.ValidarPermisoMvcAsync("Ver Reportes",
+                    "No tienes permisos para exportar reportes.");
+                if (validacion != null) return validacion;
+
                 _logger.LogInformation("Iniciando exportación a PDF para toma física de inventario");
+
+                // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
+                var token = ObtenerTokenJWT();
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
 
                 // Parámetros por defecto si no se proporcionan
                 responsable = string.IsNullOrEmpty(responsable) ? User.Identity.Name ?? "No especificado" : responsable;
@@ -336,8 +431,8 @@ namespace GestionLlantera.Web.Controllers
                     fechaLimiteInventario = DateTime.Now.AddDays(7);
                 }
 
-                // Obtener los datos de productos
-                var productos = await _inventarioService.ObtenerProductosAsync();
+                // 📤 OBTENER LOS DATOS DE PRODUCTOS CON TOKEN
+                var productos = await _inventarioService.ObtenerProductosAsync(token);
 
                 // Identificador único para el inventario
                 string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
@@ -807,7 +902,20 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ RESTRICCIÓN PARA EXPORTAR
+                var validacion = await this.ValidarPermisoMvcAsync("Ver Reportes",
+                    "No tienes permisos para exportar reportes.");
+                if (validacion != null) return validacion;
+
                 _logger.LogInformation("Iniciando exportación a Excel para toma física de inventario");
+
+                // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
 
                 // Parámetros por defecto si no se proporcionan
                 responsable = string.IsNullOrEmpty(responsable) ? User.Identity.Name ?? "No especificado" : responsable;
@@ -820,8 +928,10 @@ namespace GestionLlantera.Web.Controllers
                     fechaLimiteInventario = DateTime.Now.AddDays(7);
                 }
 
-                // Obtener los datos de productos
-                var productos = await _inventarioService.ObtenerProductosAsync();
+
+                // 📤 OBTENER LOS DATOS DE PRODUCTOS CON TOKEN
+                var productos = await _inventarioService.ObtenerProductosAsync(token);
+
 
                 // Configurar licencia de EPPlus
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -1179,6 +1289,10 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                // ✅ PASO 1: VERIFICACIÓN DE PERMISOS (SEGURIDAD PRINCIPAL)
+                var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
+                    "No tienes permisos para programar inventarios. Contacta al administrador.");
+                if (validacion != null) return validacion;
                 // Obtener la lista de usuarios para asignar responsabilidades
                 // En un escenario real, esto sería inyectado como un servicio
                 var usuarios = await _usuariosService.ObtenerTodosAsync();
@@ -1258,6 +1372,11 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ VERIFICACIÓN TAMBIÉN EN POST
+                var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
+                    "No tienes permisos para crear inventarios programados.");
+                if (validacion != null) return validacion;
+
                 _logger.LogInformation("Iniciando proceso de creación de inventario programado");
 
                 if (!ModelState.IsValid)
@@ -1679,7 +1798,133 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        // GET: /Inventario/BuscarMarcas?filtro=text
+        [HttpGet]
+        [Route("Inventario/BuscarMarcas")]
+        public async Task<IActionResult> BuscarMarcas(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Búsqueda de marcas solicitada con filtro: '{Filtro}'", filtro);
 
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado");
+                    return Json(new List<string>());
+                }
+
+                // Llamar al servicio para obtener las marcas
+                var marcas = await _inventarioService.BuscarMarcasLlantasAsync(filtro, token);
+
+                _logger.LogInformation("✅ Devolviendo {Count} marcas encontradas", marcas.Count);
+
+                // Devolver JSON directamente
+                return Json(marcas);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar marcas en controlador web");
+                return Json(new List<string>());
+            }
+        }
+
+        // GET: /Inventario/BuscarModelos?filtro=text&marca=brand
+        [HttpGet]
+        [Route("Inventario/BuscarModelos")]
+        public async Task<IActionResult> BuscarModelos(string filtro = "", string marca = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Búsqueda de modelos solicitada - Filtro: '{Filtro}', Marca: '{Marca}'", filtro, marca);
+
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado para búsqueda de modelos");
+                    return Json(new List<string>());
+                }
+
+                // Llamar al servicio para obtener los modelos
+                var modelos = await _inventarioService.BuscarModelosLlantasAsync(filtro, marca, token);
+
+                _logger.LogInformation("✅ Devolviendo {Count} modelos encontrados", modelos.Count);
+
+                // Devolver JSON directamente
+                return Json(modelos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar modelos en controlador web");
+                return Json(new List<string>());
+            }
+        }
+
+        // GET: /Inventario/BuscarIndicesVelocidad?filtro=text
+        [HttpGet]
+        [Route("Inventario/BuscarIndicesVelocidad")]
+        public async Task<IActionResult> BuscarIndicesVelocidad(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Búsqueda de índices de velocidad solicitada con filtro: '{Filtro}'", filtro);
+
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado para búsqueda de índices");
+                    return Json(new List<string>());
+                }
+
+                // Llamar al servicio para obtener los índices
+                var indices = await _inventarioService.BuscarIndicesVelocidadAsync(filtro, token);
+
+                _logger.LogInformation("✅ Devolviendo {Count} índices de velocidad encontrados", indices.Count);
+
+                // Devolver JSON directamente
+                return Json(indices);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar índices de velocidad en controlador web");
+                return Json(new List<string>());
+            }
+        }
+
+        // GET: /Inventario/BuscarTiposTerreno?filtro=text
+        [HttpGet]
+        [Route("Inventario/BuscarTiposTerreno")]
+        public async Task<IActionResult> BuscarTiposTerreno(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Búsqueda de tipos de terreno solicitada con filtro: '{Filtro}'", filtro);
+
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado para búsqueda de tipos de terreno");
+                    return Json(new List<string>());
+                }
+
+                // Llamar al servicio para obtener los tipos
+                var tipos = await _inventarioService.BuscarTiposTerrenoAsync(filtro, token);
+
+                _logger.LogInformation("✅ Devolviendo {Count} tipos de terreno encontrados", tipos.Count);
+
+                // Devolver JSON directamente
+                return Json(tipos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar tipos de terreno en controlador web");
+                return Json(new List<string>());
+            }
+        }
     }
 }
     

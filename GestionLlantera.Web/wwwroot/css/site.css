@@ -69,3 +69,39 @@ input[type="password"]::-ms-clear,
 input[type="password"]::-webkit-credentials-auto-fill-button {
     display: none;
 }
+
+
+/* Estilos para alertas de acceso restringido */
+.alert-warning.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.alert-icon {
+    min-width: 40px;
+}
+
+.alert-details {
+    font-size: 0.875rem;
+}
+
+.alert-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Animación suave para alertas */
+.alert.fade.show {
+    animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

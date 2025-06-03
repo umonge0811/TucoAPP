@@ -34,29 +34,29 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <div class="form-check form-switch form-switch-lg">
-                                    <input class="form-check-input" type="checkbox" id="esLlanta" asp-for="EsLlanta" style="font-size: 1.5em;">
-                                    <label class="form-check-label fw-bold" for="esLlanta" style="font-size: 1.1em;">
-                                        <i class="bi bi-car-front-fill me-2"></i>
+                                <div class="form-check form-switch form-switch-custom">
+                                    <input class="form-check-input" type="checkbox" id="esLlanta" asp-for="EsLlanta">
+                                    <label class="form-check-label fw-bold ms-3" for="esLlanta" style="font-size: 1.1em;">
+                                        <i class="bi bi-car-front-fill me-2 text-primary"></i>
                                         ¿Es una llanta?
                                     </label>
                                 </div>
-                                <div class="form-text mt-2">
+                                <div class="form-text mt-2 ms-5">
                                     Active esta opción si el producto es una llanta para habilitar campos específicos
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="alert alert-info d-flex align-items-center mb-0" id="tipoProductoInfo">
                                     <i class="bi bi-info-circle me-2"></i>
-                                    <span id="textoTipoProducto">Producto general - se solicitará información básica</span>
+                                    <span id="textoTipoProducto">Producto general - información básica</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ✅ PASO 2: INFORMACIÓN BÁSICA -->
-                <div class="dashboard-card mb-4">
+                <!-- ✅ PASO 2: INFORMACIÓN BÁSICA (Solo para productos generales) -->
+                <div class="dashboard-card mb-4" id="informacionBasica">
                     <div class="card-header">
                         <h3>
                             <i class="bi bi-info-circle me-2"></i>
@@ -65,24 +65,24 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <div class="mb-3">
                                     <label asp-for="NombreProducto" class="form-label">Nombre del Producto</label>
-                                    <input asp-for="NombreProducto" class="form-control" required />
+                                    <input asp-for="NombreProducto" class="form-control"  />
                                     <span asp-validation-for="NombreProducto" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="CantidadEnInventario" class="form-label">Cantidad en Inventario</label>
-                                    <input asp-for="CantidadEnInventario" type="number" min="0" class="form-control" required />
+                                    <input asp-for="CantidadEnInventario" type="number" min="0" class="form-control"  />
                                     <span asp-validation-for="CantidadEnInventario" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="StockMinimo" class="form-label">Stock Mínimo</label>
-                                    <input asp-for="StockMinimo" type="number" min="0" class="form-control" required />
+                                    <input asp-for="StockMinimo" type="number" min="0" class="form-control" />
                                     <div class="form-text">Cantidad mínima antes de emitir alertas</div>
                                     <span asp-validation-for="StockMinimo" class="text-danger"></span>
                                 </div>
@@ -109,11 +109,46 @@
                     <div class="card-body">
                         <div class="alert alert-primary d-flex align-items-center mb-4">
                             <i class="bi bi-lightbulb me-2"></i>
-                            <span>Complete la información técnica de la llanta para una mejor categorización</span>
+                            <span>Complete toda la información de la llanta para una mejor categorización</span>
                         </div>
 
+                        <!-- INFORMACIÓN BÁSICA PARA LLANTAS (SIN nombre del producto) -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Información General
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="cantidadInventarioLlanta" class="form-label">Cantidad en Inventario</label>
+                                    <input type="number" id="cantidadInventarioLlanta" name="cantidadInventarioLlanta" min="0" class="form-control"  />
+                                    <span class="text-danger" id="errorCantidadLlanta"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="stockMinimoLlanta" class="form-label">Stock Mínimo</label>
+                                    <input type="number" id="stockMinimoLlanta" name="stockMinimoLlanta" min="0" class="form-control"  />
+                                    <div class="form-text">Cantidad mínima antes de emitir alertas</div>
+                                    <span class="text-danger" id="errorStockLlanta"></span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="descripcionLlanta" class="form-label">Descripción</label>
+                                    <textarea id="descripcionLlanta" name="descripcionLlanta" class="form-control" rows="3" placeholder="Describe las características principales de la llanta..."></textarea>
+                                    <span class="text-danger" id="errorDescripcionLlanta"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Separador visual -->
+                        <hr class="my-4">
+
+                        <!-- MEDIDAS DE LLANTA -->
                         <div class="row g-3">
-                            <!-- Medidas principales -->
                             <div class="col-12">
                                 <h5 class="text-primary mb-3">
                                     <i class="bi bi-rulers me-2"></i>
@@ -131,11 +166,14 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label asp-for="Llanta.Perfil" class="form-label">Perfil</label>
+                                    <label asp-for="Llanta.Perfil" class="form-label">
+                                        Perfil <small class="text-muted">(opcional)</small>
+                                    </label>
                                     <div class="input-group">
                                         <input asp-for="Llanta.Perfil" type="number" min="0" class="form-control" placeholder="60" />
                                         <span class="input-group-text">%</span>
                                     </div>
+                                    <div class="form-text">Deje vacío para formatos como 225/R16</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -159,26 +197,22 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Marca" class="form-label">Marca</label>
-                                    <select asp-for="Llanta.Marca" class="form-select">
-                                        <option value="">Seleccionar marca...</option>
-                                        <option value="Michelin">Michelin</option>
-                                        <option value="Bridgestone">Bridgestone</option>
-                                        <option value="Continental">Continental</option>
-                                        <option value="Pirelli">Pirelli</option>
-                                        <option value="Goodyear">Goodyear</option>
-                                        <option value="Firestone">Firestone</option>
-                                        <option value="Dunlop">Dunlop</option>
-                                        <option value="Hankook">Hankook</option>
-                                        <option value="Kumho">Kumho</option>
-                                        <option value="Yokohama">Yokohama</option>
-                                        <option value="Otra">Otra</option>
-                                    </select>
+                                    <div class="position-relative">
+                                        <input asp-for="Llanta.Marca" class="form-control" id="marcaInput" placeholder="Escriba o seleccione una marca..." autocomplete="off" />
+                                        <div class="dropdown-suggestions" id="marcaSuggestions" style="display: none;"></div>
+                                    </div>
+                                    <span asp-validation-for="Llanta.Marca" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Modelo" class="form-label">Modelo</label>
-                                    <input asp-for="Llanta.Modelo" class="form-control" placeholder="Pilot Sport 4" />
+                                    <div class="position-relative">
+                                        <input asp-for="Llanta.Modelo" class="form-control" id="modeloInput" placeholder="Escriba o seleccione un modelo..." autocomplete="off" />
+                                        <div class="dropdown-suggestions" id="modeloSuggestions" style="display: none;"></div>
+                                    </div>
+                                    <div class="form-text">Los modelos se filtrarán según la marca seleccionada</div>
+                                    <span asp-validation-for="Llanta.Modelo" class="text-danger"></span>
                                 </div>
                             </div>
 
@@ -192,34 +226,23 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.IndiceVelocidad" class="form-label">Índice de Velocidad</label>
-                                    <select asp-for="Llanta.IndiceVelocidad" class="form-select">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="N">N (140 km/h)</option>
-                                        <option value="P">P (150 km/h)</option>
-                                        <option value="Q">Q (160 km/h)</option>
-                                        <option value="R">R (170 km/h)</option>
-                                        <option value="S">S (180 km/h)</option>
-                                        <option value="T">T (190 km/h)</option>
-                                        <option value="U">U (200 km/h)</option>
-                                        <option value="H">H (210 km/h)</option>
-                                        <option value="V">V (240 km/h)</option>
-                                        <option value="W">W (270 km/h)</option>
-                                        <option value="Y">Y (300 km/h)</option>
-                                    </select>
+                                    <div class="position-relative">
+                                        <input asp-for="Llanta.IndiceVelocidad" class="form-control" id="indiceVelocidadInput" placeholder="Ej: H, V, W..." autocomplete="off" />
+                                        <div class="dropdown-suggestions" id="indiceVelocidadSuggestions" style="display: none;"></div>
+                                    </div>
+                                    <div class="form-text">Escriba la letra del índice de velocidad</div>
+                                    <span asp-validation-for="Llanta.IndiceVelocidad" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.TipoTerreno" class="form-label">Tipo de Terreno</label>
-                                    <select asp-for="Llanta.TipoTerreno" class="form-select">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="Carretera">Carretera</option>
-                                        <option value="Todo Terreno">Todo Terreno</option>
-                                        <option value="Off-Road">Off-Road</option>
-                                        <option value="Nieve">Nieve</option>
-                                        <option value="Barro">Barro</option>
-                                        <option value="Mixto">Mixto</option>
-                                    </select>
+                                    <div class="position-relative">
+                                        <input asp-for="Llanta.TipoTerreno" class="form-control" id="tipoTerrenoInput" placeholder="Ej: Carretera, Todo Terreno..." autocomplete="off" />
+                                        <div class="dropdown-suggestions" id="tipoTerrenoSuggestions" style="display: none;"></div>
+                                    </div>
+                                    <div class="form-text">Escriba el tipo de terreno para la llanta</div>
+                                    <span asp-validation-for="Llanta.TipoTerreno" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -392,6 +415,7 @@
                         </div>
                     </div>
                 </div>
+
 
                 <!-- ✅ BOTONES DE ACCIÓN -->
                 <div class="d-flex gap-2 justify-content-end mb-4">

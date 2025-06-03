@@ -1,4 +1,5 @@
-﻿using GestionLlantera.Web.Models.DTOs;
+﻿using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,10 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+
+                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                if (validacion != null) return validacion;
+
                 // Obtener roles usando el servicio
                 var roles = await _rolesService.ObtenerTodosLosRoles();
                 _logger.LogInformation($"Roles cargados: {roles.Count}");
@@ -52,6 +57,11 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+
+                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios",
+                        "Solo usuarios autorizados pueden gestionar otros usuarios del sistema.");
+                if (validacion != null) return validacion;
+
                 _logger.LogInformation("Obteniendo lista de usuarios");
                 var usuarios = await _usuariosService.ObtenerTodosAsync();
 
@@ -78,6 +88,10 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                if (validacion != null) return validacion;
+
+
                 // Validación básica
                 if (!ModelState.IsValid)
                 {

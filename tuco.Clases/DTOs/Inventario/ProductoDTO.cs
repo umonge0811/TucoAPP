@@ -11,7 +11,6 @@ namespace Tuco.Clases.DTOs.Inventario
     {
         public int ProductoId { get; set; }
 
-        [Required(ErrorMessage = "El nombre del producto es obligatorio")]
         [StringLength(100, ErrorMessage = "El nombre del producto no puede tener más de 100 caracteres")]
         public string NombreProducto { get; set; } = string.Empty; // Valor por defecto
 
