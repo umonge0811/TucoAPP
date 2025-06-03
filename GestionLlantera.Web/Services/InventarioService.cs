@@ -542,6 +542,7 @@ namespace GestionLlantera.Web.Services
                 };
             }
         }// ✅ MÉTODOS AUXILIARES PARA MAPEO SEGURO
+
         private static string GetSafeString(dynamic value, string defaultValue = "")
         {
             try
@@ -614,11 +615,26 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes)
+
+
+        public async Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation("Iniciando proceso de agregar producto: {NombreProducto}", producto.NombreProducto);
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para la petición");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT - la petición podría fallar");
+                }
 
                 // ✅ NUEVO: Calcular el precio final usando la misma lógica del controlador
                 var precioFinal = CalcularPrecioFinal(producto);
@@ -666,8 +682,8 @@ namespace GestionLlantera.Web.Services
                 // Obtener la URL base para verificarla
                 _logger.LogInformation("URL base del cliente HTTP: {BaseUrl}", _httpClient.BaseAddress?.ToString() ?? "null");
 
-                // Enviar la solicitud
-                var response = await _httpClient.PostAsync("/api/Inventario/productos", content);
+                // ✅ CORREGIR URL - quitar la barra inicial
+                var response = await _httpClient.PostAsync("api/Inventario/productos", content);
 
                 // Capturar la respuesta completa
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -724,7 +740,8 @@ namespace GestionLlantera.Web.Services
                         }
                     }
 
-                    var imageUploadUrl = $"/api/Inventario/productos/{productoId}/imagenes";
+                    // ✅ CORREGIR URL - quitar la barra inicial
+                    var imageUploadUrl = $"api/Inventario/productos/{productoId}/imagenes";
                     _logger.LogInformation("Enviando solicitud POST a: {Url}", imageUploadUrl);
 
                     var imageResponse = await _httpClient.PostAsync(imageUploadUrl, formData);

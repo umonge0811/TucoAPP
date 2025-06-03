@@ -54,6 +54,8 @@ namespace GestionLlantera.Web.Controllers
 
 
 
+
+
         // GET: /Inventario
         public async Task<IActionResult> Index()
         {
@@ -250,50 +252,66 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // ✅ TAMBIÉN EN POST
+                // ✅ VERIFICACIÓN DE PERMISOS
                 var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
                     "No tienes permisos para crear productos.");
                 if (validacion != null) return validacion;
 
-                // Registra información para diagnóstico
-                _logger.LogInformation("Método AgregarProducto llamado");
-                _logger.LogInformation($"Content-Type: {Request.ContentType}");
-                _logger.LogInformation($"Archivos: {Request.Form.Files.Count}");
+                _logger.LogInformation("=== INICIANDO AGREGAR PRODUCTO ===");
+                _logger.LogInformation($"NombreProducto: {producto.NombreProducto}");
+                _logger.LogInformation($"CantidadEnInventario: {producto.CantidadEnInventario}");
+                _logger.LogInformation($"StockMinimo: {producto.StockMinimo}");
+                _logger.LogInformation($"EsLlanta: {producto.EsLlanta}");
 
-                // Verificar el modelo
-                if (producto != null)
-                {
-                    _logger.LogInformation($"ProductoDTO vinculado: NombreProducto={producto.NombreProducto}, Precio={producto.Precio}");
-                }
-                else
-                {
-                    _logger.LogWarning("El modelo ProductoDTO no se pudo vincular (es null)");
-                }
-
-                if (!ModelState.IsValid)
-                {
+                if(!ModelState.IsValid)
+{
                     _logger.LogWarning("ModelState no es válido:");
-                    foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                    foreach (var kvp in ModelState)
                     {
-                        _logger.LogWarning($"  - Error: {error.ErrorMessage}");
+                        var key = kvp.Key;
+                        var value = kvp.Value;
+
+                        if (value.Errors.Count > 0)
+                        {
+                            _logger.LogWarning($"Campo: {key}");
+                            foreach (var error in value.Errors)
+                            {
+                                _logger.LogWarning($"  - Error: {error.ErrorMessage}");
+                            }
+                        }
                     }
+
+                    // TAMBIÉN MOSTRAR EN LA VISTA PARA DEBUG
+                    ViewBag.ModelStateErrors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToList()
+                        );
+
                     return View(producto);
+                }
+
+                // ✅ OBTENER TOKEN - ESTO FALTABA
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
                 }
 
                 // Obtener las imágenes
                 var imagenes = Request.Form.Files.GetFiles("imagenes").ToList();
                 _logger.LogInformation($"Recibidas {imagenes.Count} imágenes");
 
-                // Intentar guardar el producto
-                var resultado = await _inventarioService.AgregarProductoAsync(producto, imagenes);
-
+                // ✅ PASAR EL TOKEN AL SERVICIO
+                var resultado = await _inventarioService.AgregarProductoAsync(producto, imagenes, token);
                 if (resultado)
                 {
                     TempData["Success"] = "Producto agregado exitosamente";
                     return RedirectToAction(nameof(Index));
                 }
 
-                // Si no se pudo guardar, mostrar error
                 TempData["Error"] = "Error al agregar el producto";
                 return View(producto);
             }

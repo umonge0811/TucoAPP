@@ -1,7 +1,7 @@
 ﻿/* ✅ CSS PARA LA VISTA REORGANIZADA DE AGREGAR PRODUCTO */
 
 /* === ESTILOS PARA EL SWITCH DE TIPO DE PRODUCTO === */
-.form-switch-lg .form-check-input {
+/*.form-switch-lg .form-check-input {
     width: 3rem;
     height: 1.5rem;
     border-radius: 3rem;
@@ -11,7 +11,7 @@
     .form-switch-lg .form-check-input:checked {
         background-color: #0d6efd;
         border-color: #0d6efd;
-    }
+    }*/
 
 /* === ESTILOS PARA LAS TARJETAS DE MODO DE PRECIO === */
 #cardAutomatico, #cardManual {
@@ -257,3 +257,42 @@
     background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
     color: #664d03;
 }
+
+/* Toggle Switch Personalizado */
+.form-switch-custom .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    background-color: #e9ecef;
+    border: 2px solid #dee2e6;
+    border-radius: 2rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+    .form-switch-custom .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .form-switch-custom .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        border-color: #86b7fe;
+    }
+
+    .form-switch-custom .form-check-input::after {
+        content: '';
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 1.25rem;
+        height: 1.25rem;
+        background-color: white;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .form-switch-custom .form-check-input:checked::after {
+        transform: translateX(1.5rem);
+    }

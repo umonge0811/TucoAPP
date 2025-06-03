@@ -88,23 +88,25 @@
     }
 
     function esCampoVisible(campo) {
+        const informacionBasica = document.getElementById('informacionBasica');
+
+        // ✅ NUEVO: Si estamos en modo llanta, ignorar TODOS los campos de información básica
+        if (esLlantaCheckbox && esLlantaCheckbox.checked && informacionBasica && informacionBasica.contains(campo)) {
+            console.log(`❌ Campo ${campo.name || campo.id} en Información Básica - ignorado en modo llanta`);
+            return false;
+        }
+
         // Si el campo es de llanta y el checkbox no está marcado, ignorar
-        if (!esLlantaCheckbox.checked && llantaFields && llantaFields.contains(campo)) {
+        if ((!esLlantaCheckbox || !esLlantaCheckbox.checked) && llantaFields && llantaFields.contains(campo)) {
+            console.log(`❌ Campo ${campo.name || campo.id} en Llanta - ignorado en modo general`);
             return false;
         }
 
-        // Si es modo manual y el campo es de cálculo automático, ignorar
-        if (modoManualRadio && modoManualRadio.checked && camposAutomaticos && camposAutomaticos.contains(campo)) {
-            return false;
-        }
-
-        // Si es modo automático y el campo es de precio manual, ignorar
-        if (modoAutomaticoRadio && modoAutomaticoRadio.checked && campoManual && campoManual.contains(campo)) {
-            return false;
-        }
-
+        // Resto de validaciones...
+        console.log(`✅ Campo ${campo.name || campo.id} - validación activa`);
         return true;
     }
+
 
     // ========================================
     // INICIALIZACIÓN
@@ -116,19 +118,180 @@
     // GESTIÓN DE TIPO DE PRODUCTO (LLANTA)
     // ========================================
 
+    // NUEVA FUNCIÓN: Sincronizar campos de llanta a campos principales
+    // FUNCIÓN MEJORADA: Sincronizar campos de llanta
+    function sincronizarCamposLlanta() {
+        console.log('🔄 Configurando sincronización de campos de llanta...');
+
+        // ✅ NO sincronizar nombre - se generará automáticamente
+        const cantidadLlanta = document.getElementById('cantidadInventarioLlanta');
+        const stockLlanta = document.getElementById('stockMinimoLlanta');
+        const descripcionLlanta = document.getElementById('descripcionLlanta');
+
+        const hiddenCantidad = document.getElementById('hiddenCantidadInventario');
+        const hiddenStock = document.getElementById('hiddenStockMinimo');
+        const hiddenDescripcion = document.getElementById('hiddenDescripcion');
+
+        // Sincronización en tiempo real (sin nombre)
+        if (cantidadLlanta && hiddenCantidad) {
+            cantidadLlanta.addEventListener('input', () => {
+                hiddenCantidad.value = cantidadLlanta.value;
+                console.log(`Sincronizado cantidad: ${cantidadLlanta.value}`);
+            });
+        }
+
+        if (stockLlanta && hiddenStock) {
+            stockLlanta.addEventListener('input', () => {
+                hiddenStock.value = stockLlanta.value;
+                console.log(`Sincronizado stock: ${stockLlanta.value}`);
+            });
+        }
+
+        if (descripcionLlanta && hiddenDescripcion) {
+            descripcionLlanta.addEventListener('input', () => {
+                hiddenDescripcion.value = descripcionLlanta.value;
+                console.log(`Sincronizado descripción: ${descripcionLlanta.value}`);
+            });
+        }
+
+        console.log('✅ Sincronización configurada (sin nombre del producto)');
+    }
+
+    function prepararFormularioParaEnvio() {
+        console.log('🔄 === PREPARANDO FORMULARIO PARA ENVÍO ===');
+
+        // ✅ SINCRONIZAR EsLlanta
+        const esLlantaHidden = document.querySelector('[name="EsLlanta"]');
+        if (esLlantaHidden) {
+            esLlantaHidden.value = esLlantaCheckbox && esLlantaCheckbox.checked ? 'true' : 'false';
+            console.log(`🔄 EsLlanta sincronizado: ${esLlantaHidden.value}`);
+        }
+
+        if (esLlantaCheckbox && esLlantaCheckbox.checked) {
+            console.log('🔄 Modo llanta detectado - procesando...');
+
+            // ✅ LIMPIAR CAMPOS DE INFORMACIÓN BÁSICA PARA QUE NO INTERFIERAN
+            const nombreBasico = document.querySelector('[name="NombreProducto"]');
+            const cantidadBasica = document.querySelector('[name="CantidadEnInventario"]');
+            const stockBasico = document.querySelector('[name="StockMinimo"]');
+            const descripcionBasica = document.querySelector('[name="Descripcion"]');
+
+            // ✅ OBTENER VALORES DE LLANTA ANTES DE LIMPIAR
+            const cantidadLlanta = document.getElementById('cantidadInventarioLlanta');
+            const stockLlanta = document.getElementById('stockMinimoLlanta');
+            const descripcionLlanta = document.getElementById('descripcionLlanta');
+
+            const valorCantidad = cantidadLlanta?.value || '0';
+            const valorStock = stockLlanta?.value || '0';
+            const valorDescripcion = descripcionLlanta?.value || '';
+
+            console.log(`📊 VALORES DE LLANTA CAPTURADOS:`);
+            console.log(`- Cantidad: "${valorCantidad}"`);
+            console.log(`- Stock: "${valorStock}"`);
+            console.log(`- Descripción: "${valorDescripcion}"`);
+
+            // ✅ GENERAR NOMBRE AUTOMÁTICO
+            const marca = document.querySelector('[name="Llanta.Marca"]')?.value || '';
+            const modelo = document.querySelector('[name="Llanta.Modelo"]')?.value || '';
+            let nombreGenerado = 'Llanta';
+            if (marca) nombreGenerado += ` ${marca}`;
+            if (modelo) nombreGenerado += ` ${modelo}`;
+
+            // ✅ ESTABLECER VALORES EN CAMPOS PRINCIPALES (QUE VAN AL DTO)
+            if (nombreBasico) {
+                nombreBasico.value = nombreGenerado;
+                console.log(`✅ Nombre establecido: "${nombreGenerado}"`);
+            }
+
+            if (cantidadBasica) {
+                cantidadBasica.value = valorCantidad;
+                console.log(`✅ Cantidad establecida: "${valorCantidad}"`);
+            }
+
+            if (stockBasico) {
+                stockBasico.value = valorStock;
+                console.log(`✅ Stock establecido: "${valorStock}"`);
+            }
+
+            if (descripcionBasica) {
+                descripcionBasica.value = valorDescripcion;
+                console.log(`✅ Descripción establecida: "${valorDescripcion}"`);
+            }
+
+            console.log('✅ Campos principales sincronizados desde llanta');
+        } else {
+            console.log('🔄 Modo producto general - sin cambios');
+        }
+    }
+
+    // FUNCIÓN MEJORADA: Limpiar campos de llanta
+    function sincronizarCamposBasicos() {
+        const cantidadLlanta = document.getElementById('cantidadInventarioLlanta');
+        const stockLlanta = document.getElementById('stockMinimoLlanta');
+        const descripcionLlanta = document.getElementById('descripcionLlanta');
+
+        // Limpiar valores de campos de llanta
+        if (cantidadLlanta) cantidadLlanta.value = '';
+        if (stockLlanta) stockLlanta.value = '';
+        if (descripcionLlanta) descripcionLlanta.value = '';
+
+        // Limpiar campos ocultos también
+        const hiddenCantidad = document.getElementById('hiddenCantidadInventario');
+        const hiddenStock = document.getElementById('hiddenStockMinimo');
+        const hiddenDescripcion = document.getElementById('hiddenDescripcion');
+
+        if (hiddenCantidad) hiddenCantidad.value = '';
+        if (hiddenStock) hiddenStock.value = '';
+        if (hiddenDescripcion) hiddenDescripcion.value = '';
+
+        console.log('✅ Campos de llanta limpiados');
+    }
+
     if (esLlantaCheckbox && llantaFields && tipoProductoInfo && textoTipoProducto) {
+        // AGREGAR ESTA LÍNEA - Referencia al card de información básica
+        const informacionBasica = document.getElementById('informacionBasica');
+
         function actualizarTipoProducto() {
             if (esLlantaCheckbox.checked) {
+
+                // ✅ AGREGAR: Asegurar que EsLlanta sea true
+                const esLlantaHidden = document.querySelector('[name="EsLlanta"]');
+                if (esLlantaHidden) {
+                    esLlantaHidden.value = 'true';
+                    console.log('✅ EsLlanta establecido a: true');
+                }
+
+                // MOSTRAR campos de llanta
                 llantaFields.style.display = 'block';
-                tipoProductoInfo.className = 'alert alert-primary d-flex align-items-center mb-0';
+
+                // OCULTAR información básica
+                if (informacionBasica) {
+                    informacionBasica.style.display = 'none';
+
+                    // REMOVER required de campos de información básica
+                    const camposInformacionBasica = informacionBasica.querySelectorAll('[required]');
+                    camposInformacionBasica.forEach(campo => {
+                        campo.removeAttribute('required');
+                        campo.classList.remove('is-invalid');
+                        console.log(`❌ Required removido de: ${campo.name || campo.id}`);
+                    });
+                }
+
+                // NUEVA FUNCIONALIDAD: Sincronizar campos de llanta a campos ocultos
+                sincronizarCamposLlanta();
+
+                // Actualizar el alert informativo
+                tipoProductoInfo.className = 'alert alert-success d-flex align-items-center mb-0';
                 textoTipoProducto.innerHTML = '<i class="bi bi-car-front-fill me-1"></i> Producto tipo Llanta - campos específicos habilitados';
 
-                // Hacer obligatorios algunos campos de llanta
+                // Hacer obligatorios algunos campos de llanta (SIN perfil y SIN nombre)
                 const camposObligatoriosLlanta = [
                     document.querySelector('[name="Llanta.Marca"]'),
                     document.querySelector('[name="Llanta.Ancho"]'),
-                    document.querySelector('[name="Llanta.Perfil"]'),
-                    document.querySelector('[name="Llanta.Diametro"]')
+                    document.querySelector('[name="Llanta.Diametro"]'),
+                    // Campos de información general de llanta (SIN nombre del producto)
+                    document.getElementById('cantidadInventarioLlanta'),
+                    document.getElementById('stockMinimoLlanta')
                 ];
 
                 camposObligatoriosLlanta.forEach(campo => {
@@ -136,10 +299,54 @@
                         campo.setAttribute('required', 'required');
                         const formGroup = campo.closest('.mb-3');
                         if (formGroup) formGroup.classList.add('required');
+                        console.log(`✅ Required agregado a: ${campo.name || campo.id}`);
                     }
                 });
+
+                // Hacer el perfil opcional explícitamente
+                const perfilField = document.querySelector('[name="Llanta.Perfil"]');
+                if (perfilField) {
+                    perfilField.removeAttribute('required');
+                    const formGroup = perfilField.closest('.mb-3');
+                    if (formGroup) formGroup.classList.remove('required');
+                }
+
+                console.log('✅ Modo llanta activado - Validaciones transferidas a campos de llanta');
             } else {
+
+                const esLlantaHidden = document.querySelector('[name="EsLlanta"]');
+                if (esLlantaHidden) {
+                    esLlantaHidden.value = 'false';
+                    console.log('✅ EsLlanta establecido a: false');
+                }
+
+                // OCULTAR campos de llanta
                 llantaFields.style.display = 'none';
+
+                // MOSTRAR información básica
+                if (informacionBasica) {
+                    informacionBasica.style.display = 'block';
+
+                    // RESTAURAR required en campos de información básica
+                    //const nombreProducto = informacionBasica.querySelector('[name="NombreProducto"]');
+                    const cantidadInventario = informacionBasica.querySelector('[name="CantidadEnInventario"]');
+                    const stockMinimo = informacionBasica.querySelector('[name="StockMinimo"]');
+
+                    //if (nombreProducto) {
+                    //    nombreProducto.setAttribute('required', 'required');
+                    //    console.log(`✅ Required restaurado en: NombreProducto`);
+                    //}
+                    //if (cantidadInventario) {
+                    //    cantidadInventario.setAttribute('required', 'required');
+                    //    console.log(`✅ Required restaurado en: CantidadEnInventario`);
+                    //}
+                    //if (stockMinimo) {
+                    //    stockMinimo.setAttribute('required', 'required');
+                    //    console.log(`✅ Required restaurado en: StockMinimo`);
+                    //}
+                }
+
+                // Actualizar el alert informativo
                 tipoProductoInfo.className = 'alert alert-info d-flex align-items-center mb-0';
                 textoTipoProducto.innerHTML = '<i class="bi bi-box me-1"></i> Producto general - información básica';
 
@@ -147,9 +354,16 @@
                 const llantaInputs = llantaFields.querySelectorAll('input, select');
                 llantaInputs.forEach(input => {
                     input.removeAttribute('required');
+                    input.classList.remove('is-invalid');
                     const formGroup = input.closest('.mb-3');
                     if (formGroup) formGroup.classList.remove('required');
+                    console.log(`❌ Required removido de campo llanta: ${input.name || input.id}`);
                 });
+
+                // NUEVA FUNCIONALIDAD: Limpiar campos de llanta
+                sincronizarCamposBasicos();
+
+                console.log('✅ Modo producto general activado - Validaciones restauradas en información básica');
             }
         }
 
@@ -487,36 +701,51 @@
         function validarFormularioCompleto() {
             let esValido = true;
 
-            // Validar campos básicos
+            // Validar solo campos visibles
+            const formInputs = form.querySelectorAll('input, select, textarea');
+
             formInputs.forEach(input => {
-                if (!validarCampo(input)) {
-                    esValido = false;
+                // Solo validar si el campo es visible y requerido
+                if (input.hasAttribute('required') && esCampoVisible(input)) {
+                    if (!validarCampo(input)) {
+                        esValido = false;
+                        console.log(`❌ Campo inválido: ${input.name || input.id}`);
+                    } else {
+                        console.log(`✅ Campo válido: ${input.name || input.id}`);
+                    }
                 }
             });
 
             // Validar precio según el modo seleccionado
             if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
-                if (!inputCosto.value || parseFloat(inputCosto.value) <= 0) {
-                    inputCosto.classList.add('is-invalid');
+                if (!inputCosto || !inputCosto.value || parseFloat(inputCosto.value) <= 0) {
+                    if (inputCosto) inputCosto.classList.add('is-invalid');
                     esValido = false;
+                    console.log(`❌ Costo inválido`);
                 }
-                if (!inputUtilidad.value || parseFloat(inputUtilidad.value) < 0) {
-                    inputUtilidad.classList.add('is-invalid');
+                if (!inputUtilidad || !inputUtilidad.value || parseFloat(inputUtilidad.value) < 0) {
+                    if (inputUtilidad) inputUtilidad.classList.add('is-invalid');
                     esValido = false;
+                    console.log(`❌ Utilidad inválida`);
                 }
             } else if (modoManualRadio && modoManualRadio.checked) {
-                if (!inputPrecioManual.value || parseFloat(inputPrecioManual.value) <= 0) {
-                    inputPrecioManual.classList.add('is-invalid');
+                if (!inputPrecioManual || !inputPrecioManual.value || parseFloat(inputPrecioManual.value) <= 0) {
+                    if (inputPrecioManual) inputPrecioManual.classList.add('is-invalid');
                     esValido = false;
+                    console.log(`❌ Precio manual inválido`);
                 }
             }
 
+            console.log(`Validación completa: ${esValido ? 'VÁLIDO' : 'INVÁLIDO'}`);
             return esValido;
         }
 
         form.onsubmit = function (e) {
             e.preventDefault();
             console.log('Formulario enviado - iniciando validación');
+
+            // ✅ NUEVO: Preparar formulario antes de validar
+            prepararFormularioParaEnvio();
 
             if (!validarFormularioCompleto()) {
                 console.log('Formulario inválido - campos con errores');
@@ -527,6 +756,9 @@
             }
 
             console.log('Formulario válido - preparando para enviar');
+
+            // ✅ NUEVO: Preparar una vez más justo antes del envío (por seguridad)
+            prepararFormularioParaEnvio();
 
             submitButton.disabled = true;
             const normalState = submitButton.querySelector('.normal-state');

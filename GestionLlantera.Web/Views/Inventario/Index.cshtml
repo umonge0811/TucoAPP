@@ -365,19 +365,27 @@
                                             <span class="badge bg-primary">Llanta</span>
                                         }
                                     </td>
-
                                     <!-- 4. Medidas -->
                                     <td>
                                         @if (producto.Llanta != null)
                                         {
                                             <span class="medida-llanta">
-                                                @if (producto.Llanta.Ancho.HasValue && producto.Llanta.Perfil.HasValue && !string.IsNullOrEmpty(producto.Llanta.Diametro))
+                                                @if (producto.Llanta.Ancho.HasValue && !string.IsNullOrEmpty(producto.Llanta.Diametro))
                                                 {
-                                                    @($"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}")
+                                                    @if (producto.Llanta.Perfil.HasValue && producto.Llanta.Perfil.Value > 0)
+                                                    {
+                                                        <!-- Formato completo: 225/60/R16 -->
+                                                        @($"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}")
+                                                    }
+                                                    else
+                                                    {
+                                                        <!-- Formato sin perfil: 225/R16 -->
+                                                        @($"{producto.Llanta.Ancho}/R{producto.Llanta.Diametro}")
+                                                    }
                                                 }
                                                 else
                                                 {
-                                                    <text>-</text>
+                                                    <span>N/A</span>
                                                 }
                                             </span>
                                         }
