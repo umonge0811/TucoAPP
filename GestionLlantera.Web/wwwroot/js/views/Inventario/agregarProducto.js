@@ -1065,4 +1065,341 @@
         // Aquí podrías agregar navegación con flechas en el futuro
     }
 
+    // ========================================
+    // AUTOCOMPLETADO PARA MODELO (DEPENDIENTE DE MARCA)
+    // ========================================
+
+    function configurarAutocompletadoModelo() {
+        const modeloInput = document.getElementById('modeloInput');
+        const modeloSuggestions = document.getElementById('modeloSuggestions');
+        const marcaInput = document.getElementById('marcaInput');
+
+        if (!modeloInput || !modeloSuggestions) {
+            console.warn('⚠️ Elementos de autocompletado para modelo no encontrados');
+            return;
+        }
+
+        console.log('✅ Configurando autocompletado para modelo');
+
+        // Evento principal: cuando el usuario escribe en modelo
+        modeloInput.addEventListener('input', function () {
+            const valor = this.value.trim();
+            const marcaSeleccionada = marcaInput ? marcaInput.value.trim() : '';
+
+            console.log(`🔤 Usuario escribió modelo: "${valor}", marca actual: "${marcaSeleccionada}"`);
+
+            // Limpiar timeout anterior
+            if (timeoutBusqueda) {
+                clearTimeout(timeoutBusqueda);
+            }
+
+            // Si está vacío, ocultar sugerencias
+            if (valor.length === 0) {
+                ocultarSugerencias(modeloSuggestions);
+                return;
+            }
+
+            // Si es muy corto, esperar más caracteres
+            if (valor.length < 2) {
+                mostrarMensaje(modeloSuggestions, '💡 Escriba al menos 2 caracteres...');
+                return;
+            }
+
+            // Mostrar indicador de carga
+            mostrarCargando(modeloSuggestions);
+
+            // Hacer búsqueda con delay
+            timeoutBusqueda = setTimeout(() => {
+                buscarModelosEnTiempoReal(valor, marcaSeleccionada, modeloSuggestions, modeloInput);
+            }, 300);
+        });
+
+        // Evento focus
+        modeloInput.addEventListener('focus', function () {
+            const valor = this.value.trim();
+            const marcaSeleccionada = marcaInput ? marcaInput.value.trim() : '';
+            if (valor.length >= 2) {
+                buscarModelosEnTiempoReal(valor, marcaSeleccionada, modeloSuggestions, modeloInput);
+            }
+        });
+
+        // Limpiar modelo cuando cambie la marca
+        if (marcaInput) {
+            marcaInput.addEventListener('change', function () {
+                console.log('🔄 Marca cambió, limpiando modelo');
+                modeloInput.value = '';
+                ocultarSugerencias(modeloSuggestions);
+            });
+        }
+
+        // Ocultar sugerencias al hacer clic fuera
+        document.addEventListener('click', function (e) {
+            if (!modeloInput.contains(e.target) && !modeloSuggestions.contains(e.target)) {
+                ocultarSugerencias(modeloSuggestions);
+            }
+        });
+
+        // Manejar teclas especiales
+        modeloInput.addEventListener('keydown', function (e) {
+            manejarTeclasEspeciales(e, modeloSuggestions);
+        });
+    }
+
+    // Función para buscar modelos
+    async function buscarModelosEnTiempoReal(filtro, marca, container, input) {
+        try {
+            console.log(`🔍 Buscando modelos con filtro: "${filtro}", marca: "${marca}"`);
+
+            // Construir URL con parámetros
+            let url = `/Inventario/BuscarModelos?filtro=${encodeURIComponent(filtro)}`;
+            if (marca) {
+                url += `&marca=${encodeURIComponent(marca)}`;
+            }
+
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log(`📡 Respuesta modelos: ${response.status}`);
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const modelos = await response.json();
+            console.log(`✅ Modelos recibidos:`, modelos);
+
+            // Mostrar resultados
+            mostrarSugerenciasGenericas(container, modelos, filtro, input, 'modelo');
+
+        } catch (error) {
+            console.error('❌ Error al buscar modelos:', error);
+            mostrarError(container, 'Error al buscar modelos. Intente nuevamente.');
+        }
+    }
+
+    // ========================================
+    // AUTOCOMPLETADO PARA ÍNDICE DE VELOCIDAD
+    // ========================================
+
+    function configurarAutocompletadoIndiceVelocidad() {
+        const input = document.getElementById('indiceVelocidadInput');
+        const suggestions = document.getElementById('indiceVelocidadSuggestions');
+
+        if (!input || !suggestions) {
+            console.warn('⚠️ Elementos de autocompletado para índice de velocidad no encontrados');
+            return;
+        }
+
+        console.log('✅ Configurando autocompletado para índice de velocidad');
+
+        configurarAutocompletadoGenerico(input, suggestions, 'indices de velocidad', '/Inventario/BuscarIndicesVelocidad');
+    }
+
+    // ========================================
+    // AUTOCOMPLETADO PARA TIPO DE TERRENO
+    // ========================================
+
+    function configurarAutocompletadoTipoTerreno() {
+        const input = document.getElementById('tipoTerrenoInput');
+        const suggestions = document.getElementById('tipoTerrenoSuggestions');
+
+        if (!input || !suggestions) {
+            console.warn('⚠️ Elementos de autocompletado para tipo de terreno no encontrados');
+            return;
+        }
+
+        console.log('✅ Configurando autocompletado para tipo de terreno');
+
+        configurarAutocompletadoGenerico(input, suggestions, 'tipos de terreno', '/Inventario/BuscarTiposTerreno');
+    }
+
+    // ========================================
+    // FUNCIÓN GENÉRICA PARA AUTOCOMPLETADO
+    // ========================================
+
+    function configurarAutocompletadoGenerico(input, suggestions, nombreCampo, url) {
+        // Evento principal: cuando el usuario escribe
+        input.addEventListener('input', function () {
+            const valor = this.value.trim();
+            console.log(`🔤 Usuario escribió ${nombreCampo}: "${valor}"`);
+
+            // Limpiar timeout anterior
+            if (timeoutBusqueda) {
+                clearTimeout(timeoutBusqueda);
+            }
+
+            // Si está vacío, ocultar sugerencias
+            if (valor.length === 0) {
+                ocultarSugerencias(suggestions);
+                return;
+            }
+
+            // Si es muy corto, esperar más caracteres
+            if (valor.length < 1) {
+                mostrarMensaje(suggestions, '💡 Escriba al menos 1 carácter...');
+                return;
+            }
+
+            // Mostrar indicador de carga
+            mostrarCargando(suggestions);
+
+            // Hacer búsqueda con delay
+            timeoutBusqueda = setTimeout(() => {
+                buscarGenericoEnTiempoReal(valor, suggestions, input, nombreCampo, url);
+            }, 300);
+        });
+
+        // Evento focus
+        input.addEventListener('focus', function () {
+            const valor = this.value.trim();
+            if (valor.length >= 1) {
+                buscarGenericoEnTiempoReal(valor, suggestions, input, nombreCampo, url);
+            }
+        });
+
+        // Ocultar sugerencias al hacer clic fuera
+        document.addEventListener('click', function (e) {
+            if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+                ocultarSugerencias(suggestions);
+            }
+        });
+
+        // Manejar teclas especiales
+        input.addEventListener('keydown', function (e) {
+            manejarTeclasEspeciales(e, suggestions);
+        });
+    }
+
+    // Función para búsqueda genérica
+    async function buscarGenericoEnTiempoReal(filtro, container, input, nombreCampo, url) {
+        try {
+            console.log(`🔍 Buscando ${nombreCampo} con filtro: "${filtro}"`);
+
+            const urlCompleta = `${url}?filtro=${encodeURIComponent(filtro)}`;
+
+            const response = await fetch(urlCompleta, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log(`📡 Respuesta ${nombreCampo}: ${response.status}`);
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const resultados = await response.json();
+            console.log(`✅ ${nombreCampo} recibidos:`, resultados);
+
+            // Mostrar resultados
+            mostrarSugerenciasGenericas(container, resultados, filtro, input, nombreCampo);
+
+        } catch (error) {
+            console.error(`❌ Error al buscar ${nombreCampo}:`, error);
+            mostrarError(container, `Error al buscar ${nombreCampo}. Intente nuevamente.`);
+        }
+    }
+
+    // ========================================
+    // FUNCIÓN PARA MOSTRAR SUGERENCIAS GENÉRICAS
+    // ========================================
+
+    function mostrarSugerenciasGenericas(container, resultados, valorBuscado, input, nombreCampo) {
+        console.log(`📋 Mostrando ${resultados.length} sugerencias para ${nombreCampo}`);
+
+        container.innerHTML = '';
+
+        if (resultados.length === 0) {
+            // No hay resultados existentes - mostrar opción para crear nueva
+            const nuevoItem = crearItemSugerencia(
+                `<i class="bi bi-plus-circle me-2 text-success"></i>Crear nuevo ${nombreCampo}: "<strong>${valorBuscado}</strong>"`,
+                'suggestion-new',
+                () => seleccionarValorGenerico(valorBuscado, input, container, true, nombreCampo)
+            );
+            container.appendChild(nuevoItem);
+        } else {
+            // Mostrar resultados existentes
+            resultados.forEach(resultado => {
+                const icono = obtenerIconoPorTipo(nombreCampo);
+                const item = crearItemSugerencia(
+                    `<i class="bi ${icono} me-2 text-primary"></i>${resultado}`,
+                    'suggestion-existing',
+                    () => seleccionarValorGenerico(resultado, input, container, false, nombreCampo)
+                );
+                container.appendChild(item);
+            });
+
+            // Agregar opción para crear nueva al final si no coincide exactamente
+            const coincidenciaExacta = resultados.some(r => r.toLowerCase() === valorBuscado.toLowerCase());
+            if (!coincidenciaExacta) {
+                const separador = document.createElement('div');
+                separador.className = 'suggestion-separator';
+                separador.innerHTML = '<hr class="my-1">';
+                container.appendChild(separador);
+
+                const nuevoItem = crearItemSugerencia(
+                    `<i class="bi bi-plus-circle me-2 text-success"></i>Crear nuevo ${nombreCampo}: "<strong>${valorBuscado}</strong>"`,
+                    'suggestion-new',
+                    () => seleccionarValorGenerico(valorBuscado, input, container, true, nombreCampo)
+                );
+                container.appendChild(nuevoItem);
+            }
+        }
+
+        mostrarContainer(container);
+    }
+
+    // Función para obtener ícono según el tipo
+    function obtenerIconoPorTipo(nombreCampo) {
+        switch (nombreCampo) {
+            case 'modelo': return 'bi-car-front';
+            case 'indices de velocidad': return 'bi-speedometer2';
+            case 'tipos de terreno': return 'bi-geo-alt';
+            default: return 'bi-tag';
+        }
+    }
+
+    // Función para seleccionar valor genérico
+    function seleccionarValorGenerico(valor, input, container, esNuevo, nombreCampo) {
+        console.log(`✅ ${nombreCampo} seleccionado: "${valor}" (Nuevo: ${esNuevo})`);
+
+        input.value = valor;
+        ocultarSugerencias(container);
+
+        // Mostrar feedback visual
+        input.classList.add('input-success');
+        setTimeout(() => {
+            input.classList.remove('input-success');
+        }, 1000);
+
+        // Mostrar notificación
+        if (esNuevo && typeof toastr !== 'undefined') {
+            toastr.info(`Nuevo ${nombreCampo} "${valor}" será agregado al guardar el producto`);
+        }
+
+        // Trigger evento
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // ========================================
+    // ACTUALIZAR FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
+    // ========================================
+
+    // Función principal para inicializar autocompletado (MODIFICAR LA EXISTENTE)
+    function inicializarAutocompletado() {
+        console.log('🚀 Inicializando autocompletado inteligente completo...');
+        configurarAutocompletadoMarca();
+        configurarAutocompletadoModelo();
+        configurarAutocompletadoIndiceVelocidad();
+        configurarAutocompletadoTipoTerreno();
+    }
+
 });

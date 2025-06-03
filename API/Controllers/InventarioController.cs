@@ -1324,6 +1324,120 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al buscar marcas" });
             }
         }
+
+        // GET: api/Inventario/modelos-busqueda?filtro=text&marca=brand
+        [HttpGet("modelos-busqueda")]
+        [Authorize]
+        public async Task<ActionResult<List<string>>> BuscarModelosLlantas(string filtro = "", string marca = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando modelos con filtro: '{Filtro}', marca: '{Marca}'", filtro, marca);
+
+                IQueryable<string> query = _context.Llantas
+                    .Where(l => !string.IsNullOrEmpty(l.Modelo))
+                    .Select(l => l.Modelo)
+                    .Distinct();
+
+                // Filtrar por marca si se especifica
+                if (!string.IsNullOrWhiteSpace(marca))
+                {
+                    query = _context.Llantas
+                        .Where(l => !string.IsNullOrEmpty(l.Modelo) && l.Marca == marca)
+                        .Select(l => l.Modelo)
+                        .Distinct();
+                }
+
+                // Aplicar filtro de texto si se proporciona
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    query = query.Where(m => m.Contains(filtro));
+                }
+
+                var modelos = await query
+                    .OrderBy(m => m)
+                    .Take(10) // Limitar a 10 resultados
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} modelos", modelos.Count);
+                return Ok(modelos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar modelos");
+                return StatusCode(500, new { message = "Error al buscar modelos" });
+            }
+        }
+
+        // GET: api/Inventario/indices-velocidad-busqueda?filtro=text
+        [HttpGet("indices-velocidad-busqueda")]
+        [Authorize]
+        public async Task<ActionResult<List<string>>> BuscarIndicesVelocidad(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando índices de velocidad con filtro: '{Filtro}'", filtro);
+
+                IQueryable<string> query = _context.Llantas
+                    .Where(l => !string.IsNullOrEmpty(l.IndiceVelocidad))
+                    .Select(l => l.IndiceVelocidad)
+                    .Distinct();
+
+                // Aplicar filtro si se proporciona
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    query = query.Where(i => i.Contains(filtro));
+                }
+
+                var indices = await query
+                    .OrderBy(i => i)
+                    .Take(10)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} índices de velocidad", indices.Count);
+                return Ok(indices);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar índices de velocidad");
+                return StatusCode(500, new { message = "Error al buscar índices de velocidad" });
+            }
+        }
+
+        // GET: api/Inventario/tipos-terreno-busqueda?filtro=text
+        [HttpGet("tipos-terreno-busqueda")]
+        [Authorize]
+        public async Task<ActionResult<List<string>>> BuscarTiposTerreno(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando tipos de terreno con filtro: '{Filtro}'", filtro);
+
+                IQueryable<string> query = _context.Llantas
+                    .Where(l => !string.IsNullOrEmpty(l.TipoTerreno))
+                    .Select(l => l.TipoTerreno)
+                    .Distinct();
+
+                // Aplicar filtro si se proporciona
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    query = query.Where(t => t.Contains(filtro));
+                }
+
+                var tipos = await query
+                    .OrderBy(t => t)
+                    .Take(10)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} tipos de terreno", tipos.Count);
+                return Ok(tipos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar tipos de terreno");
+                return StatusCode(500, new { message = "Error al buscar tipos de terreno" });
+            }
+        }
     }
 }
             

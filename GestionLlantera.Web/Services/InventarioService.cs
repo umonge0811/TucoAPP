@@ -1316,5 +1316,174 @@ namespace GestionLlantera.Web.Services
                 return new List<string>();
             }
         }
+
+        /// <summary>
+        /// Busca modelos de llantas que coincidan con el filtro proporcionado, opcionalmente filtrados por marca
+        /// </summary>
+        /// <param name="filtro">Texto para filtrar los modelos</param>
+        /// <param name="marca">Marca específica para filtrar (opcional)</param>
+        /// <param name="jwtToken">Token de autenticación</param>
+        /// <returns>Lista de modelos que coinciden con el filtro</returns>
+        public async Task<List<string>> BuscarModelosLlantasAsync(string filtro = "", string marca = "", string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando modelos con filtro: '{Filtro}', marca: '{Marca}'", filtro, marca);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Construir URL con parámetros de consulta
+                string url = "api/Inventario/modelos-busqueda";
+                var parameters = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    parameters.Add($"filtro={Uri.EscapeDataString(filtro)}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(marca))
+                {
+                    parameters.Add($"marca={Uri.EscapeDataString(marca)}");
+                }
+
+                if (parameters.Any())
+                {
+                    url += "?" + string.Join("&", parameters);
+                }
+
+                _logger.LogInformation("📡 Realizando petición a: {Url}", url);
+
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error obteniendo modelos: {StatusCode} - {Error}",
+                        response.StatusCode, errorContent);
+                    return new List<string>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var modelos = JsonConvert.DeserializeObject<List<string>>(content) ?? new List<string>();
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} modelos", modelos.Count);
+                return modelos;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar modelos en el servicio");
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Busca índices de velocidad que coincidan con el filtro proporcionado
+        /// </summary>
+        /// <param name="filtro">Texto para filtrar los índices</param>
+        /// <param name="jwtToken">Token de autenticación</param>
+        /// <returns>Lista de índices de velocidad que coinciden con el filtro</returns>
+        public async Task<List<string>> BuscarIndicesVelocidadAsync(string filtro = "", string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando índices de velocidad con filtro: '{Filtro}'", filtro);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Construir URL con parámetro de consulta
+                string url = "api/Inventario/indices-velocidad-busqueda";
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    url += $"?filtro={Uri.EscapeDataString(filtro)}";
+                }
+
+                _logger.LogInformation("📡 Realizando petición a: {Url}", url);
+
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error obteniendo índices de velocidad: {StatusCode} - {Error}",
+                        response.StatusCode, errorContent);
+                    return new List<string>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var indices = JsonConvert.DeserializeObject<List<string>>(content) ?? new List<string>();
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} índices de velocidad", indices.Count);
+                return indices;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar índices de velocidad en el servicio");
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Busca tipos de terreno que coincidan con el filtro proporcionado
+        /// </summary>
+        /// <param name="filtro">Texto para filtrar los tipos</param>
+        /// <param name="jwtToken">Token de autenticación</param>
+        /// <returns>Lista de tipos de terreno que coinciden con el filtro</returns>
+        public async Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando tipos de terreno con filtro: '{Filtro}'", filtro);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Construir URL con parámetro de consulta
+                string url = "api/Inventario/tipos-terreno-busqueda";
+                if (!string.IsNullOrWhiteSpace(filtro))
+                {
+                    url += $"?filtro={Uri.EscapeDataString(filtro)}";
+                }
+
+                _logger.LogInformation("📡 Realizando petición a: {Url}", url);
+
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error obteniendo tipos de terreno: {StatusCode} - {Error}",
+                        response.StatusCode, errorContent);
+                    return new List<string>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var tipos = JsonConvert.DeserializeObject<List<string>>(content) ?? new List<string>();
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} tipos de terreno", tipos.Count);
+                return tipos;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar tipos de terreno en el servicio");
+                return new List<string>();
+            }
+        }
     }
 }

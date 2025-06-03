@@ -1829,6 +1829,102 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new List<string>());
             }
         }
+
+        // GET: /Inventario/BuscarModelos?filtro=text&marca=brand
+        [HttpGet]
+        [Route("Inventario/BuscarModelos")]
+        public async Task<IActionResult> BuscarModelos(string filtro = "", string marca = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Búsqueda de modelos solicitada - Filtro: '{Filtro}', Marca: '{Marca}'", filtro, marca);
+
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado para búsqueda de modelos");
+                    return Json(new List<string>());
+                }
+
+                // Llamar al servicio para obtener los modelos
+                var modelos = await _inventarioService.BuscarModelosLlantasAsync(filtro, marca, token);
+
+                _logger.LogInformation("✅ Devolviendo {Count} modelos encontrados", modelos.Count);
+
+                // Devolver JSON directamente
+                return Json(modelos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar modelos en controlador web");
+                return Json(new List<string>());
+            }
+        }
+
+        // GET: /Inventario/BuscarIndicesVelocidad?filtro=text
+        [HttpGet]
+        [Route("Inventario/BuscarIndicesVelocidad")]
+        public async Task<IActionResult> BuscarIndicesVelocidad(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Búsqueda de índices de velocidad solicitada con filtro: '{Filtro}'", filtro);
+
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado para búsqueda de índices");
+                    return Json(new List<string>());
+                }
+
+                // Llamar al servicio para obtener los índices
+                var indices = await _inventarioService.BuscarIndicesVelocidadAsync(filtro, token);
+
+                _logger.LogInformation("✅ Devolviendo {Count} índices de velocidad encontrados", indices.Count);
+
+                // Devolver JSON directamente
+                return Json(indices);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar índices de velocidad en controlador web");
+                return Json(new List<string>());
+            }
+        }
+
+        // GET: /Inventario/BuscarTiposTerreno?filtro=text
+        [HttpGet]
+        [Route("Inventario/BuscarTiposTerreno")]
+        public async Task<IActionResult> BuscarTiposTerreno(string filtro = "")
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Búsqueda de tipos de terreno solicitada con filtro: '{Filtro}'", filtro);
+
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado para búsqueda de tipos de terreno");
+                    return Json(new List<string>());
+                }
+
+                // Llamar al servicio para obtener los tipos
+                var tipos = await _inventarioService.BuscarTiposTerrenoAsync(filtro, token);
+
+                _logger.LogInformation("✅ Devolviendo {Count} tipos de terreno encontrados", tipos.Count);
+
+                // Devolver JSON directamente
+                return Json(tipos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al buscar tipos de terreno en controlador web");
+                return Json(new List<string>());
+            }
+        }
     }
 }
     

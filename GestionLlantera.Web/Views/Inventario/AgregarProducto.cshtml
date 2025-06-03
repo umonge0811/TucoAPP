@@ -211,6 +211,7 @@
                                         <input asp-for="Llanta.Modelo" class="form-control" id="modeloInput" placeholder="Escriba o seleccione un modelo..." autocomplete="off" />
                                         <div class="dropdown-suggestions" id="modeloSuggestions" style="display: none;"></div>
                                     </div>
+                                    <div class="form-text">Los modelos se filtrarán según la marca seleccionada</div>
                                     <span asp-validation-for="Llanta.Modelo" class="text-danger"></span>
                                 </div>
                             </div>
@@ -225,34 +226,23 @@
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.IndiceVelocidad" class="form-label">Índice de Velocidad</label>
-                                    <select asp-for="Llanta.IndiceVelocidad" class="form-select">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="N">N (140 km/h)</option>
-                                        <option value="P">P (150 km/h)</option>
-                                        <option value="Q">Q (160 km/h)</option>
-                                        <option value="R">R (170 km/h)</option>
-                                        <option value="S">S (180 km/h)</option>
-                                        <option value="T">T (190 km/h)</option>
-                                        <option value="U">U (200 km/h)</option>
-                                        <option value="H">H (210 km/h)</option>
-                                        <option value="V">V (240 km/h)</option>
-                                        <option value="W">W (270 km/h)</option>
-                                        <option value="Y">Y (300 km/h)</option>
-                                    </select>
+                                    <div class="position-relative">
+                                        <input asp-for="Llanta.IndiceVelocidad" class="form-control" id="indiceVelocidadInput" placeholder="Ej: H, V, W..." autocomplete="off" />
+                                        <div class="dropdown-suggestions" id="indiceVelocidadSuggestions" style="display: none;"></div>
+                                    </div>
+                                    <div class="form-text">Escriba la letra del índice de velocidad</div>
+                                    <span asp-validation-for="Llanta.IndiceVelocidad" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.TipoTerreno" class="form-label">Tipo de Terreno</label>
-                                    <select asp-for="Llanta.TipoTerreno" class="form-select">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="Carretera">Carretera</option>
-                                        <option value="Todo Terreno">Todo Terreno</option>
-                                        <option value="Off-Road">Off-Road</option>
-                                        <option value="Nieve">Nieve</option>
-                                        <option value="Barro">Barro</option>
-                                        <option value="Mixto">Mixto</option>
-                                    </select>
+                                    <div class="position-relative">
+                                        <input asp-for="Llanta.TipoTerreno" class="form-control" id="tipoTerrenoInput" placeholder="Ej: Carretera, Todo Terreno..." autocomplete="off" />
+                                        <div class="dropdown-suggestions" id="tipoTerrenoSuggestions" style="display: none;"></div>
+                                    </div>
+                                    <div class="form-text">Escriba el tipo de terreno para la llanta</div>
+                                    <span asp-validation-for="Llanta.TipoTerreno" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
