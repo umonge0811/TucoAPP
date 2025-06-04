@@ -837,31 +837,59 @@ $(document).ready(function () {
     // ========================================
     // EVENTOS PARA ELIMINAR PRODUCTO
     // ========================================
+    // ========================================
+    // FUNCIÓN MEJORADA PARA OBTENER NOMBRE DEL PRODUCTO
+    // También reemplazar esta parte en el evento click
+    // ========================================
 
-    // Evento para eliminar producto
     $(document).on('click', '.eliminar-producto-btn', function (e) {
+        console.log('🗑️ === CLICK DETECTADO EN BOTÓN ELIMINAR ===');
+
         e.preventDefault();
         e.stopPropagation();
 
-        const productoId = $(this).data("id");
-        const $fila = $(this).closest('tr');
-        const nombreProducto = $fila.find('td:eq(2) strong').text().trim();
+        const $boton = $(this);
+        const productoId = $boton.data("id");
+        const $fila = $boton.closest('tr');
 
-        console.log('🗑️ === SOLICITUD DE ELIMINACIÓN ===');
-        console.log('🗑️ Producto ID:', productoId);
-        console.log('🗑️ Nombre:', nombreProducto);
+        // ✅ MEJORAR: Buscar el nombre del producto más específicamente
+        let nombreProducto = '';
 
+        // Intentar diferentes selectores para encontrar el nombre
+        const $nombreCelda = $fila.find('td:eq(2)'); // Tercera columna (índice 2)
+
+        if ($nombreCelda.find('strong').length > 0) {
+            nombreProducto = $nombreCelda.find('strong').text().trim();
+        } else if ($nombreCelda.find('a').length > 0) {
+            nombreProducto = $nombreCelda.find('a').text().trim();
+        } else {
+            nombreProducto = $nombreCelda.text().trim();
+        }
+
+        // Si aún no tenemos nombre, usar un fallback
+        if (!nombreProducto) {
+            nombreProducto = `Producto ID: ${productoId}`;
+        }
+
+        console.log('🗑️ Datos obtenidos:');
+        console.log('   - Producto ID:', productoId);
+        console.log('   - Nombre:', nombreProducto);
+        console.log('   - Tipo ID:', typeof productoId);
+        console.log('   - Fila encontrada:', $fila.length > 0);
+        console.log('   - Celda nombre:', $nombreCelda.html());
+
+        // Validaciones
         if (!productoId) {
             console.error('❌ No se pudo obtener el ID del producto');
-            mostrarNotificacion("Error", "No se pudo identificar el producto", "danger");
+            mostrarAlertaSimple("Error: No se pudo identificar el producto", "danger");
             return;
         }
 
-        // Mostrar modal de confirmación personalizado
-        mostrarModalConfirmacionEliminacion(productoId, nombreProducto, $fila);
-    });
+        console.log('✅ Validaciones pasadas, mostrando modal...');
 
-    // Función para mostrar modal de confirmación de eliminación
+        // Mostrar modal de confirmación
+        mostrarModalConfirmacionEliminacion(productoId, nombreProducto, $fila);
+    });    // Función para mostrar modal de confirmación de eliminación
     function mostrarModalConfirmacionEliminacion(productoId, nombreProducto, $fila) {
         const modalHtml = `
         <div class="modal fade" id="modalEliminarProducto" tabindex="-1" aria-hidden="true">
@@ -924,72 +952,113 @@ $(document).ready(function () {
         });
     }
 
-    // Función para ejecutar la eliminación del producto
-    function ejecutarEliminacionProducto(productoId, nombreProducto, $fila, modal) {
+    // ========================================
+    // FUNCIÓN ACTUALIZADA PARA EJECUTAR ELIMINACIÓN
+    // Reemplazar la función ejecutarEliminacionProducto en inventario.js
+    // ========================================
+
+    function ejecutarEliminacionProducto(productoId, nombreProducto, $fila) {
         console.log('💥 === EJECUTANDO ELIMINACIÓN ===');
         console.log('💥 Producto ID:', productoId);
+        console.log('💥 Nombre:', nombreProducto);
 
         const $btnConfirmar = $('#btnConfirmarEliminacion');
         const $normalState = $btnConfirmar.find('.normal-state');
         const $loadingState = $btnConfirmar.find('.loading-state');
 
-        // Deshabilitar botón y mostrar loading
+        // Mostrar estado de carga
         $btnConfirmar.prop('disabled', true);
         $normalState.hide();
         $loadingState.show();
 
-        // Realizar petición AJAX para eliminar
+        // Realizar petición AJAX con manejo mejorado
         $.ajax({
             url: `/Inventario/EliminarProducto/${productoId}`,
             type: 'DELETE',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
             },
+            dataType: 'json', // ✅ NUEVO: Especificar que esperamos JSON
             success: function (response) {
-                console.log('✅ Producto eliminado exitosamente:', response);
+                console.log('📡 === RESPUESTA RECIBIDA ===');
+                console.log('📡 Response completo:', response);
+                console.log('📡 Success:', response.success);
+                console.log('📡 Message:', response.message);
 
                 // Cerrar modal
-                modal.hide();
+                $('#modalEliminarProducto').modal('hide');
 
-                // Mostrar notificación de éxito
-                mostrarNotificacion("Éxito", `Producto "${nombreProducto}" eliminado exitosamente`, "success");
+                // Verificar si la eliminación fue exitosa
+                if (response.success) {
+                    console.log('✅ === ELIMINACIÓN EXITOSA ===');
 
-                // Animar y remover la fila de la tabla
-                $fila.addClass('table-danger');
-                $fila.fadeOut(500, function () {
-                    $fila.remove();
+                    // Mostrar notificación de éxito
+                    mostrarAlertaSimple(response.message || `Producto "${nombreProducto}" eliminado exitosamente`, "success");
 
-                    // Actualizar contadores
-                    actualizarContadores();
+                    // Animar y remover la fila
+                    $fila.addClass('table-danger');
+                    $fila.fadeOut(800, function () {
+                        $fila.remove();
+                        actualizarContadoresTabla();
 
-                    // Actualizar paginación
-                    if (typeof actualizarFilasVisibles === 'function') {
-                        actualizarFilasVisibles();
-                        renderizarPagina(paginacionConfig.paginaActual);
-                    }
-                });
+                        // Actualizar paginación si está disponible
+                        if (typeof actualizarFilasVisibles === 'function') {
+                            actualizarFilasVisibles();
+                            renderizarPagina(paginacionConfig.paginaActual);
+                        }
+
+                        console.log('🗑️ Fila removida del DOM');
+                    });
+                } else {
+                    console.error('❌ El servidor reportó un error:', response.message);
+
+                    // Rehabilitar botón
+                    $btnConfirmar.prop('disabled', false);
+                    $normalState.show();
+                    $loadingState.hide();
+
+                    mostrarAlertaSimple(response.message || 'Error al eliminar el producto', "danger");
+                }
             },
             error: function (xhr, status, error) {
-                console.error('❌ Error al eliminar producto:', error);
-                console.error('❌ Respuesta del servidor:', xhr.responseText);
+                console.error('❌ === ERROR EN PETICIÓN AJAX ===');
+                console.error('❌ Status:', status);
+                console.error('❌ Error:', error);
+                console.error('❌ Status Code:', xhr.status);
+                console.error('❌ Response Text:', xhr.responseText);
 
                 // Rehabilitar botón
                 $btnConfirmar.prop('disabled', false);
                 $normalState.show();
                 $loadingState.hide();
 
+                // Manejar diferentes tipos de error
                 let mensajeError = 'Error desconocido';
-                try {
-                    const errorResponse = JSON.parse(xhr.responseText);
-                    mensajeError = errorResponse.message || errorResponse.error || 'Error del servidor';
-                } catch (e) {
-                    mensajeError = xhr.responseText || `Error ${xhr.status}: ${error}`;
+
+                if (xhr.status === 404) {
+                    mensajeError = 'Función de eliminación no encontrada. Contacte al administrador.';
+                } else if (xhr.status === 403) {
+                    mensajeError = 'No tiene permisos para eliminar productos.';
+                } else if (xhr.status === 401) {
+                    mensajeError = 'Sesión expirada. Por favor, inicie sesión nuevamente.';
+                } else if (xhr.responseText) {
+                    try {
+                        const errorResponse = JSON.parse(xhr.responseText);
+                        mensajeError = errorResponse.message || errorResponse.error || 'Error del servidor';
+                    } catch (e) {
+                        mensajeError = `Error ${xhr.status}: ${error}`;
+                    }
+                } else {
+                    mensajeError = `Error ${xhr.status}: ${error}`;
                 }
 
-                mostrarNotificacion("Error", `No se pudo eliminar el producto: ${mensajeError}`, "danger");
+                mostrarAlertaSimple(`Error al eliminar: ${mensajeError}`, "danger");
             }
         });
     }
+
+
 
     // Eventos para compartir desde el modal
     $("#btnCompartirWhatsApp").click(function (e) {
@@ -1164,4 +1233,172 @@ Saludos.`;
     inicializarPaginacion();
 
     console.log('✅ Inventario - Sistema completo inicializado correctamente');
+
+    // ========================================
+    // FUNCIÓN PARA MOSTRAR ALERTAS
+    // Agregar al final de inventario.js
+    // ========================================
+
+    /**
+     * Muestra una alerta al usuario usando diferentes métodos disponibles
+     * @param {string} mensaje - Mensaje a mostrar
+     * @param {string} tipo - Tipo de alerta: success, danger, warning, info
+     */
+    function mostrarAlertaSimple(mensaje, tipo) {
+        console.log(`🔔 Mostrando alerta: [${tipo}] ${mensaje}`);
+
+        // Método 1: Si toastr está disponible (recomendado)
+        if (typeof toastr !== 'undefined') {
+            console.log('✅ Usando toastr para mostrar alerta');
+            const tipoToastr = tipo === 'danger' ? 'error' : tipo;
+            toastr[tipoToastr](mensaje);
+            return;
+        }
+
+        // Método 2: Si SweetAlert está disponible
+        if (typeof Swal !== 'undefined') {
+            console.log('✅ Usando SweetAlert para mostrar alerta');
+            const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
+            Swal.fire({
+                icon: iconoSwal,
+                title: tipo === 'success' ? '¡Éxito!' : tipo === 'danger' ? 'Error' : 'Información',
+                text: mensaje,
+                timer: tipo === 'success' ? 3000 : 5000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        // Método 3: Crear alerta Bootstrap personalizada
+        console.log('✅ Usando alertas Bootstrap personalizadas');
+        crearAlertaBootstrap(mensaje, tipo);
+    }
+
+    /**
+     * Crea una alerta Bootstrap personalizada
+     * @param {string} mensaje - Mensaje a mostrar
+     * @param {string} tipo - Tipo de alerta Bootstrap
+     */
+    function crearAlertaBootstrap(mensaje, tipo) {
+        // Determinar el color Bootstrap
+        const colorBootstrap = tipo === 'danger' ? 'danger' :
+            tipo === 'success' ? 'success' :
+                tipo === 'warning' ? 'warning' : 'info';
+
+        // Determinar el icono
+        const icono = tipo === 'success' ? 'bi-check-circle' :
+            tipo === 'danger' ? 'bi-exclamation-triangle' :
+                tipo === 'warning' ? 'bi-exclamation-triangle' : 'bi-info-circle';
+
+        // Crear ID único para la alerta
+        const alertId = 'alert-' + Date.now();
+
+        // HTML de la alerta
+        const alertHtml = `
+        <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm" 
+             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;" 
+             role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
+                <div class="flex-grow-1">
+                    ${mensaje}
+                </div>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+        // Agregar al DOM
+        $('body').append(alertHtml);
+
+        // Auto-remover después de 5 segundos (8 segundos para errores)
+        const timeout = tipo === 'danger' ? 8000 : 5000;
+        setTimeout(() => {
+            $(`#${alertId}`).fadeOut(300, function () {
+                $(this).remove();
+            });
+        }, timeout);
+
+        console.log(`✅ Alerta Bootstrap creada con ID: ${alertId}`);
+    }
+
+    // ========================================
+    // FUNCIÓN DE NOTIFICACIÓN ALTERNATIVA (Mantener compatibilidad)
+    // ========================================
+
+    /**
+     * Función alternativa para mantener compatibilidad con código existente
+     * @param {string} titulo - Título de la notificación
+     * @param {string} mensaje - Mensaje de la notificación  
+     * @param {string} tipo - Tipo de notificación
+     */
+    function mostrarNotificacion(titulo, mensaje, tipo) {
+        const mensajeCompleto = titulo ? `${titulo}: ${mensaje}` : mensaje;
+        mostrarAlertaSimple(mensajeCompleto, tipo);
+    }
+
+    // ========================================
+    // FUNCIÓN PARA ACTUALIZAR CONTADORES DE LA TABLA
+    // Agregar al final de inventario.js
+    // ========================================
+
+    /**
+     * Actualiza los contadores de productos en la interfaz
+     */
+    function actualizarContadoresTabla() {
+        try {
+            console.log('📊 Actualizando contadores de la tabla...');
+
+            // Contar filas visibles (productos mostrados actualmente)
+            const filasVisibles = $("tbody tr:visible").length;
+
+            // Contar filas con stock bajo (que tengan la clase table-danger)
+            const filasStockBajo = $("tbody tr.table-danger:visible").length;
+
+            // Actualizar contador de productos
+            const $contadorProductos = $("#contadorProductos");
+            if ($contadorProductos.length > 0) {
+                $contadorProductos.text(filasVisibles);
+                console.log('✅ Contador productos actualizado:', filasVisibles);
+            }
+
+            // Actualizar contador de stock bajo
+            const $contadorStockBajo = $("#contadorStockBajo");
+            if ($contadorStockBajo.length > 0) {
+                $contadorStockBajo.text(filasStockBajo);
+                console.log('✅ Contador stock bajo actualizado:', filasStockBajo);
+            }
+
+            // También actualizar la paginación si existe
+            if (typeof paginacionConfig !== 'undefined' && typeof actualizarFilasVisibles === 'function') {
+                actualizarFilasVisibles();
+
+                // Si estamos en una página que ya no tiene productos, ir a la anterior
+                if (paginacionConfig.paginaActual > 1 && filasVisibles === 0) {
+                    const nuevaPagina = Math.max(1, paginacionConfig.paginaActual - 1);
+                    console.log('📄 Página actual vacía, moviendo a página:', nuevaPagina);
+                    renderizarPagina(nuevaPagina);
+                } else if (typeof renderizarPagina === 'function') {
+                    renderizarPagina(paginacionConfig.paginaActual);
+                }
+            }
+
+            console.log('📊 Contadores actualizados - Productos visibles:', filasVisibles, 'Stock bajo:', filasStockBajo);
+
+        } catch (error) {
+            console.error('❌ Error al actualizar contadores:', error);
+            // No es crítico, continuar sin fallar
+        }
+    }
+
+    // ========================================
+    // FUNCIÓN ALTERNATIVA PARA ACTUALIZAR CONTADORES (por compatibilidad)
+    // ========================================
+
+    /**
+     * Función alternativa que mantiene compatibilidad con nombres anteriores
+     */
+    function actualizarContadores() {
+        actualizarContadoresTabla();
+    }
 });

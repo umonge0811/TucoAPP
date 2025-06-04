@@ -2286,8 +2286,18 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // DELETE: /Inventario/EliminarProducto/5
-        [HttpDelete("EliminarProducto/{id}")]
+        // ========================================
+        // MÉTODO PARA ELIMINAR PRODUCTO - CONTROLADOR WEB
+        // Agregar este método en GestionLlantera.Web/Controllers/InventarioController.cs
+        // ========================================
+
+        /// <summary>
+        /// Elimina un producto completo del inventario
+        /// </summary>
+        /// <param name="id">ID del producto a eliminar</param>
+        /// <returns>Resultado JSON con éxito o error</returns>
+        [HttpDelete]
+        [Route("Inventario/EliminarProducto/{id}")]
         [Authorize]
         public async Task<IActionResult> EliminarProducto(int id)
         {
@@ -2301,35 +2311,57 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "No tienes permisos para eliminar productos." });
                 }
 
-                _logger.LogInformation("🗑️ === ELIMINANDO PRODUCTO DESDE WEB ===");
+                _logger.LogInformation("🗑️ === ELIMINACIÓN DESDE CONTROLADOR WEB ===");
                 _logger.LogInformation("👤 Usuario: {Usuario}, Producto ID: {Id}", User.Identity?.Name, id);
 
-                // Obtener token JWT
+                // Obtener token JWT para comunicarse con la API
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogError("❌ Token JWT no encontrado para eliminación");
-                    return Json(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Sesión expirada. Por favor, inicie sesión nuevamente."
+                    });
                 }
 
-                // Llamar al servicio de eliminación
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente");
+
+                // Llamar al servicio para eliminar el producto
                 var resultado = await _inventarioService.EliminarProductoAsync(id, token);
 
                 if (resultado)
                 {
-                    _logger.LogInformation("✅ Producto {Id} eliminado exitosamente por {Usuario}", id, User.Identity?.Name);
-                    return Json(new { success = true, message = "Producto eliminado exitosamente" });
+                    _logger.LogInformation("✅ Producto {Id} eliminado exitosamente por {Usuario}",
+                        id, User.Identity?.Name);
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Producto eliminado exitosamente",
+                        productoId = id
+                    });
                 }
                 else
                 {
                     _logger.LogError("❌ El servicio retornó false para eliminación de producto {Id}", id);
-                    return Json(new { success = false, message = "Error al eliminar el producto" });
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Error al eliminar el producto. Inténtelo nuevamente."
+                    });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error crítico al eliminar producto {Id}", id);
-                return Json(new { success = false, message = "Error interno: " + ex.Message });
+                _logger.LogError(ex, "💥 Error crítico al eliminar producto {Id} desde controlador web", id);
+
+                return Json(new
+                {
+                    success = false,
+                    message = $"Error interno: {ex.Message}"
+                });
             }
         }
     }
