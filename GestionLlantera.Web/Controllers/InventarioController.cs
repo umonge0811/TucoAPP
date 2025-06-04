@@ -16,6 +16,7 @@ using Tuco.Clases.DTOs.Inventario;
 using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
 using Microsoft.AspNetCore.Mvc;
+using Tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -2364,6 +2365,133 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
+        // ========================================
+        // MÉTODO ACTUALIZADO PARA AJUSTE DE STOCK - CONTROLADOR WEB
+        // Reemplazar el método anterior en GestionLlantera.Web/Controllers/InventarioController.cs
+        // ========================================
+
+        /// <summary>
+        /// Ajusta el stock de un producto específico desde la interfaz web
+        /// </summary>
+        /// <param name="id">ID del producto</param>
+        /// <param name="ajusteData">Datos del ajuste</param>
+        /// <returns>Resultado JSON del ajuste</returns>
+        [HttpPost]
+        [Route("Inventario/AjustarStock/{id}")]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AjustarStock(int id, [FromBody] AjusteStockRequestModel ajusteData)
+        {
+            try
+            {
+                // ✅ VERIFICACIÓN DE PERMISOS
+                var validacion = await this.ValidarPermisoMvcAsync("Ajustar Stock",
+                    "No tienes permisos para ajustar el stock de productos.");
+                if (validacion != null)
+                {
+                    return Json(new { success = false, message = "No tienes permisos para ajustar stock." });
+                }
+
+                _logger.LogInformation("📦 === AJUSTE DE STOCK DESDE WEB ===");
+                _logger.LogInformation("👤 Usuario: {Usuario}, Producto ID: {Id}", User.Identity?.Name, id);
+                _logger.LogInformation("📊 Datos recibidos: Tipo='{Tipo}', Cantidad={Cantidad}, Comentario='{Comentario}'",
+                    ajusteData.TipoAjuste, ajusteData.Cantidad, ajusteData.Comentario ?? "Sin comentario");
+
+                // Validar datos de entrada
+                if (string.IsNullOrEmpty(ajusteData.TipoAjuste))
+                {
+                    return Json(new { success = false, message = "Debe especificar el tipo de ajuste" });
+                }
+
+                if (ajusteData.Cantidad <= 0)
+                {
+                    return Json(new { success = false, message = "La cantidad debe ser mayor a cero" });
+                }
+
+                // Obtener token JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Sesión expirada. Por favor, inicie sesión nuevamente."
+                    });
+                }
+
+                // Crear DTO para la API
+                var ajusteDto = new AjusteStockRapidoDTO
+                {
+                    TipoAjuste = ajusteData.TipoAjuste.ToLower(),
+                    Cantidad = ajusteData.Cantidad,
+                    Comentario = ajusteData.Comentario,
+                    UsuarioId = ObtenerIdUsuarioActual()
+                };
+
+                _logger.LogInformation("🔐 Token JWT obtenido, enviando a servicio...");
+
+                // Llamar al servicio para ajustar stock
+                var resultado = await _inventarioService.AjustarStockRapidoAsync(id, ajusteDto, token);
+
+                if (resultado.Success)
+                {
+                    _logger.LogInformation("✅ === AJUSTE EXITOSO ===");
+                    _logger.LogInformation("✅ Producto: {Nombre} (ID: {Id})", resultado.NombreProducto, resultado.ProductoId);
+                    _logger.LogInformation("✅ Stock: {Anterior} → {Nuevo} (Diferencia: {Diferencia})",
+                        resultado.StockAnterior, resultado.StockNuevo, resultado.Diferencia);
+                    _logger.LogInformation("✅ Stock bajo: {StockBajo}", resultado.StockBajo ? "SÍ" : "NO");
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.Message,
+                        data = new
+                        {
+                            productoId = resultado.ProductoId,
+                            nombreProducto = resultado.NombreProducto,
+                            stockAnterior = resultado.StockAnterior,
+                            stockNuevo = resultado.StockNuevo,
+                            diferencia = resultado.Diferencia,
+                            tipoAjuste = resultado.TipoAjuste,
+                            stockBajo = resultado.StockBajo,
+                            stockMinimo = resultado.StockMinimo,
+                            timestamp = resultado.Timestamp
+                        }
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error en ajuste de stock: {Message}", resultado.Message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.Message
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al ajustar stock desde web. Producto ID: {Id}", id);
+
+                return Json(new
+                {
+                    success = false,
+                    message = $"Error interno al ajustar stock: {ex.Message}"
+                });
+            }
+        }
+        /// <summary>
+        /// Modelo para recibir datos de ajuste desde el frontend
+        /// </summary>
+        public class AjusteStockRequestModel
+        {
+            public string TipoAjuste { get; set; } = string.Empty;
+            public int Cantidad { get; set; }
+            public string? Comentario { get; set; }
+        }
     }
+
 }
     

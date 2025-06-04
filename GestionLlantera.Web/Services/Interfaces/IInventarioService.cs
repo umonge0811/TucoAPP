@@ -12,12 +12,13 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes, string jwtToken = null);
         Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes, string jwtToken=null);
         Task<bool> EliminarImagenProductoAsync(int productoId, int imagenId, string jwtToken = null);
-        Task<bool> AjustarStockAsync(int id, int cantidad, string tipoAjuste);
         Task<List<string>> BuscarMarcasLlantasAsync(string filtro = "", string jwtToken = null);
         Task<List<string>> BuscarModelosLlantasAsync(string filtro = "", string marca = "", string jwtToken = null);
         Task<List<string>> BuscarIndicesVelocidadAsync(string filtro = "", string jwtToken = null);
         Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null);
         Task<bool> EliminarProductoAsync(int id, string jwtToken = null);
+
+        Task<AjusteStockRapidoResponseDTO> AjustarStockRapidoAsync(int id, AjusteStockRapidoDTO ajusteDto, string jwtToken = null);
 
 
         // Métodos para manejo de inventarios programados

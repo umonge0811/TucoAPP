@@ -1681,5 +1681,147 @@ namespace GestionLlantera.Web.Services
                 return false;
             }
         }
+
+        // ========================================
+        // IMPLEMENTACIÓN DEL MÉTODO EN InventarioService
+        // Archivo: GestionLlantera.Web/Services/InventarioService.cs
+        // Agregar este método al final de la clase InventarioService
+        // ========================================
+
+        /// <summary>
+        /// Ajusta el stock de un producto específico mediante la API
+        /// </summary>
+        /// <param name="id">ID del producto</param>
+        /// <param name="ajusteDto">Datos del ajuste</param>
+        /// <param name="jwtToken">Token JWT para autenticación</param>
+        /// <returns>Resultado del ajuste de stock</returns>
+        public async Task<AjusteStockRapidoResponseDTO> AjustarStockRapidoAsync(int id, AjusteStockRapidoDTO ajusteDto, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === INICIANDO AJUSTE DE STOCK EN SERVICIO ===");
+                _logger.LogInformation("📦 Producto ID: {Id}, Tipo: {Tipo}, Cantidad: {Cantidad}",
+                    id, ajusteDto.TipoAjuste, ajusteDto.Cantidad);
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para ajuste de stock");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para ajuste de stock");
+                }
+
+                // ✅ SERIALIZAR DTO PARA ENVIAR A LA API
+                var jsonContent = JsonConvert.SerializeObject(ajusteDto, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include,
+                    DateTimeZoneHandling = DateTimeZoneHandling.Local
+                });
+
+                _logger.LogInformation("📤 JSON enviado a la API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // ✅ REALIZAR PETICIÓN A LA API
+                var url = $"api/Inventario/productos/{id}/ajustar-stock";
+                _logger.LogInformation("🌐 Enviando petición POST a: {Url}", url);
+
+                var response = await _httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 Respuesta de la API - Status: {Status}, Content: {Content}",
+                    response.StatusCode, responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error en la API al ajustar stock: {Status} - {Content}",
+                        response.StatusCode, responseContent);
+
+                    // Intentar deserializar el error
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorResponse?.message?.ToString() ?? "Error desconocido";
+
+                        return new AjusteStockRapidoResponseDTO
+                        {
+                            Success = false,
+                            Message = errorMessage
+                        };
+                    }
+                    catch
+                    {
+                        return new AjusteStockRapidoResponseDTO
+                        {
+                            Success = false,
+                            Message = $"Error en la API: {response.StatusCode}"
+                        };
+                    }
+                }
+
+                // ✅ DESERIALIZAR RESPUESTA EXITOSA
+                var resultado = JsonConvert.DeserializeObject<AjusteStockRapidoResponseDTO>(responseContent);
+
+                if (resultado == null)
+                {
+                    _logger.LogError("❌ No se pudo deserializar la respuesta de la API");
+                    return new AjusteStockRapidoResponseDTO
+                    {
+                        Success = false,
+                        Message = "Error al procesar la respuesta de la API"
+                    };
+                }
+
+                _logger.LogInformation("✅ === AJUSTE DE STOCK COMPLETADO ===");
+                _logger.LogInformation("✅ Resultado: {Success}, Mensaje: {Message}",
+                    resultado.Success, resultado.Message);
+
+                if (resultado.Success)
+                {
+                    _logger.LogInformation("✅ Stock actualizado: {Anterior} → {Nuevo} (Diferencia: {Diferencia})",
+                        resultado.StockAnterior, resultado.StockNuevo, resultado.Diferencia);
+
+                    if (resultado.StockBajo)
+                    {
+                        _logger.LogWarning("⚠️ ALERTA: El producto quedó con stock bajo ({Stock} <= {Minimo})",
+                            resultado.StockNuevo, resultado.StockMinimo);
+                    }
+                }
+
+                return resultado;
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "🌐 Error de conexión al ajustar stock del producto {Id}", id);
+                return new AjusteStockRapidoResponseDTO
+                {
+                    Success = false,
+                    Message = "Error de conexión con el servidor. Verifique su conexión a internet."
+                };
+            }
+            catch (TaskCanceledException tcEx)
+            {
+                _logger.LogError(tcEx, "⏱️ Timeout al ajustar stock del producto {Id}", id);
+                return new AjusteStockRapidoResponseDTO
+                {
+                    Success = false,
+                    Message = "La operación tardó demasiado tiempo. Inténtelo nuevamente."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error general al ajustar stock del producto {Id}", id);
+                return new AjusteStockRapidoResponseDTO
+                {
+                    Success = false,
+                    Message = $"Error interno: {ex.Message}"
+                };
+            }
+        }
     }
 }

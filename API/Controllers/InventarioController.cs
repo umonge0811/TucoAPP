@@ -1444,73 +1444,181 @@ namespace API.Controllers
             }
         }
 
-        // POST: api/InventarioProgramado/detalles/ajustar-stock
-        [HttpPost("detalles/ajustar-stock")]
-       public async Task<IActionResult> AjustarStock([FromBody] AjusteStockDTO dto)
-       {
-           try
-           {
-               var detalle = await _context.DetallesInventarioProgramado
-                   .FirstOrDefaultAsync(d => d.DetalleId == dto.DetalleId);
+        // ========================================
+        // ENDPOINT ACTUALIZADO PARA AJUSTE RÁPIDO DE STOCK - API CONTROLLER
+        // Reemplazar el método anterior en API/Controllers/InventarioController.cs
+        // ========================================
 
-               if (detalle == null)
-               {
-                   return NotFound(new { message = "Detalle de inventario no encontrado" });
-               }
+        /// <summary>
+        /// Ajusta el stock de un producto específico (ajuste rápido)
+        /// </summary>
+        /// <param name="id">ID del producto</param>
+        /// <param name="ajusteDto">Datos del ajuste rápido</param>
+        /// <returns>Resultado del ajuste</returns>
+        [HttpPost("productos/{id}/ajustar-stock")]
+        [Authorize]
+        public async Task<IActionResult> AjustarStockRapido(int id, [FromBody] AjusteStockRapidoDTO ajusteDto)
+        {
+            try
+            {
+                // ✅ VERIFICACIÓN DE PERMISOS
+                var validacion = await this.ValidarPermisoAsync(_permisosService, "Ajustar Stock",
+                    "Solo usuarios con permiso 'Ajustar Stock' pueden ajustar el inventario");
+                if (validacion != null) return validacion;
 
-               // Verificar permisos del usuario
-               var asignacion = await _context.AsignacionesUsuariosInventario
-                   .FirstOrDefaultAsync(a => a.InventarioProgramadoId == detalle.InventarioProgramadoId && a.UsuarioId == dto.UsuarioId);
+                _logger.LogInformation("📦 === AJUSTE RÁPIDO DE STOCK INICIADO ===");
+                _logger.LogInformation("👤 Usuario: {Usuario}, Producto ID: {Id}", User.Identity?.Name, id);
+                _logger.LogInformation("📊 Tipo: {Tipo}, Cantidad: {Cantidad}, Comentario: {Comentario}",
+                    ajusteDto.TipoAjuste, ajusteDto.Cantidad, ajusteDto.Comentario ?? "Sin comentario");
 
-               if (asignacion == null || !asignacion.PermisoAjuste)
-               {
-                   return BadRequest(new { message = "El usuario no tiene permisos para realizar ajustes en este inventario" });
-               }
+                // Validar datos de entrada
+                if (ajusteDto.Cantidad <= 0)
+                {
+                    return BadRequest(new { message = "La cantidad debe ser mayor a cero" });
+                }
 
-               // Verificar que el inventario esté en progreso
-               var inventario = await _context.InventariosProgramados
-                   .FirstOrDefaultAsync(i => i.InventarioProgramadoId == detalle.InventarioProgramadoId);
+                if (string.IsNullOrEmpty(ajusteDto.TipoAjuste))
+                {
+                    return BadRequest(new { message = "Debe especificar el tipo de ajuste" });
+                }
 
-               if (inventario == null || inventario.Estado != "En Progreso")
-               {
-                   return BadRequest(new { message = "El inventario no está en progreso" });
-               }
+                // Buscar el producto con información adicional
+                var producto = await _context.Productos
+                    .Where(p => p.ProductoId == id)
+                    .Select(p => new {
+                        p.ProductoId,
+                        p.NombreProducto,
+                        p.CantidadEnInventario,
+                        p.StockMinimo
+                    })
+                    .FirstOrDefaultAsync();
 
-               // Obtener el producto
-               var producto = await _context.Productos
-                   .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);
+                if (producto == null)
+                {
+                    _logger.LogWarning("❌ Producto no encontrado: {Id}", id);
+                    return NotFound(new { message = "Producto no encontrado" });
+                }
 
-               if (producto == null)
-               {
-                   return NotFound(new { message = "Producto no encontrado" });
-               }
+                _logger.LogInformation("✅ Producto encontrado: '{Nombre}', Stock actual: {Stock}, Stock mínimo: {StockMin}",
+                    producto.NombreProducto, producto.CantidadEnInventario, producto.StockMinimo);
 
-               // Actualizar el stock del producto
-               producto.CantidadEnInventario = dto.NuevoStock;
-               producto.FechaUltimaActualizacion = DateTime.Now;
+                // Calcular nuevo stock según el tipo de ajuste
+                int stockAnterior = (int)producto.CantidadEnInventario;
+                int nuevoStock = stockAnterior;
 
-               // Actualizar el detalle
-               detalle.CantidadSistema = dto.NuevoStock;
-               // Si ya se realizó un conteo físico, recalcular la diferencia
-               if (detalle.CantidadFisica.HasValue)
-               {
-                   detalle.Diferencia = detalle.CantidadFisica.Value - detalle.CantidadSistema;
-               }
-               detalle.Observaciones += $"\nAjuste realizado por usuario ID {dto.UsuarioId} el {DateTime.Now}. Motivo: {dto.Motivo}";
+                switch (ajusteDto.TipoAjuste.ToLower())
+                {
+                    case "entrada":
+                        nuevoStock = stockAnterior + ajusteDto.Cantidad;
+                        _logger.LogInformation("📈 Entrada de {Cantidad} unidades: {Anterior} + {Cantidad} = {Nuevo}",
+                            ajusteDto.Cantidad, stockAnterior, ajusteDto.Cantidad, nuevoStock);
+                        break;
 
-               await _context.SaveChangesAsync();
+                    case "salida":
+                        nuevoStock = Math.Max(0, stockAnterior - ajusteDto.Cantidad);
+                        if (stockAnterior < ajusteDto.Cantidad)
+                        {
+                            _logger.LogWarning("⚠️ Salida excede stock disponible. Stock: {Stock}, Salida solicitada: {Salida}, Nuevo stock: {Nuevo}",
+                                stockAnterior, ajusteDto.Cantidad, nuevoStock);
+                        }
+                        _logger.LogInformation("📉 Salida de {Cantidad} unidades: {Anterior} - {Cantidad} = {Nuevo}",
+                            ajusteDto.Cantidad, stockAnterior, ajusteDto.Cantidad, nuevoStock);
+                        break;
 
-               // Registrar el ajuste en el historial (si existe esa funcionalidad)
-               // ...
+                    case "ajuste":
+                        nuevoStock = ajusteDto.Cantidad;
+                        _logger.LogInformation("🔧 Ajuste directo: {Anterior} → {Nuevo}", stockAnterior, nuevoStock);
+                        break;
 
-               return Ok(new { message = "Stock ajustado exitosamente" });
-           }
-           catch (Exception ex)
-           {
-               _logger.LogError(ex, "Error al ajustar stock");
-               return StatusCode(500, new { message = "Error al ajustar stock" });
-           }
-       }
+                    default:
+                        return BadRequest(new { message = "Tipo de ajuste no válido. Use: entrada, salida, o ajuste" });
+                }
+
+                // Actualizar el producto en la base de datos
+                var productoEntity = await _context.Productos.FindAsync(id);
+                if (productoEntity == null)
+                {
+                    return NotFound(new { message = "Error al actualizar: producto no encontrado" });
+                }
+
+                productoEntity.CantidadEnInventario = nuevoStock;
+                productoEntity.FechaUltimaActualizacion = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ === AJUSTE COMPLETADO ===");
+                _logger.LogInformation("📊 Stock anterior: {Anterior} → Stock nuevo: {Nuevo}", stockAnterior, nuevoStock);
+                _logger.LogInformation("🔄 Diferencia: {Diferencia}", nuevoStock - stockAnterior);
+
+                // Verificar si queda en stock bajo
+                bool stockBajo = nuevoStock <= producto.StockMinimo;
+                if (stockBajo && nuevoStock > 0)
+                {
+                    _logger.LogWarning("📉 ALERTA: Producto '{Nombre}' (ID: {Id}) quedó con stock bajo: {Stock} <= {Minimo}",
+                        producto.NombreProducto, id, nuevoStock, producto.StockMinimo);
+                }
+                else if (nuevoStock == 0)
+                {
+                    _logger.LogWarning("🚨 CRÍTICO: Producto '{Nombre}' (ID: {Id}) quedó SIN STOCK",
+                        producto.NombreProducto, id);
+                }
+
+                // Preparar respuesta detallada
+                var response = new AjusteStockRapidoResponseDTO
+                {
+                    Success = true,
+                    Message = $"Stock ajustado exitosamente. {stockAnterior} → {nuevoStock} unidades",
+                    ProductoId = id,
+                    NombreProducto = producto.NombreProducto,
+                    StockAnterior = stockAnterior,
+                    StockNuevo = nuevoStock,
+                    Diferencia = nuevoStock - stockAnterior,
+                    TipoAjuste = ajusteDto.TipoAjuste,
+                    StockBajo = stockBajo,
+                    StockMinimo = (int)producto.StockMinimo,
+                    Timestamp = DateTime.Now
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al ajustar stock del producto {Id}", id);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error interno al ajustar stock",
+                    error = ex.Message
+                });
+            }
+        }
+        /// <summary>
+        /// Registra un movimiento de inventario en el historial
+        /// </summary>
+        private async Task RegistrarMovimientoInventario(int productoId, string tipoMovimiento,
+            int stockAnterior, int stockNuevo, int cantidad, string comentario)
+        {
+            // ✅ OPCIONAL: Si tienes una tabla de historial de movimientos, agregar aquí
+            // Por ahora solo loggeamos el movimiento
+
+            var movimiento = new
+            {
+                ProductoId = productoId,
+                TipoMovimiento = tipoMovimiento,
+                StockAnterior = stockAnterior,
+                StockNuevo = stockNuevo,
+                Cantidad = cantidad,
+                Comentario = comentario,
+                UsuarioId = User.FindFirst("UserId")?.Value ?? "0",
+                FechaMovimiento = DateTime.Now
+            };
+
+            _logger.LogInformation("📝 Movimiento registrado: {@Movimiento}", movimiento);
+
+            // TODO: Si implementas tabla de historial, agregar aquí:
+            // _context.HistorialMovimientos.Add(movimiento);
+            // await _context.SaveChangesAsync();
+        }
 
         // GET: api/Inventario/marcas-llantas
         [HttpGet("marcas-llantas")]
