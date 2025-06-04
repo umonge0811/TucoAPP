@@ -505,24 +505,26 @@ function resetFormularioDetalles() {
     $("#btnNextModal").hide();
 }
 
-// Función para mostrar notificaciones
-function mostrarNotificacion(titulo, mensaje, tipo) {
-    const alertHtml = `
-        <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
-            <strong>${titulo}:</strong> ${mensaje}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    `;
 
-    if ($("#alertContainer").length === 0) {
-        $("body").prepend('<div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
-    }
 
-    const $alert = $(alertHtml).appendTo("#alertContainer");
-    setTimeout(() => {
-        $alert.alert('close');
-    }, 5000);
-}
+//// Función para mostrar notificaciones
+//function mostrarNotificacion(titulo, mensaje, tipo) {
+//    const alertHtml = `
+//        <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+//            <strong>${titulo}:</strong> ${mensaje}
+//            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+//        </div>
+//    `;
+
+//    if ($("#alertContainer").length === 0) {
+//        $("body").prepend('<div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>');
+//    }
+
+//    const $alert = $(alertHtml).appendTo("#alertContainer");
+//    setTimeout(() => {
+//        $alert.alert('close');
+//    }, 5000);
+//}
 
 // ========================================
 // ✅ NUEVAS FUNCIONES DE AJUSTE DE STOCK
@@ -909,84 +911,134 @@ function actualizarFilaProductoEnTabla(productoId, stockNuevo, stockBajo, stockM
  * @param {string} mensaje - Mensaje a mostrar
  * @param {string} tipo - Tipo de alerta: success, danger, warning, info
  */
-function mostrarAlertaSimple(mensaje, tipo) {
-    console.log(`🔔 Mostrando alerta: [${tipo}] ${mensaje}`);
+//function mostrarAlertaSimple(mensaje, tipo) {
+//    console.log(`🔔 Mostrando alerta: [${tipo}] ${mensaje}`);
 
-    // Método 1: Si toastr está disponible (recomendado)
+//    // Método 1: Si toastr está disponible (recomendado)
+//    if (typeof toastr !== 'undefined') {
+//        console.log('✅ Usando toastr para mostrar alerta');
+//        const tipoToastr = tipo === 'danger' ? 'error' : tipo;
+//        toastr[tipoToastr](mensaje);
+//        return;
+//    }
+
+//    // Método 2: Si SweetAlert está disponible
+//    if (typeof Swal !== 'undefined') {
+//        console.log('✅ Usando SweetAlert para mostrar alerta');
+//        const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
+//        Swal.fire({
+//            icon: iconoSwal,
+//            title: tipo === 'success' ? '¡Éxito!' : tipo === 'danger' ? 'Error' : 'Información',
+//            text: mensaje,
+//            timer: tipo === 'success' ? 3000 : 5000,
+//            showConfirmButton: false
+//        });
+//        return;
+//    }
+
+//    // Método 3: Crear alerta Bootstrap personalizada
+//    console.log('✅ Usando alertas Bootstrap personalizadas');
+//    crearAlertaBootstrap(mensaje, tipo);
+//}
+
+///**
+// * Crea una alerta Bootstrap personalizada
+// * @param {string} mensaje - Mensaje a mostrar
+// * @param {string} tipo - Tipo de alerta Bootstrap
+// */
+//function crearAlertaBootstrap(mensaje, tipo) {
+//    // Determinar el color Bootstrap
+//    const colorBootstrap = tipo === 'danger' ? 'danger' :
+//        tipo === 'success' ? 'success' :
+//            tipo === 'warning' ? 'warning' : 'info';
+
+//    // Determinar el icono
+//    const icono = tipo === 'success' ? 'bi-check-circle' :
+//        tipo === 'danger' ? 'bi-exclamation-triangle' :
+//            tipo === 'warning' ? 'bi-exclamation-triangle' : 'bi-info-circle';
+
+//    // Crear ID único para la alerta
+//    const alertId = 'alert-' + Date.now();
+
+//    // HTML de la alerta
+//    const alertHtml = `
+//        <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm"
+//             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;"
+//             role="alert">
+//            <div class="d-flex align-items-center">
+//                <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
+//                <div class="flex-grow-1">
+//                    ${mensaje}
+//                </div>
+//                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+//            </div>
+//        </div>
+//    `;
+
+//    // Agregar al DOM
+//    $('body').append(alertHtml);
+
+//    // Auto-remover después de 5 segundos (8 segundos para errores)
+//    const timeout = tipo === 'danger' ? 8000 : 5000;
+//    setTimeout(() => {
+//        $(`#${alertId}`).fadeOut(300, function () {
+//            $(this).remove();
+//        });
+//    }, timeout);
+
+//    console.log(`✅ Alerta Bootstrap creada con ID: ${alertId}`);
+//}
+
+// ========================================
+// ✅ FUNCIÓN ÚNICA DE NOTIFICACIONES CORREGIDA
+// ========================================
+
+/**
+ * Función principal para mostrar notificaciones - VERSIÓN CORREGIDA
+ * @param {string} mensaje - Mensaje a mostrar
+ * @param {string} tipo - Tipo: success, danger, warning, info
+ * @param {string} titulo - Título opcional
+ */
+function mostrarNotificacion(mensaje, tipo = 'info', titulo = '') {
+    console.log(`🔔 [NOTIFICACIÓN] Tipo: ${tipo}, Mensaje: ${mensaje}`);
+
+    // ✅ USAR TOASTR DIRECTAMENTE SIN COMPLICACIONES
     if (typeof toastr !== 'undefined') {
-        console.log('✅ Usando toastr para mostrar alerta');
+        console.log('✅ Usando Toastr directamente');
+
+        // Configuración simple y efectiva
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": tipo === 'success' ? "3000" : "5000",
+            "preventDuplicates": true
+        };
+
+        // Convertir tipo 'danger' a 'error' para Toastr
         const tipoToastr = tipo === 'danger' ? 'error' : tipo;
-        toastr[tipoToastr](mensaje);
+
+        // Mostrar notificación
+        if (titulo) {
+            toastr[tipoToastr](mensaje, titulo);
+        } else {
+            toastr[tipoToastr](mensaje);
+        }
+
         return;
     }
 
-    // Método 2: Si SweetAlert está disponible
-    if (typeof Swal !== 'undefined') {
-        console.log('✅ Usando SweetAlert para mostrar alerta');
-        const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
-        Swal.fire({
-            icon: iconoSwal,
-            title: tipo === 'success' ? '¡Éxito!' : tipo === 'danger' ? 'Error' : 'Información',
-            text: mensaje,
-            timer: tipo === 'success' ? 3000 : 5000,
-            showConfirmButton: false
-        });
-        return;
-    }
-
-    // Método 3: Crear alerta Bootstrap personalizada
-    console.log('✅ Usando alertas Bootstrap personalizadas');
-    crearAlertaBootstrap(mensaje, tipo);
+    // ✅ FALLBACK simple si no hay Toastr
+    console.warn('⚠️ Toastr no disponible, usando alert');
+    alert((titulo ? titulo + ': ' : '') + mensaje);
 }
 
 /**
- * Crea una alerta Bootstrap personalizada
- * @param {string} mensaje - Mensaje a mostrar
- * @param {string} tipo - Tipo de alerta Bootstrap
+ * Función de compatibilidad - SIMPLIFICADA
  */
-function crearAlertaBootstrap(mensaje, tipo) {
-    // Determinar el color Bootstrap
-    const colorBootstrap = tipo === 'danger' ? 'danger' :
-        tipo === 'success' ? 'success' :
-            tipo === 'warning' ? 'warning' : 'info';
-
-    // Determinar el icono
-    const icono = tipo === 'success' ? 'bi-check-circle' :
-        tipo === 'danger' ? 'bi-exclamation-triangle' :
-            tipo === 'warning' ? 'bi-exclamation-triangle' : 'bi-info-circle';
-
-    // Crear ID único para la alerta
-    const alertId = 'alert-' + Date.now();
-
-    // HTML de la alerta
-    const alertHtml = `
-        <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm" 
-             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;" 
-             role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
-                <div class="flex-grow-1">
-                    ${mensaje}
-                </div>
-                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        </div>
-    `;
-
-    // Agregar al DOM
-    $('body').append(alertHtml);
-
-    // Auto-remover después de 5 segundos (8 segundos para errores)
-    const timeout = tipo === 'danger' ? 8000 : 5000;
-    setTimeout(() => {
-        $(`#${alertId}`).fadeOut(300, function () {
-            $(this).remove();
-        });
-    }, timeout);
-
-    console.log(`✅ Alerta Bootstrap creada con ID: ${alertId}`);
+function mostrarAlertaSimple(mensaje, tipo) {
+    mostrarNotificacion(mensaje, tipo);
 }
-
 
 
 /**
