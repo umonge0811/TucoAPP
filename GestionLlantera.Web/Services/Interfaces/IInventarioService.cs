@@ -22,14 +22,14 @@ namespace GestionLlantera.Web.Services.Interfaces
 
 
         // Métodos para manejo de inventarios programados
-        Task<List<InventarioProgramadoDTO>> ObtenerInventariosProgramadosAsync();
-        Task<InventarioProgramadoDTO> ObtenerInventarioProgramadoPorIdAsync(int id);
-        Task<bool> GuardarInventarioProgramadoAsync(InventarioProgramadoDTO inventario);
-        Task<bool> ActualizarInventarioProgramadoAsync(int id, InventarioProgramadoDTO inventario);
-        Task<bool> IniciarInventarioAsync(int id);
-        Task<bool> CancelarInventarioAsync(int id);
-        Task<bool> CompletarInventarioAsync(int id);
-        Task<Stream> ExportarResultadosInventarioExcelAsync(int id);
-        Task<Stream> ExportarResultadosInventarioPDFAsync(int id);
+        Task<List<InventarioProgramadoDTO>> ObtenerInventariosProgramadosAsync(string jwtToken = null);
+        Task<InventarioProgramadoDTO> ObtenerInventarioProgramadoPorIdAsync(int id, string jwtToken);
+        Task<bool> GuardarInventarioProgramadoAsync(InventarioProgramadoDTO inventario, string jwtToken = null);
+        Task<bool> ActualizarInventarioProgramadoAsync(int id, InventarioProgramadoDTO inventario, string jwtToken = null);
+        Task<bool> IniciarInventarioAsync(int id, string jwtToken = null);
+        Task<bool> CancelarInventarioAsync(int id, string jwtToken=null);
+        Task<bool> CompletarInventarioAsync(int id, string jwtToken = null);
+        Task<Stream> ExportarResultadosInventarioExcelAsync(int id, string jwtToken = null);
+        Task<Stream> ExportarResultadosInventarioPDFAsync(int id, string jwtToken = null);
     }
 }

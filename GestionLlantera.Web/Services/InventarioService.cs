@@ -1,10 +1,11 @@
 ﻿// Ubicación: GestionLlantera.Web/Services/InventarioService.cs
-using Tuco.Clases.DTOs.Inventario;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
+using Tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Services
 {
@@ -1099,11 +1100,24 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Obtiene todos los inventarios programados
         /// </summary>
-        public async Task<List<InventarioProgramadoDTO>> ObtenerInventariosProgramadosAsync()
+        public async Task<List<InventarioProgramadoDTO>> ObtenerInventariosProgramadosAsync(string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation("Obteniendo inventarios programados");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para obtener inventarios programados");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener inventarios programados");
+                }
 
                 // Realizar la petición a la API
                 var response = await _httpClient.GetAsync("api/Inventario/inventarios-programados");
@@ -1134,11 +1148,24 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Obtiene un inventario programado por su ID
         /// </summary>
-        public async Task<InventarioProgramadoDTO> ObtenerInventarioProgramadoPorIdAsync(int id)
+        public async Task<InventarioProgramadoDTO> ObtenerInventarioProgramadoPorIdAsync(int id, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation($"Obteniendo inventario programado con ID: {id}");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para obtener inventario programado por ID");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener inventario programado por ID");
+                }
 
                 // Realizar la petición a la API
                 var response = await _httpClient.GetAsync($"api/Inventario/inventarios-programados/{id}");
@@ -1169,7 +1196,7 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Guarda un nuevo inventario programado
         /// </summary>
-        public async Task<bool> GuardarInventarioProgramadoAsync(InventarioProgramadoDTO inventario)
+        public async Task<bool> GuardarInventarioProgramadoAsync(InventarioProgramadoDTO inventario, string jwtToken = null)
         {
             try
             {
@@ -1177,6 +1204,24 @@ namespace GestionLlantera.Web.Services
                 Console.WriteLine("=== DATOS ENVIADOS A LA API ===");
                 Console.WriteLine($"Título: {inventario.Titulo}");
                 Console.WriteLine($"UsuarioCreadorId: {inventario.UsuarioCreadorId}");
+
+                _logger.LogInformation("🔐 Token recibido: {HasToken}");
+
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para guardar inventario programado");
+                }
+                else
+                {
+                    _logger.LogError("❌ NO SE PROPORCIONÓ TOKEN JWT - LA PETICIÓN PUEDE FALLAR");
+                }
+
+
                 Console.WriteLine($"UsuarioCreadorNombre: '{inventario.UsuarioCreadorNombre}'");
                 Console.WriteLine($"Asignaciones count: {inventario.AsignacionesUsuarios?.Count ?? 0}");
 
@@ -1228,11 +1273,23 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Actualiza un inventario programado existente
         /// </summary>
-        public async Task<bool> ActualizarInventarioProgramadoAsync(int id, InventarioProgramadoDTO inventario)
+        public async Task<bool> ActualizarInventarioProgramadoAsync(int id, InventarioProgramadoDTO inventario, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation($"Actualizando inventario programado con ID: {id}");
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para actualizar inventario programado");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para actualizar inventario programado");
+                }
 
                 // Realizar la petición a la API
                 var json = JsonConvert.SerializeObject(inventario);
@@ -1259,11 +1316,24 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Inicia un inventario programado
         /// </summary>
-        public async Task<bool> IniciarInventarioAsync(int id)
+        public async Task<bool> IniciarInventarioAsync(int id, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation($"Iniciando inventario programado con ID: {id}");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para iniciar inventario programado");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para iniciar inventario programado");
+                }
 
                 // Realizar la petición a la API
                 var response = await _httpClient.PostAsync($"api/Inventario/inventarios-programados/{id}/iniciar", null);
@@ -1288,11 +1358,25 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Cancela un inventario programado
         /// </summary>
-        public async Task<bool> CancelarInventarioAsync(int id)
+        public async Task<bool> CancelarInventarioAsync(int id, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation($"Cancelando inventario programado con ID: {id}");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para cancelar inventario programado");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para cancelar inventario programado");
+                }
+
 
                 // Realizar la petición a la API
                 var response = await _httpClient.PostAsync($"api/Inventario/inventarios-programados/{id}/cancelar", null);
@@ -1317,11 +1401,24 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Completa un inventario programado
         /// </summary>
-        public async Task<bool> CompletarInventarioAsync(int id)
+        public async Task<bool> CompletarInventarioAsync(int id, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation($"Completando inventario programado con ID: {id}");
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para completar inventario programado");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para completar inventario programado");
+                }
+
 
                 // Realizar la petición a la API
                 var response = await _httpClient.PostAsync($"api/Inventario/inventarios-programados/{id}/completar", null);
@@ -1346,11 +1443,23 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Exporta los resultados de un inventario a Excel
         /// </summary>
-        public async Task<Stream> ExportarResultadosInventarioExcelAsync(int id)
+        public async Task<Stream> ExportarResultadosInventarioExcelAsync(int id, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation($"Exportando resultados de inventario a Excel para ID: {id}");
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para exportar resultados a Excel");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para exportar resultados a Excel");
+                }
 
                 // Realizar la petición a la API
                 var response = await _httpClient.GetAsync($"api/Inventario/inventarios-programados/{id}/exportar-excel");
@@ -1378,11 +1487,24 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Exporta los resultados de un inventario a PDF
         /// </summary>
-        public async Task<Stream> ExportarResultadosInventarioPDFAsync(int id)
+        public async Task<Stream> ExportarResultadosInventarioPDFAsync(int id, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation($"Exportando resultados de inventario a PDF para ID: {id}");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para exportar resultados a PDF");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para exportar resultados a PDF");
+                }
 
                 // Realizar la petición a la API
                 var response = await _httpClient.GetAsync($"api/Inventario/inventarios-programados/{id}/exportar-pdf");
