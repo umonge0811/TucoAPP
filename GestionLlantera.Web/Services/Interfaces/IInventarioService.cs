@@ -10,7 +10,8 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<List<ProductoDTO>> ObtenerProductosAsync(string jwtToken);
         Task<ProductoDTO> ObtenerProductoPorIdAsync(int id, string jwtToken = null);
         Task<bool> AgregarProductoAsync(ProductoDTO producto, List<IFormFile> imagenes, string jwtToken = null);
-        Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes);
+        Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes, string jwtToken=null);
+        Task<bool> EliminarImagenProductoAsync(int productoId, int imagenId, string jwtToken = null);
         Task<bool> AjustarStockAsync(int id, int cantidad, string tipoAjuste);
         Task<List<string>> BuscarMarcasLlantasAsync(string filtro = "", string jwtToken = null);
         Task<List<string>> BuscarModelosLlantasAsync(string filtro = "", string marca = "", string jwtToken = null);

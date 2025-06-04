@@ -15,6 +15,7 @@ using System.Security.Claims;
 using Tuco.Clases.DTOs.Inventario;
 using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
+using Microsoft.AspNetCore.Mvc;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -221,6 +222,325 @@ namespace GestionLlantera.Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+
+        // GET: /Inventario/EditarProducto/5
+        [HttpGet]
+        public async Task<IActionResult> EditarProducto(int id)
+        {
+            try
+            {
+                // ✅ VERIFICACIÓN DE PERMISOS
+                var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
+                    "No tienes permisos para editar productos.");
+                if (validacion != null) return validacion;
+
+                ViewData["Title"] = "Editar Producto";
+                ViewData["Layout"] = "_AdminLayout";
+
+                _logger.LogInformation("🔧 === INICIANDO EDICIÓN DE PRODUCTO ===");
+                _logger.LogInformation("📋 Producto ID a editar: {Id}", id);
+
+                // ✅ VALIDACIÓN BÁSICA
+                if (id <= 0)
+                {
+                    _logger.LogWarning("❌ ID de producto inválido: {Id}", id);
+                    TempData["Error"] = "ID de producto inválido.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // ✅ OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para EditarProducto");
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // ✅ OBTENER DATOS DEL PRODUCTO
+                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id, token);
+
+                if (producto == null || producto.ProductoId == 0)
+                {
+                    _logger.LogError("❌ Producto no encontrado. ID: {Id}", id);
+                    TempData["Error"] = "Producto no encontrado.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (string.IsNullOrEmpty(producto.NombreProducto) || producto.NombreProducto == "Error al cargar producto")
+                {
+                    _logger.LogError("❌ Error al cargar datos del producto ID: {Id}", id);
+                    TempData["Error"] = "Error al cargar los datos del producto.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // ✅ INICIALIZAR LLANTA SI ES NULL PERO ES LLANTA
+                if (producto.EsLlanta && producto.Llanta == null)
+                {
+                    _logger.LogWarning("⚠️ Producto es llanta pero datos de llanta son null, inicializando...");
+                    producto.Llanta = new LlantaDTO
+                    {
+                        LlantaId = 0,
+                        ProductoId = producto.ProductoId,
+                        Ancho = null,
+                        Perfil = null,
+                        Diametro = "",
+                        Marca = "",
+                        Modelo = "",
+                        Capas = null,
+                        IndiceVelocidad = "",
+                        TipoTerreno = ""
+                    };
+                }
+
+                // ✅ INICIALIZAR IMÁGENES SI ES NULL
+                if (producto.Imagenes == null)
+                {
+                    producto.Imagenes = new List<ImagenProductoDTO>();
+                }
+
+                _logger.LogInformation("✅ Producto cargado exitosamente para edición");
+                _logger.LogInformation("📝 Nombre: '{Nombre}'", producto.NombreProducto);
+                _logger.LogInformation("🛞 Es Llanta: {EsLlanta}", producto.EsLlanta);
+                _logger.LogInformation("🖼️ Cantidad de imágenes: {Count}", producto.Imagenes.Count);
+                _logger.LogInformation("💰 Precio: {Precio}", producto.Precio);
+                _logger.LogInformation("💳 Costo: {Costo}", producto.Costo);
+                _logger.LogInformation("📊 Utilidad: {Utilidad}%", producto.PorcentajeUtilidad);
+
+                return View(producto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al cargar producto para edición. ID: {Id}", id);
+                TempData["Error"] = "Error interno al cargar el producto para edición.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // POST: /Inventario/EditarProducto/5
+        // POST: /Inventario/EditarProducto/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditarProducto(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes, [FromForm] List<int> imagenesAEliminar)
+        {
+            try
+            {
+                // ✅ VERIFICACIÓN DE PERMISOS
+                var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
+                    "No tienes permisos para actualizar productos.");
+                if (validacion != null) return validacion;
+
+                _logger.LogInformation("💾 === INICIANDO ACTUALIZACIÓN DE PRODUCTO ===");
+                _logger.LogInformation("📋 Producto ID: {Id}", id);
+                _logger.LogInformation("📝 Nombre recibido: '{Nombre}'", producto.NombreProducto);
+                _logger.LogInformation("🖼️ Nuevas imágenes: {Count}", nuevasImagenes?.Count ?? 0);
+                _logger.LogInformation("🗑️ Imágenes a eliminar: {Count}", imagenesAEliminar?.Count ?? 0);
+
+                // ✅ DEBUGGING: Verificar token JWT PRIMERO
+                _logger.LogInformation("🔐 === VERIFICACIÓN DE TOKEN JWT ===");
+                var jwtToken = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogError("❌ TOKEN JWT NO ENCONTRADO en EditarProducto POST");
+                    _logger.LogInformation("📋 Claims del usuario:");
+                    foreach (var claim in User.Claims)
+                    {
+                        _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
+                    }
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+                else
+                {
+                    _logger.LogInformation("✅ Token JWT encontrado: {TokenLength} caracteres", jwtToken.Length);
+                    _logger.LogInformation("🔐 Primeros 50 chars: {TokenStart}...",
+                        jwtToken.Length > 50 ? jwtToken.Substring(0, 50) : jwtToken);
+                }
+
+                // ✅ DEBUGGING DETALLADO DE DATOS DE PRECIO RECIBIDOS
+                _logger.LogInformation("💰 === DEBUGGING DATOS DE PRECIO RECIBIDOS ===");
+                _logger.LogInformation("💳 Costo: {Costo} (HasValue: {HasValue})", producto.Costo, producto.Costo.HasValue);
+                _logger.LogInformation("📊 PorcentajeUtilidad: {Utilidad} (HasValue: {HasValue})",
+                    producto.PorcentajeUtilidad, producto.PorcentajeUtilidad.HasValue);
+                _logger.LogInformation("💵 Precio: {Precio} (HasValue: {HasValue})", producto.Precio, producto.Precio.HasValue);
+                _logger.LogInformation("🛞 EsLlanta: {EsLlanta}", producto.EsLlanta);
+
+                // Mostrar datos RAW del Request para debugging
+                _logger.LogInformation("📝 === DATOS RAW DEL FORMULARIO ===");
+                var formKeys = Request.Form.Keys.Where(k =>
+                    k.Contains("osto", StringComparison.OrdinalIgnoreCase) ||
+                    k.Contains("tilidad", StringComparison.OrdinalIgnoreCase) ||
+                    k.Contains("recio", StringComparison.OrdinalIgnoreCase) ||
+                    k.Contains("imagenesAEliminar", StringComparison.OrdinalIgnoreCase));
+
+                foreach (var key in formKeys)
+                {
+                    _logger.LogInformation("📝 Form[{Key}] = '{Value}'", key, Request.Form[key]);
+                }
+
+                // Debugging para imágenes a eliminar
+                if (imagenesAEliminar != null && imagenesAEliminar.Any())
+                {
+                    _logger.LogInformation("🗑️ === IMÁGENES A ELIMINAR ===");
+                    for (int i = 0; i < imagenesAEliminar.Count; i++)
+                    {
+                        _logger.LogInformation("🗑️ [{Index}]: {ImagenId}", i, imagenesAEliminar[i]);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("🗑️ No hay imágenes marcadas para eliminar");
+                }
+
+                // Debugging específico para llantas
+                if (producto.EsLlanta && producto.Llanta != null)
+                {
+                    _logger.LogInformation("🛞 Datos de llanta - Marca: '{Marca}', Modelo: '{Modelo}'",
+                        producto.Llanta.Marca, producto.Llanta.Modelo);
+                }
+                _logger.LogInformation("💰 === FIN DEBUGGING DATOS PRECIO ===");
+
+                // ✅ VALIDAR QUE LOS IDs COINCIDAN
+                if (id != producto.ProductoId)
+                {
+                    _logger.LogError("❌ Inconsistencia de IDs. URL: {UrlId}, Modelo: {ModeloId}", id, producto.ProductoId);
+                    TempData["Error"] = "Error de consistencia en los datos.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // ✅ VALIDACIÓN BÁSICA
+                if (id <= 0)
+                {
+                    _logger.LogWarning("❌ ID de producto inválido: {Id}", id);
+                    TempData["Error"] = "ID de producto inválido.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // ✅ VALIDAR MODELO
+                if (!ModelState.IsValid)
+                {
+                    _logger.LogWarning("❌ ModelState no es válido para actualización:");
+                    foreach (var kvp in ModelState.Where(x => x.Value.Errors.Count > 0))
+                    {
+                        _logger.LogWarning("Campo '{Key}': {Errors}",
+                            kvp.Key,
+                            string.Join(", ", kvp.Value.Errors.Select(e => e.ErrorMessage)));
+                    }
+
+                    // Recargar producto para mostrar errores
+                    if (!string.IsNullOrEmpty(jwtToken))
+                    {
+                        var productoRecarga = await _inventarioService.ObtenerProductoPorIdAsync(id, jwtToken);
+                        if (productoRecarga != null)
+                        {
+                            // Mantener los valores modificados por el usuario
+                            productoRecarga.NombreProducto = producto.NombreProducto;
+                            productoRecarga.Descripcion = producto.Descripcion;
+                            productoRecarga.CantidadEnInventario = producto.CantidadEnInventario;
+                            productoRecarga.StockMinimo = producto.StockMinimo;
+                            productoRecarga.Precio = producto.Precio;
+                            productoRecarga.Costo = producto.Costo;
+                            productoRecarga.PorcentajeUtilidad = producto.PorcentajeUtilidad;
+
+                            return View(productoRecarga);
+                        }
+                    }
+
+                    TempData["Error"] = "Por favor corrija los errores en el formulario.";
+                    return View(producto);
+                }
+
+                // ✅ PROCESAR ELIMINACIÓN DE IMÁGENES SI HAY ALGUNA
+                if (imagenesAEliminar != null && imagenesAEliminar.Any())
+                {
+                    _logger.LogInformation("🗑️ === INICIANDO ELIMINACIÓN DE IMÁGENES ===");
+                    _logger.LogInformation("🗑️ Procesando eliminación de {Count} imágenes", imagenesAEliminar.Count);
+                    _logger.LogInformation("🔐 Token disponible para eliminación: {HasToken}", !string.IsNullOrEmpty(jwtToken) ? "SÍ" : "NO");
+
+                    foreach (var imagenId in imagenesAEliminar)
+                    {
+                        try
+                        {
+                            _logger.LogInformation("🗑️ Eliminando imagen ID: {ImagenId} con token", imagenId);
+
+                            var eliminada = await _inventarioService.EliminarImagenProductoAsync(producto.ProductoId, imagenId, jwtToken);
+
+                            if (eliminada)
+                            {
+                                _logger.LogInformation("✅ Imagen {ImagenId} eliminada exitosamente", imagenId);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("⚠️ No se pudo eliminar la imagen {ImagenId} - servicio retornó false", imagenId);
+                            }
+                        }
+                        catch (Exception imgEx)
+                        {
+                            _logger.LogError(imgEx, "❌ Excepción al eliminar imagen {ImagenId}: {Message}", imagenId, imgEx.Message);
+                            // Continuar con las demás imágenes
+                        }
+                    }
+
+                    _logger.LogInformation("🗑️ === FIN ELIMINACIÓN DE IMÁGENES ===");
+                }
+                else
+                {
+                    _logger.LogInformation("ℹ️ No hay imágenes para eliminar");
+                }
+
+                // ✅ ACTUALIZAR PRODUCTO
+                _logger.LogInformation("📤 === ENVIANDO AL SERVICIO ===");
+                _logger.LogInformation("🔐 Token que se enviará al servicio: {HasToken}", !string.IsNullOrEmpty(jwtToken) ? "SÍ" : "NO");
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogInformation("🔐 Longitud del token: {Length}", jwtToken.Length);
+                }
+
+                var resultado = await _inventarioService.ActualizarProductoAsync(id, producto, nuevasImagenes ?? new List<IFormFile>(), jwtToken);
+
+                _logger.LogInformation("📥 === RESULTADO DEL SERVICIO ===");
+                _logger.LogInformation("✅ Resultado actualización: {Resultado}", resultado);
+
+                if (resultado)
+                {
+                    _logger.LogInformation("✅ Producto actualizado exitosamente. ID: {Id}", id);
+                    TempData["Success"] = "Producto actualizado exitosamente.";
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    _logger.LogError("❌ El servicio retornó false para la actualización del producto ID: {Id}", id);
+                    TempData["Error"] = "Error al actualizar el producto.";
+
+                    // Recargar datos para mostrar el formulario nuevamente
+                    var productoRecarga = await _inventarioService.ObtenerProductoPorIdAsync(id, jwtToken);
+                    return View(productoRecarga ?? producto);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al actualizar producto ID: {Id} - {Message}", id, ex.Message);
+                TempData["Error"] = "Error interno al actualizar el producto: " + ex.Message;
+
+                try
+                {
+                    // Intentar recargar el producto para mostrar el formulario
+                    var token = ObtenerTokenJWT();
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        var productoRecarga = await _inventarioService.ObtenerProductoPorIdAsync(id, token);
+                        return View(productoRecarga ?? producto);
+                    }
+                }
+                catch (Exception innerEx)
+                {
+                    _logger.LogError(innerEx, "❌ Error adicional al recargar producto para vista");
+                }
+
+                return View(producto);
+            }
+        }
+
 
         // Método GET para mostrar el formulario de agregar producto
         [HttpGet]

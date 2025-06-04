@@ -131,6 +131,7 @@ namespace API.Controllers
                 });
             }
         }
+
         // GET: api/Inventario/productos/{id}
         [HttpGet("productos/{id}")]
         [Authorize] // Solo requiere autenticación
@@ -420,6 +421,107 @@ namespace API.Controllers
             }
         }
 
+        // DELETE: api/Inventario/productos/{productoId}/imagenes/{imagenId}
+        [HttpDelete("productos/{productoId}/imagenes/{imagenId}")]
+        [Authorize]
+        public async Task<IActionResult> EliminarImagenProducto(int productoId, int imagenId)
+        {
+            try
+            {
+                // ✅ VERIFICACIÓN DE PERMISOS
+                var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "EditarProductos",
+                    "Solo usuarios con permiso 'EditarProductos' pueden eliminar imágenes");
+                if (validacionPermiso != null) return validacionPermiso;
+
+                _logger.LogInformation("🗑️ === ELIMINANDO IMAGEN EN API ===");
+                _logger.LogInformation("🗑️ Usuario: {Usuario}, ProductoId: {ProductoId}, ImagenId: {ImagenId}",
+                    User.Identity?.Name, productoId, imagenId);
+
+                // Verificar que el producto existe
+                var producto = await _context.Productos.FindAsync(productoId);
+                if (producto == null)
+                {
+                    _logger.LogWarning("❌ Producto no encontrado: {ProductoId}", productoId);
+                    return NotFound(new { message = "Producto no encontrado" });
+                }
+
+                // Buscar la imagen específica
+                var imagen = await _context.ImagenesProductos
+                    .FirstOrDefaultAsync(img => img.ImagenId == imagenId && img.ProductoId == productoId);
+
+                if (imagen == null)
+                {
+                    _logger.LogWarning("❌ Imagen no encontrada: ImagenId={ImagenId}, ProductoId={ProductoId}",
+                        imagenId, productoId);
+                    return NotFound(new { message = "Imagen no encontrada" });
+                }
+
+                _logger.LogInformation("✅ Imagen encontrada: {UrlImagen}", imagen.Urlimagen);
+
+                // Eliminar el archivo físico si existe
+                try
+                {
+                    if (!string.IsNullOrEmpty(imagen.Urlimagen))
+                    {
+                        // Construir la ruta completa del archivo
+                        string webRootPath = _webHostEnvironment.WebRootPath;
+                        if (string.IsNullOrEmpty(webRootPath))
+                        {
+                            webRootPath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
+                        }
+
+                        // Limpiar la URL (remover el "/" inicial si existe)
+                        string rutaRelativa = imagen.Urlimagen.TrimStart('/');
+                        string rutaCompleta = Path.Combine(webRootPath, rutaRelativa);
+
+                        _logger.LogInformation("🗑️ Intentando eliminar archivo: {RutaCompleta}", rutaCompleta);
+
+                        if (System.IO.File.Exists(rutaCompleta))
+                        {
+                            System.IO.File.Delete(rutaCompleta);
+                            _logger.LogInformation("✅ Archivo físico eliminado: {RutaCompleta}", rutaCompleta);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("⚠️ Archivo físico no encontrado: {RutaCompleta}", rutaCompleta);
+                        }
+                    }
+                }
+                catch (Exception fileEx)
+                {
+                    _logger.LogError(fileEx, "❌ Error al eliminar archivo físico: {UrlImagen}", imagen.Urlimagen);
+                    // Continuar con la eliminación de la base de datos aunque falle el archivo
+                }
+
+                // Eliminar el registro de la base de datos
+                _context.ImagenesProductos.Remove(imagen);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Imagen eliminada exitosamente de la base de datos");
+                _logger.LogInformation("🎉 Usuario {Usuario} eliminó imagen {ImagenId} del producto {ProductoId}",
+                    User.Identity?.Name, imagenId, productoId);
+
+                return Ok(new
+                {
+                    message = "Imagen eliminada exitosamente",
+                    imagenId = imagenId,
+                    productoId = productoId,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al eliminar imagen {ImagenId} del producto {ProductoId}",
+                    imagenId, productoId);
+                return StatusCode(500, new
+                {
+                    message = "Error interno al eliminar imagen",
+                    error = ex.Message,
+                    timestamp = DateTime.Now
+                });
+            }
+        }
+
         // PUT: api/Inventario/productos/{id}
         [HttpPut("productos/{id}")]
         [Authorize] // Solo requiere autenticación
@@ -432,8 +534,9 @@ namespace API.Controllers
 
             try
             {
-                _logger.LogInformation("Usuario {Usuario} actualizando producto ID: {Id}",
-                    User.Identity?.Name, id);
+                _logger.LogInformation("💾 === INICIANDO ACTUALIZACIÓN EN API ===");
+                _logger.LogInformation("👤 Usuario: {Usuario} actualizando producto ID: {Id}", User.Identity?.Name, id);
+                _logger.LogInformation("📝 Nombre: '{Nombre}'", productoDto.NombreProducto);
 
                 var producto = await _context.Productos
                     .Include(p => p.Llanta)
@@ -441,21 +544,56 @@ namespace API.Controllers
 
                 if (producto == null)
                 {
+                    _logger.LogWarning("❌ Producto no encontrado: ID {Id}", id);
                     return NotFound(new { message = "Producto no encontrado" });
                 }
 
-                // ✅ EL RESTO DE TU CÓDIGO EXISTENTE SE MANTIENE IGUAL
+                _logger.LogInformation("✅ Producto encontrado: '{Nombre}'", producto.NombreProducto);
+
+                // ✅ ACTUALIZAR DATOS BÁSICOS DEL PRODUCTO
                 producto.NombreProducto = productoDto.NombreProducto;
                 producto.Descripcion = productoDto.Descripcion;
-                producto.Precio = productoDto.Precio;
                 producto.CantidadEnInventario = productoDto.CantidadEnInventario;
                 producto.StockMinimo = productoDto.StockMinimo;
                 producto.FechaUltimaActualizacion = DateTime.Now;
 
+                // ✅ MANEJAR PRECIO Y CÁLCULOS
+                _logger.LogInformation("💰 === PROCESANDO PRECIO EN ACTUALIZACIÓN ===");
+                _logger.LogInformation("💳 Costo recibido: {Costo}", productoDto.Costo);
+                _logger.LogInformation("📊 Utilidad recibida: {Utilidad}%", productoDto.PorcentajeUtilidad);
+                _logger.LogInformation("💵 Precio recibido: {Precio}", productoDto.Precio);
+
+                // Si tiene costo y utilidad, usar cálculo automático
+                if (productoDto.Costo.HasValue && productoDto.PorcentajeUtilidad.HasValue)
+                {
+                    _logger.LogInformation("🧮 Aplicando cálculo automático de precio");
+                    producto.Costo = productoDto.Costo;
+                    producto.PorcentajeUtilidad = productoDto.PorcentajeUtilidad;
+
+                    // Calcular el precio automáticamente
+                    var precioCalculado = CalcularPrecioFinal(productoDto);
+                    producto.Precio = precioCalculado;
+
+                    _logger.LogInformation("✅ Precio calculado automáticamente: ₡{Precio:N2}", precioCalculado);
+                }
+                else
+                {
+                    _logger.LogInformation("📝 Aplicando precio manual");
+                    producto.Precio = productoDto.Precio ?? 0;
+                    producto.Costo = null;
+                    producto.PorcentajeUtilidad = null;
+
+                    _logger.LogInformation("✅ Precio manual establecido: ₡{Precio:N2}", producto.Precio);
+                }
+
+                // ✅ MANEJAR DATOS DE LLANTA
                 if (productoDto.Llanta != null)
                 {
+                    _logger.LogInformation("🛞 Procesando datos de llanta...");
+
                     if (producto.Llanta.Any())
                     {
+                        _logger.LogInformation("🔄 Actualizando llanta existente");
                         var llanta = producto.Llanta.First();
                         llanta.Ancho = productoDto.Llanta.Ancho;
                         llanta.Perfil = productoDto.Llanta.Perfil;
@@ -465,9 +603,12 @@ namespace API.Controllers
                         llanta.Capas = productoDto.Llanta.Capas;
                         llanta.IndiceVelocidad = productoDto.Llanta.IndiceVelocidad;
                         llanta.TipoTerreno = productoDto.Llanta.TipoTerreno;
+
+                        _logger.LogInformation("✅ Llanta actualizada: {Marca} {Modelo}", llanta.Marca, llanta.Modelo);
                     }
                     else
                     {
+                        _logger.LogInformation("➕ Creando nueva llanta para el producto");
                         var llanta = new Llanta
                         {
                             ProductoId = id,
@@ -481,22 +622,45 @@ namespace API.Controllers
                             TipoTerreno = productoDto.Llanta.TipoTerreno
                         };
                         _context.Llantas.Add(llanta);
+
+                        _logger.LogInformation("✅ Nueva llanta creada: {Marca} {Modelo}", llanta.Marca, llanta.Modelo);
                     }
                 }
+                else
+                {
+                    _logger.LogInformation("ℹ️ No hay datos de llanta para procesar");
+                }
 
+                // ✅ GUARDAR CAMBIOS
+                _logger.LogInformation("💾 Guardando cambios en la base de datos...");
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Producto actualizado exitosamente. ID: {Id}, Usuario: {Usuario}",
-                    id, User.Identity?.Name);
+                _logger.LogInformation("🎉 === ACTUALIZACIÓN COMPLETADA EXITOSAMENTE ===");
+                _logger.LogInformation("✅ Producto ID {Id} actualizado por usuario {Usuario}", id, User.Identity?.Name);
+                _logger.LogInformation("📝 Nuevo nombre: '{Nombre}'", producto.NombreProducto);
+                _logger.LogInformation("💰 Nuevo precio: ₡{Precio:N2}", producto.Precio);
+                _logger.LogInformation("📦 Nuevo stock: {Stock} (Mín: {StockMin})", producto.CantidadEnInventario, producto.StockMinimo);
 
-                return Ok(new { message = "Producto actualizado exitosamente" });
+                return Ok(new
+                {
+                    message = "Producto actualizado exitosamente",
+                    productoId = id,
+                    timestamp = DateTime.Now,
+                    usuario = User.Identity?.Name
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar producto ID: {Id}", id);
-                return StatusCode(500, new { message = "Error al actualizar producto" });
+                _logger.LogError(ex, "💥 Error crítico al actualizar producto ID: {Id}", id);
+                return StatusCode(500, new
+                {
+                    message = "Error interno al actualizar producto",
+                    error = ex.Message,
+                    timestamp = DateTime.Now
+                });
             }
         }
+
 
         // POST: api/Inventario/inventarios-programados
         [HttpPost("inventarios-programados")]

@@ -724,21 +724,42 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // ✅ NUEVO: Método auxiliar para calcular precio (agregar al final de la clase)
+        // ✅ MÉTODO MEJORADO PARA CALCULAR PRECIO
         private decimal CalcularPrecioFinal(ProductoDTO dto)
         {
-            // Si tiene costo y utilidad, calcular automáticamente
-            if (dto.Costo.HasValue && dto.PorcentajeUtilidad.HasValue)
+            _logger.LogInformation("💰 === CALCULANDO PRECIO FINAL ===");
+            _logger.LogInformation("💳 Costo recibido: {Costo}", dto.Costo);
+            _logger.LogInformation("📊 Utilidad recibida: {Utilidad}%", dto.PorcentajeUtilidad);
+            _logger.LogInformation("💵 Precio manual recibido: {Precio}", dto.Precio);
+
+            // Si tiene costo Y utilidad, calcular automáticamente (PRIORIDAD)
+            if (dto.Costo.HasValue && dto.Costo.Value > 0 &&
+                dto.PorcentajeUtilidad.HasValue && dto.PorcentajeUtilidad.Value >= 0)
             {
-                var utilidad = dto.Costo.Value * (dto.PorcentajeUtilidad.Value / 100m);
-                return dto.Costo.Value + utilidad;
+                var utilidadDinero = dto.Costo.Value * (dto.PorcentajeUtilidad.Value / 100m);
+                var precioCalculado = dto.Costo.Value + utilidadDinero;
+
+                _logger.LogInformation("🧮 === CÁLCULO AUTOMÁTICO ===");
+                _logger.LogInformation("   - Costo base: ₡{Costo:N2}", dto.Costo.Value);
+                _logger.LogInformation("   - Porcentaje utilidad: {Utilidad:N2}%", dto.PorcentajeUtilidad.Value);
+                _logger.LogInformation("   - Utilidad en dinero: ₡{UtilidadDinero:N2}", utilidadDinero);
+                _logger.LogInformation("   - Precio final calculado: ₡{PrecioFinal:N2}", precioCalculado);
+
+                return precioCalculado;
             }
 
-            // Si no, usar el precio manual o 0 si es null
-            return dto.Precio.GetValueOrDefault(0m);
+            // Si no, usar el precio manual
+            var precioManual = dto.Precio.GetValueOrDefault(0m);
+            _logger.LogInformation("📝 === PRECIO MANUAL ===");
+            _logger.LogInformation("   - Precio recibido: ₡{PrecioManual:N2}", precioManual);
+
+            // Asegurar precio mínimo
+            var precioFinal = Math.Max(precioManual, 0.01m);
+            _logger.LogInformation("✅ Precio final determinado: ₡{PrecioFinal:N2}", precioFinal);
+
+            return precioFinal;
         }
 
-        // Método privado para validar el producto antes de enviarlo
         private void ValidarProducto(ProductoDTO producto)
         {
             _logger.LogInformation("Validando datos del producto");
@@ -830,45 +851,222 @@ namespace GestionLlantera.Web.Services
             _logger.LogInformation("Validación de producto completada");
         }
 
-        public async Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes)
+        public async Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes, string jwtToken = null)
         {
             try
             {
-                // 1. Actualizar el producto
-                var json = JsonConvert.SerializeObject(producto);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                _logger.LogInformation("🔄 === INICIANDO ACTUALIZACIÓN DE PRODUCTO ===");
+                _logger.LogInformation("📋 ID: {Id}, Nombre: '{Nombre}'", id, producto.NombreProducto);
+                _logger.LogInformation("📊 === DATOS RECIBIDOS EN SERVICIO ===");
+                _logger.LogInformation("💳 Costo: {Costo}", producto.Costo);
+                _logger.LogInformation("📈 Utilidad: {Utilidad}%", producto.PorcentajeUtilidad);
+                _logger.LogInformation("💵 Precio: {Precio}", producto.Precio);
+                _logger.LogInformation("📦 Stock: {Stock}, Stock Mín: {StockMin}", producto.CantidadEnInventario, producto.StockMinimo);
+                _logger.LogInformation("🛞 Es Llanta: {EsLlanta}", producto.EsLlanta);
+                if (producto.EsLlanta && producto.Llanta != null)
+                {
+                    _logger.LogInformation("🛞 Marca: '{Marca}', Modelo: '{Modelo}'", producto.Llanta.Marca, producto.Llanta.Modelo);
+                }
 
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para actualización");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT - la petición podría fallar");
+                }
+
+                // ✅ CALCULAR PRECIO FINAL
+                var precioFinal = CalcularPrecioFinal(producto);
+
+                // ✅ PREPARAR OBJETO DE ACTUALIZACIÓN CON ESTRUCTURA EXACTA
+                var productoRequest = new
+                {
+                    productoId = producto.ProductoId,
+                    nombreProducto = producto.NombreProducto ?? "Sin nombre",
+                    descripcion = producto.Descripcion ?? "",
+                    precio = Math.Max(precioFinal, 0.01m),
+                    costo = producto.Costo,
+                    porcentajeUtilidad = producto.PorcentajeUtilidad,
+                    cantidadEnInventario = producto.CantidadEnInventario,
+                    stockMinimo = producto.StockMinimo,
+                    esLlanta = producto.EsLlanta,
+                    fechaUltimaActualizacion = DateTime.Now,
+                    llanta = producto.EsLlanta && producto.Llanta != null ? new
+                    {
+                        llantaId = producto.Llanta.LlantaId,
+                        productoId = producto.ProductoId,
+                        ancho = producto.Llanta.Ancho ?? 0,
+                        perfil = producto.Llanta.Perfil ?? 0,
+                        diametro = producto.Llanta.Diametro ?? string.Empty,
+                        marca = producto.Llanta.Marca ?? string.Empty,
+                        modelo = producto.Llanta.Modelo ?? string.Empty,
+                        capas = producto.Llanta.Capas ?? 0,
+                        indiceVelocidad = producto.Llanta.IndiceVelocidad ?? string.Empty,
+                        tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty
+                    } : null
+                };
+
+                // ✅ SERIALIZAR Y ENVIAR ACTUALIZACIÓN
+                var jsonContent = JsonConvert.SerializeObject(productoRequest,
+                    new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Include
+                    });
+
+                _logger.LogInformation("📤 JSON enviado a la API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync($"api/Inventario/productos/{id}", content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📡 Respuesta de actualización: Status={Status}, Content={Content}",
+                    response.StatusCode, responseContent);
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Error al actualizar producto. Status: {Status}", response.StatusCode);
+                    _logger.LogError("❌ Error al actualizar producto: {StatusCode} - {Error}",
+                        response.StatusCode, responseContent);
                     return false;
                 }
 
-                // 2. Subir nuevas imágenes si hay alguna
+                _logger.LogInformation("✅ Producto actualizado exitosamente en la API");
+
+                // ✅ SUBIR NUEVAS IMÁGENES SI EXISTEN
                 if (nuevasImagenes != null && nuevasImagenes.Any())
                 {
-                    using var formContent = new MultipartFormDataContent();
-                    foreach (var imagen in nuevasImagenes)
-                    {
-                        var fileContent = new StreamContent(imagen.OpenReadStream());
-                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
-                        formContent.Add(fileContent, "imagenes", imagen.FileName);
-                    }
+                    _logger.LogInformation("📷 Subiendo {Count} nuevas imágenes...", nuevasImagenes.Count);
 
-                    var imagenesResponse = await _httpClient.PostAsync($"api/Inventario/productos/{id}/imagenes", formContent);
-                    if (!imagenesResponse.IsSuccessStatusCode)
+                    bool imagenesSubidas = await SubirNuevasImagenesAsync(id, nuevasImagenes);
+                    if (!imagenesSubidas)
                     {
-                        _logger.LogWarning("Error al subir imágenes. Status: {Status}", imagenesResponse.StatusCode);
-                        // No fallamos todo el proceso si solo fallan las imágenes
+                        _logger.LogWarning("⚠️ Algunas imágenes no se pudieron subir, pero el producto fue actualizado");
+                        // No fallar todo el proceso por las imágenes
+                    }
+                    else
+                    {
+                        _logger.LogInformation("✅ Todas las nuevas imágenes subidas correctamente");
                     }
                 }
 
+                _logger.LogInformation("🎉 Actualización de producto completada exitosamente");
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar producto");
+                _logger.LogError(ex, "💥 Error crítico al actualizar producto ID: {Id} - {Message}", id, ex.Message);
+                return false;
+            }
+        }
+
+
+
+        // ✅ MÉTODO AUXILIAR PARA SUBIR NUEVAS IMÁGENES
+        private async Task<bool> SubirNuevasImagenesAsync(int productoId, List<IFormFile> imagenes)
+        {
+            try
+            {
+                if (imagenes == null || !imagenes.Any())
+                {
+                    return true; // No hay imágenes que subir
+                }
+
+                _logger.LogInformation("📷 Subiendo {Count} nuevas imágenes para producto {ProductoId}",
+                    imagenes.Count, productoId);
+
+                using var formData = new MultipartFormDataContent();
+
+                foreach (var imagen in imagenes)
+                {
+                    if (imagen.Length > 0)
+                    {
+                        _logger.LogInformation("📎 Agregando imagen: {FileName}, Tamaño: {Length} bytes",
+                            imagen.FileName, imagen.Length);
+
+                        var streamContent = new StreamContent(imagen.OpenReadStream());
+                        streamContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+                        formData.Add(streamContent, "imagenes", imagen.FileName);
+                    }
+                }
+
+                var imageUploadUrl = $"api/Inventario/productos/{productoId}/imagenes";
+                _logger.LogInformation("📤 Enviando imágenes a: {Url}", imageUploadUrl);
+
+                var imageResponse = await _httpClient.PostAsync(imageUploadUrl, formData);
+                var imageResponseContent = await imageResponse.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 Respuesta de subida de imágenes: Status={Status}, Content={Content}",
+                    imageResponse.StatusCode, imageResponseContent);
+
+                if (!imageResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error al subir nuevas imágenes: {Status} - {Error}",
+                        imageResponse.StatusCode, imageResponseContent);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Nuevas imágenes subidas exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al subir nuevas imágenes para producto {ProductoId}", productoId);
+                return false;
+            }
+        }
+
+        // ✅ MÉTODO PARA ELIMINAR IMAGEN ESPECÍFICA DE UN PRODUCTO
+        public async Task<bool> EliminarImagenProductoAsync(int productoId, int imagenId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ === INICIANDO ELIMINACIÓN EN SERVICIO ===");
+                _logger.LogInformation("🗑️ ProductoId: {ProductoId}, ImagenId: {ImagenId}", productoId, imagenId);
+                _logger.LogInformation("🔐 Token recibido en servicio: {HasToken}", !string.IsNullOrEmpty(jwtToken) ? "SÍ" : "NO");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado correctamente");
+                }
+                else
+                {
+                    _logger.LogError("❌ TOKEN JWT FALTANTE EN SERVICIO DE ELIMINACIÓN");
+                    return false;
+                }
+
+                var deleteUrl = $"api/Inventario/productos/{productoId}/imagenes/{imagenId}";
+                _logger.LogInformation("📤 Enviando DELETE a: {Url}", deleteUrl);
+
+                var response = await _httpClient.DeleteAsync(deleteUrl);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 === RESPUESTA DE LA API ===");
+                _logger.LogInformation("📡 Status Code: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📡 Content: {Content}", responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error al eliminar imagen: {Status} - {Content}",
+                        response.StatusCode, responseContent);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Imagen {ImagenId} eliminada exitosamente", imagenId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al eliminar imagen {ImagenId} del producto {ProductoId}",
+                    imagenId, productoId);
                 return false;
             }
         }
