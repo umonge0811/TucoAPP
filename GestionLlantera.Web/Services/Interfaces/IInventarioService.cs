@@ -17,6 +17,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<List<string>> BuscarModelosLlantasAsync(string filtro = "", string marca = "", string jwtToken = null);
         Task<List<string>> BuscarIndicesVelocidadAsync(string filtro = "", string jwtToken = null);
         Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null);
+        Task<bool> EliminarProductoAsync(int id, string jwtToken = null);
 
 
         // Métodos para manejo de inventarios programados

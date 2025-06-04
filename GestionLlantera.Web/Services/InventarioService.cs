@@ -1627,5 +1627,59 @@ namespace GestionLlantera.Web.Services
                 return new List<string>();
             }
         }
+
+        /// <summary>
+        /// Elimina un producto completo del sistema
+        /// </summary>
+        /// <param name="id">ID del producto a eliminar</param>
+        /// <param name="jwtToken">Token de autenticación</param>
+        /// <returns>True si se eliminó exitosamente, False en caso contrario</returns>
+        public async Task<bool> EliminarProductoAsync(int id, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ === INICIANDO ELIMINACIÓN DE PRODUCTO ===");
+                _logger.LogInformation("🗑️ Producto ID: {Id}", id);
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para eliminación");
+                }
+                else
+                {
+                    _logger.LogError("❌ TOKEN JWT FALTANTE EN ELIMINACIÓN DE PRODUCTO");
+                    return false;
+                }
+
+                var deleteUrl = $"api/Inventario/productos/{id}";
+                _logger.LogInformation("📤 Enviando DELETE a: {Url}", deleteUrl);
+
+                var response = await _httpClient.DeleteAsync(deleteUrl);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 === RESPUESTA DE ELIMINACIÓN ===");
+                _logger.LogInformation("📡 Status Code: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📡 Content: {Content}", responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error al eliminar producto: {Status} - {Content}",
+                        response.StatusCode, responseContent);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Producto {Id} eliminado exitosamente", id);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al eliminar producto {Id}", id);
+                return false;
+            }
+        }
     }
 }

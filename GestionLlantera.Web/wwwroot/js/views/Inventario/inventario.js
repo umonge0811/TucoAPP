@@ -834,6 +834,163 @@ $(document).ready(function () {
         }, 500);
     });
 
+    // ========================================
+    // EVENTOS PARA ELIMINAR PRODUCTO
+    // ========================================
+
+    // Evento para eliminar producto
+    $(document).on('click', '.eliminar-producto-btn', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const productoId = $(this).data("id");
+        const $fila = $(this).closest('tr');
+        const nombreProducto = $fila.find('td:eq(2) strong').text().trim();
+
+        console.log('🗑️ === SOLICITUD DE ELIMINACIÓN ===');
+        console.log('🗑️ Producto ID:', productoId);
+        console.log('🗑️ Nombre:', nombreProducto);
+
+        if (!productoId) {
+            console.error('❌ No se pudo obtener el ID del producto');
+            mostrarNotificacion("Error", "No se pudo identificar el producto", "danger");
+            return;
+        }
+
+        // Mostrar modal de confirmación personalizado
+        mostrarModalConfirmacionEliminacion(productoId, nombreProducto, $fila);
+    });
+
+    // Función para mostrar modal de confirmación de eliminación
+    function mostrarModalConfirmacionEliminacion(productoId, nombreProducto, $fila) {
+        const modalHtml = `
+        <div class="modal fade" id="modalEliminarProducto" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Confirmar Eliminación
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-trash text-danger" style="font-size: 3rem;"></i>
+                        </div>
+                        <h6 class="text-center mb-3">¿Está seguro de que desea eliminar este producto?</h6>
+                        <div class="alert alert-warning">
+                            <strong>Producto:</strong> ${nombreProducto}<br>
+                            <strong>ID:</strong> ${productoId}
+                        </div>
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>¡Atención!</strong> Esta acción es <strong>irreversible</strong>. 
+                            Se eliminarán todas las imágenes y datos asociados.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-danger" id="btnConfirmarEliminacion">
+                            <span class="normal-state">
+                                <i class="bi bi-trash me-2"></i>Eliminar Producto
+                            </span>
+                            <span class="loading-state" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Eliminando...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // Remover modal anterior si existe
+        $('#modalEliminarProducto').remove();
+
+        // Agregar nuevo modal al DOM
+        $('body').append(modalHtml);
+
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminarProducto'));
+        modal.show();
+
+        // Evento para confirmar eliminación
+        $('#btnConfirmarEliminacion').off('click').on('click', function () {
+            ejecutarEliminacionProducto(productoId, nombreProducto, $fila, modal);
+        });
+    }
+
+    // Función para ejecutar la eliminación del producto
+    function ejecutarEliminacionProducto(productoId, nombreProducto, $fila, modal) {
+        console.log('💥 === EJECUTANDO ELIMINACIÓN ===');
+        console.log('💥 Producto ID:', productoId);
+
+        const $btnConfirmar = $('#btnConfirmarEliminacion');
+        const $normalState = $btnConfirmar.find('.normal-state');
+        const $loadingState = $btnConfirmar.find('.loading-state');
+
+        // Deshabilitar botón y mostrar loading
+        $btnConfirmar.prop('disabled', true);
+        $normalState.hide();
+        $loadingState.show();
+
+        // Realizar petición AJAX para eliminar
+        $.ajax({
+            url: `/Inventario/EliminarProducto/${productoId}`,
+            type: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            success: function (response) {
+                console.log('✅ Producto eliminado exitosamente:', response);
+
+                // Cerrar modal
+                modal.hide();
+
+                // Mostrar notificación de éxito
+                mostrarNotificacion("Éxito", `Producto "${nombreProducto}" eliminado exitosamente`, "success");
+
+                // Animar y remover la fila de la tabla
+                $fila.addClass('table-danger');
+                $fila.fadeOut(500, function () {
+                    $fila.remove();
+
+                    // Actualizar contadores
+                    actualizarContadores();
+
+                    // Actualizar paginación
+                    if (typeof actualizarFilasVisibles === 'function') {
+                        actualizarFilasVisibles();
+                        renderizarPagina(paginacionConfig.paginaActual);
+                    }
+                });
+            },
+            error: function (xhr, status, error) {
+                console.error('❌ Error al eliminar producto:', error);
+                console.error('❌ Respuesta del servidor:', xhr.responseText);
+
+                // Rehabilitar botón
+                $btnConfirmar.prop('disabled', false);
+                $normalState.show();
+                $loadingState.hide();
+
+                let mensajeError = 'Error desconocido';
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    mensajeError = errorResponse.message || errorResponse.error || 'Error del servidor';
+                } catch (e) {
+                    mensajeError = xhr.responseText || `Error ${xhr.status}: ${error}`;
+                }
+
+                mostrarNotificacion("Error", `No se pudo eliminar el producto: ${mensajeError}`, "danger");
+            }
+        });
+    }
+
     // Eventos para compartir desde el modal
     $("#btnCompartirWhatsApp").click(function (e) {
         e.preventDefault();

@@ -661,6 +661,112 @@ namespace API.Controllers
             }
         }
 
+        // DELETE: api/Inventario/productos/{id}
+        [HttpDelete("productos/{id}")]
+        [Authorize]
+        public async Task<IActionResult> EliminarProducto(int id)
+        {
+            try
+            {
+                // ✅ VERIFICACIÓN DE PERMISOS
+                var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Eliminar Productos",
+                    "Solo usuarios con permiso 'EliminarProductos' pueden eliminar productos");
+                if (validacionPermiso != null) return validacionPermiso;
+
+                _logger.LogInformation("🗑️ === ELIMINANDO PRODUCTO COMPLETO ===");
+                _logger.LogInformation("🗑️ Usuario: {Usuario} eliminando producto ID: {Id}",
+                    User.Identity?.Name, id);
+
+                // Verificar que el producto existe
+                var producto = await _context.Productos
+                    .Include(p => p.ImagenesProductos)
+                    .Include(p => p.Llanta)
+                    .FirstOrDefaultAsync(p => p.ProductoId == id);
+
+                if (producto == null)
+                {
+                    _logger.LogWarning("❌ Producto no encontrado: {Id}", id);
+                    return NotFound(new { message = "Producto no encontrado" });
+                }
+
+                _logger.LogInformation("✅ Producto encontrado: '{Nombre}' con {ImageCount} imágenes",
+                    producto.NombreProducto, producto.ImagenesProductos.Count);
+
+                // ✅ ELIMINAR ARCHIVOS FÍSICOS DE IMÁGENES
+                if (producto.ImagenesProductos.Any())
+                {
+                    _logger.LogInformation("🖼️ Eliminando {Count} archivos de imagen...",
+                        producto.ImagenesProductos.Count);
+
+                    string webRootPath = _webHostEnvironment.WebRootPath;
+                    if (string.IsNullOrEmpty(webRootPath))
+                    {
+                        webRootPath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
+                    }
+
+                    foreach (var imagen in producto.ImagenesProductos)
+                    {
+                        try
+                        {
+                            if (!string.IsNullOrEmpty(imagen.Urlimagen))
+                            {
+                                string rutaRelativa = imagen.Urlimagen.TrimStart('/');
+                                string rutaCompleta = Path.Combine(webRootPath, rutaRelativa);
+
+                                if (System.IO.File.Exists(rutaCompleta))
+                                {
+                                    System.IO.File.Delete(rutaCompleta);
+                                    _logger.LogInformation("✅ Archivo eliminado: {Archivo}", rutaCompleta);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("⚠️ Archivo no encontrado: {Archivo}", rutaCompleta);
+                                }
+                            }
+                        }
+                        catch (Exception fileEx)
+                        {
+                            _logger.LogError(fileEx, "❌ Error al eliminar archivo: {Url}", imagen.Urlimagen);
+                            // Continuar con la eliminación aunque falle un archivo
+                        }
+                    }
+                }
+
+                // ✅ ELIMINAR REGISTROS DE LA BASE DE DATOS
+                _logger.LogInformation("🗑️ Eliminando registros de la base de datos...");
+
+                // Las imágenes se eliminarán automáticamente por CASCADE
+                // Las llantas se eliminarán automáticamente por CASCADE
+
+                _context.Productos.Remove(producto);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("🎉 === ELIMINACIÓN COMPLETADA EXITOSAMENTE ===");
+                _logger.LogInformation("✅ Producto '{Nombre}' (ID: {Id}) eliminado por usuario {Usuario}",
+                    producto.NombreProducto, id, User.Identity?.Name);
+
+                return Ok(new
+                {
+                    message = "Producto eliminado exitosamente",
+                    productoId = id,
+                    nombreProducto = producto.NombreProducto,
+                    imagenesEliminadas = producto.ImagenesProductos.Count,
+                    timestamp = DateTime.Now,
+                    usuario = User.Identity?.Name
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al eliminar producto ID: {Id}", id);
+                return StatusCode(500, new
+                {
+                    message = "Error interno al eliminar producto",
+                    error = ex.Message,
+                    timestamp = DateTime.Now
+                });
+            }
+        }
+
 
         // POST: api/Inventario/inventarios-programados
         [HttpPost("inventarios-programados")]
