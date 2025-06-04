@@ -10,7 +10,23 @@
 
     <!-- ✅ NUEVA LÍNEA -->
 }
+
+<form style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
 <div class="container-fluid">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-box-seam me-1"></i>Inventario
+            </li>
+        </ol>
+    </nav>
     <div class="page-header d-flex justify-content-between align-items-center mb-4">
         <h2>
             <i class="bi bi-box-seam me-2"></i>
@@ -326,8 +342,7 @@
                                             </a>
 
                                             <!-- Contenedor de imagen visual -->
-                                            <div class="producto-img-mini"
-                                                 style="width: 100%; height: 100%; position: relative; z-index: 2; pointer-events: none;">
+                                            <div class="producto-img-mini" style="width: 100%; height: 100%; position: relative; z-index: 2;">
                                                 @if (producto.Imagenes != null && producto.Imagenes.Any())
                                                 {
                                                     <img src="@producto.Imagenes.First().UrlImagen"
@@ -491,6 +506,10 @@
                                     <!-- 11. Acciones -->
                                     <td>
                                         <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-info ver-detalles-btn"
+                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ver detalles">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
                                             <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })"
                                                class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar"
                                                asp-permiso="Editar Productos">
@@ -731,17 +750,25 @@
 
                             <!-- Acciones -->
                             <div class="producto-card-acciones">
-                                <button type="button" class="btn btn-info ver-detalles-btn" data-id="@producto.ProductoId">
+                                <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })"
+                                   class="btn btn-info">
                                     <i class="bi bi-eye"></i>
                                     Ver
-                                </button>
-                                <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })" class="btn btn-primary">
+                                </a>
+                                <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })"
+                                   class="btn btn-primary" asp-permiso="Editar Productos">
                                     <i class="bi bi-pencil"></i>
                                     Editar
                                 </a>
-                                <button type="button" class="btn btn-success ajuste-stock-btn" data-id="@producto.ProductoId">
+                                <button type="button" class="btn btn-success ajuste-stock-btn"
+                                        data-id="@producto.ProductoId" asp-permiso="Ajustar Stock">
                                     <i class="bi bi-plus-slash-minus"></i>
                                     Stock
+                                </button>
+                                <button type="button" class="btn btn-danger eliminar-producto-btn"
+                                        data-id="@producto.ProductoId" asp-permiso="Eliminar Productos">
+                                    <i class="bi bi-trash"></i>
+                                    Eliminar
                                 </button>
                             </div>
                         </div>
@@ -807,49 +834,147 @@
     </div>
 </div>
 
-<!-- Modal para Ajuste de Stock -->
+<!-- ========================================
+     MODAL MEJORADO PARA AJUSTE DE STOCK
+     Reemplazar el modal existente en Index.cshtml
+     ======================================== -->
+
 <div class="modal fade" id="ajusteStockModal" tabindex="-1" aria-labelledby="ajusteStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="ajusteStockModalLabel">Ajustar Stock</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="ajusteStockModalLabel">
+                    <i class="bi bi-plus-slash-minus me-2"></i>
+                    Ajustar Stock de Inventario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="ajusteStockForm">
+                    <!-- Campo oculto para el ID del producto -->
                     <input type="hidden" id="productoId" value="">
 
-                    <div class="mb-3">
-                        <label for="tipoAjuste" class="form-label">Tipo de Ajuste</label>
-                        <select class="form-select" id="tipoAjuste" required>
-                            <option value="">Seleccione tipo de ajuste</option>
-                            <option value="entrada">Entrada de Mercancía</option>
-                            <option value="salida">Salida de Mercancía</option>
-                            <option value="ajuste">Ajuste de Inventario</option>
-                        </select>
+                    <!-- Información del producto (se llenará dinámicamente) -->
+                    <div class="alert alert-info mb-3" id="infoProductoAjuste" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <div>
+                                <strong>Producto:</strong> <span id="nombreProductoAjuste">-</span><br>
+                                <strong>Stock actual:</strong> <span id="stockActualAjuste">-</span> unidades
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="cantidad" class="form-label">Cantidad</label>
-                        <input type="number" class="form-control" id="cantidad" min="1" required>
+                    <div class="row">
+                        <!-- Tipo de ajuste -->
+                        <div class="col-md-6 mb-3">
+                            <label for="tipoAjuste" class="form-label fw-bold">
+                                <i class="bi bi-gear me-1"></i>
+                                Tipo de Ajuste <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="tipoAjuste" required>
+                                <option value="">Seleccione tipo de ajuste</option>
+                                <option value="entrada">
+                                    <i class="bi bi-arrow-up-circle"></i>
+                                    📈 Entrada de Mercancía
+                                </option>
+                                <option value="salida">
+                                    📉 Salida de Mercancía
+                                </option>
+                                <option value="ajuste">
+                                    🔧 Ajuste de Inventario
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                <small>
+                                    <strong>Entrada:</strong> Suma al stock actual<br>
+                                    <strong>Salida:</strong> Resta del stock actual<br>
+                                    <strong>Ajuste:</strong> Establece cantidad exacta
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="col-md-6 mb-3">
+                            <label for="cantidad" class="form-label fw-bold">
+                                <i class="bi bi-123 me-1"></i>
+                                Cantidad <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-hash"></i>
+                                </span>
+                                <input type="number" class="form-control" id="cantidad" min="1" max="99999" required placeholder="Ingrese cantidad">
+                                <span class="input-group-text">unidades</span>
+                            </div>
+                            <div class="form-text">
+                                <small>Cantidad debe ser un número positivo</small>
+                            </div>
+                        </div>
                     </div>
 
+                    <!-- Comentario -->
                     <div class="mb-3">
-                        <label for="comentario" class="form-label">Comentario</label>
-                        <textarea class="form-control" id="comentario" rows="3"></textarea>
+                        <label for="comentario" class="form-label fw-bold">
+                            <i class="bi bi-chat-text me-1"></i>
+                            Comentario o Motivo
+                        </label>
+                        <textarea class="form-control" id="comentario" rows="3" maxlength="500"
+                                  placeholder="Describa el motivo del ajuste (opcional)..."></textarea>
+                        <div class="form-text">
+                            <small>Máximo 500 caracteres. Este comentario se guardará en el historial.</small>
+                        </div>
+                    </div>
+
+                    <!-- Vista previa del ajuste -->
+                    <div class="card border-primary mb-3" id="vistaPrevia" style="display: none;">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">
+                                <i class="bi bi-eye me-2"></i>
+                                Vista Previa del Ajuste
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <div class="h5 mb-1" id="stockActualPreview">-</div>
+                                        <small class="text-muted">Stock Actual</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <div class="h5 mb-1 text-primary" id="operacionPreview">-</div>
+                                        <small class="text-muted">Operación</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="h5 mb-1 text-success" id="stockNuevoPreview">-</div>
+                                    <small class="text-muted">Stock Resultante</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="guardarAjusteBtn">
-                    <i class="bi bi-check-lg me-1"></i>
-                    Guardar Ajuste
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="guardarAjusteBtn">
+                    <span class="normal-state">
+                        <i class="bi bi-check-lg me-2"></i>Confirmar Ajuste
+                    </span>
+                    <span class="loading-state" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Ajustando...
+                    </span>
                 </button>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Modal para vista rápida del producto -->
 <div class="modal fade" id="detallesProductoModal" tabindex="-1" aria-labelledby="detallesProductoModalLabel" aria-hidden="true">

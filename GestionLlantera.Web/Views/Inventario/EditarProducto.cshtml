@@ -1,0 +1,440 @@
+﻿@model Tuco.Clases.DTOs.Inventario.ProductoDTO
+@{
+    ViewData["Title"] = "Editar Producto";
+    Layout = "_AdminLayout";
+}
+
+<link rel="stylesheet" href="~/css/views/inventario/agregarProducto.css">
+
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Inventario")" class="text-decoration-none">
+                    <i class="bi bi-box-seam me-1"></i>Inventario
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-pencil me-1"></i>Editar Producto
+            </li>
+        </ol>
+    </nav>
+
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="bi bi-pencil-square me-2"></i>
+            Editar Producto: @Model.NombreProducto
+        </h2>
+        <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Volver al Inventario
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <form id="formEditarProducto" action="/Inventario/EditarProducto/@Model.ProductoId" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <!-- Campo oculto para el ID -->
+                <input type="hidden" asp-for="ProductoId" />
+                <input type="hidden" asp-for="EsLlanta" id="hiddenEsLlanta" />
+
+                <!-- ✅ INFORMACIÓN BÁSICA -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-info-circle me-2"></i>
+                            Información Básica
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label asp-for="NombreProducto" class="form-label">Nombre del Producto</label>
+                                    <input asp-for="NombreProducto" class="form-control" readonly="@Model.EsLlanta" />
+                                    <span asp-validation-for="NombreProducto" class="text-danger"></span>
+                                    @if (Model.EsLlanta)
+                                    {
+                                        <div class="form-text text-info">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            El nombre se genera automáticamente para las llantas
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="cantidadInput" class="form-label">Cantidad en Inventario</label>
+                                    @if (Model.EsLlanta)
+                                    {
+                                        <!-- Para llantas: usar nombres específicos que el controller entienda -->
+                                        <input type="number" id="cantidadInput" name="CantidadEnInventario"
+                                               value="@Model.CantidadEnInventario" min="0" class="form-control" required />
+                                    }
+                                    else
+                                    {
+                                        <!-- Para productos normales: usar asp-for normal -->
+                                        <input asp-for="CantidadEnInventario" type="number" min="0" class="form-control" required />
+                                    }
+                                    <span asp-validation-for="CantidadEnInventario" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="stockInput" class="form-label">Stock Mínimo</label>
+                                    @if (Model.EsLlanta)
+                                    {
+                                        <!-- Para llantas: usar nombres específicos que el controller entienda -->
+                                        <input type="number" id="stockInput" name="StockMinimo"
+                                               value="@Model.StockMinimo" min="0" class="form-control" required />
+                                    }
+                                    else
+                                    {
+                                        <!-- Para productos normales: usar asp-for normal -->
+                                        <input asp-for="StockMinimo" type="number" min="0" class="form-control" required />
+                                    }
+                                    <div class="form-text">Cantidad mínima antes de emitir alertas</div>
+                                    <span asp-validation-for="StockMinimo" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label asp-for="Descripcion" class="form-label">Descripción</label>
+                                    <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Describe las características principales del producto..."></textarea>
+                                    <span asp-validation-for="Descripcion" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mostrar tipo de producto -->
+                        <div class="alert alert-info d-flex align-items-center mt-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span>
+                                Tipo de producto:
+                                @if (Model.EsLlanta)
+                                {
+                                    <strong class="text-primary">🛞 Llanta</strong>
+                                }
+                                else
+                                {
+                                    <strong class="text-secondary">📦 Producto General</strong>
+                                }
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ ESPECIFICACIONES DE LLANTA (Solo si es llanta) -->
+                @if (Model.EsLlanta && Model.Llanta != null)
+                {
+                    <div class="dashboard-card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="mb-0">
+                                <i class="bi bi-car-front-fill me-2"></i>
+                                Especificaciones de Llanta
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- Medidas -->
+                                <div class="col-12">
+                                    <h5 class="text-primary mb-3">
+                                        <i class="bi bi-rulers me-2"></i>
+                                        Medidas
+                                    </h5>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="Llanta.Ancho" class="form-label">Ancho</label>
+                                        <div class="input-group">
+                                            <input asp-for="Llanta.Ancho" type="number" min="0" class="form-control" />
+                                            <span class="input-group-text">mm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="Llanta.Perfil" class="form-label">Perfil</label>
+                                        <div class="input-group">
+                                            <input asp-for="Llanta.Perfil" type="number" min="0" class="form-control" />
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="Llanta.Diametro" class="form-label">Diámetro</label>
+                                        <div class="input-group">
+                                            <input asp-for="Llanta.Diametro" class="form-control" />
+                                            <span class="input-group-text">pulgadas</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fabricante -->
+                                <div class="col-12">
+                                    <h5 class="text-primary mb-3 mt-3">
+                                        <i class="bi bi-building me-2"></i>
+                                        Fabricante
+                                    </h5>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Llanta.Marca" class="form-label">Marca</label>
+                                        <input asp-for="Llanta.Marca" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Llanta.Modelo" class="form-label">Modelo</label>
+                                        <input asp-for="Llanta.Modelo" class="form-control" />
+                                    </div>
+                                </div>
+
+                                <!-- Especificaciones técnicas -->
+                                <div class="col-12">
+                                    <h5 class="text-primary mb-3 mt-3">
+                                        <i class="bi bi-gear me-2"></i>
+                                        Especificaciones Técnicas
+                                    </h5>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="Llanta.IndiceVelocidad" class="form-label">Índice de Velocidad</label>
+                                        <input asp-for="Llanta.IndiceVelocidad" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="Llanta.TipoTerreno" class="form-label">Tipo de Terreno</label>
+                                        <input asp-for="Llanta.TipoTerreno" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="Llanta.Capas" class="form-label">Capas</label>
+                                        <input asp-for="Llanta.Capas" type="number" min="0" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- ✅ CONFIGURACIÓN DE PRECIO -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-calculator me-2"></i>
+                            Configuración de Precio
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Selector de modo de precio -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Método de Configuración de Precio</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card h-100" id="cardAutomatico">
+                                        <div class="card-body text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="modoPrecio" id="modoAutomatico" value="automatico"
+                                                       @(Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue ? "checked" : "")>
+                                                <label class="form-check-label fw-bold" for="modoAutomatico">
+                                                    <i class="bi bi-gear-fill text-primary me-2" style="font-size: 1.5em;"></i>
+                                                    <div>Cálculo Automático</div>
+                                                    <small class="text-muted">Costo + Porcentaje de Utilidad</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100" id="cardManual">
+                                        <div class="card-body text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="modoPrecio" id="modoManual" value="manual"
+                                                       @(!Model.Costo.HasValue || !Model.PorcentajeUtilidad.HasValue ? "checked" : "")>
+                                                <label class="form-check-label fw-bold" for="modoManual">
+                                                    <i class="bi bi-pencil-fill text-warning me-2" style="font-size: 1.5em;"></i>
+                                                    <div>Precio Manual</div>
+                                                    <small class="text-muted">Establecer precio directamente</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campos para cálculo automático -->
+                        <div id="camposAutomaticos" style="display: @(Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue ? "block" : "none");">
+                            <div class="alert alert-info d-flex align-items-center mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <span>El precio se calculará automáticamente: <strong>Precio = Costo + (Costo × % Utilidad)</strong></span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="Costo" class="form-label fw-bold">
+                                            <i class="bi bi-cash-coin me-1"></i>
+                                            Costo del Producto
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text">₡</span>
+                                            <input asp-for="Costo" type="number" step="0.01" min="0" class="form-control" id="inputCosto" />
+                                        </div>
+                                        <span asp-validation-for="Costo" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label asp-for="PorcentajeUtilidad" class="form-label fw-bold">
+                                            <i class="bi bi-percent me-1"></i>
+                                            Porcentaje de Utilidad
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <input asp-for="PorcentajeUtilidad" type="number" step="0.01" min="0" max="999" class="form-control" id="inputUtilidad" />
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <span asp-validation-for="PorcentajeUtilidad" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-success">
+                                            <i class="bi bi-currency-dollar me-1"></i>
+                                            Precio Final
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-success text-white">₡</span>
+                                            <input type="text" class="form-control bg-light text-success fw-bold" id="precioCalculado" readonly style="font-size: 1.2em;" />
+                                        </div>
+                                        <div class="form-text">
+                                            <small id="desglosePrecio" class="text-muted"></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo para precio manual -->
+                        <div id="campoManual" style="display: @(!Model.Costo.HasValue || !Model.PorcentajeUtilidad.HasValue ? "block" : "none");">
+                            <div class="alert alert-warning d-flex align-items-center mb-3">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <span>Estableciendo precio manualmente. No se calculará automáticamente el margen de utilidad.</span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label asp-for="Precio" class="form-label fw-bold">
+                                            <i class="bi bi-tag me-1"></i>
+                                            Precio de Venta
+                                        </label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text">₡</span>
+                                            <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" id="inputPrecioManual" />
+                                        </div>
+                                        <span asp-validation-for="Precio" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumen visual -->
+                        <div class="alert alert-success d-flex align-items-center" id="resumenPrecio">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span id="textoResumen" class="fw-bold">Precio actual configurado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ IMÁGENES ACTUALES -->
+                @if (Model.Imagenes != null && Model.Imagenes.Any())
+                {
+                    <div class="dashboard-card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="mb-0">
+                                <i class="bi bi-images me-2"></i>
+                                Imágenes Actuales
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3" id="imagenesActuales">
+                                @foreach (var imagen in Model.Imagenes)
+                                {
+                                    <div class="col-md-3">
+                                        <div class="card">
+                                            <img src="@imagen.UrlImagen" class="card-img-top" style="height: 200px; object-fit: cover;" alt="Imagen del producto">
+                                            <div class="card-body p-2">
+                                                <button type="button" class="btn btn-danger btn-sm w-100 eliminar-imagen-btn"
+                                                        data-imagen-id="@imagen.ImagenId">
+                                                    <i class="bi bi-trash me-1"></i>Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- ✅ NUEVAS IMÁGENES -->
+                <div class="dashboard-card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-image me-2"></i>
+                            Agregar Nuevas Imágenes
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="img-upload-container" id="dropArea">
+                            <i class="bi bi-cloud-arrow-up img-upload-icon"></i>
+                            <p class="img-upload-text">Arrastra nuevas imágenes aquí o haz clic para seleccionar</p>
+                            <input type="file" id="fileInput" name="nuevasImagenes" multiple accept="image/*" class="d-none" />
+                            <button type="button" id="selectImagesBtn" class="btn btn-outline-primary btn-lg">
+                                <i class="bi bi-plus-lg me-2"></i>Seleccionar Nuevas Imágenes
+                            </button>
+                        </div>
+                        <div class="img-preview-container" id="previewContainer">
+                            <!-- Las previsualizaciones de nuevas imágenes se cargarán aquí -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ BOTONES DE ACCIÓN -->
+                <div class="d-flex gap-2 justify-content-end mb-4">
+                    <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary btn-lg">
+                        <i class="bi bi-x-lg me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitButton">
+                        <span class="normal-state">
+                            <i class="bi bi-save me-2"></i>Guardar Cambios
+                        </span>
+                        <span class="loading-state" style="display: none;">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            Guardando...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="~/js/views/inventario/editarProducto.js"></script>
+}

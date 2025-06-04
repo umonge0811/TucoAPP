@@ -7,8 +7,15 @@
 
 
 <div class="dashboard-container">
-    @* Estadísticas Principales *@
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-house-door me-1"></i>Dashboard
+            </li>
+        </ol>
+    </nav>
     <div class="dashboard-section">
+
         <div class="row g-4">
 
             @await Html.PartialAsync("_AlertasSistema")

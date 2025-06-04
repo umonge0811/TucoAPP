@@ -8,6 +8,25 @@
 
 
 <div class="container-fluid">
+    <!-- Breadcrumb mejorado -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Inventario")" class="text-decoration-none">
+                    <i class="bi bi-box-seam me-1"></i>Inventario
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-bag-plus me-1"></i>Agregar Producto
+            </li>
+        </ol>
+    </nav>
+
     <div class="page-header d-flex justify-content-between align-items-center mb-4">
         <h2>
             <i class="bi bi-plus-circle me-2"></i>
@@ -400,7 +419,7 @@
                             <i class="bi bi-cloud-arrow-up img-upload-icon"></i>
                             <p class="img-upload-text">Arrastra imágenes aquí o haz clic para seleccionar</p>
                             <input type="file" id="fileInput" name="imagenes" multiple accept="image/*" class="d-none" />
-                            <button type="button" id="selectImagesBtn" class="btn btn-outline-light btn-lg">
+                            <button type="button" id="selectImagesBtn" class="btn btn-outline-primary btn-lg">
                                 <i class="bi bi-plus-lg me-2"></i>Seleccionar Imágenes
                             </button>
                         </div>

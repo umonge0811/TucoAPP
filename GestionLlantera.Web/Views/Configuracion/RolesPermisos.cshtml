@@ -5,6 +5,20 @@
 }
 
 <div class="roles-permisos-container">
+    <!-- Breadcrumb mejorado -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Dashboard
+                </a>
+            </li>        
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-shield-lock me-1"></i>Roles y Permisos
+            </li>
+        </ol>
+    </nav>
+
     <div class="page-header mb-4">
         <h2>Roles y Permisos</h2>
     </div>

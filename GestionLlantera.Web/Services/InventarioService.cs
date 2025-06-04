@@ -278,88 +278,32 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        //public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id)
-        //{
-        //    try
-        //    {
-        //        var response = await _httpClient.GetAsync($"/api/Inventario/productos/{id}");
-        //        response.EnsureSuccessStatusCode();
+        // ✅ AGREGAR ESTE MÉTODO AL FINAL DE LA CLASE InventarioService
+        private string? ObtenerTokenJWT()
+        {
+            // En el servicio no tenemos acceso directo al User
+            // El token debe pasarse desde el controlador
+            return null;
+        }
 
-        //        var content = await response.Content.ReadAsStringAsync();
-        //        _logger.LogInformation($"Respuesta al obtener producto ID {id}: {content}");
-
-        //        // Deserializar a un objeto dinámico
-        //        var item = JsonConvert.DeserializeObject<dynamic>(content);
-
-        //        var producto = new ProductoDTO
-        //        {
-        //            ProductoId = (int)item.productoId,
-        //            NombreProducto = (string)item.nombreProducto,
-        //            Descripcion = (string)item.descripcion,
-        //            Precio = (decimal)item.precio,
-        //            CantidadEnInventario = (int)item.cantidadEnInventario,
-        //            StockMinimo = (int)item.stockMinimo,
-        //            Imagenes = new List<ImagenProductoDTO>()
-        //        };
-
-        //        // Procesar imágenes si existen
-        //        if (item.imagenesProductos != null && item.imagenesProductos.Count > 0)
-        //        {
-        //            foreach (var img in item.imagenesProductos)
-        //            {
-        //                // Obtener la URL de la API
-        //                string apiBaseUrl = _httpClient.BaseAddress.ToString().TrimEnd('/');
-        //                string imagenUrl = (string)img.urlimagen;
-
-        //                // Si la URL de la imagen no comienza con http, combinarla con la URL base de la API
-        //                if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-        //                {
-        //                    imagenUrl = $"{apiBaseUrl}{imagenUrl}";
-        //                }
-
-        //                producto.Imagenes.Add(new ImagenProductoDTO
-        //                {
-        //                    ImagenId = (int)img.imagenId,
-        //                    ProductoId = (int)img.productoId,
-        //                    UrlImagen = imagenUrl,
-        //                    Descripcion = img.descripcion != null ? (string)img.descripcion : null
-        //                });
-        //            }
-        //        }
-
-        //        // Procesar llanta si existe (tomar solo el primer elemento del array)
-        //        if (item.llanta != null && item.llanta.Count > 0)
-        //        {
-        //            var llantaItem = item.llanta[0]; // Tomar el primer elemento
-        //            producto.Llanta = new LlantaDTO
-        //            {
-        //                LlantaId = (int)llantaItem.llantaId,
-        //                ProductoId = (int)llantaItem.productoId,
-        //                Ancho = llantaItem.ancho != null ? (int?)llantaItem.ancho : null,
-        //                Perfil = llantaItem.perfil != null ? (int?)llantaItem.perfil : null,
-        //                Diametro = llantaItem.diametro != null ? (string)llantaItem.diametro : null,
-        //                Marca = llantaItem.marca != null ? (string)llantaItem.marca : null,
-        //                Modelo = llantaItem.modelo != null ? (string)llantaItem.modelo : null,
-        //                Capas = llantaItem.capas != null ? (int?)llantaItem.capas : null,
-        //                IndiceVelocidad = llantaItem.indiceVelocidad != null ? (string)llantaItem.indiceVelocidad : null,
-        //                TipoTerreno = llantaItem.tipoTerreno != null ? (string)llantaItem.tipoTerreno : null
-        //            };
-        //        }
-
-        //        return producto;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error al obtener producto ID: {Id}", id);
-        //        return new ProductoDTO();
-        //    }
-        //}
-
-        public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id)
+        public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation("🔍 Iniciando ObtenerProductoPorIdAsync para ID: {Id}", id);
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para la petición");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT");
+                }
+
 
                 // ✅ CORREGIR: Quitar la barra inicial de la URL
                 var response = await _httpClient.GetAsync($"api/Inventario/productos/{id}");
@@ -780,21 +724,42 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // ✅ NUEVO: Método auxiliar para calcular precio (agregar al final de la clase)
+        // ✅ MÉTODO MEJORADO PARA CALCULAR PRECIO
         private decimal CalcularPrecioFinal(ProductoDTO dto)
         {
-            // Si tiene costo y utilidad, calcular automáticamente
-            if (dto.Costo.HasValue && dto.PorcentajeUtilidad.HasValue)
+            _logger.LogInformation("💰 === CALCULANDO PRECIO FINAL ===");
+            _logger.LogInformation("💳 Costo recibido: {Costo}", dto.Costo);
+            _logger.LogInformation("📊 Utilidad recibida: {Utilidad}%", dto.PorcentajeUtilidad);
+            _logger.LogInformation("💵 Precio manual recibido: {Precio}", dto.Precio);
+
+            // Si tiene costo Y utilidad, calcular automáticamente (PRIORIDAD)
+            if (dto.Costo.HasValue && dto.Costo.Value > 0 &&
+                dto.PorcentajeUtilidad.HasValue && dto.PorcentajeUtilidad.Value >= 0)
             {
-                var utilidad = dto.Costo.Value * (dto.PorcentajeUtilidad.Value / 100m);
-                return dto.Costo.Value + utilidad;
+                var utilidadDinero = dto.Costo.Value * (dto.PorcentajeUtilidad.Value / 100m);
+                var precioCalculado = dto.Costo.Value + utilidadDinero;
+
+                _logger.LogInformation("🧮 === CÁLCULO AUTOMÁTICO ===");
+                _logger.LogInformation("   - Costo base: ₡{Costo:N2}", dto.Costo.Value);
+                _logger.LogInformation("   - Porcentaje utilidad: {Utilidad:N2}%", dto.PorcentajeUtilidad.Value);
+                _logger.LogInformation("   - Utilidad en dinero: ₡{UtilidadDinero:N2}", utilidadDinero);
+                _logger.LogInformation("   - Precio final calculado: ₡{PrecioFinal:N2}", precioCalculado);
+
+                return precioCalculado;
             }
 
-            // Si no, usar el precio manual o 0 si es null
-            return dto.Precio.GetValueOrDefault(0m);
+            // Si no, usar el precio manual
+            var precioManual = dto.Precio.GetValueOrDefault(0m);
+            _logger.LogInformation("📝 === PRECIO MANUAL ===");
+            _logger.LogInformation("   - Precio recibido: ₡{PrecioManual:N2}", precioManual);
+
+            // Asegurar precio mínimo
+            var precioFinal = Math.Max(precioManual, 0.01m);
+            _logger.LogInformation("✅ Precio final determinado: ₡{PrecioFinal:N2}", precioFinal);
+
+            return precioFinal;
         }
 
-        // Método privado para validar el producto antes de enviarlo
         private void ValidarProducto(ProductoDTO producto)
         {
             _logger.LogInformation("Validando datos del producto");
@@ -886,45 +851,222 @@ namespace GestionLlantera.Web.Services
             _logger.LogInformation("Validación de producto completada");
         }
 
-        public async Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes)
+        public async Task<bool> ActualizarProductoAsync(int id, ProductoDTO producto, List<IFormFile> nuevasImagenes, string jwtToken = null)
         {
             try
             {
-                // 1. Actualizar el producto
-                var json = JsonConvert.SerializeObject(producto);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                _logger.LogInformation("🔄 === INICIANDO ACTUALIZACIÓN DE PRODUCTO ===");
+                _logger.LogInformation("📋 ID: {Id}, Nombre: '{Nombre}'", id, producto.NombreProducto);
+                _logger.LogInformation("📊 === DATOS RECIBIDOS EN SERVICIO ===");
+                _logger.LogInformation("💳 Costo: {Costo}", producto.Costo);
+                _logger.LogInformation("📈 Utilidad: {Utilidad}%", producto.PorcentajeUtilidad);
+                _logger.LogInformation("💵 Precio: {Precio}", producto.Precio);
+                _logger.LogInformation("📦 Stock: {Stock}, Stock Mín: {StockMin}", producto.CantidadEnInventario, producto.StockMinimo);
+                _logger.LogInformation("🛞 Es Llanta: {EsLlanta}", producto.EsLlanta);
+                if (producto.EsLlanta && producto.Llanta != null)
+                {
+                    _logger.LogInformation("🛞 Marca: '{Marca}', Modelo: '{Modelo}'", producto.Llanta.Marca, producto.Llanta.Modelo);
+                }
 
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para actualización");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT - la petición podría fallar");
+                }
+
+                // ✅ CALCULAR PRECIO FINAL
+                var precioFinal = CalcularPrecioFinal(producto);
+
+                // ✅ PREPARAR OBJETO DE ACTUALIZACIÓN CON ESTRUCTURA EXACTA
+                var productoRequest = new
+                {
+                    productoId = producto.ProductoId,
+                    nombreProducto = producto.NombreProducto ?? "Sin nombre",
+                    descripcion = producto.Descripcion ?? "",
+                    precio = Math.Max(precioFinal, 0.01m),
+                    costo = producto.Costo,
+                    porcentajeUtilidad = producto.PorcentajeUtilidad,
+                    cantidadEnInventario = producto.CantidadEnInventario,
+                    stockMinimo = producto.StockMinimo,
+                    esLlanta = producto.EsLlanta,
+                    fechaUltimaActualizacion = DateTime.Now,
+                    llanta = producto.EsLlanta && producto.Llanta != null ? new
+                    {
+                        llantaId = producto.Llanta.LlantaId,
+                        productoId = producto.ProductoId,
+                        ancho = producto.Llanta.Ancho ?? 0,
+                        perfil = producto.Llanta.Perfil ?? 0,
+                        diametro = producto.Llanta.Diametro ?? string.Empty,
+                        marca = producto.Llanta.Marca ?? string.Empty,
+                        modelo = producto.Llanta.Modelo ?? string.Empty,
+                        capas = producto.Llanta.Capas ?? 0,
+                        indiceVelocidad = producto.Llanta.IndiceVelocidad ?? string.Empty,
+                        tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty
+                    } : null
+                };
+
+                // ✅ SERIALIZAR Y ENVIAR ACTUALIZACIÓN
+                var jsonContent = JsonConvert.SerializeObject(productoRequest,
+                    new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Include
+                    });
+
+                _logger.LogInformation("📤 JSON enviado a la API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 var response = await _httpClient.PutAsync($"api/Inventario/productos/{id}", content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📡 Respuesta de actualización: Status={Status}, Content={Content}",
+                    response.StatusCode, responseContent);
+
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("Error al actualizar producto. Status: {Status}", response.StatusCode);
+                    _logger.LogError("❌ Error al actualizar producto: {StatusCode} - {Error}",
+                        response.StatusCode, responseContent);
                     return false;
                 }
 
-                // 2. Subir nuevas imágenes si hay alguna
+                _logger.LogInformation("✅ Producto actualizado exitosamente en la API");
+
+                // ✅ SUBIR NUEVAS IMÁGENES SI EXISTEN
                 if (nuevasImagenes != null && nuevasImagenes.Any())
                 {
-                    using var formContent = new MultipartFormDataContent();
-                    foreach (var imagen in nuevasImagenes)
-                    {
-                        var fileContent = new StreamContent(imagen.OpenReadStream());
-                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
-                        formContent.Add(fileContent, "imagenes", imagen.FileName);
-                    }
+                    _logger.LogInformation("📷 Subiendo {Count} nuevas imágenes...", nuevasImagenes.Count);
 
-                    var imagenesResponse = await _httpClient.PostAsync($"api/Inventario/productos/{id}/imagenes", formContent);
-                    if (!imagenesResponse.IsSuccessStatusCode)
+                    bool imagenesSubidas = await SubirNuevasImagenesAsync(id, nuevasImagenes);
+                    if (!imagenesSubidas)
                     {
-                        _logger.LogWarning("Error al subir imágenes. Status: {Status}", imagenesResponse.StatusCode);
-                        // No fallamos todo el proceso si solo fallan las imágenes
+                        _logger.LogWarning("⚠️ Algunas imágenes no se pudieron subir, pero el producto fue actualizado");
+                        // No fallar todo el proceso por las imágenes
+                    }
+                    else
+                    {
+                        _logger.LogInformation("✅ Todas las nuevas imágenes subidas correctamente");
                     }
                 }
 
+                _logger.LogInformation("🎉 Actualización de producto completada exitosamente");
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar producto");
+                _logger.LogError(ex, "💥 Error crítico al actualizar producto ID: {Id} - {Message}", id, ex.Message);
+                return false;
+            }
+        }
+
+
+
+        // ✅ MÉTODO AUXILIAR PARA SUBIR NUEVAS IMÁGENES
+        private async Task<bool> SubirNuevasImagenesAsync(int productoId, List<IFormFile> imagenes)
+        {
+            try
+            {
+                if (imagenes == null || !imagenes.Any())
+                {
+                    return true; // No hay imágenes que subir
+                }
+
+                _logger.LogInformation("📷 Subiendo {Count} nuevas imágenes para producto {ProductoId}",
+                    imagenes.Count, productoId);
+
+                using var formData = new MultipartFormDataContent();
+
+                foreach (var imagen in imagenes)
+                {
+                    if (imagen.Length > 0)
+                    {
+                        _logger.LogInformation("📎 Agregando imagen: {FileName}, Tamaño: {Length} bytes",
+                            imagen.FileName, imagen.Length);
+
+                        var streamContent = new StreamContent(imagen.OpenReadStream());
+                        streamContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+                        formData.Add(streamContent, "imagenes", imagen.FileName);
+                    }
+                }
+
+                var imageUploadUrl = $"api/Inventario/productos/{productoId}/imagenes";
+                _logger.LogInformation("📤 Enviando imágenes a: {Url}", imageUploadUrl);
+
+                var imageResponse = await _httpClient.PostAsync(imageUploadUrl, formData);
+                var imageResponseContent = await imageResponse.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 Respuesta de subida de imágenes: Status={Status}, Content={Content}",
+                    imageResponse.StatusCode, imageResponseContent);
+
+                if (!imageResponse.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error al subir nuevas imágenes: {Status} - {Error}",
+                        imageResponse.StatusCode, imageResponseContent);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Nuevas imágenes subidas exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al subir nuevas imágenes para producto {ProductoId}", productoId);
+                return false;
+            }
+        }
+
+        // ✅ MÉTODO PARA ELIMINAR IMAGEN ESPECÍFICA DE UN PRODUCTO
+        public async Task<bool> EliminarImagenProductoAsync(int productoId, int imagenId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ === INICIANDO ELIMINACIÓN EN SERVICIO ===");
+                _logger.LogInformation("🗑️ ProductoId: {ProductoId}, ImagenId: {ImagenId}", productoId, imagenId);
+                _logger.LogInformation("🔐 Token recibido en servicio: {HasToken}", !string.IsNullOrEmpty(jwtToken) ? "SÍ" : "NO");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado correctamente");
+                }
+                else
+                {
+                    _logger.LogError("❌ TOKEN JWT FALTANTE EN SERVICIO DE ELIMINACIÓN");
+                    return false;
+                }
+
+                var deleteUrl = $"api/Inventario/productos/{productoId}/imagenes/{imagenId}";
+                _logger.LogInformation("📤 Enviando DELETE a: {Url}", deleteUrl);
+
+                var response = await _httpClient.DeleteAsync(deleteUrl);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 === RESPUESTA DE LA API ===");
+                _logger.LogInformation("📡 Status Code: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📡 Content: {Content}", responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error al eliminar imagen: {Status} - {Content}",
+                        response.StatusCode, responseContent);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Imagen {ImagenId} eliminada exitosamente", imagenId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al eliminar imagen {ImagenId} del producto {ProductoId}",
+                    imagenId, productoId);
                 return false;
             }
         }
@@ -1483,6 +1625,202 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, "❌ Error al buscar tipos de terreno en el servicio");
                 return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Elimina un producto completo del sistema
+        /// </summary>
+        /// <param name="id">ID del producto a eliminar</param>
+        /// <param name="jwtToken">Token de autenticación</param>
+        /// <returns>True si se eliminó exitosamente, False en caso contrario</returns>
+        public async Task<bool> EliminarProductoAsync(int id, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ === INICIANDO ELIMINACIÓN DE PRODUCTO ===");
+                _logger.LogInformation("🗑️ Producto ID: {Id}", id);
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para eliminación");
+                }
+                else
+                {
+                    _logger.LogError("❌ TOKEN JWT FALTANTE EN ELIMINACIÓN DE PRODUCTO");
+                    return false;
+                }
+
+                var deleteUrl = $"api/Inventario/productos/{id}";
+                _logger.LogInformation("📤 Enviando DELETE a: {Url}", deleteUrl);
+
+                var response = await _httpClient.DeleteAsync(deleteUrl);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 === RESPUESTA DE ELIMINACIÓN ===");
+                _logger.LogInformation("📡 Status Code: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📡 Content: {Content}", responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error al eliminar producto: {Status} - {Content}",
+                        response.StatusCode, responseContent);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Producto {Id} eliminado exitosamente", id);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al eliminar producto {Id}", id);
+                return false;
+            }
+        }
+
+        // ========================================
+        // IMPLEMENTACIÓN DEL MÉTODO EN InventarioService
+        // Archivo: GestionLlantera.Web/Services/InventarioService.cs
+        // Agregar este método al final de la clase InventarioService
+        // ========================================
+
+        /// <summary>
+        /// Ajusta el stock de un producto específico mediante la API
+        /// </summary>
+        /// <param name="id">ID del producto</param>
+        /// <param name="ajusteDto">Datos del ajuste</param>
+        /// <param name="jwtToken">Token JWT para autenticación</param>
+        /// <returns>Resultado del ajuste de stock</returns>
+        public async Task<AjusteStockRapidoResponseDTO> AjustarStockRapidoAsync(int id, AjusteStockRapidoDTO ajusteDto, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === INICIANDO AJUSTE DE STOCK EN SERVICIO ===");
+                _logger.LogInformation("📦 Producto ID: {Id}, Tipo: {Tipo}, Cantidad: {Cantidad}",
+                    id, ajusteDto.TipoAjuste, ajusteDto.Cantidad);
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para ajuste de stock");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para ajuste de stock");
+                }
+
+                // ✅ SERIALIZAR DTO PARA ENVIAR A LA API
+                var jsonContent = JsonConvert.SerializeObject(ajusteDto, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include,
+                    DateTimeZoneHandling = DateTimeZoneHandling.Local
+                });
+
+                _logger.LogInformation("📤 JSON enviado a la API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // ✅ REALIZAR PETICIÓN A LA API
+                var url = $"api/Inventario/productos/{id}/ajustar-stock";
+                _logger.LogInformation("🌐 Enviando petición POST a: {Url}", url);
+
+                var response = await _httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 Respuesta de la API - Status: {Status}, Content: {Content}",
+                    response.StatusCode, responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error en la API al ajustar stock: {Status} - {Content}",
+                        response.StatusCode, responseContent);
+
+                    // Intentar deserializar el error
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorResponse?.message?.ToString() ?? "Error desconocido";
+
+                        return new AjusteStockRapidoResponseDTO
+                        {
+                            Success = false,
+                            Message = errorMessage
+                        };
+                    }
+                    catch
+                    {
+                        return new AjusteStockRapidoResponseDTO
+                        {
+                            Success = false,
+                            Message = $"Error en la API: {response.StatusCode}"
+                        };
+                    }
+                }
+
+                // ✅ DESERIALIZAR RESPUESTA EXITOSA
+                var resultado = JsonConvert.DeserializeObject<AjusteStockRapidoResponseDTO>(responseContent);
+
+                if (resultado == null)
+                {
+                    _logger.LogError("❌ No se pudo deserializar la respuesta de la API");
+                    return new AjusteStockRapidoResponseDTO
+                    {
+                        Success = false,
+                        Message = "Error al procesar la respuesta de la API"
+                    };
+                }
+
+                _logger.LogInformation("✅ === AJUSTE DE STOCK COMPLETADO ===");
+                _logger.LogInformation("✅ Resultado: {Success}, Mensaje: {Message}",
+                    resultado.Success, resultado.Message);
+
+                if (resultado.Success)
+                {
+                    _logger.LogInformation("✅ Stock actualizado: {Anterior} → {Nuevo} (Diferencia: {Diferencia})",
+                        resultado.StockAnterior, resultado.StockNuevo, resultado.Diferencia);
+
+                    if (resultado.StockBajo)
+                    {
+                        _logger.LogWarning("⚠️ ALERTA: El producto quedó con stock bajo ({Stock} <= {Minimo})",
+                            resultado.StockNuevo, resultado.StockMinimo);
+                    }
+                }
+
+                return resultado;
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "🌐 Error de conexión al ajustar stock del producto {Id}", id);
+                return new AjusteStockRapidoResponseDTO
+                {
+                    Success = false,
+                    Message = "Error de conexión con el servidor. Verifique su conexión a internet."
+                };
+            }
+            catch (TaskCanceledException tcEx)
+            {
+                _logger.LogError(tcEx, "⏱️ Timeout al ajustar stock del producto {Id}", id);
+                return new AjusteStockRapidoResponseDTO
+                {
+                    Success = false,
+                    Message = "La operación tardó demasiado tiempo. Inténtelo nuevamente."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error general al ajustar stock del producto {Id}", id);
+                return new AjusteStockRapidoResponseDTO
+                {
+                    Success = false,
+                    Message = $"Error interno: {ex.Message}"
+                };
             }
         }
     }
