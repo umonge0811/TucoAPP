@@ -2010,6 +2010,13 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                // ✅ VERIFICAR PERMISOS DEL USUARIO PARA PROGRAMAR INVENTARIOS
+                var puedeVerProgramados = await this.TienePermisoAsync("Programar Inventario");
+                ViewBag.PuedeVerProgramados = puedeVerProgramados;
+
+                _logger.LogInformation("🔒 Usuario {Usuario} - Puede ver programados: {Permisos}",
+                    User.Identity?.Name, puedeVerProgramados);
+
                 // ✅ OBTENER TOKEN JWT
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
@@ -2024,7 +2031,16 @@ namespace GestionLlantera.Web.Controllers
                 if (inventario == null || inventario.InventarioProgramadoId == 0)
                 {
                     TempData["Error"] = "Inventario programado no encontrado.";
-                    return RedirectToAction(nameof(ProgramarInventario));
+
+                    // ✅ REDIRIGIR SEGÚN PERMISOS
+                    if (puedeVerProgramados)
+                    {
+                        return RedirectToAction(nameof(ProgramarInventario));
+                    }
+                    else
+                    {
+                        return RedirectToAction("Index", "Dashboard");
+                    }
                 }
 
                 return View(inventario);
@@ -2033,7 +2049,17 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogError(ex, "Error al cargar detalle del inventario programado {Id}", id);
                 TempData["Error"] = "Error al cargar el detalle del inventario programado.";
-                return RedirectToAction(nameof(ProgramarInventario));
+
+                // ✅ REDIRIGIR SEGÚN PERMISOS TAMBIÉN EN CASO DE ERROR
+                var puedeVerProgramados = await this.TienePermisoAsync("Programar Inventario");
+                if (puedeVerProgramados)
+                {
+                    return RedirectToAction(nameof(ProgramarInventario));
+                }
+                else
+                {
+                    return RedirectToAction("Index", "Dashboard");
+                }
             }
         }
 

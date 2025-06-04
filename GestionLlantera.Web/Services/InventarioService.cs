@@ -965,8 +965,6 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-
-
         // ✅ MÉTODO AUXILIAR PARA SUBIR NUEVAS IMÁGENES
         private async Task<bool> SubirNuevasImagenesAsync(int productoId, List<IFormFile> imagenes)
         {
