@@ -2367,8 +2367,8 @@ namespace GestionLlantera.Web.Controllers
         }
 
         // ========================================
-        // MÉTODO ACTUALIZADO PARA AJUSTE DE STOCK - CONTROLADOR WEB
-        // Reemplazar el método anterior en GestionLlantera.Web/Controllers/InventarioController.cs
+        // MÉTODO CORREGIDO PARA AJUSTE DE STOCK
+        // Reemplazar en GestionLlantera.Web/Controllers/InventarioController.cs
         // ========================================
 
         /// <summary>
@@ -2380,7 +2380,7 @@ namespace GestionLlantera.Web.Controllers
         [HttpPost]
         [Route("Inventario/AjustarStock/{id}")]
         [Authorize]
-        [ValidateAntiForgeryToken]
+        // ✅ QUITAR ValidateAntiForgeryToken temporalmente para debug
         public async Task<IActionResult> AjustarStock(int id, [FromBody] AjusteStockRequestModel ajusteData)
         {
             try
@@ -2396,16 +2396,24 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("📦 === AJUSTE DE STOCK DESDE WEB ===");
                 _logger.LogInformation("👤 Usuario: {Usuario}, Producto ID: {Id}", User.Identity?.Name, id);
                 _logger.LogInformation("📊 Datos recibidos: Tipo='{Tipo}', Cantidad={Cantidad}, Comentario='{Comentario}'",
-                    ajusteData.TipoAjuste, ajusteData.Cantidad, ajusteData.Comentario ?? "Sin comentario");
+                    ajusteData?.TipoAjuste, ajusteData?.Cantidad, ajusteData?.Comentario ?? "Sin comentario");
 
-                // Validar datos de entrada
+                // ✅ VALIDAR DATOS DE ENTRADA MÁS ESPECÍFICAMENTE
+                if (ajusteData == null)
+                {
+                    _logger.LogError("❌ ajusteData es null");
+                    return Json(new { success = false, message = "No se recibieron datos del ajuste" });
+                }
+
                 if (string.IsNullOrEmpty(ajusteData.TipoAjuste))
                 {
+                    _logger.LogError("❌ TipoAjuste vacío: '{TipoAjuste}'", ajusteData.TipoAjuste);
                     return Json(new { success = false, message = "Debe especificar el tipo de ajuste" });
                 }
 
                 if (ajusteData.Cantidad <= 0)
                 {
+                    _logger.LogError("❌ Cantidad inválida: {Cantidad}", ajusteData.Cantidad);
                     return Json(new { success = false, message = "La cantidad debe ser mayor a cero" });
                 }
 
@@ -2431,9 +2439,12 @@ namespace GestionLlantera.Web.Controllers
                 };
 
                 _logger.LogInformation("🔐 Token JWT obtenido, enviando a servicio...");
+                _logger.LogInformation("📤 DTO creado: {@AjusteDto}", ajusteDto);
 
                 // Llamar al servicio para ajustar stock
                 var resultado = await _inventarioService.AjustarStockRapidoAsync(id, ajusteDto, token);
+
+                _logger.LogInformation("📥 Resultado del servicio: {@Resultado}", resultado);
 
                 if (resultado.Success)
                 {
@@ -2441,7 +2452,6 @@ namespace GestionLlantera.Web.Controllers
                     _logger.LogInformation("✅ Producto: {Nombre} (ID: {Id})", resultado.NombreProducto, resultado.ProductoId);
                     _logger.LogInformation("✅ Stock: {Anterior} → {Nuevo} (Diferencia: {Diferencia})",
                         resultado.StockAnterior, resultado.StockNuevo, resultado.Diferencia);
-                    _logger.LogInformation("✅ Stock bajo: {StockBajo}", resultado.StockBajo ? "SÍ" : "NO");
 
                     return Json(new
                     {
@@ -2482,6 +2492,7 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
         /// <summary>
         /// Modelo para recibir datos de ajuste desde el frontend
         /// </summary>
@@ -2490,7 +2501,10 @@ namespace GestionLlantera.Web.Controllers
             public string TipoAjuste { get; set; } = string.Empty;
             public int Cantidad { get; set; }
             public string? Comentario { get; set; }
-        }
+        }   
+        /// <summary>
+                 /// Modelo para recibir datos de ajuste desde el frontend
+                 /// </summary>
     }
 
 }

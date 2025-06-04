@@ -524,6 +524,517 @@ function mostrarNotificacion(titulo, mensaje, tipo) {
     }, 5000);
 }
 
+// ========================================
+// ✅ NUEVAS FUNCIONES DE AJUSTE DE STOCK
+// ========================================
+
+/**
+ * Valida completamente el formulario de ajuste de stock
+ * @returns {boolean} True si es válido, False si hay errores
+ */
+function validarFormularioAjusteCompleto() {
+    console.log('🔍 === VALIDANDO FORMULARIO COMPLETO ===');
+
+    let esValido = true;
+
+    // Limpiar validaciones anteriores
+    $("#ajusteStockForm .form-control").removeClass('is-invalid is-valid');
+    $(".validation-feedback").remove();
+
+    // Validar ProductoId
+    const productoId = $("#productoId").val();
+    if (!productoId || productoId <= 0) {
+        console.error('❌ ProductoId inválido:', productoId);
+        mostrarAlertaSimple('Error: No se pudo identificar el producto', 'danger');
+        return false;
+    }
+
+    // Validar tipo de ajuste
+    const tipoAjuste = $("#tipoAjuste").val();
+    if (!tipoAjuste || !['entrada', 'salida', 'ajuste'].includes(tipoAjuste)) {
+        console.error('❌ Tipo de ajuste inválido:', tipoAjuste);
+        $("#tipoAjuste").addClass('is-invalid');
+        agregarMensajeValidacion("#tipoAjuste", "Debe seleccionar un tipo de ajuste válido");
+        esValido = false;
+    } else {
+        $("#tipoAjuste").addClass('is-valid');
+    }
+
+    // Validar cantidad
+    const cantidad = $("#cantidad").val();
+    const cantidadNum = parseInt(cantidad);
+
+    if (!cantidad || isNaN(cantidadNum) || cantidadNum <= 0) {
+        console.error('❌ Cantidad inválida:', cantidad);
+        $("#cantidad").addClass('is-invalid');
+        agregarMensajeValidacion("#cantidad", "La cantidad debe ser un número mayor a cero");
+        esValido = false;
+    } else {
+        // Validación específica para salidas
+        if (tipoAjuste === 'salida') {
+            const stockActual = parseInt($("#ajusteStockForm").data('stock-actual')) || 0;
+            if (cantidadNum > stockActual) {
+                console.warn('⚠️ Salida excede stock disponible');
+                $("#cantidad").addClass('is-invalid');
+                agregarMensajeValidacion("#cantidad", `La cantidad no puede ser mayor al stock disponible (${stockActual})`);
+                esValido = false;
+            } else {
+                $("#cantidad").addClass('is-valid');
+            }
+        } else {
+            $("#cantidad").addClass('is-valid');
+        }
+    }
+
+    // Validar comentario (opcional pero con límite de caracteres)
+    const comentario = $("#comentario").val();
+    if (comentario && comentario.length > 500) {
+        console.error('❌ Comentario muy largo:', comentario.length);
+        $("#comentario").addClass('is-invalid');
+        agregarMensajeValidacion("#comentario", "El comentario no puede exceder 500 caracteres");
+        esValido = false;
+    } else {
+        $("#comentario").addClass('is-valid');
+    }
+
+    console.log(`🔍 Resultado validación: ${esValido ? 'VÁLIDO' : 'INVÁLIDO'}`);
+
+    // Marcar formulario como validado
+    $("#ajusteStockForm").addClass('was-validated');
+
+    return esValido;
+}
+
+/**
+ * Agrega mensaje de validación a un campo específico
+ * @param {string} selector - Selector del campo
+ * @param {string} mensaje - Mensaje de error
+ */
+function agregarMensajeValidacion(selector, mensaje) {
+    // Remover mensaje anterior si existe
+    $(selector).siblings('.invalid-feedback').remove();
+
+    // Crear nuevo mensaje
+    const $mensaje = $(`<div class="invalid-feedback">${mensaje}</div>`);
+
+    // Agregar después del campo
+    $(selector).after($mensaje);
+}
+
+/**
+ * Función para limpiar el formulario de ajuste
+ */
+function limpiarFormularioAjuste() {
+    $("#ajusteStockForm")[0].reset();
+    $("#ajusteStockForm").removeClass('was-validated');
+    $("#tipoAjuste, #cantidad, #comentario").removeClass('is-invalid is-valid');
+    $("#vistaPrevia").hide();
+    $("#infoProductoAjuste").hide();
+    $("#guardarAjusteBtn").prop('disabled', false);
+
+    // Resetear estados visuales del botón
+    const $btnGuardar = $("#guardarAjusteBtn");
+    $btnGuardar.find('.normal-state').show();
+    $btnGuardar.find('.loading-state').hide();
+}
+
+/**
+ * Función para cargar información del producto en el modal
+ */
+function cargarInformacionProductoEnModal(productoId, $fila) {
+    console.log('📋 Cargando información del producto en modal...');
+
+    // Limpiar formulario
+    limpiarFormularioAjuste();
+
+    // Establecer ID del producto
+    $("#productoId").val(productoId);
+
+    // Extraer información de la fila
+    const nombre = $fila.find("td:eq(2) strong").text().trim() || "Producto sin nombre";
+    const stockActualTexto = $fila.find("td:eq(8)").text().trim();
+    const stockActual = parseInt(stockActualTexto.split(' ')[0].replace(/[^\d]/g, '')) || 0;
+
+    console.log('📋 Datos extraídos:', { nombre, stockActual });
+
+    // Mostrar información en el modal
+    $("#nombreProductoAjuste").text(nombre);
+    $("#stockActualAjuste").text(stockActual);
+    $("#infoProductoAjuste").show();
+
+    // Guardar stock actual para validaciones
+    $("#ajusteStockForm").data('stock-actual', stockActual);
+
+    console.log('✅ Información del producto cargada en modal');
+}
+
+/**
+ * Función para actualizar vista previa del ajuste
+ */
+function actualizarVistaPrevia() {
+    const tipoAjuste = $("#tipoAjuste").val();
+    const cantidad = parseInt($("#cantidad").val()) || 0;
+    const stockActual = parseInt($("#ajusteStockForm").data('stock-actual')) || 0;
+
+    if (!tipoAjuste || cantidad <= 0) {
+        $("#vistaPrevia").hide();
+        return;
+    }
+
+    let stockNuevo = stockActual;
+    let operacion = '';
+    let colorOperacion = 'text-primary';
+    let colorResultado = 'text-success';
+
+    switch (tipoAjuste) {
+        case 'entrada':
+            stockNuevo = stockActual + cantidad;
+            operacion = `+${cantidad}`;
+            colorOperacion = 'text-success';
+            break;
+        case 'salida':
+            stockNuevo = Math.max(0, stockActual - cantidad);
+            operacion = `-${cantidad}`;
+            colorOperacion = 'text-danger';
+            if (stockActual < cantidad) {
+                colorResultado = 'text-warning';
+            }
+            break;
+        case 'ajuste':
+            stockNuevo = cantidad;
+            operacion = `=${cantidad}`;
+            colorOperacion = 'text-info';
+            break;
+    }
+
+    // Actualizar vista previa
+    $("#stockActualPreview").text(stockActual);
+    $("#operacionPreview").text(operacion).attr('class', `h5 mb-1 ${colorOperacion}`);
+    $("#stockNuevoPreview").text(stockNuevo).attr('class', `h5 mb-1 ${colorResultado}`);
+
+    // Mostrar vista previa
+    $("#vistaPrevia").show();
+
+    // Validar si es una salida que excede el stock
+    if (tipoAjuste === 'salida' && cantidad > stockActual) {
+        $("#cantidad").addClass('is-invalid');
+        mostrarMensajeValidacion("La cantidad de salida excede el stock disponible", "warning");
+    } else {
+        $("#cantidad").removeClass('is-invalid').addClass('is-valid');
+    }
+}
+
+/**
+ * Función para mostrar mensajes de validación
+ */
+function mostrarMensajeValidacion(mensaje, tipo) {
+    // Remover mensajes anteriores
+    $(".validation-feedback").remove();
+
+    // Crear nuevo mensaje
+    const claseColor = tipo === 'warning' ? 'text-warning' : tipo === 'danger' ? 'text-danger' : 'text-info';
+    const $mensaje = $(`<div class="validation-feedback d-block ${claseColor}"><small>${mensaje}</small></div>`);
+
+    // Agregar después del campo cantidad
+    $("#cantidad").after($mensaje);
+
+    // Auto-remover después de 3 segundos
+    setTimeout(() => {
+        $mensaje.fadeOut(() => $mensaje.remove());
+    }, 3000);
+}
+
+/**
+ * Procesa la respuesta exitosa del ajuste y actualiza la interfaz
+ * @param {Object} datos - Datos de la respuesta del servidor
+ */
+function procesarAjusteExitoso(datos) {
+    console.log('🎉 === PROCESANDO AJUSTE EXITOSO ===');
+    console.log('🎉 Datos recibidos:', datos);
+
+    try {
+        // Extraer información
+        const {
+            productoId,
+            nombreProducto,
+            stockAnterior,
+            stockNuevo,
+            diferencia,
+            tipoAjuste,
+            stockBajo,
+            stockMinimo
+        } = datos;
+
+        // Actualizar la fila en la tabla
+        actualizarFilaProductoEnTabla(productoId, stockNuevo, stockBajo, stockMinimo);
+
+        // Mostrar notificación de éxito
+        const mensaje = `Stock actualizado: ${stockAnterior} → ${stockNuevo} (${diferencia >= 0 ? '+' : ''}${diferencia})`;
+        mostrarAlertaSimple(mensaje, 'success');
+
+        // Mostrar advertencia si queda con stock bajo
+        if (stockBajo && stockNuevo > 0) {
+            setTimeout(() => {
+                mostrarAlertaSimple(`⚠️ ${nombreProducto} quedó con stock bajo (${stockNuevo} ≤ ${stockMinimo})`, 'warning');
+            }, 2000);
+        } else if (stockNuevo === 0) {
+            setTimeout(() => {
+                mostrarAlertaSimple(`🚨 ${nombreProducto} quedó SIN STOCK`, 'danger');
+            }, 2000);
+        }
+
+        // Actualizar contadores generales
+        actualizarContadoresTabla();
+
+        console.log('✅ Interfaz actualizada correctamente');
+
+    } catch (error) {
+        console.error('❌ Error al procesar ajuste exitoso:', error);
+        mostrarAlertaSimple('Ajuste realizado, pero hubo un error al actualizar la interfaz. Recargue la página.', 'warning');
+    }
+}
+
+/**
+ * Actualiza una fila específica en la tabla con el nuevo stock
+ * @param {number} productoId - ID del producto
+ * @param {number} stockNuevo - Nuevo stock
+ * @param {boolean} stockBajo - Si está en stock bajo
+ * @param {number} stockMinimo - Stock mínimo
+ */
+function actualizarFilaProductoEnTabla(productoId, stockNuevo, stockBajo, stockMinimo) {
+    console.log(`🔄 Actualizando fila del producto ${productoId} con stock ${stockNuevo}`);
+
+    // Encontrar la fila del producto
+    const $fila = $(`tr[data-id="${productoId}"]`);
+
+    if ($fila.length === 0) {
+        console.warn('⚠️ No se encontró la fila del producto en la tabla');
+        return;
+    }
+
+    // Actualizar celda de stock (columna 8, índice 8)
+    const $celdaStock = $fila.find('td:eq(8)');
+    const $spanStock = $celdaStock.find('span');
+
+    if ($spanStock.length > 0) {
+        // Actualizar el texto del stock
+        $spanStock.text(stockNuevo);
+
+        // Actualizar clases de estilo
+        $spanStock.removeClass('text-danger fw-bold');
+        if (stockBajo) {
+            $spanStock.addClass('text-danger fw-bold');
+        }
+
+        // Manejar icono de advertencia
+        const $icono = $spanStock.find('i.bi-exclamation-triangle-fill');
+        if (stockBajo && $icono.length === 0) {
+            $spanStock.append('<i class="bi bi-exclamation-triangle-fill ms-1" data-bs-toggle="tooltip" title="Stock bajo"></i>');
+        } else if (!stockBajo && $icono.length > 0) {
+            $icono.remove();
+        }
+    } else {
+        // Si no tiene la estructura esperada, actualizar directamente
+        $celdaStock.html(stockBajo ?
+            `<span class="text-danger fw-bold">${stockNuevo} <i class="bi bi-exclamation-triangle-fill ms-1" data-bs-toggle="tooltip" title="Stock bajo"></i></span>` :
+            `<span>${stockNuevo}</span>`
+        );
+    }
+
+    // Actualizar clase de la fila completa
+    if (stockBajo) {
+        $fila.addClass('table-danger');
+    } else {
+        $fila.removeClass('table-danger');
+    }
+
+    // Efecto visual de actualización
+    $celdaStock.addClass('bg-success text-white').animate({ opacity: 0.7 }, 200).animate({ opacity: 1 }, 200, function () {
+        setTimeout(() => {
+            $celdaStock.removeClass('bg-success text-white');
+        }, 1000);
+    });
+
+    console.log('✅ Fila actualizada correctamente');
+}
+
+/**
+ * Muestra una alerta al usuario usando diferentes métodos disponibles
+ * @param {string} mensaje - Mensaje a mostrar
+ * @param {string} tipo - Tipo de alerta: success, danger, warning, info
+ */
+function mostrarAlertaSimple(mensaje, tipo) {
+    console.log(`🔔 Mostrando alerta: [${tipo}] ${mensaje}`);
+
+    // Método 1: Si toastr está disponible (recomendado)
+    if (typeof toastr !== 'undefined') {
+        console.log('✅ Usando toastr para mostrar alerta');
+        const tipoToastr = tipo === 'danger' ? 'error' : tipo;
+        toastr[tipoToastr](mensaje);
+        return;
+    }
+
+    // Método 2: Si SweetAlert está disponible
+    if (typeof Swal !== 'undefined') {
+        console.log('✅ Usando SweetAlert para mostrar alerta');
+        const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
+        Swal.fire({
+            icon: iconoSwal,
+            title: tipo === 'success' ? '¡Éxito!' : tipo === 'danger' ? 'Error' : 'Información',
+            text: mensaje,
+            timer: tipo === 'success' ? 3000 : 5000,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    // Método 3: Crear alerta Bootstrap personalizada
+    console.log('✅ Usando alertas Bootstrap personalizadas');
+    crearAlertaBootstrap(mensaje, tipo);
+}
+
+/**
+ * Crea una alerta Bootstrap personalizada
+ * @param {string} mensaje - Mensaje a mostrar
+ * @param {string} tipo - Tipo de alerta Bootstrap
+ */
+function crearAlertaBootstrap(mensaje, tipo) {
+    // Determinar el color Bootstrap
+    const colorBootstrap = tipo === 'danger' ? 'danger' :
+        tipo === 'success' ? 'success' :
+            tipo === 'warning' ? 'warning' : 'info';
+
+    // Determinar el icono
+    const icono = tipo === 'success' ? 'bi-check-circle' :
+        tipo === 'danger' ? 'bi-exclamation-triangle' :
+            tipo === 'warning' ? 'bi-exclamation-triangle' : 'bi-info-circle';
+
+    // Crear ID único para la alerta
+    const alertId = 'alert-' + Date.now();
+
+    // HTML de la alerta
+    const alertHtml = `
+        <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm" 
+             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;" 
+             role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
+                <div class="flex-grow-1">
+                    ${mensaje}
+                </div>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+    // Agregar al DOM
+    $('body').append(alertHtml);
+
+    // Auto-remover después de 5 segundos (8 segundos para errores)
+    const timeout = tipo === 'danger' ? 8000 : 5000;
+    setTimeout(() => {
+        $(`#${alertId}`).fadeOut(300, function () {
+            $(this).remove();
+        });
+    }, timeout);
+
+    console.log(`✅ Alerta Bootstrap creada con ID: ${alertId}`);
+}
+
+
+
+/**
+ * Función principal para ejecutar el ajuste de stock
+ */
+function ejecutarAjusteStock(productoId, tipoAjuste, cantidad, comentario) {
+    console.log('🚀 === EJECUTANDO AJUSTE DE STOCK ===');
+
+    const $btnGuardar = $("#guardarAjusteBtn");
+    const $normalState = $btnGuardar.find('.normal-state');
+    const $loadingState = $btnGuardar.find('.loading-state');
+
+    // Mostrar estado de carga
+    $btnGuardar.prop('disabled', true);
+    $normalState.hide();
+    $loadingState.show();
+
+    // Preparar datos para envío
+    const datosAjuste = {
+        TipoAjuste: tipoAjuste.toLowerCase(),
+        Cantidad: cantidad,
+        Comentario: comentario || null
+    };
+
+    console.log('📡 Enviando petición AJAX...');
+    console.log('📡 URL:', `/Inventario/AjustarStock/${productoId}`);
+    console.log('📡 Datos:', datosAjuste);
+
+    // Obtener token anti-forgery
+    const token = $('input[name="__RequestVerificationToken"]').val();
+
+    // Realizar petición AJAX
+    $.ajax({
+        url: `/Inventario/AjustarStock/${productoId}`,
+        type: 'POST',
+        contentType: 'application/json',
+        headers: {
+            'RequestVerificationToken': token
+        },
+        data: JSON.stringify(datosAjuste),
+        dataType: 'json',
+        success: function (response) {
+            console.log('📡 === RESPUESTA RECIBIDA ===');
+            console.log('📡 Response:', response);
+
+            // Rehabilitar botón
+            $btnGuardar.prop('disabled', false);
+            $normalState.show();
+            $loadingState.hide();
+
+            if (response.success) {
+                console.log('✅ Ajuste exitoso');
+                procesarAjusteExitoso(response.data);
+                $("#ajusteStockModal").modal("hide");
+            } else {
+                console.error('❌ Error en ajuste:', response.message);
+                mostrarAlertaSimple(response.message || 'Error al ajustar stock', 'danger');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('❌ === ERROR EN PETICIÓN ===');
+            console.error('❌ Status:', status);
+            console.error('❌ Error:', error);
+            console.error('❌ Response:', xhr.responseText);
+
+            // Rehabilitar botón
+            $btnGuardar.prop('disabled', false);
+            $normalState.show();
+            $loadingState.hide();
+
+            // Manejar errores específicos
+            let mensajeError = 'Error desconocido al ajustar stock';
+
+            if (xhr.status === 401) {
+                mensajeError = 'Sesión expirada. Por favor, inicie sesión nuevamente.';
+            } else if (xhr.status === 403) {
+                mensajeError = 'No tiene permisos para ajustar stock.';
+            } else if (xhr.responseText) {
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    mensajeError = errorResponse.message || mensajeError;
+                } catch (e) {
+                    mensajeError = `Error ${xhr.status}: ${error}`;
+                }
+            }
+
+            mostrarAlertaSimple(mensajeError, 'danger');
+        }
+    });
+}
+
+
+
+
 // ✅ FUNCIONES DE ORDENAMIENTO
 
 // Función principal para ordenar por columna
@@ -718,6 +1229,85 @@ function actualizarContadores() {
 
 // ✅ DOCUMENT READY - CONFIGURACIÓN E INICIALIZACIÓN
 $(document).ready(function () {
+
+    console.log('🚀 Inventario - Inicializando ajuste de stock');
+
+    // ✅ EVENTO PARA ABRIR MODAL DE AJUSTE
+    $(document).on('click', '.ajuste-stock-btn', function (e) {
+        console.log('📦 === ABRIENDO MODAL AJUSTE STOCK ===');
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const $boton = $(this);
+        const productoId = $boton.data("id");
+        const $fila = $boton.closest('tr');
+
+        console.log('📦 Producto ID:', productoId);
+
+        if (!productoId) {
+            console.error('❌ No se pudo obtener el ProductoId');
+            mostrarAlertaSimple("Error: No se pudo identificar el producto", "danger");
+            return;
+        }
+
+        // Cargar información del producto desde la fila
+        cargarInformacionProductoEnModal(productoId, $fila);
+
+        // Mostrar el modal
+        $("#ajusteStockModal").modal("show");
+    });
+
+    // ✅ EVENTOS PARA ACTUALIZAR VISTA PREVIA
+    $("#tipoAjuste, #cantidad").on('change input', function () {
+        actualizarVistaPrevia();
+    });
+
+    // ✅ EVENTO PRINCIPAL PARA GUARDAR EL AJUSTE
+    $("#guardarAjusteBtn").off('click').on('click', function () {
+        console.log('💾 === INICIANDO GUARDADO DE AJUSTE ===');
+
+        // Validar formulario
+        if (!validarFormularioAjusteCompleto()) {
+            console.log('❌ Validación del formulario falló');
+            return;
+        }
+
+        // Obtener datos del formulario
+        const productoId = $("#productoId").val();
+        const tipoAjuste = $("#tipoAjuste").val();
+        const cantidad = parseInt($("#cantidad").val());
+        const comentario = $("#comentario").val().trim();
+
+        console.log('📦 Datos a enviar:', { productoId, tipoAjuste, cantidad, comentario });
+
+        // Ejecutar ajuste
+        ejecutarAjusteStock(productoId, tipoAjuste, cantidad, comentario);
+    });
+
+    // ✅ LIMPIAR MODAL CUANDO SE CIERRA
+    $("#ajusteStockModal").on('hidden.bs.modal', function () {
+        console.log('🧹 Limpiando modal de ajuste al cerrar...');
+        limpiarFormularioAjuste();
+    });
+
+    // ✅ LIMPIAR VALIDACIONES AL CAMBIAR VALORES
+    $("#tipoAjuste").on('change', function () {
+        $(this).removeClass('is-invalid');
+        $(this).siblings('.invalid-feedback').remove();
+    });
+
+    $("#cantidad").on('input', function () {
+        $(this).removeClass('is-invalid');
+        $(this).siblings('.invalid-feedback').remove();
+    });
+
+    $("#comentario").on('input', function () {
+        $(this).removeClass('is-invalid');
+        $(this).siblings('.invalid-feedback').remove();
+    });
+
+    console.log('✅ Sistema de ajuste de stock inicializado correctamente');
     console.log('🚀 Inventario - Inicializando sistema completo');
 
     // Limpiar eventos previos
