@@ -746,6 +746,7 @@ function mostrarMensajeValidacion(mensaje, tipo) {
 
 /**
  * Procesa la respuesta exitosa del ajuste y actualiza la interfaz
+ * VERSIÓN CORREGIDA - Sin duplicación de notificaciones
  * @param {Object} datos - Datos de la respuesta del servidor
  */
 function procesarAjusteExitoso(datos) {
@@ -753,44 +754,89 @@ function procesarAjusteExitoso(datos) {
     console.log('🎉 Datos recibidos:', datos);
 
     try {
-        // Extraer información
-        const {
-            productoId,
-            nombreProducto,
-            stockAnterior,
-            stockNuevo,
-            diferencia,
-            tipoAjuste,
-            stockBajo,
-            stockMinimo
-        } = datos;
-
-        // Actualizar la fila en la tabla
-        actualizarFilaProductoEnTabla(productoId, stockNuevo, stockBajo, stockMinimo);
-
-        // Mostrar notificación de éxito
-        const mensaje = `Stock actualizado: ${stockAnterior} → ${stockNuevo} (${diferencia >= 0 ? '+' : ''}${diferencia})`;
-        mostrarAlertaSimple(mensaje, 'success');
-
-        // Mostrar advertencia si queda con stock bajo
-        if (stockBajo && stockNuevo > 0) {
-            setTimeout(() => {
-                mostrarAlertaSimple(`⚠️ ${nombreProducto} quedó con stock bajo (${stockNuevo} ≤ ${stockMinimo})`, 'warning');
-            }, 2000);
-        } else if (stockNuevo === 0) {
-            setTimeout(() => {
-                mostrarAlertaSimple(`🚨 ${nombreProducto} quedó SIN STOCK`, 'danger');
-            }, 2000);
+        // ✅ VALIDAR QUE TENEMOS LOS DATOS NECESARIOS
+        if (!datos || typeof datos !== 'object') {
+            console.error('❌ Datos inválidos recibidos:', datos);
+            mostrarNotificacion('Ajuste completado, pero no se recibieron datos válidos del servidor', 'warning');
+            return;
         }
 
-        // Actualizar contadores generales
-        actualizarContadoresTabla();
+        // ✅ EXTRAER INFORMACIÓN CON VALORES POR DEFECTO
+        const {
+            productoId = null,
+            nombreProducto = 'Producto',
+            stockAnterior = 0,
+            stockNuevo = 0,
+            diferencia = 0,
+            tipoAjuste = 'ajuste',
+            stockBajo = false,
+            stockMinimo = 0
+        } = datos;
 
-        console.log('✅ Interfaz actualizada correctamente');
+        console.log('📊 Datos extraídos:', {
+            productoId, nombreProducto, stockAnterior, stockNuevo, diferencia, stockBajo
+        });
+
+        // ✅ ACTUALIZAR LA FILA EN LA TABLA (CON MANEJO DE ERRORES)
+        if (productoId) {
+            try {
+                actualizarFilaProductoEnTabla(productoId, stockNuevo, stockBajo, stockMinimo);
+                console.log('✅ Fila actualizada correctamente en la tabla');
+            } catch (filaError) {
+                console.warn('⚠️ Error al actualizar fila, pero continuando:', filaError);
+            }
+        } else {
+            console.warn('⚠️ No se recibió ProductoId válido, omitiendo actualización de fila');
+        }
+
+        // ✅ MOSTRAR NOTIFICACIÓN PRINCIPAL DE ÉXITO (SOLO UNA)
+        const signo = diferencia >= 0 ? '+' : '';
+        const mensaje = `Stock actualizado: ${stockAnterior} → ${stockNuevo} (${signo}${diferencia})`;
+
+        console.log('📢 Mostrando notificación principal:', mensaje);
+        mostrarNotificacion(mensaje, 'success');
+
+        // ✅ ACTUALIZAR CONTADORES GENERALES (CON MANEJO DE ERRORES)
+        try {
+            // Verificar que las funciones existen antes de llamarlas
+            if (typeof actualizarContadoresTabla === 'function') {
+                actualizarContadoresTabla();
+                console.log('✅ Contadores actualizados');
+            } else if (typeof actualizarContadores === 'function') {
+                actualizarContadores();
+                console.log('✅ Contadores actualizados (método alternativo)');
+            } else {
+                console.warn('⚠️ Funciones de actualización de contadores no encontradas');
+            }
+        } catch (contadorError) {
+            console.warn('⚠️ Error al actualizar contadores, pero continuando:', contadorError);
+        }
+
+        // ✅ MOSTRAR ADVERTENCIAS ADICIONALES SOLO SI ES NECESARIO
+        // (Con delay para evitar sobrecargar al usuario)
+        if (stockBajo && stockNuevo > 0) {
+            setTimeout(() => {
+                const advertencia = `⚠️ ${nombreProducto} quedó con stock bajo (${stockNuevo} ≤ ${stockMinimo})`;
+                console.log('📢 Mostrando advertencia de stock bajo:', advertencia);
+                mostrarNotificacion(advertencia, 'warning');
+            }, 2500); // 2.5 segundos después
+        } else if (stockNuevo === 0) {
+            setTimeout(() => {
+                const critico = `🚨 ${nombreProducto} quedó SIN STOCK`;
+                console.log('📢 Mostrando alerta crítica:', critico);
+                mostrarNotificacion(critico, 'danger');
+            }, 2500); // 2.5 segundos después
+        }
+
+        console.log('✅ === PROCESAMIENTO COMPLETADO EXITOSAMENTE ===');
 
     } catch (error) {
-        console.error('❌ Error al procesar ajuste exitoso:', error);
-        mostrarAlertaSimple('Ajuste realizado, pero hubo un error al actualizar la interfaz. Recargue la página.', 'warning');
+        console.error('❌ Error específico al procesar ajuste exitoso:', error);
+        console.error('❌ Stack trace:', error.stack);
+
+        // ✅ MOSTRAR UNA NOTIFICACIÓN MÁS ESPECÍFICA
+        const mensajeError = `Error al actualizar la interfaz: ${error.message || 'Error desconocido'}. Considere recargar la página.`;
+        mostrarNotificacion(mensajeError, 'warning');
     }
 }
 
@@ -997,7 +1043,6 @@ function ejecutarAjusteStock(productoId, tipoAjuste, cantidad, comentario) {
                 $("#ajusteStockModal").modal("hide");
             } else {
                 console.error('❌ Error en ajuste:', response.message);
-                mostrarAlertaSimple(response.message || 'Error al ajustar stock', 'danger');
             }
         },
         error: function (xhr, status, error) {
@@ -1661,39 +1706,7 @@ $(document).ready(function () {
         compartirPorEmail();
     });
 
-    // Guardar ajuste de stock
-    $("#guardarAjusteBtn").click(function () {
-        if (!validarFormularioAjuste()) {
-            return;
-        }
-
-        const productoId = $("#productoId").val();
-        const tipoAjuste = $("#tipoAjuste").val();
-        const cantidad = $("#cantidad").val();
-
-        const datos = {
-            cantidad: parseInt(cantidad),
-            tipoAjuste: tipoAjuste
-        };
-
-        $.ajax({
-            url: `/api/Inventario/productos/${productoId}/ajuste-stock`,
-            type: "POST",
-            contentType: "application/json",
-            data: JSON.stringify(datos),
-            success: function (respuesta) {
-                mostrarNotificacion("Éxito", "Stock ajustado correctamente", "success");
-                $("#ajusteStockModal").modal("hide");
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            },
-            error: function (xhr, status, error) {
-                console.error("Error al ajustar stock:", error);
-                mostrarNotificacion("Error", "No se pudo ajustar el stock", "danger");
-            }
-        });
-    });
+   
 
     // Funciones de compartir
     function compartirPorWhatsApp() {
@@ -1727,18 +1740,18 @@ $(document).ready(function () {
             const asunto = `Producto: ${nombre}`;
             const cuerpo = `Hola,
 
-Te comparto información sobre este producto:
+                Te comparto información sobre este producto:
 
-🛞 PRODUCTO: ${nombre}
+                🛞 PRODUCTO: ${nombre}
 
-💰 PRECIO: ${precio}
-📦 STOCK DISPONIBLE: ${stock} unidades
-📝 DESCRIPCIÓN: ${descripcion}
+                💰 PRECIO: ${precio}
+                📦 STOCK DISPONIBLE: ${stock} unidades
+                📝 DESCRIPCIÓN: ${descripcion}
 
-🔗 Ver detalles completos:
-${urlProducto}
+                🔗 Ver detalles completos:
+                ${urlProducto}
 
-Saludos.`;
+                Saludos.`;
 
             const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
             window.location.href = emailUrl;
@@ -1768,11 +1781,7 @@ Saludos.`;
         }
 
         return esValido;
-    }
-
-    
-
-   
+    }   
 
 
     // Ordenamiento original por select (mantener compatibilidad)
@@ -1824,66 +1833,101 @@ Saludos.`;
 
     console.log('✅ Inventario - Sistema completo inicializado correctamente');
 
+
+
     // ========================================
-    // FUNCIÓN PARA MOSTRAR ALERTAS
-    // Agregar al final de inventario.js
+    // ✅ SISTEMA UNIFICADO DE NOTIFICACIONES
+    // Reemplazar TODAS las funciones de notificación existentes
     // ========================================
 
     /**
-     * Muestra una alerta al usuario usando diferentes métodos disponibles
-     * @param {string} mensaje - Mensaje a mostrar
-     * @param {string} tipo - Tipo de alerta: success, danger, warning, info
+     * FUNCIÓN PRINCIPAL para mostrar notificaciones con Toastr mejorado
      */
-    function mostrarAlertaSimple(mensaje, tipo) {
-        console.log(`🔔 Mostrando alerta: [${tipo}] ${mensaje}`);
+    function mostrarNotificacion(mensaje, tipo = 'info', titulo = '') {
+        console.log(`🔔 [NOTIFICACIÓN] Tipo: ${tipo}, Mensaje: ${mensaje}`);
 
-        // Método 1: Si toastr está disponible (recomendado)
+        // Prevenir múltiples notificaciones del mismo mensaje
+        if (window.ultimaNotificacion === mensaje && Date.now() - window.ultimaNotificacionTiempo < 2000) {
+            console.log('🚫 Notificación duplicada bloqueada');
+            return;
+        }
+
+        window.ultimaNotificacion = mensaje;
+        window.ultimaNotificacionTiempo = Date.now();
+
+        // ✅ USAR SOLO TOASTR CON CONFIGURACIÓN MEJORADA
         if (typeof toastr !== 'undefined') {
-            console.log('✅ Usando toastr para mostrar alerta');
+            console.log('✅ Usando Toastr');
+
+            // ✅ CONFIGURAR TOASTR CON ESTILOS COMPLETOS
+            toastr.options = {
+                "closeButton": true,
+                "debug": false,
+                "newestOnTop": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "preventDuplicates": true,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": tipo === 'success' ? "4000" : "6000",
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut",
+                "tapToDismiss": true,
+                "escapeHtml": false
+            };
+
+            // ✅ PERSONALIZAR MENSAJE CON ICONOS
+            const iconos = {
+                'success': '✅ ',
+                'danger': '❌ ',
+                'warning': '⚠️ ',
+                'info': 'ℹ️ '
+            };
+
             const tipoToastr = tipo === 'danger' ? 'error' : tipo;
-            toastr[tipoToastr](mensaje);
+            const icono = iconos[tipo] || iconos[tipoToastr] || '';
+            const mensajeConIcono = icono + mensaje;
+
+            // ✅ MOSTRAR TOASTR
+            if (titulo) {
+                toastr[tipoToastr](mensajeConIcono, titulo);
+            } else {
+                toastr[tipoToastr](mensajeConIcono);
+            }
+
             return;
         }
 
-        // Método 2: Si SweetAlert está disponible
-        if (typeof Swal !== 'undefined') {
-            console.log('✅ Usando SweetAlert para mostrar alerta');
-            const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
-            Swal.fire({
-                icon: iconoSwal,
-                title: tipo === 'success' ? '¡Éxito!' : tipo === 'danger' ? 'Error' : 'Información',
-                text: mensaje,
-                timer: tipo === 'success' ? 3000 : 5000,
-                showConfirmButton: false
-            });
-            return;
-        }
-
-        // Método 3: Crear alerta Bootstrap personalizada
-        console.log('✅ Usando alertas Bootstrap personalizadas');
-        crearAlertaBootstrap(mensaje, tipo);
+        // ✅ FALLBACK SIMPLE SI NO HAY TOASTR
+        console.warn('⚠️ Toastr no disponible');
+        alert((titulo ? titulo + ': ' : '') + mensaje);
     }
-
     /**
-     * Crea una alerta Bootstrap personalizada
-     * @param {string} mensaje - Mensaje a mostrar
-     * @param {string} tipo - Tipo de alerta Bootstrap
+     * Función para crear alertas Bootstrap personalizadas
+     * SOLO se usa como fallback cuando no hay Toastr o SweetAlert
      */
-    function crearAlertaBootstrap(mensaje, tipo) {
-        // Determinar el color Bootstrap
-        const colorBootstrap = tipo === 'danger' ? 'danger' :
-            tipo === 'success' ? 'success' :
-                tipo === 'warning' ? 'warning' : 'info';
+    function crearAlertaBootstrap(mensaje, tipo, titulo = '') {
+        const colorBootstrap = {
+            'success': 'success',
+            'danger': 'danger',
+            'warning': 'warning',
+            'info': 'info'
+        }[tipo] || 'info';
 
-        // Determinar el icono
-        const icono = tipo === 'success' ? 'bi-check-circle' :
-            tipo === 'danger' ? 'bi-exclamation-triangle' :
-                tipo === 'warning' ? 'bi-exclamation-triangle' : 'bi-info-circle';
+        const icono = {
+            'success': 'bi-check-circle',
+            'danger': 'bi-exclamation-triangle',
+            'warning': 'bi-exclamation-triangle',
+            'info': 'bi-info-circle'
+        }[tipo] || 'bi-info-circle';
 
-        // Crear ID único para la alerta
-        const alertId = 'alert-' + Date.now();
+        const alertId = 'alert-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        const mensajeCompleto = titulo ? `<strong>${titulo}:</strong> ${mensaje}` : mensaje;
 
-        // HTML de la alerta
         const alertHtml = `
         <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm" 
              style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;" 
@@ -1891,40 +1935,53 @@ Saludos.`;
             <div class="d-flex align-items-center">
                 <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
                 <div class="flex-grow-1">
-                    ${mensaje}
+                    ${mensajeCompleto}
                 </div>
                 <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>
     `;
 
-        // Agregar al DOM
+        // Verificar que no existe ya una alerta con el mismo mensaje
+        if ($(`div[role="alert"]:contains("${mensaje.substring(0, 20)}")`).length > 0) {
+            console.log('🚫 Alerta Bootstrap duplicada bloqueada');
+            return;
+        }
+
         $('body').append(alertHtml);
 
-        // Auto-remover después de 5 segundos (8 segundos para errores)
-        const timeout = tipo === 'danger' ? 8000 : 5000;
+        // Auto-remover
         setTimeout(() => {
             $(`#${alertId}`).fadeOut(300, function () {
                 $(this).remove();
             });
-        }, timeout);
+        }, tipo === 'danger' ? 8000 : 5000);
 
-        console.log(`✅ Alerta Bootstrap creada con ID: ${alertId}`);
+        console.log(`✅ Alerta Bootstrap creada: ${alertId}`);
     }
 
     // ========================================
-    // FUNCIÓN DE NOTIFICACIÓN ALTERNATIVA (Mantener compatibilidad)
+    // ✅ FUNCIONES DE COMPATIBILIDAD
+    // Para mantener código existente funcionando
     // ========================================
 
     /**
-     * Función alternativa para mantener compatibilidad con código existente
-     * @param {string} titulo - Título de la notificación
-     * @param {string} mensaje - Mensaje de la notificación  
-     * @param {string} tipo - Tipo de notificación
+     * Función de compatibilidad con el formato anterior
+     * @param {string} titulo - Título
+     * @param {string} mensaje - Mensaje  
+     * @param {string} tipo - Tipo
      */
-    function mostrarNotificacion(titulo, mensaje, tipo) {
-        const mensajeCompleto = titulo ? `${titulo}: ${mensaje}` : mensaje;
-        mostrarAlertaSimple(mensajeCompleto, tipo);
+    function mostrarNotificacionLegacy(titulo, mensaje, tipo) {
+        mostrarNotificacion(mensaje, tipo, titulo);
+    }
+
+    /**
+     * Función de compatibilidad con formato simple
+     * @param {string} mensaje - Mensaje
+     * @param {string} tipo - Tipo
+     */
+    function mostrarAlertaSimple(mensaje, tipo) {
+        mostrarNotificacion(mensaje, tipo);
     }
 
     // ========================================
@@ -1934,61 +1991,117 @@ Saludos.`;
 
     /**
      * Actualiza los contadores de productos en la interfaz
+     * VERSIÓN CORREGIDA - Con manejo robusto de errores
      */
     function actualizarContadoresTabla() {
+        console.log('📊 === INICIANDO ACTUALIZACIÓN DE CONTADORES ===');
+
         try {
-            console.log('📊 Actualizando contadores de la tabla...');
-
-            // Contar filas visibles (productos mostrados actualmente)
-            const filasVisibles = $("tbody tr:visible").length;
-
-            // Contar filas con stock bajo (que tengan la clase table-danger)
-            const filasStockBajo = $("tbody tr.table-danger:visible").length;
-
-            // Actualizar contador de productos
-            const $contadorProductos = $("#contadorProductos");
-            if ($contadorProductos.length > 0) {
-                $contadorProductos.text(filasVisibles);
-                console.log('✅ Contador productos actualizado:', filasVisibles);
+            // ✅ VERIFICAR QUE LA TABLA EXISTE
+            const $tabla = $("tbody");
+            if ($tabla.length === 0) {
+                console.warn('⚠️ No se encontró la tabla de productos');
+                return;
             }
 
-            // Actualizar contador de stock bajo
-            const $contadorStockBajo = $("#contadorStockBajo");
-            if ($contadorStockBajo.length > 0) {
-                $contadorStockBajo.text(filasStockBajo);
-                console.log('✅ Contador stock bajo actualizado:', filasStockBajo);
+            // ✅ CONTAR FILAS VISIBLES DE FORMA SEGURA
+            let filasVisibles = 0;
+            let filasStockBajo = 0;
+
+            try {
+                // Contar todas las filas visibles
+                filasVisibles = $("tbody tr:visible").length;
+                console.log('📊 Filas visibles encontradas:', filasVisibles);
+
+                // Contar filas con stock bajo (clase table-danger)
+                filasStockBajo = $("tbody tr.table-danger:visible").length;
+                console.log('📊 Filas con stock bajo encontradas:', filasStockBajo);
+
+            } catch (conteoError) {
+                console.error('❌ Error al contar filas:', conteoError);
+                // Usar valores por defecto
+                filasVisibles = $("tbody tr").length || 0;
+                filasStockBajo = $("tbody tr.table-danger").length || 0;
             }
 
-            // También actualizar la paginación si existe
-            if (typeof paginacionConfig !== 'undefined' && typeof actualizarFilasVisibles === 'function') {
-                actualizarFilasVisibles();
-
-                // Si estamos en una página que ya no tiene productos, ir a la anterior
-                if (paginacionConfig.paginaActual > 1 && filasVisibles === 0) {
-                    const nuevaPagina = Math.max(1, paginacionConfig.paginaActual - 1);
-                    console.log('📄 Página actual vacía, moviendo a página:', nuevaPagina);
-                    renderizarPagina(nuevaPagina);
-                } else if (typeof renderizarPagina === 'function') {
-                    renderizarPagina(paginacionConfig.paginaActual);
+            // ✅ ACTUALIZAR CONTADOR DE PRODUCTOS (CON VERIFICACIÓN)
+            try {
+                const $contadorProductos = $("#contadorProductos");
+                if ($contadorProductos.length > 0) {
+                    $contadorProductos.text(filasVisibles);
+                    console.log('✅ Contador productos actualizado:', filasVisibles);
+                } else {
+                    console.log('ℹ️ Elemento #contadorProductos no encontrado (normal si no existe en la página)');
                 }
+            } catch (contadorError) {
+                console.error('❌ Error al actualizar contador de productos:', contadorError);
             }
 
-            console.log('📊 Contadores actualizados - Productos visibles:', filasVisibles, 'Stock bajo:', filasStockBajo);
+            // ✅ ACTUALIZAR CONTADOR DE STOCK BAJO (CON VERIFICACIÓN)
+            try {
+                const $contadorStockBajo = $("#contadorStockBajo");
+                if ($contadorStockBajo.length > 0) {
+                    $contadorStockBajo.text(filasStockBajo);
+                    console.log('✅ Contador stock bajo actualizado:', filasStockBajo);
+                } else {
+                    console.log('ℹ️ Elemento #contadorStockBajo no encontrado (normal si no existe en la página)');
+                }
+            } catch (stockBajoError) {
+                console.error('❌ Error al actualizar contador de stock bajo:', stockBajoError);
+            }
+
+            // ✅ ACTUALIZAR PAGINACIÓN SI ESTÁ DISPONIBLE (CON VERIFICACIONES)
+            try {
+                // Verificar que las variables y funciones de paginación existen
+                if (typeof paginacionConfig !== 'undefined' &&
+                    typeof actualizarFilasVisibles === 'function' &&
+                    typeof renderizarPagina === 'function') {
+
+                    console.log('🔄 Actualizando paginación...');
+
+                    actualizarFilasVisibles();
+
+                    // Si estamos en una página que ya no tiene productos, ir a la anterior
+                    if (paginacionConfig.paginaActual > 1 && filasVisibles === 0) {
+                        const nuevaPagina = Math.max(1, paginacionConfig.paginaActual - 1);
+                        console.log('📄 Página actual vacía, moviendo a página:', nuevaPagina);
+                        renderizarPagina(nuevaPagina);
+                    } else {
+                        renderizarPagina(paginacionConfig.paginaActual);
+                    }
+
+                    console.log('✅ Paginación actualizada correctamente');
+                } else {
+                    console.log('ℹ️ Sistema de paginación no disponible o no inicializado');
+                }
+            } catch (paginacionError) {
+                console.error('❌ Error al actualizar paginación:', paginacionError);
+                // No es crítico, continuar sin fallar
+            }
+
+            console.log('📊 === CONTADORES ACTUALIZADOS EXITOSAMENTE ===');
+            console.log(`📊 Resumen: ${filasVisibles} productos visibles, ${filasStockBajo} con stock bajo`);
+
+            return true; // Indicar éxito
 
         } catch (error) {
-            console.error('❌ Error al actualizar contadores:', error);
-            // No es crítico, continuar sin fallar
+            console.error('❌ === ERROR CRÍTICO AL ACTUALIZAR CONTADORES ===');
+            console.error('❌ Error:', error);
+            console.error('❌ Stack:', error.stack);
+
+            // No lanzar el error, solo loggearlo
+            return false; // Indicar fallo
         }
     }
 
     // ========================================
-    // FUNCIÓN ALTERNATIVA PARA ACTUALIZAR CONTADORES (por compatibilidad)
+    // ✅ FUNCIÓN DE COMPATIBILIDAD
     // ========================================
 
     /**
      * Función alternativa que mantiene compatibilidad con nombres anteriores
      */
     function actualizarContadores() {
-        actualizarContadoresTabla();
+        return actualizarContadoresTabla();
     }
 });
