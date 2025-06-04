@@ -1534,6 +1534,7 @@ $(document).ready(function () {
             $("#ajusteStockModal").modal("show");
         }, 500);
     });
+
     $("#btnAjustarStockVistaRapida").click(function () {
         console.log('📦 === ABRIENDO MODAL AJUSTE DESDE VISTA RÁPIDA ===');
 
@@ -1564,6 +1565,8 @@ $(document).ready(function () {
             $("#ajusteStockModal").modal("show");
         }, 500);
     });
+
+
     
     // ========================================
     // EVENTOS PARA ELIMINAR PRODUCTO
