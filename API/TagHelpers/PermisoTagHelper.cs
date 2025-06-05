@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using API.Services.Interfaces;
+using API.ServicesAPI.Interfaces;
 
 namespace API.TagHelpers
 {

@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 
-namespace API.Services.Interfaces
+namespace API.ServicesAPI.Interfaces
 {
     /// <summary>
     /// Servicio para gestionar permisos de manera dinámica desde la base de datos

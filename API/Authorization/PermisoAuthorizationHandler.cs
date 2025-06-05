@@ -1,4 +1,4 @@
-﻿using API.Services.Interfaces;
+﻿using API.ServicesAPI.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 
 namespace API.Authorization

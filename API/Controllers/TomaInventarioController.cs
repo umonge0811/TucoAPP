@@ -1,6 +1,6 @@
 ﻿using API.Data;
 using API.Extensions; // ✅ CONSISTENTE CON TU ESTILO
-using API.Services.Interfaces;
+using API.ServicesAPI.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +8,7 @@ using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.DTOs;
 using Tuco.Clases.Models;
+using API.Services.Interfaces;
 
 namespace API.Controllers
 {

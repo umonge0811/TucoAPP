@@ -1,14 +1,16 @@
+using API.Authorization;
 using API.Data;
 using API.Services;
 using API.Services.Interfaces;
+using API.ServicesAPI;
+using API.ServicesAPI.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Tuco.Clases.Models.Emails;
-using API.Authorization;
-using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +20,8 @@ builder.Services.AddScoped<EmailService>();
 
 // Configurar servicios de notificaciones
 builder.Services.AddScoped<INotificacionService, NotificacionService>();
+// EN Program.cs - AGREGAR ESTA LÍNEA:
+builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 
 // ? SERVICIOS DE PERMISOS - Sistema completamente dinámico
 builder.Services.AddScoped<IPermisosService, PermisosService>();

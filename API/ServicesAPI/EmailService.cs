@@ -4,7 +4,7 @@ using MimeKit.Text;
 using Microsoft.Extensions.Options;
 using Tuco.Clases.Models.Emails;
 
-namespace API.Services
+namespace API.ServicesAPI
 {
     public class EmailService
     {

@@ -1,10 +1,10 @@
 ﻿using API.Data;
-using API.Services.Interfaces;
+using API.ServicesAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
-namespace API.Services
+namespace API.ServicesAPI
 {
     /// <summary>
     /// Servicio profesional para gestión dinámica de permisos desde base de datos

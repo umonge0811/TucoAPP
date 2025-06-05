@@ -1,7 +1,7 @@
 ﻿using API.Data;
 using API.Extensions; // ✅ AGREGAR ESTA LÍNEA
-using API.Services;
-using API.Services.Interfaces;
+using API.ServicesAPI;
+using API.ServicesAPI.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;

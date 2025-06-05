@@ -216,79 +216,23 @@ namespace Tuco.Clases.DTOs.Inventario
                 };
             }
         }
+
+        // <summary>
+        /// Nombre del usuario que realizó el conteo (alias para compatibilidad)
+        /// </summary>
+        public string? UsuarioConteoNombre => NombreUsuarioConteo;
+
+        /// <summary>
+        /// Información completa de la llanta (para el servicio)
+        /// </summary>
+        public LlantaTomaDTO? InformacionLlanta { get; set; }
+
+        /// <summary>
+        /// Indica si el producto ya fue contado (alias para compatibilidad)
+        /// </summary>
+        public bool Contado => EstadoConteo == "Contado";
     }
 
     
 
-    /// <summary>
-    /// DTO para estadísticas de progreso de un inventario
-    /// </summary>
-    public class ProgresoInventarioDTO
-    {
-        /// <summary>
-        /// ID del inventario
-        /// </summary>
-        public int InventarioProgramadoId { get; set; }
-
-        /// <summary>
-        /// Título del inventario
-        /// </summary>
-        public string Titulo { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Estado actual del inventario
-        /// </summary>
-        public string Estado { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Total de productos en el inventario
-        /// </summary>
-        public int TotalProductos { get; set; }
-
-        /// <summary>
-        /// Productos ya contados
-        /// </summary>
-        public int ProductosContados { get; set; }
-
-        /// <summary>
-        /// Productos pendientes de contar
-        /// </summary>
-        public int ProductosPendientes => TotalProductos - ProductosContados;
-
-        /// <summary>
-        /// Porcentaje de progreso (0-100)
-        /// </summary>
-        public decimal PorcentajeProgreso => TotalProductos > 0 ?
-            Math.Round((decimal)ProductosContados / TotalProductos * 100, 1) : 0;
-
-        /// <summary>
-        /// Total de discrepancias encontradas
-        /// </summary>
-        public int TotalDiscrepancias { get; set; }
-
-        /// <summary>
-        /// Discrepancias críticas que requieren atención inmediata
-        /// </summary>
-        public int DiscrepanciasCriticas { get; set; }
-
-        /// <summary>
-        /// Fecha de inicio del inventario
-        /// </summary>
-        public DateTime? FechaInicio { get; set; }
-
-        /// <summary>
-        /// Fecha estimada de finalización
-        /// </summary>
-        public DateTime? FechaEstimadaFinalizacion { get; set; }
-
-        /// <summary>
-        /// Usuarios activos contando en este momento
-        /// </summary>
-        public List<string> UsuariosActivos { get; set; } = new List<string>();
-
-        /// <summary>
-        /// Último conteo registrado
-        /// </summary>
-        public DateTime? UltimoConteo { get; set; }
-    }
 }
