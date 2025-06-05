@@ -127,3 +127,555 @@
 .export-menu {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
+
+/* =================================
+   TABLA RESPONSIVA PARA MÓVILES
+   ================================= */
+
+/* Estilo para pantallas grandes (escritorio) */
+@media (min-width: 768px) {
+    .tabla-inventarios-responsive {
+        display: table;
+        width: 100%;
+    }
+
+    .inventario-card-mobile {
+        display: none;
+    }
+}
+
+/* Estilo para pantallas pequeñas (móviles) */
+@media (max-width: 767px) {
+    /* Ocultar tabla tradicional en móviles */
+    .tabla-inventarios-responsive {
+        display: none;
+    }
+
+    /* Mostrar vista de tarjetas en móviles */
+    .inventario-card-mobile {
+        display: block;
+        margin-bottom: 1.25rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        background: white;
+        box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .inventario-card-mobile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+        }
+
+        .inventario-card-mobile:active {
+            transform: scale(0.98);
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+        }
+
+    .inventario-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .inventario-titulo-mobile {
+        font-weight: 600;
+        font-size: 1.15rem;
+        color: #212529;
+        margin: 0;
+        line-height: 1.3;
+        margin-bottom: 0.25rem;
+    }
+
+    .inventario-tipo-mobile {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        font-weight: 500;
+    }
+
+    .inventario-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .inventario-info-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .inventario-info-value {
+        color: #6c757d;
+        text-align: right;
+    }
+
+    .inventario-fechas-mobile {
+        background-color: #f8f9fa;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        text-align: center;
+    }
+
+        .inventario-fechas-mobile small {
+            display: block;
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+            .inventario-fechas-mobile small:last-child {
+                margin-bottom: 0;
+            }
+
+    .inventario-progreso-mobile {
+        margin: 1rem 0;
+    }
+
+    .inventario-usuarios-mobile {
+        margin: 1rem 0;
+        text-align: center;
+    }
+
+        .inventario-usuarios-mobile .small {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            display: block;
+            color: #495057;
+        }
+
+    /* =============================================
+       OPTIMIZACIÓN DE BOTONES PARA MÓVILES
+       ============================================= */
+    .inventario-acciones-mobile {
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+        /* Botón Ver - Siempre prominente y ancho completo */
+        .inventario-acciones-mobile .btn-info {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: #0dcaf0;
+            border-color: #0dcaf0;
+            color: #000;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+            .inventario-acciones-mobile .btn-info:hover,
+            .inventario-acciones-mobile .btn-info:focus {
+                background-color: #31d2f2;
+                border-color: #25cff2;
+                color: #000;
+                text-decoration: none;
+                transform: translateY(-1px);
+            }
+
+    /* Container para botones de acción secundarios */
+    .botones-accion-secundarios {
+        display: grid;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+        /* Configuraciones según cantidad de botones */
+        .botones-accion-secundarios.dos-botones {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .botones-accion-secundarios.tres-botones {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .botones-accion-secundarios.cuatro-botones {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+    /* Estilos para botones secundarios */
+    .inventario-acciones-mobile .btn:not(.btn-info) {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border-radius: 0.4rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        margin: 0;
+    }
+
+        .inventario-acciones-mobile .btn:not(.btn-info):active {
+            transform: scale(0.95);
+        }
+
+    /* Iconos en botones móviles */
+    .inventario-acciones-mobile .btn i {
+        margin-right: 0.4rem;
+        font-size: 0.9em;
+    }
+
+    /* Estados específicos de botones */
+    .inventario-acciones-mobile .btn-success {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+
+        .inventario-acciones-mobile .btn-success:hover,
+        .inventario-acciones-mobile .btn-success:focus {
+            background-color: #157347;
+            border-color: #146c43;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+    .inventario-acciones-mobile .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: #fff;
+    }
+
+        .inventario-acciones-mobile .btn-danger:hover,
+        .inventario-acciones-mobile .btn-danger:focus {
+            background-color: #bb2d3b;
+            border-color: #b02a37;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+    .inventario-acciones-mobile .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+        .inventario-acciones-mobile .btn-primary:hover,
+        .inventario-acciones-mobile .btn-primary:focus {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+    /* Ajustes para badges en móviles */
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 0.375rem;
+        font-weight: 600;
+    }
+
+    /* Ajustes para avatars en móviles */
+    .avatar-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        justify-content: center;
+    }
+
+    .avatar {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0;
+    }
+
+    .avatar-initial {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* Progress bar mejorada */
+    .progress {
+        height: 0.75rem;
+        border-radius: 0.375rem;
+        background-color: #e9ecef;
+        margin-bottom: 0.5rem;
+    }
+
+    .progress-bar {
+        border-radius: 0.375rem;
+    }
+
+    .inventario-progreso-mobile .d-flex {
+        margin-bottom: 0.5rem;
+    }
+
+    .inventario-progreso-mobile .small {
+        font-weight: 500;
+        color: #495057;
+    }
+}
+
+/* Mejoras adicionales para la experiencia móvil */
+@media (max-width: 575px) {
+    .inventario-card-mobile {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        border-radius: 0.5rem;
+        border-left: 1px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+        padding: 1rem;
+    }
+
+    .inventario-titulo-mobile {
+        font-size: 1.1rem;
+    }
+
+    .inventario-acciones-mobile .btn:not(.btn-info) {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.6rem;
+        min-height: 42px;
+    }
+
+    .inventario-acciones-mobile .btn i {
+        margin-right: 0.3rem;
+        font-size: 0.85em;
+    }
+
+    /* En pantallas muy pequeñas, botones de 3 se vuelven de 2 columnas */
+    .botones-accion-secundarios.tres-botones {
+        grid-template-columns: 1fr 1fr;
+    }
+
+        .botones-accion-secundarios.tres-botones .btn:last-child {
+            grid-column: 1 / -1; /* El tercer botón ocupa toda la fila */
+        }
+}
+
+/* =================================
+   MEJORAS RESPONSIVAS ADICIONALES
+   ================================= */
+
+/* Header responsivo */
+@media (max-width: 767px) {
+    .page-header {
+        padding: 0.5rem 0;
+    }
+
+        .page-header h2 {
+            font-size: 1.5rem;
+        }
+
+    /* Breadcrumb móvil */
+    .breadcrumb {
+        margin-bottom: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    /* Tabs responsivos */
+    .nav-tabs {
+        border-bottom: 1px solid #dee2e6;
+    }
+
+        .nav-tabs .nav-link {
+            font-size: 0.875rem;
+            padding: 0.75rem 0.5rem;
+            border: 1px solid transparent;
+            border-bottom: none;
+        }
+
+            .nav-tabs .nav-link.active {
+                border-color: #dee2e6 #dee2e6 #fff;
+                border-bottom-color: #fff;
+                margin-bottom: -1px;
+            }
+
+    /* Cards del dashboard responsivos */
+    .dashboard-card {
+        margin-bottom: 1rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+        .dashboard-card .card-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+
+            .dashboard-card .card-header h3 {
+                font-size: 1.1rem;
+                margin: 0;
+            }
+
+        .dashboard-card .card-body {
+            padding: 1rem;
+        }
+
+    /* Formulario responsivo */
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        font-size: 1rem;
+        padding: 0.75rem;
+    }
+
+    /* Botones en móviles */
+    .btn {
+        border-radius: 0.375rem;
+    }
+
+    .btn-group {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+        .btn-group .btn {
+            margin-bottom: 0.25rem;
+        }
+
+    /* Alert responsivo */
+    .alert {
+        font-size: 0.875rem;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Modal responsivo */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-content {
+        border-radius: 0.5rem;
+    }
+
+    .modal-header, .modal-body, .modal-footer {
+        padding: 1rem;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Mejoras para pantallas muy pequeñas */
+@media (max-width: 575px) {
+    .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .page-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .dashboard-card {
+        margin-left: -0.25rem;
+        margin-right: -0.25rem;
+        border-radius: 0.25rem;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 0.5rem 0.25rem;
+        font-size: 0.8rem;
+    }
+
+    /* Botones más pequeños en pantallas muy pequeñas */
+    .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Formulario en pantallas pequeñas */
+    .form-control, .form-select {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+
+    .form-text {
+        font-size: 0.75rem;
+    }
+}
+
+/* Mejoras para la experiencia táctil */
+@media (hover: none) and (pointer: coarse) {
+    /* Pantallas táctiles */
+    .btn {
+        min-height: 44px; /* Tamaño mínimo recomendado para touch */
+        padding: 0.75rem 1rem;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Mejorar área de toque para elementos interactivos */
+    .nav-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .form-control, .form-select {
+        min-height: 48px;
+        padding: 0.75rem;
+    }
+}
+
+/* Estados de carga más visibles en móviles */
+@media (max-width: 767px) {
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .loading-state {
+        font-size: 0.875rem;
+    }
+}
+
+/* Efectos para botones en móviles */
+.btn-pressed {
+    transform: scale(0.95) !important;
+    opacity: 0.8;
+    transition: all 0.1s ease;
+}
+
+/* Toast mejorado para móviles */
+.toast-container {
+    max-width: 90vw;
+}
+
+@media (max-width: 767px) {
+    .toast {
+        min-width: 300px;
+        max-width: 90vw;
+    }
+
+    .toast-body {
+        font-size: 0.9rem;
+    }
+}

@@ -27,11 +27,28 @@ document.addEventListener('DOMContentLoaded', function () {
     let contadorUsuarios = 0;
 
     // Inicializar tooltips de Bootstrap
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    // Inicializar tooltips de Bootstrap (solo en dispositivos no táctiles)
+    function initializeTooltips() {
+        // Detectar si es un dispositivo táctil
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+        if (!isTouchDevice) {
+            // Solo inicializar tooltips en dispositivos de escritorio
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        } else {
+            // En dispositivos móviles, remover el atributo data-bs-toggle
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                el.removeAttribute('data-bs-toggle');
+                el.removeAttribute('title');
+            });
+        }
+    }
+
+    // Llamar la función
+    initializeTooltips();
     // Abrir modal para agregar usuario
     if (btnAgregarUsuario) {
         btnAgregarUsuario.addEventListener('click', function () {
@@ -487,14 +504,21 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Función para mostrar toast (notificación)
+    // Función para mostrar toast (notificación) - Versión móvil mejorada
     function showToast(title, message, type) {
         // Verificar si ya existe un contenedor de toasts
         let toastContainer = document.querySelector('.toast-container');
 
         if (!toastContainer) {
             toastContainer = document.createElement('div');
-            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            // Posición diferente según el tamaño de pantalla
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                toastContainer.className = 'toast-container position-fixed top-0 start-50 translate-middle-x p-3';
+                toastContainer.style.zIndex = '9999';
+            } else {
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            }
             document.body.appendChild(toastContainer);
         }
 
@@ -507,15 +531,24 @@ document.addEventListener('DOMContentLoaded', function () {
         toast.setAttribute('aria-live', 'assertive');
         toast.setAttribute('aria-atomic', 'true');
 
-        // Contenido del toast
-        toast.innerHTML = `
-           <div class="d-flex">
-               <div class="toast-body">
-                   <strong>${title}</strong>: ${message}
-               </div>
-               <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-           </div>
-       `;
+        // Contenido del toast adaptado para móviles
+        const isMobile = window.innerWidth <= 768;
+        const toastContent = isMobile ?
+            `<div class="d-flex">
+            <div class="toast-body text-center w-100">
+                <div><strong>${title}</strong></div>
+                <div class="small">${message}</div>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>` :
+            `<div class="d-flex">
+            <div class="toast-body">
+                <strong>${title}</strong>: ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>`;
+
+        toast.innerHTML = toastContent;
 
         // Agregar el toast al contenedor
         toastContainer.appendChild(toast);
@@ -523,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Inicializar y mostrar el toast
         const bsToast = new bootstrap.Toast(toast, {
             autohide: true,
-            delay: 5000
+            delay: isMobile ? 4000 : 5000 // Menos tiempo en móviles
         });
 
         bsToast.show();
@@ -531,9 +564,12 @@ document.addEventListener('DOMContentLoaded', function () {
         // Eliminar el toast del DOM después de que se oculte
         toast.addEventListener('hidden.bs.toast', function () {
             this.remove();
+            // Si no hay más toasts, eliminar el contenedor
+            if (toastContainer.children.length === 0) {
+                toastContainer.remove();
+            }
         });
     }
-
     // Validación para fechas
     const fechaInicio = document.getElementById('NuevoInventario_FechaInicio');
     const fechaFin = document.getElementById('NuevoInventario_FechaFin');
@@ -553,4 +589,171 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+    // Función para mejorar la experiencia en móviles
+    function optimizeForMobile() {
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile) {
+            // Mejorar scrolling en modales
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('shown.bs.modal', function () {
+                    // Prevenir scroll del body cuando modal está abierto
+                    document.body.style.overflow = 'hidden';
+                });
+
+                modal.addEventListener('hidden.bs.modal', function () {
+                    // Restaurar scroll del body
+                    document.body.style.overflow = '';
+                });
+            });
+
+            // Mejorar experiencia de botones en cards móviles
+            document.querySelectorAll('.inventario-card-mobile .btn').forEach(btn => {
+                btn.addEventListener('touchstart', function () {
+                    this.style.transform = 'scale(0.95)';
+                    this.style.transition = 'transform 0.1s ease';
+                });
+
+                btn.addEventListener('touchend', function () {
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 100);
+                });
+            });
+
+            // Agregar haptic feedback si está disponible
+            if (navigator.vibrate) {
+                document.querySelectorAll('.btn-success, .btn-danger').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        navigator.vibrate(50); // Vibración suave
+                    });
+                });
+            }
+
+            // Mejorar experiencia de botones en general
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('touchstart', function (e) {
+                    // Agregar clase para feedback visual
+                    this.classList.add('btn-pressed');
+                });
+
+                btn.addEventListener('touchend', function (e) {
+                    // Remover clase después de un momento
+                    setTimeout(() => {
+                        this.classList.remove('btn-pressed');
+                    }, 150);
+                });
+            });
+        }
+    }
+
+    // Función para manejar cambios de orientación
+    function handleOrientationChange() {
+        setTimeout(() => {
+            // Reinicializar tooltips si es necesario
+            initializeTooltips();
+
+            // Optimizar para la nueva orientación
+            optimizeForMobile();
+
+            // Ajustar altura de modales si están abiertos
+            document.querySelectorAll('.modal.show').forEach(modal => {
+                const modalDialog = modal.querySelector('.modal-dialog');
+                if (modalDialog) {
+                    modalDialog.style.maxHeight = (window.innerHeight - 20) + 'px';
+                }
+            });
+
+            // Reposicionar toasts si los hay
+            const toastContainer = document.querySelector('.toast-container');
+            if (toastContainer) {
+                const isMobile = window.innerWidth <= 768;
+                if (isMobile) {
+                    toastContainer.className = 'toast-container position-fixed top-0 start-50 translate-middle-x p-3';
+                    toastContainer.style.zIndex = '9999';
+                } else {
+                    toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+                }
+            }
+        }, 100);
+    }
+
+    // Event listeners para optimización móvil
+    window.addEventListener('resize', handleOrientationChange);
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    // Ejecutar optimización inicial
+    optimizeForMobile();
+
+    // Prevenir zoom en inputs en iOS
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        document.querySelectorAll('input, select, textarea').forEach(element => {
+            element.addEventListener('focus', function () {
+                this.style.fontSize = '16px';
+            });
+
+            element.addEventListener('blur', function () {
+                this.style.fontSize = '';
+            });
+        });
+    }
+
+    // Mejorar experiencia de swipe en cards móviles (opcional)
+    let startX = 0;
+    let startY = 0;
+
+    document.querySelectorAll('.inventario-card-mobile').forEach(card => {
+        card.addEventListener('touchstart', function (e) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+
+        card.addEventListener('touchmove', function (e) {
+            if (!startX || !startY) {
+                return;
+            }
+
+            let diffX = startX - e.touches[0].clientX;
+            let diffY = startY - e.touches[0].clientY;
+
+            // Si el swipe es más horizontal que vertical
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (Math.abs(diffX) > 50) { // Threshold de 50px
+                    // Agregar efecto visual de swipe
+                    this.style.transform = `translateX(${-diffX / 10}px)`;
+                    this.style.transition = 'transform 0.2s ease';
+                }
+            }
+        });
+
+        card.addEventListener('touchend', function (e) {
+            // Restaurar posición
+            this.style.transform = '';
+            startX = 0;
+            startY = 0;
+        });
+    });
+
+    // Función para optimizar layout de botones dinámicamente
+    function optimizeButtonLayout() {
+        document.querySelectorAll('.botones-accion-secundarios').forEach(container => {
+            const buttons = container.querySelectorAll('.btn');
+            const buttonCount = buttons.length;
+
+            // Remover clases existentes
+            container.classList.remove('un-boton', 'dos-botones', 'tres-botones');
+
+            // Agregar clase según cantidad de botones
+            if (buttonCount === 1) {
+                container.classList.add('un-boton');
+            } else if (buttonCount === 2) {
+                container.classList.add('dos-botones');
+            } else if (buttonCount >= 3) {
+                container.classList.add('tres-botones');
+            }
+        });
+    }
+
+    // Ejecutar al cargar la página
+    optimizeButtonLayout();
 });
