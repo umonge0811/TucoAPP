@@ -1,0 +1,382 @@
+﻿/* ========================================
+   ESTILOS PARA TOMA DE INVENTARIO
+   ======================================== */
+
+/* Variables CSS */
+:root {
+    --toma-primary: #0d6efd;
+    --toma-success: #198754;
+    --toma-warning: #ffc107;
+    --toma-danger: #dc3545;
+    --toma-info: #0dcaf0;
+    --toma-light: #f8f9fa;
+    --toma-dark: #212529;
+    --toma-border: #dee2e6;
+    --toma-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --toma-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+/* ========================================
+   HEADER DEL INVENTARIO
+   ======================================== */
+.toma-inventario-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: var(--toma-shadow-lg);
+}
+
+.inventario-titulo {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.inventario-detalles {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.inventario-descripcion {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+.inventario-acciones .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+
+/* ========================================
+   PROGRESO Y ESTADÍSTICAS
+   ======================================== */
+.progreso-container .dashboard-card {
+    border: none;
+    box-shadow: var(--toma-shadow);
+}
+
+.progreso-info h5 {
+    color: var(--toma-dark);
+    font-weight: 600;
+}
+
+.progress {
+    border-radius: 8px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--toma-success) 0%, var(--toma-info) 100%);
+}
+
+.estadisticas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.estadistica-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--toma-light);
+    border-radius: 8px;
+    border: 1px solid var(--toma-border);
+}
+
+.estadistica-numero {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.estadistica-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========================================
+   BÚSQUEDA RÁPIDA
+   ======================================== */
+.busqueda-rapida {
+    background: var(--toma-light);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--toma-border);
+}
+
+    .busqueda-rapida h6 {
+        color: var(--toma-dark);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+
+    .busqueda-rapida .form-control {
+        border-radius: 8px;
+        border: 1px solid var(--toma-border);
+        font-size: 0.95rem;
+    }
+
+    .busqueda-rapida .btn {
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+    }
+
+/* ========================================
+   CONTROLES Y FILTROS
+   ======================================== */
+.controles-container .dashboard-card {
+    border: none;
+    box-shadow: var(--toma-shadow);
+}
+
+.filtros-toma {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.form-check-input:checked {
+    background-color: var(--toma-primary);
+    border-color: var(--toma-primary);
+}
+
+.controles-vista .btn-group {
+    border-radius: 8px;
+    box-shadow: var(--toma-shadow);
+}
+
+.controles-vista .btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* ========================================
+   TABLA DE PRODUCTOS
+   ======================================== */
+.vista-tabla .table {
+    margin-bottom: 0;
+}
+
+    .vista-tabla .table th {
+        background-color: var(--toma-light);
+        border-bottom: 2px solid var(--toma-border);
+        font-weight: 600;
+        color: var(--toma-dark);
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+    }
+
+    .vista-tabla .table td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .vista-tabla .table tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+/* Estados de productos */
+.estado-badge {
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.estado-pendiente {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.estado-contado {
+    background-color: #d1edff;
+    color: #0c5460;
+}
+
+.estado-discrepancia {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Imagen del producto en tabla */
+.producto-imagen-tabla {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid var(--toma-border);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+    .producto-imagen-tabla:hover {
+        transform: scale(1.05);
+        box-shadow: var(--toma-shadow);
+    }
+
+.sin-imagen-tabla {
+    width: 60px;
+    height: 60px;
+    background-color: var(--toma-light);
+    border: 2px dashed var(--toma-border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1.5rem;
+}
+
+/* Información del producto */
+.producto-nombre {
+    font-weight: 600;
+    color: var(--toma-dark);
+    margin-bottom: 0.25rem;
+}
+
+.producto-id {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.producto-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Medidas y especificaciones */
+.medidas-producto {
+    font-weight: 500;
+    color: var(--toma-primary);
+}
+
+.marca-modelo {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Cantidades */
+.cantidad-sistema {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.cantidad-fisica {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--toma-success);
+}
+
+.cantidad-vacia {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+/* Diferencias */
+.diferencia-positiva {
+    color: var(--toma-success);
+    font-weight: 600;
+}
+
+.diferencia-negativa {
+    color: var(--toma-danger);
+    font-weight: 600;
+}
+
+.diferencia-cero {
+    color: var(--toma-info);
+    font-weight: 500;
+}
+
+/* Botones de acción */
+.acciones-producto {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+    .acciones-producto .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+.btn-contar {
+    background: linear-gradient(135deg, var(--toma-primary), #4dabf7);
+    border: none;
+    color: white;
+}
+
+    .btn-contar:hover {
+        background: linear-gradient(135deg, #0b5ed7, #339af0);
+        transform: translateY(-1px);
+        box-shadow: var(--toma-shadow);
+    }
+
+/* ========================================
+   VISTA DE CARDS (MÓVIL)
+   ======================================== */
+.productos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.producto-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--toma-shadow);
+    border: 1px solid var(--toma-border);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+    .producto-card:hover {
+        box-shadow: var(--toma-shadow-lg);
+        transform: translateY(-2px);
+    }
+
+.producto-card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--toma-border);
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.producto-card-imagen {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid white;
+    box-shadow: var(--toma-shadow);
+    margin-bottom: 1rem;
+}
+
+.producto-card-titulo {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--toma-dark);
+    margin-bottom: 0.5rem;
+}
+
+

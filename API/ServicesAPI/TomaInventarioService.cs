@@ -81,8 +81,9 @@ namespace API.Services
             }
         }
 
+        // ✅ MÉTODO MEJORADO PARA INICIAR INVENTARIO
         /// <summary>
-        /// Inicia un inventario programado
+        /// Inicia un inventario programado y genera productos para contar
         /// </summary>
         public async Task<ResultadoOperacionDTO> IniciarInventarioAsync(int inventarioId)
         {
@@ -134,6 +135,90 @@ namespace API.Services
                 return ResultadoOperacionDTO.Error("Error interno al iniciar inventario", "ERROR_INTERNO");
             }
         }
+
+        // ✅ NUEVO MÉTODO: OBTENER PRODUCTOS DEL INVENTARIO PARA LA INTERFAZ WEB
+        /// <summary>
+        /// Obtiene productos del inventario con información optimizada para la interfaz web
+        /// </summary>
+        public async Task<List<DetalleInventarioDTO>> ObtenerProductosParaTomaAsync(int inventarioId, int? usuarioId = null)
+        {
+            _logger.LogInformation("📦 Obteniendo productos para toma del inventario {InventarioId}", inventarioId);
+
+            try
+            {
+                var query = _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId)
+                    .Include(d => d.Producto)
+                        .ThenInclude(p => p.Llanta)
+                    .Include(d => d.Producto)
+                        .ThenInclude(p => p.ImagenesProductos)
+                    .Include(d => d.UsuarioConteo)
+                    .AsQueryable();
+
+                // 🔍 FILTRAR POR USUARIO SI SE ESPECIFICA (para asignaciones específicas)
+                if (usuarioId.HasValue)
+                {
+                    // Opcional: Filtrar productos asignados a un usuario específico
+                    // query = query.Where(d => d.UsuarioConteoId == usuarioId || d.UsuarioConteoId == null);
+                }
+
+                var detalles = await query
+                    .Select(d => new DetalleInventarioDTO
+                    {
+                        DetalleId = d.DetalleId,
+                        InventarioProgramadoId = d.InventarioProgramadoId,
+                        ProductoId = d.ProductoId,
+                        CantidadSistema = d.CantidadSistema,
+                        CantidadFisica = d.CantidadFisica,
+                        Diferencia = d.Diferencia,
+                        Observaciones = d.Observaciones,
+                        FechaConteo = d.FechaConteo,
+                        UsuarioConteoId = d.UsuarioConteoId,
+                        NombreUsuarioConteo = d.UsuarioConteo != null ? d.UsuarioConteo.NombreUsuario : null,
+
+                        // ✅ INFORMACIÓN DEL PRODUCTO
+                        NombreProducto = d.Producto.NombreProducto,
+                        DescripcionProducto = d.Producto.Descripcion,
+                        EsLlanta = d.Producto.Llanta.Any(),
+
+                        // ✅ INFORMACIÓN DE LLANTA SIMPLIFICADA
+                        MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
+                        ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null,
+                        MedidasLlanta = d.Producto.Llanta.Any() && d.Producto.Llanta.First().Ancho.HasValue ?
+                            $"{d.Producto.Llanta.First().Ancho}/{d.Producto.Llanta.First().Perfil}R{d.Producto.Llanta.First().Diametro}" : null,
+
+                        // ✅ PRIMERA IMAGEN PARA VISTA RÁPIDA
+                        ImagenUrl = d.Producto.ImagenesProductos.Any() ? d.Producto.ImagenesProductos.First().Urlimagen : null,
+
+                        // ✅ ESTADO CALCULADO
+                        EstadoConteo = d.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                        TieneDiscrepancia = d.Diferencia.HasValue && d.Diferencia.Value != 0,
+
+                        // ✅ INFORMACIÓN COMPLETA DE LLANTA PARA EL SERVICIO
+                        InformacionLlanta = d.Producto.Llanta.Any() ? new LlantaTomaDTO
+                        {
+                            Ancho = d.Producto.Llanta.First().Ancho,
+                            Perfil = d.Producto.Llanta.First().Perfil,
+                            Diametro = d.Producto.Llanta.First().Diametro,
+                            Marca = d.Producto.Llanta.First().Marca,
+                            Modelo = d.Producto.Llanta.First().Modelo,
+                            IndiceVelocidad = d.Producto.Llanta.First().IndiceVelocidad,
+                            TipoTerreno = d.Producto.Llanta.First().TipoTerreno
+                        } : null
+                    })
+                    .OrderBy(d => d.NombreProducto)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Obtenidos {Cantidad} productos para toma", detalles.Count);
+                return detalles;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener productos para toma");
+                return new List<DetalleInventarioDTO>();
+            }
+        }
+
 
         /// <summary>
         /// Completa un inventario programado
@@ -324,8 +409,9 @@ namespace API.Services
             }
         }
 
+        // ✅ MÉTODO MEJORADO PARA REGISTRAR CONTEO
         /// <summary>
-        /// Registra el conteo físico de un producto
+        /// Registra el conteo de un producto y maneja discrepancias
         /// </summary>
         public async Task<bool> RegistrarConteoAsync(ConteoProductoDTO conteo)
         {
@@ -334,7 +420,9 @@ namespace API.Services
 
             try
             {
+                // ✅ BUSCAR DETALLE DEL INVENTARIO
                 var detalle = await _context.DetallesInventarioProgramado
+                    .Include(d => d.Producto)
                     .FirstOrDefaultAsync(d => d.InventarioProgramadoId == conteo.InventarioProgramadoId
                                             && d.ProductoId == conteo.ProductoId);
 
@@ -344,7 +432,17 @@ namespace API.Services
                     return false;
                 }
 
-                // Registrar conteo
+                // ✅ VERIFICAR QUE EL INVENTARIO ESTÉ EN PROGRESO
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == conteo.InventarioProgramadoId);
+
+                if (inventario?.Estado != "En Progreso")
+                {
+                    _logger.LogWarning("❌ Inventario no está en progreso: Estado={Estado}", inventario?.Estado);
+                    return false;
+                }
+
+                // ✅ REGISTRAR CONTEO
                 detalle.CantidadFisica = conteo.CantidadFisica;
                 detalle.Diferencia = conteo.CantidadFisica - detalle.CantidadSistema;
                 detalle.Observaciones = conteo.Observaciones;
@@ -353,6 +451,12 @@ namespace API.Services
 
                 await _context.SaveChangesAsync();
 
+                // ✅ MANEJAR DISCREPANCIAS SI LAS HAY
+                if (detalle.Diferencia.HasValue && Math.Abs(detalle.Diferencia.Value) > 0)
+                {
+                    await NotificarDiscrepanciaAsync(conteo.InventarioProgramadoId, detalle);
+                }
+
                 _logger.LogInformation("✅ Conteo registrado. Diferencia: {Diferencia}", detalle.Diferencia);
                 return true;
             }
@@ -360,6 +464,57 @@ namespace API.Services
             {
                 _logger.LogError(ex, "💥 Error al registrar conteo");
                 return false;
+            }
+        }
+
+        // ✅ MÉTODO AUXILIAR PARA NOTIFICAR DISCREPANCIAS
+        private async Task NotificarDiscrepanciaAsync(int inventarioId, DetalleInventarioProgramado detalle)
+        {
+            try
+            {
+                _logger.LogInformation("⚠️ Notificando discrepancia en producto {ProductoId}", detalle.ProductoId);
+
+                // ✅ OBTENER USUARIOS CON PERMISO DE VALIDACIÓN
+                var usuariosValidacion = await _context.AsignacionesUsuariosInventario
+                    .Where(a => a.InventarioProgramadoId == inventarioId && a.PermisoValidacion)
+                    .Select(a => a.UsuarioId)
+                    .ToListAsync();
+
+                if (!usuariosValidacion.Any())
+                {
+                    _logger.LogWarning("⚠️ No hay usuarios con permiso de validación para notificar");
+                    return;
+                }
+
+                // ✅ OBTENER NOMBRE DEL PRODUCTO
+                var nombreProducto = detalle.Producto?.NombreProducto ??
+                    (await _context.Productos.Where(p => p.ProductoId == detalle.ProductoId)
+                                            .Select(p => p.NombreProducto)
+                                            .FirstOrDefaultAsync()) ??
+                    $"Producto ID: {detalle.ProductoId}";
+
+                // ✅ CREAR NOTIFICACIÓN
+                var titulo = "⚠️ Discrepancia Detectada";
+                var mensaje = $"Discrepancia en '{nombreProducto}': Sistema={detalle.CantidadSistema}, " +
+                             $"Físico={detalle.CantidadFisica}, Diferencia={detalle.Diferencia}";
+                var urlAccion = $"/Inventario/DetalleInventarioProgramado/{inventarioId}";
+
+                await _notificacionService.CrearNotificacionesAsync(
+                    usuariosIds: usuariosValidacion,
+                    titulo: titulo,
+                    mensaje: mensaje,
+                    tipo: "warning",
+                    icono: "fas fa-exclamation-triangle",
+                    urlAccion: urlAccion,
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: inventarioId
+                );
+
+                _logger.LogInformation("✅ Notificación de discrepancia enviada a {Count} usuarios", usuariosValidacion.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error notificando discrepancia");
             }
         }
 
@@ -378,15 +533,23 @@ namespace API.Services
 
         #region 📊 PROGRESO Y ESTADÍSTICAS
 
-        /// <summary>
-        /// Obtiene el progreso actual de un inventario
-        /// </summary>
+        // ✅ MÉTODO MEJORADO PARA OBTENER PROGRESO
         public async Task<ProgresoInventarioDTO?> ObtenerProgresoAsync(int inventarioId)
         {
             _logger.LogInformation("📊 Calculando progreso del inventario {InventarioId}", inventarioId);
 
             try
             {
+                // ✅ VERIFICAR QUE EL INVENTARIO EXISTE
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    return null;
+                }
+
+                // ✅ CALCULAR ESTADÍSTICAS
                 var estadisticas = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioId)
                     .GroupBy(d => 1)
@@ -398,9 +561,18 @@ namespace API.Services
                     })
                     .FirstOrDefaultAsync();
 
-                if (estadisticas == null)
+                if (estadisticas == null || estadisticas.Total == 0)
                 {
-                    return null;
+                    return new ProgresoInventarioDTO
+                    {
+                        InventarioId = inventarioId,
+                        TotalProductos = 0,
+                        ProductosContados = 0,
+                        PorcentajeProgreso = 0,
+                        TotalDiscrepancias = 0,
+                        FechaCalculo = DateTime.Now,
+                        Mensaje = "No hay productos en este inventario"
+                    };
                 }
 
                 var porcentaje = estadisticas.Total > 0
@@ -414,7 +586,8 @@ namespace API.Services
                     ProductosContados = estadisticas.Contados,
                     PorcentajeProgreso = Math.Round(porcentaje, 1),
                     TotalDiscrepancias = estadisticas.Discrepancias,
-                    FechaCalculo = DateTime.Now
+                    FechaCalculo = DateTime.Now,
+                    Mensaje = $"Progreso: {estadisticas.Contados}/{estadisticas.Total} productos contados"
                 };
             }
             catch (Exception ex)
@@ -423,7 +596,6 @@ namespace API.Services
                 return null;
             }
         }
-
         /// <summary>
         /// Obtiene productos con discrepancias
         /// </summary>

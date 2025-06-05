@@ -17,6 +17,8 @@ builder.Services.AddDbContext<TucoContext>(options =>
 // Agregar servicios al contenedor
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+// ✅ REGISTRO DEL NUEVO SERVICIO DE TOMA DE INVENTARIO
+builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 
 // ✅ SOLO EL SERVICIO DIRECTO (sin HTTP)
 builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
