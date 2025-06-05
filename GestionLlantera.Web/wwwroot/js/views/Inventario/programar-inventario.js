@@ -756,4 +756,371 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Ejecutar al cargar la página
     optimizeButtonLayout();
+
+    // ========================================
+    // JAVASCRIPT MEJORADO PARA INICIAR INVENTARIOS
+    // Ubicación: Agregar al final de programar-inventario.js
+    // ========================================
+
+    /**
+     * 🚀 FUNCIÓN MEJORADA PARA INICIAR INVENTARIOS
+     * 
+     * FUNCIONA EN:
+     * - ProgramarInventario.cshtml (lista de inventarios)
+     * - DetalleInventarioProgramado.cshtml (vista de detalle)
+     * 
+     * FLUJO:
+     * 1. Usuario hace clic en "Iniciar Inventario"
+     * 2. Se confirma la acción con modal
+     * 3. Se inicia el inventario vía API
+     * 4. Se redirige automáticamente a la toma de inventario
+     */
+
+    // Función para configurar botones de iniciar inventario (mejorada)
+    function configurarBotonesIniciarInventario() {
+        console.log('🔧 Configurando botones de iniciar inventario...');
+
+        // Encontrar todos los botones de iniciar inventario
+        const iniciarInventarioBtns = document.querySelectorAll('.iniciar-inventario-btn');
+
+        console.log(`📋 Se encontraron ${iniciarInventarioBtns.length} botones de iniciar inventario`);
+
+        iniciarInventarioBtns.forEach((btn, index) => {
+            console.log(`🔘 Configurando botón ${index + 1}:`, btn);
+
+            // Remover eventos anteriores para evitar duplicados
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+
+            // Agregar evento click
+            newBtn.addEventListener('click', function () {
+                const inventarioId = this.dataset.id;
+                console.log(`🚀 Iniciando inventario ID: ${inventarioId}`);
+
+                if (!inventarioId) {
+                    console.error('❌ No se encontró ID del inventario');
+                    mostrarToast('Error', 'No se pudo identificar el inventario', 'danger');
+                    return;
+                }
+
+                iniciarInventarioConConfirmacion(inventarioId);
+            });
+        });
+    }
+
+    // Función principal para iniciar inventario con confirmación
+    function iniciarInventarioConConfirmacion(inventarioId) {
+        console.log(`🎯 Iniciando proceso para inventario ${inventarioId}`);
+
+        // Crear modal de confirmación dinámicamente si no existe
+        let modal = document.getElementById('modalIniciarInventario');
+
+        if (!modal) {
+            modal = crearModalIniciarInventario();
+            document.body.appendChild(modal);
+        }
+
+        // Configurar el modal para este inventario específico
+        configurarModalIniciarInventario(modal, inventarioId);
+
+        // Mostrar el modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+    // Crear modal de confirmación dinámicamente
+    function crearModalIniciarInventario() {
+        console.log('🏗️ Creando modal de confirmación...');
+
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.id = 'modalIniciarInventarioDinamico';
+        modal.tabIndex = -1;
+        modal.setAttribute('aria-labelledby', 'modalIniciarInventarioLabel');
+        modal.setAttribute('aria-hidden', 'true');
+
+        modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalIniciarInventarioLabel">
+                        <i class="bi bi-play-circle me-2"></i>
+                        Iniciar Inventario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>¿Está seguro de que desea iniciar este inventario?</strong>
+                    </div>
+                    <p>Al iniciar el inventario:</p>
+                    <ul>
+                        <li>Se notificará por correo electrónico a todos los usuarios asignados</li>
+                        <li>Los usuarios podrán comenzar inmediatamente con el conteo físico</li>
+                        <li>El estado del inventario cambiará a "En Progreso"</li>
+                        <li>Se abrirá automáticamente la interfaz de toma de inventario</li>
+                    </ul>
+                    
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="abrirTomaAutomatica" checked>
+                        <label class="form-check-label" for="abrirTomaAutomatica">
+                            <i class="bi bi-tablet me-1"></i>
+                            Abrir interfaz de toma de inventario automáticamente
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnConfirmarIniciarDinamico">
+                        <span class="normal-state">
+                            <i class="bi bi-play-fill me-2"></i>
+                            Iniciar Inventario
+                        </span>
+                        <span class="loading-state" style="display: none;">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            Iniciando...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+        return modal;
+    }
+
+    // Configurar el modal para un inventario específico
+    function configurarModalIniciarInventario(modal, inventarioId) {
+        const btnConfirmar = modal.querySelector('#btnConfirmarIniciarDinamico');
+
+        // Remover eventos anteriores
+        const newBtn = btnConfirmar.cloneNode(true);
+        btnConfirmar.parentNode.replaceChild(newBtn, btnConfirmar);
+
+        // Agregar evento para este inventario específico
+        newBtn.addEventListener('click', function () {
+            ejecutarInicioInventario(inventarioId, modal);
+        });
+    }
+
+    // Función que ejecuta el inicio de inventario
+    async function ejecutarInicioInventario(inventarioId, modal) {
+        console.log(`⚡ Ejecutando inicio de inventario ${inventarioId}`);
+
+        const btnConfirmar = modal.querySelector('#btnConfirmarIniciarDinamico');
+        const abrirTomaAutomatica = modal.querySelector('#abrirTomaAutomatica').checked;
+
+        try {
+            // Mostrar estado de carga
+            btnConfirmar.querySelector('.normal-state').style.display = 'none';
+            btnConfirmar.querySelector('.loading-state').style.display = 'inline-block';
+            btnConfirmar.disabled = true;
+
+            console.log('📡 Enviando petición para iniciar inventario...');
+
+            // Obtener token CSRF
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            // Decidir qué endpoint usar según dónde estemos
+            let endpoint;
+
+            // Verificar si tenemos TomaInventarioController disponible
+            if (typeof window.tomaInventarioManager !== 'undefined') {
+                // Estamos en la vista de toma de inventario
+                endpoint = `/TomaInventario/IniciarInventario/${inventarioId}`;
+            } else {
+                // Estamos en las vistas de gestión de inventarios
+                endpoint = `/Inventario/IniciarInventario/${inventarioId}`;
+            }
+
+            console.log(`🎯 Usando endpoint: ${endpoint}`);
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                }
+            });
+
+            console.log(`📡 Respuesta recibida: ${response.status}`);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Error en respuesta:', errorText);
+                throw new Error(`Error ${response.status}: ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Resultado:', result);
+
+            if (result.success) {
+                // Cerrar modal
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                bsModal.hide();
+
+                // Mostrar mensaje de éxito
+                mostrarToast('Éxito',
+                    result.message || 'Inventario iniciado exitosamente',
+                    'success'
+                );
+
+                // Vibración en dispositivos móviles
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]);
+                }
+
+                // Determinar próximo paso
+                if (abrirTomaAutomatica) {
+                    console.log('🚀 Redirigiendo a toma de inventario...');
+
+                    // Pequeña pausa para que el usuario vea el mensaje de éxito
+                    setTimeout(() => {
+                        // Redireccionar a la interfaz de toma
+                        window.location.href = `/TomaInventario/Ejecutar/${inventarioId}`;
+                    }, 1500);
+
+                } else {
+                    console.log('🔄 Recargando página actual...');
+
+                    // Solo recargar la página
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                }
+
+            } else {
+                throw new Error(result.message || 'Error desconocido al iniciar inventario');
+            }
+
+        } catch (error) {
+            console.error('💥 Error al iniciar inventario:', error);
+
+            // Restaurar botón
+            btnConfirmar.querySelector('.normal-state').style.display = 'inline-block';
+            btnConfirmar.querySelector('.loading-state').style.display = 'none';
+            btnConfirmar.disabled = false;
+
+            // Mostrar error
+            mostrarToast('Error',
+                `Error al iniciar inventario: ${error.message}`,
+                'danger'
+            );
+        }
+    }
+
+    // Función mejorada para mostrar toasts (compatible con móviles)
+    function mostrarToast(titulo, mensaje, tipo) {
+        console.log(`📢 Toast: ${tipo} - ${titulo}: ${mensaje}`);
+
+        // Verificar si ya existe un contenedor de toasts
+        let toastContainer = document.querySelector('.toast-container');
+
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+
+            // Posición diferente según el tamaño de pantalla
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                toastContainer.className = 'toast-container position-fixed top-0 start-50 translate-middle-x p-3';
+                toastContainer.style.zIndex = '9999';
+            } else {
+                toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            }
+            document.body.appendChild(toastContainer);
+        }
+
+        // Crear un nuevo toast
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${tipo} border-0`;
+        toast.id = toastId;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+
+        // Contenido del toast adaptado para móviles
+        const isMobile = window.innerWidth <= 768;
+        const toastContent = isMobile ?
+            `<div class="d-flex">
+            <div class="toast-body text-center w-100">
+                <div><strong>${titulo}</strong></div>
+                <div class="small">${mensaje}</div>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>` :
+            `<div class="d-flex">
+            <div class="toast-body">
+                <strong>${titulo}</strong>: ${mensaje}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>`;
+
+        toast.innerHTML = toastContent;
+
+        // Agregar el toast al contenedor
+        toastContainer.appendChild(toast);
+
+        // Inicializar y mostrar el toast
+        const bsToast = new bootstrap.Toast(toast, {
+            autohide: true,
+            delay: isMobile ? 4000 : 5000
+        });
+
+        bsToast.show();
+
+        // Eliminar el toast del DOM después de que se oculte
+        toast.addEventListener('hidden.bs.toast', function () {
+            this.remove();
+            if (toastContainer.children.length === 0) {
+                toastContainer.remove();
+            }
+        });
+    }
+
+    // =====================================
+    // 🔄 INICIALIZACIÓN AUTOMÁTICA
+    // =====================================
+
+    // Configurar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('🎯 Configurando sistema de inicio de inventarios...');
+
+        // Configurar botones de iniciar inventario
+        configurarBotonesIniciarInventario();
+
+        // Reconfigurar después de cambios dinámicos en el DOM
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'childList') {
+                    const addedNodes = Array.from(mutation.addedNodes);
+                    const hasIniciarButton = addedNodes.some(node =>
+                        node.nodeType === 1 &&
+                        (node.classList?.contains('iniciar-inventario-btn') ||
+                            node.querySelector?.('.iniciar-inventario-btn'))
+                    );
+
+                    if (hasIniciarButton) {
+                        console.log('🔄 Reconfiguración automática de botones de iniciar inventario');
+                        setTimeout(configurarBotonesIniciarInventario, 100);
+                    }
+                }
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        console.log('✅ Sistema de inicio de inventarios configurado');
+    });
+
+    // Hacer disponible globalmente para debug
+    window.iniciarInventarioConConfirmacion = iniciarInventarioConConfirmacion;
+    window.configurarBotonesIniciarInventario = configurarBotonesIniciarInventario;
 });

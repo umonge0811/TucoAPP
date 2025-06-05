@@ -1,5 +1,5 @@
 ﻿// ========================================
-// NUEVO CONTROLADOR PARA TOMA DE INVENTARIO
+// CONTROLADOR DEPURADO PARA TOMA DE INVENTARIO (WEB)
 // Ubicación: GestionLlantera.Web/Controllers/TomaInventarioController.cs
 // ========================================
 
@@ -13,102 +13,42 @@ using Tuco.Clases.DTOs.Inventario;
 namespace GestionLlantera.Web.Controllers
 {
     /// <summary>
-    /// Controlador específico para la TOMA FÍSICA de inventarios
-    /// Separado del InventarioController para mejor organización
-    /// Maneja todo el proceso de conteo físico en tiempo real
+    /// 🎯 CONTROLADOR ESPECÍFICO PARA LA EJECUCIÓN DE TOMA DE INVENTARIOS
+    /// 
+    /// RESPONSABILIDADES:
+    /// - Mostrar interfaz de ejecución de inventarios
+    /// - Manejar conteos en tiempo real
+    /// - Gestionar progreso de inventarios
+    /// - Búsqueda de productos durante el conteo
+    /// 
+    /// NO MANEJA:
+    /// - Programación de inventarios (eso lo hace InventarioController)
+    /// - CRUD de productos (eso lo hace InventarioController)
+    /// - Gestión de usuarios (eso lo hace InventarioController)
     /// </summary>
     [Authorize] // 🔒 Solo usuarios autenticados
     public class TomaInventarioController : Controller
     {
-        private readonly ITomaInventarioService _tomainventarioService;
+        private readonly ITomaInventarioService _tomaInventarioService;
         private readonly IInventarioService _inventarioService;
         private readonly ILogger<TomaInventarioController> _logger;
 
         public TomaInventarioController(
-            ITomaInventarioService tomainventarioService,
+            ITomaInventarioService tomaInventarioService,
             IInventarioService inventarioService,
             ILogger<TomaInventarioController> logger)
         {
-            _tomainventarioService = tomainventarioService;
+            _tomaInventarioService = tomaInventarioService;
             _inventarioService = inventarioService;
             _logger = logger;
         }
 
         // =====================================
-        // MÉTODOS PRINCIPALES DE TOMA
+        // 🚀 MÉTODO PRINCIPAL: INTERFAZ DE EJECUCIÓN
         // =====================================
 
-        // 🚀 MÉTODO 1: INICIAR INVENTARIO DESDE LA WEB
         /// <summary>
-        /// Inicia un inventario programado (cambia de "Programado" a "En Progreso")
-        /// POST: /TomaInventario/IniciarInventario/5
-        /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> IniciarInventario(int id)
-        {
-            try
-            {
-                // ✅ VERIFICACIÓN DE PERMISOS
-                var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
-                    "Solo usuarios con permiso 'Programar Inventario' pueden iniciar inventarios.");
-                if (validacion != null)
-                {
-                    return Json(new { success = false, message = "No tienes permisos para iniciar inventarios." });
-                }
-
-                _logger.LogInformation("🚀 === INICIANDO INVENTARIO DESDE WEB ===");
-                _logger.LogInformation("👤 Usuario: {Usuario}, Inventario ID: {Id}", User.Identity?.Name, id);
-
-                // ✅ OBTENER TOKEN JWT
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    _logger.LogError("❌ Token JWT no encontrado");
-                    return Json(new
-                    {
-                        success = false,
-                        message = "Sesión expirada. Por favor, inicie sesión nuevamente."
-                    });
-                }
-
-                // ✅ LLAMAR AL SERVICIO PARA INICIAR
-                var resultado = await _tomainventarioService.IniciarInventarioAsync(id, token);
-
-                if (resultado)
-                {
-                    _logger.LogInformation("✅ Inventario {Id} iniciado exitosamente", id);
-                    return Json(new
-                    {
-                        success = true,
-                        message = "Inventario iniciado exitosamente. Los usuarios asignados han sido notificados.",
-                        inventarioId = id,
-                        redirectUrl = Url.Action("Ejecutar", new { id = id })
-                    });
-                }
-                else
-                {
-                    _logger.LogError("❌ Error al iniciar inventario {Id}", id);
-                    return Json(new
-                    {
-                        success = false,
-                        message = "No se pudo iniciar el inventario. Verifique que esté en estado 'Programado'."
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "💥 Error crítico al iniciar inventario {Id}", id);
-                return Json(new
-                {
-                    success = false,
-                    message = $"Error interno: {ex.Message}"
-                });
-            }
-        }
-
-        // 📱 MÉTODO 2: PÁGINA PRINCIPAL DE TOMA DE INVENTARIO
-        /// <summary>
-        /// Muestra la interfaz principal para realizar la toma de inventario
+        /// 📱 Muestra la interfaz principal para realizar la toma de inventario
         /// GET: /TomaInventario/Ejecutar/5
         /// </summary>
         [HttpGet]
@@ -179,12 +119,11 @@ namespace GestionLlantera.Web.Controllers
         }
 
         // =====================================
-        // MÉTODOS AJAX PARA LA INTERFAZ
+        // 🔥 MÉTODOS AJAX PARA LA INTERFAZ
         // =====================================
 
-        // 📋 MÉTODO 3: OBTENER PRODUCTOS DEL INVENTARIO (AJAX)
         /// <summary>
-        /// Obtiene la lista de productos del inventario para mostrar en la interfaz
+        /// 📋 Obtiene la lista de productos del inventario para mostrar en la interfaz
         /// GET: /TomaInventario/ObtenerProductos/5
         /// </summary>
         [HttpGet]
@@ -202,7 +141,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // ✅ LLAMAR AL SERVICIO PARA OBTENER PRODUCTOS
-                var productos = await _tomainventarioService.ObtenerProductosInventarioAsync(id, token);
+                var productos = await _tomaInventarioService.ObtenerProductosInventarioAsync(id, token);
 
                 if (productos == null)
                 {
@@ -226,7 +165,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // ✅ CALCULAR ESTADÍSTICAS
-                var todosLosProductos = await _tomainventarioService.ObtenerProductosInventarioAsync(id, token);
+                var todosLosProductos = await _tomaInventarioService.ObtenerProductosInventarioAsync(id, token);
                 var estadisticas = new
                 {
                     total = todosLosProductos?.Count ?? 0,
@@ -256,9 +195,8 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // 📝 MÉTODO 4: REGISTRAR CONTEO DE PRODUCTO (AJAX)
         /// <summary>
-        /// Registra el conteo físico de un producto
+        /// 📝 Registra el conteo físico de un producto
         /// POST: /TomaInventario/RegistrarConteo
         /// </summary>
         [HttpPost]
@@ -286,14 +224,14 @@ namespace GestionLlantera.Web.Controllers
                 conteo.FechaConteo = DateTime.Now;
 
                 // ✅ LLAMAR AL SERVICIO PARA REGISTRAR
-                var resultado = await _tomainventarioService.RegistrarConteoAsync(conteo, token);
+                var resultado = await _tomaInventarioService.RegistrarConteoAsync(conteo, token);
 
                 if (resultado)
                 {
                     _logger.LogInformation("✅ Conteo registrado exitosamente");
 
                     // ✅ OBTENER PROGRESO ACTUALIZADO
-                    var progreso = await _tomainventarioService.ObtenerProgresoInventarioAsync(conteo.InventarioProgramadoId, token);
+                    var progreso = await _tomaInventarioService.ObtenerProgresoInventarioAsync(conteo.InventarioProgramadoId, token);
 
                     return Json(new
                     {
@@ -316,9 +254,8 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // 📊 MÉTODO 5: OBTENER PROGRESO DEL INVENTARIO (AJAX)
         /// <summary>
-        /// Obtiene el progreso actual del inventario en tiempo real
+        /// 📊 Obtiene el progreso actual del inventario en tiempo real
         /// GET: /TomaInventario/ObtenerProgreso/5
         /// </summary>
         [HttpGet]
@@ -333,7 +270,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // ✅ OBTENER PROGRESO DEL SERVICIO
-                var progreso = await _tomainventarioService.ObtenerProgresoInventarioAsync(id, token);
+                var progreso = await _tomaInventarioService.ObtenerProgresoInventarioAsync(id, token);
 
                 if (progreso != null)
                 {
@@ -355,9 +292,8 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // 🔍 MÉTODO 6: BUSCAR PRODUCTO ESPECÍFICO (AJAX)
         /// <summary>
-        /// Busca un producto específico por ID o nombre para conteo rápido
+        /// 🔍 Busca un producto específico por ID o nombre para conteo rápido
         /// GET: /TomaInventario/BuscarProducto/5?termino=llanta
         /// </summary>
         [HttpGet]
@@ -373,21 +309,8 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                // ✅ OBTENER TODOS LOS PRODUCTOS Y FILTRAR
-                var productos = await _tomainventarioService.ObtenerProductosInventarioAsync(id, token);
-
-                if (productos == null)
-                {
-                    return Json(new { success = false, message = "No se pudieron obtener los productos" });
-                }
-
-                // ✅ BUSCAR POR TÉRMINO
-                var productoEncontrado = productos.FirstOrDefault(p =>
-                    p.ProductoId.ToString() == termino ||
-                    p.NombreProducto.Contains(termino, StringComparison.OrdinalIgnoreCase) ||
-                    (p.MarcaLlanta?.Contains(termino, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                    (p.ModeloLlanta?.Contains(termino, StringComparison.OrdinalIgnoreCase) ?? false)
-                );
+                // ✅ BUSCAR PRODUCTO
+                var productoEncontrado = await _tomaInventarioService.BuscarProductoAsync(id, termino, token);
 
                 if (productoEncontrado != null)
                 {
@@ -419,7 +342,78 @@ namespace GestionLlantera.Web.Controllers
         }
 
         // =====================================
-        // MÉTODOS AUXILIARES PRIVADOS
+        // 🎮 MÉTODOS DE CONTROL DE INVENTARIO
+        // =====================================
+
+        /// <summary>
+        /// 🚀 Inicia un inventario programado desde la interfaz de toma
+        /// POST: /TomaInventario/IniciarInventario/5
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> IniciarInventario(int id)
+        {
+            try
+            {
+                // ✅ VERIFICACIÓN DE PERMISOS
+                var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
+                    "Solo usuarios con permiso 'Programar Inventario' pueden iniciar inventarios.");
+                if (validacion != null)
+                {
+                    return Json(new { success = false, message = "No tienes permisos para iniciar inventarios." });
+                }
+
+                _logger.LogInformation("🚀 === INICIANDO INVENTARIO DESDE TOMA ===");
+                _logger.LogInformation("👤 Usuario: {Usuario}, Inventario ID: {Id}", User.Identity?.Name, id);
+
+                // ✅ OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Sesión expirada. Por favor, inicie sesión nuevamente."
+                    });
+                }
+
+                // ✅ LLAMAR AL SERVICIO PARA INICIAR
+                var resultado = await _tomaInventarioService.IniciarInventarioAsync(id, token);
+
+                if (resultado)
+                {
+                    _logger.LogInformation("✅ Inventario {Id} iniciado exitosamente", id);
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Inventario iniciado exitosamente. Los usuarios asignados han sido notificados.",
+                        inventarioId = id,
+                        redirectUrl = Url.Action("Ejecutar", new { id = id })
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error al iniciar inventario {Id}", id);
+                    return Json(new
+                    {
+                        success = false,
+                        message = "No se pudo iniciar el inventario. Verifique que esté en estado 'Programado'."
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al iniciar inventario {Id}", id);
+                return Json(new
+                {
+                    success = false,
+                    message = $"Error interno: {ex.Message}"
+                });
+            }
+        }
+
+        // =====================================
+        // 🛠️ MÉTODOS AUXILIARES PRIVADOS
         // =====================================
 
         /// <summary>
