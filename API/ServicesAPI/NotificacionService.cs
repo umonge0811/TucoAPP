@@ -1,10 +1,10 @@
 ﻿using API.Data;
-using API.Services.Interfaces;
+using API.ServicesAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Tuco.Clases.DTOs;
 using Tuco.Clases.Models;
 
-namespace API.Services
+namespace API.ServicesAPI
 {
     public class NotificacionService : INotificacionService
     {

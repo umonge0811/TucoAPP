@@ -1,0 +1,448 @@
+﻿@model Tuco.Clases.DTOs.Inventario.InventarioProgramadoDTO
+@{
+    ViewData["Title"] = "Toma de Inventario - " + Model.Titulo;
+    Layout = "_AdminLayout";
+}
+
+<!-- CSS específico para toma de inventario -->
+<link rel="stylesheet" href="~/css/views/inventario/tomainventario.css">
+<link rel="stylesheet" href="~/css/views/toma-inventario/mobile.css">
+
+<div class="container-fluid toma-inventario-container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                    <i class="bi bi-house-door me-1"></i>Dashboard
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("ProgramarInventario", "Inventario")" class="text-decoration-none">
+                    <i class="bi bi-calendar-check me-1"></i>Inventarios
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="bi bi-tablet me-1"></i>Toma de Inventario
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Header de la toma -->
+    <div class="toma-header mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-6 mb-2">
+                    <i class="bi bi-tablet text-primary me-2"></i>
+                    @Model.Titulo
+                </h1>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-calendar3 me-1"></i>
+                    Inventario programado desde @Model.FechaInicio.ToString("dd/MM/yyyy")
+                    hasta @Model.FechaFin.ToString("dd/MM/yyyy")
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="estado-inventario">
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        <i class="bi bi-play-circle me-1"></i>
+                        @Model.Estado
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de progreso -->
+    <div class="progress-panel mb-4">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Progreso del Inventario
+                    </h3>
+                    <button class="btn btn-outline-primary btn-sm" id="btnActualizarProgreso">
+                        <i class="bi bi-arrow-clockwise me-1"></i>
+                        Actualizar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <!-- Barra de progreso principal -->
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="fw-bold">Progreso General</span>
+                            <span class="text-primary fw-bold" id="porcentajeProgreso">0%</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                 role="progressbar"
+                                 style="width: 0%;"
+                                 id="barraProgreso">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estadísticas detalladas -->
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-primary">
+                                <i class="bi bi-box-seam"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="totalProductos">-</div>
+                                <div class="stat-label">Total Productos</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-success">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="productosContados">-</div>
+                                <div class="stat-label">Contados</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-warning">
+                                <i class="bi bi-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="productosPendientes">-</div>
+                                <div class="stat-label">Pendientes</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-danger">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number" id="discrepancias">-</div>
+                                <div class="stat-label">Discrepancias</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel de búsqueda y filtros -->
+    <div class="search-panel mb-4">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3 class="mb-0">
+                    <i class="bi bi-search me-2"></i>
+                    Buscar y Filtrar Productos
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <!-- Búsqueda rápida -->
+                    <div class="col-md-6">
+                        <label for="busquedaRapida" class="form-label">
+                            <i class="bi bi-search me-1"></i>
+                            Búsqueda Rápida
+                        </label>
+                        <div class="input-group">
+                            <input type="text"
+                                   class="form-control"
+                                   id="busquedaRapida"
+                                   placeholder="ID, nombre, marca, modelo...">
+                            <button class="btn btn-primary" type="button" id="btnBuscar">
+                                <i class="bi bi-search"></i>
+                            </button>
+                            <button class="btn btn-outline-secondary" type="button" id="btnLimpiarBusqueda">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtro por estado -->
+                    <div class="col-md-3">
+                        <label for="filtroEstado" class="form-label">
+                            <i class="bi bi-funnel me-1"></i>
+                            Estado
+                        </label>
+                        <select class="form-select" id="filtroEstado">
+                            <option value="">Todos</option>
+                            <option value="pendiente">⏳ Pendientes</option>
+                            <option value="contado">✅ Contados</option>
+                            <option value="discrepancia">⚠️ Con Discrepancia</option>
+                        </select>
+                    </div>
+
+                    <!-- Filtro por tipo -->
+                    <div class="col-md-3">
+                        <label for="filtroTipo" class="form-label">
+                            <i class="bi bi-tags me-1"></i>
+                            Tipo
+                        </label>
+                        <select class="form-select" id="filtroTipo">
+                            <option value="">Todos</option>
+                            <option value="llanta">🛞 Llantas</option>
+                            <option value="accesorio">🔧 Accesorios</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Botones de acción rápida -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button class="btn btn-outline-primary btn-sm" id="btnMostrarTodos">
+                                <i class="bi bi-list-ul me-1"></i>
+                                Mostrar Todos
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" id="btnSoloPendientes">
+                                <i class="bi bi-clock me-1"></i>
+                                Solo Pendientes
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" id="btnSoloDiscrepancias">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Solo Discrepancias
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de productos -->
+    <div class="productos-panel">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-list-check me-2"></i>
+                        Productos para Contar
+                        <span class="badge bg-primary ms-2" id="contadorProductosMostrados">0</span>
+                    </h3>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" id="btnVistaTarjetas">
+                            <i class="bi bi-grid me-1"></i>
+                            Tarjetas
+                        </button>
+                        <button class="btn btn-primary btn-sm" id="btnVistaLista">
+                            <i class="bi bi-list me-1"></i>
+                            Lista
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Loading state -->
+                <div class="text-center py-5" id="loadingProductos">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando productos...</span>
+                    </div>
+                    <p class="text-muted">Cargando productos del inventario...</p>
+                </div>
+
+                <!-- Vista de lista (por defecto) -->
+                <div class="productos-lista" id="productosLista" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Imagen</th>
+                                    <th>Producto</th>
+                                    <th>Sistema</th>
+                                    <th>Físico</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaProductosBody">
+                                <!-- Los productos se cargarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Vista de tarjetas (móvil) -->
+                <div class="productos-tarjetas" id="productosTarjetas" style="display: none;">
+                    <div class="row g-3" id="contenedorTarjetas">
+                        <!-- Las tarjetas se cargarán aquí dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Estado vacío -->
+                <div class="text-center py-5" id="estadoVacio" style="display: none;">
+                    <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted mb-2">No hay productos para mostrar</h4>
+                    <p class="text-muted">
+                        No se encontraron productos que coincidan con los filtros aplicados.
+                    </p>
+                    <button class="btn btn-outline-primary" id="btnLimpiarFiltros">
+                        <i class="bi bi-funnel me-1"></i>
+                        Limpiar Filtros
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para registrar conteo -->
+<div class="modal fade" id="conteoModal" tabindex="-1" aria-labelledby="conteoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="conteoModalLabel">
+                    <i class="bi bi-123 me-2"></i>
+                    Registrar Conteo Físico
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Información del producto -->
+                <div class="producto-info mb-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="producto-imagen">
+                                <img id="imagenProductoConteo"
+                                     src=""
+                                     alt="Producto"
+                                     class="img-fluid rounded"
+                                     style="max-height: 120px; object-fit: cover;">
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <h4 id="nombreProductoConteo" class="mb-2">Producto</h4>
+                            <p class="text-muted mb-1" id="descripcionProductoConteo">Descripción</p>
+                            <div class="badges mb-2">
+                                <span class="badge bg-secondary" id="idProductoConteo">ID: -</span>
+                                <span class="badge bg-info" id="tipoProductoConteo">Tipo</span>
+                            </div>
+                            <div class="medidas-llanta" id="medidasLlantaConteo" style="display: none;">
+                                <small class="text-muted">
+                                    <i class="bi bi-car-front me-1"></i>
+                                    <span id="especificacionesLlanta">-</span>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de conteo -->
+                <form id="formConteo">
+                    <input type="hidden" id="inventarioIdConteo" value="@Model.InventarioProgramadoId">
+                    <input type="hidden" id="productoIdConteo" value="">
+
+                    <div class="row g-3">
+                        <!-- Cantidad en sistema -->
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-pc-display me-1"></i>
+                                Cantidad en Sistema
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-database"></i>
+                                </span>
+                                <input type="number"
+                                       class="form-control"
+                                       id="cantidadSistemaConteo"
+                                       readonly>
+                                <span class="input-group-text">unidades</span>
+                            </div>
+                        </div>
+
+                        <!-- Cantidad física -->
+                        <div class="col-md-6">
+                            <label for="cantidadFisicaConteo" class="form-label fw-bold">
+                                <i class="bi bi-person-check me-1"></i>
+                                Cantidad Física Contada <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white">
+                                    <i class="bi bi-123"></i>
+                                </span>
+                                <input type="number"
+                                       class="form-control form-control-lg"
+                                       id="cantidadFisicaConteo"
+                                       min="0"
+                                       required
+                                       placeholder="0">
+                                <span class="input-group-text">unidades</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vista previa de diferencia -->
+                    <div class="alert mt-3" id="alertaDiferencia" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <div>
+                                <strong>Diferencia detectada:</strong>
+                                <span id="textoDiferencia">0 unidades</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="mb-3">
+                        <label for="observacionesConteo" class="form-label">
+                            <i class="bi bi-chat-text me-1"></i>
+                            Observaciones
+                        </label>
+                        <textarea class="form-control"
+                                  id="observacionesConteo"
+                                  rows="3"
+                                  maxlength="500"
+                                  placeholder="Anote cualquier observación sobre el conteo (opcional)..."></textarea>
+                        <div class="form-text">Máximo 500 caracteres</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-1"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGuardarConteo">
+                    <span class="normal-state">
+                        <i class="bi bi-check-lg me-2"></i>
+                        Registrar Conteo
+                    </span>
+                    <span class="loading-state" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Guardando...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts específicos -->
+@section Scripts {
+    <script>
+        // Variables globales para la toma de inventario
+        window.inventarioConfig = {
+            inventarioId: @Model.InventarioProgramadoId,
+            usuarioId: @ViewBag.UsuarioId,
+            permisos: {
+                puedeContar: @(ViewBag.PuedeContar.ToString().ToLower()),
+                puedeAjustar: @(ViewBag.PuedeAjustar.ToString().ToLower()),
+                puedeValidar: @(ViewBag.PuedeValidar.ToString().ToLower()),
+                esAdmin: @(ViewBag.EsAdmin.ToString().ToLower())
+            }
+        };
+    </script>
+    <script src="~/js/views/toma-inventario/ejecutar.js"></script>
+}

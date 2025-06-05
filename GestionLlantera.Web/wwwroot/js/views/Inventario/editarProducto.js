@@ -155,9 +155,195 @@
     }
 
     // ========================================
-    // GESTIÓN DE ELIMINACIÓN DE IMÁGENES ACTUALES
+    // ✅ GESTIÓN DE ELIMINACIÓN DE IMÁGENES ACTUALES - CORREGIDA
     // ========================================
 
+    /**
+     * ✅ NUEVA FUNCIÓN: Modal de confirmación para eliminar imagen
+     * @param {string} imagenId - ID de la imagen
+     * @param {Element} boton - Botón que disparó la eliminación
+     */
+    function mostrarModalConfirmacionEliminacionImagen(imagenId, boton) {
+        console.log('🎭 === CREANDO MODAL DE CONFIRMACIÓN PARA IMAGEN ===');
+
+        // Obtener información de la imagen
+        const contenedorImagen = boton.closest('.col-md-3');
+        const imagen = contenedorImagen.querySelector('img');
+        const urlImagen = imagen ? imagen.getAttribute('src') : '';
+        const nombreImagen = urlImagen ? urlImagen.split('/').pop() : `Imagen ${imagenId}`;
+
+        const modalHtml = `
+        <div class="modal fade" id="modalEliminarImagen" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Confirmar Eliminación de Imagen
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-5">
+                                <div class="text-center mb-3">
+                                    <img src="${urlImagen}" 
+                                         class="img-fluid rounded border" 
+                                         style="max-height: 150px; object-fit: cover;"
+                                         alt="Imagen a eliminar"
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                                    <div class="text-muted" style="display: none;">
+                                        <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                        <p>Vista previa no disponible</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <h6 class="mb-3">¿Está seguro de eliminar esta imagen?</h6>
+                                <div class="alert alert-warning">
+                                    <strong>Imagen:</strong> ${nombreImagen}<br>
+                                    <strong>ID:</strong> ${imagenId}
+                                </div>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    La imagen se eliminará cuando <strong>guarde los cambios</strong> del producto.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-warning" id="btnConfirmarEliminacionImagen">
+                            <span class="normal-state">
+                                <i class="bi bi-trash me-2"></i>Marcar para Eliminar
+                            </span>
+                            <span class="loading-state" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                Procesando...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+
+        // Remover modal anterior si existe
+        const modalAnterior = document.getElementById('modalEliminarImagen');
+        if (modalAnterior) {
+            modalAnterior.remove();
+        }
+
+        // Agregar nuevo modal al DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Crear y mostrar el modal
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminarImagen'));
+        modal.show();
+
+        // Evento para confirmar eliminación
+        const btnConfirmar = document.getElementById('btnConfirmarEliminacionImagen');
+        btnConfirmar.addEventListener('click', function () {
+            ejecutarMarcadoEliminacionImagen(imagenId, boton, modal);
+        });
+
+        console.log('✅ Modal de confirmación creado y mostrado');
+    }
+
+    /**
+     * ✅ NUEVA FUNCIÓN: Ejecuta el marcado de eliminación
+     * @param {string} imagenId - ID de la imagen
+     * @param {Element} boton - Botón original
+     * @param {Object} modal - Instancia del modal
+     */
+    function ejecutarMarcadoEliminacionImagen(imagenId, boton, modal) {
+        console.log('⚡ === EJECUTANDO MARCADO DE ELIMINACIÓN ===');
+
+        const btnConfirmar = document.getElementById('btnConfirmarEliminacionImagen');
+        const normalState = btnConfirmar.querySelector('.normal-state');
+        const loadingState = btnConfirmar.querySelector('.loading-state');
+
+        // Mostrar estado de carga
+        btnConfirmar.disabled = true;
+        normalState.style.display = 'none';
+        loadingState.style.display = 'inline-flex';
+
+        // Simular pequeño delay para mejor UX
+        setTimeout(() => {
+            try {
+                // Asegurar que es un número
+                const imagenIdNumero = parseInt(imagenId);
+
+                if (isNaN(imagenIdNumero)) {
+                    console.error('❌ ID de imagen no es un número válido:', imagenId);
+                    mostrarNotificacion('error', 'Error: ID de imagen inválido');
+                    return;
+                }
+
+                console.log('🗑️ ID convertido a número:', imagenIdNumero);
+
+                // Agregar a lista de imágenes a eliminar
+                if (!imagenesAEliminar.includes(imagenIdNumero)) {
+                    imagenesAEliminar.push(imagenIdNumero);
+                    console.log('✅ Imagen agregada a lista de eliminación');
+                } else {
+                    console.log('⚠️ Imagen ya estaba en lista de eliminación');
+                }
+
+                console.log('🗑️ Lista actual de imágenes a eliminar:', imagenesAEliminar);
+
+                // Remover visualmente
+                const contenedorImagen = boton.closest('.col-md-3');
+                if (contenedorImagen) {
+                    contenedorImagen.style.opacity = '0.5';
+                    contenedorImagen.style.pointerEvents = 'none';
+
+                    // Agregar indicador visual mejorado
+                    const overlay = document.createElement('div');
+                    overlay.className = 'position-absolute top-0 start-0 w-100 h-100 bg-warning bg-opacity-75 d-flex align-items-center justify-content-center';
+                    overlay.innerHTML = `
+                        <div class="text-center text-dark">
+                            <i class="bi bi-clock-history" style="font-size: 2rem;"></i>
+                            <br>
+                            <small class="fw-bold">Pendiente de eliminar</small>
+                            <br>
+                            <small>Se eliminará al guardar</small>
+                        </div>
+                    `;
+                    overlay.style.borderRadius = '0.375rem';
+
+                    contenedorImagen.style.position = 'relative';
+                    contenedorImagen.appendChild(overlay);
+
+                    console.log('✅ Indicador visual agregado');
+                } else {
+                    console.error('❌ No se encontró el contenedor de la imagen');
+                }
+
+                // Cerrar modal
+                modal.hide();
+
+                // Mostrar notificación de éxito
+                mostrarNotificacion('warning', 'Imagen marcada para eliminar. Se eliminará cuando guarde los cambios del producto.');
+
+                console.log(`✅ Imagen ${imagenIdNumero} marcada para eliminación exitosamente`);
+
+            } catch (error) {
+                console.error('❌ Error al marcar imagen para eliminación:', error);
+
+                // Restaurar botón
+                btnConfirmar.disabled = false;
+                normalState.style.display = 'inline-flex';
+                loadingState.style.display = 'none';
+
+                mostrarNotificacion('error', 'Error al marcar imagen para eliminación');
+            }
+        }, 500);
+    }
+
+    // ✅ EVENTO PRINCIPAL PARA ELIMINAR IMÁGENES (CORREGIDO)
     document.addEventListener('click', function (e) {
         if (e.target.closest('.eliminar-imagen-btn')) {
             e.preventDefault();
@@ -166,60 +352,10 @@
 
             console.log(`🗑️ Solicitando eliminación de imagen ID: ${imagenId}`);
 
-            if (confirm('¿Está seguro de que desea eliminar esta imagen?')) {
-                eliminarImagenActual(imagenId, boton);
-            }
+            // ✅ MOSTRAR MODAL EN LUGAR DE CONFIRM()
+            mostrarModalConfirmacionEliminacionImagen(imagenId, boton);
         }
     });
-
-    function eliminarImagenActual(imagenId, boton) {
-        console.log('🗑️ === ELIMINANDO IMAGEN ===');
-        console.log('🗑️ ID de imagen:', imagenId);
-        console.log('🗑️ Tipo de ID:', typeof imagenId);
-
-        // Asegurar que es un número
-        const imagenIdNumero = parseInt(imagenId);
-
-        if (isNaN(imagenIdNumero)) {
-            console.error('❌ ID de imagen no es un número válido:', imagenId);
-            mostrarNotificacion('error', 'Error: ID de imagen inválido');
-            return;
-        }
-
-        console.log('🗑️ ID convertido a número:', imagenIdNumero);
-
-        // Agregar a lista de imágenes a eliminar
-        if (!imagenesAEliminar.includes(imagenIdNumero)) {
-            imagenesAEliminar.push(imagenIdNumero);
-            console.log('✅ Imagen agregada a lista de eliminación');
-        } else {
-            console.log('⚠️ Imagen ya estaba en lista de eliminación');
-        }
-
-        console.log('🗑️ Lista actual de imágenes a eliminar:', imagenesAEliminar);
-
-        // Remover visualmente
-        const contenedorImagen = boton.closest('.col-md-3');
-        if (contenedorImagen) {
-            contenedorImagen.style.opacity = '0.5';
-            contenedorImagen.style.pointerEvents = 'none';
-
-            // Agregar indicador visual
-            const overlay = document.createElement('div');
-            overlay.className = 'position-absolute top-0 start-0 w-100 h-100 bg-danger bg-opacity-75 d-flex align-items-center justify-content-center';
-            overlay.innerHTML = '<div class="text-center text-white"><i class="bi bi-trash" style="font-size: 2rem;"></i><br><small>Marcado para eliminar</small></div>';
-            overlay.style.borderRadius = '0.375rem';
-
-            contenedorImagen.style.position = 'relative';
-            contenedorImagen.appendChild(overlay);
-
-            console.log('✅ Indicador visual agregado');
-        } else {
-            console.error('❌ No se encontró el contenedor de la imagen');
-        }
-
-        console.log(`✅ Imagen ${imagenIdNumero} marcada para eliminación`);
-    }
 
     // ========================================
     // GESTIÓN DE NUEVAS IMÁGENES
@@ -335,19 +471,15 @@
     // FUNCIONES AUXILIARES
     // ========================================
 
-    // ✅ FUNCIÓN CORREGIDA: Preparar datos antes del envío
     function prepararDatosParaEnvio() {
         console.log('🔄 === PREPARANDO DATOS DE PRECIO ===');
 
-        // Verificar modo de precio actual
         const esAutomatico = modoAutomaticoRadio && modoAutomaticoRadio.checked;
-
         console.log(`💰 Modo de precio: ${esAutomatico ? 'AUTOMÁTICO' : 'MANUAL'}`);
 
         if (esAutomatico) {
             console.log('🧮 Configurando para cálculo automático...');
 
-            // Verificar que tenemos los valores
             const costoValue = inputCosto ? parseFloat(inputCosto.value) || 0 : 0;
             const utilidadValue = inputUtilidad ? parseFloat(inputUtilidad.value) || 0 : 0;
 
@@ -366,8 +498,6 @@
                 return false;
             }
 
-            // IMPORTANTE: En modo automático, NO limpiar Precio
-            // La API necesita saber que es automático por la presencia de Costo y Utilidad
             console.log('✅ Modo automático configurado correctamente');
 
         } else {
@@ -382,7 +512,6 @@
                 return false;
             }
 
-            // En modo manual: LIMPIAR costo y utilidad para que la API sepa que es manual
             if (inputCosto) {
                 inputCosto.value = '';
                 console.log('🔄 Costo limpiado para precio manual');
@@ -410,7 +539,6 @@
             }
         });
 
-        // Validar precio según el modo
         if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
             if (!inputCosto || !inputCosto.value || parseFloat(inputCosto.value) <= 0) {
                 if (inputCosto) inputCosto.classList.add('is-invalid');
@@ -453,14 +581,12 @@
                 return false;
             }
 
-            // ✅ PREPARAR DATOS ANTES DE CREAR FORMDATA
             if (!prepararDatosParaEnvio()) {
                 console.log('❌ Error en preparación de datos de precio');
                 mostrarNotificacion('error', 'Por favor corrija los errores en la configuración de precio');
                 return false;
             }
 
-            // Deshabilitar botón y mostrar loading
             submitButton.disabled = true;
             const normalState = submitButton.querySelector('.normal-state');
             const loadingState = submitButton.querySelector('.loading-state');
@@ -468,22 +594,18 @@
             if (normalState) normalState.style.display = 'none';
             if (loadingState) loadingState.style.display = 'inline-flex';
 
-            // Crear FormData
             const formData = new FormData(form);
 
-            // ✅ MEJORAR: Agregar imágenes a eliminar al FormData
             console.log('📤 === PREPARANDO IMÁGENES PARA ELIMINACIÓN ===');
             console.log('🗑️ Total imágenes a eliminar:', imagenesAEliminar.length);
             console.log('🗑️ Lista completa:', imagenesAEliminar);
 
             if (imagenesAEliminar.length > 0) {
-                // Método 1: Array indexado (ASP.NET Core style)
                 imagenesAEliminar.forEach((id, index) => {
                     formData.append(`imagenesAEliminar[${index}]`, id.toString());
                     console.log(`📎 Agregando eliminación [${index}]: ${id}`);
                 });
 
-                // Método 2: También como lista simple (backup)
                 imagenesAEliminar.forEach(id => {
                     formData.append('imagenesAEliminar', id.toString());
                 });
@@ -493,22 +615,10 @@
                 console.log('ℹ️ No hay imágenes para eliminar');
             }
 
-            // ✅ DEBUGGING: Mostrar todo el FormData
-            console.log('📋 === CONTENIDO COMPLETO DEL FORMDATA ===');
-            for (let [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    console.log(`${key}: File - ${value.name} (${value.size} bytes)`);
-                } else {
-                    console.log(`${key}: ${value}`);
-                }
-            }
-            console.log('📋 === FIN CONTENIDO FORMDATA ===');
-
             console.log('📤 Enviando datos del formulario...');
             console.log(`🖼️ Imágenes a eliminar: ${imagenesAEliminar.length}`);
             console.log(`📷 Nuevas imágenes: ${nuevasImagenes.length}`);
 
-            // Enviar formulario
             fetch(form.action, {
                 method: 'POST',
                 body: formData
@@ -530,7 +640,6 @@
                 .catch(error => {
                     console.error('❌ Error:', error);
 
-                    // Rehabilitar botón
                     submitButton.disabled = false;
                     if (normalState) normalState.style.display = 'inline-flex';
                     if (loadingState) loadingState.style.display = 'none';

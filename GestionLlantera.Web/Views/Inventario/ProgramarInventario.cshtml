@@ -8,47 +8,67 @@
 
 <div class="container-fluid">
     <!-- Breadcrumb mejorado -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
-                    <i class="bi bi-house-door me-1"></i>Dashboard
-                </a>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="@Url.Action("Index", "Inventario")" class="text-decoration-none">
-                    <i class="bi bi-box-seam me-1"></i>Inventario
-                </a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">
-                <i class="bi bi-card-checklist me-1"></i>Programar Inventario
-            </li>
-        </ol>
-    </nav>
-    <div class="page-header d-flex justify-content-between align-items-center mb-4">
-        <h2>
-            <i class="bi bi-calendar-check me-2"></i>
-            Programar Inventario
-        </h2>
-        <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Volver al Inventario
-        </a>
-    </div>
+            <!-- Breadcrumb mejorado para móviles -->
+            <nav aria-label="breadcrumb" class="mb-3 d-none d-md-block">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                            <i class="bi bi-house-door me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Inventario")" class="text-decoration-none">
+                            <i class="bi bi-box-seam me-1"></i>Inventario
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <i class="bi bi-card-checklist me-1"></i>Programar Inventario
+                    </li>
+                </ol>
+            </nav>
 
+            <!-- Breadcrumb simplificado para móviles -->
+            <nav aria-label="breadcrumb" class="mb-3 d-block d-md-none">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Inventario")" class="text-decoration-none">
+                            <i class="bi bi-arrow-left me-1"></i>Inventario
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Programar
+                    </li>
+                </ol>
+            </nav>        <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-2">
+            <h2 class="mb-2 mb-md-0">
+                <i class="bi bi-calendar-check me-2"></i>
+                <span class="d-none d-sm-inline">Programar Inventario</span>
+                <span class="d-inline d-sm-none">Inventarios</span>
+            </h2>
+            <a asp-controller="Inventario" asp-action="Index" class="btn btn-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1 me-md-2"></i>
+                <span class="d-none d-sm-inline">Volver al Inventario</span>
+                <span class="d-inline d-sm-none">Volver</span>
+            </a>
+        </div>
     <!-- Tabs de navegación -->
-    <ul class="nav nav-tabs mb-4" id="inventarioTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="programados-tab" data-bs-toggle="tab" data-bs-target="#programados" type="button" role="tab" aria-controls="programados" aria-selected="true">
-                <i class="bi bi-list-check me-2"></i>Inventarios Programados
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="nuevo-tab" data-bs-toggle="tab" data-bs-target="#nuevo" type="button" role="tab" aria-controls="nuevo" aria-selected="false">
-                <i class="bi bi-plus-circle me-2"></i>Nuevo Inventario
-            </button>
-        </li>
-    </ul>
-
+<!-- Tabs de navegación responsivos -->
+<ul class="nav nav-tabs mb-4" id="inventarioTabs" role="tablist">
+    <li class="nav-item flex-fill" role="presentation">
+        <button class="nav-link active w-100 text-center" id="programados-tab" data-bs-toggle="tab" data-bs-target="#programados" type="button" role="tab" aria-controls="programados" aria-selected="true">
+            <i class="bi bi-list-check me-1 me-md-2"></i>
+            <span class="d-none d-sm-inline">Inventarios Programados</span>
+            <span class="d-inline d-sm-none">Programados</span>
+        </button>
+    </li>
+    <li class="nav-item flex-fill" role="presentation">
+        <button class="nav-link w-100 text-center" id="nuevo-tab" data-bs-toggle="tab" data-bs-target="#nuevo" type="button" role="tab" aria-controls="nuevo" aria-selected="false">
+            <i class="bi bi-plus-circle me-1 me-md-2"></i>
+            <span class="d-none d-sm-inline">Nuevo Inventario</span>
+            <span class="d-inline d-sm-none">Nuevo</span>
+        </button>
+    </li>
+</ul>
     <!-- Contenido de los tabs -->
     <div class="tab-content" id="inventarioTabsContent">
         <!-- Tab de Inventarios Programados -->
@@ -70,36 +90,176 @@
                     }
                     else
                     {
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Título</th>
-                                        <th>Tipo</th>
-                                        <th>Fechas</th>
-                                        <th>Estado</th>
-                                        <th>Progreso</th>
-                                        <th>Usuarios</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var inventario in Model.InventariosProgramados)
-                                    {
+                            <!-- VISTA DE ESCRITORIO - Tabla tradicional -->
+                            <div class="table-responsive tabla-inventarios-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
                                         <tr>
-                                            <td>
-                                                <strong>@inventario.Titulo</strong>
-                                                @if (!string.IsNullOrEmpty(inventario.Descripcion))
-                                                {
-                                                    <div class="small text-muted">@(inventario.Descripcion.Length > 50 ? inventario.Descripcion.Substring(0, 50) + "..." : inventario.Descripcion)</div>
-                                                }
-                                            </td>
-                                            <td>@inventario.TipoInventario</td>
-                                            <td>
-                                                <div>Inicio: @inventario.FechaInicio.ToString("dd/MM/yyyy")</div>
-                                                <div>Fin: @inventario.FechaFin.ToString("dd/MM/yyyy")</div>
-                                            </td>
-                                            <td>
+                                            <th>Título</th>
+                                            <th>Tipo</th>
+                                            <th>Fechas</th>
+                                            <th>Estado</th>
+                                            <th>Progreso</th>
+                                            <th>Usuarios</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var inventario in Model.InventariosProgramados)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <strong>@inventario.Titulo</strong>
+                                                    @if (!string.IsNullOrEmpty(inventario.Descripcion))
+                                                    {
+                                                        <div class="small text-muted">@(inventario.Descripcion.Length > 50 ? inventario.Descripcion.Substring(0, 50) + "..." : inventario.Descripcion)</div>
+                                                    }
+                                                </td>
+                                                <td>@inventario.TipoInventario</td>
+                                                <td>
+                                                    <div>Inicio: @inventario.FechaInicio.ToString("dd/MM/yyyy")</div>
+                                                    <div>Fin: @inventario.FechaFin.ToString("dd/MM/yyyy")</div>
+                                                </td>
+                                                <td>
+                                                    @switch (inventario.Estado)
+                                                    {
+                                                        case "Programado":
+                                                            <span class="badge bg-primary">Programado</span>
+                                                            break;
+                                                        case "En Progreso":
+                                                            <span class="badge bg-warning text-dark">En Progreso</span>
+                                                            break;
+                                                        case "Completado":
+                                                            <span class="badge bg-success">Completado</span>
+                                                            break;
+                                                        case "Cancelado":
+                                                            <span class="badge bg-danger">Cancelado</span>
+                                                            break;
+                                                        default:
+                                                            <span class="badge bg-secondary">@inventario.Estado</span>
+                                                            break;
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (inventario.Estado == "En Progreso" || inventario.Estado == "Completado")
+                                                    {
+                                                        <div class="progress">
+                                                            <div class="progress-bar @(inventario.Estado == "Completado" ? "bg-success" : "")"
+                                                                 role="progressbar"
+                                                                 style="width: @inventario.PorcentajeProgreso%;"
+                                                                 aria-valuenow="@inventario.PorcentajeProgreso"
+                                                                 aria-valuemin="0"
+                                                                 aria-valuemax="100">
+                                                                @inventario.PorcentajeProgreso%
+                                                            </div>
+                                                        </div>
+                                                        <div class="small mt-1">
+                                                            <span class="text-nowrap">@inventario.ProductosContados de @inventario.TotalProductos productos</span>
+                                                            @if (inventario.Discrepancias > 0)
+                                                            {
+                                                                <span class="text-danger ms-2">
+                                                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                    @inventario.Discrepancias discrepancias
+                                                                </span>
+                                                            }
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">No iniciado</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div class="avatar-group">
+                                                        @foreach (var asignacion in inventario.AsignacionesUsuarios.Take(3))
+                                                        {
+                                                            <div class="avatar" data-bs-toggle="tooltip" title="@asignacion.NombreUsuario">
+                                                                <span class="avatar-initial rounded-circle bg-primary">
+                                                                    @(asignacion.NombreUsuario.Substring(0, 1).ToUpper())
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                        @if (inventario.AsignacionesUsuarios.Count > 3)
+                                                        {
+                                                            <div class="avatar" data-bs-toggle="tooltip" title="@(inventario.AsignacionesUsuarios.Count - 3) más">
+                                                                <span class="avatar-initial rounded-circle bg-secondary">
+                                                                    +@(inventario.AsignacionesUsuarios.Count - 3)
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <a href="@Url.Action("DetalleInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
+                                                           class="btn btn-sm btn-info"
+                                                           data-bs-toggle="tooltip"
+                                                           title="Ver detalles">
+                                                            <i class="bi bi-eye"></i>
+                                                        </a>
+                                                        @if (inventario.Estado == "Programado")
+                                                        {
+                                                            <a href="@Url.Action("EditarInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
+                                                               class="btn btn-sm btn-primary"
+                                                               data-bs-toggle="tooltip"
+                                                               title="Editar">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </a>
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-success iniciar-inventario-btn"
+                                                                    data-id="@inventario.InventarioProgramadoId"
+                                                                    data-bs-toggle="tooltip"
+                                                                    title="Iniciar inventario">
+                                                                <i class="bi bi-play-fill"></i>
+                                                            </button>
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-danger cancelar-inventario-btn"
+                                                                    data-id="@inventario.InventarioProgramadoId"
+                                                                    data-bs-toggle="tooltip"
+                                                                    title="Cancelar inventario">
+                                                                <i class="bi bi-x-lg"></i>
+                                                            </button>
+                                                        }
+                                                        @if (inventario.Estado == "En Progreso")
+                                                        {
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-success completar-inventario-btn"
+                                                                    data-id="@inventario.InventarioProgramadoId"
+                                                                    data-bs-toggle="tooltip"
+                                                                    title="Completar inventario">
+                                                                <i class="bi bi-check-lg"></i>
+                                                            </button>
+                                                        }
+                                                        @if (inventario.Estado == "Completado")
+                                                        {
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-primary exportar-inventario-btn"
+                                                                    data-id="@inventario.InventarioProgramadoId"
+                                                                    data-bs-toggle="tooltip"
+                                                                    title="Exportar resultados">
+                                                                <i class="bi bi-download"></i>
+                                                            </button>
+                                                        }
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- VISTA MÓVIL - Tarjetas responsivas -->
+                            <div class="inventarios-mobile-container">
+                                @foreach (var inventario in Model.InventariosProgramados)
+                                {
+                                    <div class="inventario-card-mobile">
+                                        <!-- Header de la tarjeta -->
+                                        <div class="inventario-card-header">
+                                            <div>
+                                                <h5 class="inventario-titulo-mobile">@inventario.Titulo</h5>
+                                                <div class="inventario-tipo-mobile">@inventario.TipoInventario</div>
+                                            </div>
+                                            <div>
                                                 @switch (inventario.Estado)
                                                 {
                                                     case "Programado":
@@ -118,115 +278,143 @@
                                                         <span class="badge bg-secondary">@inventario.Estado</span>
                                                         break;
                                                 }
-                                            </td>
-                                            <td>
-                                                @if (inventario.Estado == "En Progreso" || inventario.Estado == "Completado")
-                                                {
-                                                    <div class="progress">
-                                                        <div class="progress-bar @(inventario.Estado == "Completado" ? "bg-success" : "")"
-                                                             role="progressbar"
-                                                             style="width: @inventario.PorcentajeProgreso%;"
-                                                             aria-valuenow="@inventario.PorcentajeProgreso"
-                                                             aria-valuemin="0"
-                                                             aria-valuemax="100">
-                                                            @inventario.PorcentajeProgreso%
-                                                        </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Descripción si existe -->
+                                        @if (!string.IsNullOrEmpty(inventario.Descripcion))
+                                        {
+                                            <div class="inventario-info-row">
+                                                <span class="inventario-info-label">Descripción:</span>
+                                                <span class="inventario-info-value">@(inventario.Descripcion.Length > 30 ? inventario.Descripcion.Substring(0, 30) + "..." : inventario.Descripcion)</span>
+                                            </div>
+                                        }
+
+                                        <!-- Fechas -->
+                                        <div class="inventario-fechas-mobile">
+                                            <small><strong>Inicio:</strong> @inventario.FechaInicio.ToString("dd/MM/yyyy")</small>
+                                            <small><strong>Fin:</strong> @inventario.FechaFin.ToString("dd/MM/yyyy")</small>
+                                        </div>
+
+                                        <!-- Progreso -->
+                                        @if (inventario.Estado == "En Progreso" || inventario.Estado == "Completado")
+                                        {
+                                            <div class="inventario-progreso-mobile">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="small font-weight-medium">Progreso</span>
+                                                    <span class="small text-muted">@inventario.PorcentajeProgreso%</span>
+                                                </div>
+                                                <div class="progress mb-2">
+                                                    <div class="progress-bar @(inventario.Estado == "Completado" ? "bg-success" : "")"
+                                                         role="progressbar"
+                                                         style="width: @inventario.PorcentajeProgreso%;"
+                                                         aria-valuenow="@inventario.PorcentajeProgreso"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100">
                                                     </div>
-                                                    <div class="small mt-1">
-                                                        <span class="text-nowrap">@inventario.ProductosContados de @inventario.TotalProductos productos</span>
-                                                        @if (inventario.Discrepancias > 0)
-                                                        {
-                                                            <span class="text-danger ms-2">
-                                                                <i class="bi bi-exclamation-triangle-fill"></i>
-                                                                @inventario.Discrepancias discrepancias
-                                                            </span>
-                                                        }
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <span class="text-muted">No iniciado</span>
-                                                }
-                                            </td>
-                                            <td>
-                                                <div class="avatar-group">
-                                                    @foreach (var asignacion in inventario.AsignacionesUsuarios.Take(3))
+                                                </div>
+                                                <div class="small text-muted">
+                                                    @inventario.ProductosContados de @inventario.TotalProductos productos
+                                                    @if (inventario.Discrepancias > 0)
                                                     {
-                                                        <div class="avatar" data-bs-toggle="tooltip" title="@asignacion.NombreUsuario">
-                                                            <span class="avatar-initial rounded-circle bg-primary">
-                                                                @(asignacion.NombreUsuario.Substring(0, 1).ToUpper())
-                                                            </span>
-                                                        </div>
-                                                    }
-                                                    @if (inventario.AsignacionesUsuarios.Count > 3)
-                                                    {
-                                                        <div class="avatar" data-bs-toggle="tooltip" title="@(inventario.AsignacionesUsuarios.Count - 3) más">
-                                                            <span class="avatar-initial rounded-circle bg-secondary">
-                                                                +@(inventario.AsignacionesUsuarios.Count - 3)
-                                                            </span>
-                                                        </div>
+                                                        <span class="text-danger ms-2">
+                                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                                            @inventario.Discrepancias discrepancias
+                                                        </span>
                                                     }
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group">
-                                                    <a href="@Url.Action("DetalleInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
-                                                       class="btn btn-sm btn-info"
-                                                       data-bs-toggle="tooltip"
-                                                       title="Ver detalles">
-                                                        <i class="bi bi-eye"></i>
-                                                    </a>
-                                                    @if (inventario.Estado == "Programado")
-                                                    {
-                                                        <a href="@Url.Action("EditarInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
-                                                           class="btn btn-sm btn-primary"
-                                                           data-bs-toggle="tooltip"
-                                                           title="Editar">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                        <button type="button"
-                                                                class="btn btn-sm btn-success iniciar-inventario-btn"
-                                                                data-id="@inventario.InventarioProgramadoId"
-                                                                data-bs-toggle="tooltip"
-                                                                title="Iniciar inventario">
-                                                            <i class="bi bi-play-fill"></i>
-                                                        </button>
-                                                        <button type="button"
-                                                                class="btn btn-sm btn-danger cancelar-inventario-btn"
-                                                                data-id="@inventario.InventarioProgramadoId"
-                                                                data-bs-toggle="tooltip"
-                                                                title="Cancelar inventario">
-                                                            <i class="bi bi-x-lg"></i>
-                                                        </button>
-                                                    }
-                                                    @if (inventario.Estado == "En Progreso")
-                                                    {
-                                                        <button type="button"
-                                                                class="btn btn-sm btn-success completar-inventario-btn"
-                                                                data-id="@inventario.InventarioProgramadoId"
-                                                                data-bs-toggle="tooltip"
-                                                                title="Completar inventario">
-                                                            <i class="bi bi-check-lg"></i>
-                                                        </button>
-                                                    }
-                                                    @if (inventario.Estado == "Completado")
-                                                    {
-                                                        <button type="button"
-                                                                class="btn btn-sm btn-primary exportar-inventario-btn"
-                                                                data-id="@inventario.InventarioProgramadoId"
-                                                                data-bs-toggle="tooltip"
-                                                                title="Exportar resultados">
-                                                            <i class="bi bi-download"></i>
-                                                        </button>
-                                                    }
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
+                                            </div>
+                                        }
+
+                                        <!-- Usuarios asignados -->
+                                        <div class="inventario-usuarios-mobile">
+                                            <div class="small font-weight-medium mb-2">Usuarios asignados:</div>
+                                            <div class="avatar-group">
+                                                @foreach (var asignacion in inventario.AsignacionesUsuarios.Take(4))
+                                                {
+                                                    <div class="avatar" data-bs-toggle="tooltip" title="@asignacion.NombreUsuario">
+                                                        <span class="avatar-initial rounded-circle bg-primary">
+                                                            @(asignacion.NombreUsuario.Substring(0, 1).ToUpper())
+                                                        </span>
+                                                    </div>
+                                                }
+                                                @if (inventario.AsignacionesUsuarios.Count > 4)
+                                                {
+                                                    <div class="avatar" data-bs-toggle="tooltip" title="@(inventario.AsignacionesUsuarios.Count - 4) más">
+                                                        <span class="avatar-initial rounded-circle bg-secondary">
+                                                            +@(inventario.AsignacionesUsuarios.Count - 4)
+                                                        </span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <!-- Acciones -->
+                                        <!-- Acciones optimizadas para móviles -->
+<div class="inventario-acciones-mobile">
+    <!-- Botón Ver - Siempre visible y prominente -->
+    <a href="@Url.Action("DetalleInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
+       class="btn btn-info">
+        <i class="bi bi-eye"></i> Ver Detalles
+    </a>
+    
+    <!-- Container para botones secundarios -->
+    @{
+        var cantidadBotones = 0;
+        if (inventario.Estado == "Programado") cantidadBotones = 3;
+        else if (inventario.Estado == "En Progreso") cantidadBotones = 1;
+        else if (inventario.Estado == "Completado") cantidadBotones = 1;
+        
+        var claseGrid = cantidadBotones switch
+        {
+            1 => "un-boton",
+            2 => "dos-botones", 
+            3 => "tres-botones",
+            _ => "dos-botones"
+        };
+    }
+    
+    <div class="botones-accion-secundarios @claseGrid">
+        @if (inventario.Estado == "Programado")
+        {
+            <a href="@Url.Action("EditarInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
+               class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Editar
+            </a>
+            <button type="button"
+                    class="btn btn-success iniciar-inventario-btn"
+                    data-id="@inventario.InventarioProgramadoId">
+                <i class="bi bi-play-fill"></i> Iniciar
+            </button>
+            <button type="button"
+                    class="btn btn-danger cancelar-inventario-btn"
+                    data-id="@inventario.InventarioProgramadoId">
+                <i class="bi bi-x-lg"></i> Cancelar
+            </button>
+        }
+        
+        @if (inventario.Estado == "En Progreso")
+        {
+            <button type="button"
+                    class="btn btn-success completar-inventario-btn"
+                    data-id="@inventario.InventarioProgramadoId">
+                <i class="bi bi-check-lg"></i> Completar Inventario
+            </button>
+        }
+        
+        @if (inventario.Estado == "Completado")
+        {
+            <button type="button"
+                    class="btn btn-primary exportar-inventario-btn"
+                    data-id="@inventario.InventarioProgramadoId">
+                <i class="bi bi-download"></i> Exportar Resultados
+            </button>
+        }
+    </div>
+</div>
+                                    </div>
+                                }
+                            </div>                    }
                 </div>
             </div>
         </div>

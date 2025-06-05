@@ -1,6 +1,6 @@
 ﻿using Tuco.Clases.DTOs;
 
-namespace API.Services.Interfaces
+namespace API.ServicesAPI.Interfaces
 {
     public interface INotificacionService
     {

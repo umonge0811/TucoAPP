@@ -71,8 +71,9 @@
                 </button>
                 <ul class="dropdown-menu">
                     <li>
-                        <button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#ajusteStockModal">
-                            <i class="bi bi-plus-slash-minus me-2"></i>Ajustar Stock
+                        <button class="dropdown-item ajuste-stock-btn" type="button" 
+                            data-id="@Model.ProductoId" asp-permiso="Ajustar Stock">
+                        <i class="bi bi-plus-slash-minus me-2"></i>Ajustar Stock
                         </button>
                     </li>
                     <li>
@@ -82,9 +83,10 @@
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                        <button class="dropdown-item text-danger" type="button" onclick="eliminarProducto(@Model.ProductoId)" asp-permiso="Eliminar Productos">
+                        <button class="dropdown-item text-danger eliminar-producto-btn" type="button" 
+                                data-id="@Model.ProductoId" asp-permiso="Eliminar Productos">
                             <i class="bi bi-trash me-2"></i>Eliminar Producto
-                        </button>
+                        </button>  
                     </li>
                 </ul>
             </div>
@@ -161,43 +163,43 @@
 
                         <!-- Información del producto -->
                         <div class="col-md-6">
-<div class="precio-section mb-3">
-    @if (Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue)
-    {
-        <!-- Precio calculado automáticamente -->
-        <h4 class="precio-detalle text-success">₡@((Model.PrecioCalculado ?? 0).ToString("N0"))</h4>
-        <small class="text-success fw-bold"><i class="bi bi-calculator me-1"></i>Precio Calculado Automáticamente</small>
+                            <div class="precio-section mb-3">
+                                @if (Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue)
+                                {
+                                    <!-- Precio calculado automáticamente -->
+                                    <h4 class="precio-detalle text-success">₡@((Model.PrecioCalculado ?? 0).ToString("N0"))</h4>
+                                    <small class="text-success fw-bold"><i class="bi bi-calculator me-1"></i>Precio Calculado Automáticamente</small>
         
-        <div class="row mt-2">
-            <div class="col-4">
-                <small class="text-muted">Costo:</small><br>
-                <span class="text-muted">₡@Model.Costo.Value.ToString("N0")</span>
-            </div>
-            <div class="col-4">
-                <small class="text-muted">Utilidad:</small><br>
-                <span class="badge bg-info">@Model.PorcentajeUtilidad.Value.ToString("0.0")%</span>
-            </div>
-            <div class="col-4">
-                <small class="text-muted">Ganancia:</small><br>
-                <span class="text-success">₡@Model.UtilidadEnDinero.Value.ToString("N0")</span>
-            </div>
-        </div>
-    }
-    else
-    {
-        <!-- Precio manual -->
-        <h4 class="precio-detalle text-primary">₡@((Model.Precio ?? 0).ToString("N0"))</h4>
-        <small class="text-primary fw-bold"><i class="bi bi-pencil me-1"></i>Precio Manual</small>
+                                    <div class="row mt-2">
+                                        <div class="col-4">
+                                            <small class="text-muted">Costo:</small><br>
+                                            <span class="text-muted">₡@Model.Costo.Value.ToString("N0")</span>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Utilidad:</small><br>
+                                            <span class="badge bg-info">@Model.PorcentajeUtilidad.Value.ToString("0.0")%</span>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Ganancia:</small><br>
+                                            <span class="text-success">₡@Model.UtilidadEnDinero.Value.ToString("N0")</span>
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <!-- Precio manual -->
+                                    <h4 class="precio-detalle text-primary">₡@((Model.Precio ?? 0).ToString("N0"))</h4>
+                                    <small class="text-primary fw-bold"><i class="bi bi-pencil me-1"></i>Precio Manual</small>
         
-        @if (Model.Costo.HasValue || Model.PorcentajeUtilidad.HasValue)
-        {
-            <div class="alert alert-warning mt-2" role="alert">
-                <i class="bi bi-exclamation-triangle me-1"></i>
-                <small>Información de costo/utilidad incompleta. Configure ambos valores para cálculo automático.</small>
-            </div>
-        }
-    }
-</div>
+                                    @if (Model.Costo.HasValue || Model.PorcentajeUtilidad.HasValue)
+                                    {
+                                        <div class="alert alert-warning mt-2" role="alert">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            <small>Información de costo/utilidad incompleta. Configure ambos valores para cálculo automático.</small>
+                                        </div>
+                                    }
+                                }
+                            </div>
                             <div class="mb-3">
                                 <div class="stock-info @(Model.CantidadEnInventario <= Model.StockMinimo ? "text-danger" : "text-success")">
                                     <i class="bi @(Model.CantidadEnInventario <= Model.StockMinimo ? "bi-exclamation-triangle" : "bi-check-circle")"></i>
@@ -224,42 +226,37 @@
                             }
 
                             <div class="mb-3">
-    <h5>Información Adicional</h5>
-    <ul class="list-group list-group-flush">
-        <li class="list-group-item d-flex justify-content-between">
-            <span>Stock Mínimo:</span>
-            <span>@Model.StockMinimo unidades</span>
-        </li>
-        <li class="list-group-item d-flex justify-content-between">
-            <span>Última Actualización:</span>
-@*             <span>@(Model.FechaUltimaActualizacion?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</span>
- *@        </li>
-        @if (Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue)
-        {
-            <li class="list-group-item d-flex justify-content-between">
-                <span>Método de Precio:</span>
-                <span class="badge bg-success">Cálculo Automático</span>
-            </li>
-            <li class="list-group-item d-flex justify-content-between">
-                <span>Margen de Ganancia:</span>
-                <span class="text-success fw-bold">₡@Model.UtilidadEnDinero.Value.ToString("N0")</span>
-            </li>
-        }
-        else
-        {
-            <li class="list-group-item d-flex justify-content-between">
-                <span>Método de Precio:</span>
-                <span class="badge bg-primary">Manual</span>
-            </li>
-        }
-    </ul>
-</div>
-
-                            <div class="mt-4">
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ajusteStockModal">
-                                    <i class="bi bi-plus-slash-minus me-2"></i>Ajustar Stock
-                                </button>
+                                <h5>Información Adicional</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Stock Mínimo:</span>
+                                        <span>@Model.StockMinimo unidades</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Última Actualización:</span>
+                            @*             <span>@(Model.FechaUltimaActualizacion?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")</span>
+                             *@        </li>
+                                    @if (Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue)
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Método de Precio:</span>
+                                            <span class="badge bg-success">Cálculo Automático</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Margen de Ganancia:</span>
+                                            <span class="text-success fw-bold">₡@Model.UtilidadEnDinero.Value.ToString("N0")</span>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span>Método de Precio:</span>
+                                            <span class="badge bg-primary">Manual</span>
+                                        </li>
+                                    }
+                                </ul>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -267,64 +264,65 @@
         </div>
 
         <!-- Información específica de llantas y estadísticas -->
-        <div class="col-lg-4">
-            @if (Model.Llanta != null && Model.Llanta.LlantaId > 0)
-            {
-                <div class="dashboard-card mb-4">
-                    <div class="card-header">
-                        <h3>
-                            <i class="bi bi-car-front me-2"></i>
-                            Especificaciones de Llanta
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush">
-                            @if (!string.IsNullOrEmpty(Model.Llanta.Marca))
-                            {
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>Marca:</span>
-                                    <span>@Model.Llanta.Marca</span>
-                                </li>
-                            }
-                            @if (!string.IsNullOrEmpty(Model.Llanta.Modelo))
-                            {
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>Modelo:</span>
-                                    <span>@Model.Llanta.Modelo</span>
-                                </li>
-                            }
-                            @if (Model.Llanta.Ancho.HasValue)
-                            {
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>Medidas:</span>
-                                    <span>@Model.Llanta.Ancho/@Model.Llanta.Perfil R@Model.Llanta.Diametro</span>
-                                </li>
-                            }
-                            @if (!string.IsNullOrEmpty(Model.Llanta.IndiceVelocidad))
-                            {
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>Índice de Velocidad:</span>
-                                    <span>@Model.Llanta.IndiceVelocidad</span>
-                                </li>
-                            }
-                            @if (Model.Llanta.Capas.HasValue)
-                            {
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>Capas:</span>
-                                    <span>@Model.Llanta.Capas</span>
-                                </li>
-                            }
-                            @if (!string.IsNullOrEmpty(Model.Llanta.TipoTerreno))
-                            {
-                                <li class="list-group-item d-flex justify-content-between">
-                                    <span>Tipo de Terreno:</span>
-                                    <span>@Model.Llanta.TipoTerreno</span>
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                </div>
-            }
+<div class="col-lg-4">
+    @if (Model.Llanta != null && Model.Llanta.LlantaId > 0)
+    {
+        <div class="dashboard-card mb-4">
+            <div class="card-header">
+                <h3>
+                    <i class="bi bi-car-front me-2"></i>
+                    Especificaciones de Llanta
+                </h3>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    @if (!string.IsNullOrEmpty(Model.Llanta.Marca))
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Marca:</span>
+                            <span>@Model.Llanta.Marca</span>
+                        </li>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Llanta.Modelo))
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Modelo:</span>
+                            <span>@Model.Llanta.Modelo</span>
+                        </li>
+                    }
+                    @if (Model.Llanta.Ancho.HasValue)
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Medidas:</span>
+                            <span>@Model.Llanta.Ancho/@Model.Llanta.Perfil R@Model.Llanta.Diametro</span>
+                        </li>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Llanta.IndiceVelocidad))
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Índice de Velocidad:</span>
+                            <span>@Model.Llanta.IndiceVelocidad</span>
+                        </li>
+                    }
+                    @if (Model.Llanta.Capas.HasValue)
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Capas:</span>
+                            <span>@Model.Llanta.Capas</span>
+                        </li>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Llanta.TipoTerreno))
+                    {
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Tipo de Terreno:</span>
+                            <span>@Model.Llanta.TipoTerreno</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+</div> <!-- ← ESTA ETIQUETA FALTABA -->
 
             <div class="dashboard-card">
                 <div class="card-header">
@@ -360,110 +358,141 @@
     </div>
 </div>
 
-<!-- Modal de Ajuste de Stock -->
+<!-- ✅ MODAL NUEVO DE AJUSTE DE STOCK -->
 <div class="modal fade" id="ajusteStockModal" tabindex="-1" aria-labelledby="ajusteStockModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="ajusteStockModalLabel">Ajustar Stock</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="ajusteStockModalLabel">
+                    <i class="bi bi-plus-slash-minus me-2"></i>
+                    Ajustar Stock de Inventario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="ajusteStockForm">
-                    <input type="hidden" id="productoId" value="@Model.ProductoId" />
+                    <input type="hidden" id="productoId" value="@Model.ProductoId">
 
-                    <div class="mb-3">
-                        <label for="tipoAjuste" class="form-label">Tipo de Ajuste</label>
-                        <select class="form-select" id="tipoAjuste" required>
-                            <option value="">Seleccione tipo de ajuste</option>
-                            <option value="entrada">Entrada de Mercancía</option>
-                            <option value="salida">Salida de Mercancía</option>
-                            <option value="ajuste">Ajuste de Inventario</option>
-                        </select>
+                    <!-- Información del producto -->
+                    <div class="alert alert-info mb-3" id="infoProductoAjuste" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <div>
+                                <strong>Producto:</strong> <span id="nombreProductoAjuste">-</span><br>
+                                <strong>Stock actual:</strong> <span id="stockActualAjuste">-</span> unidades
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="cantidad" class="form-label">Cantidad</label>
-                        <input type="number" class="form-control" id="cantidad" min="1" required>
+                    <div class="row">
+                        <!-- Tipo de ajuste -->
+                        <div class="col-md-6 mb-3">
+                            <label for="tipoAjuste" class="form-label fw-bold">
+                                <i class="bi bi-gear me-1"></i>
+                                Tipo de Ajuste <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="tipoAjuste" required>
+                                <option value="">Seleccione tipo de ajuste</option>
+                                <option value="entrada">📈 Entrada de Mercancía</option>
+                                <option value="salida">📉 Salida de Mercancía</option>
+                                <option value="ajuste">🔧 Ajuste de Inventario</option>
+                            </select>
+                        </div>
+
+                        <!-- Cantidad -->
+                        <div class="col-md-6 mb-3">
+                            <label for="cantidad" class="form-label fw-bold">
+                                <i class="bi bi-123 me-1"></i>
+                                Cantidad <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-hash"></i></span>
+                                <input type="number" class="form-control" id="cantidad" min="1" max="99999" required placeholder="Ingrese cantidad">
+                                <span class="input-group-text">unidades</span>
+                            </div>
+                        </div>
                     </div>
 
+                    <!-- Comentario -->
                     <div class="mb-3">
-                        <label for="comentario" class="form-label">Comentario</label>
-                        <textarea class="form-control" id="comentario" rows="3"></textarea>
+                        <label for="comentario" class="form-label fw-bold">
+                            <i class="bi bi-chat-text me-1"></i>
+                            Comentario o Motivo
+                        </label>
+                        <textarea class="form-control" id="comentario" rows="3" maxlength="500"
+                                  placeholder="Describa el motivo del ajuste (opcional)..."></textarea>
+                    </div>
+
+                    <!-- Vista previa -->
+                    <div class="card border-primary mb-3" id="vistaPrevia" style="display: none;">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="bi bi-eye me-2"></i>Vista Previa del Ajuste</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <div class="h5 mb-1" id="stockActualPreview">-</div>
+                                        <small class="text-muted">Stock Actual</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="border-end">
+                                        <div class="h5 mb-1 text-primary" id="operacionPreview">-</div>
+                                        <small class="text-muted">Operación</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="h5 mb-1 text-success" id="stockNuevoPreview">-</div>
+                                    <small class="text-muted">Stock Resultante</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="guardarAjusteBtn">
-                    <i class="bi bi-check-lg me-1"></i>
-                    Guardar Ajuste
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="guardarAjusteBtn">
+                    <span class="normal-state">
+                        <i class="bi bi-check-lg me-2"></i>Confirmar Ajuste
+                    </span>
+                    <span class="loading-state" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Ajustando...
+                    </span>
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+
+
 @section Scripts {
     <script src="~/js/views/inventario/imagenes.js"></script>
     <script src="~/js/views/inventario/exportarInventario.js"></script>
+    <script src="~/js/views/inventario/inventario.js"></script>
+    <script src="~/js/views/inventario/detalleProducto.js"></script>
     
     <script>
-        // Función para compartir producto
-        function compartirProducto() {
-            const nombre = '@Model.NombreProducto';
-            const precio = '@((Model.Precio ?? 0).ToString("N0"))';
-            const url = window.location.href;
-            
-            const mensaje = `🛞 *${nombre}*\n\n💰 Precio: ₡${precio}\n\n🔗 Ver detalles:\n${url}`;
-            
-            if (navigator.share) {
-                // API Web Share (móviles modernos)
-                navigator.share({
-                    title: nombre,
-                    text: `Producto: ${nombre} - Precio: ₡${precio}`,
-                    url: url
-                }).catch(err => console.log('Error sharing:', err));
-            } else {
-                // Fallback: copiar al portapapeles
-                navigator.clipboard.writeText(mensaje).then(() => {
-                    // Mostrar notificación de éxito
-                    const toast = `
-                        <div class="toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3" 
-                             role="alert" style="z-index: 9999;">
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    ¡Información copiada al portapapeles!
-                                </div>
-                                <button type="button" class="btn-close btn-close-white me-2 m-auto" 
-                                        data-bs-dismiss="toast"></button>
-                            </div>
-                        </div>`;
-                    
-                    $('body').append(toast);
-                    $('.toast').toast('show');
-                    setTimeout(() => $('.toast').remove(), 3000);
-                });
-            }
-        }
+        // ✅ CONTEXTO DEL PRODUCTO PARA JAVASCRIPT
+        window.productoContexto = {
+            id: @Model.ProductoId,
+            nombre: '@Html.Raw(Model.NombreProducto.Replace("'", "\\'"))',
+            stock: @Model.CantidadEnInventario,
+            stockMinimo: @Model.StockMinimo,
+            precio: '@((Model.Precio ?? Model.PrecioCalculado ?? 0).ToString("N0"))'
+        };
 
-        // Función para eliminar producto (placeholder)
-        function eliminarProducto(productoId) {
-            if (confirm('¿Estás seguro de que deseas eliminar este producto?\n\nEsta acción no se puede deshacer.')) {
-                // Aquí iría la lógica de eliminación
-                console.log('Eliminar producto ID:', productoId);
-                // TODO: Implementar eliminación
-                alert('Funcionalidad de eliminación pendiente de implementar');
-            }
-        }
-
-        // Mejorar tooltips
+        // ✅ INICIALIZAR CUANDO EL DOM ESTÉ LISTO
         $(document).ready(function() {
-            // Inicializar tooltips si existen
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
+            // Inicializar tooltips
+            inicializarTooltips();
+            
+            console.log('🎯 Vista de detalle lista con contexto:', window.productoContexto);
         });
     </script>
-}}
+}

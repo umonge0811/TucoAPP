@@ -366,9 +366,54 @@ function cargarDetallesProducto(productoId) {
     $("#btnVerDetallesCompletos").attr("href", `/Inventario/DetalleProducto/${productoId}`);
     $("#btnAjustarStockVistaRapida").data("id", productoId);
 
+    // ✅ REORGANIZAR BOTONES PARA MÓVILES
+    reorganizarBotonesModal();
+
     // Mostrar el modal
     $("#detallesProductoModal").modal("show");
 }
+// ✅ NUEVA FUNCIÓN PARA REORGANIZAR BOTONES EN MÓVILES
+function reorganizarBotonesModal() {
+    const isMobile = window.innerWidth <= 767;
+
+    if (isMobile) {
+        console.log('📱 Reorganizando botones para móvil');
+
+        // Encontrar el contenedor de botones
+        const $footer = $("#detallesProductoModal .modal-footer");
+        const $botonesContainer = $footer.find('.d-flex.gap-2');
+
+        if ($botonesContainer.length > 0) {
+            // Crear contenedor para botones secundarios si no existe
+            if ($botonesContainer.find('.modal-botones-secundarios').length === 0) {
+                const $btnAjustar = $botonesContainer.find('#btnAjustarStockVistaRapida');
+                const $btnCompartir = $botonesContainer.find('.btn-group');
+
+                if ($btnAjustar.length > 0 && $btnCompartir.length > 0) {
+                    // Crear contenedor para botones secundarios
+                    const $secundarios = $('<div class="modal-botones-secundarios"></div>');
+
+                    // Mover botones al contenedor secundario
+                    $btnAjustar.appendTo($secundarios);
+                    $btnCompartir.appendTo($secundarios);
+
+                    // Agregar contenedor después del botón principal
+                    $botonesContainer.append($secundarios);
+
+                    console.log('✅ Botones reorganizados para móvil');
+                }
+            }
+        }
+    }
+}
+
+// ✅ AGREGAR EVENT LISTENER PARA CAMBIOS DE ORIENTACIÓN
+window.addEventListener('resize', function () {
+    // Solo reorganizar si el modal está abierto
+    if ($("#detallesProductoModal").hasClass('show')) {
+        setTimeout(reorganizarBotonesModal, 100);
+    }
+});
 
 // Función para configurar indicador visual de stock
 function configurarIndicadorStock(stock, stockMin) {
@@ -420,7 +465,7 @@ function cargarImagenesEnModal(fila, productoId) {
     });
 }
 
-// Función para procesar imágenes del producto
+// Función para procesar imágenes del producto - VERSIÓN CORREGIDA
 function procesarImagenesDelProducto(imagenes) {
     const $contenedorImagenes = $("#contenedorImagenesModal");
     const $indicadores = $("#indicadoresModal");
@@ -429,23 +474,31 @@ function procesarImagenesDelProducto(imagenes) {
 
     if (imagenes.length === 0) {
         $contenedorImagenes.html(`
-            <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
+            <div class="carousel-item active">
                 <div class="text-center">
-                    <i class="bi bi-image text-muted" style="font-size: 4rem;"></i>
+                    <i class="bi bi-image text-muted"></i>
                     <p class="text-muted mt-3">No hay imágenes disponibles</p>
                 </div>
             </div>
         `);
     } else if (imagenes.length === 1) {
+        // ✅ UNA SOLA IMAGEN - CORREGIDA
         $contenedorImagenes.html(`
-            <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
+            <div class="carousel-item active">
                 <img src="${imagenes[0]}" 
                      class="img-fluid" 
-                     style="max-height: 400px; max-width: 100%; object-fit: contain;"
-                     alt="Imagen del producto">
+                     alt="Imagen del producto"
+                     onload="this.style.opacity=1"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                     style="opacity: 0; transition: opacity 0.3s ease;">
+                <div class="text-center" style="display: none;">
+                    <i class="bi bi-image text-muted"></i>
+                    <p class="text-muted mt-2">Error al cargar imagen</p>
+                </div>
             </div>
         `);
     } else {
+        // ✅ MÚLTIPLES IMÁGENES - CORREGIDAS
         let imagenesHtml = '';
         let indicadoresHtml = '';
 
@@ -453,11 +506,15 @@ function procesarImagenesDelProducto(imagenes) {
             const activo = index === 0 ? 'active' : '';
             imagenesHtml += `
                 <div class="carousel-item ${activo}">
-                    <div class="d-flex align-items-center justify-content-center" style="min-height: 400px;">
-                        <img src="${imagen}" 
-                             class="img-fluid" 
-                             style="max-height: 400px; max-width: 100%; object-fit: contain;"
-                             alt="Imagen del producto ${index + 1}">
+                    <img src="${imagen}" 
+                         class="img-fluid" 
+                         alt="Imagen del producto ${index + 1}"
+                         onload="this.style.opacity=1"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
+                         style="opacity: 0; transition: opacity 0.3s ease;">
+                    <div class="text-center" style="display: none;">
+                        <i class="bi bi-image text-muted"></i>
+                        <p class="text-muted mt-2">Error al cargar imagen ${index + 1}</p>
                     </div>
                 </div>
             `;
@@ -475,6 +532,7 @@ function procesarImagenesDelProducto(imagenes) {
         $btnNext.show();
     }
 }
+
 
 // Función para resetear el formulario de detalles
 function resetFormularioDetalles() {
@@ -1506,6 +1564,29 @@ $(document).ready(function () {
     });
 
     $(".ajuste-stock-detalle-btn").click(function () {
+        console.log('📦 === ABRIENDO MODAL AJUSTE DESDE DETALLE ===');
+
+        const productoId = $("#productoId").val() || $(this).data("id");
+        console.log('📦 Producto ID desde detalle:', productoId);
+
+        if (!productoId) {
+            console.error('❌ No se pudo obtener el ProductoId desde detalle');
+            mostrarAlertaSimple("Error: No se pudo identificar el producto", "danger");
+            return;
+        }
+
+        // ✅ ENCONTRAR LA FILA DEL PRODUCTO EN LA TABLA
+        const $fila = $(`tr[data-id="${productoId}"]`);
+
+        if ($fila.length === 0) {
+            console.error('❌ No se encontró la fila del producto en la tabla');
+            mostrarAlertaSimple("Error: No se pudo encontrar el producto en la tabla", "danger");
+            return;
+        }
+
+        // ✅ CARGAR INFORMACIÓN DEL PRODUCTO
+        cargarInformacionProductoEnModal(productoId, $fila);
+
         $("#detallesProductoModal").modal("hide");
         setTimeout(() => {
             $("#ajusteStockModal").modal("show");
@@ -1513,14 +1594,38 @@ $(document).ready(function () {
     });
 
     $("#btnAjustarStockVistaRapida").click(function () {
+        console.log('📦 === ABRIENDO MODAL AJUSTE DESDE VISTA RÁPIDA ===');
+
         const productoId = $(this).data("id");
-        $("#productoId").val(productoId);
+        console.log('📦 Producto ID desde vista rápida:', productoId);
+
+        if (!productoId) {
+            console.error('❌ No se pudo obtener el ProductoId desde vista rápida');
+            mostrarAlertaSimple("Error: No se pudo identificar el producto", "danger");
+            return;
+        }
+
+        // ✅ ENCONTRAR LA FILA DEL PRODUCTO EN LA TABLA
+        const $fila = $(`tr[data-id="${productoId}"]`);
+
+        if ($fila.length === 0) {
+            console.error('❌ No se encontró la fila del producto en la tabla');
+            mostrarAlertaSimple("Error: No se pudo encontrar el producto en la tabla", "danger");
+            return;
+        }
+
+        // ✅ CARGAR INFORMACIÓN DEL PRODUCTO (IGUAL QUE EL OTRO BOTÓN)
+        cargarInformacionProductoEnModal(productoId, $fila);
+
+        // Cerrar modal de vista rápida y abrir modal de ajuste
         $("#detallesProductoModal").modal("hide");
         setTimeout(() => {
             $("#ajusteStockModal").modal("show");
         }, 500);
     });
 
+
+    
     // ========================================
     // EVENTOS PARA ELIMINAR PRODUCTO
     // ========================================
@@ -1576,7 +1681,10 @@ $(document).ready(function () {
 
         // Mostrar modal de confirmación
         mostrarModalConfirmacionEliminacion(productoId, nombreProducto, $fila);
-    });    // Función para mostrar modal de confirmación de eliminación
+    });
+
+
+    // Función para mostrar modal de confirmación de eliminación
     function mostrarModalConfirmacionEliminacion(productoId, nombreProducto, $fila) {
         const modalHtml = `
         <div class="modal fade" id="modalEliminarProducto" tabindex="-1" aria-hidden="true">
@@ -2156,4 +2264,14 @@ $(document).ready(function () {
     function actualizarContadores() {
         return actualizarContadoresTabla();
     }
+    // ✅ OPTIMIZACIÓN ADICIONAL PARA MODAL EN MÓVILES
+    $("#detallesProductoModal").on('shown.bs.modal', function () {
+        reorganizarBotonesModal();
+
+        // Ajustar altura del modal en móviles
+        if (window.innerWidth <= 767) {
+            const modalHeight = window.innerHeight - 20;
+            $(this).find('.modal-content').css('max-height', modalHeight + 'px');
+        }
+    });
 });

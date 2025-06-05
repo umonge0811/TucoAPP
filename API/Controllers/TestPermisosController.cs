@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using API.Services.Interfaces;
+using API.ServicesAPI.Interfaces;
 using API.Extensions;
 
 namespace API.Controllers

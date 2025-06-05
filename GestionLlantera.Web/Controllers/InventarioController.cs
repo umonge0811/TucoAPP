@@ -7,16 +7,18 @@ using iTextSharp.text.pdf;
 using iTextSharp.tool.xml;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using OfficeOpenXml; // Para manejar archivos Excel
+using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
 using OfficeOpenXml.Style;
 using System.IO;
 using System.Security.Claims;
 using Tuco.Clases.DTOs.Inventario;
+using Tuco.Clases.DTOs.Inventario;
 using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
-using Microsoft.AspNetCore.Mvc;
-using Tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -1654,12 +1656,23 @@ namespace GestionLlantera.Web.Controllers
                 var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
                     "No tienes permisos para programar inventarios. Contacta al administrador.");
                 if (validacion != null) return validacion;
+
+                // ✅ PASO 2: OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado en ProgramarInventario GET");
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente para cargar página de programar inventario");
+
                 // Obtener la lista de usuarios para asignar responsabilidades
-                // En un escenario real, esto sería inyectado como un servicio
                 var usuarios = await _usuariosService.ObtenerTodosAsync();
 
-                // Obtener la lista de inventarios programados
-                var inventariosProgramados = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                // ✅ PASO 3: OBTENER LA LISTA DE INVENTARIOS PROGRAMADOS CON TOKEN
+                var inventariosProgramados = await _inventarioService.ObtenerInventariosProgramadosAsync(token);
 
                 // Crear el modelo de vista
                 var viewModel = new ProgramarInventarioViewModel
@@ -1667,8 +1680,9 @@ namespace GestionLlantera.Web.Controllers
                     UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList(),
                     InventariosProgramados = inventariosProgramados
                 };
+
                 // ✅ AGREGAR ESTA LÍNEA para pasar el usuario actual
-                ViewBag.UsuarioActualId = ObtenerIdUsuarioActual(); // Método que obtengas el ID del usuario logueado
+                ViewBag.UsuarioActualId = ObtenerIdUsuarioActual();
 
                 return View(viewModel);
             }
@@ -1740,13 +1754,25 @@ namespace GestionLlantera.Web.Controllers
 
                 _logger.LogInformation("Iniciando proceso de creación de inventario programado");
 
+                // ✅ OBTENER TOKEN JWT ANTES DE VALIDACIONES
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado en ProgramarInventario POST");
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente para programar inventario");
+
+
                 if (!ModelState.IsValid)
                 {
                     _logger.LogWarning("ModelState no es válido para crear inventario programado");
 
-                    // Recargar los datos necesarios para la vista
+                    // Recargar los datos necesarios para la vista CON TOKEN
                     var usuarios = await _usuariosService.ObtenerTodosAsync();
-                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync(); // ← ESTE TAMBIÉN NECESITA TOKEN
 
                     model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
                     model.InventariosProgramados = inventarios;
@@ -1767,9 +1793,9 @@ namespace GestionLlantera.Web.Controllers
                     ModelState.AddModelError("NuevoInventario.FechaInicio", "La fecha de inicio no puede ser anterior a hoy");
                     TempData["Error"] = "La fecha de inicio no puede ser anterior a hoy.";
 
-                    // Recargar datos
+                    // Recargar datos CON TOKEN
                     var usuarios = await _usuariosService.ObtenerTodosAsync();
-                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync(); // ← ESTE TAMBIÉN NECESITA TOKEN
                     model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
                     model.InventariosProgramados = inventarios;
 
@@ -1781,9 +1807,9 @@ namespace GestionLlantera.Web.Controllers
                     ModelState.AddModelError("NuevoInventario.FechaFin", "La fecha de fin debe ser posterior a la fecha de inicio");
                     TempData["Error"] = "La fecha de fin debe ser posterior a la fecha de inicio.";
 
-                    // Recargar datos
+                    // Recargar datos CON TOKEN
                     var usuarios = await _usuariosService.ObtenerTodosAsync();
-                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync(); // ← ESTE TAMBIÉN NECESITA TOKEN
                     model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
                     model.InventariosProgramados = inventarios;
 
@@ -1794,17 +1820,17 @@ namespace GestionLlantera.Web.Controllers
                 {
                     TempData["Error"] = "Debe asignar al menos un usuario al inventario.";
 
-                    // Recargar datos
+                    // Recargar datos CON TOKEN
                     var usuarios = await _usuariosService.ObtenerTodosAsync();
-                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync(); // ← ESTE TAMBIÉN NECESITA TOKEN
                     model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
                     model.InventariosProgramados = inventarios;
 
                     return View(model);
                 }
 
-                // Obtener el ID del usuario actual (deberías tener esto en tu sistema de autenticación)
-                var usuarioActualId = int.Parse(User.FindFirst("UserId")?.Value ?? "1"); // Por ahora usamos 1 como fallback
+                // Obtener el ID del usuario actual
+                var usuarioActualId = ObtenerIdUsuarioActual();
 
                 // Crear el DTO para el inventario programado
                 var inventarioProgramado = new InventarioProgramadoDTO
@@ -1830,10 +1856,10 @@ namespace GestionLlantera.Web.Controllers
                     }).ToList()
                 };
 
-                _logger.LogInformation($"Enviando inventario programado al servicio: {inventarioProgramado.Titulo}");
+                _logger.LogInformation($"Enviando inventario programado al servicio con token: {inventarioProgramado.Titulo}");
 
-                // Guardar el inventario programado usando el servicio
-                var resultado = await _inventarioService.GuardarInventarioProgramadoAsync(inventarioProgramado);
+                // ✅ PASAR EL TOKEN AL SERVICIO
+                var resultado = await _inventarioService.GuardarInventarioProgramadoAsync(inventarioProgramado, token);
 
                 if (resultado)
                 {
@@ -1846,9 +1872,9 @@ namespace GestionLlantera.Web.Controllers
                     _logger.LogError("Error al guardar el inventario programado en el servicio");
                     TempData["Error"] = "Error al programar el inventario.";
 
-                    // Recargar datos
+                    // Recargar datos CON TOKEN
                     var usuarios = await _usuariosService.ObtenerTodosAsync();
-                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync(); // ← ESTE TAMBIÉN NECESITA TOKEN
                     model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
                     model.InventariosProgramados = inventarios;
 
@@ -1863,8 +1889,9 @@ namespace GestionLlantera.Web.Controllers
                 // Recargar los datos necesarios para la vista en caso de error
                 try
                 {
+                    var token = ObtenerTokenJWT(); // ✅ OBTENER TOKEN TAMBIÉN EN CATCH
                     var usuarios = await _usuariosService.ObtenerTodosAsync();
-                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync();
+                    var inventarios = await _inventarioService.ObtenerInventariosProgramadosAsync(); // ← ESTE TAMBIÉN NECESITA TOKEN
                     model.UsuariosDisponibles = usuarios.Where(u => u.Activo).ToList();
                     model.InventariosProgramados = inventarios;
                 }
@@ -1875,6 +1902,7 @@ namespace GestionLlantera.Web.Controllers
 
                 return View(model);
             }
+           
         }
 
         // ✅ NUEVO MÉTODO POST PARA JSON (agregar ADEMÁS del existente)
@@ -1886,6 +1914,16 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                // ✅ OBTENER TOKEN JWT PRIMERO
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado en ProgramarInventarioJson");
+                    return BadRequest(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
+                }
+
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente para JSON");
+
                 // ✅ LOGGING DETALLADO
                 _logger.LogInformation("Datos recibidos:");
                 _logger.LogInformation("- Título: {Titulo}", inventarioDto?.Titulo ?? "NULL");
@@ -1941,10 +1979,10 @@ namespace GestionLlantera.Web.Controllers
                 inventarioDto.FechaCreacion = DateTime.Now;
                 inventarioDto.UsuarioCreadorId = usuarioActualId; // ✅ FORZAR EL ID CORRECTO
 
-                _logger.LogInformation("Enviando al servicio con UsuarioCreadorId: {Id}", inventarioDto.UsuarioCreadorId);
+                _logger.LogInformation("Enviando al servicio con UsuarioCreadorId: {Id} y Token", inventarioDto.UsuarioCreadorId);
 
-                // Llamar al servicio
-                var resultado = await _inventarioService.GuardarInventarioProgramadoAsync(inventarioDto);
+                // ✅ LLAMAR AL SERVICIO CON TOKEN
+                var resultado = await _inventarioService.GuardarInventarioProgramadoAsync(inventarioDto, token);
 
                 if (resultado)
                 {
@@ -1972,12 +2010,37 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
-                // Obtener el inventario programado
-                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id);
+                // ✅ VERIFICAR PERMISOS DEL USUARIO PARA PROGRAMAR INVENTARIOS
+                var puedeVerProgramados = await this.TienePermisoAsync("Programar Inventario");
+                ViewBag.PuedeVerProgramados = puedeVerProgramados;
+
+                _logger.LogInformation("🔒 Usuario {Usuario} - Puede ver programados: {Permisos}",
+                    User.Identity?.Name, puedeVerProgramados);
+
+                // ✅ OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado en DetalleInventarioProgramado");
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // Obtener el inventario programado CON TOKEN
+                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id, token);
                 if (inventario == null || inventario.InventarioProgramadoId == 0)
                 {
                     TempData["Error"] = "Inventario programado no encontrado.";
-                    return RedirectToAction(nameof(ProgramarInventario));
+
+                    // ✅ REDIRIGIR SEGÚN PERMISOS
+                    if (puedeVerProgramados)
+                    {
+                        return RedirectToAction(nameof(ProgramarInventario));
+                    }
+                    else
+                    {
+                        return RedirectToAction("Index", "Dashboard");
+                    }
                 }
 
                 return View(inventario);
@@ -1986,13 +2049,23 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogError(ex, "Error al cargar detalle del inventario programado {Id}", id);
                 TempData["Error"] = "Error al cargar el detalle del inventario programado.";
-                return RedirectToAction(nameof(ProgramarInventario));
+
+                // ✅ REDIRIGIR SEGÚN PERMISOS TAMBIÉN EN CASO DE ERROR
+                var puedeVerProgramados = await this.TienePermisoAsync("Programar Inventario");
+                if (puedeVerProgramados)
+                {
+                    return RedirectToAction(nameof(ProgramarInventario));
+                }
+                else
+                {
+                    return RedirectToAction("Index", "Dashboard");
+                }
             }
         }
 
         // GET: /Inventario/EditarInventarioProgramado/5
         [HttpGet]
-        public async Task<IActionResult> EditarInventarioProgramado(int id)
+        public async Task<IActionResult> EditarInventarioProgramado(int id, string token)
         {
             ViewData["Title"] = "Editar Inventario Programado";
             ViewData["Layout"] = "_AdminLayout";
@@ -2000,7 +2073,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 // Obtener el inventario programado
-                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id);
+                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id, token);
                 if (inventario == null || inventario.InventarioProgramadoId == 0)
                 {
                     TempData["Error"] = "Inventario programado no encontrado.";
@@ -2082,11 +2155,11 @@ namespace GestionLlantera.Web.Controllers
 
         // POST: /Inventario/IniciarInventario/5
         [HttpPost]
-        public async Task<IActionResult> IniciarInventario(int id)
+        public async Task<IActionResult> IniciarInventario(int id, string token)
         {
             try
             {
-                var resultado = await _inventarioService.IniciarInventarioAsync(id);
+                var resultado = await _inventarioService.IniciarInventarioAsync(id, token);
 
                 return Json(new { success = resultado, message = resultado ? "Inventario iniciado exitosamente." : "No se pudo iniciar el inventario." });
             }
@@ -2099,11 +2172,11 @@ namespace GestionLlantera.Web.Controllers
 
         // POST: /Inventario/CancelarInventario/5
         [HttpPost]
-        public async Task<IActionResult> CancelarInventario(int id)
+        public async Task<IActionResult> CancelarInventario(int id, string token)
         {
             try
             {
-                var resultado = await _inventarioService.CancelarInventarioAsync(id);
+                var resultado = await _inventarioService.CancelarInventarioAsync(id, token);
 
                 return Json(new { success = resultado, message = resultado ? "Inventario cancelado exitosamente." : "No se pudo cancelar el inventario." });
             }
