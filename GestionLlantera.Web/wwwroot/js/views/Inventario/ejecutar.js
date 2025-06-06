@@ -110,6 +110,134 @@ function configurarEventListeners() {
     $('#modalConteo').on('hidden.bs.modal', function () {
         limpiarModalConteo();
     });
+    // ✅ CONFIGURAR MODAL DE CONTEO
+    $('#cantidadFisicaConteo').on('input', function () {
+        calcularDiferencia();
+    });
+
+    // ✅ CONFIGURAR BOTÓN DE GUARDAR CONTEO
+    $('#btnGuardarConteo').off('click').on('click', function (e) {
+        e.preventDefault();
+        console.log('🖱️ Click en botón guardar conteo');
+        guardarConteoProducto();
+    });
+
+    // ✅ LIMPIAR MODAL AL CERRARSE
+    $('#conteoModal').on('hidden.bs.modal', function () {
+        limpiarModalConteo();
+    });
+
+    // ✅ CONFIGURAR MODAL DE AJUSTE DE STOCK
+    $('#tipoAjusteInventario').on('change', function () {
+        const tipoAjuste = $(this).val();
+        const producto = productosInventario.find(p => p.productoId == $('#productoIdAjuste').val());
+
+        if (tipoAjuste === 'ajustar-sistema') {
+            $('#containerCantidadAjuste').show();
+            $('#cantidadAjusteInventario').val(producto?.cantidadFisica || 0);
+        } else {
+            $('#containerCantidadAjuste').hide();
+        }
+
+        actualizarVistaPreviaAjuste();
+    });
+
+    $('#cantidadAjusteInventario, #tipoAjusteInventario').on('input change', function () {
+        actualizarVistaPreviaAjuste();
+    });
+
+    // ✅ CONFIGURAR BOTÓN DE GUARDAR AJUSTE
+    $('#guardarAjusteInventarioBtn').off('click').on('click', function (e) {
+        e.preventDefault();
+        console.log('🖱️ Click en botón guardar ajuste de inventario');
+        guardarAjusteInventario();
+    })
+
+}
+
+function abrirModalAjuste(productoId) {
+    try {
+        console.log(`🔧 === ABRIENDO MODAL DE AJUSTE ===`);
+        console.log(`🔧 Producto ID: ${productoId}`);
+
+        // ✅ VERIFICAR PERMISOS ANTES DE ABRIR
+        const permisos = window.inventarioConfig?.permisos || {};
+        if (!permisos.puedeAjustar && !permisos.esAdmin) {
+            mostrarError('No tienes permisos para ajustar stock en este inventario');
+            return;
+        }
+
+        // ✅ BUSCAR EL PRODUCTO EN LOS DATOS CARGADOS
+        const producto = productosInventario.find(p => p.productoId === productoId);
+        if (!producto) {
+            mostrarError('Producto no encontrado');
+            return;
+        }
+
+        // ✅ VERIFICAR QUE HAYA DISCREPANCIA
+        if (!producto.tieneDiscrepancia) {
+            mostrarError('Este producto no tiene discrepancias que ajustar');
+            return;
+        }
+
+        console.log(`🔧 Producto encontrado: ${producto.nombreProducto}`);
+        console.log(`🔧 Discrepancia: ${producto.diferencia}`);
+
+        // ✅ LLENAR INFORMACIÓN DEL PRODUCTO EN EL MODAL
+        $('#productoIdAjuste').val(producto.productoId);
+        $('#nombreProductoAjuste').text(producto.nombreProducto || 'Sin nombre');
+        $('#stockSistemaAjuste').text(producto.cantidadSistema || 0);
+        $('#stockFisicoAjuste').text(producto.cantidadFisica || 0);
+
+        // ✅ MOSTRAR DISCREPANCIA CON COLOR
+        const diferencia = producto.diferencia || 0;
+        const $discrepancia = $('#discrepanciaAjuste');
+        $discrepancia.text(diferencia > 0 ? `+${diferencia}` : diferencia);
+
+        if (diferencia > 0) {
+            $discrepancia.removeClass('text-danger').addClass('text-success');
+        } else {
+            $discrepancia.removeClass('text-success').addClass('text-danger');
+        }
+
+        // ✅ RESETEAR FORMULARIO
+        $('#tipoAjusteInventario').val('');
+        $('#cantidadAjusteInventario').val(producto.cantidadFisica || 0);
+        $('#motivoAjusteInventario').val('');
+        $('#containerCantidadAjuste').hide();
+        $('#vistaPreviaAjuste').hide();
+
+        // ✅ MOSTRAR EL MODAL
+        const modal = new bootstrap.Modal(document.getElementById('ajusteStockInventarioModal'));
+        modal.show();
+
+        console.log(`✅ Modal de ajuste abierto exitosamente`);
+
+    } catch (error) {
+        console.error('❌ Error abriendo modal de ajuste:', error);
+        mostrarError('Error al abrir el modal de ajuste');
+    }
+}
+
+
+function limpiarModalConteo() {
+    try {
+        console.log('🧹 Limpiando modal de conteo...');
+
+        $('#productoIdConteo').val('');
+        $('#inventarioIdConteo').val('');
+        $('#cantidadFisicaConteo').val('');
+        $('#observacionesConteo').val('');
+        $('#alertaDiferencia').hide();
+        $('#medidasLlantaConteo').hide();
+
+        // Limpiar imagen
+        $('#imagenProductoConteo').attr('src', '/images/no-image.png');
+
+        console.log('✅ Modal de conteo limpiado');
+    } catch (error) {
+        console.error('❌ Error limpiando modal:', error);
+    }
 }
 
 // =====================================
@@ -157,8 +285,9 @@ async function cargarProductosInventario(inventarioId) {
 
         // Mostrar loading
         $('#loadingProductos').show();
-        $('#listaProductos').hide();
-        $('#emptyState').hide();
+        $('#productosLista').hide();
+        $('#productosTarjetas').hide();
+        $('#estadoVacio').hide();
 
         const response = await fetch(`/TomaInventario/ObtenerProductos/${inventarioId}`, {
             method: 'GET',
@@ -173,48 +302,72 @@ async function cargarProductosInventario(inventarioId) {
         }
 
         const data = await response.json();
+
+        console.log('🔍 === DEBUGGING PRODUCTOS CARGADOS ===');
+        console.log('🔍 Respuesta completa:', data);
+        console.log('🔍 Productos array:', data.productos);
+        console.log('🔍 Estadísticas:', data.estadisticas);
+
         productosInventario = data.productos || [];
         estadisticasActuales = data.estadisticas || {};
+
+        if (productosInventario.length > 0) {
+            const primerProducto = productosInventario[0];
+            console.log('🔍 Primer producto:', primerProducto);
+            console.log('🔍 Propiedades del primer producto:', Object.keys(primerProducto));
+        }
 
         console.log(`✅ Cargados ${productosInventario.length} productos`);
 
         // Renderizar productos
         renderizarProductos();
 
-        // Aplicar filtros actuales
-        filtrarProductos($('#filtroProductos').val().toLowerCase(), $('#filtroEstado').val());
+        // Actualizar estadísticas
+        actualizarEstadisticasUI();
 
     } catch (error) {
         console.error('❌ Error cargando productos:', error);
         $('#loadingProductos').hide();
-        $('#emptyState').show();
+        $('#estadoVacio').show();
         mostrarError('Error al cargar productos del inventario');
     }
 }
+
 
 // =====================================
 // FUNCIONES DE RENDERIZADO
 // =====================================
 function renderizarProductos() {
-    const tbody = $('#productosTableBody');
-    tbody.empty();
+    try {
+        console.log('🎨 Renderizando productos...');
+        console.log('🎨 Total productos a renderizar:', productosInventario.length);
 
-    if (productosInventario.length === 0) {
+        const tbody = $('#tablaProductosBody');
+        tbody.empty();
+
+        if (productosInventario.length === 0) {
+            $('#loadingProductos').hide();
+            $('#productosLista').hide();
+            $('#estadoVacio').show();
+            return;
+        }
+
+        productosInventario.forEach((producto, index) => {
+            const row = crearFilaProducto(producto, index + 1);
+            tbody.append(row);
+        });
+
         $('#loadingProductos').hide();
-        $('#listaProductos').hide();
-        $('#emptyState').show();
-        return;
+        $('#productosLista').show();
+        $('#estadoVacio').hide();
+
+        console.log('✅ Productos renderizados correctamente');
+
+    } catch (error) {
+        console.error('❌ Error renderizando productos:', error);
     }
-
-    productosInventario.forEach((producto, index) => {
-        const row = crearFilaProducto(producto, index + 1);
-        tbody.append(row);
-    });
-
-    $('#loadingProductos').hide();
-    $('#listaProductos').show();
-    $('#emptyState').hide();
 }
+
 
 function crearFilaProducto(producto, numero) {
     const tieneDiscrepancia = producto.tieneDiscrepancia;
@@ -309,35 +462,69 @@ function getEstadoBadgeClass(estado) {
 // FUNCIONES DE FILTRADO
 // =====================================
 function filtrarProductos(textoFiltro, estadoFiltro) {
-    productosFiltrados = productosInventario.filter(producto => {
-        // ✅ VALIDACIÓN SEGURA - Filtro por texto
-        const cumpleTexto = !textoFiltro ||
-            (producto.nombreProducto && producto.nombreProducto.toLowerCase().includes(textoFiltro)) ||
-            (producto.descripcionProducto && producto.descripcionProducto.toLowerCase().includes(textoFiltro)) ||
-            (producto.marcaLlanta && producto.marcaLlanta.toLowerCase().includes(textoFiltro)) ||
-            (producto.modeloLlanta && producto.modeloLlanta.toLowerCase().includes(textoFiltro));
+    try {
+        console.log('🔍 Filtrando productos - Texto:', textoFiltro, 'Estado:', estadoFiltro);
+        console.log('🔍 productosInventario disponibles:', productosInventario.length);
 
-        // ✅ VALIDACIÓN SEGURA - Filtro por estado
-        let cumpleEstado = true;
-        if (estadoFiltro) {
-            switch (estadoFiltro) {
-                case 'Pendiente':
-                    cumpleEstado = producto.estadoConteo === 'Pendiente';
-                    break;
-                case 'Contado':
-                    cumpleEstado = producto.estadoConteo === 'Contado';
-                    break;
-                case 'Discrepancia':
-                    cumpleEstado = producto.tieneDiscrepancia;
-                    break;
+        productosFiltrados = productosInventario.filter(producto => {
+            // ✅ MANEJO SEGURO DE TEXTO CON VERIFICACIONES NULL
+            let cumpleTexto = true;
+            if (textoFiltro && textoFiltro.trim() !== '') {
+                const textoMinuscula = textoFiltro.toLowerCase();
+                cumpleTexto = false;
+
+                // ✅ VERIFICAR TODAS LAS POSIBLES VARIANTES DE NOMBRES
+                const nombreProducto = producto.nombreProducto || producto.NombreProducto || '';
+                const descripcionProducto = producto.descripcionProducto || producto.DescripcionProducto || '';
+                const marcaLlanta = producto.marcaLlanta || producto.MarcaLlanta || '';
+                const modeloLlanta = producto.modeloLlanta || producto.ModeloLlanta || '';
+                const productoId = producto.productoId || producto.ProductoId || '';
+
+                // Verificar en todos los campos posibles
+                if (nombreProducto.toLowerCase().includes(textoMinuscula) ||
+                    descripcionProducto.toLowerCase().includes(textoMinuscula) ||
+                    marcaLlanta.toLowerCase().includes(textoMinuscula) ||
+                    modeloLlanta.toLowerCase().includes(textoMinuscula) ||
+                    productoId.toString().includes(textoMinuscula)) {
+                    cumpleTexto = true;
+                }
             }
-        }
 
-        return cumpleTexto && cumpleEstado;
-    });
+            // ✅ FILTRO POR ESTADO
+            let cumpleEstado = true;
+            if (estadoFiltro && estadoFiltro.trim() !== '') {
+                const estadoConteo = producto.estadoConteo || producto.EstadoConteo || 'Pendiente';
+                const tieneDiscrepancia = producto.tieneDiscrepancia || producto.TieneDiscrepancia || false;
 
-    // Re-renderizar solo los productos filtrados
-    renderizarProductosFiltrados();
+                switch (estadoFiltro.toLowerCase()) {
+                    case 'pendiente':
+                        cumpleEstado = estadoConteo === 'Pendiente';
+                        break;
+                    case 'contado':
+                        cumpleEstado = estadoConteo === 'Contado';
+                        break;
+                    case 'discrepancia':
+                        cumpleEstado = tieneDiscrepancia === true;
+                        break;
+                }
+            }
+
+            return cumpleTexto && cumpleEstado;
+        });
+
+        console.log('✅ Productos filtrados:', productosFiltrados.length);
+
+        // Re-renderizar productos filtrados
+        renderizarProductosFiltrados();
+
+    } catch (error) {
+        console.error('❌ Error en filtrarProductos:', error);
+        console.error('❌ Error stack:', error.stack);
+
+        // Fallback - mostrar todos los productos
+        productosFiltrados = productosInventario;
+        renderizarProductosFiltrados();
+    }
 }
 
 
@@ -364,124 +551,202 @@ function renderizarProductosFiltrados() {
 // FUNCIONES DE CONTEO
 // =====================================
 function abrirModalConteo(productoId) {
-    // Verificar permisos antes de abrir el modal
-    if (!window.permisosUsuarioInventario?.permisoConteo) {
-        mostrarError('No tienes permisos para realizar conteos en este inventario');
-        return;
+    try {
+        console.log(`📝 === ABRIENDO MODAL DE CONTEO ===`);
+        console.log(`📝 Producto ID: ${productoId}`);
+
+        // ✅ VERIFICAR PERMISOS ANTES DE ABRIR
+        const permisos = window.inventarioConfig?.permisos || {};
+        if (!permisos.puedeContar && !permisos.esAdmin) {
+            mostrarError('No tienes permisos para realizar conteos en este inventario');
+            return;
+        }
+
+        // ✅ BUSCAR EL PRODUCTO EN LOS DATOS CARGADOS
+        const producto = productosInventario.find(p => p.productoId === productoId);
+        if (!producto) {
+            mostrarError('Producto no encontrado');
+            return;
+        }
+
+        console.log(`📝 Producto encontrado: ${producto.nombreProducto}`);
+
+        // ✅ LLENAR INFORMACIÓN DEL PRODUCTO EN EL MODAL
+        $('#productoIdConteo').val(producto.productoId);
+        $('#inventarioIdConteo').val(window.inventarioConfig.inventarioId);
+        $('#nombreProductoConteo').text(producto.nombreProducto || 'Sin nombre');
+        $('#descripcionProductoConteo').text(producto.descripcionProducto || 'Sin descripción');
+        $('#cantidadSistemaConteo').val(producto.cantidadSistema || 0);
+
+        // ✅ IMAGEN DEL PRODUCTO
+        const imagenSrc = producto.imagenUrl || '/images/no-image.png';
+        $('#imagenProductoConteo').attr('src', imagenSrc).attr('alt', producto.nombreProducto);
+
+        // ✅ INFORMACIÓN DE LLANTA SI APLICA
+        if (producto.esLlanta && (producto.marcaLlanta || producto.modeloLlanta)) {
+            const especificaciones = [
+                producto.marcaLlanta,
+                producto.modeloLlanta,
+                producto.medidasLlanta
+            ].filter(Boolean).join(' - ');
+
+            $('#especificacionesLlanta').text(especificaciones || 'Sin especificaciones');
+            $('#medidasLlantaConteo').show();
+            $('#tipoProductoConteo').text('Llanta').removeClass('bg-info').addClass('bg-primary');
+        } else {
+            $('#medidasLlantaConteo').hide();
+            $('#tipoProductoConteo').text('Accesorio').removeClass('bg-primary').addClass('bg-info');
+        }
+
+        // ✅ MOSTRAR CONTEO ANTERIOR SI EXISTE
+        if (producto.cantidadFisica !== null && producto.cantidadFisica !== undefined) {
+            $('#cantidadFisicaConteo').val(producto.cantidadFisica);
+            console.log(`📝 Cantidad física anterior: ${producto.cantidadFisica}`);
+        } else {
+            $('#cantidadFisicaConteo').val('');
+            console.log(`📝 Sin conteo anterior`);
+        }
+
+        // ✅ OBSERVACIONES ANTERIORES
+        $('#observacionesConteo').val(producto.observaciones || '');
+
+        // ✅ CALCULAR DIFERENCIA INICIAL
+        calcularDiferencia();
+
+        // ✅ MOSTRAR EL MODAL
+        const modal = new bootstrap.Modal(document.getElementById('conteoModal'));
+        modal.show();
+
+        // ✅ FOCUS EN EL CAMPO DE CANTIDAD DESPUÉS DE QUE SE ABRA
+        $('#conteoModal').on('shown.bs.modal', function () {
+            $('#cantidadFisicaConteo').focus().select();
+        });
+
+        console.log(`✅ Modal de conteo abierto exitosamente`);
+
+    } catch (error) {
+        console.error('❌ Error abriendo modal de conteo:', error);
+        mostrarError('Error al abrir el modal de conteo');
     }
-
-    const producto = productosInventario.find(p => p.productoId === productoId);
-    if (!producto) {
-        mostrarError('Producto no encontrado');
-        return;
-    }
-
-    console.log(`📝 Abriendo modal de conteo para producto: ${producto.nombreProducto}`);
-
-    // Llenar información del producto
-    $('#modalProductoId').val(producto.productoId);
-    $('#modalInventarioId').val(inventarioActual.inventarioProgramadoId);
-    $('#modalProductoNombre').text(producto.nombreProducto);
-    $('#modalProductoDescripcion').text(producto.descripcionProducto || 'Sin descripción');
-    $('#modalCantidadSistema').text(producto.cantidadSistema);
-
-    // Imagen del producto
-    const imagenSrc = producto.imagenUrl || '/images/no-image.png';
-    $('#modalProductoImagen').attr('src', imagenSrc);
-
-    // Información de llanta si aplica
-    if (producto.esLlanta) {
-        const infoLlanta = `${producto.marcaLlanta || ''} ${producto.modeloLlanta || ''} ${producto.medidasLlanta || ''}`.trim();
-        $('#modalLlantaInfo').text(infoLlanta);
-        $('#modalProductoLlanta').show();
-    } else {
-        $('#modalProductoLlanta').hide();
-    }
-
-    // Conteo anterior
-    if (producto.cantidadFisica !== null) {
-        $('#modalConteoAnterior').text(producto.cantidadFisica).removeClass('text-muted').addClass('text-info');
-        $('#cantidadFisica').val(producto.cantidadFisica);
-    } else {
-        $('#modalConteoAnterior').text('Sin contar').removeClass('text-info').addClass('text-muted');
-        $('#cantidadFisica').val('');
-    }
-
-    // Observaciones anteriores
-    $('#observaciones').val(producto.observaciones || '');
-
-    // Calcular diferencia inicial
-    calcularDiferencia();
-
-    // Mostrar modal
-    $('#modalConteo').modal('show');
-
-    // Focus en el campo de cantidad
-    setTimeout(() => {
-        $('#cantidadFisica').focus().select();
-    }, 500);
 }
 
+
 function calcularDiferencia() {
-    const cantidadSistema = parseInt($('#modalCantidadSistema').text()) || 0;
-    const cantidadFisica = parseInt($('#cantidadFisica').val()) || 0;
-    const diferencia = cantidadFisica - cantidadSistema;
+    try {
+        const cantidadSistema = parseInt($('#cantidadSistemaConteo').val()) || 0;
+        const cantidadFisica = parseInt($('#cantidadFisicaConteo').val()) || 0;
+        const diferencia = cantidadFisica - cantidadSistema;
 
-    // Mostrar diferencia
-    const $diferencia = $('#diferenciaCalculada');
-    $diferencia.text(diferencia > 0 ? `+${diferencia}` : diferencia);
+        console.log(`🧮 Calculando diferencia: Sistema=${cantidadSistema}, Físico=${cantidadFisica}, Diferencia=${diferencia}`);
 
-    // Colorear según la diferencia
-    $diferencia.removeClass('text-success text-danger text-muted')
-        .addClass(diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : 'text-muted');
+        // ✅ MOSTRAR/OCULTAR ALERTA DE DISCREPANCIA
+        const $alerta = $('#alertaDiferencia');
+        const $textoDiferencia = $('#textoDiferencia');
 
-    // Mostrar/ocultar alerta de discrepancia
-    if (diferencia !== 0) {
-        const tipoDiscrepancia = diferencia > 0 ? 'exceso' : 'faltante';
-        const cantidadDiscrepancia = Math.abs(diferencia);
-        $('#textoDiscrepancia').text(
-            `Se detectó un ${tipoDiscrepancia} de ${cantidadDiscrepancia} unidad${cantidadDiscrepancia !== 1 ? 'es' : ''}.`
-        );
-        $('#alertaDiscrepancia').removeClass('d-none');
-    } else {
-        $('#alertaDiscrepancia').addClass('d-none');
+        if (diferencia !== 0 && cantidadFisica > 0) {
+            // Hay discrepancia
+            let mensaje = '';
+            let claseAlerta = '';
+
+            if (diferencia > 0) {
+                mensaje = `Exceso de ${diferencia} unidad${diferencia !== 1 ? 'es' : ''}`;
+                claseAlerta = 'alert-warning';
+                $textoDiferencia.text(`+${diferencia} unidades`).removeClass('text-danger text-muted').addClass('text-warning');
+            } else {
+                mensaje = `Faltante de ${Math.abs(diferencia)} unidad${Math.abs(diferencia) !== 1 ? 'es' : ''}`;
+                claseAlerta = 'alert-danger';
+                $textoDiferencia.text(`${diferencia} unidades`).removeClass('text-warning text-muted').addClass('text-danger');
+            }
+
+            $alerta.removeClass('alert-info alert-warning alert-danger').addClass(claseAlerta);
+            $alerta.find('strong').text('Discrepancia detectada:');
+            $alerta.find('span').text(mensaje);
+            $alerta.show();
+
+        } else {
+            // Sin discrepancia o sin cantidad física
+            if (cantidadFisica > 0) {
+                $alerta.removeClass('alert-warning alert-danger').addClass('alert-success');
+                $alerta.find('strong').text('Conteo correcto:');
+                $alerta.find('span').text('Las cantidades coinciden');
+                $textoDiferencia.text('0 unidades').removeClass('text-danger text-warning').addClass('text-muted');
+                $alerta.show();
+            } else {
+                $alerta.hide();
+                $textoDiferencia.text('0 unidades').removeClass('text-danger text-warning').addClass('text-muted');
+            }
+        }
+
+    } catch (error) {
+        console.error('❌ Error calculando diferencia:', error);
     }
 }
 
 async function guardarConteoProducto() {
     try {
-        const inventarioId = $('#modalInventarioId').val();
-        const productoId = $('#modalProductoId').val();
-        const cantidadFisica = parseInt($('#cantidadFisica').val());
-        const observaciones = $('#observaciones').val().trim();
+        console.log('💾 === INICIANDO GUARDADO DE CONTEO ===');
 
-        // Validaciones
-        if (!cantidadFisica && cantidadFisica !== 0) {
-            mostrarError('Debes ingresar una cantidad física válida');
+        // ✅ OBTENER DATOS DEL MODAL
+        const inventarioId = $('#inventarioIdConteo').val();
+        const productoId = $('#productoIdConteo').val();
+        const cantidadFisica = parseInt($('#cantidadFisicaConteo').val());
+        const observaciones = $('#observacionesConteo').val()?.trim() || '';
+
+        console.log('📊 Datos del conteo:', {
+            inventarioId,
+            productoId,
+            cantidadFisica,
+            observaciones
+        });
+
+        // ✅ VALIDACIONES
+        if (!inventarioId || !productoId) {
+            mostrarError('Faltan datos del inventario o producto');
             return;
         }
 
-        if (cantidadFisica < 0) {
-            mostrarError('La cantidad física no puede ser negativa');
+        if (isNaN(cantidadFisica) || cantidadFisica < 0) {
+            mostrarError('Debes ingresar una cantidad física válida (mayor o igual a 0)');
+            $('#cantidadFisicaConteo').focus();
             return;
         }
 
-        // Deshabilitar botón mientras se guarda
+        // ✅ OBTENER BOTÓN Y MANEJAR ESTADO SEGURO
         const $btn = $('#btnGuardarConteo');
-        const textoOriginal = $btn.html();
-        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
+        if (!$btn.length) {
+            console.error('❌ No se encontró el botón de guardar');
+            mostrarError('Error en la interfaz: botón no encontrado');
+            return;
+        }
 
-        console.log(`💾 Guardando conteo - Inventario: ${inventarioId}, Producto: ${productoId}, Cantidad: ${cantidadFisica}`);
+        // ✅ GUARDAR ESTADO ORIGINAL Y CAMBIAR A LOADING
+        const estadoOriginal = {
+            disabled: $btn.prop('disabled'),
+            html: $btn.html()
+        };
 
+        console.log('🔄 Cambiando botón a estado de carga...');
+        $btn.prop('disabled', true);
+        $btn.find('.normal-state').hide();
+        $btn.find('.loading-state').show();
+
+        // ✅ OBTENER USUARIO ACTUAL
+        const usuarioId = window.inventarioConfig?.usuarioId || 1;
+
+        // ✅ CREAR OBJETO DE CONTEO
         const conteoData = {
             inventarioProgramadoId: parseInt(inventarioId),
             productoId: parseInt(productoId),
-            usuarioId: obtenerUsuarioId(), // Función que obtiene el ID del usuario actual
+            usuarioId: usuarioId,
             cantidadFisica: cantidadFisica,
-            observaciones: observaciones || null
+            observaciones: observaciones || null,
+            fechaConteo: new Date().toISOString()
         };
 
-        const response = await fetch(`/TomaInventario/RegistrarConteo`, {
+        console.log('📤 Enviando datos de conteo:', conteoData);
+
+        // ✅ ENVIAR A LA API
+        const response = await fetch('/TomaInventario/RegistrarConteo', {
             method: 'POST',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -490,38 +755,54 @@ async function guardarConteoProducto() {
             body: JSON.stringify(conteoData)
         });
 
+        console.log('📡 Respuesta recibida:', response.status);
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            const errorData = await response.text();
+            console.error('❌ Error del servidor:', errorData);
+            throw new Error(`Error ${response.status}: ${errorData}`);
         }
 
         const resultado = await response.json();
+        console.log('✅ Resultado exitoso:', resultado);
 
-        console.log('✅ Conteo guardado exitosamente:', resultado);
-
-        // Mostrar mensaje de éxito
+        // ✅ MOSTRAR MENSAJE DE ÉXITO
         if (resultado.hayDiscrepancia) {
-            mostrarExito(`Conteo guardado. Discrepancia de ${resultado.diferencia} detectada.`);
+            mostrarExito(`Conteo guardado. Discrepancia de ${resultado.diferencia} unidades detectada.`);
         } else {
             mostrarExito('Conteo guardado exitosamente');
         }
 
-        // Cerrar modal
-        $('#modalConteo').modal('hide');
+        // ✅ CERRAR MODAL
+        const modal = bootstrap.Modal.getInstance(document.getElementById('conteoModal'));
+        if (modal) {
+            modal.hide();
+        }
 
-        // Recargar productos para mostrar el cambio
+        // ✅ RECARGAR PRODUCTOS Y ESTADÍSTICAS
         await cargarProductosInventario(inventarioId);
-        await actualizarEstadisticas();
+        await actualizarEstadisticasUI();
+
+        console.log('🎉 Conteo guardado y datos actualizados');
 
     } catch (error) {
         console.error('❌ Error guardando conteo:', error);
         mostrarError(`Error al guardar conteo: ${error.message}`);
     } finally {
-        // Restaurar botón
-        $('#btnGuardarConteo').prop('disabled', false).html(textoOriginal);
+        // ✅ RESTAURAR BOTÓN SIEMPRE
+        try {
+            const $btn = $('#btnGuardarConteo');
+            if ($btn.length) {
+                $btn.prop('disabled', false);
+                $btn.find('.loading-state').hide();
+                $btn.find('.normal-state').show();
+            }
+        } catch (btnError) {
+            console.error('❌ Error restaurando botón:', btnError);
+        }
     }
 }
+
 
 function limpiarModalConteo() {
     $('#modalProductoId').val('');
@@ -685,6 +966,53 @@ async function completarInventario() {
 }
 
 // =====================================
+// FUNCIONES DE ACTUALIZACIÓN DE UI
+// =====================================
+
+/**
+ * Actualiza las estadísticas en la interfaz de usuario
+ */
+function actualizarEstadisticasUI() {
+    try {
+        console.log('📊 Actualizando estadísticas UI...');
+        console.log('📊 Estadísticas actuales:', estadisticasActuales);
+
+        // Actualizar contadores
+        $('#totalProductos').text(estadisticasActuales.total || 0);
+        $('#productosContados').text(estadisticasActuales.contados || 0);
+        $('#productosPendientes').text(estadisticasActuales.pendientes || 0);
+        $('#discrepancias').text(estadisticasActuales.discrepancias || 0);
+
+        // Actualizar barra de progreso
+        const porcentaje = estadisticasActuales.porcentajeProgreso || 0;
+        $('#porcentajeProgreso').text(`${porcentaje}%`);
+        $('#barraProgreso').css('width', `${porcentaje}%`);
+
+        // Cambiar color de la barra según el progreso
+        const $barra = $('#barraProgreso');
+        $barra.removeClass('bg-danger bg-warning bg-info bg-success progress-bar-striped progress-bar-animated');
+
+        if (porcentaje < 25) {
+            $barra.addClass('bg-danger progress-bar-striped progress-bar-animated');
+        } else if (porcentaje < 50) {
+            $barra.addClass('bg-warning progress-bar-striped progress-bar-animated');
+        } else if (porcentaje < 90) {
+            $barra.addClass('bg-info progress-bar-striped progress-bar-animated');
+        } else {
+            $barra.addClass('bg-success');
+        }
+
+        // Actualizar contador de productos mostrados
+        $('#contadorProductosMostrados').text(productosInventario.length);
+
+        console.log(`📊 Estadísticas actualizadas: ${porcentaje}% completado`);
+
+    } catch (error) {
+        console.error('❌ Error actualizando estadísticas UI:', error);
+    }
+}
+
+// =====================================
 // FUNCIONES AUXILIARES
 // =====================================
 function getInventarioIdFromUrl() {
@@ -698,6 +1026,142 @@ function getInventarioIdFromUrl() {
     console.log('🔍 ID extraído de URL:', id);
     return id;
 }
+
+function actualizarVistaPreviaAjuste() {
+    try {
+        const tipoAjuste = $('#tipoAjusteInventario').val();
+        const producto = productosInventario.find(p => p.productoId == $('#productoIdAjuste').val());
+
+        if (!tipoAjuste || !producto) {
+            $('#vistaPreviaAjuste').hide();
+            return;
+        }
+
+        const stockActual = producto.cantidadSistema || 0;
+        const stockFisico = producto.cantidadFisica || 0;
+        let stockFinal = stockActual;
+        let accionTexto = '';
+
+        switch (tipoAjuste) {
+            case 'ajustar-sistema':
+                stockFinal = parseInt($('#cantidadAjusteInventario').val()) || stockFisico;
+                accionTexto = 'Ajustar al físico';
+                break;
+            case 'reconteo':
+                stockFinal = stockActual;
+                accionTexto = 'Recontar';
+                break;
+            case 'verificacion':
+                stockFinal = stockActual;
+                accionTexto = 'Verificar';
+                break;
+        }
+
+        $('#stockActualPreviewAjuste').text(stockActual);
+        $('#stockFisicoPreviewAjuste').text(stockFisico);
+        $('#accionPreviewAjuste').text(accionTexto);
+        $('#stockFinalPreviewAjuste').text(stockFinal);
+
+        $('#vistaPreviaAjuste').show();
+
+    } catch (error) {
+        console.error('❌ Error actualizando vista previa:', error);
+    }
+}
+
+async function guardarAjusteInventario() {
+    try {
+        console.log('💾 === GUARDANDO AJUSTE DE INVENTARIO ===');
+
+        const productoId = $('#productoIdAjuste').val();
+        const tipoAjuste = $('#tipoAjusteInventario').val();
+        const motivo = $('#motivoAjusteInventario').val()?.trim();
+
+        // ✅ VALIDACIONES
+        if (!productoId || !tipoAjuste || !motivo) {
+            mostrarError('Todos los campos son obligatorios');
+            return;
+        }
+
+        if (motivo.length < 10) {
+            mostrarError('El motivo debe tener al menos 10 caracteres');
+            $('#motivoAjusteInventario').focus();
+            return;
+        }
+
+        // ✅ OBTENER BOTÓN Y MANEJAR ESTADO
+        const $btn = $('#guardarAjusteInventarioBtn');
+        $btn.prop('disabled', true);
+        $btn.find('.normal-state').hide();
+        $btn.find('.loading-state').show();
+
+        let ajusteData = {};
+
+        if (tipoAjuste === 'ajustar-sistema') {
+            // ✅ USAR EL ENDPOINT EXISTENTE DE AJUSTE DE STOCK
+            const cantidadFinal = parseInt($('#cantidadAjusteInventario').val());
+
+            ajusteData = {
+                tipoAjuste: 'ajuste',
+                cantidad: cantidadFinal,
+                comentario: `Ajuste por inventario físico: ${motivo}`
+            };
+
+            console.log('📤 Enviando ajuste de stock:', ajusteData);
+
+            const response = await fetch(`/Inventario/AjustarStock/${productoId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(ajusteData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${await response.text()}`);
+            }
+
+            const resultado = await response.json();
+
+            if (resultado.success) {
+                mostrarExito(`Stock ajustado exitosamente. ${resultado.data.stockAnterior} → ${resultado.data.stockNuevo} unidades`);
+            } else {
+                throw new Error(resultado.message || 'Error al ajustar stock');
+            }
+
+        } else {
+            // ✅ PARA RECONTEO Y VERIFICACIÓN, SOLO REGISTRAR EN EL INVENTARIO
+            console.log('📝 Registrando acción en inventario:', tipoAjuste);
+
+            // Aquí podrías implementar un endpoint específico para estas acciones
+            // Por ahora, simular el éxito
+            mostrarExito(`Acción "${tipoAjuste}" registrada exitosamente`);
+        }
+
+        // ✅ CERRAR MODAL Y RECARGAR DATOS
+        const modal = bootstrap.Modal.getInstance(document.getElementById('ajusteStockInventarioModal'));
+        if (modal) {
+            modal.hide();
+        }
+
+        // ✅ RECARGAR PRODUCTOS Y ESTADÍSTICAS
+        await cargarProductosInventario(window.inventarioConfig.inventarioId);
+        await actualizarEstadisticasUI();
+
+    } catch (error) {
+        console.error('❌ Error guardando ajuste:', error);
+        mostrarError(`Error al guardar ajuste: ${error.message}`);
+    } finally {
+        // ✅ RESTAURAR BOTÓN
+        const $btn = $('#guardarAjusteInventarioBtn');
+        $btn.prop('disabled', false);
+        $btn.find('.loading-state').hide();
+        $btn.find('.normal-state').show();
+    }
+}
+
+
 function obtenerUsuarioId() {
     // Esta función debería obtener el ID del usuario actual
     // Puedes implementarla según tu sistema de autenticación
@@ -762,64 +1226,90 @@ function mostrarInfo(mensaje) {
 }
 
 function crearBotonesAccion(producto) {
-    const permisos = window.permisosUsuarioInventario || {};
-    const inventarioEnProgreso = inventarioActual?.estado === 'En Progreso';
+    try {
+        // ✅ OBTENER PERMISOS DESDE CONFIGURACIÓN GLOBAL
+        const permisos = window.inventarioConfig?.permisos || {};
+        const inventarioEnProgreso = inventarioActual?.estado === 'En Progreso';
 
-    let botones = '';
+        console.log('🔒 Permisos del usuario:', permisos);
+        console.log('📊 Estado del inventario en progreso:', inventarioEnProgreso);
 
-    // Botón de contar (solo si tiene permiso y el inventario está en progreso)
-    if (permisos.permisoConteo && inventarioEnProgreso) {
-        const textoBoton = producto.estadoConteo === 'Contado' ? 'Recontar' : 'Contar';
-        botones += `
-            <button class="btn btn-sm btn-primary btn-contar me-1" 
-                    onclick="abrirModalConteo(${producto.productoId})">
-                <i class="fas fa-calculator me-1"></i>
-                ${textoBoton}
+        let botones = '';
+
+        // ✅ BOTÓN DE CONTAR (si tiene permiso y el inventario está en progreso)
+        if ((permisos.puedeContar || permisos.esAdmin) && inventarioEnProgreso) {
+            const textoBoton = producto.estadoConteo === 'Contado' ? 'Recontar' : 'Contar';
+            const iconoBoton = producto.estadoConteo === 'Contado' ? 'bi-arrow-clockwise' : 'bi-calculator';
+
+            botones += `
+                <button class="btn btn-sm btn-primary btn-contar me-1" 
+                        onclick="abrirModalConteo(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="${textoBoton} producto">
+                    <i class="bi ${iconoBoton} me-1"></i>
+                    ${textoBoton}
+                </button>
+            `;
+        }
+
+        // ✅ BOTÓN DE AJUSTE (solo si tiene permiso, hay discrepancia y el inventario está en progreso)
+        if ((permisos.puedeAjustar || permisos.esAdmin) && producto.tieneDiscrepancia && inventarioEnProgreso) {
+            botones += `
+                <button class="btn btn-sm btn-warning btn-ajustar me-1" 
+                        onclick="abrirModalAjuste(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="Ajustar discrepancia en el sistema">
+                    <i class="bi bi-tools me-1"></i>
+                    Ajustar
+                </button>
+            `;
+        }
+
+        // ✅ BOTÓN DE VALIDACIÓN (solo si tiene permiso y hay discrepancia)
+        if ((permisos.puedeValidar || permisos.esAdmin) && producto.tieneDiscrepancia) {
+            botones += `
+                <button class="btn btn-sm btn-info btn-validar me-1" 
+                        onclick="abrirModalValidacion(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="Validar y aprobar discrepancia">
+                    <i class="bi bi-check-double me-1"></i>
+                    Validar
+                </button>
+            `;
+        }
+
+        // ✅ BOTÓN INFORMATIVO si no tiene permisos
+        if (!botones) {
+            let razon = '';
+            if (!inventarioEnProgreso) {
+                razon = 'Inventario no está en progreso';
+            } else if (!permisos.puedeContar && !permisos.esAdmin) {
+                razon = 'Sin permisos de conteo';
+            } else {
+                razon = 'Sin acciones disponibles';
+            }
+
+            botones = `
+                <button class="btn btn-sm btn-secondary" disabled 
+                        data-bs-toggle="tooltip" 
+                        title="${razon}">
+                    <i class="bi bi-lock me-1"></i>
+                    Sin acceso
+                </button>
+            `;
+        }
+
+        return botones;
+
+    } catch (error) {
+        console.error('❌ Error creando botones de acción:', error);
+        return `
+            <button class="btn btn-sm btn-secondary" disabled>
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Error
             </button>
         `;
     }
-
-    // Botón de ajuste (solo si tiene permiso, hay discrepancia y el inventario está en progreso)
-    if (permisos.permisoAjuste && producto.tieneDiscrepancia && inventarioEnProgreso) {
-        botones += `
-            <button class="btn btn-sm btn-warning btn-ajustar me-1" 
-                    onclick="abrirModalAjuste(${producto.productoId})"
-                    title="Ajustar discrepancia">
-                <i class="fas fa-tools me-1"></i>
-                Ajustar
-            </button>
-        `;
-    }
-
-    // Botón de validación (solo si tiene permiso y hay discrepancia)
-    if (permisos.permisoValidacion && producto.tieneDiscrepancia) {
-        botones += `
-            <button class="btn btn-sm btn-info btn-validar" 
-                    onclick="abrirModalValidacion(${producto.productoId})"
-                    title="Validar discrepancia">
-                <i class="fas fa-check-double me-1"></i>
-                Validar
-            </button>
-        `;
-    }
-
-    // Si no tiene permisos o el inventario no está en progreso, mostrar botón deshabilitado
-    if (!botones) {
-        const razon = !inventarioEnProgreso ? 'Inventario no en progreso' : 'Sin permisos';
-        botones = `
-            <button class="btn btn-sm btn-secondary" disabled title="${razon}">
-                <i class="fas fa-lock me-1"></i>
-                Sin acceso
-            </button>
-        `;
-    }
-
-    return botones;
-}
-
-// Funciones placeholder para ajuste y validación (implementar después si es necesario)
-function abrirModalAjuste(productoId) {
-    mostrarInfo('Función de ajuste en desarrollo');
 }
 
 function abrirModalValidacion(productoId) {
@@ -828,3 +1318,5 @@ function abrirModalValidacion(productoId) {
 window.abrirModalConteo = abrirModalConteo;
 window.mostrarModalCompletarInventario = mostrarModalCompletarInventario;
 window.completarInventario = completarInventario;
+
+

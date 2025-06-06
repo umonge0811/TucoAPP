@@ -297,6 +297,148 @@
     </div>
 </div>
 
+<!-- Modal para ajuste de stock en toma de inventario -->
+<div class="modal fade" id="ajusteStockInventarioModal" tabindex="-1" aria-labelledby="ajusteStockInventarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="ajusteStockInventarioModalLabel">
+                    <i class="bi bi-tools me-2"></i>
+                    Ajustar Discrepancia en Inventario
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="ajusteStockInventarioForm">
+                    <!-- Campo oculto para el ID del producto -->
+                    <input type="hidden" id="productoIdAjuste" value="">
+
+                    <!-- Información del producto y discrepancia -->
+                    <div class="alert alert-warning mb-3" id="infoDiscrepanciaAjuste">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
+                            <div>
+                                <strong>Producto:</strong> <span id="nombreProductoAjuste">-</span><br>
+                                <strong>Stock en Sistema:</strong> <span id="stockSistemaAjuste">-</span> unidades<br>
+                                <strong>Cantidad Física Contada:</strong> <span id="stockFisicoAjuste">-</span> unidades<br>
+                                <strong>Discrepancia:</strong>
+                                <span id="discrepanciaAjuste" class="fw-bold">-</span> unidades
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Tipo de ajuste -->
+                        <div class="col-md-6 mb-3">
+                            <label for="tipoAjusteInventario" class="form-label fw-bold">
+                                <i class="bi bi-gear me-1"></i>
+                                Acción a Realizar <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="tipoAjusteInventario" required>
+                                <option value="">Seleccione la acción</option>
+                                <option value="ajustar-sistema">
+                                    🔧 Ajustar stock del sistema al conteo físico
+                                </option>
+                                <option value="reconteo">
+                                    🔄 Solicitar reconteo del producto
+                                </option>
+                                <option value="verificacion">
+                                    ✓ Marcar como verificado (mantener discrepancia)
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                <small>
+                                    <strong>Ajustar sistema:</strong> Cambia el stock del sistema al conteo físico<br>
+                                    <strong>Reconteo:</strong> Marca para contar nuevamente<br>
+                                    <strong>Verificado:</strong> Acepta la discrepancia como válida
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Cantidad (solo para ajuste manual) -->
+                        <div class="col-md-6 mb-3" id="containerCantidadAjuste" style="display: none;">
+                            <label for="cantidadAjusteInventario" class="form-label fw-bold">
+                                <i class="bi bi-123 me-1"></i>
+                                Cantidad Final <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="bi bi-hash"></i>
+                                </span>
+                                <input type="number" class="form-control" id="cantidadAjusteInventario" min="0" max="99999" placeholder="Cantidad final en sistema">
+                                <span class="input-group-text">unidades</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motivo del ajuste -->
+                    <div class="mb-3">
+                        <label for="motivoAjusteInventario" class="form-label fw-bold">
+                            <i class="bi bi-chat-text me-1"></i>
+                            Motivo del Ajuste <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="motivoAjusteInventario" rows="3" maxlength="500" required
+                                  placeholder="Explique el motivo de la discrepancia y la acción tomada..."></textarea>
+                        <div class="form-text">
+                            <small>Este comentario se guardará en el historial del inventario. Máximo 500 caracteres.</small>
+                        </div>
+                    </div>
+
+                    <!-- Vista previa del ajuste -->
+                    <div class="card border-warning mb-3" id="vistaPreviaAjuste" style="display: none;">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">
+                                <i class="bi bi-eye me-2"></i>
+                                Vista Previa del Ajuste
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <div class="border-end">
+                                        <div class="h6 mb-1" id="stockActualPreviewAjuste">-</div>
+                                        <small class="text-muted">Stock Actual</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="border-end">
+                                        <div class="h6 mb-1 text-info" id="stockFisicoPreviewAjuste">-</div>
+                                        <small class="text-muted">Conteo Físico</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="border-end">
+                                        <div class="h6 mb-1 text-warning" id="accionPreviewAjuste">-</div>
+                                        <small class="text-muted">Acción</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="h6 mb-1 text-success" id="stockFinalPreviewAjuste">-</div>
+                                    <small class="text-muted">Stock Final</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" id="guardarAjusteInventarioBtn">
+                    <span class="normal-state">
+                        <i class="bi bi-check-lg me-2"></i>Aplicar Ajuste
+                    </span>
+                    <span class="loading-state" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Aplicando...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal para registrar conteo -->
 <div class="modal fade" id="conteoModal" tabindex="-1" aria-labelledby="conteoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">

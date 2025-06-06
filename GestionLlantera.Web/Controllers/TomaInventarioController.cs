@@ -58,20 +58,43 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
-                _logger.LogInformation("📱 Cargando interfaz de toma para inventario {Id}", id);
+                _logger.LogInformation("🚀 === MÉTODO EJECUTAR LLAMADO ===");
+                _logger.LogInformation("🚀 ID del inventario: {Id}", (object)id);
+                _logger.LogInformation("🚀 URL solicitada: {Url}", (object)(Request.Path + Request.QueryString));
+                _logger.LogInformation("🚀 Usuario: {Usuario}", (object)(User.Identity?.Name ?? "Anónimo"));
 
                 // ✅ VERIFICAR SESIÓN
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
+                    _logger.LogError("❌ Token JWT no encontrado");
                     TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
                     return RedirectToAction("Login", "Account");
                 }
 
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente");
+
                 // ✅ OBTENER INFORMACIÓN DEL INVENTARIO usando el servicio de inventario
                 var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id, token);
+
+                _logger.LogInformation("📋 === INFORMACIÓN DEL INVENTARIO ===");
+                if (inventario == null)
+                {
+                    _logger.LogError("❌ Inventario es NULL");
+                }
+                else
+                {
+                    _logger.LogInformation("📋 ID: {Id}", (object)inventario.InventarioProgramadoId);
+                    _logger.LogInformation("📋 Título: {Titulo}", (object)(inventario.Titulo ?? "Sin título"));
+                    _logger.LogInformation("📋 Estado: {Estado}", (object)(inventario.Estado ?? "Sin estado"));
+                    _logger.LogInformation("📋 Fecha inicio: {Fecha}", (object)inventario.FechaInicio);
+                    _logger.LogInformation("📋 Fecha fin: {Fecha}", (object)inventario.FechaFin);
+                    _logger.LogInformation("📋 Total asignaciones: {Count}", (object)(inventario.AsignacionesUsuarios?.Count ?? 0));
+                }
+
                 if (inventario == null || inventario.InventarioProgramadoId == 0)
                 {
+                    _logger.LogError("❌ Inventario no encontrado - ID: {Id}", (object)id);
                     TempData["Error"] = "Inventario no encontrado.";
                     return RedirectToAction("ProgramarInventario", "Inventario");
                 }
@@ -79,6 +102,7 @@ namespace GestionLlantera.Web.Controllers
                 // ✅ VERIFICAR QUE ESTÉ EN PROGRESO
                 if (inventario.Estado != "En Progreso")
                 {
+                    _logger.LogWarning("⚠️ Inventario no está en progreso: {Estado}", (object)(inventario.Estado ?? "Sin estado"));
                     TempData["Error"] = $"El inventario está en estado '{inventario.Estado}' y no se puede realizar toma.";
                     return RedirectToAction("DetalleInventarioProgramado", "Inventario", new { id });
                 }
@@ -90,8 +114,16 @@ namespace GestionLlantera.Web.Controllers
                 var puedeValidar = inventario.AsignacionesUsuarios?.Any(a => a.UsuarioId == usuarioId && a.PermisoValidacion) ?? false;
                 var esAdmin = await this.TienePermisoAsync("Programar Inventario");
 
+                _logger.LogInformation("🔐 === PERMISOS DEL USUARIO ===");
+                _logger.LogInformation("🔐 Usuario ID: {UsuarioId}", (object)usuarioId);
+                _logger.LogInformation("🔐 Puede contar: {PuedeContar}", (object)puedeContar);
+                _logger.LogInformation("🔐 Puede ajustar: {PuedeAjustar}", (object)puedeAjustar);
+                _logger.LogInformation("🔐 Puede validar: {PuedeValidar}", (object)puedeValidar);
+                _logger.LogInformation("🔐 Es admin: {EsAdmin}", (object)esAdmin);
+
                 if (!puedeContar && !esAdmin)
                 {
+                    _logger.LogWarning("🚫 Usuario sin permisos de conteo");
                     TempData["Error"] = "No tienes permisos para realizar conteos en este inventario.";
                     return RedirectToAction("DetalleInventarioProgramado", "Inventario", new { id });
                 }
@@ -104,14 +136,19 @@ namespace GestionLlantera.Web.Controllers
                 ViewBag.PuedeValidar = puedeValidar || esAdmin;
                 ViewBag.EsAdmin = esAdmin;
 
-                _logger.LogInformation("✅ Interfaz de toma cargada para usuario {Usuario} - Permisos: Contar={Contar}, Ajustar={Ajustar}, Validar={Validar}",
-                    User.Identity?.Name, puedeContar || esAdmin, puedeAjustar || esAdmin, puedeValidar || esAdmin);
+                _logger.LogInformation("📦 === DATOS PREPARADOS PARA LA VISTA ===");
+                _logger.LogInformation("📦 ViewBag.InventarioId: {Id}", (object)id);
+                _logger.LogInformation("📦 ViewBag.UsuarioId: {UsuarioId}", (object)usuarioId);
+
+                _logger.LogInformation("✅ === RETORNANDO VISTA CON MODELO ===");
+                _logger.LogInformation("✅ Modelo.Titulo: {Titulo}", (object)(inventario.Titulo ?? "Sin título"));
+                _logger.LogInformation("✅ Modelo.Estado: {Estado}", (object)(inventario.Estado ?? "Sin estado"));
 
                 return View(inventario);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error al cargar interfaz de toma para inventario {Id}", id);
+                _logger.LogError(ex, "💥 Error al cargar interfaz de toma para inventario {Id}", (object)id);
                 TempData["Error"] = "Error al cargar la interfaz de toma de inventario.";
                 return RedirectToAction("ProgramarInventario", "Inventario");
             }
@@ -126,8 +163,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo productos del inventario {Id} - Filtro: '{Filtro}', Solo sin contar: {SoloSinContar}",
-                    id, filtro, soloSinContar);
+                _logger.LogInformation("📋 Obteniendo productos del inventario {Id}", id);
 
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
@@ -137,7 +173,6 @@ namespace GestionLlantera.Web.Controllers
 
                 // ✅ LLAMAR AL SERVICIO PARA OBTENER PRODUCTOS
                 var productos = await _tomaInventarioService.ObtenerProductosInventarioAsync(id, token);
-
                 if (productos == null)
                 {
                     return Json(new { success = false, message = "No se pudieron obtener los productos" });
@@ -147,7 +182,7 @@ namespace GestionLlantera.Web.Controllers
                 if (!string.IsNullOrWhiteSpace(filtro))
                 {
                     productos = productos.Where(p =>
-                        p.NombreProducto.Contains(filtro, StringComparison.OrdinalIgnoreCase) ||
+                        (p.NombreProducto?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false) ||
                         (p.MarcaLlanta?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false) ||
                         (p.ModeloLlanta?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false) ||
                         p.ProductoId.ToString().Contains(filtro)
@@ -172,22 +207,23 @@ namespace GestionLlantera.Web.Controllers
                     resultadosFiltrados = productos.Count
                 };
 
-                _logger.LogInformation("✅ Enviando {Filtrados} productos filtrados de {Total} totales",
-                    productos.Count, productos.Count);
+                _logger.LogInformation("✅ Enviando {Count} productos", productos.Count);
 
+                // ✅ RETURN JSON DENTRO DEL TRY
                 return Json(new
                 {
                     success = true,
                     productos = productos,
                     estadisticas = estadisticas
                 });
-            }
+
+            } // ← AQUÍ TERMINA EL TRY
             catch (Exception ex)
             {
                 _logger.LogError(ex, "💥 Error al obtener productos del inventario {Id}", id);
                 return Json(new { success = false, message = "Error al obtener productos" });
             }
-        }
+        } // ← AQUÍ TERMINA EL MÉTODO - NO MÁS RETURN JSON AQUÍ
 
 
         // =====================================

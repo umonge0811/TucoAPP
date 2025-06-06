@@ -425,104 +425,141 @@ namespace API.Controllers
                 _logger.LogInformation("📦 Inventario ID: {InventarioId}, Usuario: {Usuario}",
                     inventarioId, User.Identity?.Name ?? "Anónimo");
 
-                // 🔒 VERIFICAR ACCESO AL INVENTARIO
+                // ✅ VERIFICAR ACCESO AL INVENTARIO
                 var tieneAcceso = await VerificarAccesoInventario(inventarioId);
                 if (!tieneAcceso)
                 {
                     return Forbid("No tienes acceso a este inventario");
                 }
 
-                // ✅ OBTENER PRODUCTOS CON MANEJO SEGURO DE NULLS
-                var productos = await _context.DetallesInventarioProgramado
+                // ✅ OBTENER DETALLES SIN RELACIONES COMPLEJAS
+                var detalles = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioId)
-                    .Select(d => new DetalleInventarioDTO
-                    {
-                        DetalleId = d.DetalleId,
-                        InventarioProgramadoId = d.InventarioProgramadoId,
-                        ProductoId = d.ProductoId,
-                        CantidadSistema = d.CantidadSistema,
-                        CantidadFisica = d.CantidadFisica,
-                        Diferencia = d.Diferencia,
-                        Observaciones = d.Observaciones ?? "",
-                        FechaConteo = d.FechaConteo,
-                        UsuarioConteoId = d.UsuarioConteoId,
-
-                        // ✅ INFORMACIÓN BÁSICA DEL PRODUCTO (SIN JOINS COMPLEJOS)
-                        NombreProducto = _context.Productos
-                            .Where(p => p.ProductoId == d.ProductoId)
-                            .Select(p => p.NombreProducto)
-                            .FirstOrDefault() ?? "Producto sin nombre",
-
-                        DescripcionProducto = _context.Productos
-                            .Where(p => p.ProductoId == d.ProductoId)
-                            .Select(p => p.Descripcion)
-                            .FirstOrDefault() ?? "",
-
-                        // ✅ INFORMACIÓN BÁSICA DE LLANTA
-                        EsLlanta = _context.Llantas.Any(l => l.ProductoId == d.ProductoId),
-
-                        MarcaLlanta = _context.Llantas
-                            .Where(l => l.ProductoId == d.ProductoId)
-                            .Select(l => l.Marca)
-                            .FirstOrDefault(),
-
-                        ModeloLlanta = _context.Llantas
-                            .Where(l => l.ProductoId == d.ProductoId)
-                            .Select(l => l.Modelo)
-                            .FirstOrDefault(),
-
-                        // ✅ IMAGEN BÁSICA
-                        ImagenUrl = _context.ImagenesProductos
-                            .Where(img => img.ProductoId == d.ProductoId)
-                            .Select(img => img.Urlimagen)
-                            .FirstOrDefault(),
-
-                        // ✅ ESTADOS CALCULADOS
-                        EstadoConteo = d.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                        TieneDiscrepancia = d.Diferencia.HasValue && d.Diferencia.Value != 0,
-
-                        // ✅ USUARIO QUE HIZO EL CONTEO
-                        NombreUsuarioConteo = d.UsuarioConteoId.HasValue ?
-                            _context.Usuarios
-                                .Where(u => u.UsuarioId == d.UsuarioConteoId.Value)
-                                .Select(u => u.NombreUsuario)
-                                .FirstOrDefault() : null
-                    })
                     .ToListAsync();
 
-                _logger.LogInformation("🔍 === DEBUGGING PRODUCTOS API ===");
-                _logger.LogInformation("🔍 Productos encontrados: {Count}", productos.Count);
+                _logger.LogInformation("🔍 Detalles obtenidos: {Count}", detalles.Count);
 
-                if (productos.Any())
+                if (!detalles.Any())
                 {
-                    var primerProducto = productos.First();
-                    _logger.LogInformation("🔍 Primer producto:");
-                    _logger.LogInformation("🔍   - ID: {Id}", primerProducto.ProductoId);
-                    _logger.LogInformation("🔍   - Nombre: '{Nombre}'", primerProducto.NombreProducto);
-                    _logger.LogInformation("🔍   - Cantidad Sistema: {Cantidad}", primerProducto.CantidadSistema);
-                    _logger.LogInformation("🔍   - Estado: {Estado}", primerProducto.EstadoConteo);
+                    return Ok(new
+                    {
+                        productos = new List<DetalleInventarioDTO>(),
+                        estadisticas = new { total = 0, contados = 0, pendientes = 0, discrepancias = 0, porcentajeProgreso = 0.0 }
+                    });
                 }
 
-                _logger.LogInformation("✅ Se obtuvieron {Count} productos para inventario", productos.Count);
+                var productosDTO = new List<DetalleInventarioDTO>();
 
-                // ✅ ESTADÍSTICAS RÁPIDAS
-                var contados = productos.Count(p => p.EstadoConteo == "Contado");
-                var pendientes = productos.Count(p => p.EstadoConteo == "Pendiente");
-                var discrepancias = productos.Count(p => p.TieneDiscrepancia);
+                foreach (var detalle in detalles)
+                {
+                    try
+                    {
+                        // ✅ OBTENER PRODUCTO
+                        var producto = await _context.Productos
+                            .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);
+
+                        // ✅ OBTENER LLANTA (SOLO UNA)
+                        var llanta = await _context.Llantas
+                            .FirstOrDefaultAsync(l => l.ProductoId == detalle.ProductoId);
+
+                        // ✅ OBTENER SOLO LA PRIMERA IMAGEN (EVITAR DUPLICADOS)
+                        var imagenPrincipal = await _context.ImagenesProductos
+                            .Where(img => img.ProductoId == detalle.ProductoId)
+                            .OrderBy(img => img.ImagenId) // Tomar la primera imagen por ID
+                            .Select(img => img.Urlimagen)
+                            .FirstOrDefaultAsync();
+
+                        // ✅ OBTENER USUARIO DE CONTEO
+                        var usuario = detalle.UsuarioConteoId.HasValue
+                            ? await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == detalle.UsuarioConteoId.Value)
+                            : null;
+
+                        // ✅ CONSTRUIR MEDIDAS DE LLANTA
+                        string? medidasLlanta = null;
+                        if (llanta != null && llanta.Ancho.HasValue && llanta.Perfil.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
+                        {
+                            medidasLlanta = $"{llanta.Ancho}/{llanta.Perfil}R{llanta.Diametro}";
+                        }
+
+                        // ✅ CREAR DTO COMPLETO
+                        var dto = new DetalleInventarioDTO
+                        {
+                            DetalleId = detalle.DetalleId,
+                            InventarioProgramadoId = detalle.InventarioProgramadoId,
+                            ProductoId = detalle.ProductoId,
+                            CantidadSistema = detalle.CantidadSistema,
+                            CantidadFisica = detalle.CantidadFisica,
+                            Diferencia = detalle.Diferencia,
+                            Observaciones = detalle.Observaciones ?? "",
+                            FechaConteo = detalle.FechaConteo,
+                            UsuarioConteoId = detalle.UsuarioConteoId,
+
+                            // ✅ INFORMACIÓN DEL PRODUCTO
+                            NombreProducto = producto?.NombreProducto ?? $"Producto {detalle.ProductoId}",
+                            DescripcionProducto = producto?.Descripcion ?? "",
+
+                            // ✅ INFORMACIÓN DE LLANTA
+                            EsLlanta = llanta != null,
+                            MarcaLlanta = llanta?.Marca,
+                            ModeloLlanta = llanta?.Modelo,
+                            MedidasLlanta = medidasLlanta,
+
+                            // ✅ IMAGEN PRINCIPAL (SOLO UNA)
+                            ImagenUrl = imagenPrincipal,
+
+                            // ✅ ESTADOS CALCULADOS
+                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0,
+
+                            // ✅ USUARIO QUE HIZO EL CONTEO
+                            NombreUsuarioConteo = usuario?.NombreUsuario
+                        };
+
+                        productosDTO.Add(dto);
+
+                        _logger.LogInformation("✅ Producto {ProductoId} mapeado: {Nombre} (Llanta: {EsLlanta})",
+                            detalle.ProductoId, dto.NombreProducto, dto.EsLlanta);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ Error mapeando producto {ProductoId}: {Error}", detalle.ProductoId, ex.Message);
+
+                        // ✅ PRODUCTO BÁSICO EN CASO DE ERROR
+                        productosDTO.Add(new DetalleInventarioDTO
+                        {
+                            DetalleId = detalle.DetalleId,
+                            InventarioProgramadoId = detalle.InventarioProgramadoId,
+                            ProductoId = detalle.ProductoId,
+                            CantidadSistema = detalle.CantidadSistema,
+                            CantidadFisica = detalle.CantidadFisica,
+                            Diferencia = detalle.Diferencia,
+                            NombreProducto = $"ERROR - Producto {detalle.ProductoId}",
+                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0
+                        });
+                    }
+                }
+
+                _logger.LogInformation("✅ Productos mapeados correctamente: {Count}", productosDTO.Count);
+
+                // ✅ ESTADÍSTICAS
+                var contados = productosDTO.Count(p => p.EstadoConteo == "Contado");
+                var pendientes = productosDTO.Count(p => p.EstadoConteo == "Pendiente");
+                var discrepancias = productosDTO.Count(p => p.TieneDiscrepancia);
 
                 _logger.LogInformation("📊 Estadísticas: {Contados} contados, {Pendientes} pendientes, {Discrepancias} discrepancias",
                     contados, pendientes, discrepancias);
 
                 return Ok(new
                 {
-                    productos = productos,
+                    productos = productosDTO,
                     estadisticas = new
                     {
-                        total = productos.Count,
+                        total = productosDTO.Count,
                         contados = contados,
                         pendientes = pendientes,
                         discrepancias = discrepancias,
-                        porcentajeProgreso = productos.Count > 0 ? Math.Round((double)contados / productos.Count * 100, 1) : 0
+                        porcentajeProgreso = productosDTO.Count > 0 ? Math.Round((double)contados / productosDTO.Count * 100, 1) : 0
                     }
                 });
             }
@@ -536,6 +573,68 @@ namespace API.Controllers
                 });
             }
         }
+
+
+        /// <summary>
+        /// MÉTODO DE PRUEBA - Solo datos básicos sin relaciones
+        /// GET: api/TomaInventario/{inventarioId}/productos-simple
+        /// </summary>
+        [HttpGet("{inventarioId}/productos-simple")]
+        public async Task<ActionResult> ObtenerProductosSimple(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🧪 === MÉTODO DE PRUEBA SIMPLE ===");
+                _logger.LogInformation("🧪 Inventario ID: {InventarioId}", inventarioId);
+
+                // ✅ AHORA DEBERÍA FUNCIONAR CON EL MODELO CORREGIDO
+                var detalles = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId)
+                    .Select(d => new DetalleInventarioSimpleDTO
+                    {
+                        DetalleId = d.DetalleId,
+                        InventarioProgramadoId = d.InventarioProgramadoId,
+                        ProductoId = d.ProductoId,
+                        CantidadSistema = d.CantidadSistema,
+                        CantidadFisica = d.CantidadFisica,
+                        Diferencia = d.Diferencia,
+                        Observaciones = d.Observaciones,  // ✅ AHORA ES NULLABLE
+                        FechaConteo = d.FechaConteo,
+                        UsuarioConteoId = d.UsuarioConteoId,
+                        EstadoConteo = d.CantidadFisica != null ? "Contado" : "Pendiente",
+                        TieneDiscrepancia = d.Diferencia != null && d.Diferencia != 0
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("🧪 Detalles obtenidos: {Count}", detalles.Count);
+
+                if (detalles.Any())
+                {
+                    var primer = detalles.First();
+                    _logger.LogInformation("🧪 Primer detalle - ID: {DetalleId}, ProductoId: {ProductoId}, Estado: {Estado}",
+                        primer.DetalleId, primer.ProductoId, primer.EstadoConteo);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    total = detalles.Count,
+                    productos = detalles,
+                    mensaje = $"Método simple - {detalles.Count} detalles encontrados"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "🧪 💥 Error en método simple: {Message}", ex.Message);
+
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
 
         /// <summary>
         /// 📝 MÉTODO PRINCIPAL: Registra un conteo de producto
