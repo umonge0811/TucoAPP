@@ -328,9 +328,20 @@
                             <i class="bi bi-clock-history me-2"></i>
                             Estado: Programado
                         </h3>
-                        <button type="button" class="btn btn-success iniciar-inventario-btn" data-id="@Model.InventarioProgramadoId">
+@*                         <button type="button" class="btn btn-success iniciar-inventario-btn" data-id="@Model.InventarioProgramadoId">
                             <i class="bi bi-play-fill me-1"></i> Iniciar Inventario
                         </button>
+
+
+ *@
+
+                        <a href="@Url.Action("Ejecutar", "TomaInventario", new { id = Model.InventarioProgramadoId })" 
+                           class="btn btn-success iniciar-inventario-btn">
+                            <i class="fas fa-play me-1"></i>
+                            Iniciar Inventario
+                        </a>
+
+
                     </div>
                     <div class="card-body">
                         <div class="alert alert-info">
@@ -411,59 +422,30 @@
 
 @section Scripts {
     <script>
+        console.log('🔧 JavaScript cargado');
+        
         document.addEventListener('DOMContentLoaded', function () {
+            console.log('🔧 DOM cargado');
+            
             // Modal de iniciar inventario
             const modalIniciarInventario = new bootstrap.Modal(document.getElementById('modalIniciarInventario'));
+            console.log('🔧 Modal:', modalIniciarInventario);
             
             // Botón de iniciar inventario
             const iniciarInventarioBtn = document.querySelector('.iniciar-inventario-btn');
+            console.log('🔧 Botón encontrado:', iniciarInventarioBtn);
+            
             if (iniciarInventarioBtn) {
+                console.log('🔧 Agregando event listener al botón');
                 iniciarInventarioBtn.addEventListener('click', function() {
+                    console.log('🔧 ¡CLICK DETECTADO!');
                     modalIniciarInventario.show();
                 });
+            } else {
+                console.log('❌ NO se encontró el botón con clase .iniciar-inventario-btn');
             }
             
-            // Botón para confirmar inicio
-            const btnConfirmarIniciar = document.getElementById('btnConfirmarIniciar');
-            if (btnConfirmarIniciar) {
-                btnConfirmarIniciar.addEventListener('click', function() {
-                    const inventarioId = document.querySelector('.iniciar-inventario-btn').dataset.id;
-                    
-                    this.disabled = true;
-                    this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando...';
-                    
-                    // Enviar solicitud AJAX
-                    fetch(`/Inventario/IniciarInventario/${inventarioId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        modalIniciarInventario.hide();
-                        
-                        if (data.success) {
-                            // Mostrar mensaje de éxito y recargar la página
-                            alert(data.message);
-                            window.location.reload();
-                        } else {
-                            // Mostrar mensaje de error
-                            alert('Error: ' + data.message);
-                            this.disabled = false;
-                            this.innerHTML = 'Iniciar Inventario';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Ocurrió un error al procesar la solicitud');
-                        this.disabled = false;
-                        this.innerHTML = 'Iniciar Inventario';
-                        modalIniciarInventario.hide();
-                    });
-                });
-            }
+            // Resto del código...
         });
     </script>
 }

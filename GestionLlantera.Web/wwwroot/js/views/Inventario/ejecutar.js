@@ -1,1146 +1,838 @@
-﻿// ========================================
-// JAVASCRIPT PARA TOMA DE INVENTARIO
-// Ubicación: GestionLlantera.Web/wwwroot/js/views/toma-inventario/ejecutar.js
-// ========================================
-
-/**
- * 🎯 MÓDULO PRINCIPAL PARA TOMA DE INVENTARIO
- * 
- * FUNCIONALIDADES:
- * - Carga y visualización de productos
- * - Búsqueda y filtros en tiempo real
- * - Registro de conteos
- * - Actualización de progreso
- * - Vista adaptativa (móvil/escritorio)
+﻿/**
+ * JavaScript específico para EJECUTAR INVENTARIOS
+ * Separado de programar-inventario.js para evitar conflictos
  */
 
-class TomaInventarioManager {
-    constructor() {
-        // 🔧 Configuración inicial
-        this.inventarioId = window.inventarioConfig?.inventarioId || 0;
-        this.usuarioId = window.inventarioConfig?.usuarioId || 0;
-        this.permisos = window.inventarioConfig?.permisos || {};
-
-        // 📊 Estado de la aplicación
-        this.productos = [];
-        this.productosFiltrados = [];
-        this.estadisticas = {};
-        this.vistaActual = 'lista'; // 'lista' o 'tarjetas'
-        this.filtrosActivos = {
-            busqueda: '',
-            estado: '',
-            tipo: ''
-        };
-
-        // 🎮 Referencias DOM
-        this.elementos = {
-            // Progreso
-            barraProgreso: document.getElementById('barraProgreso'),
-            porcentajeProgreso: document.getElementById('porcentajeProgreso'),
-            totalProductos: document.getElementById('totalProductos'),
-            productosContados: document.getElementById('productosContados'),
-            productosPendientes: document.getElementById('productosPendientes'),
-            discrepancias: document.getElementById('discrepancias'),
-
-            // Búsqueda y filtros
-            busquedaRapida: document.getElementById('busquedaRapida'),
-            filtroEstado: document.getElementById('filtroEstado'),
-            filtroTipo: document.getElementById('filtroTipo'),
-            btnBuscar: document.getElementById('btnBuscar'),
-            btnLimpiarBusqueda: document.getElementById('btnLimpiarBusqueda'),
-
-            // Vistas
-            btnVistaLista: document.getElementById('btnVistaLista'),
-            btnVistaTarjetas: document.getElementById('btnVistaTarjetas'),
-            productosLista: document.getElementById('productosLista'),
-            productosTarjetas: document.getElementById('productosTarjetas'),
-            tablaProductosBody: document.getElementById('tablaProductosBody'),
-            contenedorTarjetas: document.getElementById('contenedorTarjetas'),
-
-            // Estados
-            loadingProductos: document.getElementById('loadingProductos'),
-            estadoVacio: document.getElementById('estadoVacio'),
-            contadorProductosMostrados: document.getElementById('contadorProductosMostrados'),
-
-            // Botones de acción
-            btnActualizarProgreso: document.getElementById('btnActualizarProgreso'),
-            btnMostrarTodos: document.getElementById('btnMostrarTodos'),
-            btnSoloPendientes: document.getElementById('btnSoloPendientes'),
-            btnSoloDiscrepancias: document.getElementById('btnSoloDiscrepancias'),
-            btnLimpiarFiltros: document.getElementById('btnLimpiarFiltros')
-        };
-
-        // 🎭 Modal de conteo
-        this.conteoModal = new bootstrap.Modal(document.getElementById('conteoModal'));
-        this.productoSeleccionado = null;
-
-        // 🏃‍♂️ Inicializar
-        this.init();
-    }
-
-    // =====================================
-    // 🚀 INICIALIZACIÓN
-    // =====================================
-
-    async init() {
-        console.log('🚀 Inicializando Toma de Inventario Manager');
-        console.log('📋 Configuración:', {
-            inventarioId: this.inventarioId,
-            usuarioId: this.usuarioId,
-            permisos: this.permisos
-        });
-
-        try {
-            // Configurar eventos
-            this.configurarEventos();
-
-            // Configurar vista inicial
-            this.configurarVistaInicial();
-
-            // Cargar datos iniciales
-            await this.cargarProductos();
-            await this.actualizarProgreso();
-
-            // Configurar actualización automática cada 30 segundos
-            setInterval(() => this.actualizarProgreso(), 30000);
-
-            console.log('✅ Toma de Inventario Manager inicializado correctamente');
-
-        } catch (error) {
-            console.error('💥 Error al inicializar:', error);
-            this.mostrarError('Error al cargar la interfaz de toma de inventario');
-        }
-    }
-
-    configurarEventos() {
-        // 🔍 Búsqueda y filtros
-        this.elementos.busquedaRapida?.addEventListener('input', (e) => {
-            this.filtrosActivos.busqueda = e.target.value.trim();
-            this.debounce(() => this.aplicarFiltros(), 300);
-        });
-
-        this.elementos.filtroEstado?.addEventListener('change', (e) => {
-            this.filtrosActivos.estado = e.target.value;
-            this.aplicarFiltros();
-        });
-
-        this.elementos.filtroTipo?.addEventListener('change', (e) => {
-            this.filtrosActivos.tipo = e.target.value;
-            this.aplicarFiltros();
-        });
-
-        this.elementos.btnBuscar?.addEventListener('click', () => {
-            this.buscarProductoEspecifico();
-        });
-
-        this.elementos.btnLimpiarBusqueda?.addEventListener('click', () => {
-            this.limpiarBusqueda();
-        });
-
-        // 🎮 Botones de vista
-        this.elementos.btnVistaLista?.addEventListener('click', () => {
-            this.cambiarVista('lista');
-        });
-
-        this.elementos.btnVistaTarjetas?.addEventListener('click', () => {
-            this.cambiarVista('tarjetas');
-        });
-
-        // 📊 Botones de progreso
-        this.elementos.btnActualizarProgreso?.addEventListener('click', () => {
-            this.actualizarProgreso();
-        });
-
-        // 🎯 Botones de acción rápida
-        this.elementos.btnMostrarTodos?.addEventListener('click', () => {
-            this.limpiarFiltros();
-        });
-
-        this.elementos.btnSoloPendientes?.addEventListener('click', () => {
-            this.aplicarFiltroRapido('pendiente');
-        });
-
-        this.elementos.btnSoloDiscrepancias?.addEventListener('click', () => {
-            this.aplicarFiltroRapido('discrepancia');
-        });
-
-        this.elementos.btnLimpiarFiltros?.addEventListener('click', () => {
-            this.limpiarFiltros();
-        });
-
-        // 🎭 Modal de conteo
-        this.configurarModalConteo();
-
-        // 📱 Eventos para móvil
-        this.configurarEventosMovil();
-    }
-
-    configurarVistaInicial() {
-        // Detectar si es móvil para vista inicial
-        const esMobile = window.innerWidth <= 768;
-        this.cambiarVista(esMobile ? 'tarjetas' : 'lista');
-    }
-
-    // =====================================
-    // 📊 CARGA Y GESTIÓN DE DATOS
-    // =====================================
-
-    async cargarProductos() {
-        try {
-            console.log('📋 Cargando productos del inventario...');
-            this.mostrarLoading(true);
-
-            const response = await fetch(`/TomaInventario/ObtenerProductos/${this.inventarioId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-
-            const data = await response.json();
-
-            if (data.success) {
-                this.productos = data.productos || [];
-                this.estadisticas = data.estadisticas || {};
-                this.productosFiltrados = [...this.productos];
-
-                console.log(`✅ Cargados ${this.productos.length} productos`);
-
-                this.renderizarProductos();
-                this.actualizarContadores();
-                this.mostrarLoading(false);
-
-            } else {
-                throw new Error(data.message || 'Error al cargar productos');
-            }
-
-        } catch (error) {
-            console.error('💥 Error cargando productos:', error);
-            this.mostrarError('Error al cargar los productos del inventario');
-            this.mostrarLoading(false);
-        }
-    }
-
-    async actualizarProgreso() {
-        try {
-            const response = await fetch(`/TomaInventario/ObtenerProgreso/${this.inventarioId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                console.warn('No se pudo actualizar el progreso');
-                return;
-            }
-
-            const data = await response.json();
-
-            if (data.success && data.progreso) {
-                this.actualizarInterfazProgreso(data.progreso);
-            }
-
-        } catch (error) {
-            console.warn('Error actualizando progreso:', error);
-        }
-    }
-
-    actualizarInterfazProgreso(progreso) {
-        // Actualizar barra de progreso
-        const porcentaje = progreso.porcentajeProgreso || 0;
-
-        if (this.elementos.barraProgreso) {
-            this.elementos.barraProgreso.style.width = `${porcentaje}%`;
-            this.elementos.barraProgreso.setAttribute('aria-valuenow', porcentaje);
-        }
-
-        if (this.elementos.porcentajeProgreso) {
-            this.elementos.porcentajeProgreso.textContent = `${porcentaje}%`;
-        }
-
-        // Actualizar estadísticas
-        if (this.elementos.totalProductos) {
-            this.elementos.totalProductos.textContent = progreso.totalProductos || 0;
-        }
-
-        if (this.elementos.productosContados) {
-            this.elementos.productosContados.textContent = progreso.productosContados || 0;
-        }
-
-        if (this.elementos.productosPendientes) {
-            this.elementos.productosPendientes.textContent = progreso.productosPendientes || 0;
-        }
-
-        if (this.elementos.discrepancias) {
-            this.elementos.discrepancias.textContent = progreso.totalDiscrepancias || 0;
-        }
-
-        // Cambiar color de barra según progreso
-        if (this.elementos.barraProgreso) {
-            this.elementos.barraProgreso.className = 'progress-bar progress-bar-striped progress-bar-animated';
-
-            if (porcentaje === 100) {
-                this.elementos.barraProgreso.classList.add('bg-success');
-            } else if (porcentaje >= 75) {
-                this.elementos.barraProgreso.classList.add('bg-info');
-            } else if (porcentaje >= 50) {
-                this.elementos.barraProgreso.classList.add('bg-warning');
-            } else {
-                this.elementos.barraProgreso.classList.add('bg-primary');
-            }
-        }
-    }
-
-    // =====================================
-    // 🎨 RENDERIZADO DE PRODUCTOS
-    // =====================================
-
-    renderizarProductos() {
-        if (this.vistaActual === 'lista') {
-            this.renderizarVistaLista();
-        } else {
-            this.renderizarVistaTarjetas();
-        }
-
-        this.actualizarContadores();
-    }
-
-    renderizarVistaLista() {
-        if (!this.elementos.tablaProductosBody) return;
-
-        const tbody = this.elementos.tablaProductosBody;
-        tbody.innerHTML = '';
-
-        if (this.productosFiltrados.length === 0) {
-            this.mostrarEstadoVacio();
-            return;
-        }
-
-        this.productosFiltrados.forEach(producto => {
-            const fila = this.crearFilaProducto(producto);
-            tbody.appendChild(fila);
-        });
-
-        this.mostrarVista('lista');
-    }
-
-    renderizarVistaTarjetas() {
-        if (!this.elementos.contenedorTarjetas) return;
-
-        const contenedor = this.elementos.contenedorTarjetas;
-        contenedor.innerHTML = '';
-
-        if (this.productosFiltrados.length === 0) {
-            this.mostrarEstadoVacio();
-            return;
-        }
-
-        this.productosFiltrados.forEach(producto => {
-            const tarjeta = this.crearTarjetaProducto(producto);
-            contenedor.appendChild(tarjeta);
-        });
-
-        this.mostrarVista('tarjetas');
-    }
-
-    crearFilaProducto(producto) {
-        const fila = document.createElement('tr');
-
-        // Clase según estado
-        if (producto.tieneDiscrepancia) {
-            fila.classList.add('table-warning');
-        } else if (producto.estadoConteo === 'Contado') {
-            fila.classList.add('table-success');
-        }
-
-        fila.innerHTML = `
-            <td>${producto.productoId}</td>
-            <td>
-                <div class="producto-imagen-mini">
-                    ${producto.imagenUrl ?
-                `<img src="${producto.imagenUrl}" alt="${producto.nombreProducto}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">` :
-                `<div class="sin-imagen-placeholder" style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 4px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-image text-muted"></i></div>`
-            }
-                </div>
-            </td>
-            <td>
-                <div>
-                    <strong>${producto.nombreProducto}</strong>
-                    ${producto.descripcionProducto ? `<div class="small text-muted">${producto.descripcionProducto}</div>` : ''}
-                    ${producto.esLlanta ? '<span class="badge bg-primary">Llanta</span>' : ''}
-                </div>
-            </td>
-            <td class="text-center">
-                <span class="badge ${this.getClaseEstado(producto.estadoConteo)}">
-                    ${this.getTextoEstado(producto.estadoConteo)}
-                </span>
-            </td>
-            <td class="text-center">
-                <span class="fs-6">${producto.cantidadSistema}</span>
-            </td>
-            <td class="text-center">
-                ${producto.cantidadFisica !== null ?
-                `<span class="fs-6 fw-bold text-success">${producto.cantidadFisica}</span>` :
-                '<span class="text-muted">-</span>'
-            }
-                ${producto.tieneDiscrepancia ?
-                `<div class="small text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Diferencia: ${producto.diferencia || 0}</div>` :
-                ''
-            }
-            </td>
-            <td>
-                <div class="btn-group">
-                    <button type="button" 
-                            class="btn btn-sm btn-primary contar-btn" 
-                            data-producto-id="${producto.productoId}"
-                            ${!this.permisos.puedeContar ? 'disabled' : ''}>
-                        <i class="bi bi-123"></i>
-                        ${producto.estadoConteo === 'Contado' ? 'Recontar' : 'Contar'}
-                    </button>
-                </div>
-            </td>
-        `;
-
-        // Configurar evento del botón contar
-        const btnContar = fila.querySelector('.contar-btn');
-        btnContar?.addEventListener('click', () => {
-            this.abrirModalConteo(producto);
-        });
-
-        return fila;
-    }
-
-    crearTarjetaProducto(producto) {
-        const col = document.createElement('div');
-        col.className = 'col-12 col-sm-6 col-lg-4 col-xl-3';
-
-        const claseEstado = producto.tieneDiscrepancia ? 'border-warning' :
-            producto.estadoConteo === 'Contado' ? 'border-success' : 'border-light';
-
-        col.innerHTML = `
-            <div class="card h-100 ${claseEstado}" style="transition: transform 0.2s ease;">
-                <div class="card-body p-3">
-                    <!-- Imagen del producto -->
-                    <div class="text-center mb-3">
-                        ${producto.imagenUrl ?
-                `<img src="${producto.imagenUrl}" alt="${producto.nombreProducto}" class="img-fluid rounded" style="max-height: 100px; object-fit: cover;">` :
-                `<div class="sin-imagen-placeholder bg-light rounded d-flex align-items-center justify-content-center" style="height: 100px;"><i class="bi bi-image text-muted" style="font-size: 2rem;"></i></div>`
-            }
-                    </div>
-                    
-                    <!-- Información del producto -->
-                    <h6 class="card-title text-truncate" title="${producto.nombreProducto}">
-                        ${producto.nombreProducto}
-                    </h6>
-                    
-                    <div class="mb-2">
-                        <small class="text-muted">ID: ${producto.productoId}</small>
-                        ${producto.esLlanta ? '<span class="badge bg-primary ms-2">Llanta</span>' : ''}
-                    </div>
-                    
-                    <!-- Estado del conteo -->
-                    <div class="text-center mb-3">
-                        <span class="badge ${this.getClaseEstado(producto.estadoConteo)} w-100 py-2">
-                            ${this.getTextoEstado(producto.estadoConteo)}
-                        </span>
-                    </div>
-                    
-                    <!-- Cantidades -->
-                    <div class="row text-center mb-3">
-                        <div class="col-6">
-                            <div class="border-end">
-                                <div class="h6 mb-1">${producto.cantidadSistema}</div>
-                                <small class="text-muted">Sistema</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="h6 mb-1 ${producto.cantidadFisica !== null ? 'text-success' : 'text-muted'}">
-                                ${producto.cantidadFisica !== null ? producto.cantidadFisica : '-'}
-                            </div>
-                            <small class="text-muted">Físico</small>
-                        </div>
-                    </div>
-                    
-                    <!-- Discrepancia si existe -->
-                    ${producto.tieneDiscrepancia ?
-                `<div class="alert alert-warning py-2 mb-3">
-                            <small><i class="bi bi-exclamation-triangle-fill"></i> Diferencia: ${producto.diferencia || 0}</small>
-                        </div>` : ''
-            }
-                    
-                    <!-- Información de llanta si aplica -->
-                    ${producto.esLlanta && (producto.medidasLlanta || producto.marcaLlanta) ?
-                `<div class="card bg-light mb-3 p-2">
-                            <small class="text-muted">
-                                ${producto.medidasLlanta ? `<div><strong>Medidas:</strong> ${producto.medidasLlanta}</div>` : ''}
-                                ${producto.marcaLlanta ? `<div><strong>Marca:</strong> ${producto.marcaLlanta}</div>` : ''}
-                            </small>
-                        </div>` : ''
-            }
-                </div>
-                
-                <!-- Footer con botón de acción -->
-                <div class="card-footer bg-transparent border-0 pt-0">
-                    <button type="button" 
-                            class="btn btn-primary w-100 contar-btn" 
-                            data-producto-id="${producto.productoId}"
-                            ${!this.permisos.puedeContar ? 'disabled' : ''}>
-                        <i class="bi bi-123 me-1"></i>
-                        ${producto.estadoConteo === 'Contado' ? 'Recontar' : 'Contar'}
-                    </button>
-                </div>
-            </div>
-        `;
-
-        // Configurar evento del botón contar
-        const btnContar = col.querySelector('.contar-btn');
-        btnContar?.addEventListener('click', () => {
-            this.abrirModalConteo(producto);
-        });
-
-        // Efecto hover para tarjetas
-        const card = col.querySelector('.card');
-        card.addEventListener('mouseenter', function () {
-            this.style.transform = 'translateY(-2px)';
-            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-        });
-
-        card.addEventListener('mouseleave', function () {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '';
-        });
-
-        return col;
-    }
-
-    // =====================================
-    // 🎭 MODAL DE CONTEO
-    // =====================================
-
-    configurarModalConteo() {
-        const btnGuardarConteo = document.getElementById('btnGuardarConteo');
-        const cantidadFisicaInput = document.getElementById('cantidadFisicaConteo');
-
-        // Evento para guardar conteo
-        btnGuardarConteo?.addEventListener('click', () => {
-            this.guardarConteo();
-        });
-
-        // Calcular diferencia en tiempo real
-        cantidadFisicaInput?.addEventListener('input', () => {
-            this.calcularDiferencia();
-        });
-
-        // Enviar con Enter
-        cantidadFisicaInput?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.guardarConteo();
-            }
-        });
-    }
-
-    abrirModalConteo(producto) {
-        this.productoSeleccionado = producto;
-
-        // Llenar datos del producto
-        const nombreProducto = document.getElementById('nombreProductoConteo');
-        const descripcionProducto = document.getElementById('descripcionProductoConteo');
-        const idProducto = document.getElementById('idProductoConteo');
-        const tipoProducto = document.getElementById('tipoProductoConteo');
-        const imagenProducto = document.getElementById('imagenProductoConteo');
-        const cantidadSistema = document.getElementById('cantidadSistemaConteo');
-        const cantidadFisica = document.getElementById('cantidadFisicaConteo');
-        const observaciones = document.getElementById('observacionesConteo');
-        const medidasLlanta = document.getElementById('medidasLlantaConteo');
-        const especificacionesLlanta = document.getElementById('especificacionesLlanta');
-
-        // Datos básicos
-        if (nombreProducto) nombreProducto.textContent = producto.nombreProducto;
-        if (descripcionProducto) descripcionProducto.textContent = producto.descripcionProducto || 'Sin descripción';
-        if (idProducto) idProducto.textContent = `ID: ${producto.productoId}`;
-        if (tipoProducto) tipoProducto.textContent = producto.esLlanta ? 'Llanta' : 'Accesorio';
-
-        // Imagen
-        if (imagenProducto) {
-            if (producto.imagenUrl) {
-                imagenProducto.src = producto.imagenUrl;
-                imagenProducto.style.display = 'block';
-            } else {
-                imagenProducto.style.display = 'none';
-            }
-        }
-
-        // Cantidades
-        if (cantidadSistema) cantidadSistema.value = producto.cantidadSistema;
-        if (cantidadFisica) {
-            cantidadFisica.value = producto.cantidadFisica !== null ? producto.cantidadFisica : '';
-            cantidadFisica.focus();
-        }
-
-        // Observaciones existentes
-        if (observaciones) observaciones.value = producto.observaciones || '';
-
-        // Información de llanta
-        if (producto.esLlanta && medidasLlanta) {
-            if (producto.medidasLlanta || producto.marcaLlanta) {
-                medidasLlanta.style.display = 'block';
-                if (especificacionesLlanta) {
-                    especificacionesLlanta.textContent =
-                        `${producto.medidasLlanta || 'N/A'} - ${producto.marcaLlanta || 'Sin marca'}`;
-                }
-            } else {
-                medidasLlanta.style.display = 'none';
-            }
-        } else if (medidasLlanta) {
-            medidasLlanta.style.display = 'none';
-        }
-
-        // Calcular diferencia inicial
-        this.calcularDiferencia();
-
-        // Mostrar modal
-        this.conteoModal.show();
-    }
-
-    calcularDiferencia() {
-        const cantidadSistema = parseInt(document.getElementById('cantidadSistemaConteo')?.value || 0);
-        const cantidadFisica = parseInt(document.getElementById('cantidadFisicaConteo')?.value || 0);
-        const alertaDiferencia = document.getElementById('alertaDiferencia');
-        const textoDiferencia = document.getElementById('textoDiferencia');
-
-        if (!alertaDiferencia || !textoDiferencia) return;
-
-        const diferencia = cantidadFisica - cantidadSistema;
-
-        if (diferencia !== 0 && !isNaN(diferencia)) {
-            alertaDiferencia.style.display = 'block';
-            textoDiferencia.textContent = `${diferencia > 0 ? '+' : ''}${diferencia} unidades`;
-
-            // Cambiar clase según el tipo de diferencia
-            alertaDiferencia.className = 'alert mt-3';
-            if (diferencia > 0) {
-                alertaDiferencia.classList.add('alert-info');
-            } else {
-                alertaDiferencia.classList.add('alert-warning');
-            }
-        } else {
-            alertaDiferencia.style.display = 'none';
-        }
-    }
-
-    async guardarConteo() {
-        if (!this.productoSeleccionado) return;
-
-        const cantidadFisica = parseInt(document.getElementById('cantidadFisicaConteo')?.value || 0);
-        const observaciones = document.getElementById('observacionesConteo')?.value || '';
-        const btnGuardar = document.getElementById('btnGuardarConteo');
-
-        // Validación
-        if (isNaN(cantidadFisica) || cantidadFisica < 0) {
-            this.mostrarError('La cantidad física debe ser un número válido mayor o igual a cero');
-            return;
-        }
-
-        try {
-            // Mostrar estado de carga
-            if (btnGuardar) {
-                btnGuardar.querySelector('.normal-state').style.display = 'none';
-                btnGuardar.querySelector('.loading-state').style.display = 'inline-block';
-                btnGuardar.disabled = true;
-            }
-
-            const conteoData = {
-                inventarioProgramadoId: this.inventarioId,
-                productoId: this.productoSeleccionado.productoId,
-                cantidadFisica: cantidadFisica,
-                observaciones: observaciones,
-                usuarioId: this.usuarioId,
-                fechaConteo: new Date().toISOString()
-            };
-
-            const response = await fetch('/TomaInventario/RegistrarConteo', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                },
-                body: JSON.stringify(conteoData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                // Cerrar modal
-                this.conteoModal.hide();
-
-                // Mostrar mensaje de éxito
-                this.mostrarExito('Conteo registrado exitosamente');
-
-                // Actualizar datos
-                await this.cargarProductos();
-                await this.actualizarProgreso();
-
-                // Vibración en móviles
-                if (navigator.vibrate) {
-                    navigator.vibrate(100);
-                }
-
-            } else {
-                throw new Error(result.message || 'Error al registrar conteo');
-            }
-
-        } catch (error) {
-            console.error('Error guardando conteo:', error);
-            this.mostrarError(`Error al registrar conteo: ${error.message}`);
-        } finally {
-            // Restaurar botón
-            if (btnGuardar) {
-                btnGuardar.querySelector('.normal-state').style.display = 'inline-block';
-                btnGuardar.querySelector('.loading-state').style.display = 'none';
-                btnGuardar.disabled = false;
-            }
-        }
-    }
-
-    // =====================================
-    // 🔍 BÚSQUEDA Y FILTROS
-    // =====================================
-
-    aplicarFiltros() {
-        let productosFiltrados = [...this.productos];
-
-        // Filtro por búsqueda de texto
-        if (this.filtrosActivos.busqueda) {
-            const termino = this.filtrosActivos.busqueda.toLowerCase();
-            productosFiltrados = productosFiltrados.filter(producto =>
-                producto.nombreProducto.toLowerCase().includes(termino) ||
-                producto.productoId.toString().includes(termino) ||
-                (producto.marcaLlanta && producto.marcaLlanta.toLowerCase().includes(termino)) ||
-                (producto.modeloLlanta && producto.modeloLlanta.toLowerCase().includes(termino)) ||
-                (producto.medidasLlanta && producto.medidasLlanta.toLowerCase().includes(termino))
-            );
-        }
-
-        // Filtro por estado
-        if (this.filtrosActivos.estado) {
-            productosFiltrados = productosFiltrados.filter(producto => {
-                switch (this.filtrosActivos.estado) {
-                    case 'pendiente':
-                        return producto.estadoConteo === 'Pendiente';
-                    case 'contado':
-                        return producto.estadoConteo === 'Contado';
-                    case 'discrepancia':
-                        return producto.tieneDiscrepancia;
-                    default:
-                        return true;
-                }
-            });
-        }
-
-        // Filtro por tipo
-        if (this.filtrosActivos.tipo) {
-            productosFiltrados = productosFiltrados.filter(producto => {
-                switch (this.filtrosActivos.tipo) {
-                    case 'llanta':
-                        return producto.esLlanta;
-                    case 'accesorio':
-                        return !producto.esLlanta;
-                    default:
-                        return true;
-                }
-            });
-        }
-
-        this.productosFiltrados = productosFiltrados;
-        this.renderizarProductos();
-    }
-
-    async buscarProductoEspecifico() {
-        const termino = this.elementos.busquedaRapida?.value?.trim();
-        if (!termino) return;
-
-        try {
-            const response = await fetch(`/TomaInventario/BuscarProducto/${this.inventarioId}?termino=${encodeURIComponent(termino)}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            const result = await response.json();
-
-            if (result.success && result.producto) {
-                // Abrir directamente el modal de conteo
-                this.abrirModalConteo(result.producto);
-                this.mostrarExito(result.message);
-            } else {
-                this.mostrarError(result.message || 'Producto no encontrado');
-            }
-
-        } catch (error) {
-            console.error('Error en búsqueda específica:', error);
-            this.mostrarError('Error al buscar el producto');
-        }
-    }
-
-    limpiarBusqueda() {
-        if (this.elementos.busquedaRapida) {
-            this.elementos.busquedaRapida.value = '';
-        }
-        this.filtrosActivos.busqueda = '';
-        this.aplicarFiltros();
-    }
-
-    aplicarFiltroRapido(tipo) {
-        // Limpiar otros filtros
-        this.filtrosActivos.busqueda = '';
-        this.filtrosActivos.tipo = '';
-
-        if (this.elementos.busquedaRapida) {
-            this.elementos.busquedaRapida.value = '';
-        }
-
-        if (this.elementos.filtroTipo) {
-            this.elementos.filtroTipo.value = '';
-        }
-
-        // Aplicar filtro específico
-        this.filtrosActivos.estado = tipo;
-
-        if (this.elementos.filtroEstado) {
-            this.elementos.filtroEstado.value = tipo;
-        }
-
-        this.aplicarFiltros();
-    }
-
-    limpiarFiltros() {
-        // Limpiar todos los filtros
-        this.filtrosActivos = {
-            busqueda: '',
-            estado: '',
-            tipo: ''
-        };
-
-        // Limpiar elementos del DOM
-        if (this.elementos.busquedaRapida) {
-            this.elementos.busquedaRapida.value = '';
-        }
-
-        if (this.elementos.filtroEstado) {
-            this.elementos.filtroEstado.value = '';
-        }
-
-        if (this.elementos.filtroTipo) {
-            this.elementos.filtroTipo.value = '';
-        }
-
-        this.aplicarFiltros();
-    }
-
-    // =====================================
-    // 🎮 GESTIÓN DE VISTAS
-    // =====================================
-
-    cambiarVista(nuevaVista) {
-        this.vistaActual = nuevaVista;
-
-        // Actualizar botones
-        if (this.elementos.btnVistaLista && this.elementos.btnVistaTarjetas) {
-            if (nuevaVista === 'lista') {
-                this.elementos.btnVistaLista.classList.add('btn-primary');
-                this.elementos.btnVistaLista.classList.remove('btn-outline-secondary');
-                this.elementos.btnVistaTarjetas.classList.add('btn-outline-secondary');
-                this.elementos.btnVistaTarjetas.classList.remove('btn-primary');
-            } else {
-                this.elementos.btnVistaTarjetas.classList.add('btn-primary');
-                this.elementos.btnVistaTarjetas.classList.remove('btn-outline-secondary');
-                this.elementos.btnVistaLista.classList.add('btn-outline-secondary');
-                this.elementos.btnVistaLista.classList.remove('btn-primary');
-            }
-        }
-
-        this.renderizarProductos();
-    }
-
-    mostrarVista(vista) {
-        if (vista === 'lista') {
-            if (this.elementos.productosLista) {
-                this.elementos.productosLista.style.display = 'block';
-            }
-            if (this.elementos.productosTarjetas) {
-                this.elementos.productosTarjetas.style.display = 'none';
-            }
-        } else {
-            if (this.elementos.productosLista) {
-                this.elementos.productosLista.style.display = 'none';
-            }
-            if (this.elementos.productosTarjetas) {
-                this.elementos.productosTarjetas.style.display = 'block';
-            }
-        }
-
-        if (this.elementos.estadoVacio) {
-            this.elementos.estadoVacio.style.display = 'none';
-        }
-    }
-
-    mostrarLoading(mostrar) {
-        if (this.elementos.loadingProductos) {
-            this.elementos.loadingProductos.style.display = mostrar ? 'block' : 'none';
-        }
-
-        if (!mostrar) {
-            if (this.elementos.productosLista) {
-                this.elementos.productosLista.style.display = 'none';
-            }
-            if (this.elementos.productosTarjetas) {
-                this.elementos.productosTarjetas.style.display = 'none';
-            }
-        }
-    }
-
-    mostrarEstadoVacio() {
-        if (this.elementos.estadoVacio) {
-            this.elementos.estadoVacio.style.display = 'block';
-        }
-
-        if (this.elementos.productosLista) {
-            this.elementos.productosLista.style.display = 'none';
-        }
-
-        if (this.elementos.productosTarjetas) {
-            this.elementos.productosTarjetas.style.display = 'none';
-        }
-    }
-
-    actualizarContadores() {
-        if (this.elementos.contadorProductosMostrados) {
-            this.elementos.contadorProductosMostrados.textContent = this.productosFiltrados.length;
-        }
-    }
-
-    // =====================================
-    // 🎨 MÉTODOS DE UTILIDAD
-    // =====================================
-
-    getClaseEstado(estado) {
-        switch (estado) {
-            case 'Contado':
-                return 'bg-success';
-            case 'Pendiente':
-                return 'bg-warning text-dark';
-            default:
-                return 'bg-secondary';
-        }
-    }
-
-    getTextoEstado(estado) {
-        switch (estado) {
-            case 'Contado':
-                return '✅ Contado';
-            case 'Pendiente':
-                return '⏳ Pendiente';
-            default:
-                return estado;
-        }
-    }
-
-    // =====================================
-    // 📱 CONFIGURACIÓN MÓVIL
-    // =====================================
-
-    configurarEventosMovil() {
-        // Cambio de orientación
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                this.ajustarVistaPorPantalla();
-            }, 100);
-        });
-
-        // Redimensionado de ventana
-        window.addEventListener('resize', () => {
-            this.debounce(() => {
-                this.ajustarVistaPorPantalla();
-            }, 250);
-        });
-
-        // Optimización para touch
-        this.optimizarTouch();
-    }
-
-    ajustarVistaPorPantalla() {
-        const esMobile = window.innerWidth <= 768;
-
-        // Cambiar vista automáticamente en móviles
-        if (esMobile && this.vistaActual === 'lista') {
-            this.cambiarVista('tarjetas');
-        }
-
-        // Ajustar tamaños de modal
-        const modals = document.querySelectorAll('.modal-dialog');
-        modals.forEach(modal => {
-            if (esMobile) {
-                modal.style.maxHeight = (window.innerHeight - 20) + 'px';
-                modal.style.margin = '10px';
-            } else {
-                modal.style.maxHeight = '';
-                modal.style.margin = '';
-            }
-        });
-    }
-
-    optimizarTouch() {
-        // Agregar clases CSS para better touch
-        const botones = document.querySelectorAll('.btn');
-        botones.forEach(btn => {
-            btn.style.minHeight = '44px'; // Tamaño mínimo recomendado para touch
-        });
-
-        // Haptic feedback para acciones importantes
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-primary, .btn-success, .btn-danger')) {
-                if (navigator.vibrate) {
-                    navigator.vibrate(50);
-                }
-            }
-        });
-    }
-
-    // =====================================
-    // 🛠️ UTILIDADES GENERALES
-    // =====================================
-
-    debounce(func, wait) {
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-        }
-        this.debounceTimer = setTimeout(func, wait);
-    }
-
-    mostrarExito(mensaje) {
-        this.mostrarNotificacion(mensaje, 'success');
-    }
-
-    mostrarError(mensaje) {
-        this.mostrarNotificacion(mensaje, 'danger');
-    }
-
-    mostrarNotificacion(mensaje, tipo) {
-        // Crear contenedor si no existe
-        let container = document.querySelector('.toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'toast-container position-fixed top-0 end-0 p-3';
-            container.style.zIndex = '9999';
-            document.body.appendChild(container);
-        }
-
-        // Crear toast
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white bg-${tipo} border-0`;
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${mensaje}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        `;
-
-        container.appendChild(toast);
-
-        // Mostrar toast
-        const bsToast = new bootstrap.Toast(toast, {
-            autohide: true,
-            delay: tipo === 'danger' ? 8000 : 4000
-        });
-
-        bsToast.show();
-
-        // Limpiar después de ocultar
-        toast.addEventListener('hidden.bs.toast', () => {
-            toast.remove();
-            if (container.children.length === 0) {
-                container.remove();
-            }
-        });
-    }
-}
+// =====================================
+// VARIABLES GLOBALES
+// =====================================
+let inventarioActual = null;
+let productosInventario = [];
+let productosFiltrados = [];
+let estadisticasActuales = {};
 
 // =====================================
-// 🚀 INICIALIZACIÓN GLOBAL
+// INICIALIZACIÓN
 // =====================================
+$(document).ready(function () {
+    console.log('🚀 Ejecutar Inventario - Inicializando...');
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('🎯 Inicializando sistema de toma de inventario...');
+    // Obtener ID del inventario desde la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const inventarioId = urlParams.get('id') || getInventarioIdFromUrl();
 
-    // Verificar que tenemos la configuración necesaria
-    if (!window.inventarioConfig) {
-        console.error('❌ Configuración de inventario no encontrada');
+    if (!inventarioId) {
+        mostrarError('No se especificó un inventario válido');
         return;
     }
 
-    // Crear instancia global del manager
-    window.tomaInventarioManager = new TomaInventarioManager();
+    // Inicializar la página
+    inicializarEjecutorInventario(inventarioId);
 
-    console.log('✅ Sistema de toma de inventario inicializado');
+    // Configurar event listeners
+    configurarEventListeners();
 });
 
-// Prevenir pérdida de datos al salir
-window.addEventListener('beforeunload', function (e) {
-    // Solo mostrar advertencia si hay conteos sin guardar
-    const modal = document.getElementById('conteoModal');
-    if (modal && modal.classList.contains('show')) {
-        e.preventDefault();
-        e.returnValue = '';
-        return '';
+// =====================================
+// FUNCIONES DE INICIALIZACIÓN
+// =====================================
+async function inicializarEjecutorInventario(inventarioId) {
+    try {
+        console.log(`📋 Inicializando ejecutor para inventario ID: ${inventarioId}`);
+
+        // Cargar información del inventario
+        await cargarInformacionInventario(inventarioId);
+
+        // Cargar productos del inventario
+        await cargarProductosInventario(inventarioId);
+
+        // Actualizar estadísticas
+        await actualizarEstadisticas();
+
+        // Configurar auto-refresh cada 30 segundos
+        setInterval(() => {
+            actualizarEstadisticas();
+        }, 30000);
+
+    } catch (error) {
+        console.error('❌ Error inicializando ejecutor:', error);
+        mostrarError('Error al cargar el inventario');
     }
-});
-
-// Manejar errores JavaScript globales
-window.addEventListener('error', function (e) {
-    console.error('💥 Error JavaScript:', e.error);
-
-    // Solo mostrar al usuario errores críticos
-    if (e.error && e.error.message && e.error.message.includes('fetch')) {
-        if (window.tomaInventarioManager) {
-            window.tomaInventarioManager.mostrarError('Error de conexión. Verifique su conexión a internet.');
-        }
-    }
-});
-
-// Exportar para uso en otros scripts si es necesario
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = TomaInventarioManager;
 }
 
-    /*
-    ¿Qué hace este JavaScript?
-🎯 Funcionalidades principales:
+function configurarEventListeners() {
+    // Filtro de búsqueda
+    $('#filtroProductos').on('input', function () {
+        const filtro = $(this).val().toLowerCase();
+        filtrarProductos(filtro, $('#filtroEstado').val());
+    });
 
-Gestión de estado: Maneja todos los datos de productos y progreso
-Búsqueda inteligente: Filtros en tiempo real por texto, estado y tipo
-Vista adaptativa: Automáticamente cambia entre lista y tarjetas según el dispositivo
-Modal de conteo: Interfaz completa para registrar conteos con validaciones
-Actualización en tiempo real: Progreso y estadísticas se actualizan automáticamente
-Optimización móvil: Touch events, haptic feedback, y UI responsive
+    // Filtro por estado
+    $('#filtroEstado').on('change', function () {
+        const estadoFiltro = $(this).val();
+        filtrarProductos($('#filtroProductos').val().toLowerCase(), estadoFiltro);
+    });
 
-🔧 Conceptos importantes que estamos usando:
+    // Botón refrescar
+    $('#btnRefrescar').on('click', function () {
+        const inventarioId = inventarioActual?.inventarioProgramadoId;
+        if (inventarioId) {
+            cargarProductosInventario(inventarioId);
+            actualizarEstadisticas();
+        }
+    });
 
-Clase ES6: Organizamos todo en una clase para mejor estructura
-Async/Await: Para manejar llamadas a la API de forma moderna
-Event Delegation: Los eventos se manejan eficientemente
-Debouncing: Para optimizar búsquedas en tiempo real
-Progressive Enhancement: Funciona básico sin JS, mejor con JS
-    */
+    // Botón completar inventario
+    $('#btnCompletarInventario').on('click', function () {
+        mostrarModalCompletarInventario();
+    });
+
+    // Formulario de conteo
+    $('#cantidadFisica').on('input', function () {
+        calcularDiferencia();
+    });
+
+    // Guardar conteo
+    $('#btnGuardarConteo').on('click', function () {
+        guardarConteoProducto();
+    });
+
+    // Confirmar completar inventario
+    $('#btnConfirmarCompletar').on('click', function () {
+        completarInventario();
+    });
+
+    // Limpiar modal al cerrarse
+    $('#modalConteo').on('hidden.bs.modal', function () {
+        limpiarModalConteo();
+    });
+}
+
+// =====================================
+// FUNCIONES DE CARGA DE DATOS
+// =====================================
+async function cargarInformacionInventario(inventarioId) {
+    try {
+        console.log(`📋 Cargando información del inventario ${inventarioId}...`);
+
+        const response = await fetch(`/api/TomaInventario/${inventarioId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        inventarioActual = await response.json();
+
+        // Actualizar UI con información del inventario
+        $('#inventarioTitulo').text(inventarioActual.titulo || 'Sin título');
+        $('#inventarioDescripcion').text(inventarioActual.descripcion || '');
+        $('#inventarioEstado').text(inventarioActual.estado || 'Desconocido')
+            .removeClass('bg-light bg-warning bg-success bg-danger')
+            .addClass(getEstadoBadgeClass(inventarioActual.estado));
+
+        // Mostrar botón completar solo si está en progreso
+        if (inventarioActual.estado === 'En Progreso') {
+            $('#btnCompletarInventario').show();
+        }
+
+        // Verificar permisos del usuario actual en este inventario
+        const usuarioActualId = obtenerUsuarioId();
+        const asignacionUsuario = inventario.asignacionesUsuarios?.find(a => a.usuarioId === usuarioActualId);
+
+        if (!asignacionUsuario) {
+            console.warn('⚠️ Usuario no encontrado en las asignaciones del inventario');
+            mostrarError('No tienes permisos para acceder a este inventario');
+            return;
+        }
+
+        // Guardar permisos del usuario para uso posterior
+        window.permisosUsuarioInventario = {
+            permisoConteo: asignacionUsuario.permisoConteo,
+            permisoAjuste: asignacionUsuario.permisoAjuste,
+            permisoValidacion: asignacionUsuario.permisoValidacion
+        };
+
+        console.log('🔐 Permisos del usuario:', window.permisosUsuarioInventario);
+
+    } catch (error) {
+        console.error('❌ Error cargando información del inventario:', error);
+        throw error;
+    }
+}
+
+async function cargarProductosInventario(inventarioId) {
+    try {
+        console.log(`📦 Cargando productos del inventario ${inventarioId}...`);
+
+        // Mostrar loading
+        $('#loadingProductos').show();
+        $('#listaProductos').hide();
+        $('#emptyState').hide();
+
+        const response = await fetch(`/api/TomaInventario/${inventarioId}/productos`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        productosInventario = data.productos || [];
+        estadisticasActuales = data.estadisticas || {};
+
+        console.log(`✅ Cargados ${productosInventario.length} productos`);
+
+        // Renderizar productos
+        renderizarProductos();
+
+        // Aplicar filtros actuales
+        filtrarProductos($('#filtroProductos').val().toLowerCase(), $('#filtroEstado').val());
+
+    } catch (error) {
+        console.error('❌ Error cargando productos:', error);
+        $('#loadingProductos').hide();
+        $('#emptyState').show();
+        mostrarError('Error al cargar productos del inventario');
+    }
+}
+
+// =====================================
+// FUNCIONES DE RENDERIZADO
+// =====================================
+function renderizarProductos() {
+    const tbody = $('#productosTableBody');
+    tbody.empty();
+
+    if (productosInventario.length === 0) {
+        $('#loadingProductos').hide();
+        $('#listaProductos').hide();
+        $('#emptyState').show();
+        return;
+    }
+
+    productosInventario.forEach((producto, index) => {
+        const row = crearFilaProducto(producto, index + 1);
+        tbody.append(row);
+    });
+
+    $('#loadingProductos').hide();
+    $('#listaProductos').show();
+    $('#emptyState').hide();
+}
+
+function crearFilaProducto(producto, numero) {
+    const tieneDiscrepancia = producto.tieneDiscrepancia;
+    const estadoClass = tieneDiscrepancia ? 'estado-discrepancia' :
+        producto.estadoConteo === 'Contado' ? 'estado-contado' : 'estado-pendiente';
+
+    const imagenSrc = producto.imagenUrl || '/images/no-image.png';
+    const diferencia = producto.diferencia || 0;
+    const diferenciaClass = diferencia > 0 ? 'diferencia-positiva' :
+        diferencia < 0 ? 'diferencia-negativa' : 'diferencia-cero';
+
+    const estadoBadge = getEstadoBadge(producto.estadoConteo, tieneDiscrepancia);
+
+    // Información adicional para llantas
+    let infoLlanta = '';
+    if (producto.esLlanta) {
+        infoLlanta = `
+            <div class="small text-muted">
+                <i class="fas fa-circle-info me-1"></i>
+                ${producto.marcaLlanta || ''} ${producto.modeloLlanta || ''} 
+                ${producto.medidasLlanta || ''}
+            </div>
+        `;
+    }
+
+    return $(`
+        <tr class="producto-row ${estadoClass}" data-producto-id="${producto.productoId}">
+            <td class="text-center fw-bold">${numero}</td>
+            <td>
+                <img src="${imagenSrc}" alt="Producto" class="producto-imagen">
+            </td>
+            <td>
+                <div class="fw-semibold">${producto.nombreProducto}</div>
+                <div class="small text-muted">${producto.descripcionProducto || ''}</div>
+                ${infoLlanta}
+            </td>
+            <td class="text-center">
+                <span class="badge bg-primary">${producto.cantidadSistema}</span>
+            </td>
+            <td class="text-center">
+                ${producto.cantidadFisica !== null ?
+            `<span class="badge bg-info">${producto.cantidadFisica}</span>` :
+            '<span class="text-muted">Sin contar</span>'
+        }
+            </td>
+            <td class="text-center">
+                <span class="${diferenciaClass}">
+                    ${diferencia > 0 ? '+' : ''}${diferencia}
+                </span>
+            </td>
+            <td class="text-center">
+                ${estadoBadge}
+            </td>
+            <td class="text-center">
+                ${crearBotonesAccion(producto)}
+            </td>
+        </tr>
+    `);
+}
+
+function getEstadoBadge(estado, tieneDiscrepancia) {
+    if (tieneDiscrepancia) {
+        return '<span class="badge bg-danger"><i class="fas fa-exclamation-triangle me-1"></i>Discrepancia</span>';
+    }
+
+    switch (estado) {
+        case 'Contado':
+            return '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Contado</span>';
+        case 'Pendiente':
+            return '<span class="badge bg-warning"><i class="fas fa-clock me-1"></i>Pendiente</span>';
+        default:
+            return '<span class="badge bg-secondary">Desconocido</span>';
+    }
+}
+
+function getEstadoBadgeClass(estado) {
+    switch (estado) {
+        case 'Programado':
+            return 'bg-warning';
+        case 'En Progreso':
+            return 'bg-info';
+        case 'Completado':
+            return 'bg-success';
+        case 'Cancelado':
+            return 'bg-danger';
+        default:
+            return 'bg-secondary';
+    }
+}
+
+// =====================================
+// FUNCIONES DE FILTRADO
+// =====================================
+function filtrarProductos(textoFiltro, estadoFiltro) {
+    productosFiltrados = productosInventario.filter(producto => {
+        // Filtro por texto
+        const cumpleTexto = !textoFiltro ||
+            producto.nombreProducto.toLowerCase().includes(textoFiltro) ||
+            (producto.descripcionProducto && producto.descripcionProducto.toLowerCase().includes(textoFiltro)) ||
+            (producto.marcaLlanta && producto.marcaLlanta.toLowerCase().includes(textoFiltro)) ||
+            (producto.modeloLlanta && producto.modeloLlanta.toLowerCase().includes(textoFiltro));
+
+        // Filtro por estado
+        let cumpleEstado = true;
+        if (estadoFiltro) {
+            switch (estadoFiltro) {
+                case 'Pendiente':
+                    cumpleEstado = producto.estadoConteo === 'Pendiente';
+                    break;
+                case 'Contado':
+                    cumpleEstado = producto.estadoConteo === 'Contado';
+                    break;
+                case 'Discrepancia':
+                    cumpleEstado = producto.tieneDiscrepancia;
+                    break;
+            }
+        }
+
+        return cumpleTexto && cumpleEstado;
+    });
+
+    // Re-renderizar solo los productos filtrados
+    renderizarProductosFiltrados();
+}
+
+function renderizarProductosFiltrados() {
+    const tbody = $('#productosTableBody');
+    tbody.empty();
+
+    if (productosFiltrados.length === 0) {
+        $('#listaProductos').hide();
+        $('#emptyState').show();
+        return;
+    }
+
+    productosFiltrados.forEach((producto, index) => {
+        const row = crearFilaProducto(producto, index + 1);
+        tbody.append(row);
+    });
+
+    $('#listaProductos').show();
+    $('#emptyState').hide();
+}
+
+// =====================================
+// FUNCIONES DE CONTEO
+// =====================================
+function abrirModalConteo(productoId) {
+    // Verificar permisos antes de abrir el modal
+    if (!window.permisosUsuarioInventario?.permisoConteo) {
+        mostrarError('No tienes permisos para realizar conteos en este inventario');
+        return;
+    }
+
+    const producto = productosInventario.find(p => p.productoId === productoId);
+    if (!producto) {
+        mostrarError('Producto no encontrado');
+        return;
+    }
+
+    console.log(`📝 Abriendo modal de conteo para producto: ${producto.nombreProducto}`);
+
+    // Llenar información del producto
+    $('#modalProductoId').val(producto.productoId);
+    $('#modalInventarioId').val(inventarioActual.inventarioProgramadoId);
+    $('#modalProductoNombre').text(producto.nombreProducto);
+    $('#modalProductoDescripcion').text(producto.descripcionProducto || 'Sin descripción');
+    $('#modalCantidadSistema').text(producto.cantidadSistema);
+
+    // Imagen del producto
+    const imagenSrc = producto.imagenUrl || '/images/no-image.png';
+    $('#modalProductoImagen').attr('src', imagenSrc);
+
+    // Información de llanta si aplica
+    if (producto.esLlanta) {
+        const infoLlanta = `${producto.marcaLlanta || ''} ${producto.modeloLlanta || ''} ${producto.medidasLlanta || ''}`.trim();
+        $('#modalLlantaInfo').text(infoLlanta);
+        $('#modalProductoLlanta').show();
+    } else {
+        $('#modalProductoLlanta').hide();
+    }
+
+    // Conteo anterior
+    if (producto.cantidadFisica !== null) {
+        $('#modalConteoAnterior').text(producto.cantidadFisica).removeClass('text-muted').addClass('text-info');
+        $('#cantidadFisica').val(producto.cantidadFisica);
+    } else {
+        $('#modalConteoAnterior').text('Sin contar').removeClass('text-info').addClass('text-muted');
+        $('#cantidadFisica').val('');
+    }
+
+    // Observaciones anteriores
+    $('#observaciones').val(producto.observaciones || '');
+
+    // Calcular diferencia inicial
+    calcularDiferencia();
+
+    // Mostrar modal
+    $('#modalConteo').modal('show');
+
+    // Focus en el campo de cantidad
+    setTimeout(() => {
+        $('#cantidadFisica').focus().select();
+    }, 500);
+}
+
+function calcularDiferencia() {
+    const cantidadSistema = parseInt($('#modalCantidadSistema').text()) || 0;
+    const cantidadFisica = parseInt($('#cantidadFisica').val()) || 0;
+    const diferencia = cantidadFisica - cantidadSistema;
+
+    // Mostrar diferencia
+    const $diferencia = $('#diferenciaCalculada');
+    $diferencia.text(diferencia > 0 ? `+${diferencia}` : diferencia);
+
+    // Colorear según la diferencia
+    $diferencia.removeClass('text-success text-danger text-muted')
+        .addClass(diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : 'text-muted');
+
+    // Mostrar/ocultar alerta de discrepancia
+    if (diferencia !== 0) {
+        const tipoDiscrepancia = diferencia > 0 ? 'exceso' : 'faltante';
+        const cantidadDiscrepancia = Math.abs(diferencia);
+        $('#textoDiscrepancia').text(
+            `Se detectó un ${tipoDiscrepancia} de ${cantidadDiscrepancia} unidad${cantidadDiscrepancia !== 1 ? 'es' : ''}.`
+        );
+        $('#alertaDiscrepancia').removeClass('d-none');
+    } else {
+        $('#alertaDiscrepancia').addClass('d-none');
+    }
+}
+
+async function guardarConteoProducto() {
+    try {
+        const inventarioId = $('#modalInventarioId').val();
+        const productoId = $('#modalProductoId').val();
+        const cantidadFisica = parseInt($('#cantidadFisica').val());
+        const observaciones = $('#observaciones').val().trim();
+
+        // Validaciones
+        if (!cantidadFisica && cantidadFisica !== 0) {
+            mostrarError('Debes ingresar una cantidad física válida');
+            return;
+        }
+
+        if (cantidadFisica < 0) {
+            mostrarError('La cantidad física no puede ser negativa');
+            return;
+        }
+
+        // Deshabilitar botón mientras se guarda
+        const $btn = $('#btnGuardarConteo');
+        const textoOriginal = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Guardando...');
+
+        console.log(`💾 Guardando conteo - Inventario: ${inventarioId}, Producto: ${productoId}, Cantidad: ${cantidadFisica}`);
+
+        const conteoData = {
+            inventarioProgramadoId: parseInt(inventarioId),
+            productoId: parseInt(productoId),
+            usuarioId: obtenerUsuarioId(), // Función que obtiene el ID del usuario actual
+            cantidadFisica: cantidadFisica,
+            observaciones: observaciones || null
+        };
+
+        const response = await fetch(`/api/TomaInventario/${inventarioId}/productos/${productoId}/conteo`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(conteoData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+
+        console.log('✅ Conteo guardado exitosamente:', resultado);
+
+        // Mostrar mensaje de éxito
+        if (resultado.hayDiscrepancia) {
+            mostrarExito(`Conteo guardado. Discrepancia de ${resultado.diferencia} detectada.`);
+        } else {
+            mostrarExito('Conteo guardado exitosamente');
+        }
+
+        // Cerrar modal
+        $('#modalConteo').modal('hide');
+
+        // Recargar productos para mostrar el cambio
+        await cargarProductosInventario(inventarioId);
+        await actualizarEstadisticas();
+
+    } catch (error) {
+        console.error('❌ Error guardando conteo:', error);
+        mostrarError(`Error al guardar conteo: ${error.message}`);
+    } finally {
+        // Restaurar botón
+        $('#btnGuardarConteo').prop('disabled', false).html(textoOriginal);
+    }
+}
+
+function limpiarModalConteo() {
+    $('#modalProductoId').val('');
+    $('#modalInventarioId').val('');
+    $('#cantidadFisica').val('');
+    $('#observaciones').val('');
+    $('#alertaDiscrepancia').addClass('d-none');
+    $('#modalProductoLlanta').hide();
+}
+
+// =====================================
+// FUNCIONES DE ESTADÍSTICAS
+// =====================================
+async function actualizarEstadisticas() {
+    try {
+        if (!inventarioActual) return;
+
+        const inventarioId = inventarioActual.inventarioProgramadoId;
+        const response = await fetch(`/api/TomaInventario/${inventarioId}/progreso`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.warn('⚠️ No se pudieron cargar las estadísticas');
+            return;
+        }
+
+        const progreso = await response.json();
+
+        // Actualizar estadísticas en la UI
+        $('#statTotal').text(progreso.totalProductos || 0);
+        $('#statContados').text(progreso.productosContados || 0);
+        $('#statPendientes').text(progreso.productosPendientes || 0);
+        $('#statDiscrepancias').text(progreso.discrepancias || 0);
+
+        // Actualizar barra de progreso
+        const porcentaje = progreso.porcentajeProgreso || 0;
+        $('#barraProgreso').css('width', `${porcentaje}%`).attr('aria-valuenow', porcentaje);
+        $('#progresoTexto').text(`${progreso.productosContados || 0} / ${progreso.totalProductos || 0} productos`);
+
+        // Cambiar color de la barra según el progreso
+        const $barra = $('#barraProgreso');
+        $barra.removeClass('bg-danger bg-warning bg-info bg-success');
+        if (porcentaje < 25) {
+            $barra.addClass('bg-danger');
+        } else if (porcentaje < 50) {
+            $barra.addClass('bg-warning');
+        } else if (porcentaje < 90) {
+            $barra.addClass('bg-info');
+        } else {
+            $barra.addClass('bg-success');
+        }
+
+        console.log(`📊 Estadísticas actualizadas: ${porcentaje}% completado`);
+
+    } catch (error) {
+        console.error('❌ Error actualizando estadísticas:', error);
+    }
+}
+
+// =====================================
+// FUNCIONES PARA COMPLETAR INVENTARIO
+// =====================================
+function mostrarModalCompletarInventario() {
+    const stats = estadisticasActuales;
+    const inventario = inventarioActual;
+
+    const resumen = `
+        <div class="row text-center">
+            <div class="col-3">
+                <div class="card bg-light">
+                    <div class="card-body py-2">
+                        <div class="fs-5 fw-bold">${stats.total || 0}</div>
+                        <small>Total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card bg-success bg-opacity-10">
+                    <div class="card-body py-2">
+                        <div class="fs-5 fw-bold text-success">${stats.contados || 0}</div>
+                        <small>Contados</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card bg-warning bg-opacity-10">
+                    <div class="card-body py-2">
+                        <div class="fs-5 fw-bold text-warning">${stats.pendientes || 0}</div>
+                        <small>Pendientes</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-3">
+                <div class="card bg-danger bg-opacity-10">
+                    <div class="card-body py-2">
+                        <div class="fs-5 fw-bold text-danger">${stats.discrepancias || 0}</div>
+                        <small>Discrepancias</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    $('#resumenCompletarInventario').html(resumen);
+    $('#modalCompletarInventario').modal('show');
+}
+
+async function completarInventario() {
+    try {
+        const inventarioId = inventarioActual.inventarioProgramadoId;
+
+        // Deshabilitar botón
+        const $btn = $('#btnConfirmarCompletar');
+        const textoOriginal = $btn.html();
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Completando...');
+
+        console.log(`🏁 Completando inventario ${inventarioId}...`);
+
+        const response = await fetch(`/api/TomaInventario/${inventarioId}/completar`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+
+        console.log('✅ Inventario completado exitosamente:', resultado);
+
+        // Cerrar modal
+        $('#modalCompletarInventario').modal('hide');
+
+        // Mostrar mensaje de éxito
+        mostrarExito(`Inventario completado exitosamente. Total: ${resultado.totalProductos} productos, Discrepancias: ${resultado.discrepancias}`);
+
+        // Recargar información del inventario
+        await cargarInformacionInventario(inventarioId);
+        await cargarProductosInventario(inventarioId);
+
+        // Ocultar botón de completar
+        $('#btnCompletarInventario').hide();
+
+    } catch (error) {
+        console.error('❌ Error completando inventario:', error);
+        mostrarError(`Error al completar inventario: ${error.message}`);
+    } finally {
+        // Restaurar botón
+        $('#btnConfirmarCompletar').prop('disabled', false).html(textoOriginal);
+    }
+}
+
+// =====================================
+// FUNCIONES AUXILIARES
+// =====================================
+function getInventarioIdFromUrl() {
+    const path = window.location.pathname;
+    const matches = path.match(/\/Inventario\/Ejecutar\/(\d+)/);
+    return matches ? matches[1] : null;
+}
+
+function obtenerUsuarioId() {
+    // Esta función debería obtener el ID del usuario actual
+    // Puedes implementarla según tu sistema de autenticación
+    try {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return parseInt(payload.userId || payload.nameid || payload.sub);
+        }
+    } catch (error) {
+        console.error('Error obteniendo ID de usuario:', error);
+    }
+    return 1; // Fallback
+}
+
+function mostrarError(mensaje) {
+    console.error('❌ Error:', mensaje);
+
+    // Usar SweetAlert2 si está disponible, sino usar alert nativo
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Error',
+            text: mensaje,
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    } else {
+        alert(`Error: ${mensaje}`);
+    }
+}
+
+function mostrarExito(mensaje) {
+    console.log('✅ Éxito:', mensaje);
+
+    // Usar SweetAlert2 si está disponible, sino usar alert nativo
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Éxito',
+            text: mensaje,
+            icon: 'success',
+            timer: 3000,
+            showConfirmButton: false
+        });
+    } else {
+        alert(`Éxito: ${mensaje}`);
+    }
+}
+
+function mostrarInfo(mensaje) {
+    console.log('ℹ️ Info:', mensaje);
+
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: 'Información',
+            text: mensaje,
+            icon: 'info',
+            confirmButtonColor: '#0dcaf0'
+        });
+    } else {
+        alert(`Info: ${mensaje}`);
+    }
+}
+
+function crearBotonesAccion(producto) {
+    const permisos = window.permisosUsuarioInventario || {};
+    const inventarioEnProgreso = inventarioActual?.estado === 'En Progreso';
+
+    let botones = '';
+
+    // Botón de contar (solo si tiene permiso y el inventario está en progreso)
+    if (permisos.permisoConteo && inventarioEnProgreso) {
+        const textoBoton = producto.estadoConteo === 'Contado' ? 'Recontar' : 'Contar';
+        botones += `
+            <button class="btn btn-sm btn-primary btn-contar me-1" 
+                    onclick="abrirModalConteo(${producto.productoId})">
+                <i class="fas fa-calculator me-1"></i>
+                ${textoBoton}
+            </button>
+        `;
+    }
+
+    // Botón de ajuste (solo si tiene permiso, hay discrepancia y el inventario está en progreso)
+    if (permisos.permisoAjuste && producto.tieneDiscrepancia && inventarioEnProgreso) {
+        botones += `
+            <button class="btn btn-sm btn-warning btn-ajustar me-1" 
+                    onclick="abrirModalAjuste(${producto.productoId})"
+                    title="Ajustar discrepancia">
+                <i class="fas fa-tools me-1"></i>
+                Ajustar
+            </button>
+        `;
+    }
+
+    // Botón de validación (solo si tiene permiso y hay discrepancia)
+    if (permisos.permisoValidacion && producto.tieneDiscrepancia) {
+        botones += `
+            <button class="btn btn-sm btn-info btn-validar" 
+                    onclick="abrirModalValidacion(${producto.productoId})"
+                    title="Validar discrepancia">
+                <i class="fas fa-check-double me-1"></i>
+                Validar
+            </button>
+        `;
+    }
+
+    // Si no tiene permisos o el inventario no está en progreso, mostrar botón deshabilitado
+    if (!botones) {
+        const razon = !inventarioEnProgreso ? 'Inventario no en progreso' : 'Sin permisos';
+        botones = `
+            <button class="btn btn-sm btn-secondary" disabled title="${razon}">
+                <i class="fas fa-lock me-1"></i>
+                Sin acceso
+            </button>
+        `;
+    }
+
+    return botones;
+}
+
+// Funciones placeholder para ajuste y validación (implementar después si es necesario)
+function abrirModalAjuste(productoId) {
+    mostrarInfo('Función de ajuste en desarrollo');
+}
+
+function abrirModalValidacion(productoId) {
+    mostrarInfo('Función de validación en desarrollo');
+}
+window.abrirModalConteo = abrirModalConteo;
+window.mostrarModalCompletarInventario = mostrarModalCompletarInventario;
+window.completarInventario = completarInventario;

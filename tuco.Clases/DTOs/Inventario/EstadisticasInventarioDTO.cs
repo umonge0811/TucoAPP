@@ -13,16 +13,15 @@ namespace Tuco.Clases.DTOs.Inventario
     {
         public int TotalProductos { get; set; }
         public int ProductosContados { get; set; }
+        public int ProductosPendientes { get; set; }
+        public int Discrepancias { get; set; }
+        public double PorcentajeProgreso { get; set; }
+
+        // ✅ AGREGAR ESTAS PROPIEDADES QUE FALTAN:
+        public double PorcentajeCompletado { get; set; }
         public int ProductosConDiscrepancia { get; set; }
-        public decimal PorcentajeCompletado { get; set; }
-
-        // Estadísticas de tiempo
-        public DateTime? FechaInicio { get; set; }
+        public double ProductosPorHora { get; set; }
         public DateTime? UltimoConteo { get; set; }
-        public int MinutosTranscurridos { get; set; }
-
-        // Productividad
-        public decimal ProductosPorHora { get; set; }
         public int UsuariosActivos { get; set; }
     }
 }

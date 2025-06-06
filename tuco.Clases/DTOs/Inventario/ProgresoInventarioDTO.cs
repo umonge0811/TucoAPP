@@ -11,12 +11,27 @@ namespace Tuco.Clases.DTOs.Inventario
     /// </summary>
     public class ProgresoInventarioDTO
     {
-        public int InventarioId { get; set; }
+        public int InventarioProgramadoId { get; set; }
+        public string Titulo { get; set; } = string.Empty;
+        public string Estado { get; set; } = string.Empty;
         public int TotalProductos { get; set; }
         public int ProductosContados { get; set; }
-        public decimal PorcentajeProgreso { get; set; }
+        public int ProductosPendientes { get; set; }
+        public int Discrepancias { get; set; }
+        public double PorcentajeProgreso { get; set; }
+        public DateTime FechaInicio { get; set; }
+        public DateTime FechaFin { get; set; }
+
+        // ✅ AGREGAR ESTAS PROPIEDADES QUE FALTAN:
+        public DateTime? FechaCalculo { get; set; }
         public int TotalDiscrepancias { get; set; }
-        public DateTime FechaCalculo { get; set; }
-        public string? Mensaje { get; set; }
+    }
+
+    public class ResultadoInventarioDTO
+    {
+        public bool Exitoso { get; set; }
+        public string Mensaje { get; set; } = string.Empty;
+        public int TotalProductos { get; set; }
+        public int Discrepancias { get; set; }
     }
 }

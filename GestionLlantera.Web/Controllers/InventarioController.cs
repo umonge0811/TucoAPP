@@ -88,6 +88,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+
         /// <summary>
         /// Método auxiliar para obtener el token JWT del usuario autenticado
         /// </summary>
@@ -2153,22 +2154,22 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // POST: /Inventario/IniciarInventario/5
-        [HttpPost]
-        public async Task<IActionResult> IniciarInventario(int id, string token)
-        {
-            try
-            {
-                var resultado = await _inventarioService.IniciarInventarioAsync(id, token);
+        //// POST: /Inventario/IniciarInventario/5
+        //[HttpPost]
+        //public async Task<IActionResult> IniciarInventario(int id, string token)
+        //{
+        //    try
+        //    {
+        //        var resultado = await _inventarioService.IniciarInventarioAsync(id, token);
 
-                return Json(new { success = resultado, message = resultado ? "Inventario iniciado exitosamente." : "No se pudo iniciar el inventario." });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al iniciar inventario {Id}", id);
-                return Json(new { success = false, message = "Error al iniciar el inventario: " + ex.Message });
-            }
-        }
+        //        return Json(new { success = resultado, message = resultado ? "Inventario iniciado exitosamente." : "No se pudo iniciar el inventario." });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Error al iniciar inventario {Id}", id);
+        //        return Json(new { success = false, message = "Error al iniciar el inventario: " + ex.Message });
+        //    }
+        //}
 
         // POST: /Inventario/CancelarInventario/5
         [HttpPost]

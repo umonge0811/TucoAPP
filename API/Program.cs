@@ -20,6 +20,7 @@ builder.Services.AddScoped<EmailService>();
 
 // Configurar servicios de notificaciones
 builder.Services.AddScoped<INotificacionService, NotificacionService>();
+
 // EN Program.cs - AGREGAR ESTA LÍNEA:
 builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 

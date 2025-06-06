@@ -51,7 +51,7 @@ namespace GestionLlantera.Web.Controllers
         /// 📱 Muestra la interfaz principal para realizar la toma de inventario
         /// GET: /TomaInventario/Ejecutar/5
         /// </summary>
-        [HttpGet]
+        [HttpGet("Ejecutar/{id}")]
         public async Task<IActionResult> Ejecutar(int id)
         {
             ViewData["Title"] = "Toma de Inventario - Ejecución";
