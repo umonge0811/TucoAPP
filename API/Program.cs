@@ -1,11 +1,9 @@
 ﻿using API.Authorization;
 using API.Data;
-using API.ServiceAPI;
-using API.ServiceAPI.Interfaces;
-using API.Services;
-using API.Services.Interfaces;
 using API.ServicesAPI;
 using API.ServicesAPI.Interfaces;
+using API.Services;
+using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;

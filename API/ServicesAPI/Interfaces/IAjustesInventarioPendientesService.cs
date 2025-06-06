@@ -1,12 +1,15 @@
 ﻿using Tuco.Clases.DTOs.Inventario;
-using Tuco.Clases.Models;
 
-namespace API.ServiceAPI.Interfaces
+namespace API.ServicesAPI.Interfaces
 {
+    /// <summary>
+    /// Interfaz para gestión de ajustes pendientes durante la toma de inventario
+    /// Los ajustes NO se aplican inmediatamente al stock real
+    /// </summary>
     public interface IAjustesInventarioPendientesService
     {
         /// <summary>
-        /// Crea un nuevo ajuste pendiente durante la toma de inventario
+        /// Crea un nuevo ajuste pendiente sin tocar el stock real
         /// </summary>
         Task<int> CrearAjustePendienteAsync(SolicitudAjusteInventarioDTO solicitud);
 
@@ -16,24 +19,9 @@ namespace API.ServiceAPI.Interfaces
         Task<List<AjusteInventarioPendienteDTO>> ObtenerAjustesPorInventarioAsync(int inventarioProgramadoId);
 
         /// <summary>
-        /// Obtiene ajustes pendientes de un producto específico en un inventario
+        /// Obtiene ajustes pendientes de un producto específico
         /// </summary>
         Task<List<AjusteInventarioPendienteDTO>> ObtenerAjustesPorProductoAsync(int inventarioProgramadoId, int productoId);
-
-        /// <summary>
-        /// Actualiza el estado de un ajuste
-        /// </summary>
-        Task<bool> ActualizarEstadoAjusteAsync(int ajusteId, string nuevoEstado, DateTime? fechaAplicacion = null);
-
-        /// <summary>
-        /// Elimina un ajuste pendiente (solo si no ha sido aplicado)
-        /// </summary>
-        Task<bool> EliminarAjustePendienteAsync(int ajusteId);
-
-        /// <summary>
-        /// Aplica todos los ajustes pendientes de un inventario al completarlo
-        /// </summary>
-        Task<bool> AplicarAjustesPendientesAsync(int inventarioProgramadoId);
 
         /// <summary>
         /// Verifica si un producto tiene ajustes pendientes
@@ -41,8 +29,24 @@ namespace API.ServiceAPI.Interfaces
         Task<bool> TieneAjustesPendientesAsync(int inventarioProgramadoId, int productoId);
 
         /// <summary>
-        /// Obtiene un resumen de ajustes para reporte
+        /// Elimina un ajuste pendiente (solo si está en estado Pendiente)
         /// </summary>
-        Task<object> ObtenerResumenAjustesAsync(int inventarioProgramadoId);
+        Task<bool> EliminarAjustePendienteAsync(int ajusteId);
+
+        /// <summary>
+        /// Obtiene resumen de ajustes de un inventario
+        /// </summary>
+        Task<ResumenAjustesInventarioDTO> ObtenerResumenAjustesAsync(int inventarioProgramadoId);
+
+        /// <summary>
+        /// MÉTODO CRÍTICO: Aplica todos los ajustes pendientes al stock real
+        /// Solo debe llamarse al completar el inventario
+        /// </summary>
+        Task<bool> AplicarAjustesPendientesAsync(int inventarioProgramadoId);
+
+        /// <summary>
+        /// Valida que un ajuste sea coherente antes de crearlo
+        /// </summary>
+        Task<(bool esValido, string mensaje)> ValidarAjusteAsync(SolicitudAjusteInventarioDTO solicitud);
     }
 }

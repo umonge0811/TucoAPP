@@ -1,11 +1,16 @@
 ﻿using API.Data;
-using API.ServiceAPI.Interfaces;
+using API.ServicesAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
 
-namespace API.ServiceAPI
+namespace API.ServicesAPI
 {
+    /// <summary>
+    /// Servicio para gestión de ajustes pendientes durante la toma de inventario
+    /// Los ajustes NO se aplican inmediatamente al stock real
+    /// </summary>
     public class AjustesInventarioPendientesService : IAjustesInventarioPendientesService
     {
         private readonly TucoContext _context;
@@ -19,41 +24,57 @@ namespace API.ServiceAPI
             _logger = logger;
         }
 
+        /// <summary>
+        /// Crea un nuevo ajuste pendiente sin tocar el stock real
+        /// </summary>
         public async Task<int> CrearAjustePendienteAsync(SolicitudAjusteInventarioDTO solicitud)
         {
             try
             {
-                _logger.LogInformation("🆕 Creando ajuste pendiente para producto {ProductoId}", solicitud.ProductoId);
+                _logger.LogInformation("📝 === CREANDO AJUSTE PENDIENTE ===");
+                _logger.LogInformation("📝 Inventario: {InventarioId}, Producto: {ProductoId}, Tipo: {Tipo}",
+                    solicitud.InventarioProgramadoId, solicitud.ProductoId, solicitud.TipoAjuste);
 
-                // ✅ VALIDAR QUE EL INVENTARIO ESTÉ EN PROGRESO
+                // ✅ VALIDAR LA SOLICITUD
+                var (esValido, mensajeValidacion) = await ValidarAjusteAsync(solicitud);
+                if (!esValido)
+                {
+                    throw new ArgumentException($"Ajuste no válido: {mensajeValidacion}");
+                }
+
+                // ✅ VERIFICAR QUE EL INVENTARIO ESTÉ EN PROGRESO
                 var inventario = await _context.InventariosProgramados
                     .FirstOrDefaultAsync(i => i.InventarioProgramadoId == solicitud.InventarioProgramadoId);
 
                 if (inventario == null)
                 {
-                    throw new ArgumentException("Inventario no encontrado");
+                    throw new InvalidOperationException("Inventario no encontrado");
                 }
 
                 if (inventario.Estado != "En Progreso")
                 {
-                    throw new InvalidOperationException("Solo se pueden crear ajustes en inventarios en progreso");
+                    throw new InvalidOperationException($"No se pueden crear ajustes en un inventario en estado '{inventario.Estado}'");
                 }
 
-                // ✅ DETERMINAR LA CANTIDAD FINAL SEGÚN EL TIPO DE AJUSTE
-                int cantidadFinalPropuesta = solicitud.TipoAjuste.ToLower() switch
-                {
-                    "sistema_a_fisico" => solicitud.CantidadFinalPropuesta ?? solicitud.CantidadFisicaContada,
-                    "reconteo" => solicitud.CantidadSistemaOriginal, // No cambia hasta recontar
-                    "validado" => solicitud.CantidadSistemaOriginal, // Se acepta la discrepancia
-                    _ => throw new ArgumentException("Tipo de ajuste no válido")
-                };
+                // ✅ VERIFICAR QUE EL PRODUCTO EXISTE EN EL INVENTARIO
+                var detalleInventario = await _context.DetallesInventarioProgramado
+                    .FirstOrDefaultAsync(d => d.InventarioProgramadoId == solicitud.InventarioProgramadoId &&
+                                             d.ProductoId == solicitud.ProductoId);
 
-                // ✅ CREAR EL AJUSTE
-                var ajuste = new AjusteInventarioPendiente
+                if (detalleInventario == null)
+                {
+                    throw new InvalidOperationException("El producto no pertenece a este inventario");
+                }
+
+                // ✅ DETERMINAR LA CANTIDAD FINAL PROPUESTA
+                int cantidadFinalPropuesta = solicitud.CantidadFinalPropuesta ?? solicitud.CantidadFisicaContada;
+
+                // ✅ CREAR EL AJUSTE PENDIENTE
+                var ajustePendiente = new AjusteInventarioPendiente
                 {
                     InventarioProgramadoId = solicitud.InventarioProgramadoId,
                     ProductoId = solicitud.ProductoId,
-                    TipoAjuste = solicitud.TipoAjuste.ToLower(),
+                    TipoAjuste = solicitud.TipoAjuste,
                     CantidadSistemaOriginal = solicitud.CantidadSistemaOriginal,
                     CantidadFisicaContada = solicitud.CantidadFisicaContada,
                     CantidadFinalPropuesta = cantidadFinalPropuesta,
@@ -63,19 +84,23 @@ namespace API.ServiceAPI
                     Estado = "Pendiente"
                 };
 
-                _context.AjustesInventarioPendientes.Add(ajuste);
+                _context.AjustesInventarioPendientes.Add(ajustePendiente);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Ajuste pendiente creado con ID {AjusteId}", ajuste.AjusteId);
-                return ajuste.AjusteId;
+                _logger.LogInformation("✅ Ajuste pendiente creado con ID: {AjusteId}", ajustePendiente.AjusteId);
+
+                return ajustePendiente.AjusteId;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al crear ajuste pendiente");
+                _logger.LogError(ex, "❌ Error creando ajuste pendiente");
                 throw;
             }
         }
 
+        /// <summary>
+        /// Obtiene todos los ajustes pendientes de un inventario
+        /// </summary>
         public async Task<List<AjusteInventarioPendienteDTO>> ObtenerAjustesPorInventarioAsync(int inventarioProgramadoId)
         {
             try
@@ -99,218 +124,330 @@ namespace API.ServiceAPI
                         FechaCreacion = a.FechaCreacion,
                         Estado = a.Estado,
                         FechaAplicacion = a.FechaAplicacion,
-                        NombreProducto = a.Producto != null ? a.Producto.NombreProducto : "Sin nombre",
-                        NombreUsuario = a.Usuario != null ? a.Usuario.NombreUsuario : "Sin usuario"
+                        NombreProducto = a.Producto != null ? a.Producto.NombreProducto : "Producto desconocido",
+                        NombreUsuario = a.Usuario != null ? a.Usuario.NombreUsuario : "Usuario desconocido"
                     })
                     .ToListAsync();
+
+                _logger.LogInformation("📋 Obtenidos {Count} ajustes para inventario {InventarioId}",
+                    ajustes.Count, inventarioProgramadoId);
 
                 return ajustes;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener ajustes por inventario {InventarioId}", inventarioProgramadoId);
+                _logger.LogError(ex, "❌ Error obteniendo ajustes del inventario {InventarioId}", inventarioProgramadoId);
                 throw;
             }
         }
 
+        /// <summary>
+        /// Obtiene ajustes pendientes de un producto específico
+        /// </summary>
         public async Task<List<AjusteInventarioPendienteDTO>> ObtenerAjustesPorProductoAsync(int inventarioProgramadoId, int productoId)
         {
-            try
-            {
-                var ajustes = await _context.AjustesInventarioPendientes
-                    .Include(a => a.Usuario)
-                    .Where(a => a.InventarioProgramadoId == inventarioProgramadoId && a.ProductoId == productoId)
-                    .OrderByDescending(a => a.FechaCreacion)
-                    .Select(a => new AjusteInventarioPendienteDTO
-                    {
-                        AjusteId = a.AjusteId,
-                        InventarioProgramadoId = a.InventarioProgramadoId,
-                        ProductoId = a.ProductoId,
-                        TipoAjuste = a.TipoAjuste,
-                        CantidadSistemaOriginal = a.CantidadSistemaOriginal,
-                        CantidadFisicaContada = a.CantidadFisicaContada,
-                        CantidadFinalPropuesta = a.CantidadFinalPropuesta,
-                        MotivoAjuste = a.MotivoAjuste,
-                        UsuarioId = a.UsuarioId,
-                        FechaCreacion = a.FechaCreacion,
-                        Estado = a.Estado,
-                        FechaAplicacion = a.FechaAplicacion,
-                        NombreUsuario = a.Usuario != null ? a.Usuario.NombreUsuario : "Sin usuario"
-                    })
-                    .ToListAsync();
+            var ajustes = await _context.AjustesInventarioPendientes
+                .Include(a => a.Usuario)
+                .Where(a => a.InventarioProgramadoId == inventarioProgramadoId && a.ProductoId == productoId)
+                .OrderByDescending(a => a.FechaCreacion)
+                .Select(a => new AjusteInventarioPendienteDTO
+                {
+                    AjusteId = a.AjusteId,
+                    InventarioProgramadoId = a.InventarioProgramadoId,
+                    ProductoId = a.ProductoId,
+                    TipoAjuste = a.TipoAjuste,
+                    CantidadSistemaOriginal = a.CantidadSistemaOriginal,
+                    CantidadFisicaContada = a.CantidadFisicaContada,
+                    CantidadFinalPropuesta = a.CantidadFinalPropuesta,
+                    MotivoAjuste = a.MotivoAjuste,
+                    UsuarioId = a.UsuarioId,
+                    FechaCreacion = a.FechaCreacion,
+                    Estado = a.Estado,
+                    FechaAplicacion = a.FechaAplicacion,
+                    NombreUsuario = a.Usuario != null ? a.Usuario.NombreUsuario : "Usuario desconocido"
+                })
+                .ToListAsync();
 
-                return ajustes;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener ajustes por producto {ProductoId}", productoId);
-                throw;
-            }
+            return ajustes;
         }
 
-        public async Task<bool> ActualizarEstadoAjusteAsync(int ajusteId, string nuevoEstado, DateTime? fechaAplicacion = null)
+        /// <summary>
+        /// Verifica si un producto tiene ajustes pendientes
+        /// </summary>
+        public async Task<bool> TieneAjustesPendientesAsync(int inventarioProgramadoId, int productoId)
         {
-            try
-            {
-                var ajuste = await _context.AjustesInventarioPendientes.FindAsync(ajusteId);
-                if (ajuste == null)
-                {
-                    _logger.LogWarning("Ajuste {AjusteId} no encontrado", ajusteId);
-                    return false;
-                }
-
-                ajuste.Estado = nuevoEstado;
-                if (fechaAplicacion.HasValue)
-                {
-                    ajuste.FechaAplicacion = fechaAplicacion.Value;
-                }
-
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Estado del ajuste {AjusteId} actualizado a {Estado}", ajusteId, nuevoEstado);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al actualizar estado del ajuste {AjusteId}", ajusteId);
-                throw;
-            }
+            return await _context.AjustesInventarioPendientes
+                .AnyAsync(a => a.InventarioProgramadoId == inventarioProgramadoId &&
+                              a.ProductoId == productoId &&
+                              a.Estado == "Pendiente");
         }
 
+        /// <summary>
+        /// Elimina un ajuste pendiente (solo si está en estado Pendiente)
+        /// </summary>
         public async Task<bool> EliminarAjustePendienteAsync(int ajusteId)
         {
             try
             {
-                var ajuste = await _context.AjustesInventarioPendientes.FindAsync(ajusteId);
+                var ajuste = await _context.AjustesInventarioPendientes
+                    .FirstOrDefaultAsync(a => a.AjusteId == ajusteId);
+
                 if (ajuste == null)
                 {
-                    _logger.LogWarning("Ajuste {AjusteId} no encontrado para eliminar", ajusteId);
+                    _logger.LogWarning("⚠️ Ajuste {AjusteId} no encontrado para eliminar", ajusteId);
                     return false;
                 }
 
-                if (ajuste.Estado == "Aplicado")
+                if (ajuste.Estado != "Pendiente")
                 {
-                    _logger.LogWarning("No se puede eliminar el ajuste {AjusteId} porque ya fue aplicado", ajusteId);
+                    _logger.LogWarning("⚠️ No se puede eliminar ajuste {AjusteId} en estado {Estado}",
+                        ajusteId, ajuste.Estado);
                     return false;
                 }
 
                 _context.AjustesInventarioPendientes.Remove(ajuste);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Ajuste {AjusteId} eliminado exitosamente", ajusteId);
+                _logger.LogInformation("✅ Ajuste {AjusteId} eliminado correctamente", ajusteId);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al eliminar ajuste {AjusteId}", ajusteId);
+                _logger.LogError(ex, "❌ Error eliminando ajuste {AjusteId}", ajusteId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene resumen de ajustes de un inventario
+        /// </summary>
+        public async Task<ResumenAjustesInventarioDTO> ObtenerResumenAjustesAsync(int inventarioProgramadoId)
+        {
+            try
+            {
+                _logger.LogInformation("📊 Generando resumen de ajustes para inventario {InventarioId}",
+                    inventarioProgramadoId);
+
+                // Obtener inventario
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioProgramadoId);
+
+                if (inventario == null)
+                {
+                    throw new InvalidOperationException("Inventario no encontrado");
+                }
+
+                // Obtener todos los ajustes
+                var ajustes = await ObtenerAjustesPorInventarioAsync(inventarioProgramadoId);
+
+                // Calcular estadísticas
+                var ajustesPendientes = ajustes.Where(a => a.Estado == "Pendiente").ToList();
+                var ajustesAplicados = ajustes.Where(a => a.Estado == "Aplicado").ToList();
+                var ajustesRechazados = ajustes.Where(a => a.Estado == "Rechazado").ToList();
+
+                var resumen = new ResumenAjustesInventarioDTO
+                {
+                    InventarioProgramadoId = inventarioProgramadoId,
+                    TituloInventario = inventario.Titulo,
+                    TotalAjustesPendientes = ajustesPendientes.Count,
+                    AjustesAplicados = ajustesAplicados.Count,
+                    AjustesRechazados = ajustesRechazados.Count,
+                    ProductosConAjustes = ajustes.Select(a => a.ProductoId).Distinct().Count(),
+
+                    // Clasificación por tipo
+                    AjustesSistemaAFisico = ajustes.Count(a => a.TipoAjuste == "sistema_a_fisico"),
+                    AjustesReconteo = ajustes.Count(a => a.TipoAjuste == "reconteo"),
+                    AjustesValidados = ajustes.Count(a => a.TipoAjuste == "validado"),
+
+                    // Impacto en stock
+                    TotalUnidadesAumento = ajustesPendientes.Where(a => a.CantidadAjuste > 0).Sum(a => a.CantidadAjuste),
+                    TotalUnidadesDisminucion = Math.Abs(ajustesPendientes.Where(a => a.CantidadAjuste < 0).Sum(a => a.CantidadAjuste)),
+                    ImpactoNetoUnidades = ajustesPendientes.Sum(a => a.CantidadAjuste),
+
+                    // Información temporal
+                    FechaUltimaActualizacion = ajustes.Any() ? ajustes.Max(a => a.FechaCreacion) : null,
+                    FechaPrimerAjuste = ajustes.Any() ? ajustes.Min(a => a.FechaCreacion) : null,
+
+                    AjustesPendientes = ajustesPendientes,
+                    ListoParaAplicar = ajustesPendientes.Any() && !ajustesPendientes.Any(a => a.TipoAjuste == "reconteo")
+                };
+
+                // Generar alertas
+                GenerarAlertasYRecomendaciones(resumen, ajustesPendientes);
+
+                return resumen;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error generando resumen de ajustes");
                 throw;
             }
         }
 
+        /// <summary>
+        /// MÉTODO CRÍTICO: Aplica todos los ajustes pendientes al stock real
+        /// </summary>
         public async Task<bool> AplicarAjustesPendientesAsync(int inventarioProgramadoId)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
-                _logger.LogInformation("🔄 Aplicando ajustes pendientes para inventario {InventarioId}", inventarioProgramadoId);
+                _logger.LogInformation("🔥 === OPERACIÓN CRÍTICA: APLICANDO AJUSTES AL STOCK REAL ===");
+                _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioProgramadoId);
 
-                // ✅ OBTENER AJUSTES PENDIENTES DEL TIPO "sistema_a_fisico"
-                var ajustesParaAplicar = await _context.AjustesInventarioPendientes
-                    .Where(a => a.InventarioProgramadoId == inventarioProgramadoId
-                               && a.Estado == "Pendiente"
-                               && a.TipoAjuste == "sistema_a_fisico")
+                // Obtener ajustes pendientes
+                var ajustesPendientes = await _context.AjustesInventarioPendientes
+                    .Where(a => a.InventarioProgramadoId == inventarioProgramadoId && a.Estado == "Pendiente")
+                    .Include(a => a.Producto)
                     .ToListAsync();
 
-                _logger.LogInformation("📊 Se encontraron {Count} ajustes para aplicar", ajustesParaAplicar.Count);
-
-                foreach (var ajuste in ajustesParaAplicar)
+                if (!ajustesPendientes.Any())
                 {
-                    // ✅ ACTUALIZAR EL STOCK DEL PRODUCTO
-                    var producto = await _context.Productos.FindAsync(ajuste.ProductoId);
-                    if (producto != null)
-                    {
-                        var stockAnterior = producto.CantidadEnInventario;
-                        producto.CantidadEnInventario = ajuste.CantidadFinalPropuesta;
-                        producto.FechaUltimaActualizacion = DateTime.Now;
-
-                        _logger.LogInformation("📦 Producto {ProductoId}: {StockAnterior} → {StockNuevo}",
-                            ajuste.ProductoId, stockAnterior, ajuste.CantidadFinalPropuesta);
-                    }
-
-                    // ✅ MARCAR EL AJUSTE COMO APLICADO
-                    ajuste.Estado = "Aplicado";
-                    ajuste.FechaAplicacion = DateTime.Now;
+                    _logger.LogInformation("ℹ️ No hay ajustes pendientes para aplicar");
+                    await transaction.CommitAsync();
+                    return true;
                 }
 
-                // ✅ MARCAR OTROS TIPOS COMO "PROCESADO" (sin aplicar al stock)
-                var otrosAjustes = await _context.AjustesInventarioPendientes
-                    .Where(a => a.InventarioProgramadoId == inventarioProgramadoId
-                               && a.Estado == "Pendiente"
-                               && a.TipoAjuste != "sistema_a_fisico")
-                    .ToListAsync();
+                _logger.LogInformation("📊 Aplicando {Count} ajustes pendientes", ajustesPendientes.Count);
 
-                foreach (var ajuste in otrosAjustes)
+                // Aplicar cada ajuste al stock real
+                foreach (var ajuste in ajustesPendientes)
                 {
-                    ajuste.Estado = "Procesado";
+                    var producto = ajuste.Producto;
+                    if (producto == null)
+                    {
+                        _logger.LogError("❌ Producto {ProductoId} no encontrado para ajuste {AjusteId}",
+                            ajuste.ProductoId, ajuste.AjusteId);
+                        continue;
+                    }
+
+                    var stockAnterior = producto.CantidadEnInventario;
+
+                    // Aplicar el ajuste
+                    switch (ajuste.TipoAjuste)
+                    {
+                        case "sistema_a_fisico":
+                            producto.CantidadEnInventario = ajuste.CantidadFinalPropuesta;
+                            break;
+                        case "validado":
+                            // No cambiar el stock, solo marcar como validado
+                            break;
+                        default:
+                            _logger.LogWarning("⚠️ Tipo de ajuste {Tipo} no manejado", ajuste.TipoAjuste);
+                            continue;
+                    }
+
+                    producto.FechaUltimaActualizacion = DateTime.Now;
+
+                    // Marcar ajuste como aplicado
+                    ajuste.Estado = "Aplicado";
                     ajuste.FechaAplicacion = DateTime.Now;
+
+                    _logger.LogInformation("✅ Producto {ProductoId}: {StockAnterior} → {StockNuevo}",
+                        producto.ProductoId, stockAnterior, producto.CantidadEnInventario);
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("✅ Ajustes aplicados exitosamente. Aplicados: {Aplicados}, Procesados: {Procesados}",
-                    ajustesParaAplicar.Count, otrosAjustes.Count);
-
+                _logger.LogInformation("🎉 === AJUSTES APLICADOS EXITOSAMENTE ===");
                 return true;
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "❌ Error al aplicar ajustes pendientes");
+                _logger.LogError(ex, "💥 ERROR CRÍTICO al aplicar ajustes");
                 throw;
             }
         }
 
-        public async Task<bool> TieneAjustesPendientesAsync(int inventarioProgramadoId, int productoId)
+        /// <summary>
+        /// Valida que un ajuste sea coherente antes de crearlo
+        /// </summary>
+        public async Task<(bool esValido, string mensaje)> ValidarAjusteAsync(SolicitudAjusteInventarioDTO solicitud)
         {
-            try
+            // Validaciones básicas
+            if (solicitud.CantidadSistemaOriginal < 0)
+                return (false, "La cantidad del sistema no puede ser negativa");
+
+            if (solicitud.CantidadFisicaContada < 0)
+                return (false, "La cantidad física contada no puede ser negativa");
+
+            if (string.IsNullOrWhiteSpace(solicitud.MotivoAjuste) || solicitud.MotivoAjuste.Length < 10)
+                return (false, "El motivo del ajuste debe tener al menos 10 caracteres");
+
+            // Validación específica por tipo
+            switch (solicitud.TipoAjuste)
             {
-                return await _context.AjustesInventarioPendientes
-                    .AnyAsync(a => a.InventarioProgramadoId == inventarioProgramadoId
-                              && a.ProductoId == productoId
-                              && a.Estado == "Pendiente");
+                case "sistema_a_fisico":
+                    if (!solicitud.CantidadFinalPropuesta.HasValue)
+                        return (false, "Para ajuste al sistema se requiere especificar la cantidad final");
+                    if (solicitud.CantidadFinalPropuesta < 0)
+                        return (false, "La cantidad final propuesta no puede ser negativa");
+                    break;
+
+                case "reconteo":
+                case "validado":
+                    // Estos tipos no requieren validaciones adicionales
+                    break;
+
+                default:
+                    return (false, $"Tipo de ajuste '{solicitud.TipoAjuste}' no válido");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al verificar ajustes pendientes");
-                throw;
-            }
+
+            // Verificar que no haya ajustes duplicados recientes (últimos 5 minutos)
+            var ajusteReciente = await _context.AjustesInventarioPendientes
+                .AnyAsync(a => a.InventarioProgramadoId == solicitud.InventarioProgramadoId &&
+                              a.ProductoId == solicitud.ProductoId &&
+                              a.UsuarioId == solicitud.UsuarioId &&
+                              a.FechaCreacion > DateTime.Now.AddMinutes(-5));
+
+            if (ajusteReciente)
+                return (false, "Ya existe un ajuste reciente para este producto. Espere unos minutos antes de crear otro.");
+
+            return (true, "Ajuste válido");
         }
 
-        public async Task<object> ObtenerResumenAjustesAsync(int inventarioProgramadoId)
+        /// <summary>
+        /// Genera alertas y recomendaciones para el resumen
+        /// </summary>
+        private void GenerarAlertasYRecomendaciones(ResumenAjustesInventarioDTO resumen, List<AjusteInventarioPendienteDTO> ajustesPendientes)
         {
-            try
+            // Alertas por productos con stock que quedaría negativo
+            var productosStockNegativo = ajustesPendientes
+                .Where(a => a.CantidadFinalPropuesta < 0)
+                .ToList();
+
+            if (productosStockNegativo.Any())
             {
-                var resumen = await _context.AjustesInventarioPendientes
-                    .Where(a => a.InventarioProgramadoId == inventarioProgramadoId)
-                    .GroupBy(a => a.Estado)
-                    .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
-                    .ToListAsync();
-
-                var ajustesStock = await _context.AjustesInventarioPendientes
-                    .Where(a => a.InventarioProgramadoId == inventarioProgramadoId && a.TipoAjuste == "sistema_a_fisico")
-                    .SumAsync(a => a.CantidadFinalPropuesta - a.CantidadSistemaOriginal);
-
-                return new
-                {
-                    ResumenPorEstado = resumen,
-                    TotalAjustesStock = ajustesStock,
-                    FechaGeneracion = DateTime.Now
-                };
+                resumen.Alertas.Add($"⚠️ {productosStockNegativo.Count} productos quedarían con stock negativo");
+                resumen.ListoParaAplicar = false;
+                resumen.MotivoNoListo = "Hay productos que quedarían con stock negativo";
             }
-            catch (Exception ex)
+
+            // Alertas por ajustes de reconteo pendientes
+            var reconteosPendientes = ajustesPendientes.Where(a => a.TipoAjuste == "reconteo").ToList();
+            if (reconteosPendientes.Any())
             {
-                _logger.LogError(ex, "Error al obtener resumen de ajustes");
-                throw;
+                resumen.Alertas.Add($"📋 {reconteosPendientes.Count} productos requieren reconteo antes de aplicar ajustes");
+                resumen.ListoParaAplicar = false;
+                resumen.MotivoNoListo = "Hay productos pendientes de reconteo";
+            }
+
+            // Recomendaciones
+            if (resumen.ImpactoNetoUnidades > 100)
+            {
+                resumen.Recomendaciones.Add("📈 El impacto neto es positivo (+100 unidades). Verificar capacidad de almacenamiento.");
+            }
+            else if (resumen.ImpactoNetoUnidades < -100)
+            {
+                resumen.Recomendaciones.Add("📉 El impacto neto es significativamente negativo (-100 unidades). Revisar causas de faltantes.");
+            }
+
+            if (resumen.ProductosConAjustes > 20)
+            {
+                resumen.Recomendaciones.Add("🔍 Alto número de productos con ajustes. Considerar revisar procesos de inventario.");
             }
         }
     }
