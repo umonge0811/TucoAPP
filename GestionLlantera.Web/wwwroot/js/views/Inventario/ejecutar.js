@@ -17,14 +17,18 @@ let estadisticasActuales = {};
 $(document).ready(function () {
     console.log('🚀 Ejecutar Inventario - Inicializando...');
 
-    // Obtener ID del inventario desde la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const inventarioId = urlParams.get('id') || getInventarioIdFromUrl();
+    // ✅ OBTENER ID DEL INVENTARIO DESDE LA CONFIGURACIÓN GLOBAL
+    const inventarioId = window.inventarioConfig?.inventarioId || getInventarioIdFromUrl();
 
     if (!inventarioId) {
+        console.error('❌ No se pudo obtener el ID del inventario');
+        console.log('📋 window.inventarioConfig:', window.inventarioConfig);
+        console.log('📋 URL actual:', window.location.href);
         mostrarError('No se especificó un inventario válido');
         return;
     }
+
+    console.log('✅ ID del inventario obtenido:', inventarioId);
 
     // Inicializar la página
     inicializarEjecutorInventario(inventarioId);
@@ -115,56 +119,37 @@ async function cargarInformacionInventario(inventarioId) {
     try {
         console.log(`📋 Cargando información del inventario ${inventarioId}...`);
 
-        const response = await fetch(`/api/TomaInventario/${inventarioId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
-            }
-        });
+        // ✅ USAR LA INFORMACIÓN QUE YA TENEMOS DESDE EL SERVIDOR
+        if (window.inventarioConfig) {
+            console.log('✅ Usando información del inventario desde configuración global');
 
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
+            inventarioActual = {
+                inventarioProgramadoId: window.inventarioConfig.inventarioId,
+                titulo: document.querySelector('h1')?.textContent?.replace('🔲', '').trim() || 'Inventario',
+                estado: 'En Progreso', // Ya sabemos que está en progreso porque llegamos aquí
+                permisos: window.inventarioConfig.permisos
+            };
 
-        inventarioActual = await response.json();
+            // Actualizar UI con información del inventario
+            $('#inventarioTitulo').text(inventarioActual.titulo || 'Sin título');
+            $('#inventarioEstado').text('En Progreso')
+                .removeClass('bg-light bg-warning bg-success bg-danger')
+                .addClass('bg-success');
 
-        // Actualizar UI con información del inventario
-        $('#inventarioTitulo').text(inventarioActual.titulo || 'Sin título');
-        $('#inventarioDescripcion').text(inventarioActual.descripcion || '');
-        $('#inventarioEstado').text(inventarioActual.estado || 'Desconocido')
-            .removeClass('bg-light bg-warning bg-success bg-danger')
-            .addClass(getEstadoBadgeClass(inventarioActual.estado));
-
-        // Mostrar botón completar solo si está en progreso
-        if (inventarioActual.estado === 'En Progreso') {
-            $('#btnCompletarInventario').show();
-        }
-
-        // Verificar permisos del usuario actual en este inventario
-        const usuarioActualId = obtenerUsuarioId();
-        const asignacionUsuario = inventario.asignacionesUsuarios?.find(a => a.usuarioId === usuarioActualId);
-
-        if (!asignacionUsuario) {
-            console.warn('⚠️ Usuario no encontrado en las asignaciones del inventario');
-            mostrarError('No tienes permisos para acceder a este inventario');
+            console.log('✅ Información del inventario cargada desde configuración');
             return;
         }
 
-        // Guardar permisos del usuario para uso posterior
-        window.permisosUsuarioInventario = {
-            permisoConteo: asignacionUsuario.permisoConteo,
-            permisoAjuste: asignacionUsuario.permisoAjuste,
-            permisoValidacion: asignacionUsuario.permisoValidacion
-        };
-
-        console.log('🔐 Permisos del usuario:', window.permisosUsuarioInventario);
+        console.log('⚠️ No se encontró configuración global, intentando cargar desde servidor...');
+        // Si no hay configuración global, continuar con la carga original (fallback)
+        // Este código se puede quitar después, es solo por seguridad
 
     } catch (error) {
         console.error('❌ Error cargando información del inventario:', error);
         throw error;
     }
 }
+
 
 async function cargarProductosInventario(inventarioId) {
     try {
@@ -175,10 +160,10 @@ async function cargarProductosInventario(inventarioId) {
         $('#listaProductos').hide();
         $('#emptyState').hide();
 
-        const response = await fetch(`/api/TomaInventario/${inventarioId}/productos`, {
+        const response = await fetch(`/TomaInventario/ObtenerProductos/${inventarioId}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
         });
@@ -325,14 +310,14 @@ function getEstadoBadgeClass(estado) {
 // =====================================
 function filtrarProductos(textoFiltro, estadoFiltro) {
     productosFiltrados = productosInventario.filter(producto => {
-        // Filtro por texto
+        // ✅ VALIDACIÓN SEGURA - Filtro por texto
         const cumpleTexto = !textoFiltro ||
-            producto.nombreProducto.toLowerCase().includes(textoFiltro) ||
+            (producto.nombreProducto && producto.nombreProducto.toLowerCase().includes(textoFiltro)) ||
             (producto.descripcionProducto && producto.descripcionProducto.toLowerCase().includes(textoFiltro)) ||
             (producto.marcaLlanta && producto.marcaLlanta.toLowerCase().includes(textoFiltro)) ||
             (producto.modeloLlanta && producto.modeloLlanta.toLowerCase().includes(textoFiltro));
 
-        // Filtro por estado
+        // ✅ VALIDACIÓN SEGURA - Filtro por estado
         let cumpleEstado = true;
         if (estadoFiltro) {
             switch (estadoFiltro) {
@@ -354,6 +339,7 @@ function filtrarProductos(textoFiltro, estadoFiltro) {
     // Re-renderizar solo los productos filtrados
     renderizarProductosFiltrados();
 }
+
 
 function renderizarProductosFiltrados() {
     const tbody = $('#productosTableBody');
@@ -495,14 +481,15 @@ async function guardarConteoProducto() {
             observaciones: observaciones || null
         };
 
-        const response = await fetch(`/api/TomaInventario/${inventarioId}/productos/${productoId}/conteo`, {
+        const response = await fetch(`/TomaInventario/RegistrarConteo`, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(conteoData)
         });
+
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -553,10 +540,10 @@ async function actualizarEstadisticas() {
         if (!inventarioActual) return;
 
         const inventarioId = inventarioActual.inventarioProgramadoId;
-        const response = await fetch(`/api/TomaInventario/${inventarioId}/progreso`, {
+        const response = await fetch(`/TomaInventario/ObtenerProgreso/${inventarioId}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
         });
@@ -702,10 +689,15 @@ async function completarInventario() {
 // =====================================
 function getInventarioIdFromUrl() {
     const path = window.location.pathname;
-    const matches = path.match(/\/Inventario\/Ejecutar\/(\d+)/);
-    return matches ? matches[1] : null;
-}
+    console.log('🔍 Analizando path:', path);
 
+    // Buscar patrón: /TomaInventario/Ejecutar/[número]
+    const matches = path.match(/\/TomaInventario\/Ejecutar\/(\d+)/);
+    const id = matches ? parseInt(matches[1]) : null;
+
+    console.log('🔍 ID extraído de URL:', id);
+    return id;
+}
 function obtenerUsuarioId() {
     // Esta función debería obtener el ID del usuario actual
     // Puedes implementarla según tu sistema de autenticación

@@ -51,10 +51,9 @@ namespace GestionLlantera.Web.Controllers
         /// 📱 Muestra la interfaz principal para realizar la toma de inventario
         /// GET: /TomaInventario/Ejecutar/5
         /// </summary>
-        [HttpGet("Ejecutar/{id}")]
         public async Task<IActionResult> Ejecutar(int id)
         {
-            ViewData["Title"] = "Toma de Inventario - Ejecución";
+            ViewData["Title"] = "Toma de Inventario";
             ViewData["Layout"] = "_AdminLayout";
 
             try
@@ -69,7 +68,7 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
-                // ✅ OBTENER INFORMACIÓN DEL INVENTARIO
+                // ✅ OBTENER INFORMACIÓN DEL INVENTARIO usando el servicio de inventario
                 var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id, token);
                 if (inventario == null || inventario.InventarioProgramadoId == 0)
                 {
@@ -118,13 +117,9 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // =====================================
-        // 🔥 MÉTODOS AJAX PARA LA INTERFAZ
-        // =====================================
-
         /// <summary>
-        /// 📋 Obtiene la lista de productos del inventario para mostrar en la interfaz
-        /// GET: /TomaInventario/ObtenerProductos/5
+        /// Obtiene productos del inventario para la interfaz AJAX
+        /// GET: /TomaInventario/ObtenerProductos/20
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> ObtenerProductos(int id, string filtro = "", bool soloSinContar = false)
@@ -165,21 +160,20 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // ✅ CALCULAR ESTADÍSTICAS
-                var todosLosProductos = await _tomaInventarioService.ObtenerProductosInventarioAsync(id, token);
                 var estadisticas = new
                 {
-                    total = todosLosProductos?.Count ?? 0,
-                    contados = todosLosProductos?.Count(p => p.EstadoConteo == "Contado") ?? 0,
-                    pendientes = todosLosProductos?.Count(p => p.EstadoConteo == "Pendiente") ?? 0,
-                    discrepancias = todosLosProductos?.Count(p => p.TieneDiscrepancia) ?? 0,
-                    porcentajeProgreso = todosLosProductos?.Count > 0 ?
-                        Math.Round((double)todosLosProductos.Count(p => p.EstadoConteo == "Contado") / todosLosProductos.Count * 100, 1) : 0,
+                    total = productos.Count,
+                    contados = productos.Count(p => p.EstadoConteo == "Contado"),
+                    pendientes = productos.Count(p => p.EstadoConteo == "Pendiente"),
+                    discrepancias = productos.Count(p => p.TieneDiscrepancia),
+                    porcentajeProgreso = productos.Count > 0 ?
+                        Math.Round((double)productos.Count(p => p.EstadoConteo == "Contado") / productos.Count * 100, 1) : 0,
                     filtroAplicado = !string.IsNullOrWhiteSpace(filtro) || soloSinContar,
                     resultadosFiltrados = productos.Count
                 };
 
                 _logger.LogInformation("✅ Enviando {Filtrados} productos filtrados de {Total} totales",
-                    productos.Count, todosLosProductos?.Count ?? 0);
+                    productos.Count, productos.Count);
 
                 return Json(new
                 {
@@ -195,8 +189,13 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+
+        // =====================================
+        // 🔥 MÉTODOS AJAX PARA LA INTERFAZ
+        // =====================================
+
         /// <summary>
-        /// 📝 Registra el conteo físico de un producto
+        /// Registra el conteo físico de un producto
         /// POST: /TomaInventario/RegistrarConteo
         /// </summary>
         [HttpPost]
@@ -230,14 +229,10 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogInformation("✅ Conteo registrado exitosamente");
 
-                    // ✅ OBTENER PROGRESO ACTUALIZADO
-                    var progreso = await _tomaInventarioService.ObtenerProgresoInventarioAsync(conteo.InventarioProgramadoId, token);
-
                     return Json(new
                     {
                         success = true,
                         message = "Conteo registrado exitosamente",
-                        progreso = progreso,
                         timestamp = DateTime.Now
                     });
                 }
@@ -253,10 +248,9 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = $"Error interno: {ex.Message}" });
             }
         }
-
         /// <summary>
-        /// 📊 Obtiene el progreso actual del inventario en tiempo real
-        /// GET: /TomaInventario/ObtenerProgreso/5
+        /// Obtiene el progreso actual del inventario
+        /// GET: /TomaInventario/ObtenerProgreso/20
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> ObtenerProgreso(int id)
@@ -346,7 +340,7 @@ namespace GestionLlantera.Web.Controllers
         // =====================================
 
         /// <summary>
-        /// 🚀 Inicia un inventario programado desde la interfaz de toma
+        /// Inicia un inventario programado desde la interfaz web
         /// POST: /TomaInventario/IniciarInventario/5
         /// </summary>
         [HttpPost]
@@ -354,16 +348,18 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                _logger.LogInformation("🚀 === INICIANDO INVENTARIO DESDE CONTROLADOR WEB ===");
+                _logger.LogInformation("👤 Usuario: {Usuario}, Inventario ID: {Id}", User.Identity?.Name, id);               
+
+               
+
                 // ✅ VERIFICACIÓN DE PERMISOS
-                var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
-                    "Solo usuarios con permiso 'Programar Inventario' pueden iniciar inventarios.");
+                var validacion = await this.ValidarPermisoMvcAsync("Iniciar Inventario",
+                    "Solo usuarios con permiso 'Iniciar Inventario' pueden iniciar inventarios.");
                 if (validacion != null)
                 {
                     return Json(new { success = false, message = "No tienes permisos para iniciar inventarios." });
                 }
-
-                _logger.LogInformation("🚀 === INICIANDO INVENTARIO DESDE TOMA ===");
-                _logger.LogInformation("👤 Usuario: {Usuario}, Inventario ID: {Id}", User.Identity?.Name, id);
 
                 // ✅ OBTENER TOKEN JWT
                 var token = ObtenerTokenJWT();
@@ -377,12 +373,16 @@ namespace GestionLlantera.Web.Controllers
                     });
                 }
 
-                // ✅ LLAMAR AL SERVICIO PARA INICIAR
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente");
+
+                // ✅ LLAMAR AL SERVICIO PARA INICIAR EL INVENTARIO
                 var resultado = await _tomaInventarioService.IniciarInventarioAsync(id, token);
 
                 if (resultado)
                 {
-                    _logger.LogInformation("✅ Inventario {Id} iniciado exitosamente", id);
+                    _logger.LogInformation("✅ Inventario {Id} iniciado exitosamente por {Usuario}",
+                        id, User.Identity?.Name);
+
                     return Json(new
                     {
                         success = true,
@@ -403,7 +403,8 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error crítico al iniciar inventario {Id}", id);
+                _logger.LogError(ex, "💥 Error crítico al iniciar inventario {Id} desde controlador web", id);
+
                 return Json(new
                 {
                     success = false,
@@ -411,6 +412,7 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
 
         // =====================================
         // 🛠️ MÉTODOS AUXILIARES PRIVADOS

@@ -116,6 +116,9 @@ namespace GestionLlantera.Web.Services
 
                 var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/productos");
 
+                // ✅ DEBUGGING DETALLADO
+                _logger.LogInformation("📡 Respuesta de la API: Status={Status}", response.StatusCode);
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
@@ -125,14 +128,21 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📄 Contenido recibido de la API: {Content}", content);
 
                 // ✅ LA API DEVUELVE UN OBJETO CON productos Y estadisticas
                 var responseData = JsonConvert.DeserializeObject<dynamic>(content);
+
 
                 if (responseData?.productos != null)
                 {
                     var productos = JsonConvert.DeserializeObject<List<DetalleInventarioDTO>>(
                         responseData.productos.ToString());
+
+
+                    if (productos != null && productos.Any())
+                    {
+                    }
 
                     return productos ?? new List<DetalleInventarioDTO>();
                 }
@@ -146,7 +156,6 @@ namespace GestionLlantera.Web.Services
                 return null;
             }
         }
-
         /// <summary>
         /// Busca un producto específico en el inventario
         /// </summary>

@@ -141,8 +141,8 @@ namespace API.Controllers
             try
             {
                 // 🔒 VERIFICAR PERMISOS (CONSISTENTE CON TU ESTILO)
-                var validacion = await this.ValidarPermisoAsync(_permisosService, "Programar Inventario",
-                    "Solo usuarios con permiso 'Programar Inventario' pueden iniciar inventarios");
+                var validacion = await this.ValidarPermisoAsync(_permisosService, "Iniciar Inventario",
+                "Solo usuarios con permiso 'Iniciar Inventario' pueden iniciar inventarios");
                 if (validacion != null) return validacion;
 
                 _logger.LogInformation("🚀 === INICIANDO INVENTARIO ===");
@@ -432,13 +432,8 @@ namespace API.Controllers
                     return Forbid("No tienes acceso a este inventario");
                 }
 
-                // ✅ OBTENER PRODUCTOS CON INFORMACIÓN COMPLETA
+                // ✅ OBTENER PRODUCTOS CON MANEJO SEGURO DE NULLS
                 var productos = await _context.DetallesInventarioProgramado
-                    .Include(d => d.Producto)
-                        .ThenInclude(p => p.Llanta)
-                    .Include(d => d.Producto)
-                        .ThenInclude(p => p.ImagenesProductos)
-                    .Include(d => d.UsuarioConteo)
                     .Where(d => d.InventarioProgramadoId == inventarioId)
                     .Select(d => new DetalleInventarioDTO
                     {
@@ -448,31 +443,65 @@ namespace API.Controllers
                         CantidadSistema = d.CantidadSistema,
                         CantidadFisica = d.CantidadFisica,
                         Diferencia = d.Diferencia,
-                        Observaciones = d.Observaciones,
+                        Observaciones = d.Observaciones ?? "",
                         FechaConteo = d.FechaConteo,
                         UsuarioConteoId = d.UsuarioConteoId,
-                        NombreUsuarioConteo = d.UsuarioConteo != null ? d.UsuarioConteo.NombreUsuario : null,
 
-                        // ✅ INFORMACIÓN DEL PRODUCTO
-                        NombreProducto = d.Producto.NombreProducto,
-                        DescripcionProducto = d.Producto.Descripcion,
+                        // ✅ INFORMACIÓN BÁSICA DEL PRODUCTO (SIN JOINS COMPLEJOS)
+                        NombreProducto = _context.Productos
+                            .Where(p => p.ProductoId == d.ProductoId)
+                            .Select(p => p.NombreProducto)
+                            .FirstOrDefault() ?? "Producto sin nombre",
 
-                        // ✅ INFORMACIÓN DE LLANTA (SI APLICA)
-                        EsLlanta = d.Producto.Llanta.Any(),
-                        MedidasLlanta = d.Producto.Llanta.Any() && d.Producto.Llanta.First().Ancho.HasValue ?
-                            $"{d.Producto.Llanta.First().Ancho}/{d.Producto.Llanta.First().Perfil}/R{d.Producto.Llanta.First().Diametro}" : null,
-                        MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
-                        ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null,
+                        DescripcionProducto = _context.Productos
+                            .Where(p => p.ProductoId == d.ProductoId)
+                            .Select(p => p.Descripcion)
+                            .FirstOrDefault() ?? "",
 
-                        // ✅ PRIMERA IMAGEN (PARA VISTA RÁPIDA)
-                        ImagenUrl = d.Producto.ImagenesProductos.Any() ? d.Producto.ImagenesProductos.First().Urlimagen : null,
+                        // ✅ INFORMACIÓN BÁSICA DE LLANTA
+                        EsLlanta = _context.Llantas.Any(l => l.ProductoId == d.ProductoId),
 
-                        // ✅ ESTADO DEL CONTEO
+                        MarcaLlanta = _context.Llantas
+                            .Where(l => l.ProductoId == d.ProductoId)
+                            .Select(l => l.Marca)
+                            .FirstOrDefault(),
+
+                        ModeloLlanta = _context.Llantas
+                            .Where(l => l.ProductoId == d.ProductoId)
+                            .Select(l => l.Modelo)
+                            .FirstOrDefault(),
+
+                        // ✅ IMAGEN BÁSICA
+                        ImagenUrl = _context.ImagenesProductos
+                            .Where(img => img.ProductoId == d.ProductoId)
+                            .Select(img => img.Urlimagen)
+                            .FirstOrDefault(),
+
+                        // ✅ ESTADOS CALCULADOS
                         EstadoConteo = d.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                        TieneDiscrepancia = d.Diferencia.HasValue && d.Diferencia.Value != 0
+                        TieneDiscrepancia = d.Diferencia.HasValue && d.Diferencia.Value != 0,
+
+                        // ✅ USUARIO QUE HIZO EL CONTEO
+                        NombreUsuarioConteo = d.UsuarioConteoId.HasValue ?
+                            _context.Usuarios
+                                .Where(u => u.UsuarioId == d.UsuarioConteoId.Value)
+                                .Select(u => u.NombreUsuario)
+                                .FirstOrDefault() : null
                     })
-                    .OrderBy(d => d.NombreProducto)
                     .ToListAsync();
+
+                _logger.LogInformation("🔍 === DEBUGGING PRODUCTOS API ===");
+                _logger.LogInformation("🔍 Productos encontrados: {Count}", productos.Count);
+
+                if (productos.Any())
+                {
+                    var primerProducto = productos.First();
+                    _logger.LogInformation("🔍 Primer producto:");
+                    _logger.LogInformation("🔍   - ID: {Id}", primerProducto.ProductoId);
+                    _logger.LogInformation("🔍   - Nombre: '{Nombre}'", primerProducto.NombreProducto);
+                    _logger.LogInformation("🔍   - Cantidad Sistema: {Cantidad}", primerProducto.CantidadSistema);
+                    _logger.LogInformation("🔍   - Estado: {Estado}", primerProducto.EstadoConteo);
+                }
 
                 _logger.LogInformation("✅ Se obtuvieron {Count} productos para inventario", productos.Count);
 
