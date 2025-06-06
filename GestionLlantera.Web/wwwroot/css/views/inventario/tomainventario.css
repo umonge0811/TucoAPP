@@ -379,4 +379,28 @@
     margin-bottom: 0.5rem;
 }
 
+/* Estilos para productos con ajustes pendientes */
+.producto-con-ajuste-pendiente {
+    background-color: #fff3cd !important;
+    border-left: 4px solid #ffc107 !important;
+}
+
+    .producto-con-ajuste-pendiente:hover {
+        background-color: #ffeaa7 !important;
+    }
+
+/* Animación sutil para ajustes aplicados */
+.ajuste-aplicado {
+    animation: fadeInSuccess 0.5s ease-in-out;
+}
+
+@keyframes fadeInSuccess {
+    from {
+        background-color: #d4edda;
+    }
+
+    to {
+        background-color: transparent;
+    }
+}
 

@@ -1,14 +1,16 @@
 ﻿using API.Data;
 using API.Extensions; // ✅ CONSISTENTE CON TU ESTILO
+using API.ServiceAPI.Interfaces;
+using API.Services.Interfaces;
 using API.ServicesAPI.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using tuco.Clases.Models;
-using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.DTOs;
+using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
-using API.Services.Interfaces;
 
 namespace API.Controllers
 {
@@ -27,12 +29,14 @@ namespace API.Controllers
         private readonly IPermisosService _permisosService;
         private readonly INotificacionService _notificacionService;
         private readonly ILogger<TomaInventarioController> _logger;
+        private readonly IAjustesInventarioPendientesService _ajustesService;
 
         public TomaInventarioController(
             TucoContext context,
             ITomaInventarioService tomaInventarioService,
             IPermisosService permisosService,
             INotificacionService notificacionService,
+            IAjustesInventarioPendientesService ajustesService,
             ILogger<TomaInventarioController> logger)
         {
             _context = context;
@@ -40,7 +44,257 @@ namespace API.Controllers
             _permisosService = permisosService;
             _notificacionService = notificacionService;
             _logger = logger;
+            _ajustesService = ajustesService;
         }
+
+        // =====================================
+        // MÉTODOS PARA AJUSTE DE INVENTARIOS
+        // =====================================
+
+        /// <summary>
+        /// Crea un ajuste pendiente para resolver discrepancias durante la toma de inventario
+        /// </summary>
+        [HttpPost("{inventarioId}/ajustar-discrepancia")]
+        [Authorize]
+        public async Task<IActionResult> CrearAjustePendiente(int inventarioId, [FromBody] SolicitudAjusteInventarioDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("📝 === AJUSTE PENDIENTE SOLICITADO ===");
+                _logger.LogInformation("📝 Inventario: {InventarioId}, Producto: {ProductoId}", inventarioId, solicitud.ProductoId);
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // ✅ VALIDAR QUE EL INVENTARIO ID COINCIDA
+                if (solicitud.InventarioProgramadoId != inventarioId)
+                {
+                    return BadRequest(new { success = false, message = "El ID del inventario no coincide" });
+                }
+
+                // ✅ OBTENER ID DEL USUARIO DESDE EL TOKEN
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { success = false, message = "No se pudo identificar el usuario" });
+                }
+
+                solicitud.UsuarioId = userId;
+
+                // ✅ CREAR EL AJUSTE PENDIENTE
+                var ajusteId = await _ajustesService.CrearAjustePendienteAsync(solicitud);
+
+                _logger.LogInformation("✅ Ajuste pendiente creado con ID: {AjusteId}", ajusteId);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Ajuste pendiente registrado exitosamente",
+                    data = new
+                    {
+                        ajusteId = ajusteId,
+                        tipoAjuste = solicitud.TipoAjuste,
+                        productoId = solicitud.ProductoId,
+                        diferencia = solicitud.CantidadFisicaContada - solicitud.CantidadSistemaOriginal,
+                        cantidadFinalPropuesta = solicitud.CantidadFinalPropuesta ?? solicitud.CantidadFisicaContada,
+                        timestamp = DateTime.Now
+                    }
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning("Solicitud inválida: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning("Operación no permitida: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al crear ajuste pendiente");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene todos los ajustes pendientes de un inventario específico
+        /// </summary>
+        [HttpGet("{inventarioId}/ajustes")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerAjustesPendientes(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo ajustes pendientes para inventario {InventarioId}", inventarioId);
+
+                var ajustes = await _ajustesService.ObtenerAjustesPorInventarioAsync(inventarioId);
+
+                return Ok(new
+                {
+                    success = true,
+                    inventarioId = inventarioId,
+                    totalAjustes = ajustes.Count,
+                    ajustes = ajustes
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener ajustes del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene ajustes pendientes de un producto específico
+        /// </summary>
+        [HttpGet("{inventarioId}/productos/{productoId}/ajustes")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerAjustesProducto(int inventarioId, int productoId)
+        {
+            try
+            {
+                var ajustes = await _ajustesService.ObtenerAjustesPorProductoAsync(inventarioId, productoId);
+                var tienePendientes = await _ajustesService.TieneAjustesPendientesAsync(inventarioId, productoId);
+
+                return Ok(new
+                {
+                    success = true,
+                    productoId = productoId,
+                    tieneAjustesPendientes = tienePendientes,
+                    totalAjustes = ajustes.Count,
+                    ajustes = ajustes
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener ajustes del producto {ProductoId}", productoId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Elimina un ajuste pendiente específico
+        /// </summary>
+        [HttpDelete("ajustes/{ajusteId}")]
+        [Authorize]
+        public async Task<IActionResult> EliminarAjustePendiente(int ajusteId)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Eliminando ajuste pendiente {AjusteId}", ajusteId);
+
+                var eliminado = await _ajustesService.EliminarAjustePendienteAsync(ajusteId);
+
+                if (eliminado)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Ajuste eliminado exitosamente",
+                        ajusteId = ajusteId
+                    });
+                }
+                else
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Ajuste no encontrado o no se puede eliminar (ya fue aplicado)"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al eliminar ajuste {AjusteId}", ajusteId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene un resumen de todos los ajustes de un inventario
+        /// </summary>
+        [HttpGet("{inventarioId}/ajustes/resumen")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerResumenAjustes(int inventarioId)
+        {
+            try
+            {
+                var resumen = await _ajustesService.ObtenerResumenAjustesAsync(inventarioId);
+                return Ok(new
+                {
+                    success = true,
+                    inventarioId = inventarioId,
+                    resumen = resumen
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener resumen de ajustes");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// MÉTODO CRÍTICO: Aplica todos los ajustes pendientes al completar el inventario
+        /// Solo debe llamarse cuando se completa un inventario
+        /// </summary>
+        [HttpPost("{inventarioId}/aplicar-ajustes")]
+        [Authorize]
+        public async Task<IActionResult> AplicarAjustesPendientes(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔥 === OPERACIÓN CRÍTICA: APLICANDO AJUSTES ===");
+                _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioId);
+                _logger.LogInformation("🔥 Usuario: {Usuario}", User.Identity?.Name);
+
+                // ✅ AQUÍ PUEDES AGREGAR VALIDACIONES DE PERMISOS ESPECÍFICOS
+                // Por ejemplo, verificar que el usuario tenga permiso "Completar Inventario"
+
+                var aplicado = await _ajustesService.AplicarAjustesPendientesAsync(inventarioId);
+
+                if (aplicado)
+                {
+                    _logger.LogInformation("✅ === AJUSTES APLICADOS EXITOSAMENTE ===");
+                    _logger.LogInformation("✅ Inventario: {InventarioId}", inventarioId);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Todos los ajustes pendientes han sido aplicados al stock del sistema",
+                        inventarioId = inventarioId,
+                        fechaAplicacion = DateTime.Now,
+                        nota = "Los cambios en el stock son irreversibles"
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ No se pudieron aplicar los ajustes para inventario {InventarioId}", inventarioId);
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "No se pudieron aplicar los ajustes pendientes"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 ERROR CRÍTICO al aplicar ajustes para inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error crítico al aplicar ajustes. Contacte al administrador del sistema"
+                });
+            }
+        }
+
+
+
+
 
         // =====================================
         // MÉTODOS PARA GESTIÓN DE INVENTARIOS

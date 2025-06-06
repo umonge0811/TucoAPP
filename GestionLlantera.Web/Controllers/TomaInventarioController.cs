@@ -4,6 +4,7 @@
 // ========================================
 
 using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -31,15 +32,19 @@ namespace GestionLlantera.Web.Controllers
     {
         private readonly ITomaInventarioService _tomaInventarioService;
         private readonly IInventarioService _inventarioService;
+       
         private readonly ILogger<TomaInventarioController> _logger;
+        private readonly IAjustesInventarioService _ajustesInventarioService;
 
         public TomaInventarioController(
             ITomaInventarioService tomaInventarioService,
             IInventarioService inventarioService,
+            IAjustesInventarioService ajustesInventarioService,
             ILogger<TomaInventarioController> logger)
         {
             _tomaInventarioService = tomaInventarioService;
             _inventarioService = inventarioService;
+            _ajustesInventarioService = ajustesInventarioService;
             _logger = logger;
         }
 
@@ -151,6 +156,156 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogError(ex, "💥 Error al cargar interfaz de toma para inventario {Id}", (object)id);
                 TempData["Error"] = "Error al cargar la interfaz de toma de inventario.";
                 return RedirectToAction("ProgramarInventario", "Inventario");
+            }
+        }
+
+        /// <summary>
+        /// NUEVO: Crea un ajuste pendiente en lugar de modificar el stock directamente
+        /// </summary>
+        [HttpPost]
+        [Route("CrearAjustePendiente")]
+        public async Task<IActionResult> CrearAjustePendiente([FromBody] SolicitudAjusteInventarioDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("📝 === CREANDO AJUSTE PENDIENTE DESDE WEB ===");
+                _logger.LogInformation("📝 Inventario: {InventarioId}, Producto: {ProductoId}",
+                    solicitud.InventarioProgramadoId, solicitud.ProductoId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ VALIDACIONES DE ENTRADA
+                if (solicitud.InventarioProgramadoId <= 0 || solicitud.ProductoId <= 0)
+                {
+                    return Json(new { success = false, message = "IDs de inventario o producto inválidos" });
+                }
+
+                if (string.IsNullOrEmpty(solicitud.TipoAjuste))
+                {
+                    return Json(new { success = false, message = "Debe especificar el tipo de ajuste" });
+                }
+
+                if (string.IsNullOrEmpty(solicitud.MotivoAjuste) || solicitud.MotivoAjuste.Length < 10)
+                {
+                    return Json(new { success = false, message = "El motivo debe tener al menos 10 caracteres" });
+                }
+
+                if (solicitud.CantidadFisicaContada < 0)
+                {
+                    return Json(new { success = false, message = "La cantidad física no puede ser negativa" });
+                }
+
+                // ✅ CREAR EL AJUSTE PENDIENTE
+                var resultado = await _ajustesInventarioService.CrearAjustePendienteAsync(solicitud, token);
+
+                if (resultado)
+                {
+                    _logger.LogInformation("✅ Ajuste pendiente creado exitosamente");
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Ajuste pendiente registrado. Se aplicará al completar el inventario.",
+                        data = new
+                        {
+                            inventarioId = solicitud.InventarioProgramadoId,
+                            productoId = solicitud.ProductoId,
+                            tipoAjuste = solicitud.TipoAjuste,
+                            diferencia = solicitud.CantidadFisicaContada - solicitud.CantidadSistemaOriginal,
+                            timestamp = DateTime.Now
+                        }
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error al crear ajuste pendiente");
+                    return Json(new { success = false, message = "Error al registrar el ajuste pendiente" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al crear ajuste pendiente");
+                return Json(new { success = false, message = $"Error interno: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene los ajustes pendientes de un inventario
+        /// </summary>
+        [HttpGet]
+        [Route("ObtenerAjustesPendientes/{inventarioId}")]
+        public async Task<IActionResult> ObtenerAjustesPendientes(int inventarioId)
+        {
+            try
+            {
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var ajustes = await _ajustesInventarioService.ObtenerAjustesPendientesAsync(inventarioId, token);
+
+                return Json(new
+                {
+                    success = true,
+                    inventarioId = inventarioId,
+                    totalAjustes = ajustes.Count,
+                    ajustes = ajustes
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener ajustes pendientes");
+                return Json(new { success = false, message = "Error al obtener ajustes pendientes" });
+            }
+        }
+
+        /// <summary>
+        /// Aplica todos los ajustes pendientes (se llama al completar inventario)
+        /// </summary>
+        [HttpPost]
+        [Route("AplicarAjustesPendientes/{inventarioId}")]
+        public async Task<IActionResult> AplicarAjustesPendientes(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔥 === APLICANDO AJUSTES PENDIENTES DESDE WEB ===");
+                _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _ajustesInventarioService.AplicarAjustesPendientesAsync(inventarioId, token);
+
+                if (resultado)
+                {
+                    _logger.LogInformation("✅ Ajustes aplicados exitosamente desde web");
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Todos los ajustes pendientes han sido aplicados al stock del sistema",
+                        inventarioId = inventarioId,
+                        timestamp = DateTime.Now
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error aplicando ajustes desde web");
+                    return Json(new { success = false, message = "Error al aplicar los ajustes pendientes" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico aplicando ajustes pendientes desde web");
+                return Json(new { success = false, message = "Error crítico al aplicar ajustes" });
             }
         }
 
