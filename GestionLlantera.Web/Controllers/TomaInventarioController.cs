@@ -234,6 +234,78 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
+        /// Obtiene los permisos específicos de un usuario en un inventario
+        /// </summary>
+        [HttpGet]
+        [Route("TomaInventario/ObtenerPermisosUsuario/{inventarioId}/{usuarioId}")]
+        public async Task<IActionResult> ObtenerPermisosUsuario(int inventarioId, int usuarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔒 Obteniendo permisos del usuario {UsuarioId} en inventario {InventarioId}",
+                    usuarioId, inventarioId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ OBTENER INFORMACIÓN DEL INVENTARIO CON ASIGNACIONES
+                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(inventarioId, token);
+
+                if (inventario == null)
+                {
+                    return Json(new { success = false, message = "Inventario no encontrado" });
+                }
+
+                // ✅ BUSCAR LA ASIGNACIÓN ESPECÍFICA DEL USUARIO
+                var asignacion = inventario.AsignacionesUsuarios?.FirstOrDefault(a => a.UsuarioId == usuarioId);
+
+                if (asignacion == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Usuario no asignado a este inventario",
+                        permisos = new
+                        {
+                            permisoConteo = false,
+                            permisoAjuste = false,
+                            permisoValidacion = false
+                        }
+                    });
+                }
+
+                // ✅ RETORNAR PERMISOS ESPECÍFICOS
+                return Json(new
+                {
+                    success = true,
+                    message = "Permisos obtenidos exitosamente",
+                    permisos = new
+                    {
+                        permisoConteo = asignacion.PermisoConteo,
+                        permisoAjuste = asignacion.PermisoAjuste,
+                        permisoValidacion = asignacion.PermisoValidacion
+                    },
+                    usuario = new
+                    {
+                        usuarioId = asignacion.UsuarioId,
+                        nombreUsuario = asignacion.NombreUsuario,
+                        emailUsuario = asignacion.EmailUsuario,
+                        fechaAsignacion = asignacion.FechaAsignacion
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error obteniendo permisos del usuario");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+
+        /// <summary>
         /// Actualiza un ajuste pendiente específico
         /// </summary>
         [HttpPut]

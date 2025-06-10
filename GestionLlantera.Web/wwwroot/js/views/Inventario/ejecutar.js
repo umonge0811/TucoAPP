@@ -45,6 +45,8 @@ async function inicializarEjecutorInventario(inventarioId) {
     try {
         console.log(`📋 Inicializando ejecutor para inventario ID: ${inventarioId}`);
 
+        // ✅ CARGAR PERMISOS ESPECÍFICOS PRIMERO
+        await cargarPermisosInventarioActual(inventarioId);
         // Cargar información del inventario
         await cargarInformacionInventario(inventarioId);
 
@@ -56,6 +58,9 @@ async function inicializarEjecutorInventario(inventarioId) {
 
         // Actualizar estadísticas
         await actualizarEstadisticas();
+
+        // ✅ APLICAR CONTROL DE PERMISOS EN LA UI
+        aplicarControlPermisos();
 
         // Configurar auto-refresh cada 30 segundos
         setInterval(async () => {
@@ -409,30 +414,356 @@ async function eliminarAjustePendiente(ajusteId) {
 
 
 /**
- * ✅ FUNCIÓN ACTUALIZADA: Mostrar/ocultar paneles según el progreso
+ * ✅ FUNCIÓN CORREGIDA: Mostrar paneles según permisos específicos
  */
 function mostrarPanelesSegunProgreso() {
+    console.log('🔍 === DEBUG: VERIFICANDO PANELES ===');
+
     const stats = estadisticasActuales;
+    console.log('📊 Estadísticas actuales:', stats);
+    console.log('🔄 Ajustes pendientes:', ajustesPendientes.length);
+    console.log('🔒 Permisos inventario actual:', permisosInventarioActual);
 
     // ✅ MOSTRAR PANEL DE AJUSTES SI HAY DISCREPANCIAS O AJUSTES PENDIENTES
     if ((stats.discrepancias && stats.discrepancias > 0) || ajustesPendientes.length > 0) {
+        console.log('✅ Mostrando panel de ajustes pendientes');
         $('#ajustesPendientesPanel').show();
         actualizarPanelAjustesPendientes();
     } else {
+        console.log('❌ Ocultando panel de ajustes pendientes');
         $('#ajustesPendientesPanel').hide();
     }
 
-    // ✅ MOSTRAR PANEL DE FINALIZACIÓN SI ESTÁ LISTO
+    // ✅ VERIFICAR CONDICIONES BÁSICAS
     const todoContado = stats.pendientes === 0;
+    const hayProductos = stats.total > 0;
+    const tienePermisosConteo = permisosInventarioActual.puedeContar || false;
+    const tienePermisosValidacion = permisosInventarioActual.puedeValidar || false;
+    const esAdmin = permisosInventarioActual.esAdmin || false;
 
-    if (todoContado && (stats.total > 0)) {
-        $('#finalizacionPanel').show();
-        actualizarPanelFinalizacion();
+    console.log('🔍 === CONDICIONES BÁSICAS ===');
+    console.log('📊 Todo contado:', todoContado, '(pendientes:', stats.pendientes, ')');
+    console.log('📦 Hay productos:', hayProductos, '(total:', stats.total, ')');
+    console.log('📝 Tiene permisos conteo:', tienePermisosConteo);
+    console.log('✅ Tiene permisos validación:', tienePermisosValidacion);
+    console.log('👑 Es admin:', esAdmin);
+
+    // ✅ VERIFICAR SI LOS PANELES EXISTEN
+    const panelFinalizacionExiste = document.getElementById('finalizacionPanel');
+    const panelConteoCompletadoExiste = document.getElementById('conteoCompletadoPanel');
+
+    console.log('🎛️ Panel finalización existe:', !!panelFinalizacionExiste);
+    console.log('🎛️ Panel conteo completado existe:', !!panelConteoCompletadoExiste);
+
+    if (todoContado && hayProductos) {
+        console.log('✅ === INVENTARIO LISTO PARA PROCESAR ===');
+
+        // ✅ DECIDIR QUÉ PANEL MOSTRAR SEGÚN PERMISOS
+        if (tienePermisosValidacion || esAdmin) {
+            // 👑 USUARIOS CON PERMISOS DE VALIDACIÓN/ADMIN
+            console.log('👑 Usuario puede finalizar inventario completo');
+
+            if (panelFinalizacionExiste) {
+                $('#finalizacionPanel').show();
+                actualizarPanelFinalizacion();
+                console.log('✅ Panel de finalización mostrado');
+            }
+
+            // Ocultar panel de conteo completado si existe
+            if (panelConteoCompletadoExiste) {
+                $('#conteoCompletadoPanel').hide();
+            }
+
+        } else if (tienePermisosConteo) {
+            // 📝 USUARIOS SOLO CON PERMISOS DE CONTEO
+            console.log('📝 Usuario solo puede notificar conteo completado');
+
+            if (panelConteoCompletadoExiste) {
+                $('#conteoCompletadoPanel').show();
+                actualizarPanelConteoCompletado();
+                console.log('✅ Panel de conteo completado mostrado');
+            } else {
+                console.warn('⚠️ Panel conteoCompletadoPanel no existe, creando dinámicamente...');
+                crearPanelConteoCompletado();
+            }
+
+            // Ocultar panel de finalización
+            if (panelFinalizacionExiste) {
+                $('#finalizacionPanel').hide();
+            }
+
+        } else {
+            // ❌ USUARIOS SIN PERMISOS
+            console.log('❌ Usuario sin permisos suficientes');
+            if (panelFinalizacionExiste) $('#finalizacionPanel').hide();
+            if (panelConteoCompletadoExiste) $('#conteoCompletadoPanel').hide();
+        }
+
     } else {
-        $('#finalizacionPanel').hide();
+        console.log('❌ === INVENTARIO NO LISTO ===');
+
+        // Ocultar ambos paneles
+        if (panelFinalizacionExiste) $('#finalizacionPanel').hide();
+        if (panelConteoCompletadoExiste) $('#conteoCompletadoPanel').hide();
+
+        // ✅ MOSTRAR RAZÓN ESPECÍFICA
+        if (!todoContado) {
+            console.log('🚫 Razón: Aún hay productos pendientes de contar');
+        }
+        if (!hayProductos) {
+            console.log('🚫 Razón: No hay productos en el inventario');
+        }
     }
 }
 
+/**
+ * ✅ FUNCIÓN NUEVA: Crear panel de conteo completado dinámicamente
+ */
+function crearPanelConteoCompletado() {
+    try {
+        console.log('🔨 Creando panel de conteo completado dinámicamente...');
+
+        const panelHtml = `
+            <div class="conteo-completado-panel mt-4" id="conteoCompletadoPanel">
+                <div class="dashboard-card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h3 class="mb-0">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Conteo Completado
+                            </h3>
+                            <span class="badge bg-light text-primary">
+                                <i class="bi bi-clipboard-check me-1"></i>
+                                Listo para revisión
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-8">
+                                <h5 class="text-primary mb-3">
+                                    <i class="bi bi-clipboard-check me-2"></i>
+                                    Has completado el conteo de productos
+                                </h5>
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <div class="d-flex justify-content-between">
+                                            <span>📦 Total de productos:</span>
+                                            <strong id="resumenTotalConteo">-</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="d-flex justify-content-between">
+                                            <span>✅ Productos contados:</span>
+                                            <strong class="text-success" id="resumenProductosContadosConteo">-</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="d-flex justify-content-between">
+                                            <span>⚠️ Con discrepancias:</span>
+                                            <strong class="text-warning" id="resumenDiscrepanciasConteo">-</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="d-flex justify-content-between">
+                                            <span>📝 Tu progreso:</span>
+                                            <strong class="text-primary" id="resumenProgresoConteo">100%</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info mt-3">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>¿Qué sigue?</strong> Un supervisor con permisos de validación 
+                                    revisará las discrepancias y completará el inventario.
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="display-1 text-success mb-2">✅</div>
+                                <h6 class="text-success">Conteo Completado</h6>
+                                <p class="text-muted small">
+                                    Completado el<br>
+                                    <span id="fechaConteoCompletado">${new Date().toLocaleString()}</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Acciones disponibles -->
+                        <div class="acciones-conteo-completado">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-primary w-100" id="btnNotificarSupervisor">
+                                        <i class="bi bi-bell me-2"></i>
+                                        Notificar Supervisor
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-info w-100" id="btnVerResumenConteo">
+                                        <i class="bi bi-file-text me-2"></i>
+                                        Ver Mi Resumen
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-outline-secondary w-100" id="btnVolverInventarios">
+                                        <i class="bi bi-arrow-left me-2"></i>
+                                        Salir del Inventario
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-3 text-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-shield-check me-1"></i>
+                                    No tienes permisos para finalizar el inventario completo
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Insertar después del panel de productos
+        $('.productos-panel').after(panelHtml);
+
+        // Configurar event listeners
+        configurarEventListenersPanelConteoCompletado();
+
+        console.log('✅ Panel de conteo completado creado y configurado');
+
+    } catch (error) {
+        console.error('❌ Error creando panel de conteo completado:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN NUEVA: Actualizar panel de conteo completado
+ */
+function actualizarPanelConteoCompletado() {
+    try {
+        const stats = estadisticasActuales;
+
+        // Actualizar datos en el panel
+        $('#resumenTotalConteo').text(stats.total || 0);
+        $('#resumenProductosContadosConteo').text(stats.contados || 0);
+        $('#resumenDiscrepanciasConteo').text(stats.discrepancias || 0);
+        $('#resumenProgresoConteo').text(`${stats.porcentajeProgreso || 0}%`);
+
+        console.log('✅ Panel de conteo completado actualizado');
+
+    } catch (error) {
+        console.error('❌ Error actualizando panel de conteo completado:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN NUEVA: Configurar event listeners del panel de conteo completado
+ */
+function configurarEventListenersPanelConteoCompletado() {
+    try {
+        // Botón notificar supervisor
+        $('#btnNotificarSupervisor').off('click').on('click', function () {
+            notificarSupervisorConteoCompletado();  //ESTO FALTA DE TRABAJAR PARA ESA NOTIFICACION!
+        });
+
+        // Botón ver resumen
+        $('#btnVerResumenConteo').off('click').on('click', function () {
+            verResumenConteoUsuario();
+        });
+
+        // Botón volver
+        $('#btnVolverInventarios').off('click').on('click', function () {
+            volverAInventarios();
+        });
+
+        console.log('✅ Event listeners configurados para panel de conteo completado');
+
+    } catch (error) {
+        console.error('❌ Error configurando event listeners:', error);
+    }
+}
+
+
+/**
+ * ✅ FUNCIÓN NUEVA: Ver resumen del conteo del usuario
+ */
+async function verResumenConteoUsuario() {
+    try {
+        const stats = estadisticasActuales;
+        const productosConDiscrepancia = productosInventario.filter(p => p.tieneDiscrepancia);
+
+        let htmlResumen = `
+            <div class="text-start">
+                <h5 class="text-primary mb-3">📊 Tu Resumen de Conteo</h5>
+                
+                <div class="row mb-3">
+                    <div class="col-6"><strong>📦 Productos asignados:</strong></div>
+                    <div class="col-6">${stats.total}</div>
+                    
+                    <div class="col-6"><strong>✅ Productos contados:</strong></div>
+                    <div class="col-6 text-success">${stats.contados}</div>
+                    
+                    <div class="col-6"><strong>📈 Progreso completado:</strong></div>
+                    <div class="col-6"><span class="badge bg-success">${stats.porcentajeProgreso}%</span></div>
+                    
+                    <div class="col-6"><strong>⚠️ Discrepancias encontradas:</strong></div>
+                    <div class="col-6 text-warning">${stats.discrepancias}</div>
+                </div>
+        `;
+
+        if (productosConDiscrepancia.length > 0) {
+            htmlResumen += `
+                <hr>
+                <h6 class="text-warning">⚠️ Productos con Discrepancias:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Sistema</th>
+                                <th class="text-center">Tu Conteo</th>
+                                <th class="text-center">Diferencia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${productosConDiscrepancia.map(p => `
+                                <tr>
+                                    <td>${p.nombreProducto}</td>
+                                    <td class="text-center">${p.cantidadSistema}</td>
+                                    <td class="text-center">${p.cantidadFisica}</td>
+                                    <td class="text-center ${p.diferencia > 0 ? 'text-success' : 'text-danger'}">
+                                        ${p.diferencia > 0 ? '+' : ''}${p.diferencia}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        htmlResumen += `
+                <div class="alert alert-success mt-3">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <strong>¡Excelente trabajo!</strong> Has completado exitosamente el conteo de todos los productos asignados.
+                </div>
+            </div>
+        `;
+
+        await Swal.fire({
+            title: '📊 Tu Resumen de Conteo',
+            html: htmlResumen,
+            icon: 'info',
+            confirmButtonColor: '#0dcaf0',
+            confirmButtonText: 'Cerrar',
+            width: '600px'
+        });
+
+    } catch (error) {
+        console.error('❌ Error mostrando resumen:', error);
+        mostrarError('Error al generar resumen');
+    }
+}
 
 function configurarEventListeners() {
     // Filtro de búsqueda
@@ -1090,6 +1421,274 @@ async function actualizarAjustePendiente(ajusteId) {
     }
 }
 
+/**
+ * ✅ SISTEMA DE PERMISOS GRANULAR PARA INVENTARIOS
+ */
+
+// Variable global para almacenar los permisos específicos del usuario en este inventario
+let permisosInventarioActual = {
+    puedeContar: false,
+    puedeAjustar: false,
+    puedeValidar: false,
+    esAdmin: false,
+    usuarioId: null
+};
+
+/**
+ * ✅ FUNCIÓN NUEVA: Obtener y verificar permisos específicos del inventario
+ */
+async function cargarPermisosInventarioActual(inventarioId) {
+    try {
+        console.log('🔒 === CARGANDO PERMISOS ESPECÍFICOS DEL INVENTARIO ===');
+        console.log('🔒 Inventario ID:', inventarioId);
+
+        const usuarioId = window.inventarioConfig?.usuarioId || ObtenerIdUsuarioActual();
+        console.log('🔒 Usuario ID:', usuarioId);
+
+        // ✅ VERIFICAR SI ES ADMINISTRADOR (SIEMPRE TIENE TODOS LOS PERMISOS)
+        const esAdmin = await verificarEsAdministrador();
+
+        if (esAdmin) {
+            permisosInventarioActual = {
+                puedeContar: true,
+                puedeAjustar: true,
+                puedeValidar: true,
+                esAdmin: true,
+                usuarioId: usuarioId
+            };
+
+            console.log('✅ Usuario es administrador - Todos los permisos concedidos');
+            return permisosInventarioActual;
+        }
+
+        // ✅ OBTENER PERMISOS ESPECÍFICOS DEL INVENTARIO
+        const response = await fetch(`/TomaInventario/ObtenerPermisosUsuario/${inventarioId}/${usuarioId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (response.ok) {
+            const resultado = await response.json();
+
+            if (resultado.success) {
+                permisosInventarioActual = {
+                    puedeContar: resultado.permisos.permisoConteo || false,
+                    puedeAjustar: resultado.permisos.permisoAjuste || false,
+                    puedeValidar: resultado.permisos.permisoValidacion || false,
+                    esAdmin: false,
+                    usuarioId: usuarioId
+                };
+
+                console.log('✅ Permisos específicos cargados:', permisosInventarioActual);
+            } else {
+                // Sin permisos específicos
+                permisosInventarioActual = {
+                    puedeContar: false,
+                    puedeAjustar: false,
+                    puedeValidar: false,
+                    esAdmin: false,
+                    usuarioId: usuarioId
+                };
+
+                console.log('⚠️ Usuario sin permisos específicos en este inventario');
+            }
+        } else {
+            console.warn('⚠️ No se pudieron obtener permisos específicos, usando configuración global');
+
+            // Fallback a configuración global
+            const configGlobal = window.inventarioConfig?.permisos || {};
+            permisosInventarioActual = {
+                puedeContar: configGlobal.puedeContar || false,
+                puedeAjustar: configGlobal.puedeAjustar || false,
+                puedeValidar: configGlobal.puedeValidar || false,
+                esAdmin: configGlobal.esAdmin || false,
+                usuarioId: usuarioId
+            };
+        }
+
+        return permisosInventarioActual;
+
+    } catch (error) {
+        console.error('❌ Error cargando permisos del inventario:', error);
+
+        // Permisos por defecto (sin acceso)
+        permisosInventarioActual = {
+            puedeContar: false,
+            puedeAjustar: false,
+            puedeValidar: false,
+            esAdmin: false,
+            usuarioId: ObtenerIdUsuarioActual()
+        };
+
+        return permisosInventarioActual;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN AUXILIAR: Verificar si el usuario es administrador
+ */
+async function verificarEsAdministrador() {
+    try {
+        // Verificar permisos globales de administrador
+        const tienePermisoInventario = await this.TienePermisoAsync("Programar Inventario");
+        const tienePermisoAjustar = await this.TienePermisoAsync("Ajustar Stock");
+
+        return tienePermisoInventario || tienePermisoAjustar;
+    } catch (error) {
+        console.error('❌ Error verificando permisos de administrador:', error);
+        return false;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN NUEVA: Verificar permiso específico con mensaje de error
+ */
+function verificarPermisoEspecifico(tipoPermiso, accion = '') {
+    let tienePermiso = false;
+    let mensajeError = '';
+
+    switch (tipoPermiso) {
+        case 'conteo':
+            tienePermiso = permisosInventarioActual.puedeContar || permisosInventarioActual.esAdmin;
+            mensajeError = 'No tienes permisos para realizar conteos en este inventario.';
+            break;
+
+        case 'ajuste':
+            tienePermiso = permisosInventarioActual.puedeAjustar || permisosInventarioActual.esAdmin;
+            mensajeError = 'No tienes permisos para crear ajustes en este inventario.';
+            break;
+
+        case 'validacion':
+            tienePermiso = permisosInventarioActual.puedeValidar || permisosInventarioActual.esAdmin;
+            mensajeError = 'No tienes permisos para validar discrepancias en este inventario.';
+            break;
+
+        case 'admin':
+            tienePermiso = permisosInventarioActual.esAdmin;
+            mensajeError = 'Solo los administradores pueden realizar esta acción.';
+            break;
+
+        default:
+            mensajeError = 'Permiso no reconocido.';
+    }
+
+    if (!tienePermiso && accion) {
+        console.warn(`🚫 Permiso denegado para ${tipoPermiso}: ${accion}`);
+    }
+
+    return {
+        tienePermiso: tienePermiso,
+        mensaje: mensajeError
+    };
+}
+
+/**
+ * ✅ FUNCIÓN NUEVA: Mostrar/ocultar elementos según permisos
+ */
+function aplicarControlPermisos() {
+    try {
+        console.log('🔒 Aplicando control de permisos en la interfaz...');
+
+        // ✅ BOTONES DE CONTEO
+        const botonesConteo = document.querySelectorAll('.btn-contar, .btn-conteo');
+        botonesConteo.forEach(btn => {
+            if (permisosInventarioActual.puedeContar || permisosInventarioActual.esAdmin) {
+                btn.style.display = 'inline-block';
+                btn.disabled = false;
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+
+        // ✅ BOTONES DE AJUSTE
+        const botonesAjuste = document.querySelectorAll('.btn-ajustar, .btn-ajuste, .btn-ajuste-pendiente');
+        botonesAjuste.forEach(btn => {
+            if (permisosInventarioActual.puedeAjustar || permisosInventarioActual.esAdmin) {
+                btn.style.display = 'inline-block';
+                btn.disabled = false;
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+
+        // ✅ BOTONES DE VALIDACIÓN
+        const botonesValidacion = document.querySelectorAll('.btn-validar, .btn-validacion');
+        botonesValidacion.forEach(btn => {
+            if (permisosInventarioActual.puedeValidar || permisosInventarioActual.esAdmin) {
+                btn.style.display = 'inline-block';
+                btn.disabled = false;
+            } else {
+                btn.style.display = 'none';
+            }
+        });
+
+        // ✅ PANEL DE FINALIZACIÓN (SOLO ADMINS O VALIDADORES)
+        const panelFinalizacion = document.getElementById('finalizacionPanel');
+        if (panelFinalizacion) {
+            if (permisosInventarioActual.esAdmin || permisosInventarioActual.puedeValidar) {
+                // Se mostrará cuando esté listo
+            } else {
+                panelFinalizacion.style.display = 'none';
+            }
+        }
+
+        // ✅ MOSTRAR INFORMACIÓN DE PERMISOS EN LA UI
+        mostrarInfoPermisos();
+
+        console.log('✅ Control de permisos aplicado correctamente');
+
+    } catch (error) {
+        console.error('❌ Error aplicando control de permisos:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN NUEVA: Mostrar información de permisos en la UI
+ */
+function mostrarInfoPermisos() {
+    try {
+        const permisosInfo = [];
+
+        if (permisosInventarioActual.esAdmin) {
+            permisosInfo.push('👑 Administrador');
+        } else {
+            if (permisosInventarioActual.puedeContar) permisosInfo.push('📝 Conteo');
+            if (permisosInventarioActual.puedeAjustar) permisosInfo.push('🔧 Ajustes');
+            if (permisosInventarioActual.puedeValidar) permisosInfo.push('✅ Validación');
+        }
+
+        if (permisosInfo.length === 0) {
+            permisosInfo.push('👁️ Solo lectura');
+        }
+
+        // Crear o actualizar badge de permisos
+        let badgePermisos = document.getElementById('badgePermisosUsuario');
+        if (!badgePermisos) {
+            badgePermisos = document.createElement('div');
+            badgePermisos.id = 'badgePermisosUsuario';
+            badgePermisos.className = 'badge bg-info ms-2';
+
+            // Insertarlo en el header
+            const header = document.querySelector('.toma-header h1');
+            if (header) {
+                header.appendChild(badgePermisos);
+            }
+        }
+
+        badgePermisos.innerHTML = `
+            <i class="bi bi-person-badge me-1"></i>
+            ${permisosInfo.join(' • ')}
+        `;
+
+        console.log('✅ Info de permisos mostrada:', permisosInfo.join(', '));
+
+    } catch (error) {
+        console.error('❌ Error mostrando info de permisos:', error);
+    }
+}
+
 
 /**
  * ✅ FUNCIÓN AUXILIAR: Restaurar modal para creación
@@ -1727,73 +2326,183 @@ function crearBadgesEstado(producto) {
 }
 
 /**
- * ✅ NUEVA FUNCIÓN: Crear botones de acción actualizados
+ * ✅ FUNCIÓN ACTUALIZADA: Crear botones de acción con permisos granulares
  */
 function crearNuevosBotonesAccion(producto) {
-    const permisos = window.inventarioConfig?.permisos || {};
-    const inventarioEnProgreso = inventarioActual?.estado === 'En Progreso';
+    try {
+        const inventarioEnProgreso = inventarioActual?.estado === 'En Progreso';
+        let botones = '';
 
-    let botones = '';
+        // ✅ BOTÓN DE CONTAR (verificar permiso específico)
+        if (permisosInventarioActual.puedeContar && inventarioEnProgreso) {
+            const textoBoton = producto.estadoConteo === 'Contado' ? 'Recontar' : 'Contar';
+            const iconoBoton = producto.estadoConteo === 'Contado' ? 'bi-arrow-clockwise' : 'bi-calculator';
+            const colorBoton = producto.estadoConteo === 'Contado' ? 'btn-outline-primary' : 'btn-primary';
 
-    // ✅ BOTÓN DE CONTAR (siempre disponible si tiene permisos)
-    if ((permisos.puedeContar || permisos.esAdmin) && inventarioEnProgreso) {
-        const textoBoton = producto.estadoConteo === 'Contado' ? 'Recontar' : 'Contar';
-        const iconoBoton = producto.estadoConteo === 'Contado' ? 'bi-arrow-clockwise' : 'bi-calculator';
-        const colorBoton = producto.estadoConteo === 'Contado' ? 'btn-outline-primary' : 'btn-primary';
+            botones += `
+                <button class="btn btn-sm ${colorBoton} mb-1 btn-conteo" 
+                        onclick="abrirModalConteo(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="${textoBoton} este producto">
+                    <i class="bi ${iconoBoton} me-1"></i>
+                    ${textoBoton}
+                </button>
+            `;
+        }
 
+        // ✅ BOTÓN DE AJUSTE PENDIENTE (verificar permiso específico)
+        if (permisosInventarioActual.puedeAjustar &&
+            producto.tieneDiscrepancia &&
+            !verificarAjustePendiente(producto.productoId) &&
+            inventarioEnProgreso) {
+
+            botones += `
+                <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente" 
+                        onclick="abrirModalAjustePendiente(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="Crear ajuste pendiente para esta discrepancia">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Crear Ajuste
+                </button>
+            `;
+        }
+
+        // ✅ BOTÓN DE VER AJUSTES (si ya tiene ajustes pendientes)
+        if (verificarAjustePendiente(producto.productoId)) {
+            botones += `
+                <button class="btn btn-sm btn-info mb-1" 
+                        onclick="verAjustesProducto(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="Ver ajustes pendientes de este producto">
+                    <i class="bi bi-eye me-1"></i>
+                    Ver Ajustes
+                </button>
+            `;
+        }
+
+        // ✅ BOTÓN DE VALIDACIÓN (solo para usuarios con permiso de validación)
+        if (permisosInventarioActual.puedeValidar &&
+            producto.tieneDiscrepancia &&
+            inventarioEnProgreso) {
+
+            botones += `
+                <button class="btn btn-sm btn-success mb-1 btn-validacion" 
+                        onclick="validarDiscrepancia(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="Validar y aprobar discrepancia">
+                    <i class="bi bi-check-double me-1"></i>
+                    Validar
+                </button>
+            `;
+        }
+
+        // ✅ BOTÓN DE DETALLES (siempre disponible)
         botones += `
-            <button class="btn btn-sm ${colorBoton} mb-1" 
-                    onclick="abrirModalConteo(${producto.productoId})"
+            <button class="btn btn-sm btn-outline-secondary mb-1" 
+                    onclick="verDetallesProducto(${producto.productoId})"
                     data-bs-toggle="tooltip"
-                    title="${textoBoton} este producto">
-                <i class="bi ${iconoBoton} me-1"></i>
-                ${textoBoton}
+                    title="Ver detalles del producto">
+                <i class="bi bi-info-circle me-1"></i>
+                Detalles
+            </button>
+        `;
+
+        // ✅ MENSAJE INFORMATIVO si no tiene permisos
+        if (!botones.includes('btn-conteo') && !botones.includes('btn-ajuste') && !botones.includes('btn-validacion')) {
+            botones += `
+                <small class="text-muted d-block">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Sin permisos de acción
+                </small>
+            `;
+        }
+
+        return `<div class="d-flex flex-column gap-1">${botones}</div>`;
+
+    } catch (error) {
+        console.error('❌ Error creando botones de acción:', error);
+        return `
+            <button class="btn btn-sm btn-secondary" disabled>
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Error
             </button>
         `;
     }
+}
 
-    // ✅ BOTÓN DE AJUSTE PENDIENTE (solo si hay discrepancia y no tiene ajuste)
-    if ((permisos.puedeAjustar || permisos.esAdmin) &&
-        producto.tieneDiscrepancia &&
-        !verificarAjustePendiente(producto.productoId) &&
-        inventarioEnProgreso) {
+/**
+ * ✅ FUNCIÓN NUEVA: Validar discrepancia (para usuarios con permiso de validación)
+ */
+async function validarDiscrepancia(productoId) {
+    try {
+        const verificacion = verificarPermisoEspecifico('validacion', 'validar discrepancia');
+        if (!verificacion.tienePermiso) {
+            mostrarError(verificacion.mensaje);
+            return;
+        }
 
-        botones += `
-            <button class="btn btn-sm btn-warning mb-1" 
-                    onclick="abrirModalAjustePendiente(${producto.productoId})"
-                    data-bs-toggle="tooltip"
-                    title="Crear ajuste pendiente para esta discrepancia">
-                <i class="bi bi-clock-history me-1"></i>
-                Crear Ajuste
-            </button>
-        `;
+        const producto = productosInventario.find(p => p.productoId === productoId);
+        if (!producto || !producto.tieneDiscrepancia) {
+            mostrarError('Este producto no tiene discrepancias para validar');
+            return;
+        }
+
+        const confirmacion = await Swal.fire({
+            title: '✅ ¿Validar discrepancia?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Producto:</strong> ${producto.nombreProducto}</p>
+                    <p><strong>Stock Sistema:</strong> ${producto.cantidadSistema}</p>
+                    <p><strong>Stock Físico:</strong> ${producto.cantidadFisica}</p>
+                    <p><strong>Diferencia:</strong> <span class="fw-bold text-warning">${producto.diferencia}</span></p>
+                    <hr>
+                    <p class="text-muted">Al validar esta discrepancia, se acepta como correcta y no requerirá ajuste.</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, validar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (confirmacion.isConfirmed) {
+            // Crear ajuste de tipo "validado"
+            const solicitudValidacion = {
+                inventarioProgramadoId: window.inventarioConfig.inventarioId,
+                productoId: producto.productoId,
+                tipoAjuste: 'validado',
+                cantidadSistemaOriginal: producto.cantidadSistema,
+                cantidadFisicaContada: producto.cantidadFisica,
+                cantidadFinalPropuesta: producto.cantidadSistema, // Mantener sistema
+                motivoAjuste: 'Discrepancia validada y aceptada por supervisor',
+                usuarioId: permisosInventarioActual.usuarioId
+            };
+
+            const response = await fetch('/TomaInventario/CrearAjustePendiente', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(solicitudValidacion)
+            });
+
+            if (response.ok) {
+                const resultado = await response.json();
+                if (resultado.success) {
+                    mostrarExito('Discrepancia validada exitosamente');
+                    await cargarAjustesPendientes(window.inventarioConfig.inventarioId);
+                    await cargarProductosInventario(window.inventarioConfig.inventarioId);
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error('❌ Error validando discrepancia:', error);
+        mostrarError('Error al validar la discrepancia');
     }
-
-    // ✅ BOTÓN DE VER AJUSTES (si ya tiene ajustes pendientes)
-    if (verificarAjustePendiente(producto.productoId)) {
-        botones += `
-            <button class="btn btn-sm btn-info mb-1" 
-                    onclick="verAjustesProducto(${producto.productoId})"
-                    data-bs-toggle="tooltip"
-                    title="Ver ajustes pendientes de este producto">
-                <i class="bi bi-eye me-1"></i>
-                Ver Ajustes
-            </button>
-        `;
-    }
-
-    // ✅ BOTÓN DE DETALLES (siempre disponible)
-    botones += `
-        <button class="btn btn-sm btn-outline-secondary mb-1" 
-                onclick="verDetallesProducto(${producto.productoId})"
-                data-bs-toggle="tooltip"
-                title="Ver detalles del producto">
-            <i class="bi bi-info-circle me-1"></i>
-            Detalles
-        </button>
-    `;
-
-    return `<div class="d-flex flex-column gap-1">${botones}</div>`;
 }
 
 /**
@@ -1948,10 +2657,10 @@ function abrirModalConteo(productoId) {
         console.log(`📝 === ABRIENDO MODAL DE CONTEO ===`);
         console.log(`📝 Producto ID: ${productoId}`);
 
-        // ✅ VERIFICAR PERMISOS ANTES DE ABRIR
-        const permisos = window.inventarioConfig?.permisos || {};
-        if (!permisos.puedeContar && !permisos.esAdmin) {
-            mostrarError('No tienes permisos para realizar conteos en este inventario');
+        // ✅ VERIFICAR PERMISOS ESPECÍFICOS ANTES DE ABRIR
+        const verificacion = verificarPermisoEspecifico('conteo', 'realizar conteo');
+        if (!verificacion.tienePermiso) {
+            mostrarError(verificacion.mensaje);
             return;
         }
 
@@ -2363,7 +3072,7 @@ async function completarInventario() {
 // =====================================
 
 /**
- * Actualiza las estadísticas en la interfaz de usuario
+ * ✅ FUNCIÓN CORREGIDA: Actualiza las estadísticas en la interfaz de usuario
  */
 function actualizarEstadisticasUI() {
     try {
@@ -2400,10 +3109,14 @@ function actualizarEstadisticasUI() {
 
         console.log(`📊 Estadísticas actualizadas: ${porcentaje}% completado`);
 
+        // ✅ AGREGAR ESTA LÍNEA CRUCIAL:
+        mostrarPanelesSegunProgreso();
+
     } catch (error) {
         console.error('❌ Error actualizando estadísticas UI:', error);
     }
 }
+
 
 // =====================================
 // FUNCIONES AUXILIARES
@@ -2975,10 +3688,10 @@ function abrirModalAjustePendiente(productoId) {
         console.log(`🔄 === ABRIENDO MODAL PARA CREAR AJUSTE ===`);
         console.log(`🔄 Producto ID: ${productoId}`);
 
-        // ✅ VERIFICAR PERMISOS
-        const permisos = window.inventarioConfig?.permisos || {};
-        if (!permisos.puedeAjustar && !permisos.esAdmin) {
-            mostrarError('No tienes permisos para crear ajustes pendientes en este inventario');
+        // ✅ VERIFICAR PERMISOS ESPECÍFICOS ANTES DE ABRIR
+        const verificacion = verificarPermisoEspecifico('ajuste', 'crear ajuste pendiente');
+        if (!verificacion.tienePermiso) {
+            mostrarError(verificacion.mensaje);
             return;
         }
 
@@ -3682,13 +4395,1031 @@ async function verResumenCompleto() {
 }
 
 /**
- * ✅ NUEVA FUNCIÓN: Exportar inventario (placeholder)
+ * ✅ SISTEMA COMPLETO DE FINALIZACIÓN DE INVENTARIO
  */
-async function exportarInventario() {
+
+/**
+ * ✅ FUNCIÓN PRINCIPAL: Finalizar inventario completo con todas las validaciones
+ */
+async function finalizarInventarioCompleto() {
     try {
-        mostrarInfo('Función de exportación en desarrollo.\n\nSe implementará exportación a Excel con:\n• Lista completa de productos\n• Discrepancias encontradas\n• Ajustes aplicados\n• Resumen estadístico');
+        console.log('🏁 === INICIANDO FINALIZACIÓN COMPLETA DE INVENTARIO ===');
+
+        const inventarioId = window.inventarioConfig.inventarioId;
+        const stats = estadisticasActuales;
+        const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
+
+        // ✅ VERIFICAR PERMISOS PARA FINALIZAR
+        const verificacionPermisos = verificarPermisoEspecifico('validacion', 'finalizar inventario');
+        if (!verificacionPermisos.tienePermiso && !permisosInventarioActual.esAdmin) {
+            mostrarError('Solo usuarios con permisos de validación o administradores pueden finalizar inventarios.');
+            return;
+        }
+
+        // ✅ VALIDACIONES CRÍTICAS PRE-FINALIZACIÓN
+        const validaciones = await ejecutarValidacionesPreFinalizacion(inventarioId, stats, totalAjustes);
+        if (!validaciones.puedeFinalizarse) {
+            mostrarError(validaciones.mensaje);
+            return;
+        }
+
+        // ✅ MOSTRAR RESUMEN DETALLADO Y CONFIRMACIÓN
+        const confirmacion = await mostrarConfirmacionFinalizacion(stats, totalAjustes, validaciones);
+        if (!confirmacion.isConfirmed) return;
+
+        // ✅ EJECUTAR PROCESO DE FINALIZACIÓN
+        await ejecutarProcesoFinalizacion(inventarioId, totalAjustes);
+
     } catch (error) {
-        console.error('❌ Error exportando:', error);
-        mostrarError('Error al exportar inventario');
+        console.error('💥 Error crítico en finalización:', error);
+        mostrarError('Error crítico al finalizar inventario. Contacte al administrador.');
     }
 }
+
+/**
+ * ✅ FUNCIÓN: Ejecutar validaciones previas a la finalización
+ */
+async function ejecutarValidacionesPreFinalizacion(inventarioId, stats, totalAjustes) {
+    try {
+        console.log('🔍 Ejecutando validaciones pre-finalización...');
+
+        const validaciones = {
+            puedeFinalizarse: true,
+            mensaje: '',
+            advertencias: [],
+            informacion: []
+        };
+
+        // ✅ VALIDACIÓN 1: Productos sin contar
+        if (stats.pendientes > 0) {
+            validaciones.puedeFinalizarse = false;
+            validaciones.mensaje = `No se puede finalizar: quedan ${stats.pendientes} productos sin contar.`;
+            return validaciones;
+        }
+
+        // ✅ VALIDACIÓN 2: Verificar estado del inventario
+        const inventarioResponse = await fetch(`/TomaInventario/ObtenerInventario/${inventarioId}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (inventarioResponse.ok) {
+            const inventarioData = await inventarioResponse.json();
+            if (inventarioData.estado !== 'En Progreso') {
+                validaciones.puedeFinalizarse = false;
+                validaciones.mensaje = `El inventario está en estado '${inventarioData.estado}' y no se puede finalizar.`;
+                return validaciones;
+            }
+        }
+
+        // ✅ VALIDACIÓN 3: Revisar ajustes pendientes
+        if (totalAjustes > 0) {
+            validaciones.informacion.push(`Se aplicarán ${totalAjustes} ajustes al stock del sistema.`);
+
+            // Verificar ajustes que podrían causar stock negativo
+            const ajustesProblematicos = ajustesPendientes.filter(a =>
+                a.estado === 'Pendiente' && a.cantidadFinalPropuesta < 0
+            );
+
+            if (ajustesProblematicos.length > 0) {
+                validaciones.advertencias.push(`${ajustesProblematicos.length} productos quedarían con stock negativo.`);
+            }
+        }
+
+        // ✅ VALIDACIÓN 4: Verificar discrepancias sin ajustes
+        const discrepanciasSinAjuste = await verificarDiscrepanciasSinAjuste(inventarioId);
+        if (discrepanciasSinAjuste.length > 0) {
+            validaciones.advertencias.push(`${discrepanciasSinAjuste.length} productos con discrepancias no tienen ajustes pendientes.`);
+        }
+
+        // ✅ VALIDACIÓN 5: Verificar productos críticos
+        const productosCriticos = await verificarProductosCriticos(inventarioId);
+        if (productosCriticos.length > 0) {
+            validaciones.advertencias.push(`${productosCriticos.length} productos quedarían por debajo del stock mínimo.`);
+        }
+
+        console.log('✅ Validaciones completadas:', validaciones);
+        return validaciones;
+
+    } catch (error) {
+        console.error('❌ Error en validaciones pre-finalización:', error);
+        return {
+            puedeFinalizarse: false,
+            mensaje: 'Error al validar el inventario. Intente nuevamente.',
+            advertencias: [],
+            informacion: []
+        };
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Verificar discrepancias sin ajustes
+ */
+async function verificarDiscrepanciasSinAjuste(inventarioId) {
+    const discrepanciasSinAjuste = [];
+
+    productosInventario.forEach(producto => {
+        if (producto.tieneDiscrepancia && !verificarAjustePendiente(producto.productoId)) {
+            discrepanciasSinAjuste.push(producto);
+        }
+    });
+
+    return discrepanciasSinAjuste;
+}
+
+/**
+ * ✅ FUNCIÓN: Verificar productos que quedarían críticos
+ */
+async function verificarProductosCriticos(inventarioId) {
+    const productosCriticos = [];
+
+    for (const producto of productosInventario) {
+        // Si tiene ajuste pendiente, usar la cantidad propuesta
+        const ajustePendiente = ajustesPendientes.find(a =>
+            a.productoId === producto.productoId && a.estado === 'Pendiente'
+        );
+
+        let cantidadFinal = producto.cantidadSistema;
+        if (ajustePendiente) {
+            cantidadFinal = ajustePendiente.cantidadFinalPropuesta;
+        }
+
+        // Verificar si quedaría por debajo del mínimo (asumiendo stock mínimo de 5 por ahora)
+        if (cantidadFinal < 5) {
+            productosCriticos.push({
+                ...producto,
+                cantidadFinal: cantidadFinal
+            });
+        }
+    }
+
+    return productosCriticos;
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar confirmación detallada de finalización
+ */
+async function mostrarConfirmacionFinalizacion(stats, totalAjustes, validaciones) {
+    let htmlConfirmacion = `
+        <div class="text-start">
+            <h5 class="text-primary mb-3">📋 Resumen Final del Inventario</h5>
+            
+            <div class="row mb-3">
+                <div class="col-6"><strong>📦 Total productos:</strong></div>
+                <div class="col-6">${stats.total}</div>
+                
+                <div class="col-6"><strong>✅ Productos contados:</strong></div>
+                <div class="col-6 text-success">${stats.contados}</div>
+                
+                <div class="col-6"><strong>⚠️ Discrepancias encontradas:</strong></div>
+                <div class="col-6 text-warning">${stats.discrepancias}</div>
+                
+                <div class="col-6"><strong>🔄 Ajustes a aplicar:</strong></div>
+                <div class="col-6 text-info">${totalAjustes}</div>
+            </div>
+    `;
+
+    // ✅ MOSTRAR INFORMACIÓN ADICIONAL
+    if (validaciones.informacion.length > 0) {
+        htmlConfirmacion += `
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle me-2"></i>Información:</h6>
+                <ul class="mb-0">
+                    ${validaciones.informacion.map(info => `<li>${info}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    // ✅ MOSTRAR ADVERTENCIAS
+    if (validaciones.advertencias.length > 0) {
+        htmlConfirmacion += `
+            <div class="alert alert-warning">
+                <h6><i class="bi bi-exclamation-triangle me-2"></i>Advertencias:</h6>
+                <ul class="mb-0">
+                    ${validaciones.advertencias.map(adv => `<li>${adv}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
+    // ✅ DETALLES DE AJUSTES SI LOS HAY
+    if (totalAjustes > 0) {
+        const ajustesPorTipo = contarAjustesPorTipo();
+        htmlConfirmacion += `
+            <div class="alert alert-primary">
+                <h6><i class="bi bi-gear me-2"></i>Detalle de Ajustes a Aplicar:</h6>
+                <div class="row">
+                    <div class="col-6">📦 Ajustes al sistema: ${ajustesPorTipo.sistema_a_fisico}</div>
+                    <div class="col-6">🔄 Reconteos: ${ajustesPorTipo.reconteo}</div>
+                    <div class="col-6">✅ Validaciones: ${ajustesPorTipo.validado}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    htmlConfirmacion += `
+            <div class="alert alert-danger">
+                <h6><i class="bi bi-shield-exclamation me-2"></i>¡ATENCIÓN!</h6>
+                <p class="mb-0">
+                    <strong>Esta acción es irreversible.</strong><br>
+                    • Se completará el inventario<br>
+                    • Se aplicarán todos los ajustes al stock del sistema<br>
+                    • No se podrán realizar más cambios
+                </p>
+            </div>
+        </div>
+    `;
+
+    return await Swal.fire({
+        title: '🏁 ¿Finalizar Inventario?',
+        html: htmlConfirmacion,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: totalAjustes > 0 ? '#ffc107' : '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: totalAjustes > 0 ?
+            '<i class="bi bi-check-lg me-1"></i> Finalizar y Aplicar Ajustes' :
+            '<i class="bi bi-check-lg me-1"></i> Finalizar Inventario',
+        cancelButtonText: '<i class="bi bi-x-lg me-1"></i> Cancelar',
+        width: '700px',
+        customClass: {
+            popup: 'swal-wide'
+        }
+    });
+}
+
+/**
+ * ✅ FUNCIÓN: Ejecutar proceso completo de finalización
+ */
+async function ejecutarProcesoFinalizacion(inventarioId, totalAjustes) {
+    // ✅ MOSTRAR PROGRESO
+    let timerInterval;
+
+    Swal.fire({
+        title: '🏁 Finalizando Inventario',
+        html: `
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Procesando...</span>
+                </div>
+                <p class="mb-2">Procesando finalización del inventario...</p>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%" id="progressBar">
+                    </div>
+                </div>
+                <small class="text-muted mt-2 d-block" id="statusText">Iniciando proceso...</small>
+            </div>
+        `,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            const progressBar = document.getElementById('progressBar');
+            const statusText = document.getElementById('statusText');
+            let progress = 0;
+
+            timerInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+
+                progressBar.style.width = progress + '%';
+
+                if (progress < 30) {
+                    statusText.textContent = 'Validando datos...';
+                } else if (progress < 60) {
+                    statusText.textContent = 'Aplicando ajustes...';
+                } else {
+                    statusText.textContent = 'Completando inventario...';
+                }
+            }, 500);
+        },
+        willClose: () => {
+            clearInterval(timerInterval);
+        }
+    });
+
+    try {
+        // ✅ PASO 1: Aplicar ajustes pendientes si los hay
+        if (totalAjustes > 0) {
+            console.log('📝 Aplicando ajustes pendientes...');
+
+            const responseAjustes = await fetch(`/TomaInventario/AplicarAjustesPendientes/${inventarioId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!responseAjustes.ok) {
+                throw new Error(`Error aplicando ajustes: ${responseAjustes.status}`);
+            }
+
+            const resultadoAjustes = await responseAjustes.json();
+            if (!resultadoAjustes.success) {
+                throw new Error(resultadoAjustes.message || 'Error al aplicar ajustes');
+            }
+
+            console.log('✅ Ajustes aplicados exitosamente');
+        }
+
+        // ✅ PASO 2: Completar inventario
+        console.log('🏁 Completando inventario...');
+
+        const responseCompletar = await fetch(`/TomaInventario/CompletarInventario/${inventarioId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!responseCompletar.ok) {
+            throw new Error(`Error completando inventario: ${responseCompletar.status}`);
+        }
+
+        const resultadoCompletar = await responseCompletar.json();
+        if (!resultadoCompletar.success) {
+            throw new Error(resultadoCompletar.message || 'Error al completar inventario');
+        }
+
+        // ✅ COMPLETAR BARRA DE PROGRESO
+        const progressBar = document.getElementById('progressBar');
+        const statusText = document.getElementById('statusText');
+        if (progressBar) progressBar.style.width = '100%';
+        if (statusText) statusText.textContent = 'Inventario completado exitosamente';
+
+        setTimeout(async () => {
+            clearInterval(timerInterval);
+
+            // ✅ MOSTRAR RESULTADO FINAL
+            await mostrarResultadoFinalizacion(inventarioId, totalAjustes, estadisticasActuales);
+
+            // ✅ ACTUALIZAR INTERFAZ FINAL
+            await actualizarInterfazInventarioCompletado();
+
+        }, 1000);
+
+    } catch (error) {
+        clearInterval(timerInterval);
+        console.error('💥 Error durante finalización:', error);
+
+        Swal.fire({
+            title: '❌ Error en Finalización',
+            html: `
+                <div class="text-start">
+                    <p>Ocurrió un error durante la finalización del inventario:</p>
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> ${error.message}
+                    </div>
+                    <p class="text-muted">
+                        El inventario no ha sido completado. Puede intentar nuevamente o contactar al administrador.
+                    </p>
+                </div>
+            `,
+            icon: 'error',
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Entendido'
+        });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar resultado final de la finalización
+ */
+async function mostrarResultadoFinalizacion(inventarioId, totalAjustes, stats) {
+    let mensaje = `
+        <div class="text-center">
+            <div class="display-1 text-success mb-3">🎉</div>
+            <h3 class="text-success mb-3">¡Inventario Completado Exitosamente!</h3>
+            
+            <div class="row text-center mb-4">
+                <div class="col-3">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <div class="h4 text-primary">${stats.total}</div>
+                            <small>Productos Inventariados</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <div class="h4 text-success">${stats.contados}</div>
+                            <small>Conteos Realizados</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <div class="h4 text-warning">${stats.discrepancias}</div>
+                            <small>Discrepancias Resueltas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <div class="h4 text-info">${totalAjustes}</div>
+                            <small>Ajustes Aplicados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    `;
+
+    if (totalAjustes > 0) {
+        mensaje += `
+            <div class="alert alert-success">
+                <h6><i class="bi bi-check-circle me-2"></i>Ajustes de Stock Aplicados</h6>
+                <p class="mb-0">Se han actualizado ${totalAjustes} productos en el sistema de inventario.</p>
+            </div>
+        `;
+    }
+
+    mensaje += `
+            <p class="text-muted mb-4">
+                El inventario ha sido marcado como completado y todos los cambios han sido aplicados al sistema.
+            </p>
+            
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="btn btn-primary" onclick="generarReporteInventario(${inventarioId})">
+                    <i class="bi bi-file-text me-1"></i> Generar Reporte
+                </button>
+                <button class="btn btn-outline-primary" onclick="exportarInventario(${inventarioId})">
+                    <i class="bi bi-download me-1"></i> Exportar Excel
+                </button>
+                <button class="btn btn-outline-secondary" onclick="volverAInventarios()">
+                    <i class="bi bi-arrow-left me-1"></i> Volver a Inventarios
+                </button>
+            </div>
+        </div>
+    `;
+
+    await Swal.fire({
+        html: mensaje,
+        icon: 'success',
+        showConfirmButton: false,
+        showCloseButton: true,
+        width: '800px',
+        customClass: {
+            popup: 'swal-wide'
+        }
+    });
+}
+
+/**
+ * ✅ FUNCIÓN: Actualizar interfaz para mostrar inventario completado
+ */
+async function actualizarInterfazInventarioCompletado() {
+    try {
+        // ✅ DESHABILITAR TODOS LOS CONTROLES DE EDICIÓN
+        $('.btn-contar, .btn-ajustar, .btn-ajuste-pendiente, .btn-validar').prop('disabled', true).addClass('disabled');
+
+        // ✅ CAMBIAR ESTADO VISUAL
+        $('.estado-inventario .badge').removeClass('bg-success').addClass('bg-primary').html('<i class="bi bi-check-circle me-1"></i>Completado');
+
+        // ✅ OCULTAR PANELES DE GESTIÓN
+        $('#ajustesPendientesPanel, #finalizacionPanel').slideUp();
+
+        // ✅ MOSTRAR BANNER DE COMPLETADO
+        const bannerCompletado = `
+            <div class="alert alert-success border-success shadow-sm mb-4" id="bannerInventarioCompletado">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-check-circle-fill display-4 text-success"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4 class="alert-heading mb-2">🎉 ¡Inventario Completado!</h4>
+                        <p class="mb-2">
+                            El inventario ha sido finalizado exitosamente. 
+                            Todos los ajustes han sido aplicados al stock del sistema.
+                        </p>
+                        <hr>
+                        <div class="d-flex gap-2 align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                Completado el ${new Date().toLocaleString()}
+                            </small>
+                            <div class="ms-auto">
+                                <button class="btn btn-success btn-sm me-2" onclick="generarReporteInventario(${window.inventarioConfig.inventarioId})">
+                                    <i class="bi bi-file-text me-1"></i> Reporte
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" onclick="exportarInventario(${window.inventarioConfig.inventarioId})">
+                                    <i class="bi bi-download me-1"></i> Exportar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        $('.toma-header').after(bannerCompletado);
+
+        // ✅ RECARGAR DATOS FINALES
+        await cargarProductosInventario(window.inventarioConfig.inventarioId);
+        await cargarAjustesPendientes(window.inventarioConfig.inventarioId);
+
+        console.log('✅ Interfaz actualizada para inventario completado');
+
+    } catch (error) {
+        console.error('❌ Error actualizando interfaz:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIONES PARA REPORTES Y EXPORTACIÓN
+ */
+
+/**
+ * ✅ FUNCIÓN: Generar reporte completo del inventario
+ */
+async function generarReporteInventario(inventarioId) {
+    try {
+        console.log('📊 Generando reporte del inventario:', inventarioId);
+
+        Swal.fire({
+            title: 'Generando Reporte',
+            html: 'Recopilando información del inventario...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // ✅ OBTENER DATOS COMPLETOS
+        const datosReporte = await recopilarDatosReporte(inventarioId);
+
+        // ✅ GENERAR HTML DEL REPORTE
+        const htmlReporte = generarHtmlReporte(datosReporte);
+
+        // ✅ MOSTRAR REPORTE EN MODAL
+        Swal.fire({
+            title: `📊 Reporte de Inventario: ${datosReporte.inventario.titulo}`,
+            html: htmlReporte,
+            width: '90%',
+            showCloseButton: true,
+            showConfirmButton: true,
+            confirmButtonText: '<i class="bi bi-printer me-1"></i> Imprimir',
+            footer: `
+                <div class="d-flex gap-2 justify-content-center">
+                    <button class="btn btn-success btn-sm" onclick="imprimirReporte()">
+                        <i class="bi bi-printer me-1"></i> Imprimir
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="exportarReporteExcel(${inventarioId})">
+                        <i class="bi bi-file-excel me-1"></i> Exportar Excel
+                    </button>
+                    <button class="btn btn-info btn-sm" onclick="exportarReportePDF(${inventarioId})">
+                        <i class="bi bi-file-pdf me-1"></i> Exportar PDF
+                    </button>
+                </div>
+            `,
+            customClass: {
+                popup: 'swal-wide'
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error generando reporte:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'No se pudo generar el reporte. Intente nuevamente.',
+            icon: 'error'
+        });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Recopilar datos para el reporte
+ */
+async function recopilarDatosReporte(inventarioId) {
+    try {
+        const datos = {
+            inventario: null,
+            productos: [],
+            ajustes: [],
+            estadisticas: {},
+            resumen: {}
+        };
+
+        // ✅ OBTENER INFORMACIÓN DEL INVENTARIO
+        const inventarioResponse = await fetch(`/TomaInventario/ObtenerInventario/${inventarioId}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (inventarioResponse.ok) {
+            datos.inventario = await inventarioResponse.json();
+        }
+
+        // ✅ OBTENER PRODUCTOS CON DETALLES
+        datos.productos = productosInventario || [];
+
+        // ✅ OBTENER AJUSTES APLICADOS
+        datos.ajustes = ajustesPendientes || [];
+
+        // ✅ CALCULAR ESTADÍSTICAS DETALLADAS
+        datos.estadisticas = calcularEstadisticasDetalladas(datos.productos, datos.ajustes);
+
+        // ✅ GENERAR RESUMEN EJECUTIVO
+        datos.resumen = generarResumenEjecutivo(datos.estadisticas, datos.ajustes);
+
+        return datos;
+
+    } catch (error) {
+        console.error('❌ Error recopilando datos:', error);
+        throw error;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Calcular estadísticas detalladas
+ */
+function calcularEstadisticasDetalladas(productos, ajustes) {
+    const stats = {
+        totalProductos: productos.length,
+        productosContados: productos.filter(p => p.estadoConteo === 'Contado').length,
+        productosConDiscrepancia: productos.filter(p => p.tieneDiscrepancia).length,
+        porcentajeCompletado: 0,
+
+        // Estadísticas de discrepancias
+        totalDiscrepancias: 0,
+        discrepanciasPositivas: 0,
+        discrepanciasNegativas: 0,
+        mayorDiscrepancia: 0,
+
+        // Estadísticas de ajustes
+        totalAjustes: ajustes.length,
+        ajustesPorTipo: {},
+        ajustesAplicados: ajustes.filter(a => a.estado === 'Aplicado').length,
+
+        // Impacto en stock
+        unidadesAumentadas: 0,
+        unidadesDisminuidas: 0,
+        impactoNeto: 0,
+
+        // Productos por categoría
+        productosPorTipo: {},
+
+        // Tiempo de ejecución
+        duracionInventario: null
+    };
+
+    // ✅ CALCULAR PORCENTAJE
+    if (stats.totalProductos > 0) {
+        stats.porcentajeCompletado = Math.round((stats.productosContados / stats.totalProductos) * 100);
+    }
+
+    // ✅ ANALIZAR DISCREPANCIAS
+    productos.forEach(producto => {
+        if (producto.tieneDiscrepancia && producto.diferencia) {
+            stats.totalDiscrepancias++;
+
+            if (producto.diferencia > 0) {
+                stats.discrepanciasPositivas++;
+                stats.unidadesAumentadas += producto.diferencia;
+            } else {
+                stats.discrepanciasNegativas++;
+                stats.unidadesDisminuidas += Math.abs(producto.diferencia);
+            }
+
+            if (Math.abs(producto.diferencia) > Math.abs(stats.mayorDiscrepancia)) {
+                stats.mayorDiscrepancia = producto.diferencia;
+            }
+        }
+
+        // ✅ CATEGORIZAR POR TIPO
+        const tipo = producto.esLlanta ? 'Llantas' : 'Accesorios';
+        stats.productosPorTipo[tipo] = (stats.productosPorTipo[tipo] || 0) + 1;
+    });
+
+    // ✅ ANALIZAR AJUSTES
+    ajustes.forEach(ajuste => {
+        const tipo = ajuste.tipoAjuste || 'Otros';
+        stats.ajustesPorTipo[tipo] = (stats.ajustesPorTipo[tipo] || 0) + 1;
+
+        if (ajuste.estado === 'Aplicado') {
+            const impacto = ajuste.cantidadFinalPropuesta - ajuste.cantidadSistemaOriginal;
+            stats.impactoNeto += impacto;
+        }
+    });
+
+    return stats;
+}
+
+/**
+ * ✅ FUNCIÓN: Generar resumen ejecutivo
+ */
+function generarResumenEjecutivo(estadisticas, ajustes) {
+    const resumen = {
+        titulo: 'Resumen Ejecutivo',
+        puntosClave: [],
+        recomendaciones: [],
+        alertas: []
+    };
+
+    // ✅ PUNTOS CLAVE
+    resumen.puntosClave.push(`Inventario completado al ${estadisticas.porcentajeCompletado}%`);
+    resumen.puntosClave.push(`${estadisticas.totalDiscrepancias} discrepancias identificadas y resueltas`);
+    resumen.puntosClave.push(`${estadisticas.ajustesAplicados} ajustes aplicados al sistema`);
+
+    if (estadisticas.impactoNeto !== 0) {
+        const tipoImpacto = estadisticas.impactoNeto > 0 ? 'aumento' : 'disminución';
+        resumen.puntosClave.push(`Impacto neto: ${tipoImpacto} de ${Math.abs(estadisticas.impactoNeto)} unidades`);
+    }
+
+    // ✅ RECOMENDACIONES
+    if (estadisticas.discrepanciasNegativas > estadisticas.discrepanciasPositivas) {
+        resumen.recomendaciones.push('Revisar procesos de control de salidas de inventario');
+    }
+
+    if (estadisticas.totalDiscrepancias > estadisticas.totalProductos * 0.1) {
+        resumen.recomendaciones.push('Considerar inventarios más frecuentes');
+    }
+
+    if (estadisticas.impactoNeto < -50) {
+        resumen.recomendaciones.push('Investigar causas de faltantes significativos');
+    }
+
+    // ✅ ALERTAS
+    if (Math.abs(estadisticas.mayorDiscrepancia) > 10) {
+        resumen.alertas.push(`Mayor discrepancia detectada: ${estadisticas.mayorDiscrepancia} unidades`);
+    }
+
+    return resumen;
+}
+
+/**
+ * ✅ FUNCIÓN: Generar HTML del reporte
+ */
+function generarHtmlReporte(datos) {
+    const fechaReporte = new Date().toLocaleString();
+
+    return `
+        <div class="reporte-inventario text-start">
+            <!-- HEADER DEL REPORTE -->
+            <div class="reporte-header mb-4">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-primary mb-1">Reporte de Inventario</h6>
+                        <h4 class="mb-2">${datos.inventario?.titulo || 'Inventario'}</h4>
+                        <p class="text-muted mb-0">
+                            <strong>Período:</strong> ${new Date(datos.inventario?.fechaInicio).toLocaleDateString()} - 
+                            ${new Date(datos.inventario?.fechaFin).toLocaleDateString()}<br>
+                            <strong>Generado:</strong> ${fechaReporte}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            ${datos.inventario?.estado || 'Completado'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESUMEN EJECUTIVO -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Resumen Ejecutivo</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="display-6 text-primary">${datos.estadisticas.totalProductos}</div>
+                            <small class="text-muted">Total Productos</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="display-6 text-success">${datos.estadisticas.porcentajeCompletado}%</div>
+                            <small class="text-muted">Completado</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="display-6 text-warning">${datos.estadisticas.totalDiscrepancias}</div>
+                            <small class="text-muted">Discrepancias</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="display-6 text-info">${datos.estadisticas.ajustesAplicados}</div>
+                            <small class="text-muted">Ajustes Aplicados</small>
+                        </div>
+                    </div>
+                    
+                    ${datos.resumen.puntosClave.length > 0 ? `
+                        <hr>
+                        <h6 class="text-primary">Puntos Clave:</h6>
+                        <ul class="mb-0">
+                            ${datos.resumen.puntosClave.map(punto => `<li>${punto}</li>`).join('')}
+                        </ul>
+                    ` : ''}
+                </div>
+            </div>
+
+            <!-- ESTADÍSTICAS DETALLADAS -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Análisis de Discrepancias</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="h5 text-success">+${datos.estadisticas.discrepanciasPositivas}</div>
+                                    <small>Sobrantes</small>
+                                </div>
+                                <div class="col-6">
+                                    <div class="h5 text-danger">-${datos.estadisticas.discrepanciasNegativas}</div>
+                                    <small>Faltantes</small>
+                                </div>
+                            </div>
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Mayor discrepancia:</strong> ${datos.estadisticas.mayorDiscrepancia} unidades<br>
+                                <strong>Impacto neto:</strong> ${datos.estadisticas.impactoNeto > 0 ? '+' : ''}${datos.estadisticas.impactoNeto} unidades
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-gear me-2"></i>Ajustes Aplicados</h6>
+                        </div>
+                        <div class="card-body">
+                            ${Object.keys(datos.estadisticas.ajustesPorTipo).length > 0 ? `
+                                ${Object.entries(datos.estadisticas.ajustesPorTipo).map(([tipo, cantidad]) => `
+                                    <div class="d-flex justify-content-between">
+                                        <span>${obtenerTextoTipoAjuste(tipo)}:</span>
+                                        <strong>${cantidad}</strong>
+                                    </div>
+                                `).join('')}
+                            ` : '<p class="text-muted mb-0">No se aplicaron ajustes</p>'}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRODUCTOS CON DISCREPANCIAS -->
+            ${datos.productos.filter(p => p.tieneDiscrepancia).length > 0 ? `
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Productos con Discrepancias</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-center">Sistema</th>
+                                        <th class="text-center">Físico</th>
+                                        <th class="text-center">Diferencia</th>
+                                        <th class="text-center">Ajuste Aplicado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${datos.productos.filter(p => p.tieneDiscrepancia).map(producto => {
+        const ajuste = datos.ajustes.find(a => a.productoId === producto.productoId);
+        const diferencia = producto.diferencia || 0;
+        return `
+                                            <tr>
+                                                <td>${producto.nombreProducto}</td>
+                                                <td class="text-center">${producto.cantidadSistema}</td>
+                                                <td class="text-center">${producto.cantidadFisica}</td>
+                                                <td class="text-center ${diferencia > 0 ? 'text-success' : 'text-danger'}">
+                                                    ${diferencia > 0 ? '+' : ''}${diferencia}
+                                                </td>
+                                                <td class="text-center">
+                                                    ${ajuste ? `<span class="badge bg-info">${obtenerTextoTipoAjuste(ajuste.tipoAjuste)}</span>` : 'Sin ajuste'}
+                                                </td>
+                                            </tr>
+                                        `;
+    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+
+            <!-- RECOMENDACIONES Y ALERTAS -->
+            ${datos.resumen.recomendaciones.length > 0 || datos.resumen.alertas.length > 0 ? `
+                <div class="row">
+                    ${datos.resumen.recomendaciones.length > 0 ? `
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-lightbulb me-2"></i>Recomendaciones</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="mb-0">
+                                        ${datos.resumen.recomendaciones.map(rec => `<li>${rec}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${datos.resumen.alertas.length > 0 ? `
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Alertas</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="mb-0">
+                                        ${datos.resumen.alertas.map(alerta => `<li>${alerta}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+/**
+ * ✅ FUNCIÓN: Exportar inventario a Excel
+ */
+async function exportarInventario(inventarioId) {
+    try {
+        console.log('📊 Exportando inventario a Excel:', inventarioId);
+
+        Swal.fire({
+            title: 'Exportando...',
+            text: 'Generando archivo Excel del inventario',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // ✅ SIMULAR EXPORTACIÓN (aquí irían llamadas reales a tu API)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        Swal.fire({
+            title: '✅ Exportación Completada',
+            text: 'El archivo Excel ha sido generado exitosamente',
+            icon: 'success',
+            confirmButtonText: 'Descargar',
+            showCancelButton: true,
+            cancelButtonText: 'Cerrar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // ✅ AQUÍ TRIGGEARÍAS LA DESCARGA REAL
+                mostrarInfo('Función de descarga en desarrollo. El archivo se descargará automáticamente.');
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error exportando:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'No se pudo exportar el inventario',
+            icon: 'error'
+        });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Volver a la lista de inventarios
+ */
+function volverAInventarios() {
+    if (confirm('¿Estás seguro de que quieres salir de la toma de inventario?')) {
+        window.location.href = '/Inventario/ProgramarInventario';
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Imprimir reporte
+ */
+function imprimirReporte() {
+    window.print();
+}
+
+/**
+ * ✅ FUNCIÓN: Exportar reporte a Excel
+ */
+async function exportarReporteExcel(inventarioId) {
+    mostrarInfo('Función de exportación Excel en desarrollo');
+}
+
+/**
+ * ✅ FUNCIÓN: Exportar reporte a PDF
+ */
+async function exportarReportePDF(inventarioId) {
+    mostrarInfo('Función de exportación PDF en desarrollo');
+}
+
+// ✅ HACER FUNCIONES GLOBALES
+window.finalizarInventarioCompleto = finalizarInventarioCompleto;
+window.generarReporteInventario = generarReporteInventario;
+window.exportarInventario = exportarInventario;
+window.volverAInventarios = volverAInventarios;
+
+

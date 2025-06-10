@@ -250,6 +250,153 @@
         </div>
     </div>
 
+    <!-- Panel de finalización del inventario - AGREGAR DESPUÉS DEL PANEL DE PRODUCTOS -->
+    <div class="finalizacion-panel mt-4" id="finalizacionPanel" style="display: none;">
+        <div class="dashboard-card border-success">
+            <div class="card-header bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Finalizar Inventario
+                    </h3>
+                    <span class="badge bg-light text-success" id="estadoFinalizacion">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        Listo para finalizar
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Resumen final -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-8">
+                        <h5 class="text-success mb-3">
+                            <i class="bi bi-clipboard-check me-2"></i>
+                            Resumen de la Toma de Inventario
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>📦 Total de productos:</span>
+                                    <strong id="resumenTotalProductos">-</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>✅ Productos contados:</span>
+                                    <strong class="text-success" id="resumenProductosContados">-</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>⚠️ Con discrepancias:</span>
+                                    <strong class="text-warning" id="resumenDiscrepancias">-</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>🔄 Ajustes pendientes:</span>
+                                    <strong class="text-primary" id="resumenAjustesPendientes">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="progress-circle-container">
+                            <div class="progress-circle">
+                                <span id="porcentajeCompletoFinal">0%</span>
+                            </div>
+                            <p class="text-muted mt-2">Progreso Completado</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas y validaciones -->
+                <div class="alertas-finalizacion mb-4">
+                    <!-- Alerta de productos pendientes -->
+                    <div class="alert alert-warning" id="alertaProductosPendientes" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <div>
+                                <strong>Atención:</strong> Aún hay <span id="cantidadPendientes">0</span> productos sin contar.
+                                <br><small>Debes contar todos los productos antes de finalizar el inventario.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerta de ajustes pendientes -->
+                    <div class="alert alert-info" id="alertaAjustesPendientes" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <div>
+                                <strong>Información:</strong> Se aplicarán <span id="cantidadAjustes">0</span> ajustes al stock del sistema.
+                                <br><small>Esta acción es irreversible. Revisa los ajustes antes de continuar.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerta de éxito -->
+                    <div class="alert alert-success" id="alertaListoParaFinalizar" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <div>
+                                <strong>¡Perfecto!</strong> Todos los productos han sido contados.
+                                <br><small>El inventario está listo para ser finalizado.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerta de permisos -->
+                    <div class="alert alert-warning" id="alertaSinPermisos" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-shield-exclamation me-2"></i>
+                            <div>
+                                <strong>Sin permisos:</strong> Solo usuarios con permisos de validación pueden finalizar inventarios.
+                                <br><small>Contacta a un supervisor para finalizar este inventario.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones de finalización -->
+                <div class="acciones-finalizacion">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary w-100" id="btnVerResumenCompleto">
+                                <i class="bi bi-file-text me-2"></i>
+                                Ver Resumen Completo
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-warning w-100" id="btnExportarInventario">
+                                <i class="bi bi-download me-2"></i>
+                                Exportar Inventario
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button class="btn btn-success btn-lg w-100" id="btnFinalizarInventario" disabled>
+                                <span class="normal-state">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    Finalizar Inventario y Aplicar Ajustes
+                                </span>
+                                <span class="loading-state" style="display: none;">
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    Finalizando inventario...
+                                </span>
+                            </button>
+                            <small class="text-muted d-block text-center mt-2">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Esta acción aplicará todos los ajustes pendientes al stock del sistema
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Panel de búsqueda y filtros -->
     <div class="search-panel mb-4">
         <div class="dashboard-card">
