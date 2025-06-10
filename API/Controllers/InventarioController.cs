@@ -702,7 +702,7 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> CrearInventarioProgramado([FromBody] InventarioProgramadoDTO dto)
         {
-            var validacion = await this.ValidarPermisoAsync(_permisosService, "ProgramarInventario",
+            var validacion = await this.ValidarPermisoAsync(_permisosService, "Programar Inventario",
                 "Solo usuarios con permiso 'ProgramarInventario' pueden crear inventarios programados");
             if (validacion != null) return validacion;
 
@@ -742,6 +742,7 @@ namespace API.Controllers
                             UsuarioId = asignacion.UsuarioId,
                             PermisoConteo = asignacion.PermisoConteo,
                             PermisoAjuste = asignacion.PermisoAjuste,
+                            PermisoCompletar = asignacion.PermisoCompletar,
                             PermisoValidacion = asignacion.PermisoValidacion,
                             FechaAsignacion = DateTime.Now
                         };
@@ -926,6 +927,7 @@ namespace API.Controllers
                             PermisoConteo = asignacion.PermisoConteo,
                             PermisoAjuste = asignacion.PermisoAjuste,
                             PermisoValidacion = asignacion.PermisoValidacion,
+                            PermisoCompletar = asignacion.PermisoCompletar,
                             FechaAsignacion = DateTime.Now
                         };
                         _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);

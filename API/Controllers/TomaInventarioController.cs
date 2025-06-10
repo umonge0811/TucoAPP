@@ -252,6 +252,16 @@ namespace API.Controllers
                 _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioId);
                 _logger.LogInformation("🔥 Usuario: {Usuario}", User.Identity?.Name);
 
+                // ✅ AGREGAR ESTA VALIDACIÓN DE AJUSTES
+                var ajustesPendientes = await _ajustesService.ObtenerAjustesPorInventarioAsync(inventarioId);
+                _logger.LogInformation("📋 Ajustes encontrados: {Count}", ajustesPendientes.Count);
+
+                if (!ajustesPendientes.Any())
+                {
+                    _logger.LogWarning("⚠️ No hay ajustes pendientes para aplicar");
+                    return BadRequest(new { success = false, message = "No hay ajustes pendientes para aplicar" });
+                }
+
                 // ✅ AQUÍ PUEDES AGREGAR VALIDACIONES DE PERMISOS ESPECÍFICOS
                 // Por ejemplo, verificar que el usuario tenga permiso "Completar Inventario"
 
@@ -272,7 +282,7 @@ namespace API.Controllers
 
                         
                     });
-                     ;
+                     
                 }
                 else
                 {
@@ -1086,7 +1096,7 @@ namespace API.Controllers
                 _logger.LogInformation("🏁 Completando inventario programado: {InventarioId}", inventarioId);
 
                 // ✅ VERIFICAR PERMISOS
-                var validacion = await this.ValidarPermisoAsync(_permisosService, "Programar Inventario",
+                var validacion = await this.ValidarPermisoAsync(_permisosService, "Completar Inventario",
                     "Solo usuarios con permiso 'Programar Inventario' pueden completar inventarios");
                 if (validacion != null) return validacion;
 

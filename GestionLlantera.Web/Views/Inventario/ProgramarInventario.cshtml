@@ -611,6 +611,14 @@
                             </label>
                             <small class="d-block text-muted">Permite validar y cerrar el inventario</small>
                         </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="permisoCompletar_{{usuarioId}}" />
+                            <label class="form-check-label" for="permisoCompletar_{{usuarioId}}">
+                                <i class="bi bi-flag-fill me-1"></i>
+                                Completar inventario
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -641,6 +649,9 @@
                         <span class="badge bg-primary me-1 badge-validacion" style="display: none;">
                             <i class="bi bi-check-circle me-1"></i> Validación
                         </span>
+                        <span class="badge bg-primary me-1 badge-Completar" style="display: none;">
+                            <i class="bi bi-check-circle me-1"></i> Completar
+                        </span>
                     </div>
                 </div>
                 <button type="button" class="btn-eliminar-usuario btn btn-outline-danger btn-sm">
@@ -653,7 +664,8 @@
             <input type="hidden" class="usuario-nombre-input" name="NuevoInventario.UsuariosAsignados[0].NombreUsuario" value="">
             <input type="hidden" class="permiso-conteo-input" name="NuevoInventario.UsuariosAsignados[0].PermisoConteo" value="true">
             <input type="hidden" class="permiso-ajuste-input" name="NuevoInventario.UsuariosAsignados[0].PermisoAjuste" value="false">
-            <input type="hidden" class="permiso-validacion-input" name="NuevoInventario.UsuariosAsignados[0].PermisoValidacion" value="false">
+@*           <input type="hidden" class="permiso-completar-input" name="NuevoInventario.UsuariosAsignados[0].PermisoCompletar" value="false">  
+ *@            <input type="hidden" class="permiso-validacion-input" name="NuevoInventario.UsuariosAsignados[0].PermisoValidacion" value="false">
         </div>
     </div>
 </template>

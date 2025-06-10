@@ -869,6 +869,7 @@ function configurarEventListeners() {
  */
     async function finalizarInventarioConAjustes() {
         try {
+            console.log('🔥 EJECUTANDO: finalizarInventarioConAjustes');
             console.log('🏁 === FINALIZANDO INVENTARIO CON AJUSTES ===');
 
             const inventarioId = window.inventarioConfig.inventarioId;
@@ -1534,14 +1535,15 @@ async function cargarPermisosInventarioActual(inventarioId) {
         const esAdmin = await verificarEsAdministrador();
 
         if (esAdmin) {
+            // Sin permisos específicos
             permisosInventarioActual = {
-                puedeContar: true,
-                puedeAjustar: true,
-                puedeValidar: true,
-                esAdmin: true,
+                puedeContar: false,
+                puedeAjustar: false,
+                puedeValidar: false,
+                puedeCompletar: false, // ← AGREGAR ESTA LÍNEA
+                esAdmin: false,
                 usuarioId: usuarioId
             };
-
             console.log('✅ Usuario es administrador - Todos los permisos concedidos');
             return permisosInventarioActual;
         }
@@ -1562,10 +1564,10 @@ async function cargarPermisosInventarioActual(inventarioId) {
                     puedeContar: resultado.permisos.permisoConteo || false,
                     puedeAjustar: resultado.permisos.permisoAjuste || false,
                     puedeValidar: resultado.permisos.permisoValidacion || false,
+                    puedeCompletar: resultado.permisos.permisoCompletar || false, // ← AGREGAR ESTA LÍNEA
                     esAdmin: false,
                     usuarioId: usuarioId
                 };
-
                 console.log('✅ Permisos específicos cargados:', permisosInventarioActual);
             } else {
                 // Sin permisos específicos
@@ -1588,6 +1590,7 @@ async function cargarPermisosInventarioActual(inventarioId) {
                 puedeContar: configGlobal.puedeContar || false,
                 puedeAjustar: configGlobal.puedeAjustar || false,
                 puedeValidar: configGlobal.puedeValidar || false,
+                puedeCompletar: configGlobal.puedeCompletar || false,
                 esAdmin: configGlobal.esAdmin || false,
                 usuarioId: usuarioId
             };
@@ -1650,6 +1653,12 @@ function verificarPermisoEspecifico(tipoPermiso, accion = '') {
             mensajeError = 'No tienes permisos para validar discrepancias en este inventario.';
             break;
 
+        // ✅ AGREGAR ESTE NUEVO CASO:
+        case 'completar':
+            tienePermiso = permisosInventarioActual.puedeCompletar || permisosInventarioActual.esAdmin;
+            mensajeError = 'No tienes permisos para completar inventarios.';
+            break;
+
         case 'admin':
             tienePermiso = permisosInventarioActual.esAdmin;
             mensajeError = 'Solo los administradores pueden realizar esta acción.';
@@ -1709,6 +1718,8 @@ function aplicarControlPermisos() {
             }
         });
 
+     
+
         // ✅ PANEL DE FINALIZACIÓN (SOLO ADMINS O VALIDADORES)
         const panelFinalizacion = document.getElementById('finalizacionPanel');
         if (panelFinalizacion) {
@@ -1742,6 +1753,7 @@ function mostrarInfoPermisos() {
             if (permisosInventarioActual.puedeContar) permisosInfo.push('📝 Conteo');
             if (permisosInventarioActual.puedeAjustar) permisosInfo.push('🔧 Ajustes');
             if (permisosInventarioActual.puedeValidar) permisosInfo.push('✅ Validación');
+            if (permisosInventarioActual.puedeCompletar) permisosInfo.push('🏁 Completar');
         }
 
         if (permisosInfo.length === 0) {
@@ -4495,9 +4507,9 @@ async function finalizarInventarioCompleto() {
         const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
 
         // ✅ VERIFICAR PERMISOS PARA FINALIZAR
-        const verificacionPermisos = verificarPermisoEspecifico('validacion', 'finalizar inventario');
-        if (!verificacionPermisos.tienePermiso && !permisosInventarioActual.esAdmin) {
-            mostrarError('Solo usuarios con permisos de validación o administradores pueden finalizar inventarios.');
+        const verificacionPermisos = verificarPermisoEspecifico('completar', 'finalizar inventario');
+        if (!verificacionPermisos.tienePermiso) {
+            mostrarError(verificacionPermisos.mensaje);
             return;
         }
 
@@ -4737,6 +4749,7 @@ async function mostrarConfirmacionFinalizacion(stats, totalAjustes, validaciones
  * ✅ FUNCIÓN: Ejecutar proceso completo de finalización
  */
 async function ejecutarProcesoFinalizacion(inventarioId, totalAjustes) {
+    console.log('🔥 EJECUTANDO: ejecutarProcesoFinalizacion');
     // ✅ MOSTRAR PROGRESO
     let timerInterval;
 
@@ -4802,6 +4815,7 @@ async function ejecutarProcesoFinalizacion(inventarioId, totalAjustes) {
             }
 
             const resultadoAjustes = await responseAjustes.json();
+            console.log('🔍 RESPUESTA COMPLETA DE AJUSTES:', resultadoAjustes); // ← AGREGAR ESTA LÍNEA
             if (!resultadoAjustes.success) {
                 throw new Error(resultadoAjustes.message || 'Error al aplicar ajustes');
             }
@@ -4869,6 +4883,8 @@ async function ejecutarProcesoFinalizacion(inventarioId, totalAjustes) {
         });
     }
 }
+
+
 
 /**
  * ✅ FUNCIÓN: Mostrar resultado final de la finalización

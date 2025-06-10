@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const permisoConteo = document.getElementById('permisoConteo');
     const permisoAjuste = document.getElementById('permisoAjuste');
     const permisoValidacion = document.getElementById('permisoValidacion');
+    const permisoCompletar = document.getElementById('permisoCompletar');
     const usuariosAsignados = document.getElementById('usuariosAsignados');
     const noUsuariosMsg = document.getElementById('noUsuariosMsg');
 
@@ -57,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
             permisoConteo.checked = true;
             permisoAjuste.checked = false;
             permisoValidacion.checked = false;
-
+            //permisoCompletar.checked = false;
             modalAgregarUsuario.show();
         });
     }
@@ -87,7 +88,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 nombreUsuario,
                 permisoConteo.checked,
                 permisoAjuste.checked,
-                permisoValidacion.checked
+                permisoValidacion.checked,
+                permisoCompletar.checked
             );
 
             modalAgregarUsuario.hide();
@@ -95,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Función para agregar un usuario asignado al DOM
-    function agregarUsuarioAsignado(usuarioId, nombreUsuario, tienePermisoConteo, tienePermisoAjuste, tienePermisoValidacion) {
+    function agregarUsuarioAsignado(usuarioId, nombreUsuario, tienePermisoConteo, tienePermisoAjuste, tienePermisoValidacion, tienePermisoCompletar) {
         // Ocultar mensaje de "no hay usuarios"
         if (noUsuariosMsg) {
             noUsuariosMsg.style.display = 'none';
@@ -118,6 +120,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (tienePermisoValidacion) {
             nuevoUsuario.querySelector('.badge-validacion').style.display = 'inline-block';
         }
+        if (tienePermisoCompletar) {
+            nuevoUsuario.querySelector('.badge-Completar').style.display = 'inline-block';
+        }
 
         // Actualizar campos ocultos
         const indexActual = contadorUsuarios;
@@ -132,6 +137,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         nuevoUsuario.querySelector('.permiso-ajuste-input').name = `NuevoInventario.UsuariosAsignados[${indexActual}].PermisoAjuste`;
         nuevoUsuario.querySelector('.permiso-ajuste-input').value = tienePermisoAjuste;
+
+        nuevoUsuario.querySelector('.permiso-completar-input').name = `NuevoInventario.UsuariosAsignados[${indexActual}].PermisoCompletar`;
+        nuevoUsuario.querySelector('.permiso-completar-input').value = tienePermisoCompletar;
 
         nuevoUsuario.querySelector('.permiso-validacion-input').name = `NuevoInventario.UsuariosAsignados[${indexActual}].PermisoValidacion`;
         nuevoUsuario.querySelector('.permiso-validacion-input').value = tienePermisoValidacion;
@@ -250,6 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     permisoConteo: card.querySelector('.permiso-conteo-input')?.value === 'true',
                     permisoAjuste: card.querySelector('.permiso-ajuste-input')?.value === 'true',
                     permisoValidacion: card.querySelector('.permiso-validacion-input')?.value === 'true'
+                //    permisoCompletar: card.querySelector('.permiso-completar-input')?.value === 'true'
                 });
             });
 
