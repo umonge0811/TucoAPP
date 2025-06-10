@@ -847,12 +847,97 @@ function configurarEventListeners() {
         actualizarVistaPreviaAjuste();
     });
 
-    //// ✅ CONFIGURAR BOTÓN DE GUARDAR AJUSTE
-    //$('#guardarAjusteInventarioBtn').off('click').on('click', function (e) {
-    //    e.preventDefault();
-    //    console.log('🖱️ Click en botón guardar ajuste de inventario');
-    //    guardarAjusteInventario();
-    //})
+    // ✅ CONFIGURAR BOTÓN DE GUARDAR AJUSTE
+    $('#guardarAjusteInventarioBtn').off('click').on('click', function (e) {
+        e.preventDefault();
+        console.log('🖱️ Click en botón guardar ajuste de inventario');
+        // ✅ CAMBIO: Detectar si es finalización de inventario
+        const esFinalización = $(this).data('es-finalizacion') === true;
+        if (esFinalización) {
+            finalizarInventarioConAjustes();
+        } else {
+            guardarAjusteInventario();
+        }
+    })
+
+
+
+
+
+    /**
+ * ✅ NUEVA FUNCIÓN: Finalizar inventario aplicando ajustes de stock
+ */
+    async function finalizarInventarioConAjustes() {
+        try {
+            console.log('🏁 === FINALIZANDO INVENTARIO CON AJUSTES ===');
+
+            const inventarioId = window.inventarioConfig.inventarioId;
+            const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
+
+            // ✅ CONFIRMACIÓN ESPECÍFICA PARA FINALIZACIÓN CON AJUSTES
+            const confirmacion = await Swal.fire({
+                title: '🏁 ¿Finalizar inventario y aplicar ajustes?',
+                html: `
+                <div class="text-start">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>¡Atención!</strong> Esta acción aplicará TODOS los ajustes pendientes al stock del sistema.
+                    </div>
+                    <p><strong>Ajustes pendientes:</strong> ${totalAjustes}</p>
+                    <p><strong>Inventario:</strong> Se marcará como completado</p>
+                    <hr>
+                    <small class="text-muted">Esta acción es <strong>irreversible</strong>.</small>
+                </div>
+            `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, finalizar y aplicar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!confirmacion.isConfirmed) return;
+
+            // ✅ LLAMAR AL ENDPOINT MODIFICADO DE AJUSTAR STOCK
+            const ajusteData = {
+                cantidad: 0, // No importa para finalización
+                tipoAjuste: "ajuste",
+                esFinalizacionInventario: true,
+                inventarioProgramadoId: inventarioId
+            };
+
+            const response = await fetch(`/api/Inventario/productos/0/ajustar-stock`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(ajusteData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const resultado = await response.json();
+
+            if (resultado.success) {
+                mostrarExito(`¡Inventario finalizado! ${resultado.ajustesAplicados} ajustes aplicados al stock.`);
+
+                // ✅ RECARGAR PÁGINA O REDIRIGIR
+                setTimeout(() => {
+                    window.location.href = '/Inventario/ProgramarInventario';
+                }, 2000);
+            } else {
+                throw new Error(resultado.message || 'Error desconocido');
+            }
+
+        } catch (error) {
+            console.error('❌ Error finalizando inventario:', error);
+            mostrarError(`Error al finalizar inventario: ${error.message}`);
+        }
+    }
 
 
     // ✅ NUEVOS EVENT LISTENERS PARA AJUSTES PENDIENTES

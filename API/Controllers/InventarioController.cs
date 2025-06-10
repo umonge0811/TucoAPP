@@ -28,19 +28,21 @@ namespace API.Controllers
         private readonly ILogger<InventarioController> _logger;
         private readonly INotificacionService _notificacionService;
         private readonly IPermisosService _permisosService;
+        private readonly IAjustesInventarioPendientesService _ajustesService;
 
         public InventarioController(
             TucoContext context,
             IWebHostEnvironment webHostEnvironment,
             ILogger<InventarioController> logger,
             INotificacionService notificacionService,
-            IPermisosService permisosService)
+            IPermisosService permisosService, IAjustesInventarioPendientesService ajustesService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
             _notificacionService = notificacionService;
             _permisosService = permisosService;
+            _ajustesService = ajustesService;
         }
 
         // =====================================
@@ -516,55 +518,180 @@ namespace API.Controllers
 
             try
             {
-                if (ajusteDto.Cantidad <= 0)
-                    return BadRequest(new { message = "La cantidad debe ser mayor a cero" });
-
-                var producto = await _context.Productos.FindAsync(id);
-                if (producto == null)
-                    return NotFound(new { message = "Producto no encontrado" });
-
-                int stockAnterior = (int)producto.CantidadEnInventario;
-                int nuevoStock = stockAnterior;
-
-                switch (ajusteDto.TipoAjuste.ToLower())
+                // ✅ CASO 1: FINALIZACIÓN DE INVENTARIO (MÚLTIPLES AJUSTES)
+                if (ajusteDto.EsFinalizacionInventario && ajusteDto.InventarioProgramadoId.HasValue)
                 {
-                    case "entrada":
-                        nuevoStock = stockAnterior + ajusteDto.Cantidad;
-                        break;
-                    case "salida":
-                        nuevoStock = Math.Max(0, stockAnterior - ajusteDto.Cantidad);
-                        break;
-                    case "ajuste":
-                        nuevoStock = ajusteDto.Cantidad;
-                        break;
-                    default:
-                        return BadRequest(new { message = "Tipo de ajuste no válido. Use: entrada, salida, o ajuste" });
+                    return await ProcesarFinalizacionInventario(ajusteDto.InventarioProgramadoId.Value);
                 }
 
-                producto.CantidadEnInventario = nuevoStock;
-                producto.FechaUltimaActualizacion = DateTime.Now;
-                await _context.SaveChangesAsync();
-
-                return Ok(new AjusteStockRapidoResponseDTO
-                {
-                    Success = true,
-                    Message = $"Stock ajustado exitosamente. {stockAnterior} → {nuevoStock} unidades",
-                    ProductoId = id,
-                    NombreProducto = producto.NombreProducto,
-                    StockAnterior = stockAnterior,
-                    StockNuevo = nuevoStock,
-                    Diferencia = nuevoStock - stockAnterior,
-                    TipoAjuste = ajusteDto.TipoAjuste,
-                    StockBajo = nuevoStock <= producto.StockMinimo,
-                    StockMinimo = (int)producto.StockMinimo,
-                    Timestamp = DateTime.Now
-                });
+                // ✅ CASO 2: AJUSTE INDIVIDUAL (LÓGICA ORIGINAL)
+                return await ProcesarAjusteIndividual(id, ajusteDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al ajustar stock del producto {Id}", id);
                 return StatusCode(500, new { message = "Error interno al ajustar stock" });
             }
+        }
+
+        /// <summary>
+        /// Procesa la finalización de inventario aplicando todos los ajustes pendientes
+        /// </summary>
+        private async Task<IActionResult> ProcesarFinalizacionInventario(int inventarioProgramadoId)
+        {
+            try
+            {
+                _logger.LogInformation("🏁 === INICIANDO FINALIZACIÓN DE INVENTARIO ===");
+                _logger.LogInformation("📋 Inventario ID: {InventarioId}", inventarioProgramadoId);
+
+                // ✅ OBTENER TODOS LOS AJUSTES PENDIENTES
+                var ajustesPendientes = await _ajustesService.ObtenerAjustesPorInventarioAsync(inventarioProgramadoId);
+
+                if (!ajustesPendientes.Any())
+                {
+                    return BadRequest(new { message = "No hay ajustes pendientes para aplicar" });
+                }
+
+                var ajustesAplicados = 0;
+                var errores = new List<string>();
+
+                // ✅ APLICAR CADA AJUSTE PENDIENTE
+                foreach (var ajuste in ajustesPendientes.Where(a => a.Estado == "Pendiente"))
+                {
+                    try
+                    {
+                        var producto = await _context.Productos.FindAsync(ajuste.ProductoId);
+                        if (producto != null)
+                        {
+                            var stockAnterior = (int)producto.CantidadEnInventario;
+                            producto.CantidadEnInventario = ajuste.CantidadFinalPropuesta != null ? ajuste.CantidadFinalPropuesta : ajuste.CantidadFisicaContada;
+                            producto.FechaUltimaActualizacion = DateTime.Now;
+
+                            _logger.LogInformation("📦 Producto {ProductoId}: {StockAnterior} → {StockNuevo}",
+                                ajuste.ProductoId, stockAnterior, producto.CantidadEnInventario);
+
+                            ajustesAplicados++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errores.Add($"Error en producto {ajuste.ProductoId}: {ex.Message}");
+                        _logger.LogError(ex, "Error aplicando ajuste para producto {ProductoId}", ajuste.ProductoId);
+                    }
+                }
+
+                // ✅ GUARDAR CAMBIOS
+                await _context.SaveChangesAsync();
+
+                // ✅ MARCAR AJUSTES COMO APLICADOS
+                await _ajustesService.AplicarAjustesPendientesAsync(inventarioProgramadoId);
+
+                // ✅ CAMBIAR ESTADO DEL INVENTARIO A COMPLETADO
+                var inventario = await _context.InventariosProgramados.FindAsync(inventarioProgramadoId);
+                if (inventario != null)
+                {
+                    inventario.Estado = "Completado";
+                    await _context.SaveChangesAsync();
+                }
+
+                // ✅ NOTIFICAR AL CREADOR DEL INVENTARIO
+                await NotificarCreadorInventario(inventario);
+
+                _logger.LogInformation("✅ === FINALIZACIÓN COMPLETADA ===");
+                _logger.LogInformation("📊 Ajustes aplicados: {Aplicados}", ajustesAplicados);
+
+                return Ok(new
+                {
+                    message = "Inventario finalizado exitosamente",
+                    ajustesAplicados = ajustesAplicados,
+                    errores = errores,
+                    inventarioId = inventarioProgramadoId,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al finalizar inventario {InventarioId}", inventarioProgramadoId);
+                return StatusCode(500, new { message = "Error crítico al finalizar inventario" });
+            }
+        }
+
+        /// <summary>
+        /// Notifica al creador del inventario que fue finalizado
+        /// </summary>
+        private async Task NotificarCreadorInventario(InventarioProgramado inventario)
+        {
+            try
+            {
+                if (inventario?.UsuarioCreadorId == null) return;
+
+                await _notificacionService.CrearNotificacionAsync(
+                    usuarioId: inventario.UsuarioCreadorId,
+                    titulo: "✅ Inventario Completado",
+                    mensaje: $"El inventario '{inventario.Titulo}' ha sido finalizado con ajustes de stock aplicados.",
+                    tipo: "success",
+                    icono: "fas fa-check-circle",
+                    urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: inventario.InventarioProgramadoId
+                );
+
+                _logger.LogInformation("📧 Notificación enviada al creador del inventario (Usuario ID: {UserId})", inventario.UsuarioCreadorId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error enviando notificación al creador");
+            }
+        }
+
+        /// <summary>
+        /// Procesa un ajuste individual (lógica original)
+        /// </summary>
+        private async Task<IActionResult> ProcesarAjusteIndividual(int id, AjusteStockRapidoDTO ajusteDto)
+        {
+            if (ajusteDto.Cantidad <= 0)
+                return BadRequest(new { message = "La cantidad debe ser mayor a cero" });
+
+            var producto = await _context.Productos.FindAsync(id);
+            if (producto == null)
+                return NotFound(new { message = "Producto no encontrado" });
+
+            int stockAnterior = (int)producto.CantidadEnInventario;
+            int nuevoStock = stockAnterior;
+
+            switch (ajusteDto.TipoAjuste.ToLower())
+            {
+                case "entrada":
+                    nuevoStock = stockAnterior + ajusteDto.Cantidad;
+                    break;
+                case "salida":
+                    nuevoStock = Math.Max(0, stockAnterior - ajusteDto.Cantidad);
+                    break;
+                case "ajuste":
+                    nuevoStock = ajusteDto.Cantidad;
+                    break;
+                default:
+                    return BadRequest(new { message = "Tipo de ajuste no válido. Use: entrada, salida, o ajuste" });
+            }
+
+            producto.CantidadEnInventario = nuevoStock;
+            producto.FechaUltimaActualizacion = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Ok(new AjusteStockRapidoResponseDTO
+            {
+                Success = true,
+                Message = $"Stock ajustado exitosamente. {stockAnterior} → {nuevoStock} unidades",
+                ProductoId = id,
+                NombreProducto = producto.NombreProducto,
+                StockAnterior = stockAnterior,
+                StockNuevo = nuevoStock,
+                Diferencia = nuevoStock - stockAnterior,
+                TipoAjuste = ajusteDto.TipoAjuste,
+                StockBajo = nuevoStock <= producto.StockMinimo,
+                StockMinimo = (int)producto.StockMinimo,
+                Timestamp = DateTime.Now
+            });
         }
 
         // =====================================
