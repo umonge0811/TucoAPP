@@ -51,6 +51,9 @@ async function inicializarEjecutorInventario(inventarioId) {
         // Cargar productos del inventario
         await cargarProductosInventario(inventarioId);
 
+        // ✅ AGREGAR ESTA LÍNEA: Cargar ajustes pendientes
+        await cargarAjustesPendientes(inventarioId);
+
         // Actualizar estadísticas
         await actualizarEstadisticas();
 
@@ -65,6 +68,283 @@ async function inicializarEjecutorInventario(inventarioId) {
         mostrarError('Error al cargar el inventario');
     }
 }
+
+/**
+ * ✅ NUEVA FUNCIÓN: Actualizar panel de ajustes pendientes
+ */
+function actualizarPanelAjustesPendientes() {
+    try {
+        console.log('🔄 Actualizando panel de ajustes pendientes...');
+
+        const totalAjustes = ajustesPendientes.length;
+        const ajustesPorTipo = contarAjustesPorTipo();
+
+        // ✅ ACTUALIZAR CONTADOR PRINCIPAL
+        $('#contadorAjustesPendientes').text(totalAjustes);
+
+        // ✅ ACTUALIZAR ESTADÍSTICAS POR TIPO
+        $('#totalEntradas').text(ajustesPorTipo.ENTRADA || 0);
+        $('#totalSalidas').text(ajustesPorTipo.SALIDA || 0);
+        $('#totalAjustes').text(ajustesPorTipo.AJUSTE_SISTEMA || 0);
+        $('#totalCorrecciones').text(ajustesPorTipo.CORRECCION_CONTEO || 0);
+
+        // ✅ MOSTRAR/OCULTAR PANEL
+        if (totalAjustes > 0) {
+            $('#ajustesPendientesPanel').show();
+            llenarTablaAjustesPendientes();
+        } else {
+            $('#ajustesPendientesPanel').hide();
+        }
+
+        console.log(`✅ Panel actualizado: ${totalAjustes} ajustes pendientes`);
+
+    } catch (error) {
+        console.error('❌ Error actualizando panel de ajustes:', error);
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Contar ajustes por tipo
+ */
+function contarAjustesPorTipo() {
+    const contadores = {
+        ENTRADA: 0,
+        SALIDA: 0,
+        AJUSTE_SISTEMA: 0,
+        CORRECCION_CONTEO: 0
+    };
+
+    ajustesPendientes.forEach(ajuste => {
+        if (ajuste.estado === 'Pendiente' && contadores.hasOwnProperty(ajuste.tipoAjuste)) {
+            contadores[ajuste.tipoAjuste]++;
+        }
+    });
+
+    return contadores;
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Llenar tabla de ajustes pendientes
+ */
+function llenarTablaAjustesPendientes() {
+    try {
+        const tbody = $('#tablaAjustesBody');
+        tbody.empty();
+
+        if (ajustesPendientes.length === 0) {
+            $('#ajustesVacio').show();
+            $('#tablaAjustes').hide();
+            return;
+        }
+
+        $('#ajustesVacio').hide();
+        $('#tablaAjustes').show();
+
+        ajustesPendientes.forEach(ajuste => {
+            const fila = crearFilaAjustePendiente(ajuste);
+            tbody.append(fila);
+        });
+
+    } catch (error) {
+        console.error('❌ Error llenando tabla de ajustes:', error);
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear fila de ajuste pendiente
+ */
+function crearFilaAjustePendiente(ajuste) {
+    const diferencia = ajuste.cantidadFisicaContada - ajuste.cantidadSistemaOriginal;
+    const diferenciaClass = diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : 'text-muted';
+    const tipoTexto = obtenerTextoTipoAjuste(ajuste.tipoAjuste);
+    const tipoBadgeClass = obtenerClaseBadgeTipo(ajuste.tipoAjuste);
+
+    return $(`
+        <tr data-ajuste-id="${ajuste.ajusteId}">
+            <td>
+                <div class="fw-semibold">${ajuste.nombreProducto || `Producto ${ajuste.productoId}`}</div>
+                <small class="text-muted">ID: ${ajuste.productoId}</small>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-secondary">${ajuste.cantidadSistemaOriginal}</span>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-info">${ajuste.cantidadFisicaContada}</span>
+            </td>
+            <td class="text-center">
+                <span class="fw-bold ${diferenciaClass}">
+                    ${diferencia > 0 ? '+' : ''}${diferencia}
+                </span>
+            </td>
+            <td class="text-center">
+                <span class="badge ${tipoBadgeClass}">${tipoTexto}</span>
+            </td>
+            <td>
+                <div class="small" style="max-width: 200px;">
+                    ${ajuste.motivoAjuste}
+                </div>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-primary">${ajuste.cantidadFinalPropuesta}</span>
+            </td>
+            <td class="text-center">
+                <div class="btn-group-vertical btn-group-sm">
+                    <button class="btn btn-outline-danger btn-sm" 
+                            onclick="eliminarAjustePendiente(${ajuste.ajusteId})"
+                            data-bs-toggle="tooltip"
+                            title="Eliminar este ajuste">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    <button class="btn btn-outline-info btn-sm" 
+                            onclick="editarAjustePendiente(${ajuste.ajusteId})"
+                            data-bs-toggle="tooltip"
+                            title="Editar este ajuste">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `);
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Obtener texto del tipo de ajuste
+ */
+function obtenerTextoTipoAjuste(tipo) {
+    const tipos = {
+        'ENTRADA': '📦 Entrada',
+        'SALIDA': '📤 Salida',
+        'AJUSTE_SISTEMA': '🔧 Ajuste Sistema',
+        'CORRECCION_CONTEO': '🔄 Corrección'
+    };
+    return tipos[tipo] || tipo;
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Obtener clase de badge según tipo
+ */
+function obtenerClaseBadgeTipo(tipo) {
+    const clases = {
+        'ENTRADA': 'bg-success',
+        'SALIDA': 'bg-warning',
+        'AJUSTE_SISTEMA': 'bg-primary',
+        'CORRECCION_CONTEO': 'bg-info'
+    };
+    return clases[tipo] || 'bg-secondary';
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Editar ajuste pendiente (placeholder)
+ */
+async function editarAjustePendiente(ajusteId) {
+    try {
+        console.log('✏️ Editando ajuste pendiente:', ajusteId);
+
+        const ajuste = ajustesPendientes.find(a => a.ajusteId === ajusteId);
+        if (!ajuste) {
+            mostrarError('Ajuste no encontrado');
+            return;
+        }
+
+        // Por ahora, mostrar información
+        mostrarInfo(`Función de edición en desarrollo.\nAjuste ID: ${ajusteId}\nProducto: ${ajuste.nombreProducto}\nTipo: ${ajuste.tipoAjuste}`);
+
+    } catch (error) {
+        console.error('❌ Error editando ajuste:', error);
+        mostrarError('Error al editar ajuste pendiente');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN ACTUALIZADA: Eliminar ajuste pendiente (ya existe, pero mejorada)
+ */
+async function eliminarAjustePendiente(ajusteId) {
+    try {
+        const ajuste = ajustesPendientes.find(a => a.ajusteId === ajusteId);
+        if (!ajuste) {
+            mostrarError('Ajuste no encontrado');
+            return;
+        }
+
+        const confirmacion = await Swal.fire({
+            title: '¿Eliminar ajuste pendiente?',
+            html: `
+                <div class="text-start">
+                    <strong>Producto:</strong> ${ajuste.nombreProducto}<br>
+                    <strong>Tipo:</strong> ${obtenerTextoTipoAjuste(ajuste.tipoAjuste)}<br>
+                    <strong>Cantidad Final:</strong> ${ajuste.cantidadFinalPropuesta}<br><br>
+                    <small class="text-muted">Esta acción no se puede deshacer</small>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) return;
+
+        // Llamar a la API para eliminar
+        const response = await fetch(`/TomaInventario/EliminarAjustePendiente/${ajusteId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const resultado = await response.json();
+
+        if (resultado.success) {
+            mostrarExito('Ajuste eliminado exitosamente');
+
+            // ✅ ACTUALIZAR DATOS LOCALES
+            const index = ajustesPendientes.findIndex(a => a.ajusteId === ajusteId);
+            if (index > -1) {
+                ajustesPendientes.splice(index, 1);
+            }
+
+            // ✅ ACTUALIZAR UI
+            actualizarPanelAjustesPendientes();
+            await cargarProductosInventario(window.inventarioConfig.inventarioId);
+
+        } else {
+            mostrarError(resultado.message || 'Error al eliminar ajuste');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando ajuste:', error);
+        mostrarError('Error al eliminar ajuste pendiente');
+    }
+}
+
+
+/**
+ * ✅ FUNCIÓN ACTUALIZADA: Mostrar/ocultar paneles según el progreso
+ */
+function mostrarPanelesSegunProgreso() {
+    const stats = estadisticasActuales;
+
+    // ✅ MOSTRAR PANEL DE AJUSTES SI HAY DISCREPANCIAS O AJUSTES PENDIENTES
+    if ((stats.discrepancias && stats.discrepancias > 0) || ajustesPendientes.length > 0) {
+        $('#ajustesPendientesPanel').show();
+        actualizarPanelAjustesPendientes();
+    } else {
+        $('#ajustesPendientesPanel').hide();
+    }
+
+    // ✅ MOSTRAR PANEL DE FINALIZACIÓN SI ESTÁ LISTO
+    const todoContado = stats.pendientes === 0;
+
+    if (todoContado && (stats.total > 0)) {
+        $('#finalizacionPanel').show();
+        actualizarPanelFinalizacion();
+    } else {
+        $('#finalizacionPanel').hide();
+    }
+}
+
 
 function configurarEventListeners() {
     // Filtro de búsqueda
@@ -184,6 +464,36 @@ function configurarEventListeners() {
     $('#btnVerAjustesPendientes').on('click', function () {
         mostrarModalAjustesPendientes();
     });
+
+    // ✅ AGREGAR AL FINAL DE LA FUNCIÓN:
+
+    // Event listeners para panel de ajustes pendientes
+    $('#btnActualizarAjustes').on('click', async function () {
+        const inventarioId = window.inventarioConfig.inventarioId;
+        await cargarAjustesPendientes(inventarioId);
+        actualizarPanelAjustesPendientes();
+        mostrarExito('Ajustes pendientes actualizados');
+    });
+
+    $('#btnToggleAjustes').on('click', function () {
+        const $contenido = $('#contenidoAjustesPendientes');
+        const $icono = $(this).find('i');
+
+        if ($contenido.is(':visible')) {
+            $contenido.slideUp();
+            $icono.removeClass('bi-chevron-up').addClass('bi-chevron-down');
+            $(this).find('span').text('Mostrar');
+        } else {
+            $contenido.slideDown();
+            $icono.removeClass('bi-chevron-down').addClass('bi-chevron-up');
+            $(this).find('span').text('Ocultar');
+        }
+    });
+
+    // Event listeners para panel de finalización
+    $('#btnVerResumenCompleto').on('click', verResumenCompleto);
+    $('#btnExportarInventario').on('click', exportarInventario);
+    $('#btnFinalizarInventario').on('click', finalizarInventarioCompleto);
 }
 
 // =====================================
@@ -219,6 +529,9 @@ async function cargarAjustesPendientes(inventarioId) {
 
             // Actualizar indicador visual
             actualizarIndicadorAjustesPendientes();
+
+            // ✅ AGREGAR ESTA LÍNEA:
+            actualizarPanelAjustesPendientes();
         } else {
             ajustesPendientes = [];
         }
@@ -228,6 +541,7 @@ async function cargarAjustesPendientes(inventarioId) {
         ajustesPendientes = [];
     }
 }
+
 
 /**
  * ✅ NUEVA FUNCIÓN: Actualizar indicador de ajustes pendientes
@@ -717,6 +1031,8 @@ function renderizarProductos() {
 
 function crearFilaProducto(producto, numero) {
     const tieneDiscrepancia = producto.tieneDiscrepancia;
+    const tieneAjustePendiente = verificarAjustePendiente(producto.productoId);
+
     const estadoClass = tieneDiscrepancia ? 'estado-discrepancia' :
         producto.estadoConteo === 'Contado' ? 'estado-contado' : 'estado-pendiente';
 
@@ -725,25 +1041,35 @@ function crearFilaProducto(producto, numero) {
     const diferenciaClass = diferencia > 0 ? 'diferencia-positiva' :
         diferencia < 0 ? 'diferencia-negativa' : 'diferencia-cero';
 
-    const estadoBadge = getEstadoBadge(producto.estadoConteo, tieneDiscrepancia);
-
     // Información adicional para llantas
     let infoLlanta = '';
     if (producto.esLlanta) {
         infoLlanta = `
             <div class="small text-muted">
-                <i class="fas fa-circle-info me-1"></i>
+                <i class="bi bi-car-front me-1"></i>
                 ${producto.marcaLlanta || ''} ${producto.modeloLlanta || ''} 
                 ${producto.medidasLlanta || ''}
             </div>
         `;
     }
 
+    // ✅ NUEVA COLUMNA DE ESTADO CON MÚLTIPLES BADGES
+    const estadoBadges = crearBadgesEstado(producto);
+
+    // ✅ NUEVOS BOTONES DE ACCIÓN
+    const botonesAccion = crearNuevosBotonesAccion(producto);
+
+    // ✅ INDICADOR DE AJUSTES PENDIENTES
+    const indicadorAjustes = tieneAjustePendiente ?
+        `<i class="bi bi-clock-history text-warning" data-bs-toggle="tooltip" title="Tiene ajustes pendientes"></i>` :
+        '';
+
     return $(`
         <tr class="producto-row ${estadoClass}" data-producto-id="${producto.productoId}">
             <td class="text-center fw-bold">${numero}</td>
-            <td>
-                <img src="${imagenSrc}" alt="Producto" class="producto-imagen">
+            <td class="text-center">
+                <img src="${imagenSrc}" alt="Producto" class="producto-imagen" 
+                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
             </td>
             <td>
                 <div class="fw-semibold">${producto.nombreProducto}</div>
@@ -751,28 +1077,154 @@ function crearFilaProducto(producto, numero) {
                 ${infoLlanta}
             </td>
             <td class="text-center">
-                <span class="badge bg-primary">${producto.cantidadSistema}</span>
+                <span class="badge bg-primary fs-6">${producto.cantidadSistema}</span>
             </td>
             <td class="text-center">
                 ${producto.cantidadFisica !== null ?
-            `<span class="badge bg-info">${producto.cantidadFisica}</span>` :
-            '<span class="text-muted">Sin contar</span>'
+            `<span class="badge bg-info fs-6">${producto.cantidadFisica}</span>` :
+            '<span class="text-muted small">Sin contar</span>'
         }
             </td>
             <td class="text-center">
-                <span class="${diferenciaClass}">
+                <span class="fw-bold ${diferenciaClass}">
                     ${diferencia > 0 ? '+' : ''}${diferencia}
                 </span>
             </td>
             <td class="text-center">
-                ${estadoBadge}
+                ${estadoBadges}
             </td>
             <td class="text-center">
-                ${crearBotonesAccion(producto)}
+                ${botonesAccion}
+            </td>
+            <td class="text-center">
+                ${indicadorAjustes}
             </td>
         </tr>
     `);
 }
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear badges de estado múltiples
+ */
+function crearBadgesEstado(producto) {
+    let badges = '';
+
+    // Badge principal de estado
+    if (producto.estadoConteo === 'Contado') {
+        badges += '<span class="badge bg-success mb-1"><i class="bi bi-check-circle me-1"></i>Contado</span>';
+    } else {
+        badges += '<span class="badge bg-warning mb-1"><i class="bi bi-clock me-1"></i>Pendiente</span>';
+    }
+
+    // Badge de discrepancia
+    if (producto.tieneDiscrepancia) {
+        const diferencia = producto.diferencia || 0;
+        const colorBadge = diferencia > 0 ? 'bg-danger' : 'bg-warning';
+        badges += `<br><span class="badge ${colorBadge} small">⚠️ Dif: ${diferencia > 0 ? '+' : ''}${diferencia}</span>`;
+    }
+
+    // Badge de ajuste pendiente
+    if (verificarAjustePendiente(producto.productoId)) {
+        badges += '<br><span class="badge bg-info small"><i class="bi bi-clock-history me-1"></i>Ajuste Pendiente</span>';
+    }
+
+    return `<div class="d-flex flex-column align-items-center gap-1">${badges}</div>`;
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear botones de acción actualizados
+ */
+function crearNuevosBotonesAccion(producto) {
+    const permisos = window.inventarioConfig?.permisos || {};
+    const inventarioEnProgreso = inventarioActual?.estado === 'En Progreso';
+
+    let botones = '';
+
+    // ✅ BOTÓN DE CONTAR (siempre disponible si tiene permisos)
+    if ((permisos.puedeContar || permisos.esAdmin) && inventarioEnProgreso) {
+        const textoBoton = producto.estadoConteo === 'Contado' ? 'Recontar' : 'Contar';
+        const iconoBoton = producto.estadoConteo === 'Contado' ? 'bi-arrow-clockwise' : 'bi-calculator';
+        const colorBoton = producto.estadoConteo === 'Contado' ? 'btn-outline-primary' : 'btn-primary';
+
+        botones += `
+            <button class="btn btn-sm ${colorBoton} mb-1" 
+                    onclick="abrirModalConteo(${producto.productoId})"
+                    data-bs-toggle="tooltip"
+                    title="${textoBoton} este producto">
+                <i class="bi ${iconoBoton} me-1"></i>
+                ${textoBoton}
+            </button>
+        `;
+    }
+
+    // ✅ BOTÓN DE AJUSTE PENDIENTE (solo si hay discrepancia y no tiene ajuste)
+    if ((permisos.puedeAjustar || permisos.esAdmin) &&
+        producto.tieneDiscrepancia &&
+        !verificarAjustePendiente(producto.productoId) &&
+        inventarioEnProgreso) {
+
+        botones += `
+            <button class="btn btn-sm btn-warning mb-1" 
+                    onclick="abrirModalAjustePendiente(${producto.productoId})"
+                    data-bs-toggle="tooltip"
+                    title="Crear ajuste pendiente para esta discrepancia">
+                <i class="bi bi-clock-history me-1"></i>
+                Crear Ajuste
+            </button>
+        `;
+    }
+
+    // ✅ BOTÓN DE VER AJUSTES (si ya tiene ajustes pendientes)
+    if (verificarAjustePendiente(producto.productoId)) {
+        botones += `
+            <button class="btn btn-sm btn-info mb-1" 
+                    onclick="verAjustesProducto(${producto.productoId})"
+                    data-bs-toggle="tooltip"
+                    title="Ver ajustes pendientes de este producto">
+                <i class="bi bi-eye me-1"></i>
+                Ver Ajustes
+            </button>
+        `;
+    }
+
+    // ✅ BOTÓN DE DETALLES (siempre disponible)
+    botones += `
+        <button class="btn btn-sm btn-outline-secondary mb-1" 
+                onclick="verDetallesProducto(${producto.productoId})"
+                data-bs-toggle="tooltip"
+                title="Ver detalles del producto">
+            <i class="bi bi-info-circle me-1"></i>
+            Detalles
+        </button>
+    `;
+
+    return `<div class="d-flex flex-column gap-1">${botones}</div>`;
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Verificar si un producto tiene ajustes pendientes
+ */
+function verificarAjustePendiente(productoId) {
+    return ajustesPendientes.some(ajuste =>
+        ajuste.productoId === productoId && ajuste.estado === 'Pendiente'
+    );
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Ver detalles del producto (placeholder)
+ */
+function verDetallesProducto(productoId) {
+    const producto = productosInventario.find(p => p.productoId === productoId);
+    if (!producto) {
+        mostrarError('Producto no encontrado');
+        return;
+    }
+
+    // Por ahora, mostrar información básica
+    mostrarInfo(`Detalles de: ${producto.nombreProducto}\nID: ${producto.productoId}\nEstado: ${producto.estadoConteo}`);
+}
+
+
 
 function getEstadoBadge(estado, tieneDiscrepancia) {
     if (tieneDiscrepancia) {
@@ -1746,6 +2198,16 @@ function getEstadoBadgeClass(estado) {
 // ✅ HACER LAS FUNCIONES GLOBALES
 window.verAjustesProducto = verAjustesProducto;
 window.guardarAjusteInventario = guardarAjusteInventario;
+window.verResumenCompleto = verResumenCompleto;
+window.exportarInventario = exportarInventario;
+window.finalizarInventarioCompleto = finalizarInventarioCompleto;
+// ✅ HACER FUNCIÓN GLOBAL
+window.abrirModalAjustePendiente = abrirModalAjustePendiente;
+window.verDetallesProducto = verDetallesProducto;
+// ✅ HACER FUNCIONES GLOBALES
+window.editarAjustePendiente = editarAjustePendiente;
+window.eliminarAjustePendiente = eliminarAjustePendiente;
+
 
 function obtenerUsuarioId() {
     // Esta función debería obtener el ID del usuario actual
@@ -1905,3 +2367,640 @@ window.mostrarModalCompletarInventario = mostrarModalCompletarInventario;
 window.completarInventario = completarInventario;
 
 
+/**
+ * ✅ NUEVA FUNCIÓN: Abrir modal de ajuste pendiente
+ */
+function abrirModalAjustePendiente(productoId) {
+    try {
+        console.log(`🔄 === ABRIENDO MODAL DE AJUSTE PENDIENTE ===`);
+        console.log(`🔄 Producto ID: ${productoId}`);
+
+        // ✅ VERIFICAR PERMISOS
+        const permisos = window.inventarioConfig?.permisos || {};
+        if (!permisos.puedeAjustar && !permisos.esAdmin) {
+            mostrarError('No tienes permisos para crear ajustes pendientes en este inventario');
+            return;
+        }
+
+        // ✅ BUSCAR EL PRODUCTO
+        const producto = productosInventario.find(p => p.productoId === productoId);
+        if (!producto) {
+            mostrarError('Producto no encontrado');
+            return;
+        }
+
+        // ✅ VERIFICAR QUE HAYA DISCREPANCIA
+        if (!producto.tieneDiscrepancia) {
+            mostrarError('Este producto no tiene discrepancias para ajustar');
+            return;
+        }
+
+        // ✅ VERIFICAR QUE NO TENGA AJUSTE PENDIENTE YA
+        if (verificarAjustePendiente(producto.productoId)) {
+            mostrarError('Este producto ya tiene un ajuste pendiente. Usa "Ver Ajustes" para gestionarlo.');
+            return;
+        }
+
+        console.log(`🔄 Producto válido: ${producto.nombreProducto}, Discrepancia: ${producto.diferencia}`);
+
+        // ✅ LLENAR DATOS EN EL MODAL
+        $('#productoIdAjustePendiente').val(producto.productoId);
+        $('#inventarioIdAjustePendiente').val(window.inventarioConfig.inventarioId);
+
+        // ✅ INFORMACIÓN DEL PRODUCTO
+        $('#nombreProductoAjustePendiente').text(producto.nombreProducto || 'Sin nombre');
+        $('#stockSistemaAjustePendiente').text(producto.cantidadSistema || 0);
+        $('#stockFisicoAjustePendiente').text(producto.cantidadFisica || 0);
+
+        // ✅ MOSTRAR DISCREPANCIA CON COLOR
+        const diferencia = producto.diferencia || 0;
+        const $discrepancia = $('#discrepanciaAjustePendiente');
+        $discrepancia.text(diferencia > 0 ? `+${diferencia}` : diferencia);
+
+        if (diferencia > 0) {
+            $discrepancia.removeClass('text-danger').addClass('text-success');
+        } else if (diferencia < 0) {
+            $discrepancia.removeClass('text-success').addClass('text-danger');
+        } else {
+            $discrepancia.removeClass('text-success text-danger').addClass('text-muted');
+        }
+
+        // ✅ RESETEAR FORMULARIO
+        $('#tipoAjustePendiente').val('');
+        $('#cantidadFinalPropuesta').val(producto.cantidadFisica || 0);
+        $('#motivoAjustePendiente').val('');
+        $('#vistaPreviaAjustePendiente').hide();
+
+        // ✅ CONFIGURAR EVENT LISTENERS ESPECÍFICOS DEL MODAL
+        configurarEventListenersModalAjustePendiente(producto);
+
+        // ✅ MOSTRAR EL MODAL
+        const modal = new bootstrap.Modal(document.getElementById('ajustePendienteModal'));
+        modal.show();
+
+        console.log(`✅ Modal de ajuste pendiente abierto exitosamente`);
+
+    } catch (error) {
+        console.error('❌ Error abriendo modal de ajuste pendiente:', error);
+        mostrarError('Error al abrir el modal de ajuste pendiente');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Configurar event listeners específicos del modal de ajuste pendiente
+ */
+function configurarEventListenersModalAjustePendiente(producto) {
+    // ✅ LIMPIAR EVENT LISTENERS ANTERIORES
+    $('#tipoAjustePendiente').off('change.ajustePendiente');
+    $('#guardarAjustePendienteBtn').off('click.ajustePendiente');
+
+    // ✅ CONFIGURAR CAMBIO DE TIPO DE AJUSTE
+    $('#tipoAjustePendiente').on('change.ajustePendiente', function () {
+        actualizarVistaPreviaAjustePendiente(producto);
+    });
+
+    // ✅ CONFIGURAR BOTÓN DE GUARDAR
+    $('#guardarAjustePendienteBtn').on('click.ajustePendiente', function (e) {
+        e.preventDefault();
+        guardarNuevoAjustePendiente();
+    });
+
+    // ✅ ACTUALIZAR VISTA PREVIA AL CAMBIAR MOTIVO
+    $('#motivoAjustePendiente').on('input.ajustePendiente', function () {
+        actualizarVistaPreviaAjustePendiente(producto);
+    });
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Actualizar vista previa del ajuste pendiente
+ */
+function actualizarVistaPreviaAjustePendiente(producto) {
+    try {
+        const tipoAjuste = $('#tipoAjustePendiente').val();
+        const motivo = $('#motivoAjustePendiente').val()?.trim();
+
+        if (!tipoAjuste) {
+            $('#vistaPreviaAjustePendiente').hide();
+            return;
+        }
+
+        const stockActual = producto.cantidadSistema || 0;
+        const conteoFisico = producto.cantidadFisica || 0;
+        let stockPropuesto = conteoFisico; // Por defecto, usar el conteo físico
+        let tipoTexto = '';
+
+        // ✅ DETERMINAR STOCK PROPUESTO SEGÚN TIPO DE AJUSTE
+        switch (tipoAjuste) {
+            case 'ENTRADA':
+                stockPropuesto = conteoFisico; // Aumentar al conteo físico
+                tipoTexto = '📦 Entrada';
+                break;
+            case 'SALIDA':
+                stockPropuesto = conteoFisico; // Reducir al conteo físico
+                tipoTexto = '📤 Salida';
+                break;
+            case 'AJUSTE_SISTEMA':
+                stockPropuesto = conteoFisico; // Ajustar sistema al físico
+                tipoTexto = '🔧 Ajuste Sistema';
+                break;
+            case 'CORRECCION_CONTEO':
+                stockPropuesto = stockActual; // Mantener sistema, corregir conteo
+                tipoTexto = '🔄 Corrección Conteo';
+                break;
+            default:
+                stockPropuesto = conteoFisico;
+                tipoTexto = tipoAjuste;
+        }
+
+        // ✅ ACTUALIZAR CAMPO DE CANTIDAD FINAL
+        $('#cantidadFinalPropuesta').val(stockPropuesto);
+
+        // ✅ LLENAR VISTA PREVIA
+        $('#stockActualPreview').text(stockActual);
+        $('#conteoFisicoPreview').text(conteoFisico);
+        $('#tipoAjustePreview').text(tipoTexto);
+        $('#stockFinalPreview').text(stockPropuesto);
+
+        // ✅ MOSTRAR/OCULTAR VISTA PREVIA
+        if (tipoAjuste && motivo && motivo.length >= 10) {
+            $('#vistaPreviaAjustePendiente').show();
+        } else {
+            $('#vistaPreviaAjustePendiente').hide();
+        }
+
+    } catch (error) {
+        console.error('❌ Error actualizando vista previa ajuste pendiente:', error);
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Guardar ajuste pendiente (reemplaza la anterior)
+ */
+async function guardarNuevoAjustePendiente() {
+    try {
+        console.log('💾 === GUARDANDO NUEVO AJUSTE PENDIENTE ===');
+
+        const productoId = $('#productoIdAjustePendiente').val();
+        const inventarioId = $('#inventarioIdAjustePendiente').val();
+        const tipoAjuste = $('#tipoAjustePendiente').val();
+        const cantidadFinalPropuesta = parseInt($('#cantidadFinalPropuesta').val());
+        const motivo = $('#motivoAjustePendiente').val()?.trim();
+
+        // ✅ VALIDACIONES
+        if (!productoId || !inventarioId || !tipoAjuste || !motivo) {
+            mostrarError('Todos los campos son obligatorios');
+            return;
+        }
+
+        if (motivo.length < 10) {
+            mostrarError('El motivo debe tener al menos 10 caracteres');
+            $('#motivoAjustePendiente').focus();
+            return;
+        }
+
+        if (isNaN(cantidadFinalPropuesta) || cantidadFinalPropuesta < 0) {
+            mostrarError('La cantidad final propuesta debe ser un número válido mayor o igual a 0');
+            return;
+        }
+
+        // ✅ OBTENER PRODUCTO
+        const producto = productosInventario.find(p => p.productoId == productoId);
+        if (!producto) {
+            mostrarError('Producto no encontrado');
+            return;
+        }
+
+        // ✅ MANEJAR ESTADO DEL BOTÓN
+        const $btn = $('#guardarAjustePendienteBtn');
+        $btn.prop('disabled', true);
+        $btn.find('.normal-state').hide();
+        $btn.find('.loading-state').show();
+
+        // ✅ CREAR OBJETO DE SOLICITUD
+        const solicitudAjuste = {
+            inventarioProgramadoId: parseInt(inventarioId),
+            productoId: parseInt(productoId),
+            tipoAjuste: tipoAjuste,
+            cantidadSistemaOriginal: producto.cantidadSistema || 0,
+            cantidadFisicaContada: producto.cantidadFisica || 0,
+            cantidadFinalPropuesta: cantidadFinalPropuesta,
+            motivoAjuste: motivo,
+            usuarioId: window.inventarioConfig.usuarioId || 1
+        };
+
+        console.log('📤 Enviando solicitud de ajuste pendiente:', solicitudAjuste);
+
+        // ✅ ENVIAR A LA API
+        const response = await fetch(`/TomaInventario/CrearAjustePendiente`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(solicitudAjuste)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(`Error ${response.status}: ${errorData}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success) {
+            mostrarExito(`Ajuste pendiente registrado exitosamente para ${producto.nombreProducto}`);
+
+            // ✅ CERRAR MODAL
+            const modal = bootstrap.Modal.getInstance(document.getElementById('ajustePendienteModal'));
+            if (modal) {
+                modal.hide();
+            }
+
+            // ✅ RECARGAR DATOS
+            await cargarAjustesPendientes(inventarioId);
+            await cargarProductosInventario(inventarioId);
+            await actualizarEstadisticasUI();
+
+            console.log('🎉 Ajuste pendiente guardado y datos actualizados');
+
+        } else {
+            throw new Error(resultado.message || 'Error al registrar ajuste pendiente');
+        }
+
+    } catch (error) {
+        console.error('❌ Error guardando ajuste pendiente:', error);
+        mostrarError(`Error al guardar ajuste pendiente: ${error.message}`);
+    } finally {
+        // ✅ RESTAURAR BOTÓN
+        const $btn = $('#guardarAjustePendienteBtn');
+        $btn.prop('disabled', false);
+        $btn.find('.loading-state').hide();
+        $btn.find('.normal-state').show();
+    }
+}
+
+/**
+* ✅ NUEVA FUNCIÓN: Actualizar panel de finalización
+*/
+function actualizarPanelFinalizacion() {
+    try {
+        console.log('🏁 Actualizando panel de finalización...');
+
+        const stats = estadisticasActuales;
+        const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
+
+        // ✅ ACTUALIZAR RESUMEN FINAL
+        $('#resumenTotalProductos').text(stats.total || 0);
+        $('#resumenProductosContados').text(stats.contados || 0);
+        $('#resumenDiscrepancias').text(stats.discrepancias || 0);
+        $('#resumenAjustesPendientes').text(totalAjustes);
+
+        // ✅ ACTUALIZAR CÍRCULO DE PROGRESO
+        const porcentaje = stats.porcentajeProgreso || 0;
+        $('#porcentajeCompletoFinal').text(`${Math.round(porcentaje)}%`);
+
+        // Actualizar círculo visual
+        const $circulo = $('.progress-circle');
+        const grados = (porcentaje / 100) * 360;
+        $circulo.css('background', `conic-gradient(#28a745 ${grados}deg, #e9ecef ${grados}deg)`);
+
+        // ✅ MOSTRAR/OCULTAR ALERTAS
+        const todoContado = stats.pendientes === 0;
+        const hayDiscrepancias = stats.discrepancias > 0;
+        const hayAjustes = totalAjustes > 0;
+
+        // Ocultar todas las alertas primero
+        $('#alertaProductosPendientes, #alertaAjustesPendientes, #alertaListoParaFinalizar').hide();
+
+        if (!todoContado) {
+            $('#cantidadPendientes').text(stats.pendientes);
+            $('#alertaProductosPendientes').show();
+        } else if (hayAjustes) {
+            $('#cantidadAjustes').text(totalAjustes);
+            $('#alertaAjustesPendientes').show();
+        } else {
+            $('#alertaListoParaFinalizar').show();
+        }
+
+        // ✅ HABILITAR/DESHABILITAR BOTÓN DE FINALIZAR
+        const puedeFinalizarSinAjustes = todoContado && !hayAjustes;
+        const puedeFinalizarConAjustes = todoContado && hayAjustes;
+
+        const $btnFinalizar = $('#btnFinalizarInventario');
+
+        if (puedeFinalizarSinAjustes) {
+            $btnFinalizar.prop('disabled', false)
+                .removeClass('btn-warning')
+                .addClass('btn-success');
+            $btnFinalizar.find('i').removeClass('bi-clock-history').addClass('bi-check-circle-fill');
+            $btnFinalizar.find('span:first').html('<i class="bi bi-check-circle-fill me-2"></i>Finalizar Inventario');
+        } else if (puedeFinalizarConAjustes) {
+            $btnFinalizar.prop('disabled', false)
+                .removeClass('btn-success')
+                .addClass('btn-warning');
+            $btnFinalizar.find('i').removeClass('bi-check-circle-fill').addClass('bi-clock-history');
+            $btnFinalizar.find('span:first').html('<i class="bi bi-clock-history me-2"></i>Finalizar y Aplicar Ajustes');
+        } else {
+            $btnFinalizar.prop('disabled', true)
+                .removeClass('btn-success btn-warning')
+                .addClass('btn-secondary');
+        }
+
+        console.log(`✅ Panel de finalización actualizado - Puede finalizar: ${puedeFinalizarSinAjustes || puedeFinalizarConAjustes}`);
+
+    } catch (error) {
+        console.error('❌ Error actualizando panel de finalización:', error);
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Finalizar inventario con aplicación de ajustes
+ */
+async function finalizarInventarioCompleto() {
+    try {
+        console.log('🏁 === INICIANDO FINALIZACIÓN DE INVENTARIO ===');
+
+        const inventarioId = window.inventarioConfig.inventarioId;
+        const stats = estadisticasActuales;
+        const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
+
+        // ✅ VALIDACIONES FINALES
+        if (stats.pendientes > 0) {
+            mostrarError(`No se puede finalizar: quedan ${stats.pendientes} productos sin contar`);
+            return;
+        }
+
+        // ✅ CONFIRMACIÓN CON RESUMEN DETALLADO
+        const tieneAjustes = totalAjustes > 0;
+        let htmlConfirmacion = `
+            <div class="text-start">
+                <h5 class="text-primary mb-3">📋 Resumen del Inventario</h5>
+                <div class="row mb-3">
+                    <div class="col-6"><strong>Total productos:</strong></div>
+                    <div class="col-6">${stats.total}</div>
+                    <div class="col-6"><strong>Productos contados:</strong></div>
+                    <div class="col-6 text-success">${stats.contados}</div>
+                    <div class="col-6"><strong>Discrepancias encontradas:</strong></div>
+                    <div class="col-6 text-warning">${stats.discrepancias}</div>
+                    <div class="col-6"><strong>Ajustes pendientes:</strong></div>
+                    <div class="col-6 text-info">${totalAjustes}</div>
+                </div>
+        `;
+
+        if (tieneAjustes) {
+            htmlConfirmacion += `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>¡Atención!</strong> Se aplicarán ${totalAjustes} ajustes al stock del sistema.
+                    <br><small>Esta acción es <strong>irreversible</strong>.</small>
+                </div>
+            `;
+        } else {
+            htmlConfirmacion += `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    No hay ajustes pendientes. El inventario se marcará como completado.
+                </div>
+            `;
+        }
+
+        htmlConfirmacion += `</div>`;
+
+        const confirmacion = await Swal.fire({
+            title: '🏁 ¿Finalizar Inventario?',
+            html: htmlConfirmacion,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: tieneAjustes ? '#ffc107' : '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: tieneAjustes ? 'Sí, Finalizar y Aplicar Ajustes' : 'Sí, Finalizar Inventario',
+            cancelButtonText: 'Cancelar',
+            width: '600px'
+        });
+
+        if (!confirmacion.isConfirmed) return;
+
+        // ✅ CAMBIAR ESTADO DEL BOTÓN
+        const $btn = $('#btnFinalizarInventario');
+        $btn.prop('disabled', true);
+        $btn.find('.normal-state').hide();
+        $btn.find('.loading-state').show();
+
+        try {
+            let mensaje = '';
+
+            if (tieneAjustes) {
+                // ✅ PASO 1: Aplicar ajustes pendientes
+                console.log('📝 Aplicando ajustes pendientes...');
+
+                const responseAjustes = await fetch(`/TomaInventario/AplicarAjustesPendientes/${inventarioId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!responseAjustes.ok) {
+                    throw new Error(`Error aplicando ajustes: ${responseAjustes.status}`);
+                }
+
+                const resultadoAjustes = await responseAjustes.json();
+
+                if (!resultadoAjustes.success) {
+                    throw new Error(resultadoAjustes.message || 'Error al aplicar ajustes');
+                }
+
+                console.log('✅ Ajustes aplicados exitosamente');
+                mensaje += `✅ ${totalAjustes} ajustes aplicados al stock.\n`;
+            }
+
+            // ✅ PASO 2: Completar inventario
+            console.log('🏁 Completando inventario...');
+
+            const responseCompletar = await fetch(`/TomaInventario/CompletarInventario/${inventarioId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!responseCompletar.ok) {
+                throw new Error(`Error completando inventario: ${responseCompletar.status}`);
+            }
+
+            const resultadoCompletar = await responseCompletar.json();
+
+            if (!resultadoCompletar.success) {
+                throw new Error(resultadoCompletar.message || 'Error al completar inventario');
+            }
+
+            console.log('🎉 === INVENTARIO FINALIZADO EXITOSAMENTE ===');
+
+            // ✅ MOSTRAR MENSAJE DE ÉXITO
+            mensaje += `🎉 Inventario completado exitosamente.\n`;
+            mensaje += `📊 Total productos: ${stats.total}\n`;
+            if (stats.discrepancias > 0) {
+                mensaje += `⚠️ Discrepancias resueltas: ${stats.discrepancias}`;
+            }
+
+            await Swal.fire({
+                title: '🎉 ¡Inventario Completado!',
+                text: mensaje,
+                icon: 'success',
+                confirmButtonColor: '#28a745',
+                confirmButtonText: 'Entendido'
+            });
+
+            // ✅ ACTUALIZAR UI FINAL
+            await cargarInformacionInventario(inventarioId);
+            await cargarProductosInventario(inventarioId);
+            await cargarAjustesPendientes(inventarioId);
+
+            // ✅ OCULTAR PANELES DE GESTIÓN
+            $('#ajustesPendientesPanel').slideUp();
+            $('#finalizacionPanel').slideUp();
+
+            // ✅ MOSTRAR MENSAJE EN LA INTERFAZ
+            mostrarInventarioCompletado();
+
+        } catch (error) {
+            console.error('💥 Error durante la finalización:', error);
+            mostrarError(`Error finalizando inventario: ${error.message}`);
+        } finally {
+            // ✅ RESTAURAR BOTÓN
+            $btn.prop('disabled', false);
+            $btn.find('.loading-state').hide();
+            $btn.find('.normal-state').show();
+        }
+
+    } catch (error) {
+        console.error('💥 Error crítico en finalización:', error);
+        mostrarError('Error crítico al finalizar inventario');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Mostrar interfaz de inventario completado
+ */
+function mostrarInventarioCompletado() {
+    try {
+        // ✅ CREAR MENSAJE DE COMPLETADO
+        const mensajeCompletado = `
+            <div class="alert alert-success border-success shadow-sm">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-check-circle-fill display-4 text-success"></i>
+                    </div>
+                    <div>
+                        <h4 class="alert-heading mb-2">🎉 ¡Inventario Completado!</h4>
+                        <p class="mb-2">
+                            El inventario ha sido finalizado exitosamente. 
+                            Todos los ajustes han sido aplicados al stock del sistema.
+                        </p>
+                        <hr>
+                        <small class="text-muted">
+                            <i class="bi bi-clock me-1"></i>
+                            Completado el ${new Date().toLocaleString()}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // ✅ INSERTAR DESPUÉS DEL HEADER
+        $('.toma-header').after(mensajeCompletado);
+
+        // ✅ DESHABILITAR BOTONES DE ACCIÓN
+        $('.btn-contar, .btn-ajustar, .btn-ajuste-pendiente').prop('disabled', true).addClass('disabled');
+
+        console.log('✅ Interfaz de inventario completado mostrada');
+
+    } catch (error) {
+        console.error('❌ Error mostrando inventario completado:', error);
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Ver resumen completo (placeholder)
+ */
+async function verResumenCompleto() {
+    try {
+        const stats = estadisticasActuales;
+        const totalAjustes = ajustesPendientes.length;
+
+        let htmlResumen = `
+            <div class="text-start">
+                <h5 class="mb-3">📊 Resumen Completo del Inventario</h5>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-6"><strong>📦 Total de productos:</strong></div>
+                    <div class="col-sm-6">${stats.total || 0}</div>
+                    
+                    <div class="col-sm-6"><strong>✅ Productos contados:</strong></div>
+                    <div class="col-sm-6 text-success">${stats.contados || 0}</div>
+                    
+                    <div class="col-sm-6"><strong>⏳ Productos pendientes:</strong></div>
+                    <div class="col-sm-6 text-warning">${stats.pendientes || 0}</div>
+                    
+                    <div class="col-sm-6"><strong>⚠️ Discrepancias:</strong></div>
+                    <div class="col-sm-6 text-danger">${stats.discrepancias || 0}</div>
+                    
+                    <div class="col-sm-6"><strong>🔄 Ajustes pendientes:</strong></div>
+                    <div class="col-sm-6 text-info">${totalAjustes}</div>
+                    
+                    <div class="col-sm-6"><strong>📈 Progreso:</strong></div>
+                    <div class="col-sm-6"><span class="badge bg-primary">${stats.porcentajeProgreso || 0}%</span></div>
+                </div>
+        `;
+
+        if (totalAjustes > 0) {
+            const ajustesPorTipo = contarAjustesPorTipo();
+            htmlResumen += `
+                <hr>
+                <h6>🔧 Detalle de Ajustes por Tipo:</h6>
+                <div class="row">
+                    <div class="col-sm-6">📦 Entradas:</div>
+                    <div class="col-sm-6">${ajustesPorTipo.ENTRADA}</div>
+                    
+                    <div class="col-sm-6">📤 Salidas:</div>
+                    <div class="col-sm-6">${ajustesPorTipo.SALIDA}</div>
+                    
+                    <div class="col-sm-6">🔧 Ajustes Sistema:</div>
+                    <div class="col-sm-6">${ajustesPorTipo.AJUSTE_SISTEMA}</div>
+                    
+                    <div class="col-sm-6">🔄 Correcciones:</div>
+                    <div class="col-sm-6">${ajustesPorTipo.CORRECCION_CONTEO}</div>
+                </div>
+            `;
+        }
+
+        htmlResumen += `</div>`;
+
+        await Swal.fire({
+            title: '📊 Resumen Completo',
+            html: htmlResumen,
+            icon: 'info',
+            confirmButtonColor: '#0dcaf0',
+            confirmButtonText: 'Cerrar',
+            width: '600px'
+        });
+
+    } catch (error) {
+        console.error('❌ Error mostrando resumen:', error);
+        mostrarError('Error al generar resumen');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Exportar inventario (placeholder)
+ */
+async function exportarInventario() {
+    try {
+        mostrarInfo('Función de exportación en desarrollo.\n\nSe implementará exportación a Excel con:\n• Lista completa de productos\n• Discrepancias encontradas\n• Ajustes aplicados\n• Resumen estadístico');
+    } catch (error) {
+        console.error('❌ Error exportando:', error);
+        mostrarError('Error al exportar inventario');
+    }
+}

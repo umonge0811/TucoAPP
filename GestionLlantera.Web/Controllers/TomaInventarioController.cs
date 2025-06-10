@@ -163,7 +163,7 @@ namespace GestionLlantera.Web.Controllers
         /// NUEVO: Crea un ajuste pendiente en lugar de modificar el stock directamente
         /// </summary>
         [HttpPost]
-        [Route("CrearAjustePendiente")]
+        [Route("TomaInventario/CrearAjustePendiente")]
         public async Task<IActionResult> CrearAjustePendiente([FromBody] SolicitudAjusteInventarioDTO solicitud)
         {
             try
@@ -237,7 +237,7 @@ namespace GestionLlantera.Web.Controllers
         /// Obtiene los ajustes pendientes de un inventario
         /// </summary>
         [HttpGet]
-        [Route("ObtenerAjustesPendientes/{inventarioId}")]
+        [Route("TomaInventario/ObtenerAjustesPendientes/{inventarioId}")]
         public async Task<IActionResult> ObtenerAjustesPendientes(int inventarioId)
         {
             try
@@ -269,7 +269,7 @@ namespace GestionLlantera.Web.Controllers
         /// Aplica todos los ajustes pendientes (se llama al completar inventario)
         /// </summary>
         [HttpPost]
-        [Route("AplicarAjustesPendientes/{inventarioId}")]
+        [Route("TomaInventario/AplicarAjustesPendientes/{inventarioId}")]
         public async Task<IActionResult> AplicarAjustesPendientes(int inventarioId)
         {
             try
@@ -647,6 +647,82 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogError(ex, "❌ Error al obtener ID del usuario");
                 return 1; // Fallback
+            }
+        }
+
+        /// <summary>
+        /// Elimina un ajuste pendiente específico
+        /// </summary>
+        [HttpDelete]
+        [Route("TomaInventario/EliminarAjustePendiente/{ajusteId}")]
+        public async Task<IActionResult> EliminarAjustePendiente(int ajusteId)
+        {
+            try
+            {
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _ajustesInventarioService.EliminarAjustePendienteAsync(ajusteId, token);
+
+                if (resultado)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Ajuste eliminado exitosamente",
+                        ajusteId = ajusteId
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "No se pudo eliminar el ajuste" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar ajuste pendiente {AjusteId}", ajusteId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Completa un inventario
+        /// </summary>
+        [HttpPost]
+        [Route("TomaInventario/CompletarInventario/{inventarioId}")]
+        public async Task<IActionResult> CompletarInventario(int inventarioId)
+        {
+            try
+            {
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _tomaInventarioService.CompletarInventarioAsync(inventarioId, token);
+
+                if (resultado)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Inventario completado exitosamente",
+                        inventarioId = inventarioId
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "No se pudo completar el inventario" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al completar inventario {InventarioId}", inventarioId);
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
     }

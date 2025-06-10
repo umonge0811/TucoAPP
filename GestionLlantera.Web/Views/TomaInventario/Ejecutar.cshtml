@@ -138,6 +138,118 @@
         </div>
     </div>
 
+    <!-- Panel de ajustes pendientes -->
+    <div class="ajustes-pendientes-panel mb-4" id="ajustesPendientesPanel" style="display: none;">
+        <div class="dashboard-card">
+            <div class="card-header bg-warning text-dark">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Ajustes Pendientes
+                        <span class="badge bg-danger ms-2" id="contadorAjustesPendientes">0</span>
+                    </h3>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-dark btn-sm" id="btnActualizarAjustes">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Actualizar
+                        </button>
+                        <button class="btn btn-outline-dark btn-sm" id="btnToggleAjustes">
+                            <i class="bi bi-chevron-up me-1"></i>
+                            Ocultar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" id="contenidoAjustesPendientes">
+                <!-- Resumen estadístico -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card-mini">
+                            <div class="stat-icon-mini bg-info">
+                                <i class="bi bi-arrow-up-circle"></i>
+                            </div>
+                            <div class="stat-content-mini">
+                                <div class="stat-number-mini" id="totalEntradas">0</div>
+                                <div class="stat-label-mini">Entradas</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card-mini">
+                            <div class="stat-icon-mini bg-warning">
+                                <i class="bi bi-arrow-down-circle"></i>
+                            </div>
+                            <div class="stat-content-mini">
+                                <div class="stat-number-mini" id="totalSalidas">0</div>
+                                <div class="stat-label-mini">Salidas</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card-mini">
+                            <div class="stat-icon-mini bg-secondary">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                            <div class="stat-content-mini">
+                                <div class="stat-number-mini" id="totalAjustes">0</div>
+                                <div class="stat-label-mini">Ajustes</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card-mini">
+                            <div class="stat-icon-mini bg-success">
+                                <i class="bi bi-check2-circle"></i>
+                            </div>
+                            <div class="stat-content-mini">
+                                <div class="stat-number-mini" id="totalCorrecciones">0</div>
+                                <div class="stat-label-mini">Correcciones</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lista de ajustes pendientes -->
+                <div class="ajustes-lista">
+                    <h5 class="mb-3">
+                        <i class="bi bi-list-check me-2"></i>
+                        Detalle de Ajustes Pendientes
+                    </h5>
+
+                    <!-- Estado vacío -->
+                    <div class="text-center py-4" id="ajustesVacio">
+                        <i class="bi bi-check-circle display-4 text-success mb-3"></i>
+                        <h5 class="text-muted">No hay ajustes pendientes</h5>
+                        <p class="text-muted mb-0">
+                            Todos los productos han sido contados sin discrepancias o los ajustes ya fueron registrados.
+                        </p>
+                    </div>
+
+                    <!-- Tabla de ajustes -->
+                    <div class="table-responsive" id="tablaAjustes" style="display: none;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="15%">Producto</th>
+                                    <th width="10%">Sistema</th>
+                                    <th width="10%">Físico</th>
+                                    <th width="10%">Diferencia</th>
+                                    <th width="15%">Tipo Ajuste</th>
+                                    <th width="25%">Motivo</th>
+                                    <th width="10%">Final</th>
+                                    <th width="5%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAjustesBody">
+                                <!-- Los ajustes se cargarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Panel de búsqueda y filtros -->
     <div class="search-panel mb-4">
         <div class="dashboard-card">
@@ -254,16 +366,20 @@
                 <!-- Vista de lista (por defecto) -->
                 <div class="productos-lista" id="productosLista" style="display: none;">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Imagen</th>
-                                    <th>Producto</th>
-                                    <th>Sistema</th>
-                                    <th>Físico</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
+                                    <th width="5%" class="text-center">#</th>
+                                    <th width="8%" class="text-center">Imagen</th>
+                                    <th width="25%">Producto</th>
+                                    <th width="8%" class="text-center">Sistema</th>
+                                    <th width="8%" class="text-center">Físico</th>
+                                    <th width="8%" class="text-center">Diferencia</th>
+                                    <th width="15%" class="text-center">Estado</th>
+                                    <th width="20%" class="text-center">Acciones</th>
+                                    <th width="3%" class="text-center">
+                                        <i class="bi bi-gear" data-bs-toggle="tooltip" title="Ajustes pendientes"></i>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody id="tablaProductosBody">
@@ -272,7 +388,6 @@
                         </table>
                     </div>
                 </div>
-
                 <!-- Vista de tarjetas (móvil) -->
                 <div class="productos-tarjetas" id="productosTarjetas" style="display: none;">
                     <div class="row g-3" id="contenedorTarjetas">
@@ -295,34 +410,171 @@
             </div>
         </div>
     </div>
+
+    <!-- Panel de finalización del inventario -->
+    <div class="finalizacion-panel mt-4" id="finalizacionPanel" style="display: none;">
+        <div class="dashboard-card border-success">
+            <div class="card-header bg-success text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Finalizar Inventario
+                    </h3>
+                    <span class="badge bg-light text-success" id="estadoFinalizacion">
+                        <i class="bi bi-hourglass-split me-1"></i>
+                        Listo para finalizar
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Resumen final -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-8">
+                        <h5 class="text-success mb-3">
+                            <i class="bi bi-clipboard-check me-2"></i>
+                            Resumen de la Toma de Inventario
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-sm-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>📦 Total de productos:</span>
+                                    <strong id="resumenTotalProductos">-</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>✅ Productos contados:</span>
+                                    <strong class="text-success" id="resumenProductosContados">-</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>⚠️ Con discrepancias:</span>
+                                    <strong class="text-warning" id="resumenDiscrepancias">-</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="d-flex justify-content-between">
+                                    <span>🔄 Ajustes pendientes:</span>
+                                    <strong class="text-primary" id="resumenAjustesPendientes">-</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="progress-circle-container">
+                            <div class="progress-circle">
+                                <span id="porcentajeCompletoFinal">0%</span>
+                            </div>
+                            <p class="text-muted mt-2">Progreso Completado</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas y validaciones -->
+                <div class="alertas-finalizacion mb-4">
+                    <!-- Alerta de productos pendientes -->
+                    <div class="alert alert-warning" id="alertaProductosPendientes" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <div>
+                                <strong>Atención:</strong> Aún hay <span id="cantidadPendientes">0</span> productos sin contar.
+                                <br><small>Debes contar todos los productos antes de finalizar el inventario.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerta de ajustes pendientes -->
+                    <div class="alert alert-info" id="alertaAjustesPendientes" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <div>
+                                <strong>Información:</strong> Se aplicarán <span id="cantidadAjustes">0</span> ajustes al stock del sistema.
+                                <br><small>Esta acción es irreversible. Revisa los ajustes antes de continuar.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alerta de éxito -->
+                    <div class="alert alert-success" id="alertaListoParaFinalizar" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle me-2"></i>
+                            <div>
+                                <strong>¡Perfecto!</strong> Todos los productos han sido contados.
+                                <br><small>El inventario está listo para ser finalizado.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones de finalización -->
+                <div class="acciones-finalizacion">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary w-100" id="btnVerResumenCompleto">
+                                <i class="bi bi-file-text me-2"></i>
+                                Ver Resumen Completo
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-warning w-100" id="btnExportarInventario">
+                                <i class="bi bi-download me-2"></i>
+                                Exportar Inventario
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button class="btn btn-success btn-lg w-100" id="btnFinalizarInventario" disabled>
+                                <span class="normal-state">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    Finalizar Inventario y Aplicar Ajustes
+                                </span>
+                                <span class="loading-state" style="display: none;">
+                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                    Finalizando inventario...
+                                </span>
+                            </button>
+                            <small class="text-muted d-block text-center mt-2">
+                                <i class="bi bi-shield-check me-1"></i>
+                                Esta acción aplicará todos los ajustes pendientes al stock del sistema
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Modal para ajuste de stock en toma de inventario -->
-<div class="modal fade" id="ajusteStockInventarioModal" tabindex="-1" aria-labelledby="ajusteStockInventarioModalLabel" aria-hidden="true">
+<!-- Modal para crear ajuste pendiente -->
+<div class="modal fade" id="ajustePendienteModal" tabindex="-1" aria-labelledby="ajustePendienteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="ajusteStockInventarioModalLabel">
-                    <i class="bi bi-tools me-2"></i>
-                    Ajustar Discrepancia en Inventario
+                <h5 class="modal-title" id="ajustePendienteModalLabel">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Registrar Ajuste Pendiente
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="ajusteStockInventarioForm">
+                <form id="ajustePendienteForm">
                     <!-- Campo oculto para el ID del producto -->
-                    <input type="hidden" id="productoIdAjuste" value="">
+                    <input type="hidden" id="productoIdAjustePendiente" value="">
+                    <input type="hidden" id="inventarioIdAjustePendiente" value="@Model.InventarioProgramadoId">
 
                     <!-- Información del producto y discrepancia -->
-                    <div class="alert alert-warning mb-3" id="infoDiscrepanciaAjuste">
+                    <div class="alert alert-warning mb-3" id="infoDiscrepanciaPendiente">
                         <div class="d-flex align-items-start">
                             <i class="bi bi-exclamation-triangle me-2 mt-1"></i>
                             <div>
-                                <strong>Producto:</strong> <span id="nombreProductoAjuste">-</span><br>
-                                <strong>Stock en Sistema:</strong> <span id="stockSistemaAjuste">-</span> unidades<br>
-                                <strong>Cantidad Física Contada:</strong> <span id="stockFisicoAjuste">-</span> unidades<br>
+                                <strong>Producto:</strong> <span id="nombreProductoAjustePendiente">-</span><br>
+                                <strong>Stock en Sistema:</strong> <span id="stockSistemaAjustePendiente">-</span> unidades<br>
+                                <strong>Cantidad Física Contada:</strong> <span id="stockFisicoAjustePendiente">-</span> unidades<br>
                                 <strong>Discrepancia:</strong>
-                                <span id="discrepanciaAjuste" class="fw-bold">-</span> unidades
+                                <span id="discrepanciaAjustePendiente" class="fw-bold">-</span> unidades
                             </div>
                         </div>
                     </div>
@@ -330,92 +582,106 @@
                     <div class="row">
                         <!-- Tipo de ajuste -->
                         <div class="col-md-6 mb-3">
-                            <label for="tipoAjusteInventario" class="form-label fw-bold">
+                            <label for="tipoAjustePendiente" class="form-label fw-bold">
                                 <i class="bi bi-gear me-1"></i>
-                                Acción a Realizar <span class="text-danger">*</span>
+                                Tipo de Ajuste <span class="text-danger">*</span>
                             </label>
-                            <select class="form-select" id="tipoAjusteInventario" required>
-                                <option value="">Seleccione la acción</option>
-                                <option value="ajustar-sistema">
-                                    🔧 Ajustar stock del sistema al conteo físico
-                                </option>
-                                <option value="reconteo">
-                                    🔄 Solicitar reconteo del producto
-                                </option>
-                                <option value="verificacion">
-                                    ✓ Marcar como verificado (mantener discrepancia)
-                                </option>
+                            <select class="form-select" id="tipoAjustePendiente" required>
+                                <option value="">Seleccione el tipo</option>
+                                <option value="ENTRADA">📦 Entrada de Stock</option>
+                                <option value="SALIDA">📤 Salida de Stock</option>
+                                <option value="AJUSTE_SISTEMA">🔧 Ajuste de Sistema</option>
+                                <option value="CORRECCION_CONTEO">🔄 Corrección de Conteo</option>
                             </select>
                             <div class="form-text">
                                 <small>
-                                    <strong>Ajustar sistema:</strong> Cambia el stock del sistema al conteo físico<br>
-                                    <strong>Reconteo:</strong> Marca para contar nuevamente<br>
-                                    <strong>Verificado:</strong> Acepta la discrepancia como válida
+                                    <strong>Entrada:</strong> Aumentar stock<br>
+                                    <strong>Salida:</strong> Reducir stock<br>
+                                    <strong>Ajuste Sistema:</strong> Corregir error del sistema<br>
+                                    <strong>Corrección:</strong> Error en el conteo físico
                                 </small>
                             </div>
                         </div>
 
-                        <!-- Cantidad (solo para ajuste manual) -->
-                        <div class="col-md-6 mb-3" id="containerCantidadAjuste" style="display: none;">
-                            <label for="cantidadAjusteInventario" class="form-label fw-bold">
+                        <!-- Cantidad final propuesta -->
+                        <div class="col-md-6 mb-3">
+                            <label for="cantidadFinalPropuesta" class="form-label fw-bold">
                                 <i class="bi bi-123 me-1"></i>
-                                Cantidad Final <span class="text-danger">*</span>
+                                Cantidad Final Propuesta
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text">
                                     <i class="bi bi-hash"></i>
                                 </span>
-                                <input type="number" class="form-control" id="cantidadAjusteInventario" min="0" max="99999" placeholder="Cantidad final en sistema">
+                                <input type="number"
+                                       class="form-control"
+                                       id="cantidadFinalPropuesta"
+                                       min="0"
+                                       max="99999"
+                                       readonly>
                                 <span class="input-group-text">unidades</span>
+                            </div>
+                            <div class="form-text">
+                                <small>Se calculará automáticamente basado en el conteo físico</small>
                             </div>
                         </div>
                     </div>
 
                     <!-- Motivo del ajuste -->
                     <div class="mb-3">
-                        <label for="motivoAjusteInventario" class="form-label fw-bold">
+                        <label for="motivoAjustePendiente" class="form-label fw-bold">
                             <i class="bi bi-chat-text me-1"></i>
                             Motivo del Ajuste <span class="text-danger">*</span>
                         </label>
-                        <textarea class="form-control" id="motivoAjusteInventario" rows="3" maxlength="500" required
-                                  placeholder="Explique el motivo de la discrepancia y la acción tomada..."></textarea>
+                        <textarea class="form-control"
+                                  id="motivoAjustePendiente"
+                                  rows="3"
+                                  maxlength="500"
+                                  required
+                                  placeholder="Explique el motivo de la discrepancia y la justificación del ajuste..."></textarea>
                         <div class="form-text">
-                            <small>Este comentario se guardará en el historial del inventario. Máximo 500 caracteres.</small>
+                            <small>Este motivo será revisado al finalizar el inventario. Máximo 500 caracteres.</small>
                         </div>
                     </div>
 
-                    <!-- Vista previa del ajuste -->
-                    <div class="card border-warning mb-3" id="vistaPreviaAjuste" style="display: none;">
-                        <div class="card-header bg-warning text-dark">
+                    <!-- Vista previa del ajuste pendiente -->
+                    <div class="card border-info mb-3" id="vistaPreviaAjustePendiente">
+                        <div class="card-header bg-info text-white">
                             <h6 class="mb-0">
                                 <i class="bi bi-eye me-2"></i>
-                                Vista Previa del Ajuste
+                                Vista Previa del Ajuste Pendiente
                             </h6>
                         </div>
                         <div class="card-body">
                             <div class="row text-center">
                                 <div class="col-3">
                                     <div class="border-end">
-                                        <div class="h6 mb-1" id="stockActualPreviewAjuste">-</div>
+                                        <div class="h6 mb-1" id="stockActualPreview">-</div>
                                         <small class="text-muted">Stock Actual</small>
                                     </div>
                                 </div>
                                 <div class="col-3">
                                     <div class="border-end">
-                                        <div class="h6 mb-1 text-info" id="stockFisicoPreviewAjuste">-</div>
+                                        <div class="h6 mb-1 text-info" id="conteoFisicoPreview">-</div>
                                         <small class="text-muted">Conteo Físico</small>
                                     </div>
                                 </div>
                                 <div class="col-3">
                                     <div class="border-end">
-                                        <div class="h6 mb-1 text-warning" id="accionPreviewAjuste">-</div>
-                                        <small class="text-muted">Acción</small>
+                                        <div class="h6 mb-1 text-warning" id="tipoAjustePreview">-</div>
+                                        <small class="text-muted">Tipo Ajuste</small>
                                     </div>
                                 </div>
                                 <div class="col-3">
-                                    <div class="h6 mb-1 text-success" id="stockFinalPreviewAjuste">-</div>
-                                    <small class="text-muted">Stock Final</small>
+                                    <div class="h6 mb-1 text-success" id="stockFinalPreview">-</div>
+                                    <small class="text-muted">Stock Propuesto</small>
                                 </div>
+                            </div>
+                            <div class="mt-2 text-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Este ajuste se aplicará al finalizar el inventario
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -425,20 +691,19 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x-lg me-2"></i>Cancelar
                 </button>
-                <button type="button" class="btn btn-warning" id="guardarAjusteInventarioBtn">
+                <button type="button" class="btn btn-warning" id="guardarAjustePendienteBtn">
                     <span class="normal-state">
-                        <i class="bi bi-check-lg me-2"></i>Aplicar Ajuste
+                        <i class="bi bi-clock-history me-2"></i>Registrar Ajuste Pendiente
                     </span>
                     <span class="loading-state" style="display: none;">
                         <span class="spinner-border spinner-border-sm me-2"></span>
-                        Aplicando...
+                        Registrando...
                     </span>
                 </button>
             </div>
         </div>
     </div>
 </div>
-
 <!-- Modal para registrar conteo -->
 <div class="modal fade" id="conteoModal" tabindex="-1" aria-labelledby="conteoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
