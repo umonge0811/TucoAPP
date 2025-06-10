@@ -319,6 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
             submitButton.disabled = false;
         }
     }
+
     // Configurar botones de iniciar inventario
     iniciarInventarioBtns.forEach(btn => {
         btn.addEventListener('click', function () {
@@ -570,6 +571,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
     // Validación para fechas
     const fechaInicio = document.getElementById('NuevoInventario_FechaInicio');
     const fechaFin = document.getElementById('NuevoInventario_FechaFin');

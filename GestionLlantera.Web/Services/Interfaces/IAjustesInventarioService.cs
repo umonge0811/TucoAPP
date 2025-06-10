@@ -33,5 +33,13 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// Aplica todos los ajustes pendientes (se llama al completar inventario)
         /// </summary>
         Task<bool> AplicarAjustesPendientesAsync(int inventarioId, string jwtToken);
+
+        /// <summary>
+        /// Actualiza un ajuste pendiente existente
+        /// </summary>
+        Task<bool> ActualizarAjustePendienteAsync(int ajusteId, SolicitudAjusteInventarioDTO solicitud, string jwtToken);
+
+
+
     }
 }

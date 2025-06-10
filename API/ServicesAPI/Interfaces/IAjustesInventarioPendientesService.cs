@@ -45,8 +45,12 @@ namespace API.ServicesAPI.Interfaces
         Task<bool> AplicarAjustesPendientesAsync(int inventarioProgramadoId);
 
         /// <summary>
-        /// Valida que un ajuste sea coherente antes de crearlo
+        /// Actualiza un ajuste pendiente existente (solo si está en estado Pendiente)
         /// </summary>
-        Task<(bool esValido, string mensaje)> ValidarAjusteAsync(SolicitudAjusteInventarioDTO solicitud);
+        Task<bool> ActualizarAjustePendienteAsync(int ajusteId, SolicitudAjusteInventarioDTO solicitud);
+
+        // ✅ DECLARACIÓN CORREGIDA
+        Task<(bool esValido, string mensaje)> ValidarAjusteAsync(SolicitudAjusteInventarioDTO solicitud, int? ajusteIdExcluir = null);
+
     }
 }

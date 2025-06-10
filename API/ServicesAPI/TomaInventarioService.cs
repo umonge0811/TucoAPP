@@ -300,6 +300,8 @@ namespace API.Services
                 return new EstadisticasInventarioDTO();
             }
         }
+
+
     }
 
 //    // =====================================

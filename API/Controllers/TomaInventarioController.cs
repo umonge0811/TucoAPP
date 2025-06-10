@@ -119,6 +119,7 @@ namespace API.Controllers
             }
         }
 
+
         /// <summary>
         /// Obtiene todos los ajustes pendientes de un inventario específico
         /// </summary>
@@ -292,7 +293,75 @@ namespace API.Controllers
         }
 
 
+        /// <summary>
+        /// Actualiza un ajuste pendiente específico
+        /// </summary>
+        [HttpPut("ajustes/{ajusteId}")]
+        [Authorize]
+        public async Task<IActionResult> ActualizarAjustePendiente(int ajusteId, [FromBody] SolicitudAjusteInventarioDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("✏️ === ACTUALIZANDO AJUSTE PENDIENTE ===");
+                _logger.LogInformation("✏️ Ajuste ID: {AjusteId}, Producto: {ProductoId}", ajusteId, solicitud.ProductoId);
 
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // ✅ OBTENER ID DEL USUARIO DESDE EL TOKEN
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { success = false, message = "No se pudo identificar el usuario" });
+                }
+
+                solicitud.UsuarioId = userId;
+
+                // ✅ ACTUALIZAR EL AJUSTE PENDIENTE
+                var actualizado = await _ajustesService.ActualizarAjustePendienteAsync(ajusteId, solicitud);
+
+                if (actualizado)
+                {
+                    _logger.LogInformation("✅ Ajuste pendiente actualizado con ID: {AjusteId}", ajusteId);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Ajuste pendiente actualizado exitosamente",
+                        data = new
+                        {
+                            ajusteId = ajusteId,
+                            tipoAjuste = solicitud.TipoAjuste,
+                            productoId = solicitud.ProductoId,
+                            cantidadFinalPropuesta = solicitud.CantidadFinalPropuesta ?? solicitud.CantidadFisicaContada,
+                            timestamp = DateTime.Now
+                        }
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ No se pudo actualizar el ajuste pendiente {AjusteId}", ajusteId);
+                    return BadRequest(new { success = false, message = "No se pudo actualizar el ajuste pendiente" });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning("Solicitud inválida: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning("Operación no permitida: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al actualizar ajuste pendiente");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
 
 
         // =====================================

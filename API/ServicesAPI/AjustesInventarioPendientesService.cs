@@ -36,7 +36,7 @@ namespace API.ServicesAPI
                     solicitud.InventarioProgramadoId, solicitud.ProductoId, solicitud.TipoAjuste);
 
                 // ✅ VALIDAR LA SOLICITUD
-                var (esValido, mensajeValidacion) = await ValidarAjusteAsync(solicitud);
+                var (esValido, mensajeValidacion) = await ValidarAjusteAsync(solicitud, null);
                 if (!esValido)
                 {
                     throw new ArgumentException($"Ajuste no válido: {mensajeValidacion}");
@@ -95,6 +95,101 @@ namespace API.ServicesAPI
             {
                 _logger.LogError(ex, "❌ Error creando ajuste pendiente");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Actualiza un ajuste pendiente existente (solo si está en estado Pendiente)
+        /// </summary>
+        public async Task<bool> ActualizarAjustePendienteAsync(int ajusteId, SolicitudAjusteInventarioDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("✏️ === ACTUALIZANDO AJUSTE PENDIENTE ===");
+                _logger.LogInformation("✏️ Ajuste ID: {AjusteId}, Producto: {ProductoId}, Nuevo Tipo: {Tipo}",
+                    ajusteId, solicitud.ProductoId, solicitud.TipoAjuste);
+
+                // ✅ BUSCAR EL AJUSTE EXISTENTE
+                var ajusteExistente = await _context.AjustesInventarioPendientes
+                    .FirstOrDefaultAsync(a => a.AjusteId == ajusteId);
+
+                if (ajusteExistente == null)
+                {
+                    _logger.LogWarning("⚠️ Ajuste {AjusteId} no encontrado para actualizar", ajusteId);
+                    return false;
+                }
+
+                // ✅ VERIFICAR QUE ESTÉ EN ESTADO PENDIENTE
+                if (ajusteExistente.Estado != "Pendiente")
+                {
+                    _logger.LogWarning("⚠️ No se puede actualizar ajuste {AjusteId} en estado {Estado}",
+                        ajusteId, ajusteExistente.Estado);
+                    throw new InvalidOperationException($"No se puede actualizar un ajuste en estado '{ajusteExistente.Estado}'");
+                }
+
+                // ✅ VERIFICAR QUE PERTENECE AL MISMO INVENTARIO Y PRODUCTO
+                if (ajusteExistente.InventarioProgramadoId != solicitud.InventarioProgramadoId ||
+                    ajusteExistente.ProductoId != solicitud.ProductoId)
+                {
+                    throw new InvalidOperationException("El ajuste no corresponde al inventario o producto especificado");
+                }
+
+                // ✅ VALIDAR LA NUEVA SOLICITUD
+                // ✅ LÍNEA CORREGIDA (excluye el ajuste actual)
+                var (esValido, mensajeValidacion) = await ValidarAjusteAsync(solicitud, ajusteId);
+                if (!esValido)
+                {
+                    throw new ArgumentException($"Ajuste actualizado no válido: {mensajeValidacion}");
+                }
+
+                // ✅ VERIFICAR QUE EL INVENTARIO SIGA EN PROGRESO
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == solicitud.InventarioProgramadoId);
+
+                if (inventario == null || inventario.Estado != "En Progreso")
+                {
+                    throw new InvalidOperationException($"No se pueden actualizar ajustes en un inventario en estado '{inventario?.Estado ?? "NULL"}'");
+                }
+
+                // ✅ DETERMINAR LA NUEVA CANTIDAD FINAL PROPUESTA
+                int cantidadFinalPropuesta = solicitud.CantidadFinalPropuesta ?? solicitud.CantidadFisicaContada;
+
+                // ✅ REGISTRAR CAMBIOS EN LOG
+                _logger.LogInformation("📝 Cambios detectados:");
+                if (ajusteExistente.TipoAjuste != solicitud.TipoAjuste)
+                {
+                    _logger.LogInformation("📝 Tipo: {TipoAnterior} → {TipoNuevo}",
+                        ajusteExistente.TipoAjuste, solicitud.TipoAjuste);
+                }
+                if (ajusteExistente.CantidadFinalPropuesta != cantidadFinalPropuesta)
+                {
+                    _logger.LogInformation("📝 Cantidad Final: {CantidadAnterior} → {CantidadNueva}",
+                        ajusteExistente.CantidadFinalPropuesta, cantidadFinalPropuesta);
+                }
+                if (ajusteExistente.MotivoAjuste != solicitud.MotivoAjuste)
+                {
+                    _logger.LogInformation("📝 Motivo actualizado: {MotivoNuevo}", solicitud.MotivoAjuste);
+                }
+
+                // ✅ ACTUALIZAR EL AJUSTE EXISTENTE
+                ajusteExistente.TipoAjuste = solicitud.TipoAjuste;
+                ajusteExistente.CantidadSistemaOriginal = solicitud.CantidadSistemaOriginal; // Actualizar por si cambió
+                ajusteExistente.CantidadFisicaContada = solicitud.CantidadFisicaContada; // Actualizar por si cambió
+                ajusteExistente.CantidadFinalPropuesta = cantidadFinalPropuesta;
+                ajusteExistente.MotivoAjuste = solicitud.MotivoAjuste;
+                ajusteExistente.UsuarioId = solicitud.UsuarioId; // Usuario que hace la actualización
+                                                                 // NO cambiar FechaCreacion, pero podrías agregar FechaModificacion si quieres
+
+                // ✅ GUARDAR CAMBIOS
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Ajuste {AjusteId} actualizado correctamente", ajusteId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error actualizando ajuste pendiente {AjusteId}", ajusteId);
+                throw; // Re-lanzar para que el controlador maneje el error
             }
         }
 
@@ -363,9 +458,9 @@ namespace API.ServicesAPI
         }
 
         /// <summary>
-        /// Valida que un ajuste sea coherente antes de crearlo
+        /// Valida que un ajuste sea coherente antes de crearlo o actualizarlo
         /// </summary>
-        public async Task<(bool esValido, string mensaje)> ValidarAjusteAsync(SolicitudAjusteInventarioDTO solicitud)
+        public async Task<(bool esValido, string mensaje)> ValidarAjusteAsync(SolicitudAjusteInventarioDTO solicitud, int? ajusteIdExcluir = null)
         {
             // Validaciones básicas
             if (solicitud.CantidadSistemaOriginal < 0)
@@ -396,12 +491,20 @@ namespace API.ServicesAPI
                     return (false, $"Tipo de ajuste '{solicitud.TipoAjuste}' no válido");
             }
 
-            // Verificar que no haya ajustes duplicados recientes (últimos 5 minutos)
-            var ajusteReciente = await _context.AjustesInventarioPendientes
-                .AnyAsync(a => a.InventarioProgramadoId == solicitud.InventarioProgramadoId &&
-                              a.ProductoId == solicitud.ProductoId &&
-                              a.UsuarioId == solicitud.UsuarioId &&
-                              a.FechaCreacion > DateTime.Now.AddMinutes(-5));
+            // ✅ VERIFICAR AJUSTES DUPLICADOS - CORREGIDO PARA ACTUALIZACIÓN
+            var queryAjustesRecientes = _context.AjustesInventarioPendientes
+                .Where(a => a.InventarioProgramadoId == solicitud.InventarioProgramadoId &&
+                            a.ProductoId == solicitud.ProductoId &&
+                            a.UsuarioId == solicitud.UsuarioId &&
+                            a.FechaCreacion > DateTime.Now.AddMinutes(-5));
+
+            // ✅ EXCLUIR EL AJUSTE ACTUAL SI SE ESTÁ ACTUALIZANDO
+            if (ajusteIdExcluir.HasValue)
+            {
+                queryAjustesRecientes = queryAjustesRecientes.Where(a => a.AjusteId != ajusteIdExcluir.Value);
+            }
+
+            var ajusteReciente = await queryAjustesRecientes.AnyAsync();
 
             if (ajusteReciente)
                 return (false, "Ya existe un ajuste reciente para este producto. Espere unos minutos antes de crear otro.");

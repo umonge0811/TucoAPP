@@ -234,6 +234,81 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
+        /// Actualiza un ajuste pendiente específico
+        /// </summary>
+        [HttpPut]
+        [Route("TomaInventario/ActualizarAjustePendiente/{ajusteId}")]
+        public async Task<IActionResult> ActualizarAjustePendiente(int ajusteId, [FromBody] SolicitudAjusteInventarioDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("✏️ === ACTUALIZANDO AJUSTE PENDIENTE DESDE WEB ===");
+                _logger.LogInformation("✏️ Ajuste ID: {AjusteId}, Producto: {ProductoId}", ajusteId, solicitud.ProductoId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ VALIDACIONES DE ENTRADA
+                if (ajusteId <= 0 || solicitud.ProductoId <= 0)
+                {
+                    return Json(new { success = false, message = "IDs de ajuste o producto inválidos" });
+                }
+
+                if (string.IsNullOrEmpty(solicitud.TipoAjuste))
+                {
+                    return Json(new { success = false, message = "Debe especificar el tipo de ajuste" });
+                }
+
+                if (string.IsNullOrEmpty(solicitud.MotivoAjuste) || solicitud.MotivoAjuste.Length < 10)
+                {
+                    return Json(new { success = false, message = "El motivo debe tener al menos 10 caracteres" });
+                }
+
+                if (solicitud.CantidadFisicaContada < 0)
+                {
+                    return Json(new { success = false, message = "La cantidad física no puede ser negativa" });
+                }
+
+                // ✅ ACTUALIZAR EL AJUSTE PENDIENTE
+                var resultado = await _ajustesInventarioService.ActualizarAjustePendienteAsync(ajusteId, solicitud, token);
+
+                if (resultado)
+                {
+                    _logger.LogInformation("✅ Ajuste pendiente actualizado exitosamente");
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Ajuste pendiente actualizado exitosamente.",
+                        data = new
+                        {
+                            ajusteId = ajusteId,
+                            inventarioId = solicitud.InventarioProgramadoId,
+                            productoId = solicitud.ProductoId,
+                            tipoAjuste = solicitud.TipoAjuste,
+                            cantidadFinalPropuesta = solicitud.CantidadFinalPropuesta,
+                            timestamp = DateTime.Now
+                        }
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error al actualizar ajuste pendiente");
+                    return Json(new { success = false, message = "Error al actualizar el ajuste pendiente" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al actualizar ajuste pendiente");
+                return Json(new { success = false, message = $"Error interno: {ex.Message}" });
+            }
+        }
+
+
+        /// <summary>
         /// Obtiene los ajustes pendientes de un inventario
         /// </summary>
         [HttpGet]

@@ -63,6 +63,110 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        /// <summary>
+        /// Actualiza un ajuste pendiente existente
+        /// </summary>
+        public async Task<bool> ActualizarAjustePendienteAsync(int ajusteId, SolicitudAjusteInventarioDTO solicitud, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("✏️ === ACTUALIZANDO AJUSTE PENDIENTE (WEB SERVICE) ===");
+                _logger.LogInformation("✏️ Ajuste ID: {AjusteId}, Producto: {ProductoId}", ajusteId, solicitud.ProductoId);
+
+                // ✅ CONFIGURAR TOKEN JWT
+                ConfigurarAutenticacion(jwtToken);
+
+                // ✅ SERIALIZAR SOLICITUD
+                var jsonContent = JsonConvert.SerializeObject(solicitud, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON actualización enviado: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // ✅ ENVIAR A LA API (USAR PUT)
+                var response = await _httpClient.PutAsync($"api/TomaInventario/ajustes/{ajusteId}", content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📡 Respuesta actualización API: Status={Status}, Content={Content}",
+                    response.StatusCode, responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error en API actualizando: {StatusCode} - {Content}", response.StatusCode, responseContent);
+                    return false;
+                }
+
+                // ✅ DESERIALIZACIÓN SEGURA - CORREGIDA
+                try
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                    // ✅ CONVERSIÓN EXPLÍCITA Y SEGURA
+                    bool success = false;
+                    if (resultado?.success != null)
+                    {
+                        // Manejar diferentes tipos de valores que puede devolver la API
+                        if (resultado.success is bool successBool)
+                        {
+                            success = successBool;
+                        }
+                        else if (resultado.success is string successString)
+                        {
+                            success = bool.TryParse(successString, out bool parsedBool) && parsedBool;
+                        }
+                        else
+                        {
+                            // Intentar convertir usando ToString() y luego Parse
+                            var successValue = resultado.success.ToString();
+                            success = bool.TryParse(successValue, out bool parsedValue) && parsedValue;
+                        }
+                    }
+
+                    if (success)
+                    {
+                        _logger.LogInformation("✅ Ajuste actualizado exitosamente");
+                    }
+                    else
+                    {
+                        _logger.LogError("❌ La API reportó fallo al actualizar ajuste");
+                    }
+
+                    return success;
+                }
+                catch (JsonException jsonEx)
+                {
+                    _logger.LogError(jsonEx, "❌ Error deserializando respuesta JSON: {Content}", responseContent);
+
+                    // ✅ FALLBACK: Si la respuesta no es JSON válido, verificar por texto
+                    if (responseContent.Contains("\"success\":true") || responseContent.Contains("success: true"))
+                    {
+                        _logger.LogInformation("✅ Actualización exitosa detectada por análisis de texto");
+                        return true;
+                    }
+
+                    return false;
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "💥 Error de conexión al actualizar ajuste pendiente");
+                return false;
+            }
+            catch (TaskCanceledException taskEx)
+            {
+                _logger.LogError(taskEx, "💥 Timeout al actualizar ajuste pendiente");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error general al actualizar ajuste pendiente en servicio web");
+                return false;
+            }
+        }
+
         public async Task<List<AjusteInventarioPendienteDTO>> ObtenerAjustesPendientesAsync(int inventarioId, string jwtToken)
         {
             try

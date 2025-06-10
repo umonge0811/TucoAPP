@@ -13,5 +13,6 @@ namespace API.Services.Interfaces  // ← CORREGIDO: API.Services.Interfaces (no
         Task<bool> UsuarioTieneAccesoAsync(int inventarioId, int usuarioId);
         Task<List<InventarioProgramadoDTO>> ObtenerInventariosAsignadosAsync(int usuarioId);
         Task<EstadisticasInventarioDTO> ObtenerEstadisticasAsync(int inventarioId);
+
     }
 }
