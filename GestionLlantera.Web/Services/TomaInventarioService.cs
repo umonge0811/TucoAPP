@@ -9,6 +9,22 @@ using System.Net.Http.Headers;
 using System.Text;
 using Tuco.Clases.DTOs.Inventario;
 
+// ✅ CLASE PARA DESERIALIZAR LA RESPUESTA DEL API
+public class ApiResponse
+{
+    public List<DetalleInventarioDTO> productos { get; set; } = new List<DetalleInventarioDTO>();
+    public ApiEstadisticas estadisticas { get; set; } = new ApiEstadisticas();
+}
+
+public class ApiEstadisticas
+{
+    public int total { get; set; }
+    public int contados { get; set; }
+    public int pendientes { get; set; }
+    public int discrepancias { get; set; }
+    public double porcentajeProgreso { get; set; }
+}
+
 namespace GestionLlantera.Web.Services
 {
     /// <summary>
@@ -116,6 +132,9 @@ namespace GestionLlantera.Web.Services
 
                 var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/productos");
 
+                // ✅ DEBUGGING DETALLADO
+                _logger.LogInformation("📡 Respuesta de la API: Status={Status}", response.StatusCode);
+
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
@@ -125,16 +144,20 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📄 Contenido recibido de la API: {Content}", content);
 
                 // ✅ LA API DEVUELVE UN OBJETO CON productos Y estadisticas
-                var responseData = JsonConvert.DeserializeObject<dynamic>(content);
+                var responseObject = JsonConvert.DeserializeObject<ApiResponse>(content);
 
-                if (responseData?.productos != null)
+                _logger.LogInformation("📄 Respuesta deserializada - Productos: {Count}",
+                    responseObject?.productos?.Count ?? 0);
+
+                if (responseObject?.productos != null)
                 {
-                    var productos = JsonConvert.DeserializeObject<List<DetalleInventarioDTO>>(
-                        responseData.productos.ToString());
+                    _logger.LogInformation("✅ Se obtuvieron {Count} productos del API",
+                        responseObject.productos.Count);
 
-                    return productos ?? new List<DetalleInventarioDTO>();
+                    return responseObject.productos;
                 }
 
                 _logger.LogWarning("⚠️ No se encontraron productos en la respuesta");
@@ -146,7 +169,6 @@ namespace GestionLlantera.Web.Services
                 return null;
             }
         }
-
         /// <summary>
         /// Busca un producto específico en el inventario
         /// </summary>

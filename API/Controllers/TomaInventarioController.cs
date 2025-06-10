@@ -1,14 +1,15 @@
 ﻿using API.Data;
 using API.Extensions; // ✅ CONSISTENTE CON TU ESTILO
+using API.Services.Interfaces;
 using API.ServicesAPI.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using tuco.Clases.Models;
-using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.DTOs;
+using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
-using API.Services.Interfaces;
 
 namespace API.Controllers
 {
@@ -27,12 +28,14 @@ namespace API.Controllers
         private readonly IPermisosService _permisosService;
         private readonly INotificacionService _notificacionService;
         private readonly ILogger<TomaInventarioController> _logger;
+        private readonly IAjustesInventarioPendientesService _ajustesService;
 
         public TomaInventarioController(
             TucoContext context,
             ITomaInventarioService tomaInventarioService,
             IPermisosService permisosService,
             INotificacionService notificacionService,
+            IAjustesInventarioPendientesService ajustesService,
             ILogger<TomaInventarioController> logger)
         {
             _context = context;
@@ -40,7 +43,326 @@ namespace API.Controllers
             _permisosService = permisosService;
             _notificacionService = notificacionService;
             _logger = logger;
+            _ajustesService = ajustesService;
         }
+
+        // =====================================
+        // MÉTODOS PARA AJUSTE DE INVENTARIOS
+        // =====================================
+
+        /// <summary>
+        /// Crea un ajuste pendiente para resolver discrepancias durante la toma de inventario
+        /// </summary>
+        [HttpPost("{inventarioId}/ajustar-discrepancia")]
+        [Authorize]
+        public async Task<IActionResult> CrearAjustePendiente(int inventarioId, [FromBody] SolicitudAjusteInventarioDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("📝 === AJUSTE PENDIENTE SOLICITADO ===");
+                _logger.LogInformation("📝 Inventario: {InventarioId}, Producto: {ProductoId}", inventarioId, solicitud.ProductoId);
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // ✅ VALIDAR QUE EL INVENTARIO ID COINCIDA
+                if (solicitud.InventarioProgramadoId != inventarioId)
+                {
+                    return BadRequest(new { success = false, message = "El ID del inventario no coincide" });
+                }
+
+                // ✅ OBTENER ID DEL USUARIO DESDE EL TOKEN
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { success = false, message = "No se pudo identificar el usuario" });
+                }
+
+                solicitud.UsuarioId = userId;
+
+                // ✅ CREAR EL AJUSTE PENDIENTE
+                var ajusteId = await _ajustesService.CrearAjustePendienteAsync(solicitud);
+
+                _logger.LogInformation("✅ Ajuste pendiente creado con ID: {AjusteId}", ajusteId);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Ajuste pendiente registrado exitosamente",
+                    data = new
+                    {
+                        ajusteId = ajusteId,
+                        tipoAjuste = solicitud.TipoAjuste,
+                        productoId = solicitud.ProductoId,
+                        diferencia = solicitud.CantidadFisicaContada - solicitud.CantidadSistemaOriginal,
+                        cantidadFinalPropuesta = solicitud.CantidadFinalPropuesta ?? solicitud.CantidadFisicaContada,
+                        timestamp = DateTime.Now
+                    }
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning("Solicitud inválida: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning("Operación no permitida: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al crear ajuste pendiente");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+
+        /// <summary>
+        /// Obtiene todos los ajustes pendientes de un inventario específico
+        /// </summary>
+        [HttpGet("{inventarioId}/ajustes")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerAjustesPendientes(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo ajustes pendientes para inventario {InventarioId}", inventarioId);
+
+                var ajustes = await _ajustesService.ObtenerAjustesPorInventarioAsync(inventarioId);
+
+                return Ok(new
+                {
+                    success = true,
+                    inventarioId = inventarioId,
+                    totalAjustes = ajustes.Count,
+                    ajustes = ajustes
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener ajustes del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene ajustes pendientes de un producto específico
+        /// </summary>
+        [HttpGet("{inventarioId}/productos/{productoId}/ajustes")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerAjustesProducto(int inventarioId, int productoId)
+        {
+            try
+            {
+                var ajustes = await _ajustesService.ObtenerAjustesPorProductoAsync(inventarioId, productoId);
+                var tienePendientes = await _ajustesService.TieneAjustesPendientesAsync(inventarioId, productoId);
+
+                return Ok(new
+                {
+                    success = true,
+                    productoId = productoId,
+                    tieneAjustesPendientes = tienePendientes,
+                    totalAjustes = ajustes.Count,
+                    ajustes = ajustes
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener ajustes del producto {ProductoId}", productoId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Elimina un ajuste pendiente específico
+        /// </summary>
+        [HttpDelete("ajustes/{ajusteId}")]
+        [Authorize]
+        public async Task<IActionResult> EliminarAjustePendiente(int ajusteId)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Eliminando ajuste pendiente {AjusteId}", ajusteId);
+
+                var eliminado = await _ajustesService.EliminarAjustePendienteAsync(ajusteId);
+
+                if (eliminado)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Ajuste eliminado exitosamente",
+                        ajusteId = ajusteId
+                    });
+                }
+                else
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = "Ajuste no encontrado o no se puede eliminar (ya fue aplicado)"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al eliminar ajuste {AjusteId}", ajusteId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene un resumen de todos los ajustes de un inventario
+        /// </summary>
+        [HttpGet("{inventarioId}/ajustes/resumen")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerResumenAjustes(int inventarioId)
+        {
+            try
+            {
+                var resumen = await _ajustesService.ObtenerResumenAjustesAsync(inventarioId);
+                return Ok(new
+                {
+                    success = true,
+                    inventarioId = inventarioId,
+                    resumen = resumen
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener resumen de ajustes");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// MÉTODO CRÍTICO: Aplica todos los ajustes pendientes al completar el inventario
+        /// Solo debe llamarse cuando se completa un inventario
+        /// </summary>
+        [HttpPost("{inventarioId}/aplicar-ajustes")]
+        [Authorize]
+        public async Task<IActionResult> AplicarAjustesPendientes(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔥 === OPERACIÓN CRÍTICA: APLICANDO AJUSTES ===");
+                _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioId);
+                _logger.LogInformation("🔥 Usuario: {Usuario}", User.Identity?.Name);
+
+                // ✅ AQUÍ PUEDES AGREGAR VALIDACIONES DE PERMISOS ESPECÍFICOS
+                // Por ejemplo, verificar que el usuario tenga permiso "Completar Inventario"
+
+                var aplicado = await _ajustesService.AplicarAjustesPendientesAsync(inventarioId);
+
+                if (aplicado)
+                {
+                    _logger.LogInformation("✅ === AJUSTES APLICADOS EXITOSAMENTE ===");
+                    _logger.LogInformation("✅ Inventario: {InventarioId}", inventarioId);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Todos los ajustes pendientes han sido aplicados al stock del sistema",
+                        inventarioId = inventarioId,
+                        fechaAplicacion = DateTime.Now,
+                        nota = "Los cambios en el stock son irreversibles"
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ No se pudieron aplicar los ajustes para inventario {InventarioId}", inventarioId);
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "No se pudieron aplicar los ajustes pendientes"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 ERROR CRÍTICO al aplicar ajustes para inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error crítico al aplicar ajustes. Contacte al administrador del sistema"
+                });
+            }
+        }
+
+
+        /// <summary>
+        /// Actualiza un ajuste pendiente específico
+        /// </summary>
+        [HttpPut("ajustes/{ajusteId}")]
+        [Authorize]
+        public async Task<IActionResult> ActualizarAjustePendiente(int ajusteId, [FromBody] SolicitudAjusteInventarioDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("✏️ === ACTUALIZANDO AJUSTE PENDIENTE ===");
+                _logger.LogInformation("✏️ Ajuste ID: {AjusteId}, Producto: {ProductoId}", ajusteId, solicitud.ProductoId);
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // ✅ OBTENER ID DEL USUARIO DESDE EL TOKEN
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized(new { success = false, message = "No se pudo identificar el usuario" });
+                }
+
+                solicitud.UsuarioId = userId;
+
+                // ✅ ACTUALIZAR EL AJUSTE PENDIENTE
+                var actualizado = await _ajustesService.ActualizarAjustePendienteAsync(ajusteId, solicitud);
+
+                if (actualizado)
+                {
+                    _logger.LogInformation("✅ Ajuste pendiente actualizado con ID: {AjusteId}", ajusteId);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Ajuste pendiente actualizado exitosamente",
+                        data = new
+                        {
+                            ajusteId = ajusteId,
+                            tipoAjuste = solicitud.TipoAjuste,
+                            productoId = solicitud.ProductoId,
+                            cantidadFinalPropuesta = solicitud.CantidadFinalPropuesta ?? solicitud.CantidadFisicaContada,
+                            timestamp = DateTime.Now
+                        }
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ No se pudo actualizar el ajuste pendiente {AjusteId}", ajusteId);
+                    return BadRequest(new { success = false, message = "No se pudo actualizar el ajuste pendiente" });
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning("Solicitud inválida: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning("Operación no permitida: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al actualizar ajuste pendiente");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
 
         // =====================================
         // MÉTODOS PARA GESTIÓN DE INVENTARIOS
@@ -141,8 +463,8 @@ namespace API.Controllers
             try
             {
                 // 🔒 VERIFICAR PERMISOS (CONSISTENTE CON TU ESTILO)
-                var validacion = await this.ValidarPermisoAsync(_permisosService, "Programar Inventario",
-                    "Solo usuarios con permiso 'Programar Inventario' pueden iniciar inventarios");
+                var validacion = await this.ValidarPermisoAsync(_permisosService, "Iniciar Inventario",
+                "Solo usuarios con permiso 'Iniciar Inventario' pueden iniciar inventarios");
                 if (validacion != null) return validacion;
 
                 _logger.LogInformation("🚀 === INICIANDO INVENTARIO ===");
@@ -425,75 +747,141 @@ namespace API.Controllers
                 _logger.LogInformation("📦 Inventario ID: {InventarioId}, Usuario: {Usuario}",
                     inventarioId, User.Identity?.Name ?? "Anónimo");
 
-                // 🔒 VERIFICAR ACCESO AL INVENTARIO
+                // ✅ VERIFICAR ACCESO AL INVENTARIO
                 var tieneAcceso = await VerificarAccesoInventario(inventarioId);
                 if (!tieneAcceso)
                 {
                     return Forbid("No tienes acceso a este inventario");
                 }
 
-                // ✅ OBTENER PRODUCTOS CON INFORMACIÓN COMPLETA
-                var productos = await _context.DetallesInventarioProgramado
-                    .Include(d => d.Producto)
-                        .ThenInclude(p => p.Llanta)
-                    .Include(d => d.Producto)
-                        .ThenInclude(p => p.ImagenesProductos)
-                    .Include(d => d.UsuarioConteo)
+                // ✅ OBTENER DETALLES SIN RELACIONES COMPLEJAS
+                var detalles = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioId)
-                    .Select(d => new DetalleInventarioDTO
-                    {
-                        DetalleId = d.DetalleId,
-                        InventarioProgramadoId = d.InventarioProgramadoId,
-                        ProductoId = d.ProductoId,
-                        CantidadSistema = d.CantidadSistema,
-                        CantidadFisica = d.CantidadFisica,
-                        Diferencia = d.Diferencia,
-                        Observaciones = d.Observaciones,
-                        FechaConteo = d.FechaConteo,
-                        UsuarioConteoId = d.UsuarioConteoId,
-                        NombreUsuarioConteo = d.UsuarioConteo != null ? d.UsuarioConteo.NombreUsuario : null,
-
-                        // ✅ INFORMACIÓN DEL PRODUCTO
-                        NombreProducto = d.Producto.NombreProducto,
-                        DescripcionProducto = d.Producto.Descripcion,
-
-                        // ✅ INFORMACIÓN DE LLANTA (SI APLICA)
-                        EsLlanta = d.Producto.Llanta.Any(),
-                        MedidasLlanta = d.Producto.Llanta.Any() && d.Producto.Llanta.First().Ancho.HasValue ?
-                            $"{d.Producto.Llanta.First().Ancho}/{d.Producto.Llanta.First().Perfil}/R{d.Producto.Llanta.First().Diametro}" : null,
-                        MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
-                        ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null,
-
-                        // ✅ PRIMERA IMAGEN (PARA VISTA RÁPIDA)
-                        ImagenUrl = d.Producto.ImagenesProductos.Any() ? d.Producto.ImagenesProductos.First().Urlimagen : null,
-
-                        // ✅ ESTADO DEL CONTEO
-                        EstadoConteo = d.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                        TieneDiscrepancia = d.Diferencia.HasValue && d.Diferencia.Value != 0
-                    })
-                    .OrderBy(d => d.NombreProducto)
                     .ToListAsync();
 
-                _logger.LogInformation("✅ Se obtuvieron {Count} productos para inventario", productos.Count);
+                _logger.LogInformation("🔍 Detalles obtenidos: {Count}", detalles.Count);
 
-                // ✅ ESTADÍSTICAS RÁPIDAS
-                var contados = productos.Count(p => p.EstadoConteo == "Contado");
-                var pendientes = productos.Count(p => p.EstadoConteo == "Pendiente");
-                var discrepancias = productos.Count(p => p.TieneDiscrepancia);
+                if (!detalles.Any())
+                {
+                    return Ok(new
+                    {
+                        productos = new List<DetalleInventarioDTO>(),
+                        estadisticas = new { total = 0, contados = 0, pendientes = 0, discrepancias = 0, porcentajeProgreso = 0.0 }
+                    });
+                }
+
+                var productosDTO = new List<DetalleInventarioDTO>();
+
+                foreach (var detalle in detalles)
+                {
+                    try
+                    {
+                        // ✅ OBTENER PRODUCTO
+                        var producto = await _context.Productos
+                            .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);
+
+                        // ✅ OBTENER LLANTA (SOLO UNA)
+                        var llanta = await _context.Llantas
+                            .FirstOrDefaultAsync(l => l.ProductoId == detalle.ProductoId);
+
+                        // ✅ OBTENER SOLO LA PRIMERA IMAGEN (EVITAR DUPLICADOS)
+                        var imagenPrincipal = await _context.ImagenesProductos
+                            .Where(img => img.ProductoId == detalle.ProductoId)
+                            .OrderBy(img => img.ImagenId) // Tomar la primera imagen por ID
+                            .Select(img => img.Urlimagen)
+                            .FirstOrDefaultAsync();
+
+                        // ✅ OBTENER USUARIO DE CONTEO
+                        var usuario = detalle.UsuarioConteoId.HasValue
+                            ? await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == detalle.UsuarioConteoId.Value)
+                            : null;
+
+                        // ✅ CONSTRUIR MEDIDAS DE LLANTA
+                        string? medidasLlanta = null;
+                        if (llanta != null && llanta.Ancho.HasValue && llanta.Perfil.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
+                        {
+                            medidasLlanta = $"{llanta.Ancho}/{llanta.Perfil}R{llanta.Diametro}";
+                        }
+
+                        // ✅ CREAR DTO COMPLETO
+                        var dto = new DetalleInventarioDTO
+                        {
+                            DetalleId = detalle.DetalleId,
+                            InventarioProgramadoId = detalle.InventarioProgramadoId,
+                            ProductoId = detalle.ProductoId,
+                            CantidadSistema = detalle.CantidadSistema,
+                            CantidadFisica = detalle.CantidadFisica,
+                            Diferencia = detalle.Diferencia,
+                            Observaciones = detalle.Observaciones ?? "",
+                            FechaConteo = detalle.FechaConteo,
+                            UsuarioConteoId = detalle.UsuarioConteoId,
+
+                            // ✅ INFORMACIÓN DEL PRODUCTO
+                            NombreProducto = producto?.NombreProducto ?? $"Producto {detalle.ProductoId}",
+                            DescripcionProducto = producto?.Descripcion ?? "",
+
+                            // ✅ INFORMACIÓN DE LLANTA
+                            EsLlanta = llanta != null,
+                            MarcaLlanta = llanta?.Marca,
+                            ModeloLlanta = llanta?.Modelo,
+                            MedidasLlanta = medidasLlanta,
+
+                            // ✅ IMAGEN PRINCIPAL (SOLO UNA)
+                            ImagenUrl = imagenPrincipal,
+
+                            // ✅ ESTADOS CALCULADOS
+                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0,
+
+                            // ✅ USUARIO QUE HIZO EL CONTEO
+                            NombreUsuarioConteo = usuario?.NombreUsuario
+                        };
+
+                        productosDTO.Add(dto);
+
+                        _logger.LogInformation("✅ Producto {ProductoId} mapeado: {Nombre} (Llanta: {EsLlanta})",
+                            detalle.ProductoId, dto.NombreProducto, dto.EsLlanta);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ Error mapeando producto {ProductoId}: {Error}", detalle.ProductoId, ex.Message);
+
+                        // ✅ PRODUCTO BÁSICO EN CASO DE ERROR
+                        productosDTO.Add(new DetalleInventarioDTO
+                        {
+                            DetalleId = detalle.DetalleId,
+                            InventarioProgramadoId = detalle.InventarioProgramadoId,
+                            ProductoId = detalle.ProductoId,
+                            CantidadSistema = detalle.CantidadSistema,
+                            CantidadFisica = detalle.CantidadFisica,
+                            Diferencia = detalle.Diferencia,
+                            NombreProducto = $"ERROR - Producto {detalle.ProductoId}",
+                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0
+                        });
+                    }
+                }
+
+                _logger.LogInformation("✅ Productos mapeados correctamente: {Count}", productosDTO.Count);
+
+                // ✅ ESTADÍSTICAS
+                var contados = productosDTO.Count(p => p.EstadoConteo == "Contado");
+                var pendientes = productosDTO.Count(p => p.EstadoConteo == "Pendiente");
+                var discrepancias = productosDTO.Count(p => p.TieneDiscrepancia);
 
                 _logger.LogInformation("📊 Estadísticas: {Contados} contados, {Pendientes} pendientes, {Discrepancias} discrepancias",
                     contados, pendientes, discrepancias);
 
                 return Ok(new
                 {
-                    productos = productos,
+                    productos = productosDTO,
                     estadisticas = new
                     {
-                        total = productos.Count,
+                        total = productosDTO.Count,
                         contados = contados,
                         pendientes = pendientes,
                         discrepancias = discrepancias,
-                        porcentajeProgreso = productos.Count > 0 ? Math.Round((double)contados / productos.Count * 100, 1) : 0
+                        porcentajeProgreso = productosDTO.Count > 0 ? Math.Round((double)contados / productosDTO.Count * 100, 1) : 0
                     }
                 });
             }
@@ -507,6 +895,68 @@ namespace API.Controllers
                 });
             }
         }
+
+
+        /// <summary>
+        /// MÉTODO DE PRUEBA - Solo datos básicos sin relaciones
+        /// GET: api/TomaInventario/{inventarioId}/productos-simple
+        /// </summary>
+        [HttpGet("{inventarioId}/productos-simple")]
+        public async Task<ActionResult> ObtenerProductosSimple(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🧪 === MÉTODO DE PRUEBA SIMPLE ===");
+                _logger.LogInformation("🧪 Inventario ID: {InventarioId}", inventarioId);
+
+                // ✅ AHORA DEBERÍA FUNCIONAR CON EL MODELO CORREGIDO
+                var detalles = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId)
+                    .Select(d => new DetalleInventarioSimpleDTO
+                    {
+                        DetalleId = d.DetalleId,
+                        InventarioProgramadoId = d.InventarioProgramadoId,
+                        ProductoId = d.ProductoId,
+                        CantidadSistema = d.CantidadSistema,
+                        CantidadFisica = d.CantidadFisica,
+                        Diferencia = d.Diferencia,
+                        Observaciones = d.Observaciones,  // ✅ AHORA ES NULLABLE
+                        FechaConteo = d.FechaConteo,
+                        UsuarioConteoId = d.UsuarioConteoId,
+                        EstadoConteo = d.CantidadFisica != null ? "Contado" : "Pendiente",
+                        TieneDiscrepancia = d.Diferencia != null && d.Diferencia != 0
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("🧪 Detalles obtenidos: {Count}", detalles.Count);
+
+                if (detalles.Any())
+                {
+                    var primer = detalles.First();
+                    _logger.LogInformation("🧪 Primer detalle - ID: {DetalleId}, ProductoId: {ProductoId}, Estado: {Estado}",
+                        primer.DetalleId, primer.ProductoId, primer.EstadoConteo);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    total = detalles.Count,
+                    productos = detalles,
+                    mensaje = $"Método simple - {detalles.Count} detalles encontrados"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "🧪 💥 Error en método simple: {Message}", ex.Message);
+
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
 
         /// <summary>
         /// 📝 MÉTODO PRINCIPAL: Registra un conteo de producto
@@ -689,6 +1139,8 @@ namespace API.Controllers
                 return 1; // Fallback
             }
         }
+
+
     }
 }
     

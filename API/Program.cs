@@ -1,9 +1,9 @@
-using API.Authorization;
+Ôªøusing API.Authorization;
 using API.Data;
-using API.Services;
-using API.Services.Interfaces;
 using API.ServicesAPI;
 using API.ServicesAPI.Interfaces;
+using API.Services;
+using API.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
@@ -20,19 +20,23 @@ builder.Services.AddScoped<EmailService>();
 
 // Configurar servicios de notificaciones
 builder.Services.AddScoped<INotificacionService, NotificacionService>();
-// EN Program.cs - AGREGAR ESTA LÕNEA:
+
+// EN Program.cs - AGREGAR ESTA L√çNEA:
 builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
+// ‚úÖ AGREGAR ESTA L√çNEA
+builder.Services.AddScoped<IAjustesInventarioPendientesService, AjustesInventarioPendientesService>();
 
-// ? SERVICIOS DE PERMISOS - Sistema completamente din·mico
+
+// ? SERVICIOS DE PERMISOS - Sistema completamente din√°mico
 builder.Services.AddScoped<IPermisosService, PermisosService>();
-builder.Services.AddMemoryCache(); // Para el cachÈ de permisos
+builder.Services.AddMemoryCache(); // Para el cach√© de permisos
 
-// ? HANDLER DE AUTORIZACI”N DIN¡MICO - Mantener para funcionalidades especÌficas
+// ? HANDLER DE AUTORIZACI√ìN DIN√ÅMICO - Mantener para funcionalidades espec√≠ficas
 builder.Services.AddScoped<IAuthorizationHandler, PermisoAuthorizationHandler>();
 
 builder.Services.AddHttpClient();
 
-// Configurar lÌmites de tamaÒo para subida de archivos
+// Configurar l√≠mites de tama√±o para subida de archivos
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = 20 * 1024 * 1024;
@@ -68,12 +72,12 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
-// ? SERVICIOS NECESARIOS PARA EL SISTEMA DIN¡MICO
+// ? SERVICIOS NECESARIOS PARA EL SISTEMA DIN√ÅMICO
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddRazorPages(); // Para TagHelpers
 
 // Configurar Swagger
-// ? DESPU…S (configuraciÛn completa):
+// ? DESPU√âS (configuraci√≥n completa):
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -81,10 +85,10 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Tuco API",
         Version = "v1",
-        Description = "API del sistema Tuco con autenticaciÛn JWT"
+        Description = "API del sistema Tuco con autenticaci√≥n JWT"
     });
 
-    // ? CONFIGURACI”N JWT PARA SWAGGER
+    // ? CONFIGURACI√ìN JWT PARA SWAGGER
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Description = "JWT Authorization header usando el esquema Bearer. Ejemplo: \"Authorization: Bearer {token}\"",
@@ -115,7 +119,7 @@ builder.Services.AddHttpClient("TucoApi", client =>
     client.BaseAddress = new Uri("https://localhost:7273/");
 });
 
-// Configurar autenticaciÛn JWT
+// Configurar autenticaci√≥n JWT
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -134,30 +138,30 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// ? CONFIGURACI”N DE AUTORIZACI”N 100% DIN¡MICA
+// ? CONFIGURACI√ìN DE AUTORIZACI√ìN 100% DIN√ÅMICA
 // ?? TODO SE MANEJA DESDE LA BASE DE DATOS - SIN HARDCODEO
 builder.Services.AddAuthorization(options =>
 {
-    // ? ⁄NICA POLICY B¡SICA: Solo requiere autenticaciÛn
+    // ? √öNICA POLICY B√ÅSICA: Solo requiere autenticaci√≥n
     options.AddPolicy("RequireAuthentication", policy =>
         policy.RequireAuthenticatedUser());
 
-    // ? YA NO HAY M¡S POLICIES EST¡TICAS
-    // ?? Todos los permisos y roles se gestionan din·micamente desde:
+    // ? YA NO HAY M√ÅS POLICIES EST√ÅTICAS
+    // ?? Todos los permisos y roles se gestionan din√°micamente desde:
     //    - Interfaz de usuario para crear/editar roles
     //    - Interfaz de usuario para crear/editar permisos  
-    //    - TagHelper autom·tico: asp-permiso="CualquierPermiso"
+    //    - TagHelper autom√°tico: asp-permiso="CualquierPermiso"
     //    - Controladores: await this.ValidarPermisoAsync(_permisosService, "CualquierPermiso")
     //
-    // ?? VENTAJAS DEL SISTEMA DIN¡MICO:
+    // ?? VENTAJAS DEL SISTEMA DIN√ÅMICO:
     //    ? Crear permiso en interfaz ? Funciona inmediatamente
     //    ? Crear rol en interfaz ? Funciona inmediatamente
     //    ? Asignar permisos a roles ? Funciona inmediatamente
-    //    ? Sin tocar cÛdigo nunca m·s
+    //    ? Sin tocar c√≥digo nunca m√°s
     //    ? Sistema escalable y mantenible
 });
 
-// Construir la aplicaciÛn
+// Construir la aplicaci√≥n
 var app = builder.Build();
 
 // Configurar el pipeline HTTP
@@ -172,7 +176,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// Usar la polÌtica de CORS
+// Usar la pol√≠tica de CORS
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();

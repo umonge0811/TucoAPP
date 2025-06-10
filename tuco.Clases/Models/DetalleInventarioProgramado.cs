@@ -24,7 +24,7 @@ namespace tuco.Clases.Models
         public int? Diferencia { get; set; }
 
         [StringLength(500)]
-        public string Observaciones { get; set; }
+        public string? Observaciones { get; set; }
 
         public int? UsuarioConteoId { get; set; }
 

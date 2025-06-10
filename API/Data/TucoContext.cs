@@ -30,6 +30,9 @@ public partial class TucoContext : DbContext
         }
     }
 
+    // Agregar esta línea donde están los otros DbSet
+    public virtual DbSet<AjusteInventarioPendiente> AjustesInventarioPendientes { get; set; }
+
     public virtual DbSet<InventarioProgramado> InventariosProgramados { get; set; }
 
     public virtual DbSet<AsignacionUsuarioInventario> AsignacionesUsuariosInventario { get; set; }
@@ -80,6 +83,48 @@ public partial class TucoContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
+        // ✅ CONFIGURACIÓN DE AjustesInventarioPendientes
+        modelBuilder.Entity<AjusteInventarioPendiente>(entity =>
+        {
+            entity.HasKey(e => e.AjusteId);
+
+            entity.ToTable("AjustesInventarioPendientes");
+
+            entity.Property(e => e.TipoAjuste)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(e => e.MotivoAjuste)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.Property(e => e.Estado)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue("Pendiente");
+
+            entity.Property(e => e.FechaCreacion)
+                .HasDefaultValueSql("(getdate())");
+
+            // Relaciones
+            entity.HasOne(d => d.InventarioProgramado)
+                .WithMany()
+                .HasForeignKey(d => d.InventarioProgramadoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Producto)
+                .WithMany()
+                .HasForeignKey(d => d.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Usuario)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+
         modelBuilder.Entity<Notificacion>(entity =>
         {
             entity.HasKey(e => e.NotificacionId);
