@@ -21,6 +21,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 // ✅ AGREGAR ESTA LÍNEA donde registras los otros servicios
 builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>();
+// ✅ AGREGAR SERVICIO DE REPORTES
+builder.Services.AddScoped<IReportesService, ReportesService>();
 
 // ✅ SOLO EL SERVICIO DIRECTO (sin HTTP)
 builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
