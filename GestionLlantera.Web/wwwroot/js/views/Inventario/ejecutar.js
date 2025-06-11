@@ -3772,6 +3772,7 @@ function crearBotonesAccion(producto) {
 function abrirModalValidacion(productoId) {
     mostrarInfo('Función de validación en desarrollo');
 }
+
 window.abrirModalConteo = abrirModalConteo;
 window.mostrarModalCompletarInventario = mostrarModalCompletarInventario;
 window.completarInventario = completarInventario;
@@ -5008,7 +5009,7 @@ async function actualizarInterfazInventarioCompletado() {
                                 <button class="btn btn-success btn-sm me-2" onclick="generarReporteInventario(${window.inventarioConfig.inventarioId})">
                                     <i class="bi bi-file-text me-1"></i> Reporte
                                 </button>
-                                <button class="btn btn-outline-success btn-sm" onclick="exportarInventario(${window.inventarioConfig.inventarioId})">
+                                <button class="btn btn-outline-success btn-sm" onclick="exportarInventario(${window.inventarioConfig.inventarioId})"> 
                                     <i class="bi bi-download me-1"></i> Exportar
                                 </button>
                             </div>
@@ -5036,63 +5037,33 @@ async function actualizarInterfazInventarioCompletado() {
  */
 
 /**
- * ✅ FUNCIÓN: Generar reporte completo del inventario
+ * ✅ FUNCIÓN: Generar reporte de inventario (usando utilidades globales)
  */
 async function generarReporteInventario(inventarioId) {
     try {
-        console.log('📊 Generando reporte del inventario:', inventarioId);
+        console.log('📊 Generando reporte para inventario:', inventarioId);
 
-        Swal.fire({
-            title: 'Generando Reporte',
-            html: 'Recopilando información del inventario...',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        // ✅ OBTENER TÍTULO DEL INVENTARIO
+        const tituloInventario = $('#tituloInventario').text().trim() ||
+            $('.inventario-titulo').text().trim() ||
+            window.inventarioConfig?.titulo ||
+            'Inventario';
 
-        // ✅ OBTENER DATOS COMPLETOS
-        const datosReporte = await recopilarDatosReporte(inventarioId);
-
-        // ✅ GENERAR HTML DEL REPORTE
-        const htmlReporte = generarHtmlReporte(datosReporte);
-
-        // ✅ MOSTRAR REPORTE EN MODAL
-        Swal.fire({
-            title: `📊 Reporte de Inventario: ${datosReporte.inventario.titulo}`,
-            html: htmlReporte,
-            width: '90%',
-            showCloseButton: true,
-            showConfirmButton: true,
-            confirmButtonText: '<i class="bi bi-printer me-1"></i> Imprimir',
-            footer: `
-                <div class="d-flex gap-2 justify-content-center">
-                    <button class="btn btn-success btn-sm" onclick="imprimirReporte()">
-                        <i class="bi bi-printer me-1"></i> Imprimir
-                    </button>
-                    <button class="btn btn-primary btn-sm" onclick="exportarReporteExcel(${inventarioId})">
-                        <i class="bi bi-file-excel me-1"></i> Exportar Excel
-                    </button>
-                    <button class="btn btn-info btn-sm" onclick="exportarReportePDF(${inventarioId})">
-                        <i class="bi bi-file-pdf me-1"></i> Exportar PDF
-                    </button>
-                </div>
-            `,
-            customClass: {
-                popup: 'swal-wide'
-            }
-        });
+        // ✅ MOSTRAR MODAL CON RESUMEN DEL REPORTE
+        await mostrarReporteModal(inventarioId, tituloInventario);
 
     } catch (error) {
-        console.error('❌ Error generando reporte:', error);
+        console.error('❌ Error al generar reporte:', error);
+
         Swal.fire({
+            icon: 'error',
             title: 'Error',
-            text: 'No se pudo generar el reporte. Intente nuevamente.',
-            icon: 'error'
+            text: 'No se pudo generar el reporte del inventario',
+            confirmButtonColor: '#d33'
         });
     }
 }
+
 
 /**
  * ✅ FUNCIÓN: Recopilar datos para el reporte
@@ -5444,45 +5415,29 @@ function generarHtmlReporte(datos) {
 }
 
 /**
- * ✅ FUNCIÓN: Exportar inventario a Excel
+ * ✅ FUNCIÓN: Exportar inventario (usando utilidades globales)
  */
 async function exportarInventario(inventarioId) {
     try {
-        console.log('📊 Exportando inventario a Excel:', inventarioId);
+        console.log('📤 Exportando inventario:', inventarioId);
 
-        Swal.fire({
-            title: 'Exportando...',
-            text: 'Generando archivo Excel del inventario',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        // ✅ OBTENER TÍTULO DEL INVENTARIO
+        const tituloInventario = $('#tituloInventario').text().trim() ||
+            $('.inventario-titulo').text().trim() ||
+            window.inventarioConfig?.titulo ||
+            'Inventario';
 
-        // ✅ SIMULAR EXPORTACIÓN (aquí irían llamadas reales a tu API)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        Swal.fire({
-            title: '✅ Exportación Completada',
-            text: 'El archivo Excel ha sido generado exitosamente',
-            icon: 'success',
-            confirmButtonText: 'Descargar',
-            showCancelButton: true,
-            cancelButtonText: 'Cerrar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // ✅ AQUÍ TRIGGEARÍAS LA DESCARGA REAL
-                mostrarInfo('Función de descarga en desarrollo. El archivo se descargará automáticamente.');
-            }
-        });
+        // ✅ LLAMAR A LA FUNCIÓN GLOBAL DE REPORTES
+        mostrarOpcionesDescarga(inventarioId, tituloInventario);
 
     } catch (error) {
-        console.error('❌ Error exportando:', error);
+        console.error('❌ Error al exportar inventario:', error);
+
         Swal.fire({
+            icon: 'error',
             title: 'Error',
-            text: 'No se pudo exportar el inventario',
-            icon: 'error'
+            text: 'No se pudo abrir las opciones de descarga',
+            confirmButtonColor: '#d33'
         });
     }
 }

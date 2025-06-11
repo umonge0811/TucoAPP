@@ -109,7 +109,7 @@ async function descargarReporteExcel(inventarioId, tituloInventario = 'inventari
         showLoadingAlert('Generando archivo Excel...');
 
         // ✅ USAR FETCH PARA OBTENER EL ARCHIVO
-        const response = await fetch(`${REPORTES_CONFIG.baseUrl}/DescargarExcel?inventarioId=${inventarioId}`, {
+        const response = await fetch(`/Reportes/inventario/${inventarioId}/excel`, {
             method: 'GET'
         });
 
@@ -153,6 +153,25 @@ async function descargarReporteExcel(inventarioId, tituloInventario = 'inventari
     }
 }
 
+// ✅ FUNCIONES AUXILIARES
+function showLoadingAlert(message) {
+    Swal.fire({
+        title: message,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+}
+
+function hideLoadingAlert() {
+    if (Swal.isVisible()) {
+        Swal.close();
+    }
+}
+
 /**
  * Descarga el reporte en formato PDF (corregido)
  */
@@ -161,7 +180,7 @@ async function descargarReportePdf(inventarioId, tituloInventario = 'inventario'
         showLoadingAlert('Generando archivo PDF...');
 
         // ✅ USAR FETCH PARA OBTENER EL ARCHIVO
-        const response = await fetch(`${REPORTES_CONFIG.baseUrl}/DescargarPdf?inventarioId=${inventarioId}`, {
+        const response = await fetch(`/Reportes/inventario/${inventarioId}/pdf`, {
             method: 'GET'
         });
 
@@ -203,6 +222,35 @@ async function descargarReportePdf(inventarioId, tituloInventario = 'inventario'
             confirmButtonColor: '#d33'
         });
     }
+}
+
+// ✅ FUNCIÓN DE CONVENIENCIA PARA INVENTARIOS COMPLETADOS
+function mostrarAlertaInventarioCompletado(inventarioId, tituloInventario) {
+    Swal.fire({
+        icon: 'success',
+        title: '✅ ¡Inventario Completado!',
+        html: `
+            <div class="text-center">
+                <h5 class="mb-3">${tituloInventario}</h5>
+                <p class="text-success mb-4">
+                    <i class="fas fa-check-circle fa-2x"></i><br>
+                    El inventario se ha completado exitosamente
+                </p>
+                <p class="text-muted mb-4">¿Desea descargar el reporte?</p>
+                
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary btn-lg" onclick="mostrarOpcionesDescarga(${inventarioId}, '${tituloInventario}')">
+                        <i class="fas fa-download"></i> Descargar Reporte
+                    </button>
+                </div>
+            </div>
+        `,
+        showConfirmButton: false,
+        showCancelButton: true,
+        cancelButtonText: '<i class="fas fa-times"></i> Cerrar',
+        cancelButtonColor: '#6c757d',
+        width: '500px'
+    });
 }
 
 

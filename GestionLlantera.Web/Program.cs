@@ -45,6 +45,8 @@ builder.Services.AddScoped<IUsuariosService, UsuariosService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
+builder.Services.AddScoped<IReportesService, ReportesService>();
+
 
 
 // ✅ NUEVO: Servicio global de permisos
