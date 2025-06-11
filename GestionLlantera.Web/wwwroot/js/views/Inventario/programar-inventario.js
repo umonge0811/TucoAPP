@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let inventarioIdSeleccionado = 0;
     let contadorUsuarios = 0;
 
-    // Inicializar tooltips de Bootstrap
     // Inicializar tooltips de Bootstrap (solo en dispositivos no táctiles)
     function initializeTooltips() {
         // Detectar si es un dispositivo táctil
@@ -58,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
             permisoConteo.checked = true;
             permisoAjuste.checked = false;
             permisoValidacion.checked = false;
-            //permisoCompletar.checked = false;
+            permisoCompletar.checked = false;
             modalAgregarUsuario.show();
         });
     }
@@ -121,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
             nuevoUsuario.querySelector('.badge-validacion').style.display = 'inline-block';
         }
         if (tienePermisoCompletar) {
-            nuevoUsuario.querySelector('.badge-Completar').style.display = 'inline-block';
+            nuevoUsuario.querySelector('.badge-completar').style.display = 'inline-block';
         }
 
         // Actualizar campos ocultos
@@ -176,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
             card.querySelector('.permiso-conteo-input').name = `NuevoInventario.UsuariosAsignados[${index}].PermisoConteo`;
             card.querySelector('.permiso-ajuste-input').name = `NuevoInventario.UsuariosAsignados[${index}].PermisoAjuste`;
             card.querySelector('.permiso-validacion-input').name = `NuevoInventario.UsuariosAsignados[${index}].PermisoValidacion`;
+            card.querySelector('.permiso-completar-input').name = `NuevoInventario.UsuariosAsignados[${index}].PermisoCompletar`;
         });
     }
 
@@ -257,8 +257,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     emailUsuario: emailUsuario,
                     permisoConteo: card.querySelector('.permiso-conteo-input')?.value === 'true',
                     permisoAjuste: card.querySelector('.permiso-ajuste-input')?.value === 'true',
-                    permisoValidacion: card.querySelector('.permiso-validacion-input')?.value === 'true'
-                //    permisoCompletar: card.querySelector('.permiso-completar-input')?.value === 'true'
+                    permisoValidacion: card.querySelector('.permiso-validacion-input')?.value === 'true',
+                    permisoCompletar: card.querySelector('.permiso-completar-input')?.value === 'true'
                 });
             });
 

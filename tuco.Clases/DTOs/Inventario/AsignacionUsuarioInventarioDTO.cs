@@ -10,7 +10,7 @@
         public bool PermisoConteo { get; set; } = true;     // Permiso para contar físicamente
         public bool PermisoAjuste { get; set; } = false;    // Permiso para ajustar cantidades
         public bool PermisoValidacion { get; set; } = false; // Permiso para validar el inventario final
-        public bool PermisoCompletar { get; set; } = false;
+        public bool PermisoCompletar { get; set; }
         public DateTime? FechaAsignacion { get; set; }
     }
 }
