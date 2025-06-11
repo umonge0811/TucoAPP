@@ -25,8 +25,6 @@ builder.Services.AddScoped<INotificacionService, NotificacionService>();
 builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 // ✅ AGREGAR ESTA LÍNEA
 builder.Services.AddScoped<IAjustesInventarioPendientesService, AjustesInventarioPendientesService>();
-// ✅ AGREGAR SERVICIO DE REPORTES
-builder.Services.AddScoped<IReporteInventarioService, ReporteInventarioService>();
 
 
 // ? SERVICIOS DE PERMISOS - Sistema completamente dinámico
