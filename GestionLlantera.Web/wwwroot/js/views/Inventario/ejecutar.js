@@ -5031,68 +5031,41 @@ async function actualizarInterfazInventarioCompletado() {
     }
 }
 
+
+
+
 /**
  * ✅ FUNCIONES PARA REPORTES Y EXPORTACIÓN
  */
 
+ */
 /**
- * ✅ FUNCIÓN: Generar reporte completo del inventario
+ * ✅ FUNCIÓN: Generar reporte de inventario (usando utilidades globales)
  */
 async function generarReporteInventario(inventarioId) {
     try {
-        console.log('📊 Generando reporte del inventario:', inventarioId);
+        console.log('📊 Generando reporte para inventario:', inventarioId);
 
-        Swal.fire({
-            title: 'Generando Reporte',
-            html: 'Recopilando información del inventario...',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        // ✅ OBTENER TÍTULO DEL INVENTARIO
+        const tituloInventario = $('#tituloInventario').text().trim() ||
+            $('.inventario-titulo').text().trim() ||
+            'Inventario';
 
-        // ✅ OBTENER DATOS COMPLETOS
-        const datosReporte = await recopilarDatosReporte(inventarioId);
-
-        // ✅ GENERAR HTML DEL REPORTE
-        const htmlReporte = generarHtmlReporte(datosReporte);
-
-        // ✅ MOSTRAR REPORTE EN MODAL
-        Swal.fire({
-            title: `📊 Reporte de Inventario: ${datosReporte.inventario.titulo}`,
-            html: htmlReporte,
-            width: '90%',
-            showCloseButton: true,
-            showConfirmButton: true,
-            confirmButtonText: '<i class="bi bi-printer me-1"></i> Imprimir',
-            footer: `
-                <div class="d-flex gap-2 justify-content-center">
-                    <button class="btn btn-success btn-sm" onclick="imprimirReporte()">
-                        <i class="bi bi-printer me-1"></i> Imprimir
-                    </button>
-                    <button class="btn btn-primary btn-sm" onclick="exportarReporteExcel(${inventarioId})">
-                        <i class="bi bi-file-excel me-1"></i> Exportar Excel
-                    </button>
-                    <button class="btn btn-info btn-sm" onclick="exportarReportePDF(${inventarioId})">
-                        <i class="bi bi-file-pdf me-1"></i> Exportar PDF
-                    </button>
-                </div>
-            `,
-            customClass: {
-                popup: 'swal-wide'
-            }
-        });
+        // ✅ USAR FUNCIÓN GLOBAL PARA MOSTRAR OPCIONES
+        mostrarOpcionesDescarga(inventarioId, tituloInventario);
 
     } catch (error) {
-        console.error('❌ Error generando reporte:', error);
+        console.error('❌ Error al generar reporte:', error);
+
         Swal.fire({
+            icon: 'error',
             title: 'Error',
-            text: 'No se pudo generar el reporte. Intente nuevamente.',
-            icon: 'error'
+            text: 'No se pudo generar el reporte del inventario',
+            confirmButtonColor: '#d33'
         });
     }
 }
+
 
 /**
  * ✅ FUNCIÓN: Recopilar datos para el reporte
@@ -5444,45 +5417,67 @@ function generarHtmlReporte(datos) {
 }
 
 /**
- * ✅ FUNCIÓN: Exportar inventario a Excel
+ * ✅ FUNCIÓN: Exportar inventario (legacy - redirige a nueva función)
  */
 async function exportarInventario(inventarioId) {
     try {
-        console.log('📊 Exportando inventario a Excel:', inventarioId);
+        console.log('📤 Exportando inventario:', inventarioId);
 
+        // ✅ OBTENER TÍTULO DEL INVENTARIO
+        const tituloInventario = $('#tituloInventario').text().trim() ||
+            $('.inventario-titulo').text().trim() ||
+            'Inventario';
+
+        // ✅ MOSTRAR OPCIONES DE DESCARGA DIRECTAMENTE
         Swal.fire({
-            title: 'Exportando...',
-            text: 'Generando archivo Excel del inventario',
-            allowOutsideClick: false,
+            title: '📤 Exportar Inventario',
+            html: `
+                <div class="text-center">
+                    <h5 class="mb-3">${tituloInventario}</h5>
+                    <p class="text-muted mb-4">Seleccione el formato de exportación:</p>
+                    
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-success btn-lg" id="btnExportarExcel">
+                            <i class="bi bi-file-earmark-excel fs-1"></i><br>
+                            <strong>Exportar a Excel</strong><br>
+                            <small class="text-muted">Archivo completo con todos los datos</small>
+                        </button>
+                        
+                        <button type="button" class="btn btn-danger btn-lg" id="btnExportarPdf">
+                            <i class="bi bi-file-earmark-pdf fs-1"></i><br>
+                            <strong>Exportar a PDF</strong><br>
+                            <small class="text-muted">Reporte profesional para presentar</small>
+                        </button>
+                    </div>
+                </div>
+            `,
             showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // ✅ SIMULAR EXPORTACIÓN (aquí irían llamadas reales a tu API)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        Swal.fire({
-            title: '✅ Exportación Completada',
-            text: 'El archivo Excel ha sido generado exitosamente',
-            icon: 'success',
-            confirmButtonText: 'Descargar',
             showCancelButton: true,
-            cancelButtonText: 'Cerrar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // ✅ AQUÍ TRIGGEARÍAS LA DESCARGA REAL
-                mostrarInfo('Función de descarga en desarrollo. El archivo se descargará automáticamente.');
+            cancelButtonText: '<i class="bi bi-x-circle"></i> Cancelar',
+            cancelButtonColor: '#6c757d',
+            width: '500px',
+            didOpen: () => {
+                // ✅ EVENTOS DE EXPORTACIÓN
+                document.getElementById('btnExportarExcel').addEventListener('click', () => {
+                    Swal.close();
+                    descargarReporteExcel(inventarioId, tituloInventario);
+                });
+
+                document.getElementById('btnExportarPdf').addEventListener('click', () => {
+                    Swal.close();
+                    descargarReportePdf(inventarioId, tituloInventario);
+                });
             }
         });
 
     } catch (error) {
-        console.error('❌ Error exportando:', error);
+        console.error('❌ Error al exportar inventario:', error);
+
         Swal.fire({
+            icon: 'error',
             title: 'Error',
             text: 'No se pudo exportar el inventario',
-            icon: 'error'
+            confirmButtonColor: '#d33'
         });
     }
 }
@@ -5503,19 +5498,6 @@ function imprimirReporte() {
     window.print();
 }
 
-/**
- * ✅ FUNCIÓN: Exportar reporte a Excel
- */
-async function exportarReporteExcel(inventarioId) {
-    mostrarInfo('Función de exportación Excel en desarrollo');
-}
-
-/**
- * ✅ FUNCIÓN: Exportar reporte a PDF
- */
-async function exportarReportePDF(inventarioId) {
-    mostrarInfo('Función de exportación PDF en desarrollo');
-}
 
 // ✅ HACER FUNCIONES GLOBALES
 window.finalizarInventarioCompleto = finalizarInventarioCompleto;

@@ -25,6 +25,9 @@ builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>(
 // ✅ SOLO EL SERVICIO DIRECTO (sin HTTP)
 builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
 
+// ✅ AGREGAR SERVICIO DE REPORTES
+builder.Services.AddScoped<IReportesService, ReportesService>();
+
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 
 // ✅ CONFIGURACIÓN DE AUTENTICACIÓN
