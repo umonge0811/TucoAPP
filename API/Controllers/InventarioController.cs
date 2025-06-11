@@ -814,6 +814,7 @@ namespace API.Controllers
                             PermisoConteo = a.PermisoConteo,
                             PermisoAjuste = a.PermisoAjuste,
                             PermisoValidacion = a.PermisoValidacion,
+                            PermisoCompletar = a.PermisoCompletar,
                             FechaAsignacion = a.FechaAsignacion
                         }).ToList(),
                         TotalProductos = i.Estado != "Programado" ?
@@ -867,6 +868,7 @@ namespace API.Controllers
                             PermisoConteo = a.PermisoConteo,
                             PermisoAjuste = a.PermisoAjuste,
                             PermisoValidacion = a.PermisoValidacion,
+                            PermisoCompletar = a.PermisoCompletar,
                             FechaAsignacion = a.FechaAsignacion
                         }).ToList(),
                         TotalProductos = i.Estado != "Programado" ?
