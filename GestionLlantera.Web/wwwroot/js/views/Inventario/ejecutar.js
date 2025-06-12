@@ -17,6 +17,682 @@ let filtrosActivos = {
     tipo: ''
 };
 
+// ✅ CONFIGURACIÓN DEL PIN (más adelante será desde BD)
+const PIN_ADMIN = "1234";
+let inventarioBloqueado = false;
+let pinValidado = false;
+let tiempoSesionAdmin = null;
+const DURACION_SESION_ADMIN = 30 * 60 * 1000; // 30 minutos en millisegundos
+
+/**
+ * ✅ FUNCIÓN: Verificar si el inventario debe estar bloqueado
+ */
+function verificarEstadoBloqueo() {
+    try {
+        // ✅ VERIFICAR SI EL INVENTARIO ESTÁ COMPLETADO
+        const estadoInventario = inventarioActual?.estado;
+        const estaCompletado = estadoInventario === 'Completado' || estadoInventario === 'Finalizado';
+
+        if (estaCompletado && !inventarioBloqueado) {
+            console.log('🔒 Inventario completado - Activando bloqueo');
+            activarBloqueoInventario();
+        }
+
+        return inventarioBloqueado;
+
+    } catch (error) {
+        console.error('❌ Error verificando estado de bloqueo:', error);
+        return false;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Activar bloqueo del inventario
+ */
+function activarBloqueoInventario() {
+    try {
+        inventarioBloqueado = true;
+        pinValidado = false;
+        tiempoSesionAdmin = null;
+
+        console.log('🔒 Bloqueo de inventario activado');
+
+        // Aplicar bloqueo visual inmediatamente
+        aplicarBloqueoVisual();
+
+        // Mostrar notificación de bloqueo
+        mostrarNotificacionBloqueo();
+
+    } catch (error) {
+        console.error('❌ Error activando bloqueo:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Aplicar bloqueo visual a la interfaz
+ */
+function aplicarBloqueoVisual() {
+    try {
+        console.log('🔒 Aplicando bloqueo visual...');
+
+        // ✅ BLOQUEAR BOTONES DE ACCIÓN
+        $('.btn-conteo, .btn-ajuste-pendiente, .btn-validacion').each(function () {
+            const $btn = $(this);
+
+            // Guardar estado original
+            if (!$btn.data('estado-original')) {
+                $btn.data('estado-original', {
+                    disabled: $btn.prop('disabled'),
+                    html: $btn.html(),
+                    classes: $btn.attr('class')
+                });
+            }
+
+            // Aplicar bloqueo
+            $btn.prop('disabled', true)
+                .removeClass('btn-primary btn-warning btn-success')
+                .addClass('btn-secondary')
+                .html('<i class="bi bi-lock me-1"></i>Bloqueado');
+        });
+
+        // ✅ BLOQUEAR PANEL DE AJUSTES PENDIENTES
+        $('#ajustesPendientesPanel .btn').each(function () {
+            const $btn = $(this);
+            if (!$btn.hasClass('btn-unlock-admin')) {
+                $btn.prop('disabled', true).addClass('disabled');
+            }
+        });
+
+        // ✅ MOSTRAR OVERLAY DE BLOQUEO EN SECCIONES CRÍTICAS
+        mostrarOverlayBloqueo();
+
+        console.log('✅ Bloqueo visual aplicado');
+
+    } catch (error) {
+        console.error('❌ Error aplicando bloqueo visual:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar overlay de bloqueo
+ */
+function mostrarOverlayBloqueo() {
+    try {
+        // Crear overlay para panel de ajustes pendientes
+        const overlayAjustes = `
+            <div class="bloqueo-overlay" id="overlayAjustes">
+                <div class="bloqueo-content">
+                    <div class="text-center">
+                        <i class="bi bi-shield-lock display-4 text-warning mb-3"></i>
+                        <h5 class="text-dark">Inventario Completado</h5>
+                        <p class="text-muted mb-3">Los ajustes están bloqueados para preservar la integridad</p>
+                        <button class="btn btn-warning btn-sm" onclick="solicitarPinAdmin()">
+                            <i class="bi bi-unlock me-1"></i>
+                            Desbloquear (Admin)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Aplicar overlay al panel de ajustes
+        const $panelAjustes = $('#ajustesPendientesPanel');
+        if ($panelAjustes.length && !$panelAjustes.find('.bloqueo-overlay').length) {
+            $panelAjustes.css('position', 'relative').append(overlayAjustes);
+        }
+
+        // Agregar estilos CSS si no existen
+        if (!$('#estilosBloqueo').length) {
+            $('head').append(`
+                <style id="estilosBloqueo">
+                    .bloqueo-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(255, 255, 255, 0.95);
+                        z-index: 1000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 0.375rem;
+                    }
+                    
+                    .bloqueo-content {
+                        text-align: center;
+                        padding: 2rem;
+                        background: white;
+                        border-radius: 0.5rem;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        border: 2px solid #ffc107;
+                    }
+                    
+                    .producto-row.bloqueado {
+                        opacity: 0.6;
+                        pointer-events: none;
+                    }
+                    
+                    .sesion-admin-activa {
+                        border-left: 4px solid #28a745 !important;
+                        background-color: rgba(40, 167, 69, 0.05) !important;
+                    }
+                </style>
+            `);
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando overlay de bloqueo:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar notificación de bloqueo
+ */
+function mostrarNotificacionBloqueo() {
+    try {
+        // Mostrar notificación en la parte superior
+        const notificacion = `
+            <div class="alert alert-warning border-warning shadow-sm mb-3" id="notificacionBloqueo">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-shield-lock display-6 text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="alert-heading mb-2">🔒 Inventario Completado y Bloqueado</h5>
+                        <p class="mb-2">
+                            El inventario ha sido completado exitosamente. Todas las acciones de modificación están bloqueadas 
+                            para preservar la integridad de los datos.
+                        </p>
+                        <hr>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-warning btn-sm" onclick="solicitarPinAdmin()">
+                                <i class="bi bi-unlock me-1"></i>
+                                Acceso Administrativo
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="$('#notificacionBloqueo').slideUp()">
+                                <i class="bi bi-x me-1"></i>
+                                Ocultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Insertar después del header
+        $('.toma-header').after(notificacion);
+
+    } catch (error) {
+        console.error('❌ Error mostrando notificación:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Solicitar PIN de administrador
+ */
+async function solicitarPinAdmin() {
+    try {
+        console.log('🔑 Solicitando PIN de administrador...');
+
+        const resultado = await Swal.fire({
+            title: '🔑 Acceso Administrativo',
+            html: `
+                <div class="text-start">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Acceso Restringido:</strong> Se requiere PIN de administrador para desbloquear 
+                        las funciones de modificación en un inventario completado.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="pinAdmin" class="form-label fw-bold">PIN de Administrador:</label>
+                        <input type="password" 
+                               class="form-control form-control-lg text-center" 
+                               id="pinAdmin" 
+                               placeholder="••••" 
+                               maxlength="10"
+                               autocomplete="off">
+                    </div>
+                    
+                    <div class="small text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
+                        El acceso administrativo será válido por 30 minutos.
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-unlock me-1"></i> Validar PIN',
+            cancelButtonText: '<i class="bi bi-x-lg me-1"></i> Cancelar',
+            focusConfirm: false,
+            didOpen: () => {
+                // Focus en el input del PIN
+                document.getElementById('pinAdmin').focus();
+            },
+            preConfirm: () => {
+                const pin = document.getElementById('pinAdmin').value;
+                if (!pin) {
+                    Swal.showValidationMessage('Debes ingresar el PIN');
+                    return false;
+                }
+                return pin;
+            }
+        });
+
+        if (resultado.isConfirmed) {
+            validarPinAdmin(resultado.value);
+        }
+
+    } catch (error) {
+        console.error('❌ Error solicitando PIN:', error);
+        mostrarError('Error al solicitar PIN de administrador');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Validar PIN de administrador
+ */
+function validarPinAdmin(pinIngresado) {
+    try {
+        console.log('🔍 Validando PIN de administrador...');
+
+        if (pinIngresado === PIN_ADMIN) {
+            // PIN correcto
+            console.log('✅ PIN válido - Concediendo acceso administrativo');
+
+            pinValidado = true;
+            tiempoSesionAdmin = Date.now() + DURACION_SESION_ADMIN;
+
+            // Desbloquear interfaz
+            desbloquearInventario();
+
+            // Mostrar éxito con información de sesión
+            Swal.fire({
+                title: '✅ Acceso Concedido',
+                html: `
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-shield-check display-4 text-success"></i>
+                        </div>
+                        <p class="text-success mb-3">
+                            <strong>Acceso administrativo activado</strong>
+                        </p>
+                        <div class="alert alert-success">
+                            <small>
+                                <i class="bi bi-clock me-1"></i>
+                                Sesión válida por 30 minutos
+                            </small>
+                        </div>
+                    </div>
+                `,
+                icon: 'success',
+                timer: 3000,
+                showConfirmButton: false
+            });
+
+            // Iniciar contador de sesión
+            iniciarContadorSesionAdmin();
+
+        } else {
+            // PIN incorrecto
+            console.log('❌ PIN inválido');
+
+            Swal.fire({
+                title: '❌ PIN Incorrecto',
+                text: 'El PIN ingresado no es válido. Contacta con un administrador si necesitas acceso.',
+                icon: 'error',
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Entendido'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error validando PIN:', error);
+        mostrarError('Error validando PIN de administrador');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Desbloquear inventario con acceso admin
+ */
+function desbloquearInventario() {
+    try {
+        console.log('🔓 Desbloqueando inventario con acceso admin...');
+
+        // ✅ RESTAURAR BOTONES DE ACCIÓN
+        $('.btn-conteo, .btn-ajuste-pendiente, .btn-validacion').each(function () {
+            const $btn = $(this);
+            const estadoOriginal = $btn.data('estado-original');
+
+            if (estadoOriginal) {
+                $btn.prop('disabled', estadoOriginal.disabled)
+                    .attr('class', estadoOriginal.classes)
+                    .html(estadoOriginal.html);
+            }
+        });
+
+        // ✅ DESBLOQUEAR PANEL DE AJUSTES
+        $('#ajustesPendientesPanel .btn').prop('disabled', false).removeClass('disabled');
+
+        // ✅ REMOVER OVERLAYS DE BLOQUEO
+        $('.bloqueo-overlay').remove();
+
+        // ✅ AGREGAR INDICADOR VISUAL DE SESIÓN ADMIN
+        $('.dashboard-card').addClass('sesion-admin-activa');
+
+        // ✅ MOSTRAR INDICADOR DE SESIÓN EN EL HEADER
+        mostrarIndicadorSesionAdmin();
+
+        console.log('✅ Inventario desbloqueado - Sesión admin activa');
+
+    } catch (error) {
+        console.error('❌ Error desbloqueando inventario:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar indicador de sesión admin activa
+ */
+function mostrarIndicadorSesionAdmin() {
+    try {
+        // Remover indicador anterior si existe
+        $('#indicadorSesionAdmin').remove();
+
+        const indicador = `
+            <div class="alert alert-success border-success shadow-sm mb-3" id="indicadorSesionAdmin">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-shield-check display-6 text-success"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading mb-1">🔓 Sesión Administrativa Activa</h6>
+                        <p class="mb-2">
+                            Tienes acceso completo para modificar el inventario. 
+                            <span class="fw-bold">Tiempo restante: <span id="tiempoRestante">30:00</span></span>
+                        </p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-success btn-sm" onclick="extenderSesionAdmin()">
+                                <i class="bi bi-clock-history me-1"></i>
+                                Extender Sesión
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="cerrarSesionAdmin()">
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Insertar después de la notificación de bloqueo o header
+        if ($('#notificacionBloqueo').length) {
+            $('#notificacionBloqueo').after(indicador);
+        } else {
+            $('.toma-header').after(indicador);
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando indicador de sesión:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Iniciar contador de sesión admin
+ */
+function iniciarContadorSesionAdmin() {
+    // Limpiar contador anterior si existe
+    if (window.contadorSesionAdmin) {
+        clearInterval(window.contadorSesionAdmin);
+    }
+
+    window.contadorSesionAdmin = setInterval(() => {
+        if (!pinValidado || !tiempoSesionAdmin) {
+            clearInterval(window.contadorSesionAdmin);
+            return;
+        }
+
+        const tiempoRestante = tiempoSesionAdmin - Date.now();
+
+        if (tiempoRestante <= 0) {
+            // Sesión expirada
+            expirarSesionAdmin();
+            clearInterval(window.contadorSesionAdmin);
+        } else {
+            // Actualizar contador visual
+            const minutos = Math.floor(tiempoRestante / 60000);
+            const segundos = Math.floor((tiempoRestante % 60000) / 1000);
+            $('#tiempoRestante').text(`${minutos}:${segundos.toString().padStart(2, '0')}`);
+        }
+    }, 1000);
+}
+
+/**
+ * ✅ FUNCIÓN: Expirar sesión admin
+ */
+function expirarSesionAdmin() {
+    try {
+        console.log('⏰ Sesión administrativa expirada');
+
+        pinValidado = false;
+        tiempoSesionAdmin = null;
+
+        // Volver a bloquear
+        aplicarBloqueoVisual();
+
+        // Remover indicador de sesión
+        $('#indicadorSesionAdmin').remove();
+
+        // Mostrar notificación de expiración
+        Swal.fire({
+            title: '⏰ Sesión Expirada',
+            text: 'Tu sesión administrativa ha expirado. Las funciones de modificación han sido bloqueadas nuevamente.',
+            icon: 'warning',
+            confirmButtonColor: '#ffc107',
+            confirmButtonText: 'Entendido'
+        });
+
+    } catch (error) {
+        console.error('❌ Error expirando sesión admin:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Extender sesión admin
+ */
+function extenderSesionAdmin() {
+    if (pinValidado) {
+        tiempoSesionAdmin = Date.now() + DURACION_SESION_ADMIN;
+        mostrarExito('Sesión extendida por 30 minutos más');
+        console.log('🔄 Sesión administrativa extendida');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Cerrar sesión admin manualmente
+ */
+function cerrarSesionAdmin() {
+    pinValidado = false;
+    tiempoSesionAdmin = null;
+
+    if (window.contadorSesionAdmin) {
+        clearInterval(window.contadorSesionAdmin);
+    }
+
+    aplicarBloqueoVisual();
+    $('#indicadorSesionAdmin').remove();
+
+    mostrarInfo('Sesión administrativa cerrada. Inventario bloqueado nuevamente.');
+    console.log('🔒 Sesión administrativa cerrada manualmente');
+}
+
+// ✅ HACER FUNCIONES GLOBALES
+window.solicitarPinAdmin = solicitarPinAdmin;
+window.extenderSesionAdmin = extenderSesionAdmin;
+window.cerrarSesionAdmin = cerrarSesionAdmin;
+
+
+
+/**
+ * ✅ MONITOR DEL BADGE DE ESTADO PARA ACTIVAR BLOQUEO
+ */
+function iniciarMonitorBadgeEstado() {
+    try {
+        console.log('👁️ Iniciando monitor del badge de estado...');
+
+        // ✅ BUSCAR EL BADGE DE ESTADO
+        const selectorBadge = '.estado-inventario .badge, .badge.bg-success, .badge.bg-primary, span[class*="badge"]';
+
+        // ✅ CREAR OBSERVER PARA DETECTAR CAMBIOS EN EL BADGE
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                    verificarEstadoBadge();
+                }
+            });
+        });
+
+        // ✅ OBSERVAR CAMBIOS EN TODA LA SECCIÓN DEL HEADER
+        const headerInventario = document.querySelector('.toma-header');
+        if (headerInventario) {
+            observer.observe(headerInventario, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+            console.log('✅ Observer del badge configurado');
+        }
+
+        // ✅ VERIFICACIÓN INICIAL
+        verificarEstadoBadge();
+
+        // ✅ VERIFICACIÓN PERIÓDICA COMO RESPALDO
+        setInterval(verificarEstadoBadge, 5000);
+
+    } catch (error) {
+        console.error('❌ Error iniciando monitor del badge:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Verificar estado del badge
+ */
+function verificarEstadoBadge() {
+    try {
+        // ✅ BUSCAR TODOS LOS BADGES POSIBLES
+        const badges = document.querySelectorAll(`
+            .estado-inventario .badge,
+            .badge.bg-success,
+            .badge.bg-primary,
+            .toma-header .badge,
+            span[class*="badge"]
+        `);
+
+        let estadoEncontrado = null;
+
+        badges.forEach(badge => {
+            const texto = badge.textContent.trim().toLowerCase();
+
+            // ✅ DETECTAR DIFERENTES VARIACIONES DE "COMPLETADO"
+            if (texto.includes('completado') ||
+                texto.includes('finalizado') ||
+                texto.includes('terminado') ||
+                texto.includes('completo')) {
+
+                estadoEncontrado = texto;
+                console.log(`🎯 Badge de estado detectado: "${texto}"`);
+
+                // ✅ SI NO ESTÁ BLOQUEADO AÚN, ACTIVAR BLOQUEO
+                if (!inventarioBloqueado) {
+                    console.log('🔒 Activando bloqueo por badge "Completado"');
+                    setTimeout(() => {
+                        activarBloqueoInventario();
+                    }, 1000); // Pequeño delay para que se complete la UI
+                }
+            }
+        });
+
+        // ✅ DEBUG: Mostrar todos los badges encontrados
+        if (badges.length > 0) {
+            console.log('🔍 Badges encontrados:', Array.from(badges).map(b => b.textContent.trim()));
+        }
+
+        return estadoEncontrado;
+
+    } catch (error) {
+        console.error('❌ Error verificando estado del badge:', error);
+        return null;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Buscar badge en todo el documento (respaldo)
+ */
+function buscarBadgeCompletadoEnTodoElDocumento() {
+    try {
+        const todosLosElementos = document.querySelectorAll('*');
+        let elementosConCompletado = [];
+
+        todosLosElementos.forEach(elemento => {
+            const texto = elemento.textContent.trim().toLowerCase();
+            if ((elemento.classList.contains('badge') ||
+                elemento.tagName === 'SPAN' ||
+                elemento.classList.contains('estado')) &&
+                (texto.includes('completado') ||
+                    texto.includes('finalizado'))) {
+
+                elementosConCompletado.push({
+                    elemento: elemento,
+                    texto: texto,
+                    clases: elemento.className
+                });
+            }
+        });
+
+        console.log('🔍 Elementos con "completado" encontrados:', elementosConCompletado);
+        return elementosConCompletado;
+
+    } catch (error) {
+        console.error('❌ Error buscando badge en documento:', error);
+        return [];
+    }
+}
+
+/**
+ * ✅ FUNCIÓN DE DEBUG: Encontrar el badge exacto
+ */
+window.debugBuscarBadge = function () {
+    console.log('🔍 === DEBUG: BUSCANDO BADGE DE ESTADO ===');
+
+    // Buscar por diferentes selectores
+    const selectores = [
+        '.estado-inventario .badge',
+        '.badge.bg-success',
+        '.badge.bg-primary',
+        '.toma-header .badge',
+        'span[class*="badge"]',
+        '.badge',
+        '[class*="estado"]'
+    ];
+
+    selectores.forEach(selector => {
+        const elementos = document.querySelectorAll(selector);
+        if (elementos.length > 0) {
+            console.log(`✅ Selector "${selector}":`, Array.from(elementos).map(el => ({
+                texto: el.textContent.trim(),
+                clases: el.className
+            })));
+        }
+    });
+
+    // Búsqueda exhaustiva
+    buscarBadgeCompletadoEnTodoElDocumento();
+
+    return verificarEstadoBadge();
+};
 // =====================================
 // INICIALIZACIÓN
 // =====================================
@@ -78,6 +754,11 @@ async function inicializarEjecutorInventario(inventarioId) {
             await cargarAjustesPendientes(inventarioId);
         }, 30000);
         console.log('✅ Ejecutor de inventario inicializado correctamente');
+        // ✅ AGREGAR AL FINAL:
+        // Iniciar monitor del badge de estado
+        setTimeout(() => {
+            iniciarMonitorBadgeEstado();
+        }, 2000);
 
     } catch (error) {
         console.error('❌ Error inicializando ejecutor:', error);
@@ -577,6 +1258,7 @@ function mostrarPanelesSegunProgreso() {
             console.log('🚫 Razón: No hay productos en el inventario');
         }
     }
+    verificarEstadoBloqueo();
 }
 
 /**
@@ -3170,6 +3852,11 @@ function aplicarFiltroRapidoConEstado(tipo, botonElement = null) {
 // =====================================
 function abrirModalConteo(productoId) {
     try {
+        // ✅ AGREGAR AL INICIO:
+        if (inventarioBloqueado && !pinValidado) {
+            solicitarPinAdmin();
+            return;
+        }
         console.log(`📝 === ABRIENDO MODAL DE CONTEO ===`);
         console.log(`📝 Producto ID: ${productoId}`);
 
@@ -4396,6 +5083,11 @@ window.completarInventario = completarInventario;
  */
 function abrirModalAjustePendiente(productoId) {
     try {
+        // ✅ AGREGAR AL INICIO:
+        if (inventarioBloqueado && !pinValidado) {
+            solicitarPinAdmin();
+            return;
+        }
         console.log(`🔄 === ABRIENDO MODAL PARA CREAR AJUSTE ===`);
         console.log(`🔄 Producto ID: ${productoId}`);
 
