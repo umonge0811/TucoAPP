@@ -11,6 +11,11 @@ let productosInventario = [];
 let productosFiltrados = [];
 let estadisticasActuales = {};
 let ajustesPendientes = []; // Nueva variable para ajustes pendientes
+let filtrosActivos = {
+    texto: '',
+    estado: '',
+    tipo: ''
+};
 
 // =====================================
 // INICIALIZACIÓN
@@ -1057,6 +1062,8 @@ function configurarEventListeners() {
     $('#btnVerResumenCompleto').on('click', verResumenCompleto);
     $('#btnExportarInventario').on('click', exportarInventario);
     $('#btnFinalizarInventario').on('click', finalizarInventarioCompleto);
+
+    configurarEventListenersFiltrado();
 }
 
 // =====================================
@@ -2350,9 +2357,7 @@ function renderizarProductos() {
     try {
         console.log('🎨 Renderizando productos...');
         console.log('🎨 Total productos a renderizar:', productosInventario.length);
-
-        const tbody = $('#tablaProductosBody');
-        tbody.empty();
+        console.log('🎨 Filtros activos:', filtrosActivos);
 
         if (productosInventario.length === 0) {
             $('#loadingProductos').hide();
@@ -2361,22 +2366,36 @@ function renderizarProductos() {
             return;
         }
 
-        productosInventario.forEach((producto, index) => {
-            const row = crearFilaProducto(producto, index + 1);
-            tbody.append(row);
-        });
+        // ✅ VERIFICAR SI HAY FILTROS ACTIVOS
+        const hayFiltrosActivos = filtrosActivos.texto || filtrosActivos.estado || filtrosActivos.tipo;
+
+        if (hayFiltrosActivos) {
+            // ✅ SI HAY FILTROS ACTIVOS: Reaplicar filtros con datos actualizados
+            console.log('🔍 Reaplicando filtros activos después de actualización...');
+            filtrarProductos(filtrosActivos.texto, filtrosActivos.estado, filtrosActivos.tipo);
+        } else {
+            // ✅ SI NO HAY FILTROS: Mostrar todos los productos normalmente
+            const tbody = $('#tablaProductosBody');
+            tbody.empty();
+
+            productosInventario.forEach((producto, index) => {
+                const row = crearFilaProducto(producto, index + 1);
+                tbody.append(row);
+            });
+
+            productosFiltrados = productosInventario;
+        }
 
         $('#loadingProductos').hide();
         $('#productosLista').show();
         $('#estadoVacio').hide();
 
-        console.log('✅ Productos renderizados correctamente');
+        console.log('✅ Productos renderizados correctamente con filtros preservados');
 
     } catch (error) {
         console.error('❌ Error renderizando productos:', error);
     }
 }
-
 
 function crearFilaProducto(producto, numero) {
     const tieneDiscrepancia = producto.tieneDiscrepancia;
@@ -2792,90 +2811,358 @@ function getEstadoBadgeClass(estado) {
 // =====================================
 // FUNCIONES DE FILTRADO
 // =====================================
-function filtrarProductos(textoFiltro, estadoFiltro) {
+function filtrarProductos(textoFiltro = '', estadoFiltro = '', tipoFiltro = '') {
     try {
-        console.log('🔍 Filtrando productos - Texto:', textoFiltro, 'Estado:', estadoFiltro);
-        console.log('🔍 productosInventario disponibles:', productosInventario.length);
+        console.log('🔍 Aplicando filtros:', { textoFiltro, estadoFiltro, tipoFiltro });
 
+        // ✅ ACTUALIZAR FILTROS ACTIVOS
+        filtrosActivos = {
+            texto: textoFiltro.toLowerCase().trim(),
+            estado: estadoFiltro,
+            tipo: tipoFiltro
+        };
+
+        // ✅ FILTRAR PRODUCTOS
         productosFiltrados = productosInventario.filter(producto => {
-            // ✅ MANEJO SEGURO DE TEXTO CON VERIFICACIONES NULL
+            // Filtro por texto (búsqueda en múltiples campos)
             let cumpleTexto = true;
-            if (textoFiltro && textoFiltro.trim() !== '') {
-                const textoMinuscula = textoFiltro.toLowerCase();
-                cumpleTexto = false;
+            if (filtrosActivos.texto) {
+                const nombreProducto = (producto.nombreProducto || '').toLowerCase();
+                const descripcionProducto = (producto.descripcionProducto || '').toLowerCase();
+                const marcaLlanta = (producto.marcaLlanta || '').toLowerCase();
+                const modeloLlanta = (producto.modeloLlanta || '').toLowerCase();
+                const productoId = producto.productoId.toString();
 
-                // ✅ VERIFICAR TODAS LAS POSIBLES VARIANTES DE NOMBRES
-                const nombreProducto = producto.nombreProducto || producto.NombreProducto || '';
-                const descripcionProducto = producto.descripcionProducto || producto.DescripcionProducto || '';
-                const marcaLlanta = producto.marcaLlanta || producto.MarcaLlanta || '';
-                const modeloLlanta = producto.modeloLlanta || producto.ModeloLlanta || '';
-                const productoId = producto.productoId || producto.ProductoId || '';
-
-                // Verificar en todos los campos posibles
-                if (nombreProducto.toLowerCase().includes(textoMinuscula) ||
-                    descripcionProducto.toLowerCase().includes(textoMinuscula) ||
-                    marcaLlanta.toLowerCase().includes(textoMinuscula) ||
-                    modeloLlanta.toLowerCase().includes(textoMinuscula) ||
-                    productoId.toString().includes(textoMinuscula)) {
-                    cumpleTexto = true;
-                }
+                cumpleTexto = nombreProducto.includes(filtrosActivos.texto) ||
+                    descripcionProducto.includes(filtrosActivos.texto) ||
+                    marcaLlanta.includes(filtrosActivos.texto) ||
+                    modeloLlanta.includes(filtrosActivos.texto) ||
+                    productoId.includes(filtrosActivos.texto);
             }
 
-            // ✅ FILTRO POR ESTADO
+            // Filtro por estado
             let cumpleEstado = true;
-            if (estadoFiltro && estadoFiltro.trim() !== '') {
-                const estadoConteo = producto.estadoConteo || producto.EstadoConteo || 'Pendiente';
-                const tieneDiscrepancia = producto.tieneDiscrepancia || producto.TieneDiscrepancia || false;
-
-                switch (estadoFiltro.toLowerCase()) {
+            if (filtrosActivos.estado) {
+                switch (filtrosActivos.estado) {
                     case 'pendiente':
-                        cumpleEstado = estadoConteo === 'Pendiente';
+                        cumpleEstado = producto.estadoConteo !== 'Contado';
                         break;
                     case 'contado':
-                        cumpleEstado = estadoConteo === 'Contado';
+                        cumpleEstado = producto.estadoConteo === 'Contado';
                         break;
                     case 'discrepancia':
-                        cumpleEstado = tieneDiscrepancia === true;
+                        cumpleEstado = producto.tieneDiscrepancia === true;
                         break;
                 }
             }
 
-            return cumpleTexto && cumpleEstado;
+            // Filtro por tipo
+            let cumpleTipo = true;
+            if (filtrosActivos.tipo) {
+                switch (filtrosActivos.tipo) {
+                    case 'llanta':
+                        cumpleTipo = producto.esLlanta === true;
+                        break;
+                    case 'accesorio':
+                        cumpleTipo = producto.esLlanta !== true;
+                        break;
+                }
+            }
+
+            return cumpleTexto && cumpleEstado && cumpleTipo;
         });
 
-        console.log('✅ Productos filtrados:', productosFiltrados.length);
+        console.log(`✅ Filtrado: ${productosFiltrados.length} de ${productosInventario.length} productos`);
 
-        // Re-renderizar productos filtrados
+        // ✅ RENDERIZAR PRODUCTOS FILTRADOS
         renderizarProductosFiltrados();
 
-    } catch (error) {
-        console.error('❌ Error en filtrarProductos:', error);
-        console.error('❌ Error stack:', error.stack);
+        // ✅ ACTUALIZAR CONTADOR
+        $('#contadorProductosMostrados').text(productosFiltrados.length);
 
-        // Fallback - mostrar todos los productos
+    } catch (error) {
+        console.error('❌ Error filtrando productos:', error);
+        // En caso de error, mostrar todos los productos
         productosFiltrados = productosInventario;
         renderizarProductosFiltrados();
     }
 }
 
-
+/**
+ * ✅ FUNCIÓN: Renderizar productos filtrados
+ */
 function renderizarProductosFiltrados() {
-    const tbody = $('#productosTableBody');
-    tbody.empty();
+    try {
+        const tbody = $('#tablaProductosBody');
+        tbody.empty();
 
-    if (productosFiltrados.length === 0) {
-        $('#listaProductos').hide();
-        $('#emptyState').show();
-        return;
+        if (productosFiltrados.length === 0) {
+            // Mostrar estado vacío
+            $('#productosLista').hide();
+            $('#estadoVacio').show();
+            return;
+        }
+
+        // Renderizar productos filtrados
+        productosFiltrados.forEach((producto, index) => {
+            const fila = crearFilaProducto(producto, index + 1);
+            tbody.append(fila);
+        });
+
+        $('#productosLista').show();
+        $('#estadoVacio').hide();
+
+        console.log(`✅ Renderizados ${productosFiltrados.length} productos filtrados`);
+
+    } catch (error) {
+        console.error('❌ Error renderizando productos filtrados:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Limpiar todos los filtros
+ */
+function limpiarFiltros() {
+    // Limpiar inputs
+    $('#busquedaRapida').val('');
+    $('#filtroEstado').val('');
+    $('#filtroTipo').val('');
+
+    // Aplicar filtros vacíos
+    filtrarProductos('', '', '');
+
+    console.log('🧹 Filtros limpiados');
+}
+
+/**
+ * ✅ FUNCIÓN: Aplicar filtro rápido
+ */
+function aplicarFiltroRapido(tipo) {
+    switch (tipo) {
+        case 'todos':
+            limpiarFiltros();
+            break;
+        case 'pendientes':
+            $('#filtroEstado').val('pendiente');
+            filtrarProductos($('#busquedaRapida').val(), 'pendiente', $('#filtroTipo').val());
+            break;
+        case 'discrepancias':
+            $('#filtroEstado').val('discrepancia');
+            filtrarProductos($('#busquedaRapida').val(), 'discrepancia', $('#filtroTipo').val());
+            break;
     }
 
-    productosFiltrados.forEach((producto, index) => {
-        const row = crearFilaProducto(producto, index + 1);
-        tbody.append(row);
+    console.log(`⚡ Filtro rápido aplicado: ${tipo}`);
+}
+
+/**
+ * ✅ FUNCIÓN: Configurar event listeners del filtrado
+ */
+function configurarEventListenersFiltrado() {
+    try {
+        // ✅ BÚSQUEDA RÁPIDA
+        $('#busquedaRapida').off('input').on('input', function () {
+            const texto = $(this).val();
+            const estado = $('#filtroEstado').val();
+            const tipo = $('#filtroTipo').val();
+            filtrarProductos(texto, estado, tipo);
+        });
+
+        // ✅ BOTÓN BUSCAR
+        $('#btnBuscar').off('click').on('click', function () {
+            const texto = $('#busquedaRapida').val();
+            const estado = $('#filtroEstado').val();
+            const tipo = $('#filtroTipo').val();
+            filtrarProductos(texto, estado, tipo);
+        });
+
+        // ✅ FILTRO POR ESTADO
+        $('#filtroEstado').off('change').on('change', function () {
+            const texto = $('#busquedaRapida').val();
+            const estado = $(this).val();
+            const tipo = $('#filtroTipo').val();
+            filtrarProductos(texto, estado, tipo);
+        });
+
+        // ✅ FILTRO POR TIPO
+        $('#filtroTipo').off('change').on('change', function () {
+            const texto = $('#busquedaRapida').val();
+            const estado = $('#filtroEstado').val();
+            const tipo = $(this).val();
+            filtrarProductos(texto, estado, tipo);
+        });
+
+        // ✅ BOTÓN LIMPIAR BÚSQUEDA
+        $('#btnLimpiarBusqueda').off('click').on('click', function () {
+            $('#busquedaRapida').val('');
+            const estado = $('#filtroEstado').val();
+            const tipo = $('#filtroTipo').val();
+            filtrarProductos('', estado, tipo);
+        });
+
+        // ✅ BOTONES DE FILTRO RÁPIDO
+        $('#btnMostrarTodos').addClass('btn-filtro-rapido').off('click').on('click', function () {
+            aplicarFiltroRapidoConEstado('todos', this);
+        });
+
+        $('#btnSoloPendientes').addClass('btn-filtro-rapido').off('click').on('click', function () {
+            aplicarFiltroRapidoConEstado('pendientes', this);
+        });
+
+        $('#btnSoloDiscrepancias').addClass('btn-filtro-rapido').off('click').on('click', function () {
+            aplicarFiltroRapidoConEstado('discrepancias', this);
+        });
+        // ✅ AGREGAR TAMBIÉN: Guardar estado en inputs
+        $('#busquedaRapida, #filtroEstado, #filtroTipo').on('change input', function () {
+            setTimeout(guardarEstadoFiltrosUI, 100);
+        });
+
+        // ✅ BOTÓN LIMPIAR FILTROS (del estado vacío)
+        $('#btnLimpiarFiltros').off('click').on('click', function () {
+            limpiarFiltros();
+        });
+
+        // ✅ ENTER EN BÚSQUEDA RÁPIDA
+        $('#busquedaRapida').off('keypress').on('keypress', function (e) {
+            if (e.which === 13) { // Enter
+                $('#btnBuscar').click();
+            }
+        });
+
+        console.log('✅ Event listeners de filtrado configurados');
+
+    } catch (error) {
+        console.error('❌ Error configurando event listeners de filtrado:', error);
+    }
+}
+
+
+/**
+ * ✅ FUNCIÓN: Guardar estado actual de filtros en la UI
+ */
+function guardarEstadoFiltrosUI() {
+    const estadoUI = {
+        busquedaRapida: $('#busquedaRapida').val(),
+        filtroEstado: $('#filtroEstado').val(),
+        filtroTipo: $('#filtroTipo').val(),
+        // Guardar qué botón rápido está activo
+        botonActivoClass: $('.btn-filtro-activo').data('filtro') || null
+    };
+
+    // Guardar en variable global
+    window.estadoFiltrosUI = estadoUI;
+    
+    console.log('💾 Estado de filtros UI guardado:', estadoUI);
+    return estadoUI;
+}
+
+/**
+ * ✅ FUNCIÓN: Restaurar estado de filtros en la UI
+ */
+function restaurarEstadoFiltrosUI() {
+    try {
+        const estado = window.estadoFiltrosUI;
+        if (!estado) return;
+
+        console.log('🔄 Restaurando estado de filtros UI:', estado);
+
+        // Restaurar valores en inputs
+        $('#busquedaRapida').val(estado.busquedaRapida || '');
+        $('#filtroEstado').val(estado.filtroEstado || '');
+        $('#filtroTipo').val(estado.filtroTipo || '');
+
+        // ✅ LIMPIAR TODOS LOS EFECTOS PRIMERO
+        $('.btn-filtro-rapido').removeClass('btn-filtro-activo').css({
+            'border': '',
+            'box-shadow': '',
+            'font-weight': ''
+        });
+
+        // ✅ APLICAR SOLO CONTORNO AL BOTÓN ACTIVO
+        if (estado.botonActivoClass) {
+            const $botonActivo = $(`.btn-filtro-rapido[data-filtro="${estado.botonActivoClass}"]`);
+            if ($botonActivo.length === 0) {
+                // Si no encuentra por data-filtro, buscar por ID
+                let selectorBoton = '';
+                switch (estado.botonActivoClass) {
+                    case 'todos':
+                        selectorBoton = '#btnMostrarTodos';
+                        break;
+                    case 'pendientes':
+                        selectorBoton = '#btnSoloPendientes';
+                        break;
+                    case 'discrepancias':
+                        selectorBoton = '#btnSoloDiscrepancias';
+                        break;
+                }
+
+                if (selectorBoton) {
+                    $(selectorBoton).addClass('btn-filtro-activo').css({
+                        'border': '2px solid #007bff',
+                        'box-shadow': '0 0 0 2px rgba(0, 123, 255, 0.25)',
+                        'font-weight': 'bold'
+                    }).data('filtro', estado.botonActivoClass);
+                }
+            } else {
+                $botonActivo.addClass('btn-filtro-activo').css({
+                    'border': '2px solid #007bff',
+                    'box-shadow': '0 0 0 2px rgba(0, 123, 255, 0.25)',
+                    'font-weight': 'bold'
+                });
+            }
+        }
+
+        console.log('✅ Estado de filtros UI restaurado con contorno');
+
+    } catch (error) {
+        console.error('❌ Error restaurando estado de filtros UI:', error);
+    }
+}
+
+
+/**
+ * ✅ FUNCIÓN MEJORADA: Aplicar filtro rápido con estado visual
+ */
+function aplicarFiltroRapidoConEstado(tipo, botonElement = null) {
+    // Guardar estado antes de cambiar
+    guardarEstadoFiltrosUI();
+
+    // ✅ LIMPIAR EFECTOS DE TODOS LOS BOTONES
+    $('.btn-filtro-rapido').removeClass('btn-filtro-activo').css({
+        'border': '',
+        'box-shadow': '',
+        'font-weight': ''
     });
 
-    $('#listaProductos').show();
-    $('#emptyState').hide();
+    switch (tipo) {
+        case 'todos':
+            limpiarFiltros();
+            break;
+
+        case 'pendientes':
+            $('#filtroEstado').val('pendiente');
+            filtrarProductos($('#busquedaRapida').val(), 'pendiente', $('#filtroTipo').val());
+            break;
+
+        case 'discrepancias':
+            $('#filtroEstado').val('discrepancia');
+            filtrarProductos($('#busquedaRapida').val(), 'discrepancia', $('#filtroTipo').val());
+            break;
+    }
+
+    // ✅ APLICAR SOLO EFECTO DE CONTORNO AL BOTÓN ACTIVO
+    if (botonElement) {
+        $(botonElement).addClass('btn-filtro-activo').css({
+            'border': '2px solid #007bff',
+            'box-shadow': '0 0 0 2px rgba(0, 123, 255, 0.25)',
+            'font-weight': 'bold'
+        }).data('filtro', tipo);
+    }
+
+    // Guardar nuevo estado
+    guardarEstadoFiltrosUI();
+
+    console.log(`⚡ Filtro rápido aplicado con contorno: ${tipo}`);
 }
 
 // =====================================
@@ -3192,7 +3479,13 @@ async function actualizarEstadisticas() {
         }
 
 
-        console.log(`📊 Estadísticas actualizadas: ${porcentaje}% completado`);
+        console.log(`📊 Estadísticas actualizadas correctamente: ${porcentaje}% completado`);
+
+        // ✅ AGREGAR ESTAS LÍNEAS AL FINAL:
+        // Preservar filtros después de actualización
+        setTimeout(() => {
+            restaurarEstadoFiltrosUI();
+        }, 200);
 
     } catch (error) {
         console.error('❌ Error actualizando estadísticas:', error);
