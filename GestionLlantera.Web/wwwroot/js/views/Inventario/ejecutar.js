@@ -3059,6 +3059,7 @@ async function actualizarEstadisticas() {
             $barra.addClass('bg-success');
         }
 
+
         console.log(`📊 Estadísticas actualizadas: ${porcentaje}% completado`);
 
     } catch (error) {
@@ -3169,25 +3170,33 @@ async function completarInventario() {
 // =====================================
 
 /**
- * ✅ FUNCIÓN CORREGIDA: Actualiza las estadísticas en la interfaz de usuario
+ * ✅ FUNCIÓN LIMPIA: Actualizar estadísticas UI con protección de barra
  */
 function actualizarEstadisticasUI() {
     try {
         console.log('📊 Actualizando estadísticas UI...');
         console.log('📊 Estadísticas actuales:', estadisticasActuales);
 
-        // Actualizar contadores
+        if (!estadisticasActuales) {
+            console.warn('⚠️ No hay estadísticas para actualizar');
+            return;
+        }
+
+        const porcentaje = estadisticasActuales.porcentajeProgreso || 0;
+
+        // ✅ ACTUALIZAR CONTADORES
         $('#totalProductos').text(estadisticasActuales.total || 0);
         $('#productosContados').text(estadisticasActuales.contados || 0);
         $('#productosPendientes').text(estadisticasActuales.pendientes || 0);
         $('#discrepancias').text(estadisticasActuales.discrepancias || 0);
+        $('#contadorProductosMostrados').text(productosInventario.length);
 
-        // Actualizar barra de progreso
-        const porcentaje = estadisticasActuales.porcentajeProgreso || 0;
+        // ✅ ACTUALIZAR BARRA DE PROGRESO (PROTEGIDA)
         $('#porcentajeProgreso').text(`${porcentaje}%`);
         $('#barraProgreso').css('width', `${porcentaje}%`);
+        $('#barraProgreso').attr('aria-valuenow', porcentaje);
 
-        // Cambiar color de la barra según el progreso
+        // ✅ ACTUALIZAR COLOR DE LA BARRA
         const $barra = $('#barraProgreso');
         $barra.removeClass('bg-danger bg-warning bg-info bg-success progress-bar-striped progress-bar-animated');
 
@@ -3201,19 +3210,40 @@ function actualizarEstadisticasUI() {
             $barra.addClass('bg-success');
         }
 
-        // Actualizar contador de productos mostrados
-        $('#contadorProductosMostrados').text(productosInventario.length);
+        // ✅ PROTECCIÓN MÁS FUERTE
+        setTimeout(() => {
+            if ($('#barraProgreso').css('width') === '0px' && porcentaje > 0) {
+                $('#barraProgreso').css('width', `${porcentaje}%`);
+                $('#porcentajeProgreso').text(`${porcentaje}%`);
+                console.log(`🛡️ Barra restaurada a: ${porcentaje}%`);
+            }
+        }, 500);
 
-        console.log(`📊 Estadísticas actualizadas: ${porcentaje}% completado`);
+        // Protección continua contra auto-refresh
+        if (!window.barraProteccionInterval) {
+            window.barraProteccionInterval = setInterval(() => {
+                if (estadisticasActuales && estadisticasActuales.porcentajeProgreso > 0) {
+                    const porcentajeActual = estadisticasActuales.porcentajeProgreso;
+                    const anchoActual = $('#barraProgreso').css('width');
 
-        // ✅ AGREGAR ESTA LÍNEA CRUCIAL:
+                    if (anchoActual === '0px') {
+                        $('#barraProgreso').css('width', `${porcentajeActual}%`);
+                        $('#porcentajeProgreso').text(`${porcentajeActual}%`);
+                        console.log(`🔒 Auto-protección: Barra restaurada a ${porcentajeActual}%`);
+                    }
+                }
+            }, 1000);
+        }
+
+        console.log(`✅ Estadísticas actualizadas: ${porcentaje}% completado`);
+
+        // ✅ MOSTRAR PANELES SEGÚN PROGRESO
         mostrarPanelesSegunProgreso();
 
     } catch (error) {
         console.error('❌ Error actualizando estadísticas UI:', error);
     }
 }
-
 
 // =====================================
 // FUNCIONES AUXILIARES
@@ -5458,6 +5488,8 @@ function imprimirReporte() {
     window.print();
 }
 
+
+
 /**
  * ✅ FUNCIÓN: Exportar reporte a Excel
  */
@@ -5479,3 +5511,53 @@ window.exportarInventario = exportarInventario;
 window.volverAInventarios = volverAInventarios;
 
 
+// ✅ CÓDIGO DETECTIVE - Agregar al final del archivo
+$(document).ready(function () {
+    // Espiar cuando alguien cambia la barra de progreso
+    const barraOriginal = $('#barraProgreso');
+
+    if (barraOriginal.length) {
+        // Crear observador para detectar cambios
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const nuevoAncho = $('#barraProgreso').css('width');
+
+                    if (nuevoAncho === '0px') {
+                        console.error('🚨 DETECTIVE: ¡Alguien reseteó la barra a 0px!');
+                        console.error('🚨 Stack trace del culpable:');
+                        console.trace();
+                    }
+                }
+            });
+        });
+
+        observer.observe(barraOriginal[0], {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+
+        console.log('🕵️ Detective activado - monitoreando cambios en la barra');
+    }
+});
+
+// ✅ ESPIAR FUNCIONES SOSPECHOSAS
+const funcionesOriginales = {};
+
+// Interceptar cargarProductosInventario
+if (typeof cargarProductosInventario === 'function') {
+    funcionesOriginales.cargarProductosInventario = cargarProductosInventario;
+    window.cargarProductosInventario = function (...args) {
+        console.log('🔍 DETECTIVE: cargarProductosInventario ejecutándose...');
+        return funcionesOriginales.cargarProductosInventario.apply(this, args);
+    };
+}
+
+// Interceptar actualizarEstadisticas (si existe)
+if (typeof actualizarEstadisticas === 'function') {
+    funcionesOriginales.actualizarEstadisticas = actualizarEstadisticas;
+    window.actualizarEstadisticas = function (...args) {
+        console.log('🔍 DETECTIVE: actualizarEstadisticas ejecutándose...');
+        return funcionesOriginales.actualizarEstadisticas.apply(this, args);
+    };
+}
