@@ -2587,16 +2587,6 @@ function crearNuevosBotonesAccion(producto) {
             `;
         }
 
-        // ✅ BOTÓN DE DETALLES (siempre disponible)
-        botones += `
-            <button class="btn btn-sm btn-outline-secondary mb-1" 
-                    onclick="verDetallesProducto(${producto.productoId})"
-                    data-bs-toggle="tooltip"
-                    title="Ver detalles del producto">
-                <i class="bi bi-info-circle me-1"></i>
-                Detalles
-            </button>
-        `;
 
         // ✅ MENSAJE INFORMATIVO si no tiene permisos de acción
         if (!botones.includes('btn-conteo') && !botones.includes('btn-ajuste') && !botones.includes('btn-validacion')) {
@@ -3634,35 +3624,193 @@ function actualizarProductoConAjustePendiente(productoId, ajusteData) {
     }
 }
 
-// ✅ NUEVA FUNCIÓN: Ver ajustes de un producto
+/**
+ * ✅ FUNCIÓN CORREGIDA: Ver ajustes de un producto con popup rápido
+ * REEMPLAZAR la función existente o AGREGAR si no existe
+ */
 async function verAjustesProducto(productoId) {
     try {
         console.log('👁️ Mostrando ajustes del producto:', productoId);
 
-        const response = await fetch(`/TomaInventario/${window.inventarioConfig.inventarioId}/productos/${productoId}/ajustes`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+        // ✅ BUSCAR AJUSTES LOCALES DEL PRODUCTO
+        const ajustesProducto = ajustesPendientes.filter(ajuste =>
+            ajuste.productoId === productoId &&
+            (ajuste.estado === 'Pendiente' || ajuste.estado === 'pendiente' || !ajuste.estado)
+        );
+
+        if (ajustesProducto.length === 0) {
+            mostrarInfo('Este producto no tiene ajustes pendientes');
+            return;
+        }
+
+        // ✅ OBTENER DATOS DEL PRODUCTO
+        const producto = productosInventario.find(p => p.productoId === productoId);
+        const nombreProducto = producto ? producto.nombreProducto : `Producto ${productoId}`;
+
+        // ✅ CREAR RESUMEN RÁPIDO Y VISUAL
+        let htmlResumen = `
+            <div class="text-start">
+                <h5 class="text-primary mb-3">
+                    <i class="bi bi-clipboard-check me-2"></i>
+                    Ajustes Pendientes
+                </h5>
+                
+                <div class="alert alert-info">
+                    <strong>📦 Producto:</strong> ${nombreProducto}<br>
+                    <strong>🔄 Ajustes encontrados:</strong> ${ajustesProducto.length}
+                </div>
+        `;
+
+        // ✅ MOSTRAR CADA AJUSTE DE FORMA VISUAL Y SIMPLE
+        ajustesProducto.forEach((ajuste, index) => {
+            const diferencia = ajuste.cantidadFinalPropuesta - ajuste.cantidadSistemaOriginal;
+            const diferenciaTexto = diferencia > 0 ? `+${diferencia}` : `${diferencia}`;
+            const diferenciaColor = diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : 'text-muted';
+
+            const tipoTexto = obtenerTextoTipoAjuste(ajuste.tipoAjuste);
+            const fechaCreacion = ajuste.fechaCreacion ? new Date(ajuste.fechaCreacion).toLocaleDateString() : 'Hoy';
+
+            htmlResumen += `
+                <div class="card mb-2 border-left-primary">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <div class="h6 mb-0">${ajuste.cantidadSistemaOriginal}</div>
+                                    <small class="text-muted">Sistema</small>
+                                </div>
+                            </div>
+                            <div class="col-2 text-center">
+                                <i class="bi bi-arrow-right h4 text-primary"></i>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <div class="h6 mb-0 text-primary">${ajuste.cantidadFinalPropuesta}</div>
+                                    <small class="text-muted">Propuesto</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-end">
+                                    <span class="badge bg-primary">${tipoTexto}</span><br>
+                                    <span class="fw-bold ${diferenciaColor}">${diferenciaTexto} unidades</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${ajuste.motivoAjuste ? `
+                            <div class="mt-2 pt-2 border-top">
+                                <small class="text-muted">
+                                    <strong>Motivo:</strong> ${ajuste.motivoAjuste}
+                                </small>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        htmlResumen += `
+                <div class="alert alert-warning mt-3">
+                    <small>
+                        <i class="bi bi-info-circle me-1"></i>
+                        Estos ajustes se aplicarán al stock cuando se complete el inventario.
+                    </small>
+                </div>
+            </div>
+        `;
+
+        // ✅ MOSTRAR POPUP CON BOTONES DE ACCIÓN
+        const resultado = await Swal.fire({
+            title: `📋 Ajustes de ${nombreProducto}`,
+            html: htmlResumen,
+            icon: 'info',
+            showCancelButton: true,
+            showDenyButton: ajustesProducto.length === 1, // Solo mostrar editar si hay 1 ajuste
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            denyButtonColor: '#ffc107',
+            confirmButtonText: '<i class="bi bi-check-lg me-1"></i> Entendido',
+            cancelButtonText: '<i class="bi bi-trash me-1"></i> Eliminar Ajuste',
+            denyButtonText: '<i class="bi bi-pencil me-1"></i> Editar Ajuste',
+            width: '600px',
+            customClass: {
+                popup: 'swal-wide'
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}`);
-        }
-
-        const resultado = await response.json();
-
-        if (resultado.success && resultado.ajustes.length > 0) {
-            mostrarModalAjustesProducto(resultado.ajustes);
-        } else {
-            mostrarInfo('Este producto no tiene ajustes pendientes');
+        // ✅ MANEJAR ACCIONES DEL USUARIO
+        if (resultado.isDenied && ajustesProducto.length === 1) {
+            // Editar ajuste
+            editarAjustePendiente(ajustesProducto[0].ajusteId);
+        } else if (resultado.isDismissed && resultado.dismiss === 'cancel') {
+            // Eliminar ajuste
+            if (ajustesProducto.length === 1) {
+                eliminarAjustePendiente(ajustesProducto[0].ajusteId);
+            } else {
+                // Si hay múltiples, preguntar cuál eliminar
+                mostrarSeleccionarAjusteParaEliminar(ajustesProducto);
+            }
         }
 
     } catch (error) {
-        console.error('❌ Error obteniendo ajustes del producto:', error);
-        mostrarError('Error al obtener los ajustes del producto');
+        console.error('❌ Error mostrando ajustes del producto:', error);
+        mostrarError('Error al mostrar los ajustes del producto');
     }
 }
+
+/**
+ * ✅ FUNCIÓN AUXILIAR: Seleccionar ajuste para eliminar cuando hay múltiples
+ */
+async function mostrarSeleccionarAjusteParaEliminar(ajustes) {
+    try {
+        let opcionesHtml = '<div class="text-start">';
+
+        ajustes.forEach((ajuste, index) => {
+            const tipoTexto = obtenerTextoTipoAjuste(ajuste.tipoAjuste);
+            const diferencia = ajuste.cantidadFinalPropuesta - ajuste.cantidadSistemaOriginal;
+
+            opcionesHtml += `
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="ajusteSeleccionado" 
+                           id="ajuste${ajuste.ajusteId}" value="${ajuste.ajusteId}">
+                    <label class="form-check-label" for="ajuste${ajuste.ajusteId}">
+                        ${tipoTexto} - ${diferencia > 0 ? '+' : ''}${diferencia} unidades
+                        <br><small class="text-muted">${ajuste.motivoAjuste}</small>
+                    </label>
+                </div>
+            `;
+        });
+
+        opcionesHtml += '</div>';
+
+        const resultado = await Swal.fire({
+            title: '🗑️ ¿Qué ajuste quieres eliminar?',
+            html: opcionesHtml,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Eliminar Seleccionado',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const seleccionado = document.querySelector('input[name="ajusteSeleccionado"]:checked');
+                if (!seleccionado) {
+                    Swal.showValidationMessage('Debes seleccionar un ajuste');
+                    return false;
+                }
+                return seleccionado.value;
+            }
+        });
+
+        if (resultado.isConfirmed) {
+            eliminarAjustePendiente(parseInt(resultado.value));
+        }
+
+    } catch (error) {
+        console.error('❌ Error en selección de ajuste:', error);
+    }
+}
+
 
 // ✅ NUEVA FUNCIÓN: Mostrar modal con ajustes de un producto
 function mostrarModalAjustesProducto(ajustes) {
