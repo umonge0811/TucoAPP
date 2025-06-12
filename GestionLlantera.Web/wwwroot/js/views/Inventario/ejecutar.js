@@ -41,39 +41,44 @@ $(document).ready(function () {
 // =====================================
 // FUNCIONES DE INICIALIZACIÓN
 // =====================================
+
 async function inicializarEjecutorInventario(inventarioId) {
     try {
         console.log(`📋 Inicializando ejecutor para inventario ID: ${inventarioId}`);
 
         // ✅ CARGAR PERMISOS ESPECÍFICOS PRIMERO
         await cargarPermisosInventarioActual(inventarioId);
-        // Cargar información del inventario
+
+        // ✅ CARGAR INFORMACIÓN DEL INVENTARIO
         await cargarInformacionInventario(inventarioId);
 
-        // Cargar productos del inventario
-        await cargarProductosInventario(inventarioId);
-
-        // ✅ AGREGAR ESTA LÍNEA: Cargar ajustes pendientes
+        // ✅ CAMBIO CRÍTICO: CARGAR AJUSTES PENDIENTES ANTES QUE PRODUCTOS
+        console.log('🔄 Cargando ajustes pendientes ANTES que productos...');
         await cargarAjustesPendientes(inventarioId);
 
-        // Actualizar estadísticas
+        // ✅ AHORA SÍ CARGAR PRODUCTOS (ya con ajustes en memoria)
+        console.log('📦 Cargando productos CON ajustes ya cargados...');
+        await cargarProductosInventario(inventarioId);
+
+        // ✅ ACTUALIZAR ESTADÍSTICAS
         await actualizarEstadisticas();
 
-        // ✅ APLICAR CONTROL DE PERMISOS EN LA UI
+        // ✅ APLICAR CONTROL DE PERMISOS
         aplicarControlPermisos();
 
-        // Configurar auto-refresh cada 30 segundos
+        // ✅ AUTO-REFRESH CADA 30 SEGUNDOS
+        // ✅ CAMBIAR línea 71 por esto:
         setInterval(async () => {
             await actualizarEstadisticas();
             await cargarAjustesPendientes(inventarioId);
         }, 30000);
+        console.log('✅ Ejecutor de inventario inicializado correctamente');
 
     } catch (error) {
         console.error('❌ Error inicializando ejecutor:', error);
         mostrarError('Error al cargar el inventario');
     }
 }
-
 /**
  * ✅ NUEVA FUNCIÓN: Actualizar panel de ajustes pendientes
  */
@@ -2324,6 +2329,15 @@ function crearFilaProducto(producto, numero) {
     const tieneDiscrepancia = producto.tieneDiscrepancia;
     const tieneAjustePendiente = verificarAjustePendiente(producto.productoId);
 
+    // ✅ AGREGAR ESTAS LÍNEAS DE DEBUG:
+    console.log(`🔧 DEBUG crearFilaProducto - Producto ${producto.productoId}:`, {
+        nombreProducto: producto.nombreProducto,
+        tieneDiscrepancia: tieneDiscrepancia,
+        tieneAjustePendiente: tieneAjustePendiente,
+        ajustesPendientesTotal: ajustesPendientes ? ajustesPendientes.length : 0,
+        ajustesParaEsteProducto: ajustesPendientes ? ajustesPendientes.filter(a => a.productoId === producto.productoId) : []
+    });
+
     const estadoClass = tieneDiscrepancia ? 'estado-discrepancia' :
         producto.estadoConteo === 'Contado' ? 'estado-contado' : 'estado-pendiente';
 
@@ -2427,6 +2441,16 @@ function crearBadgesEstado(producto) {
  */
 function crearNuevosBotonesAccion(producto) {
     try {
+        // ✅ DEBUG AL INICIO
+        const tieneAjustePendiente = verificarAjustePendiente(producto.productoId);
+        const ajusteDetalle = tieneAjustePendiente ? obtenerDetallesAjustePendiente(producto.productoId) : null;
+
+        console.log(`🔧 crearNuevosBotonesAccion - Producto ${producto.productoId}:`, {
+            tieneDiscrepancia: producto.tieneDiscrepancia,
+            tieneAjustePendiente: tieneAjustePendiente,
+            detalleAjuste: ajusteDetalle
+        });
+
         const inventarioEnProgreso = inventarioActual?.estado === 'En Progreso';
         let botones = '';
 
@@ -2447,39 +2471,56 @@ function crearNuevosBotonesAccion(producto) {
             `;
         }
 
-        // ✅ BOTÓN DE AJUSTE PENDIENTE (verificar permiso específico)
-        if (permisosInventarioActual.puedeAjustar &&
-            producto.tieneDiscrepancia &&
-            !verificarAjustePendiente(producto.productoId) &&
-            inventarioEnProgreso) {
+        // ✅ LÓGICA CORREGIDA PARA BOTONES DE AJUSTE
+        if (permisosInventarioActual.puedeAjustar && producto.tieneDiscrepancia && inventarioEnProgreso) {
 
-            botones += `
-                <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente" 
-                        onclick="abrirModalAjustePendiente(${producto.productoId})"
-                        data-bs-toggle="tooltip"
-                        title="Crear ajuste pendiente para esta discrepancia">
-                    <i class="bi bi-clock-history me-1"></i>
-                    Crear Ajuste
-                </button>
-            `;
+            if (tieneAjustePendiente) {
+                // ✅ SI YA TIENE AJUSTE: Mostrar botón Ver Ajustes
+                console.log(`🟢 Producto ${producto.productoId}: Mostrando botón VER AJUSTE`);
+
+                botones += `
+                    <button class="btn btn-sm btn-info mb-1" 
+                            onclick="verAjustesProducto(${producto.productoId})"
+                            data-bs-toggle="tooltip"
+                            title="Ver ajuste pendiente: ${ajusteDetalle ? obtenerTextoTipoAjuste(ajusteDetalle.tipoAjuste) : 'Pendiente'}">
+                        <i class="bi bi-eye me-1"></i>
+                        Ver Ajuste
+                    </button>
+                `;
+
+                // ✅ Botón secundario para editar (si existe la función)
+                if (ajusteDetalle && typeof editarAjustePendiente === 'function') {
+                    botones += `
+                        <button class="btn btn-sm btn-outline-warning mb-1" 
+                                onclick="editarAjustePendiente(${ajusteDetalle.ajusteId})"
+                                data-bs-toggle="tooltip"
+                                title="Editar ajuste pendiente">
+                            <i class="bi bi-pencil me-1"></i>
+                            Editar
+                        </button>
+                    `;
+                }
+
+            } else {
+                // ✅ SI NO TIENE AJUSTE: Mostrar botón Crear
+                console.log(`🟡 Producto ${producto.productoId}: Mostrando botón CREAR AJUSTE`);
+
+                botones += `
+                    <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente" 
+                            onclick="abrirModalAjustePendiente(${producto.productoId})"
+                            data-bs-toggle="tooltip"
+                            title="Crear ajuste pendiente para esta discrepancia">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Crear Ajuste
+                    </button>
+                `;
+            }
         }
 
-        // ✅ BOTÓN DE VER AJUSTES (si ya tiene ajustes pendientes)
-        if (verificarAjustePendiente(producto.productoId)) {
-            botones += `
-                <button class="btn btn-sm btn-info mb-1" 
-                        onclick="verAjustesProducto(${producto.productoId})"
-                        data-bs-toggle="tooltip"
-                        title="Ver ajustes pendientes de este producto">
-                    <i class="bi bi-eye me-1"></i>
-                    Ver Ajustes
-                </button>
-            `;
-        }
-
-        // ✅ BOTÓN DE VALIDACIÓN (solo para usuarios con permiso de validación)
+        // ✅ BOTÓN DE VALIDACIÓN (solo si no tiene ajuste pendiente)
         if (permisosInventarioActual.puedeValidar &&
             producto.tieneDiscrepancia &&
+            !tieneAjustePendiente &&
             inventarioEnProgreso) {
 
             botones += `
@@ -2504,7 +2545,7 @@ function crearNuevosBotonesAccion(producto) {
             </button>
         `;
 
-        // ✅ MENSAJE INFORMATIVO si no tiene permisos
+        // ✅ MENSAJE INFORMATIVO si no tiene permisos de acción
         if (!botones.includes('btn-conteo') && !botones.includes('btn-ajuste') && !botones.includes('btn-validacion')) {
             botones += `
                 <small class="text-muted d-block">
@@ -2513,6 +2554,8 @@ function crearNuevosBotonesAccion(producto) {
                 </small>
             `;
         }
+
+        console.log(`✅ Botones generados para producto ${producto.productoId}:`, botones.includes('Ver Ajuste') ? 'Ver Ajuste' : 'Crear Ajuste');
 
         return `<div class="d-flex flex-column gap-1">${botones}</div>`;
 
@@ -2603,13 +2646,59 @@ async function validarDiscrepancia(productoId) {
 }
 
 /**
- * ✅ NUEVA FUNCIÓN: Verificar si un producto tiene ajustes pendientes
+ * ✅ FUNCIÓN CORREGIDA: Verificar si un producto tiene ajustes pendientes
+ * REEMPLAZAR la función existente completamente
  */
 function verificarAjustePendiente(productoId) {
-    return ajustesPendientes.some(ajuste =>
-        ajuste.productoId === productoId && ajuste.estado === 'Pendiente'
-    );
+    try {
+        // ✅ Verificar en datos locales de ajustesPendientes
+        if (!ajustesPendientes || ajustesPendientes.length === 0) {
+            console.log(`🔍 Producto ${productoId}: No hay ajustes pendientes cargados`);
+            return false;
+        }
+
+        // ✅ Buscar ajuste pendiente para este producto
+        const ajustePendiente = ajustesPendientes.find(ajuste =>
+            ajuste.productoId === productoId &&
+            (ajuste.estado === 'Pendiente' || ajuste.estado === 'pendiente' || !ajuste.estado)
+        );
+
+        if (ajustePendiente) {
+            console.log(`✅ Producto ${productoId} SÍ tiene ajuste pendiente:`, ajustePendiente);
+            return true;
+        } else {
+            console.log(`❌ Producto ${productoId} NO tiene ajuste pendiente`);
+            return false;
+        }
+
+    } catch (error) {
+        console.error('❌ Error verificando ajuste pendiente:', error);
+        return false;
+    }
 }
+
+/**
+ * ✅ FUNCIÓN NUEVA: Obtener detalles del ajuste pendiente
+ */
+function obtenerDetallesAjustePendiente(productoId) {
+    try {
+        if (!ajustesPendientes || ajustesPendientes.length === 0) {
+            return null;
+        }
+
+        const ajuste = ajustesPendientes.find(ajuste =>
+            ajuste.productoId === productoId &&
+            (ajuste.estado === 'Pendiente' || ajuste.estado === 'pendiente' || !ajuste.estado)
+        );
+
+        return ajuste || null;
+
+    } catch (error) {
+        console.error('❌ Error obteniendo detalles de ajuste:', error);
+        return null;
+    }
+}
+
 
 /**
  * ✅ NUEVA FUNCIÓN: Ver detalles del producto (placeholder)
@@ -5561,3 +5650,57 @@ if (typeof actualizarEstadisticas === 'function') {
         return funcionesOriginales.actualizarEstadisticas.apply(this, args);
     };
 }
+
+// ✅ FUNCIONES DE DEBUG - Agregar al final del archivo
+
+/**
+ * ✅ FUNCIÓN DE DEBUG: Mostrar todos los ajustes pendientes
+ */
+function debugAjustesPendientes() {
+    console.log('🔍 === DEBUG AJUSTES PENDIENTES ===');
+    console.log('📊 Total ajustes cargados:', ajustesPendientes ? ajustesPendientes.length : 0);
+
+    if (ajustesPendientes && ajustesPendientes.length > 0) {
+        ajustesPendientes.forEach((ajuste, index) => {
+            console.log(`${index + 1}. Producto ${ajuste.productoId} - Estado: ${ajuste.estado} - Tipo: ${ajuste.tipoAjuste}`);
+        });
+    } else {
+        console.log('❌ No hay ajustes pendientes cargados');
+    }
+
+    return ajustesPendientes;
+}
+
+/**
+ * ✅ FUNCIÓN DE DEBUG COMPLETO
+ */
+window.debugInventarioCompleto = function () {
+    console.log('🔍 === DEBUG COMPLETO ===');
+    console.log('📦 Productos:', productosInventario ? productosInventario.length : 0);
+    console.log('🔄 Ajustes pendientes:', ajustesPendientes ? ajustesPendientes.length : 0);
+
+    if (productosInventario && productosInventario.length > 0) {
+        console.log('📋 Detalle por producto:');
+        productosInventario.forEach(producto => {
+            const tieneAjuste = verificarAjustePendiente(producto.productoId);
+            console.log(`  Producto ${producto.productoId} (${producto.nombreProducto}): Discrepancia=${producto.tieneDiscrepancia}, Ajuste=${tieneAjuste}`);
+        });
+    }
+
+    debugAjustesPendientes();
+
+    return {
+        productos: productosInventario ? productosInventario.length : 0,
+        ajustes: ajustesPendientes ? ajustesPendientes.length : 0
+    };
+};
+
+/**
+ * ✅ FUNCIÓN PARA VER ESTADO ACTUAL
+ */
+window.verEstadoActual = function () {
+    console.log('📊 Estado actual:');
+    console.log('  productosInventario:', productosInventario ? productosInventario.length : 'undefined');
+    console.log('  ajustesPendientes:', ajustesPendientes ? ajustesPendientes.length : 'undefined');
+    console.log('  estadisticasActuales:', estadisticasActuales);
+};
