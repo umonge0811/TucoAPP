@@ -87,16 +87,16 @@ function actualizarPanelAjustesPendientes() {
         console.log('🔄 Actualizando panel de ajustes pendientes...');
 
         const totalAjustes = ajustesPendientes.length;
+        // ✅ POR ESTAS LÍNEAS CORREGIDAS:
         const ajustesPorTipo = contarAjustesPorTipo();
 
-        // ✅ ACTUALIZAR CONTADOR PRINCIPAL
-        $('#contadorAjustesPendientes').text(totalAjustes);
+        console.log('📊 Actualizando estadísticas del panel con:', ajustesPorTipo);
 
-        // ✅ ACTUALIZAR ESTADÍSTICAS POR TIPO
-        $('#totalEntradas').text(ajustesPorTipo.ENTRADA || 0);
-        $('#totalSalidas').text(ajustesPorTipo.SALIDA || 0);
-        $('#totalAjustes').text(ajustesPorTipo.AJUSTE_SISTEMA || 0);
-        $('#totalCorrecciones').text(ajustesPorTipo.CORRECCION_CONTEO || 0);
+        // ✅ ACTUALIZAR ESTADÍSTICAS POR TIPO (IDs CORRECTOS)
+        $('#totalEntradas').text(ajustesPorTipo.entradas || 0);
+        $('#totalSalidas').text(ajustesPorTipo.salidas || 0);
+        $('#totalAjustes').text(ajustesPorTipo.ajustes_sistema || 0);
+        $('#totalCorrecciones').text(ajustesPorTipo.correcciones || 0);
 
         // ✅ MOSTRAR/OCULTAR PANEL
         if (totalAjustes > 0) {
@@ -114,25 +114,78 @@ function actualizarPanelAjustesPendientes() {
 }
 
 /**
- * ✅ NUEVA FUNCIÓN: Contar ajustes por tipo
+ * ✅ FUNCIÓN CORREGIDA: Contar ajustes por tipo
+ * REEMPLAZAR la función existente si la hay, o AGREGAR si no existe
  */
 function contarAjustesPorTipo() {
-    const contadores = {
-        ENTRADA: 0,
-        SALIDA: 0,
-        AJUSTE_SISTEMA: 0,
-        CORRECCION_CONTEO: 0
-    };
+    try {
+        console.log('📊 Contando ajustes por tipo...');
+        console.log('🔍 Ajustes pendientes:', ajustesPendientes);
 
-    ajustesPendientes.forEach(ajuste => {
-        if (ajuste.estado === 'Pendiente' && contadores.hasOwnProperty(ajuste.tipoAjuste)) {
-            contadores[ajuste.tipoAjuste]++;
+        const contadores = {
+            entradas: 0,           // Cuando aumenta el stock
+            salidas: 0,            // Cuando disminuye el stock  
+            ajustes_sistema: 0,    // Ajustes del tipo sistema_a_fisico
+            correcciones: 0,       // Validaciones y reconteos
+            total: ajustesPendientes.length
+        };
+
+        if (!ajustesPendientes || ajustesPendientes.length === 0) {
+            console.log('⚠️ No hay ajustes pendientes para contar');
+            return contadores;
         }
-    });
 
-    return contadores;
+        ajustesPendientes.forEach(ajuste => {
+            if (ajuste.estado !== 'Pendiente' && ajuste.estado !== 'pendiente') {
+                return; // Solo contar ajustes pendientes
+            }
+
+            const diferencia = ajuste.cantidadFinalPropuesta - ajuste.cantidadSistemaOriginal;
+
+            // ✅ CLASIFICAR POR TIPO DE AJUSTE
+            switch (ajuste.tipoAjuste) {
+                case 'sistema_a_fisico':
+                    contadores.ajustes_sistema++;
+                    // También clasificar si es entrada o salida
+                    if (diferencia > 0) {
+                        contadores.entradas++;
+                    } else if (diferencia < 0) {
+                        contadores.salidas++;
+                    }
+                    break;
+
+                case 'validado':
+                case 'reconteo':
+                    contadores.correcciones++;
+                    break;
+
+                default:
+                    // Para tipos no reconocidos, clasificar por diferencia
+                    if (diferencia > 0) {
+                        contadores.entradas++;
+                    } else if (diferencia < 0) {
+                        contadores.salidas++;
+                    } else {
+                        contadores.correcciones++;
+                    }
+                    break;
+            }
+        });
+
+        console.log('✅ Contadores calculados:', contadores);
+        return contadores;
+
+    } catch (error) {
+        console.error('❌ Error contando ajustes por tipo:', error);
+        return {
+            entradas: 0,
+            salidas: 0,
+            ajustes_sistema: 0,
+            correcciones: 0,
+            total: 0
+        };
+    }
 }
-
 /**
  * ✅ NUEVA FUNCIÓN: Llenar tabla de ajustes pendientes
  */
