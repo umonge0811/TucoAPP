@@ -1,0 +1,152 @@
+
+<!-- Modal Finalizar Venta -->
+<div class="modal fade" id="modalFinalizarVenta" tabindex="-1" aria-labelledby="modalFinalizarVentaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalFinalizarVentaLabel">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Finalizar Venta
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formFinalizarVenta">
+                    <!-- Información del cliente -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="bi bi-person me-1"></i>
+                                Información del Cliente
+                            </h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Nombre Completo *</label>
+                            <input type="text" class="form-control" id="clienteNombre" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Cédula/Identificación</label>
+                            <input type="text" class="form-control" id="clienteCedula">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" class="form-control" id="clienteTelefono">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="clienteEmail">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Dirección</label>
+                            <textarea class="form-control" rows="2" id="clienteDireccion"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Método de pago -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="bi bi-credit-card me-1"></i>
+                                Método de Pago
+                            </h6>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="pagoEfectivo" value="efectivo" checked>
+                                        <label class="form-check-label" for="pagoEfectivo">
+                                            <i class="bi bi-cash me-1"></i>
+                                            Efectivo
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="pagoTarjeta" value="tarjeta">
+                                        <label class="form-check-label" for="pagoTarjeta">
+                                            <i class="bi bi-credit-card me-1"></i>
+                                            Tarjeta
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="pagoTransferencia" value="transferencia">
+                                        <label class="form-check-label" for="pagoTransferencia">
+                                            <i class="bi bi-bank me-1"></i>
+                                            Transferencia
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo para efectivo recibido -->
+                        <div class="col-md-6 mb-3" id="campoEfectivoRecibido">
+                            <label class="form-label">Efectivo Recibido</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₡</span>
+                                <input type="number" class="form-control" id="efectivoRecibido" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3" id="campoCambio" style="display: none;">
+                            <label class="form-label">Cambio</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₡</span>
+                                <input type="text" class="form-control" id="cambioCalculado" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resumen de la venta -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2 mb-3">
+                                <i class="bi bi-receipt me-1"></i>
+                                Resumen de la Venta
+                            </h6>
+                        </div>
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div id="resumenVentaFinal">
+                                        <!-- Se llena dinámicamente -->
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <strong>Total a Pagar:</strong>
+                                        <strong class="h5 text-success" id="totalFinalVenta">₡0.00</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Observaciones -->
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" rows="3" id="observacionesVenta" 
+                                      placeholder="Observaciones adicionales sobre la venta..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" id="btnGuardarProforma">
+                    <i class="bi bi-file-earmark-text me-1"></i>
+                    Guardar como Proforma
+                </button>
+                <button type="button" class="btn btn-success" id="btnConfirmarVenta">
+                    <i class="bi bi-check-circle me-1"></i>
+                    Confirmar Venta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

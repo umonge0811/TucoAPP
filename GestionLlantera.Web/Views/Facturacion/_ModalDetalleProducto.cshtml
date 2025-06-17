@@ -1,0 +1,113 @@
+
+<!-- Modal Detalle de Producto -->
+<div class="modal fade" id="modalDetalleProducto" tabindex="-1" aria-labelledby="modalDetalleProductoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalDetalleProductoLabel">
+                    <i class="bi bi-box me-2"></i>
+                    Detalle del Producto
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Imagen del producto -->
+                    <div class="col-md-4 mb-3">
+                        <div class="product-image-container text-center">
+                            <img id="productoImagen" src="" alt="Producto" class="img-fluid rounded border" 
+                                 style="max-height: 250px; object-fit: cover;">
+                        </div>
+                    </div>
+
+                    <!-- Información del producto -->
+                    <div class="col-md-8">
+                        <div class="product-info">
+                            <h4 id="productoNombre" class="text-primary mb-2"></h4>
+                            <p id="productoDescripcion" class="text-muted mb-3"></p>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <strong>Código:</strong>
+                                    <span id="productoCodigo" class="d-block"></span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Categoría:</strong>
+                                    <span id="productoCategoria" class="d-block"></span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <strong>Precio:</strong>
+                                    <span id="productoPrecio" class="d-block h5 text-success"></span>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Stock Disponible:</strong>
+                                    <span id="productoStock" class="d-block"></span>
+                                </div>
+                            </div>
+
+                            <!-- Información específica de llanta -->
+                            <div id="llantaInfo" style="display: none;">
+                                <h6 class="text-secondary border-bottom pb-1 mb-2">Información de Llanta</h6>
+                                <div class="row">
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Medida:</small>
+                                        <div id="llantaMedida"></div>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Marca:</small>
+                                        <div id="llantaMarca"></div>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Tipo:</small>
+                                        <div id="llantaTipo"></div>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Uso:</small>
+                                        <div id="llantaUso"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Controles de cantidad -->
+                            <div class="quantity-controls mt-3">
+                                <label class="form-label fw-bold">Cantidad a agregar:</label>
+                                <div class="input-group" style="max-width: 200px;">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnRestarCantidad">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <input type="number" class="form-control text-center" id="cantidadProducto" 
+                                           value="1" min="1" max="999">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnSumarCantidad">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Máximo disponible: <span id="stockMaximo"></span></small>
+                            </div>
+
+                            <!-- Subtotal -->
+                            <div class="subtotal-preview mt-3 p-2 bg-light rounded">
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal:</span>
+                                    <strong id="subtotalPreview">₡0.00</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnAgregarAlCarrito">
+                    <i class="bi bi-cart-plus me-1"></i>
+                    Agregar al Carrito
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

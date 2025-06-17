@@ -1,0 +1,254 @@
+
+@{
+    ViewData["Title"] = "Facturación";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css" asp-append-version="true" />
+}
+
+<div class="container-fluid px-4">
+    <!-- Header principal -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-header d-flex justify-content-between align-items-center flex-wrap">
+                <div class="header-content">
+                    <h2 class="page-title">
+                        <i class="bi bi-receipt-cutoff me-2"></i>
+                        Facturación
+                    </h2>
+                    <p class="page-subtitle text-muted mb-0">
+                        Gestiona ventas, consulta inventario y genera facturas
+                    </p>
+                </div>
+                <div class="header-actions d-flex gap-2 flex-wrap">
+                    <button class="btn btn-outline-success" id="btnConsultarInventario">
+                        <i class="bi bi-search me-1"></i>
+                        <span class="d-none d-sm-inline">Consultar </span>Inventario
+                    </button>
+                    <button class="btn btn-primary" id="btnNuevaVenta">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Nueva Venta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-primary text-white rounded-circle mx-auto mb-2">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                    <h3 class="stat-number text-primary" id="ventasHoy">0</h3>
+                    <p class="stat-label text-muted mb-0">Ventas Hoy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-success text-white rounded-circle mx-auto mb-2">
+                        <i class="bi bi-currency-dollar"></i>
+                    </div>
+                    <h3 class="stat-number text-success" id="ingresosDia">₡0</h3>
+                    <p class="stat-label text-muted mb-0">Ingresos del Día</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-info text-white rounded-circle mx-auto mb-2">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h3 class="stat-number text-info" id="productosVendidos">0</h3>
+                    <p class="stat-label text-muted mb-0">Productos Vendidos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3 mb-3">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="stat-icon bg-warning text-white rounded-circle mx-auto mb-2">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <h3 class="stat-number text-warning" id="proformasCreadas">0</h3>
+                    <p class="stat-label text-muted mb-0">Proformas Creadas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel principal de facturación -->
+    <div class="row">
+        <!-- Panel de búsqueda y selección de productos -->
+        <div class="col-lg-8 mb-4">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-search me-2"></i>
+                        Búsqueda de Productos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Barra de búsqueda -->
+                    <div class="search-container mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="busquedaProducto" 
+                                   placeholder="Buscar por código, nombre o descripción...">
+                            <button class="btn btn-outline-secondary" type="button" id="btnEscanearCodigo">
+                                <i class="bi bi-upc-scan"></i>
+                                <span class="d-none d-md-inline ms-1">Escanear</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros rápidos -->
+                    <div class="filter-chips mb-3">
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-sm btn-outline-primary filter-chip active" data-filter="todos">
+                                Todos
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="llantas">
+                                Llantas
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="accesorios">
+                                Accesorios
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="servicios">
+                                Servicios
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Resultados de búsqueda -->
+                    <div id="resultadosBusqueda" class="productos-grid">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-search display-1 opacity-25"></i>
+                            <p class="mt-3">Ingresa términos de búsqueda para encontrar productos</p>
+                        </div>
+                    </div>
+
+                    <!-- Paginación -->
+                    <nav aria-label="Paginación productos" class="mt-3">
+                        <ul class="pagination justify-content-center" id="paginacionProductos">
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel del carrito de venta -->
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card border-0 shadow-sm sticky-top" style="top: 1rem;">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-cart3 me-2"></i>
+                        Carrito de Venta
+                    </h5>
+                    <span class="badge bg-light text-success" id="contadorItems">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Items del carrito -->
+                    <div id="itemsCarrito" class="carrito-items">
+                        <div class="empty-cart text-center py-4">
+                            <i class="bi bi-cart-x display-2 text-muted"></i>
+                            <p class="text-muted mt-2">No hay productos seleccionados</p>
+                            <small class="text-muted">Busca y agrega productos al carrito</small>
+                        </div>
+                    </div>
+
+                    <!-- Resumen de totales -->
+                    <div class="cart-summary border-top p-3" id="resumenCarrito" style="display: none;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="subtotalCarrito">₡0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>IVA (13%):</span>
+                            <span id="ivaCarrito">₡0.00</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fw-bold h5">
+                            <span>Total:</span>
+                            <span id="totalCarrito">₡0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Acciones del carrito -->
+                    <div class="cart-actions p-3 border-top" id="accionesCarrito" style="display: none;">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" id="btnFinalizarVenta">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Finalizar Venta
+                            </button>
+                            <button class="btn btn-outline-warning" id="btnGenerarProforma">
+                                <i class="bi bi-file-earmark-text me-1"></i>
+                                Generar Proforma
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" id="btnLimpiarCarrito">
+                                <i class="bi bi-trash me-1"></i>
+                                Limpiar Carrito
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de ventas recientes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card dashboard-card border-0 shadow-sm">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Ventas Recientes
+                    </h5>
+                    <button class="btn btn-light btn-sm" id="btnVerTodasVentas">
+                        <i class="bi bi-eye me-1"></i>
+                        Ver Todas
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="tablaVentasRecientes">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Factura</th>
+                                    <th>Fecha</th>
+                                    <th class="d-none d-md-table-cell">Cliente</th>
+                                    <th>Total</th>
+                                    <th class="d-none d-lg-table-cell">Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales -->
+@await Html.PartialAsync("_ModalInventario")
+@await Html.PartialAsync("_ModalFinalizarVenta")
+@await Html.PartialAsync("_ModalDetalleProducto")
+
+@section Scripts {
+    <script src="~/js/views/facturacion/facturacion.js" asp-append-version="true"></script>
+}
