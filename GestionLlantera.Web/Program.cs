@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using GestionLlantera.Web.Middleware;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
@@ -46,7 +46,7 @@ builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
-
+builder.Services.AddScoped<IFacturacionService, FacturacionService>();
 
 
 // ✅ NUEVO: Servicio global de permisos

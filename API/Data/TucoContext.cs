@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Org.BouncyCastle.Security;
 using System;
@@ -50,6 +50,10 @@ public partial class TucoContext : DbContext
     public virtual DbSet<DetallePedido> DetallePedidos { get; set; }
 
     public virtual DbSet<Documento> Documentos { get; set; }
+
+    public virtual DbSet<Factura> Facturas { get; set; }
+
+    public virtual DbSet<DetalleFactura> DetallesFactura { get; set; }
 
     public virtual DbSet<HistorialAcciones> HistorialAcciones { get; set; }
 
@@ -679,6 +683,110 @@ public partial class TucoContext : DbContext
 
             // NO configurar la relación con InventarioProgramado aquí
             // Ya está configurada arriba
+        });
+
+        // Configuración para Factura
+        modelBuilder.Entity<Factura>(entity =>
+        {
+            entity.HasKey(e => e.FacturaId).HasName("PK_Facturas");
+            
+            entity.ToTable("Facturas");
+            
+            entity.Property(e => e.NumeroFactura)
+                .HasMaxLength(50)
+                .IsRequired();
+                
+            entity.Property(e => e.NombreCliente)
+                .HasMaxLength(200)
+                .IsRequired();
+                
+            entity.Property(e => e.IdentificacionCliente)
+                .HasMaxLength(50);
+                
+            entity.Property(e => e.TelefonoCliente)
+                .HasMaxLength(20);
+                
+            entity.Property(e => e.EmailCliente)
+                .HasMaxLength(200);
+                
+            entity.Property(e => e.DireccionCliente)
+                .HasMaxLength(300);
+                
+            entity.Property(e => e.Estado)
+                .HasMaxLength(20)
+                .IsRequired();
+                
+            entity.Property(e => e.TipoDocumento)
+                .HasMaxLength(20)
+                .IsRequired();
+                
+            entity.Property(e => e.MetodoPago)
+                .HasMaxLength(50);
+                
+            entity.Property(e => e.Observaciones)
+                .HasMaxLength(500);
+                
+            entity.Property(e => e.Subtotal)
+                .HasColumnType("decimal(18,2)");
+                
+            entity.Property(e => e.DescuentoGeneral)
+                .HasColumnType("decimal(5,2)");
+                
+            entity.Property(e => e.PorcentajeImpuesto)
+                .HasColumnType("decimal(5,2)");
+                
+            entity.Property(e => e.MontoImpuesto)
+                .HasColumnType("decimal(18,2)");
+                
+            entity.Property(e => e.Total)
+                .HasColumnType("decimal(18,2)");
+
+            entity.HasOne(d => d.Cliente)
+                .WithMany()
+                .HasForeignKey(d => d.ClienteId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.UsuarioCreador)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioCreadorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuración para DetalleFactura
+        modelBuilder.Entity<DetalleFactura>(entity =>
+        {
+            entity.HasKey(e => e.DetalleFacturaId).HasName("PK_DetallesFactura");
+            
+            entity.ToTable("DetallesFactura");
+            
+            entity.Property(e => e.NombreProducto)
+                .HasMaxLength(200)
+                .IsRequired();
+                
+            entity.Property(e => e.DescripcionProducto)
+                .HasMaxLength(500);
+                
+            entity.Property(e => e.PrecioUnitario)
+                .HasColumnType("decimal(18,2)");
+                
+            entity.Property(e => e.PorcentajeDescuento)
+                .HasColumnType("decimal(5,2)");
+                
+            entity.Property(e => e.MontoDescuento)
+                .HasColumnType("decimal(18,2)");
+                
+            entity.Property(e => e.Subtotal)
+                .HasColumnType("decimal(18,2)");
+
+            entity.HasOne(d => d.Factura)
+                .WithMany(p => p.DetallesFactura)
+                .HasForeignKey(d => d.FacturaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Producto)
+                .WithMany()
+                .HasForeignKey(d => d.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);
