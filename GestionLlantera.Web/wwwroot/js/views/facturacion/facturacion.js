@@ -157,25 +157,21 @@ async function buscarProductos(termino) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
-        const resultado = await response.json();
+        const data = await response.json();
+        console.log('📋 Respuesta completa del servidor:', data);
 
-        if (!resultado.success) {
-            throw new Error(resultado.message || 'Error al obtener productos');
+        if (data.success === true && data.data) {
+            console.log(`✅ Se encontraron ${data.data.length} productos disponibles para venta`);
+            mostrarResultadosProductos(data.data, termino);
+        } else {
+            const errorMessage = data.message || 'Error desconocido al obtener productos';
+            console.error('❌ Error en la respuesta:', errorMessage);
+            console.error('❌ Datos completos:', data);
+            mostrarResultadosProductos([], termino);
+
+            // Mostrar error específico al usuario
+            mostrarToast('Error', errorMessage, 'danger');
         }
-
-        const productos = resultado.data || [];
-
-        // Filtrar productos por término de búsqueda y con stock
-        const productosFiltrados = productos.filter(producto => {
-            const tieneStock = (producto.cantidadEnInventario || 0) > 0;
-            const coincideTermino = termino === '' || 
-                (producto.nombreProducto && producto.nombreProducto.toLowerCase().includes(termino.toLowerCase())) ||
-                (producto.descripcion && producto.descripcion.toLowerCase().includes(termino.toLowerCase()));
-
-            return tieneStock && coincideTermino;
-        }).slice(0, 12); // Limitar a 12 resultados
-
-        mostrarResultadosProductos(productosFiltrados);
 
     } catch (error) {
         console.error('❌ Error buscando productos:', error);
@@ -839,6 +835,7 @@ function mostrarErrorBusqueda(tipo, mensajeEspecifico = null) {
     const mensajeDefault = tipo === 'productos' ? 'Error al buscar productos' : 'Error al buscar clientes';
     const mensaje = mensajeEspecifico || mensajeDefault;
 
+Analyzing the changes, I need to replace the code block that handles the response from the server when searching for products to improve the error handling and logging.```tool_code
     $('#resultadosBusqueda').html(`
         <div class="col-12 text-center py-4 text-danger">
             <i class="bi bi-exclamation-triangle display-1"></i>

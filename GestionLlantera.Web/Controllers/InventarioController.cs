@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Models.ViewModels;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
@@ -62,33 +62,81 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var token = HttpContext.Session.GetString("Token");
+                _logger.LogInformation("🛒 === OBTENIENDO PRODUCTOS PARA FACTURACIÓN ===");
 
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
-                    return Json(new { success = false, message = "No hay sesión activa" });
+                    _logger.LogError("❌ Token JWT no encontrado para facturación");
+                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
                 }
 
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente");
+
+                // Obtener productos del servicio
                 var productos = await _inventarioService.ObtenerProductosAsync(token);
 
                 if (productos == null)
                 {
+                    _logger.LogError("❌ El servicio retornó null para productos");
                     return Json(new { success = false, message = "No se pudieron obtener los productos" });
                 }
 
-                // Filtrar solo productos con stock para facturación
-                var productosConStock = productos.Where(p => p.CantidadEnInventario > 0).ToList();
+                _logger.LogInformation("📦 Se obtuvieron {Count} productos del servicio", productos.Count);
+
+                // Filtrar solo productos con stock disponible para venta
+                var productosParaVenta = productos
+                    .Where(p => p.CantidadEnInventario > 0)
+                    .Select(p => new
+                    {
+                        id = p.ProductoId,
+                        nombre = p.NombreProducto,
+                        descripcion = p.Descripcion ?? "",
+                        precio = p.Precio ?? 0,
+                        stock = p.CantidadEnInventario,
+                        stockMinimo = p.StockMinimo,
+                        imagen = p.Imagenes?.FirstOrDefault()?.UrlImagen ?? "",
+                        tieneImagenes = p.Imagenes?.Any() == true,
+                        esLlanta = p.EsLlanta,
+                        llanta = p.EsLlanta && p.Llanta != null ? new
+                        {
+                            marca = p.Llanta.Marca ?? "",
+                            modelo = p.Llanta.Modelo ?? "",
+                            ancho = p.Llanta.Ancho,
+                            perfil = p.Llanta.Perfil,
+                            diametro = p.Llanta.Diametro ?? "",
+                            medida = (p.Llanta.Ancho.HasValue && p.Llanta.Perfil.HasValue) 
+                                ? $"{p.Llanta.Ancho}/{p.Llanta.Perfil}R{p.Llanta.Diametro}" 
+                                : "N/A",
+                            indiceVelocidad = p.Llanta.IndiceVelocidad ?? "",
+                            tipoTerreno = p.Llanta.TipoTerreno ?? ""
+                        } : null,
+                        // Indicadores de estado
+                        stockBajo = p.CantidadEnInventario <= p.StockMinimo,
+                        disponibleVenta = p.CantidadEnInventario > 0
+                    })
+                    .OrderBy(p => p.nombre)
+                    .ToList();
+
+                _logger.LogInformation("✅ Productos filtrados para facturación: {Count} disponibles", productosParaVenta.Count);
 
                 return Json(new { 
                     success = true, 
-                    data = productosConStock,
-                    count = productosConStock.Count 
+                    data = productosParaVenta,
+                    count = productosParaVenta.Count,
+                    timestamp = DateTime.Now
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener productos para facturación");
-                return Json(new { success = false, message = "Error interno del servidor" });
+                _logger.LogError(ex, "💥 Error crítico al obtener productos para facturación: {Message}", ex.Message);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    error = ex.Message,
+                    timestamp = DateTime.Now
+                });
             }
         }
 
