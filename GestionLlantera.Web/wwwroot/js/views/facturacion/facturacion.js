@@ -6,6 +6,16 @@ let modalInventario = null;
 let modalFinalizarVenta = null;
 let modalDetalleProducto = null;
 
+// ===== CONFIGURACIÓN DE PRECIOS POR MÉTODO DE PAGO =====
+const CONFIGURACION_PRECIOS = {
+    efectivo: { multiplicador: 1.0, nombre: 'Efectivo' },
+    transferencia: { multiplicador: 1.0, nombre: 'Transferencia' },
+    sinpe: { multiplicador: 1.0, nombre: 'SINPE Móvil' },
+    tarjeta: { multiplicador: 1.05, nombre: 'Tarjeta' } // 5% adicional para tarjeta
+};
+
+let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
+
 // ===== INICIALIZACIÓN =====
 $(document).ready(function() {
     console.log('🚀 Inicializando módulo de facturación');
@@ -22,6 +32,9 @@ function inicializarFacturacion() {
 
         // Actualizar totales
         actualizarTotales();
+
+        // Cargar productos iniciales
+        cargarProductosIniciales();
 
         console.log('✅ Facturación inicializada correctamente');
     } catch (error) {
@@ -128,19 +141,31 @@ async function buscarProductos(termino) {
 
         mostrarCargandoBusqueda();
 
-        const response = await fetch(`/Facturacion/BuscarProductos?termino=${encodeURIComponent(termino)}&tamano=12`);
+        // Usar el endpoint de inventario para obtener productos con stock
+        const response = await fetch('/api/Inventario/productos', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+                'Content-Type': 'application/json'
+            }
+        });
 
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
-        const resultado = await response.json();
+        const productos = await response.json();
 
-        if (resultado.success && resultado.data) {
-            mostrarResultadosProductos(resultado.data);
-        } else {
-            mostrarSinResultados('productos');
-        }
+        // Filtrar productos por término de búsqueda y con stock
+        const productosFiltrados = productos.filter(producto => {
+            const tieneStock = producto.cantidadEnInventario > 0;
+            const coincideTermino = termino === '' || 
+                producto.nombreProducto.toLowerCase().includes(termino.toLowerCase()) ||
+                (producto.descripcion && producto.descripcion.toLowerCase().includes(termino.toLowerCase()));
+            
+            return tieneStock && coincideTermino;
+        }).slice(0, 12); // Limitar a 12 resultados
+
+        mostrarResultadosProductos(productosFiltrados);
 
     } catch (error) {
         console.error('❌ Error buscando productos:', error);
@@ -158,11 +183,15 @@ function mostrarResultadosProductos(productos) {
 
     let html = '';
     productos.forEach(producto => {
-        const imagenUrl = producto.imagenes && producto.imagenes.length > 0 
-            ? producto.imagenes[0].urlImagen 
+        const imagenUrl = producto.imagenesProductos && producto.imagenesProductos.length > 0 
+            ? producto.imagenesProductos[0].urlimagen 
             : '/images/no-image.png';
 
-        const precioFormateado = formatearMoneda(producto.precio || 0);
+        // Calcular precios según método de pago
+        const precioBase = producto.precio || 0;
+        const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
+        const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
+
         const stockClase = producto.cantidadEnInventario <= 0 ? 'border-danger' : 
                           producto.cantidadEnInventario <= producto.stockMinimo ? 'border-warning' : '';
 
@@ -173,7 +202,8 @@ function mostrarResultadosProductos(productos) {
                         <img src="${imagenUrl}" 
                              class="card-img-top producto-imagen" 
                              alt="${producto.nombreProducto}"
-                             style="height: 120px; object-fit: cover;">
+                             style="height: 120px; object-fit: cover;"
+                             onerror="this.src='/images/no-image.png'">
                         ${producto.cantidadEnInventario <= 0 ? 
                             '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
                             producto.cantidadEnInventario <= producto.stockMinimo ?
@@ -186,16 +216,33 @@ function mostrarResultadosProductos(productos) {
                                 producto.nombreProducto.substring(0, 25) + '...' : 
                                 producto.nombreProducto}
                         </h6>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-success fw-bold">${precioFormateado}</span>
-                            <small class="text-muted">Stock: ${producto.cantidadEnInventario}</small>
+                        
+                        <!-- Precios diferenciados -->
+                        <div class="precios-metodos mb-2">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Efectivo/SINPE</small>
+                                    <span class="text-success fw-bold small">₡${formatearMoneda(precioEfectivo)}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Tarjeta</small>
+                                    <span class="text-warning fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-primary">Stock: ${producto.cantidadEnInventario}</small>
+                            ${producto.cantidadEnInventario <= producto.stockMinimo && producto.cantidadEnInventario > 0 ? 
+                                '<small class="badge bg-warning">Stock Bajo</small>' : ''}
+                        </div>
+                        
                         <div class="d-grid gap-1">
                             ${producto.cantidadEnInventario > 0 ? `
                                 <button type="button" 
-                                        class="btn btn-primary btn-sm btn-agregar-producto"
+                                        class="btn btn-primary btn-sm btn-seleccionar-producto"
                                         data-producto='${JSON.stringify(producto)}'>
-                                    <i class="bi bi-plus-circle me-1"></i>Agregar
+                                    <i class="bi bi-hand-index me-1"></i>Seleccionar
                                 </button>
                             ` : `
                                 <button type="button" class="btn btn-secondary btn-sm" disabled>
@@ -204,7 +251,7 @@ function mostrarResultadosProductos(productos) {
                             `}
                             <button type="button" 
                                     class="btn btn-outline-info btn-sm btn-ver-detalle"
-                                    data-producto-id="${producto.productoId}">
+                                    data-producto='${JSON.stringify(producto)}'>
                                 <i class="bi bi-eye me-1"></i>Ver Detalle
                             </button>
                         </div>
@@ -217,14 +264,14 @@ function mostrarResultadosProductos(productos) {
     container.html(html);
 
     // Configurar eventos de los botones
-    $('.btn-agregar-producto').on('click', function() {
+    $('.btn-seleccionar-producto').on('click', function() {
         const producto = JSON.parse($(this).attr('data-producto'));
-        agregarProductoAVenta(producto);
+        mostrarModalSeleccionProducto(producto);
     });
 
     $('.btn-ver-detalle').on('click', function() {
-        const productoId = $(this).attr('data-producto-id');
-        verDetalleProducto(productoId);
+        const producto = JSON.parse($(this).attr('data-producto'));
+        verDetalleProducto(producto);
     });
 }
 
@@ -302,18 +349,195 @@ function seleccionarCliente(cliente) {
     $('#clienteSeleccionado').removeClass('d-none');
 }
 
+// ===== MODAL DE SELECCIÓN DE PRODUCTO =====
+function mostrarModalSeleccionProducto(producto) {
+    const precioBase = producto.precio || 0;
+    const imagenUrl = producto.imagenesProductos && producto.imagenesProductos.length > 0 
+        ? producto.imagenesProductos[0].urlimagen 
+        : '/images/no-image.png';
+
+    const modalHtml = `
+        <div class="modal fade" id="modalSeleccionProducto" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-cart-plus me-2"></i>Seleccionar Producto
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <img src="${imagenUrl}" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     alt="${producto.nombreProducto}"
+                                     onerror="this.src='/images/no-image.png'">
+                            </div>
+                            <div class="col-md-8">
+                                <h4 class="mb-3">${producto.nombreProducto}</h4>
+                                ${producto.descripcion ? `<p class="text-muted mb-3">${producto.descripcion}</p>` : ''}
+                                
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>Stock disponible:</strong> ${producto.cantidadEnInventario} unidades
+                                </div>
+
+                                <!-- Selección de método de pago -->
+                                <div class="mb-4">
+                                    <h6 class="mb-3">💳 Selecciona el método de pago:</h6>
+                                    <div class="row g-2">
+                                        ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
+                                            const precio = precioBase * config.multiplicador;
+                                            return `
+                                                <div class="col-sm-6 col-lg-3">
+                                                    <input type="radio" 
+                                                           class="btn-check metodo-pago-radio" 
+                                                           name="metodoPagoProducto" 
+                                                           id="metodo-${metodo}" 
+                                                           value="${metodo}"
+                                                           ${metodo === 'efectivo' ? 'checked' : ''}>
+                                                    <label class="btn btn-outline-primary w-100 text-center p-2" 
+                                                           for="metodo-${metodo}">
+                                                        <div class="fw-bold">${config.nombre}</div>
+                                                        <div class="text-success">₡${formatearMoneda(precio)}</div>
+                                                        ${metodo === 'tarjeta' ? '<small class="text-muted">+5%</small>' : ''}
+                                                    </label>
+                                                </div>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+
+                                <!-- Cantidad -->
+                                <div class="mb-3">
+                                    <label for="cantidadProducto" class="form-label">
+                                        <i class="bi bi-123 me-1"></i>Cantidad:
+                                    </label>
+                                    <div class="input-group" style="max-width: 150px;">
+                                        <button type="button" class="btn btn-outline-secondary" id="btnMenosCantidad">-</button>
+                                        <input type="number" 
+                                               class="form-control text-center" 
+                                               id="cantidadProducto" 
+                                               value="1" 
+                                               min="1" 
+                                               max="${producto.cantidadEnInventario}">
+                                        <button type="button" class="btn btn-outline-secondary" id="btnMasCantidad">+</button>
+                                    </div>
+                                </div>
+
+                                <!-- Total calculado -->
+                                <div class="alert alert-success">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span><i class="bi bi-calculator me-2"></i><strong>Total:</strong></span>
+                                        <span class="fs-4 fw-bold" id="totalCalculado">₡${formatearMoneda(precioBase)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg" id="btnConfirmarAgregarProducto">
+                            <i class="bi bi-cart-plus me-1"></i>Agregar al Carrito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalSeleccionProducto').remove();
+    $('body').append(modalHtml);
+
+    const modal = new bootstrap.Modal(document.getElementById('modalSeleccionProducto'));
+    modal.show();
+
+    // Configurar eventos del modal
+    configurarEventosModalProducto(producto, modal);
+}
+
+function configurarEventosModalProducto(producto, modal) {
+    const precioBase = producto.precio || 0;
+    
+    // Actualizar total cuando cambie el método de pago o cantidad
+    function actualizarTotal() {
+        const metodoSeleccionado = $('input[name="metodoPagoProducto"]:checked').val();
+        const cantidad = parseInt($('#cantidadProducto').val()) || 1;
+        const precio = precioBase * CONFIGURACION_PRECIOS[metodoSeleccionado].multiplicador;
+        const total = precio * cantidad;
+        
+        $('#totalCalculado').text(`₡${formatearMoneda(total)}`);
+    }
+
+    // Eventos de cambio de método de pago
+    $('.metodo-pago-radio').on('change', actualizarTotal);
+
+    // Eventos de cantidad
+    $('#btnMenosCantidad').on('click', function() {
+        const input = $('#cantidadProducto');
+        const valorActual = parseInt(input.val()) || 1;
+        if (valorActual > 1) {
+            input.val(valorActual - 1);
+            actualizarTotal();
+        }
+    });
+
+    $('#btnMasCantidad').on('click', function() {
+        const input = $('#cantidadProducto');
+        const valorActual = parseInt(input.val()) || 1;
+        const stockDisponible = producto.cantidadEnInventario;
+        if (valorActual < stockDisponible) {
+            input.val(valorActual + 1);
+            actualizarTotal();
+        }
+    });
+
+    $('#cantidadProducto').on('input', function() {
+        const valor = parseInt($(this).val()) || 1;
+        const min = parseInt($(this).attr('min')) || 1;
+        const max = parseInt($(this).attr('max')) || producto.cantidadEnInventario;
+        
+        if (valor < min) $(this).val(min);
+        if (valor > max) $(this).val(max);
+        
+        actualizarTotal();
+    });
+
+    // Confirmar agregar producto
+    $('#btnConfirmarAgregarProducto').on('click', function() {
+        const metodoSeleccionado = $('input[name="metodoPagoProducto"]:checked').val();
+        const cantidad = parseInt($('#cantidadProducto').val()) || 1;
+        const precio = precioBase * CONFIGURACION_PRECIOS[metodoSeleccionado].multiplicador;
+        
+        agregarProductoAVenta(producto, cantidad, precio, metodoSeleccionado);
+        modal.hide();
+    });
+
+    // Inicializar total
+    actualizarTotal();
+}
+
 // ===== GESTIÓN DEL CARRITO =====
-function agregarProductoAVenta(producto) {
+function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, metodoPago = 'efectivo') {
+    // Si no se especifica precio, calcularlo
+    if (precioUnitario === null) {
+        precioUnitario = (producto.precio || 0) * CONFIGURACION_PRECIOS[metodoPago].multiplicador;
+    }
+
     // Verificar si el producto ya está en la venta
     const productoExistente = productosEnVenta.find(p => p.productoId === producto.productoId);
 
     if (productoExistente) {
         // Incrementar cantidad si no supera el stock
-        if (productoExistente.cantidad < producto.cantidadEnInventario) {
-            productoExistente.cantidad++;
+        if (productoExistente.cantidad + cantidad <= producto.cantidadEnInventario) {
+            productoExistente.cantidad += cantidad;
             mostrarToast('Producto actualizado', `Cantidad de ${producto.nombreProducto} incrementada`, 'success');
         } else {
-            mostrarToast('Stock insuficiente', `No hay más stock disponible para ${producto.nombreProducto}`, 'warning');
+            mostrarToast('Stock insuficiente', `No hay suficiente stock disponible para ${producto.nombreProducto}`, 'warning');
             return;
         }
     } else {
@@ -321,10 +545,12 @@ function agregarProductoAVenta(producto) {
         productosEnVenta.push({
             productoId: producto.productoId,
             nombreProducto: producto.nombreProducto,
-            precioUnitario: producto.precio || 0,
-            cantidad: 1,
+            precioUnitario: precioUnitario,
+            cantidad: cantidad,
             stockDisponible: producto.cantidadEnInventario,
-            imagenUrl: producto.imagenes && producto.imagenes.length > 0 ? producto.imagenes[0].urlImagen : null
+            metodoPago: metodoPago,
+            imagenUrl: producto.imagenesProductos && producto.imagenesProductos.length > 0 ? 
+                      producto.imagenesProductos[0].urlimagen : null
         });
 
         mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');
@@ -353,12 +579,18 @@ function actualizarVistaCarrito() {
     let html = '';
     productosEnVenta.forEach((producto, index) => {
         const subtotal = producto.precioUnitario * producto.cantidad;
+        const metodoPago = producto.metodoPago || 'efectivo';
+        const configMetodo = CONFIGURACION_PRECIOS[metodoPago];
+        
         html += `
             <div class="producto-venta-item border rounded p-2 mb-2">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <h6 class="mb-1">${producto.nombreProducto}</h6>
-                        <small class="text-muted">₡${formatearMoneda(producto.precioUnitario)} c/u</small>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">₡${formatearMoneda(producto.precioUnitario)} c/u</small>
+                            <small class="badge bg-info">${configMetodo.nombre}</small>
+                        </div>
                     </div>
                     <button type="button" 
                             class="btn btn-sm btn-outline-danger btn-eliminar-producto"
@@ -615,9 +847,139 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
     console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
 }
 
-function verDetalleProducto(productoId) {
-    console.log('Ver detalle del producto:', productoId);
-    // Implementar funcionalidad de ver detalle
+function verDetalleProducto(producto) {
+    console.log('Ver detalle del producto:', producto);
+    
+    const imagenUrl = producto.imagenesProductos && producto.imagenesProductos.length > 0 
+        ? producto.imagenesProductos[0].urlimagen 
+        : '/images/no-image.png';
+
+    const modalHtml = `
+        <div class="modal fade" id="modalDetalleProducto" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-info-circle me-2"></i>Detalle del Producto
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <img src="${imagenUrl}" 
+                                     class="img-fluid rounded shadow-sm" 
+                                     alt="${producto.nombreProducto}"
+                                     onerror="this.src='/images/no-image.png'">
+                                
+                                <!-- Información de stock -->
+                                <div class="mt-3">
+                                    <div class="alert ${producto.cantidadEnInventario <= 0 ? 'alert-danger' : 
+                                        producto.cantidadEnInventario <= producto.stockMinimo ? 'alert-warning' : 'alert-success'}">
+                                        <div class="text-center">
+                                            <i class="bi bi-box-seam display-6"></i>
+                                            <h5 class="mt-2">Stock: ${producto.cantidadEnInventario}</h5>
+                                            <small>Mínimo: ${producto.stockMinimo}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h3 class="mb-3">${producto.nombreProducto}</h3>
+                                
+                                ${producto.descripcion ? `
+                                    <div class="mb-3">
+                                        <h6><i class="bi bi-card-text me-2"></i>Descripción:</h6>
+                                        <p class="text-muted">${producto.descripcion}</p>
+                                    </div>
+                                ` : ''}
+
+                                <!-- Tabla de precios -->
+                                <div class="mb-4">
+                                    <h6><i class="bi bi-currency-exchange me-2"></i>Precios por método de pago:</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Método de Pago</th>
+                                                    <th class="text-end">Precio</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
+                                                    const precio = (producto.precio || 0) * config.multiplicador;
+                                                    return `
+                                                        <tr>
+                                                            <td>
+                                                                <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : 'cash'} me-2"></i>
+                                                                ${config.nombre}
+                                                                ${metodo === 'tarjeta' ? '<span class="text-muted">(+5%)</span>' : ''}
+                                                            </td>
+                                                            <td class="text-end fw-bold">₡${formatearMoneda(precio)}</td>
+                                                        </tr>
+                                                    `;
+                                                }).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Información adicional si es llanta -->
+                                ${producto.llanta ? `
+                                    <div class="mb-3">
+                                        <h6><i class="bi bi-circle me-2"></i>Información de Llanta:</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Marca:</small><br>
+                                                <strong>${producto.llanta.marca || 'N/A'}</strong>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Modelo:</small><br>
+                                                <strong>${producto.llanta.modelo || 'N/A'}</strong>
+                                            </div>
+                                            <div class="col-6 mt-2">
+                                                <small class="text-muted">Medida:</small><br>
+                                                <strong>${producto.llanta.ancho}/${producto.llanta.perfil} R${producto.llanta.diametro}</strong>
+                                            </div>
+                                            <div class="col-6 mt-2">
+                                                <small class="text-muted">Índice de Velocidad:</small><br>
+                                                <strong>${producto.llanta.indiceVelocidad || 'N/A'}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+
+                                <!-- Información del sistema -->
+                                <div class="text-muted small">
+                                    <p class="mb-1"><strong>ID:</strong> ${producto.productoId}</p>
+                                    ${producto.fechaUltimaActualizacion ? 
+                                        `<p class="mb-0"><strong>Última actualización:</strong> ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}</p>` 
+                                        : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        ${producto.cantidadEnInventario > 0 ? `
+                            <button type="button" class="btn btn-primary" onclick="mostrarModalSeleccionProducto(${JSON.stringify(producto).replace(/"/g, '&quot;')})">
+                                <i class="bi bi-cart-plus me-1"></i>Agregar a Venta
+                            </button>
+                        ` : ''}
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalDetalleProducto').remove();
+    $('body').append(modalHtml);
+
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalleProducto'));
+    modal.show();
 }
 
 // ===== GESTIÓN DE CLIENTES =====
@@ -911,6 +1273,25 @@ function actualizarCantidadProducto(index, nuevaCantidad) {
 
 function procesarVenta() {
     procesarVentaFinal();
+}
+
+// ===== CARGAR PRODUCTOS INICIALES =====
+async function cargarProductosIniciales() {
+    try {
+        console.log('📦 Cargando productos iniciales...');
+        await buscarProductos(''); // Cargar todos los productos con stock
+    } catch (error) {
+        console.error('❌ Error cargando productos iniciales:', error);
+        $('#resultadosBusqueda').html(`
+            <div class="col-12 text-center py-4 text-danger">
+                <i class="bi bi-exclamation-triangle display-1"></i>
+                <p class="mt-2">Error al cargar productos</p>
+                <button class="btn btn-outline-primary" onclick="cargarProductosIniciales()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+                </button>
+            </div>
+        `);
+    }
 }
 
 // ===== HACER FUNCIONES GLOBALES =====
