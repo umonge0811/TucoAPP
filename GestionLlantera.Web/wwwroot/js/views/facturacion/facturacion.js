@@ -189,14 +189,18 @@ function mostrarResultadosProductos(productos) {
 
     let html = '';
     productos.forEach(producto => {
-        // Validación robusta para imágenes
-        const imagenUrl = (producto.imagenesProductos && 
-                          Array.isArray(producto.imagenesProductos) && 
-                          producto.imagenesProductos.length > 0 && 
-                          producto.imagenesProductos[0] && 
-                          producto.imagenesProductos[0].urlimagen) 
-            ? producto.imagenesProductos[0].urlimagen 
-            : '/images/no-image.png';
+        // Validación robusta para imágenes - más defensiva
+        let imagenUrl = '/images/no-image.png';
+        
+        if (producto.imagenesProductos && 
+            Array.isArray(producto.imagenesProductos) && 
+            producto.imagenesProductos.length > 0) {
+            
+            const primeraImagen = producto.imagenesProductos[0];
+            if (primeraImagen && primeraImagen.urlimagen) {
+                imagenUrl = primeraImagen.urlimagen;
+            }
+        }
 
         // Calcular precios según método de pago
         const precioBase = producto.precio || 0;
@@ -365,13 +369,18 @@ function seleccionarCliente(cliente) {
 // ===== MODAL DE SELECCIÓN DE PRODUCTO =====
 function mostrarModalSeleccionProducto(producto) {
     const precioBase = producto.precio || 0;
-    const imagenUrl = (producto.imagenesProductos && 
-                      Array.isArray(producto.imagenesProductos) && 
-                      producto.imagenesProductos.length > 0 && 
-                      producto.imagenesProductos[0] && 
-                      producto.imagenesProductos[0].urlimagen) 
-        ? producto.imagenesProductos[0].urlimagen 
-        : '/images/no-image.png';
+    
+    // Validación robusta para imágenes
+    let imagenUrl = '/images/no-image.png';
+    if (producto.imagenesProductos && 
+        Array.isArray(producto.imagenesProductos) && 
+        producto.imagenesProductos.length > 0) {
+        
+        const primeraImagen = producto.imagenesProductos[0];
+        if (primeraImagen && primeraImagen.urlimagen) {
+            imagenUrl = primeraImagen.urlimagen;
+        }
+    }
 
     const modalHtml = `
         <div class="modal fade" id="modalSeleccionProducto" tabindex="-1">
@@ -559,6 +568,18 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
         }
     } else {
         // Agregar nuevo producto
+        // Validación robusta para imagen URL
+        let imagenUrl = null;
+        if (producto.imagenesProductos && 
+            Array.isArray(producto.imagenesProductos) && 
+            producto.imagenesProductos.length > 0) {
+            
+            const primeraImagen = producto.imagenesProductos[0];
+            if (primeraImagen && primeraImagen.urlimagen) {
+                imagenUrl = primeraImagen.urlimagen;
+            }
+        }
+
         productosEnVenta.push({
             productoId: producto.productoId,
             nombreProducto: producto.nombreProducto,
@@ -566,12 +587,7 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
             cantidad: cantidad,
             stockDisponible: producto.cantidadEnInventario,
             metodoPago: metodoPago,
-            imagenUrl: (producto.imagenesProductos && 
-                       Array.isArray(producto.imagenesProductos) && 
-                       producto.imagenesProductos.length > 0 && 
-                       producto.imagenesProductos[0] && 
-                       producto.imagenesProductos[0].urlimagen) ? 
-                      producto.imagenesProductos[0].urlimagen : null
+            imagenUrl: imagenUrl
         });
 
         mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');
@@ -875,13 +891,17 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
-    const imagenUrl = (producto.imagenesProductos && 
-                      Array.isArray(producto.imagenesProductos) && 
-                      producto.imagenesProductos.length > 0 && 
-                      producto.imagenesProductos[0] && 
-                      producto.imagenesProductos[0].urlimagen) 
-        ? producto.imagenesProductos[0].urlimagen 
-        : '/images/no-image.png';
+    // Validación robusta para imágenes
+    let imagenUrl = '/images/no-image.png';
+    if (producto.imagenesProductos && 
+        Array.isArray(producto.imagenesProductos) && 
+        producto.imagenesProductos.length > 0) {
+        
+        const primeraImagen = producto.imagenesProductos[0];
+        if (primeraImagen && primeraImagen.urlimagen) {
+            imagenUrl = primeraImagen.urlimagen;
+        }
+    }
 
     const modalHtml = `
         <div class="modal fade" id="modalDetalleProducto" tabindex="-1">
