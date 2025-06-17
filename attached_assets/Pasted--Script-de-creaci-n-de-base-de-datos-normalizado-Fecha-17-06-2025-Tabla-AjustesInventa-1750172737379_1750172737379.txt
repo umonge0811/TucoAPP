@@ -1,0 +1,285 @@
+-- Script de creación de base de datos normalizado
+-- Fecha: 17/06/2025
+
+-- Tabla: AjustesInventarioPendientes
+CREATE TABLE AjustesInventarioPendientes (
+    AjusteId INT IDENTITY(1,1) PRIMARY KEY,
+    InventarioProgramadoId INT NOT NULL,
+    ProductoId INT NOT NULL,
+    TipoAjuste NVARCHAR(50) NOT NULL,
+    CantidadSistemaOriginal INT NOT NULL,
+    CantidadFisicaContada INT NOT NULL,
+    CantidadFinalPropuesta INT NOT NULL,
+    MotivoAjuste NVARCHAR(500) NOT NULL,
+    UsuarioId INT NOT NULL,
+    FechaCreacion DATETIME2(7) NOT NULL,
+    Estado NVARCHAR(20) NOT NULL,
+    FechaAplicacion DATETIME2(7) NULL
+);
+
+-- Tabla: AlertasInventario
+CREATE TABLE AlertasInventario (
+    AlertaID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductoID INT NULL,
+    FechaAlerta DATETIME NULL,
+    TipoAlerta VARCHAR(50) NULL,
+    Descripcion TEXT NULL
+);
+
+-- Tabla: AsignacionesUsuariosInventario
+CREATE TABLE AsignacionesUsuariosInventario (
+    AsignacionId INT IDENTITY(1,1) PRIMARY KEY,
+    InventarioProgramadoId INT NOT NULL,
+    UsuarioId INT NOT NULL,
+    PermisoConteo BIT NOT NULL,
+    PermisoAjuste BIT NOT NULL,
+    PermisoValidacion BIT NOT NULL,
+    FechaAsignacion DATETIME2(7) NOT NULL,
+    PermisoCompletar BIT NOT NULL
+);
+
+-- Tabla: Clientes
+CREATE TABLE Clientes (
+    ClienteID INT IDENTITY(1,1) PRIMARY KEY,
+    NombreCliente VARCHAR(100) NOT NULL,
+    Contacto VARCHAR(100) NULL,
+    Direccion VARCHAR(255) NULL,
+    Email VARCHAR(100) NULL,
+    Telefono VARCHAR(15) NULL,
+    UsuarioID INT NULL
+);
+
+-- Tabla: DetalleDocumento
+CREATE TABLE DetalleDocumento (
+    DetalleID INT IDENTITY(1,1) PRIMARY KEY,
+    DocumentoID INT NULL,
+    ProductoID INT NULL,
+    Cantidad INT NOT NULL,
+    PrecioUnitario DECIMAL(10, 2) NULL,
+    Descuento DECIMAL(10, 2) NULL
+);
+
+-- Tabla: DetalleInventario
+CREATE TABLE DetalleInventario (
+    DetalleInventarioID INT IDENTITY(1,1) PRIMARY KEY,
+    InventarioID INT NULL,
+    ProductoID INT NULL,
+    CantidadRegistrada INT NULL,
+    CantidadContada INT NULL,
+    Diferencia AS (CantidadContada - CantidadRegistrada),
+    Comentario TEXT NULL
+);
+
+-- Tabla: DetallePedido
+CREATE TABLE DetallePedido (
+    DetalleID INT IDENTITY(1,1) PRIMARY KEY,
+    PedidoID INT NULL,
+    ProductoID INT NULL,
+    Cantidad INT NOT NULL,
+    PrecioUnitario DECIMAL(10, 2) NULL
+);
+
+-- Tabla: DetallesInventarioProgramado
+CREATE TABLE DetallesInventarioProgramado (
+    DetalleId INT IDENTITY(1,1) PRIMARY KEY,
+    InventarioProgramadoId INT NOT NULL,
+    ProductoId INT NOT NULL,
+    CantidadSistema INT NOT NULL,
+    CantidadFisica INT NULL,
+    Diferencia INT NULL,
+    Observaciones NVARCHAR(500) NULL,
+    UsuarioConteoId INT NULL,
+    FechaConteo DATETIME2(7) NULL
+);
+
+-- Tabla: Documentos
+CREATE TABLE Documentos (
+    DocumentoID INT IDENTITY(1,1) PRIMARY KEY,
+    ClienteID INT NULL,
+    EsProforma BIT NULL,
+    Estado VARCHAR(50) NULL,
+    FechaDocumento DATETIME NULL,
+    FechaVencimiento DATETIME NULL,
+    Subtotal DECIMAL(10, 2) NULL,
+    Impuestos DECIMAL(10, 2) NULL,
+    Total DECIMAL(10, 2) NULL,
+    UsuarioID INT NULL
+);
+
+-- Tabla: HistorialAcciones
+CREATE TABLE HistorialAcciones (
+    HistorialID INT IDENTITY(1,1) PRIMARY KEY,
+    UsuarioID INT NOT NULL,
+    FechaAccion DATETIME NOT NULL,
+    TipoAccion VARCHAR(50) NOT NULL,
+    Modulo VARCHAR(50) NOT NULL,
+    Detalle TEXT NOT NULL,
+    Token NVARCHAR(MAX) NULL,
+    PropositoToken NVARCHAR(MAX) NULL,
+    EstadoAccion NVARCHAR(MAX) NOT NULL,
+    ErrorDetalle NVARCHAR(MAX) NULL
+);
+
+-- Tabla: ImagenesProducto
+CREATE TABLE ImagenesProducto (
+    ImagenID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductoID INT NULL,
+    URLImagen VARCHAR(255) NOT NULL,
+    Descripcion VARCHAR(255) NULL,
+    FechaCreacion DATETIME NULL
+);
+
+-- Tabla: Inventarios
+CREATE TABLE Inventarios (
+    InventarioID INT IDENTITY(1,1) PRIMARY KEY,
+    FechaProgramada DATETIME NOT NULL,
+    FechaRealizacion DATETIME NULL,
+    FechaReprogramada DATETIME NULL,
+    Estado VARCHAR(20) NULL,
+    UsuarioID INT NULL
+);
+
+-- Tabla: InventariosProgramados
+CREATE TABLE InventariosProgramados (
+    InventarioProgramadoId INT IDENTITY(1,1) PRIMARY KEY,
+    Titulo NVARCHAR(100) NOT NULL,
+    Descripcion NVARCHAR(500) NULL,
+    FechaInicio DATETIME2(7) NOT NULL,
+    FechaFin DATETIME2(7) NOT NULL,
+    TipoInventario NVARCHAR(50) NOT NULL,
+    Estado NVARCHAR(50) NOT NULL,
+    FechaCreacion DATETIME2(7) NOT NULL,
+    UsuarioCreadorId INT NOT NULL,
+    UbicacionEspecifica NVARCHAR(100) NULL,
+    IncluirStockBajo BIT NOT NULL
+);
+
+-- Tabla: Llantas
+CREATE TABLE Llantas (
+    LlantaID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductoID INT NULL,
+    Ancho INT NULL,
+    Perfil INT NULL,
+    Diametro VARCHAR(10) NULL,
+    Marca VARCHAR(50) NULL,
+    Modelo VARCHAR(50) NULL,
+    Capas INT NULL,
+    IndiceVelocidad VARCHAR(5) NULL,
+    TipoTerreno VARCHAR(50) NULL
+);
+
+-- Tabla: Notificaciones
+CREATE TABLE Notificaciones (
+    NotificacionId INT IDENTITY(1,1) PRIMARY KEY,
+    UsuarioId INT NOT NULL,
+    Titulo NVARCHAR(200) NOT NULL,
+    Mensaje NVARCHAR(500) NOT NULL,
+    Tipo NVARCHAR(50) NOT NULL,
+    Leida BIT NOT NULL,
+    FechaCreacion DATETIME2(7) NOT NULL,
+    FechaLectura DATETIME2(7) NULL,
+    Icono NVARCHAR(100) NULL,
+    EntidadTipo NVARCHAR(100) NULL,
+    EntidadId INT NULL,
+    UrlAccion NVARCHAR(500) NULL
+);
+
+-- Tabla: PedidosProveedor
+CREATE TABLE PedidosProveedor (
+    PedidoID INT IDENTITY(1,1) PRIMARY KEY,
+    ProveedorID INT NULL,
+    FechaPedido DATETIME NULL,
+    Estado VARCHAR(50) NULL,
+    UsuarioID INT NULL
+);
+
+-- Tabla: Permisos
+CREATE TABLE Permisos (
+    PermisoID INT IDENTITY(1,1) PRIMARY KEY,
+    NombrePermiso VARCHAR(100) NOT NULL,
+    DescripcionPermiso VARCHAR(255) NULL
+);
+
+-- Tabla: Productos
+CREATE TABLE Productos (
+    ProductoID INT IDENTITY(1,1) PRIMARY KEY,
+    NombreProducto VARCHAR(100) NOT NULL,
+    Descripcion TEXT NULL,
+    Precio DECIMAL(10, 2) NULL,
+    CantidadEnInventario INT NULL,
+    FechaUltimaActualizacion DATETIME NULL,
+    StockMinimo INT NULL,
+    Costo DECIMAL(10, 2) NULL,
+    PorcentajeUtilidad DECIMAL(5, 2) NULL
+);
+
+-- Tabla: Proveedores
+CREATE TABLE Proveedores (
+    ProveedorID INT IDENTITY(1,1) PRIMARY KEY,
+    NombreProveedor VARCHAR(100) NOT NULL,
+    Contacto VARCHAR(100) NULL,
+    Telefono VARCHAR(15) NULL,
+    Direccion VARCHAR(255) NULL
+);
+
+-- Tabla: Roles
+CREATE TABLE Roles (
+    RolID INT IDENTITY(1,1) PRIMARY KEY,
+    NombreRol VARCHAR(50) NOT NULL,
+    DescripcionRol VARCHAR(255) NULL
+);
+
+-- Tabla: RolPermiso
+CREATE TABLE RolPermiso (
+    RolID INT NOT NULL,
+    PermisoID INT NOT NULL,
+    PRIMARY KEY (RolID, PermisoID)
+);
+
+-- Tabla: RolPermisos (tabla duplicada - considerar eliminar)
+CREATE TABLE RolPermisos (
+    RolID INT NOT NULL,
+    PermisoID INT NOT NULL,
+    PRIMARY KEY (RolID, PermisoID)
+);
+
+-- Tabla: SesionUsuario
+CREATE TABLE SesionUsuario (
+    SesionID INT IDENTITY(1,1) PRIMARY KEY,
+    UsuarioID INT NULL,
+    FechaHoraInicio DATETIME NULL
+);
+
+-- Tabla: UsuarioPermiso
+CREATE TABLE UsuarioPermiso (
+    UsuarioID INT NOT NULL,
+    PermisoID INT NOT NULL,
+    PRIMARY KEY (UsuarioID, PermisoID)
+);
+
+-- Tabla: UsuarioRol
+CREATE TABLE UsuarioRol (
+    UsuarioID INT NOT NULL,
+    RolID INT NOT NULL,
+    PRIMARY KEY (UsuarioID, RolID)
+);
+
+-- Tabla: UsuarioRoles (tabla duplicada - considerar eliminar)
+CREATE TABLE UsuarioRoles (
+    UsuarioId INT NOT NULL,
+    RolId INT NOT NULL,
+    PRIMARY KEY (UsuarioId, RolId)
+);
+
+-- Tabla: Usuarios
+CREATE TABLE Usuarios (
+    UsuarioID INT IDENTITY(1,1) PRIMARY KEY,
+    NombreUsuario VARCHAR(50) NOT NULL,
+    Email VARCHAR(100) NOT NULL,
+    Contrasena VARCHAR(255) NOT NULL,
+    FechaCreacion DATETIME NULL,
+    FechaExpiracionToken DATETIME2(7) NULL,
+    PropositoToken NVARCHAR(MAX) NULL,
+    Activo BIT NULL,
+    Token NVARCHAR(MAX) NULL
+);

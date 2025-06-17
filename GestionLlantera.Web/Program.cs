@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using GestionLlantera.Web.Middleware;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
@@ -23,6 +23,7 @@ builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>();
 // ✅ AGREGAR SERVICIO DE REPORTES
 builder.Services.AddScoped<IReportesService, ReportesService>();
+builder.Services.AddScoped<IFacturacionService, FacturacionService>();
 
 // ✅ SOLO EL SERVICIO DIRECTO (sin HTTP)
 builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
@@ -46,7 +47,7 @@ builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
-
+builder.Services.AddScoped<IFacturacionService, FacturacionService>();
 
 
 // ✅ NUEVO: Servicio global de permisos
