@@ -23,15 +23,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <returns>Lista de tipos de terreno que coinciden con el filtro</returns>
         Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null);
 
-        /// <summary>
-        /// Busca productos para facturación con paginación
-        /// </summary>
-        /// <param name="termino">Término de búsqueda</param>
-        /// <param name="pagina">Página actual</param>
-        /// <param name="tamano">Tamaño de página</param>
-        /// <param name="jwtToken">Token de autenticación</param>
-        /// <returns>Lista de productos paginada</returns>
-        Task<List<ProductoDTO>> BuscarProductosAsync(string termino = "", int pagina = 1, int tamano = 20, string jwtToken = null);
+        
         Task<bool> EliminarProductoAsync(int id, string jwtToken = null);
 
         Task<AjusteStockRapidoResponseDTO> AjustarStockRapidoAsync(int id, AjusteStockRapidoDTO ajusteDto, string jwtToken = null);

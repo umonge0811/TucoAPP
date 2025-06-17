@@ -1,25 +1,247 @@
-using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using GestionLlantera.Web.Extensions;
+using Microsoft.AspNetCore.Mvc;
+using Tuco.Clases.DTOs.Inventario;
+using Tuco.Clases.Models;
 
 namespace GestionLlantera.Web.Controllers
 {
     [Authorize]
     public class FacturacionController : Controller
     {
-        private readonly IInventarioService _inventarioService;
-        private readonly IUsuariosService _usuariosService;
         private readonly ILogger<FacturacionController> _logger;
+        private readonly IInventarioService _inventarioService;
+        private readonly IClientesService _clientesService;
+        private readonly IFacturacionService _facturacionService;
 
         public FacturacionController(
+            ILogger<FacturacionController> logger,
             IInventarioService inventarioService, 
-            IUsuariosService usuariosService,
-            ILogger<FacturacionController> logger)
+            IClientesService clientesService,
+            IFacturacionService facturacionService)
         {
-            _inventarioService = inventarioService;
-            _usuariosService = usuariosService;
             _logger = logger;
+            _inventarioService = inventarioService;
+            _clientesService = clientesService;
+            _facturacionService = facturacionService;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            try
+            {
+                // Verificar permisos
+                if (!await this.TienePermisoAsync("Ver Ventas"))
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
+                ViewData["Title"] = "Facturación";
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en vista de facturación");
+                return View("Error");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> BuscarProductos(string termino = "", int pagina = 1, int tamano = 20)
+        {
+            try
+            {
+                // Verificar permisos
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para buscar productos" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+
+                // Reutilizar el método existente de inventario con filtrado local
+                var todosLosProductos = await _inventarioService.ObtenerProductosAsync(jwtToken);
+
+                // Filtrar por término de búsqueda si se proporciona
+                if (!string.IsNullOrWhiteSpace(termino))
+                {
+                    todosLosProductos = todosLosProductos.Where(p => 
+                        p.NombreProducto.Contains(termino, StringComparison.OrdinalIgnoreCase) ||
+                        (p.Descripcion != null && p.Descripcion.Contains(termino, StringComparison.OrdinalIgnoreCase)) ||
+                        (p.Llanta != null && (
+                            (p.Llanta.Marca != null && p.Llanta.Marca.Contains(termino, StringComparison.OrdinalIgnoreCase)) ||
+                            (p.Llanta.Modelo != null && p.Llanta.Modelo.Contains(termino, StringComparison.OrdinalIgnoreCase))
+                        ))
+                    ).ToList();
+                }
+
+                // Filtrar solo productos con stock disponible
+                var productosDisponibles = todosLosProductos
+                    .Where(p => p.CantidadEnInventario > 0)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
+                    .ToList();
+
+                var resultado = productosDisponibles.Select(p => new
+                {
+                    id = p.ProductoId,
+                    nombre = p.NombreProducto,
+                    descripcion = p.Descripcion ?? "",
+                    precio = p.Precio ?? 0,
+                    stock = p.CantidadEnInventario,
+                    imagen = p.Imagenes?.FirstOrDefault()?.UrlImagen ?? "",
+                    esLlanta = p.EsLlanta,
+                    llanta = p.EsLlanta && p.Llanta != null ? new
+                    {
+                        marca = p.Llanta.Marca ?? "",
+                        modelo = p.Llanta.Modelo ?? "",
+                        medida = $"{p.Llanta.Ancho}/{p.Llanta.Perfil}R{p.Llanta.Diametro}"
+                    } : null
+                }).ToList();
+
+                return Json(new { success = true, data = resultado });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al buscar productos para facturación");
+                return Json(new { success = false, message = "Error al buscar productos" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerClientes(string termino = "")
+        {
+            try
+            {
+                // Verificar permisos para clientes
+                if (!await this.TienePermisoAsync("Ver Clientes"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para consultar clientes" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                var clientes = await _clientesService.BuscarClientesAsync(termino, jwtToken);
+
+                var resultado = clientes.Take(20).Select(c => new {
+                    id = c.ClienteId,
+                    nombre = c.NombreCompleto,
+                    email = c.Email,
+                    telefono = c.Telefono
+                }).ToList();
+
+                return Json(new { success = true, data = resultado });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener clientes");
+                return Json(new { success = false, message = "Error al obtener clientes" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaDTO> productos)
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para verificar stock" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                var stockDisponible = await _facturacionService.VerificarStockDisponibleAsync(productos, jwtToken);
+
+                return Json(new { success = stockDisponible });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar stock");
+                return Json(new { success = false, message = "Error al verificar stock" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ProcesarVenta([FromBody] VentaDTO venta)
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Crear Ventas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para procesar ventas" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                var ventaProcesada = await _facturacionService.ProcesarVentaAsync(venta, jwtToken);
+
+                if (ventaProcesada)
+                {
+                    return Json(new { 
+                        success = true, 
+                        message = "Venta procesada exitosamente",
+                        ventaId = 1 // En la implementación real, la API devolvería el ID
+                    });
+                }
+
+                return Json(new { success = false, message = "Error al procesar la venta" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al procesar venta");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaDTO> productos)
+        {
+            try
+            {
+                var total = await _facturacionService.CalcularTotalVentaAsync(productos);
+                var subtotal = productos.Sum(p => p.Subtotal);
+                var iva = subtotal * 0.13m; // 13% IVA
+
+                return Json(new { 
+                    success = true, 
+                    subtotal = subtotal,
+                    iva = iva,
+                    total = total 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al calcular total de venta");
+                return Json(new { success = false, message = "Error al calcular totales" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearCliente([FromBody] Cliente cliente)
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Crear Clientes"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para crear clientes" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                var clienteCreado = await _clientesService.CrearClienteAsync(cliente, jwtToken);
+
+                if (clienteCreado)
+                {
+                    return Json(new { 
+                        success = true, 
+                        message = "Cliente creado exitosamente"
+                    });
+                }
+
+                return Json(new { success = false, message = "Error al crear cliente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear cliente");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
         }
 
         /// <summary>
@@ -41,155 +263,6 @@ namespace GestionLlantera.Web.Controllers
             }
 
             return token;
-        }
-
-        public async Task<IActionResult> Index()
-        {
-            try
-            {
-                // ✅ VERIFICAR PERMISOS USANDO EL MÉTODO EXISTENTE
-                var tienePermiso = await this.TienePermisoAsync("Ver Facturación");
-                if (!tienePermiso)
-                {
-                    _logger.LogWarning("Usuario {Usuario} intentó acceder a facturación sin permisos", 
-                        User.Identity?.Name);
-                    TempData["Error"] = "No tienes permisos para acceder a la facturación.";
-                    return RedirectToAction("Index", "Dashboard");
-                }
-
-                ViewData["Title"] = "Facturación";
-                return View();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al cargar vista de facturación");
-                TempData["Error"] = "Error al cargar la página de facturación.";
-                return RedirectToAction("Index", "Dashboard");
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> BuscarProductos(string termino = "", int pagina = 1, int tamano = 20)
-        {
-            try
-            {
-                // ✅ VERIFICAR PERMISOS
-                var tienePermiso = await this.TienePermisoAsync("Ver Inventario");
-                if (!tienePermiso)
-                {
-                    return Json(new { success = false, message = "Sin permisos para consultar inventario" });
-                }
-
-                // ✅ OBTENER TOKEN JWT
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    return Json(new { success = false, message = "Sesión expirada" });
-                }
-
-                // ✅ USAR EL MÉTODO IMPLEMENTADO
-                var productos = await _inventarioService.BuscarProductosAsync(termino, pagina, tamano, token);
-                
-                // ✅ FILTRAR SOLO PRODUCTOS CON STOCK DISPONIBLE PARA VENTA
-                var productosDisponibles = productos.Where(p => p.CantidadEnInventario > 0).ToList();
-
-                return Json(new { 
-                    success = true, 
-                    data = productosDisponibles,
-                    total = productosDisponibles.Count,
-                    pagina = pagina,
-                    tamano = tamano
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al buscar productos para facturación");
-                return Json(new { success = false, message = "Error al buscar productos" });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ObtenerProducto(int id)
-        {
-            try
-            {
-                // ✅ VERIFICAR PERMISOS
-                var tienePermiso = await this.TienePermisoAsync("Ver Inventario");
-                if (!tienePermiso)
-                {
-                    return Json(new { success = false, message = "Sin permisos para consultar productos" });
-                }
-
-                // ✅ OBTENER TOKEN JWT
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    return Json(new { success = false, message = "Sesión expirada" });
-                }
-
-                // ✅ USAR MÉTODO EXISTENTE DEL SERVICIO
-                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id, token);
-                
-                if (producto == null || producto.ProductoId == 0)
-                {
-                    return Json(new { success = false, message = "Producto no encontrado" });
-                }
-
-                // ✅ VERIFICAR STOCK DISPONIBLE
-                if (producto.CantidadEnInventario <= 0)
-                {
-                    return Json(new { 
-                        success = false, 
-                        message = "Producto sin stock disponible",
-                        stockDisponible = producto.CantidadEnInventario
-                    });
-                }
-
-                return Json(new { success = true, data = producto });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener producto {ProductoId}", id);
-                return Json(new { success = false, message = "Error al obtener producto" });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ObtenerClientes(string termino = "")
-        {
-            try
-            {
-                // ✅ VERIFICAR PERMISOS
-                var tienePermiso = await this.TienePermisoAsync("Ver Usuarios");
-                if (!tienePermiso)
-                {
-                    return Json(new { success = false, message = "Sin permisos para consultar clientes" });
-                }
-
-                // ✅ REUTILIZAR SERVICIO DE USUARIOS EXISTENTE
-                var usuarios = await _usuariosService.ObtenerTodosAsync();
-                
-                // ✅ FILTRAR USUARIOS ACTIVOS Y QUE SEAN CLIENTES
-                var clientes = usuarios.Where(u => u.Activo && 
-                    (string.IsNullOrWhiteSpace(termino) || 
-                     u.NombreCompleto.Contains(termino, StringComparison.OrdinalIgnoreCase) ||
-                     u.Email.Contains(termino, StringComparison.OrdinalIgnoreCase)))
-                    .Take(20) // Limitar resultados
-                    .Select(u => new {
-                        id = u.UsuarioId,
-                        nombre = u.NombreCompleto,
-                        email = u.Email,
-                        telefono = u.Telefono
-                    })
-                    .ToList();
-
-                return Json(new { success = true, data = clientes });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener clientes");
-                return Json(new { success = false, message = "Error al obtener clientes" });
-            }
         }
     }
 }

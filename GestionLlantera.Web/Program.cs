@@ -51,6 +51,7 @@ builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
 builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>();
 builder.Services.AddScoped<IFacturacionService, FacturacionService>();
+builder.Services.AddScoped<IClientesService, ClientesService>();
 
 // ✅ NUEVO: Servicio global de permisos
 builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();
