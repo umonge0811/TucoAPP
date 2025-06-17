@@ -1,0 +1,139 @@
+
+@{
+    ViewData["Title"] = "Facturación";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css" asp-append-version="true" />
+}
+
+<!-- Header de Facturación -->
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-receipt me-2"></i>Facturación</h2>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-info" onclick="consultarInventario()">
+            <i class="bi bi-search me-1"></i>Consultar Inventario
+        </button>
+        <button class="btn btn-success" onclick="nuevaVenta()">
+            <i class="bi bi-plus-circle me-1"></i>Nueva Venta
+        </button>
+    </div>
+</div>
+
+<!-- Información del Cliente -->
+<div class="dashboard-card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-person me-2"></i>Información del Cliente</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label for="clienteNombre" class="form-label">Nombre del Cliente</label>
+                    <input type="text" id="clienteNombre" class="form-control" placeholder="Ingrese nombre del cliente">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group mb-3">
+                    <label for="clienteTelefono" class="form-label">Teléfono</label>
+                    <input type="tel" id="clienteTelefono" class="form-control" placeholder="Teléfono">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group mb-3">
+                    <label for="tipoDocumento" class="form-label">Tipo de Documento</label>
+                    <select id="tipoDocumento" class="form-select">
+                        <option value="factura">Factura</option>
+                        <option value="proforma">Proforma</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Productos en la Venta -->
+<div class="dashboard-card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-cart me-2"></i>Productos en la Venta</h5>
+        <button class="btn btn-primary btn-sm" onclick="agregarProducto()">
+            <i class="bi bi-plus-circle me-1"></i>Agregar Producto
+        </button>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="tablaProductosVenta" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Subtotal</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="productosVentaBody">
+                    <tr class="empty-state">
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
+                            No hay productos agregados a la venta
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen de la Venta -->
+<div class="dashboard-card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Resumen de la Venta</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="form-group mb-3">
+                    <label for="observaciones" class="form-label">Observaciones</label>
+                    <textarea id="observaciones" class="form-control" rows="3" placeholder="Observaciones adicionales..."></textarea>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="resumen-totales">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span id="subtotalVenta">₡0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>IVA (13%):</span>
+                        <span id="ivaVenta">₡0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3">
+                        <strong>Total:</strong>
+                        <strong id="totalVenta">₡0.00</strong>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success" onclick="finalizarVenta()" id="btnFinalizarVenta" disabled>
+                            <i class="bi bi-check-circle me-1"></i>Finalizar Venta
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="limpiarVenta()">
+                            <i class="bi bi-x-circle me-1"></i>Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales -->
+@await Html.PartialAsync("_ModalInventario")
+@await Html.PartialAsync("_ModalDetalleProducto")
+@await Html.PartialAsync("_ModalFinalizarVenta")
+
+@section Scripts {
+    <script src="~/js/views/facturacion/facturacion.js" asp-append-version="true"></script>
+}
