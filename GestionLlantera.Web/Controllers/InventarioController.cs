@@ -59,7 +59,6 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        [Route("ObtenerProductosParaFacturacion")]
         public async Task<IActionResult> ObtenerProductosParaFacturacion()
         {
             try
