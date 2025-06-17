@@ -1,3 +1,4 @@
+csharp
 ﻿using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Models.ViewModels;
 using GestionLlantera.Web.Services;
@@ -19,6 +20,7 @@ using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.DTOs.Inventario;
 using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
+using Microsoft.AspNetCore.Http;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -56,7 +58,43 @@ namespace GestionLlantera.Web.Controllers
             return View();
         }
 
-        // GET: /Inventario
+        [HttpGet]
+        [Route("ObtenerProductosParaFacturacion")]
+        public async Task<IActionResult> ObtenerProductosParaFacturacion()
+        {
+            try
+            {
+                var token = HttpContext.Session.GetString("Token");
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "No hay sesión activa" });
+                }
+
+                var productos = await _inventarioService.ObtenerProductosAsync(token);
+
+                if (productos == null)
+                {
+                    return Json(new { success = false, message = "No se pudieron obtener los productos" });
+                }
+
+                // Filtrar solo productos con stock para facturación
+                var productosConStock = productos.Where(p => p.CantidadEnInventario > 0).ToList();
+
+                return Json(new { 
+                    success = true, 
+                    data = productosConStock,
+                    count = productosConStock.Count 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener productos para facturación");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Inventario de Productos";
@@ -803,7 +841,8 @@ namespace GestionLlantera.Web.Controllers
 
                 // Crear documento PDF
                 using var memoryStream = new MemoryStream();
-                var document = new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
+                var document =```csharp
+ new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
                 var writer = PdfWriter.GetInstance(document, memoryStream);
 
                 // Agregar eventos de encabezado y pie de página
@@ -1903,7 +1942,7 @@ namespace GestionLlantera.Web.Controllers
 
                 return View(model);
             }
-           
+
         }
 
         // ✅ NUEVO MÉTODO POST PARA JSON (agregar ADEMÁS del existente)
@@ -2188,7 +2227,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // POST: /Inventario/CompletarInventario/5
+        // POST: /Inventario/CompletarInventario/5```csharp
         [HttpPost]
         public async Task<IActionResult> CompletarInventario(int id)
         {
@@ -2590,4 +2629,3 @@ namespace GestionLlantera.Web.Controllers
     }
 
 }
-    

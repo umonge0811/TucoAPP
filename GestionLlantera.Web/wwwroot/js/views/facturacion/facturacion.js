@@ -141,25 +141,42 @@ async function buscarProductos(termino) {
 
         mostrarCargandoBusqueda();
 
-        // Usar el endpoint de inventario para obtener productos con stock
-        const response = await fetch('/api/Inventario/productos', {
+        // Obtener token del usuario autenticado
+        const token = localStorage.getItem('token') || '';
+        if (!token) {
+            console.warn('⚠️ No hay token de autenticación disponible');
+            mostrarErrorBusqueda('productos', 'No hay sesión activa. Por favor inicie sesión.');
+            return;
+        }
+
+        // Usar el endpoint web en lugar del API directo para facturación
+        const response = await fetch('/Inventario/ObtenerProductosParaFacturacion', {
+            method: 'GET',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+                'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
         });
 
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
-        const productos = await response.json();
+        const resultado = await response.json();
+        
+        if (!resultado.success) {
+            throw new Error(resultado.message || 'Error al obtener productos');
+        }
+
+        const productos = resultado.data || [];
 
         // Filtrar productos por término de búsqueda y con stock
         const productosFiltrados = productos.filter(producto => {
-            const tieneStock = producto.cantidadEnInventario > 0;
+            const tieneStock = (producto.cantidadEnInventario || 0) > 0;
             const coincideTermino = termino === '' || 
-                producto.nombreProducto.toLowerCase().includes(termino.toLowerCase()) ||
+                (producto.nombreProducto && producto.nombreProducto.toLowerCase().includes(termino.toLowerCase())) ||
                 (producto.descripcion && producto.descripcion.toLowerCase().includes(termino.toLowerCase()));
             
             return tieneStock && coincideTermino;
@@ -169,7 +186,7 @@ async function buscarProductos(termino) {
 
     } catch (error) {
         console.error('❌ Error buscando productos:', error);
-        mostrarErrorBusqueda('productos');
+        mostrarErrorBusqueda('productos', error.message);
     }
 }
 
@@ -825,12 +842,17 @@ function mostrarSinResultados(tipo) {
     `);
 }
 
-function mostrarErrorBusqueda(tipo) {
-    const mensaje = tipo === 'productos' ? 'Error al buscar productos' : 'Error al buscar clientes';
+function mostrarErrorBusqueda(tipo, mensajeEspecifico = null) {
+    const mensajeDefault = tipo === 'productos' ? 'Error al buscar productos' : 'Error al buscar clientes';
+    const mensaje = mensajeEspecifico || mensajeDefault;
+    
     $('#resultadosBusqueda').html(`
         <div class="col-12 text-center py-4 text-danger">
             <i class="bi bi-exclamation-triangle display-1"></i>
             <p class="mt-2">${mensaje}</p>
+            <button class="btn btn-outline-primary mt-2" onclick="cargarProductosIniciales()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+            </button>
         </div>
     `);
 }
