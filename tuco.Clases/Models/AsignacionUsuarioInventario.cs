@@ -26,6 +26,9 @@ namespace tuco.Clases.Models
         public bool PermisoValidacion { get; set; } = false;
 
         [Required]
+        public bool PermisoCompletar { get; set; } = false;
+
+        [Required]
         public DateTime FechaAsignacion { get; set; }
 
         // Relaciones

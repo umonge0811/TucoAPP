@@ -2567,6 +2567,14 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+
+
+
+
+
+
+
+
         /// <summary>
         /// Modelo para recibir datos de ajuste desde el frontend
         /// </summary>

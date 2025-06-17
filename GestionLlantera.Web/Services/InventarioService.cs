@@ -1232,6 +1232,11 @@ namespace GestionLlantera.Web.Services
                         Console.WriteLine($"  - UsuarioId: {asignacion.UsuarioId}");
                         Console.WriteLine($"  - NombreUsuario: '{asignacion.NombreUsuario}'");
                         Console.WriteLine($"  - EmailUsuario: '{asignacion.EmailUsuario}'");
+
+                        Console.WriteLine($"  - PermisoConteo: {asignacion.PermisoConteo}");
+                        Console.WriteLine($"  - PermisoAjuste: {asignacion.PermisoAjuste}");
+                        Console.WriteLine($"  - PermisoValidacion: {asignacion.PermisoValidacion}");
+                        Console.WriteLine($"  - PermisoCompletar: {asignacion.PermisoCompletar}");  // ✅ ESTA LÍNEA ES CLAVE
                     }
                 }
                 Console.WriteLine("=== FIN DATOS ===");

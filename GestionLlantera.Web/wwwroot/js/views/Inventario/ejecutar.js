@@ -11,7 +11,688 @@ let productosInventario = [];
 let productosFiltrados = [];
 let estadisticasActuales = {};
 let ajustesPendientes = []; // Nueva variable para ajustes pendientes
+let filtrosActivos = {
+    texto: '',
+    estado: '',
+    tipo: ''
+};
 
+// ✅ CONFIGURACIÓN DEL PIN (más adelante será desde BD)
+const PIN_ADMIN = "1234";
+let inventarioBloqueado = false;
+let pinValidado = false;
+let tiempoSesionAdmin = null;
+const DURACION_SESION_ADMIN = 30 * 60 * 1000; // 30 minutos en millisegundos
+
+/**
+ * ✅ FUNCIÓN: Verificar si el inventario debe estar bloqueado
+ */
+function verificarEstadoBloqueo() {
+    try {
+        // ✅ VERIFICAR SI EL INVENTARIO ESTÁ COMPLETADO
+        const estadoInventario = inventarioActual?.estado;
+        const estaCompletado = estadoInventario === 'Completado' || estadoInventario === 'Finalizado';
+
+        if (estaCompletado && !inventarioBloqueado) {
+            console.log('🔒 Inventario completado - Activando bloqueo');
+            activarBloqueoInventario();
+        }
+
+        return inventarioBloqueado;
+
+    } catch (error) {
+        console.error('❌ Error verificando estado de bloqueo:', error);
+        return false;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Activar bloqueo del inventario
+ */
+function activarBloqueoInventario() {
+    try {
+        inventarioBloqueado = true;
+        pinValidado = false;
+        tiempoSesionAdmin = null;
+
+        console.log('🔒 Bloqueo de inventario activado');
+
+        // Aplicar bloqueo visual inmediatamente
+        aplicarBloqueoVisual();
+
+        // Mostrar notificación de bloqueo
+        mostrarNotificacionBloqueo();
+
+    } catch (error) {
+        console.error('❌ Error activando bloqueo:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Aplicar bloqueo visual a la interfaz
+ */
+function aplicarBloqueoVisual() {
+    try {
+        console.log('🔒 Aplicando bloqueo visual...');
+
+        // ✅ BLOQUEAR BOTONES DE ACCIÓN
+        $('.btn-conteo, .btn-ajuste-pendiente, .btn-validacion').each(function () {
+            const $btn = $(this);
+
+            // Guardar estado original
+            if (!$btn.data('estado-original')) {
+                $btn.data('estado-original', {
+                    disabled: $btn.prop('disabled'),
+                    html: $btn.html(),
+                    classes: $btn.attr('class')
+                });
+            }
+
+            // Aplicar bloqueo
+            $btn.prop('disabled', true)
+                .removeClass('btn-primary btn-warning btn-success')
+                .addClass('btn-secondary')
+                .html('<i class="bi bi-lock me-1"></i>Bloqueado');
+        });
+
+        // ✅ BLOQUEAR PANEL DE AJUSTES PENDIENTES
+        $('#ajustesPendientesPanel .btn').each(function () {
+            const $btn = $(this);
+            if (!$btn.hasClass('btn-unlock-admin')) {
+                $btn.prop('disabled', true).addClass('disabled');
+            }
+        });
+
+        // ✅ MOSTRAR OVERLAY DE BLOQUEO EN SECCIONES CRÍTICAS
+        mostrarOverlayBloqueo();
+
+        console.log('✅ Bloqueo visual aplicado');
+
+    } catch (error) {
+        console.error('❌ Error aplicando bloqueo visual:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar overlay de bloqueo
+ */
+function mostrarOverlayBloqueo() {
+    try {
+        // Crear overlay para panel de ajustes pendientes
+        const overlayAjustes = `
+            <div class="bloqueo-overlay" id="overlayAjustes">
+                <div class="bloqueo-content">
+                    <div class="text-center">
+                        <i class="bi bi-shield-lock display-4 text-warning mb-3"></i>
+                        <h5 class="text-dark">Inventario Completado</h5>
+                        <p class="text-muted mb-3">Los ajustes están bloqueados para preservar la integridad</p>
+                        <button class="btn btn-warning btn-sm" onclick="solicitarPinAdmin()">
+                            <i class="bi bi-unlock me-1"></i>
+                            Desbloquear (Admin)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Aplicar overlay al panel de ajustes
+        const $panelAjustes = $('#ajustesPendientesPanel');
+        if ($panelAjustes.length && !$panelAjustes.find('.bloqueo-overlay').length) {
+            $panelAjustes.css('position', 'relative').append(overlayAjustes);
+        }
+
+        // Agregar estilos CSS si no existen
+        if (!$('#estilosBloqueo').length) {
+            $('head').append(`
+                <style id="estilosBloqueo">
+                    .bloqueo-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(255, 255, 255, 0.95);
+                        z-index: 1000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 0.375rem;
+                    }
+                    
+                    .bloqueo-content {
+                        text-align: center;
+                        padding: 2rem;
+                        background: white;
+                        border-radius: 0.5rem;
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        border: 2px solid #ffc107;
+                    }
+                    
+                    .producto-row.bloqueado {
+                        opacity: 0.6;
+                        pointer-events: none;
+                    }
+                    
+                    .sesion-admin-activa {
+                        border-left: 4px solid #28a745 !important;
+                        background-color: rgba(40, 167, 69, 0.05) !important;
+                    }
+                </style>
+            `);
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando overlay de bloqueo:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar notificación de bloqueo
+ */
+function mostrarNotificacionBloqueo() {
+    try {
+        // Mostrar notificación en la parte superior
+        const notificacion = `
+            <div class="alert alert-warning border-warning shadow-sm mb-3" id="notificacionBloqueo">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-shield-lock display-6 text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="alert-heading mb-2">🔒 Inventario Completado y Bloqueado</h5>
+                        <p class="mb-2">
+                            El inventario ha sido completado exitosamente. Todas las acciones de modificación están bloqueadas 
+                            para preservar la integridad de los datos.
+                        </p>
+                        <hr>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-warning btn-sm" onclick="solicitarPinAdmin()">
+                                <i class="bi bi-unlock me-1"></i>
+                                Acceso Administrativo
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="$('#notificacionBloqueo').slideUp()">
+                                <i class="bi bi-x me-1"></i>
+                                Ocultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Insertar después del header
+        $('.toma-header').after(notificacion);
+
+    } catch (error) {
+        console.error('❌ Error mostrando notificación:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Solicitar PIN de administrador
+ */
+async function solicitarPinAdmin() {
+    try {
+        console.log('🔑 Solicitando PIN de administrador...');
+
+        const resultado = await Swal.fire({
+            title: '🔑 Acceso Administrativo',
+            html: `
+                <div class="text-start">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Acceso Restringido:</strong> Se requiere PIN de administrador para desbloquear 
+                        las funciones de modificación en un inventario completado.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="pinAdmin" class="form-label fw-bold">PIN de Administrador:</label>
+                        <input type="password" 
+                               class="form-control form-control-lg text-center" 
+                               id="pinAdmin" 
+                               placeholder="••••" 
+                               maxlength="10"
+                               autocomplete="off">
+                    </div>
+                    
+                    <div class="small text-muted">
+                        <i class="bi bi-shield-check me-1"></i>
+                        El acceso administrativo será válido por 30 minutos.
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-unlock me-1"></i> Validar PIN',
+            cancelButtonText: '<i class="bi bi-x-lg me-1"></i> Cancelar',
+            focusConfirm: false,
+            didOpen: () => {
+                // Focus en el input del PIN
+                document.getElementById('pinAdmin').focus();
+            },
+            preConfirm: () => {
+                const pin = document.getElementById('pinAdmin').value;
+                if (!pin) {
+                    Swal.showValidationMessage('Debes ingresar el PIN');
+                    return false;
+                }
+                return pin;
+            }
+        });
+
+        if (resultado.isConfirmed) {
+            validarPinAdmin(resultado.value);
+        }
+
+    } catch (error) {
+        console.error('❌ Error solicitando PIN:', error);
+        mostrarError('Error al solicitar PIN de administrador');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Validar PIN de administrador
+ */
+function validarPinAdmin(pinIngresado) {
+    try {
+        console.log('🔍 Validando PIN de administrador...');
+
+        if (pinIngresado === PIN_ADMIN) {
+            // PIN correcto
+            console.log('✅ PIN válido - Concediendo acceso administrativo');
+
+            pinValidado = true;
+            tiempoSesionAdmin = Date.now() + DURACION_SESION_ADMIN;
+
+            // Desbloquear interfaz
+            desbloquearInventario();
+
+            // Mostrar éxito con información de sesión
+            Swal.fire({
+                title: '✅ Acceso Concedido',
+                html: `
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <i class="bi bi-shield-check display-4 text-success"></i>
+                        </div>
+                        <p class="text-success mb-3">
+                            <strong>Acceso administrativo activado</strong>
+                        </p>
+                        <div class="alert alert-success">
+                            <small>
+                                <i class="bi bi-clock me-1"></i>
+                                Sesión válida por 30 minutos
+                            </small>
+                        </div>
+                    </div>
+                `,
+                icon: 'success',
+                timer: 3000,
+                showConfirmButton: false
+            });
+
+            // Iniciar contador de sesión
+            iniciarContadorSesionAdmin();
+
+        } else {
+            // PIN incorrecto
+            console.log('❌ PIN inválido');
+
+            Swal.fire({
+                title: '❌ PIN Incorrecto',
+                text: 'El PIN ingresado no es válido. Contacta con un administrador si necesitas acceso.',
+                icon: 'error',
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Entendido'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error validando PIN:', error);
+        mostrarError('Error validando PIN de administrador');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Desbloquear inventario con acceso admin
+ */
+function desbloquearInventario() {
+    try {
+        console.log('🔓 Desbloqueando inventario con acceso admin...');
+
+        // ✅ RESTAURAR BOTONES DE ACCIÓN
+        $('.btn-conteo, .btn-ajuste-pendiente, .btn-validacion').each(function () {
+            const $btn = $(this);
+            const estadoOriginal = $btn.data('estado-original');
+
+            if (estadoOriginal) {
+                $btn.prop('disabled', estadoOriginal.disabled)
+                    .attr('class', estadoOriginal.classes)
+                    .html(estadoOriginal.html);
+            }
+        });
+
+        // ✅ DESBLOQUEAR PANEL DE AJUSTES
+        $('#ajustesPendientesPanel .btn').prop('disabled', false).removeClass('disabled');
+
+        // ✅ REMOVER OVERLAYS DE BLOQUEO
+        $('.bloqueo-overlay').remove();
+
+        // ✅ AGREGAR INDICADOR VISUAL DE SESIÓN ADMIN
+        $('.dashboard-card').addClass('sesion-admin-activa');
+
+        // ✅ MOSTRAR INDICADOR DE SESIÓN EN EL HEADER
+        mostrarIndicadorSesionAdmin();
+
+        console.log('✅ Inventario desbloqueado - Sesión admin activa');
+
+    } catch (error) {
+        console.error('❌ Error desbloqueando inventario:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar indicador de sesión admin activa
+ */
+function mostrarIndicadorSesionAdmin() {
+    try {
+        // Remover indicador anterior si existe
+        $('#indicadorSesionAdmin').remove();
+
+        const indicador = `
+            <div class="alert alert-success border-success shadow-sm mb-3" id="indicadorSesionAdmin">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="bi bi-shield-check display-6 text-success"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading mb-1">🔓 Sesión Administrativa Activa</h6>
+                        <p class="mb-2">
+                            Tienes acceso completo para modificar el inventario. 
+                            <span class="fw-bold">Tiempo restante: <span id="tiempoRestante">30:00</span></span>
+                        </p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-success btn-sm" onclick="extenderSesionAdmin()">
+                                <i class="bi bi-clock-history me-1"></i>
+                                Extender Sesión
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="cerrarSesionAdmin()">
+                                <i class="bi bi-box-arrow-right me-1"></i>
+                                Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Insertar después de la notificación de bloqueo o header
+        if ($('#notificacionBloqueo').length) {
+            $('#notificacionBloqueo').after(indicador);
+        } else {
+            $('.toma-header').after(indicador);
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando indicador de sesión:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Iniciar contador de sesión admin
+ */
+function iniciarContadorSesionAdmin() {
+    // Limpiar contador anterior si existe
+    if (window.contadorSesionAdmin) {
+        clearInterval(window.contadorSesionAdmin);
+    }
+
+    window.contadorSesionAdmin = setInterval(() => {
+        if (!pinValidado || !tiempoSesionAdmin) {
+            clearInterval(window.contadorSesionAdmin);
+            return;
+        }
+
+        const tiempoRestante = tiempoSesionAdmin - Date.now();
+
+        if (tiempoRestante <= 0) {
+            // Sesión expirada
+            expirarSesionAdmin();
+            clearInterval(window.contadorSesionAdmin);
+        } else {
+            // Actualizar contador visual
+            const minutos = Math.floor(tiempoRestante / 60000);
+            const segundos = Math.floor((tiempoRestante % 60000) / 1000);
+            $('#tiempoRestante').text(`${minutos}:${segundos.toString().padStart(2, '0')}`);
+        }
+    }, 1000);
+}
+
+/**
+ * ✅ FUNCIÓN: Expirar sesión admin
+ */
+function expirarSesionAdmin() {
+    try {
+        console.log('⏰ Sesión administrativa expirada');
+
+        pinValidado = false;
+        tiempoSesionAdmin = null;
+
+        // Volver a bloquear
+        aplicarBloqueoVisual();
+
+        // Remover indicador de sesión
+        $('#indicadorSesionAdmin').remove();
+
+        // Mostrar notificación de expiración
+        Swal.fire({
+            title: '⏰ Sesión Expirada',
+            text: 'Tu sesión administrativa ha expirado. Las funciones de modificación han sido bloqueadas nuevamente.',
+            icon: 'warning',
+            confirmButtonColor: '#ffc107',
+            confirmButtonText: 'Entendido'
+        });
+
+    } catch (error) {
+        console.error('❌ Error expirando sesión admin:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Extender sesión admin
+ */
+function extenderSesionAdmin() {
+    if (pinValidado) {
+        tiempoSesionAdmin = Date.now() + DURACION_SESION_ADMIN;
+        mostrarExito('Sesión extendida por 30 minutos más');
+        console.log('🔄 Sesión administrativa extendida');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Cerrar sesión admin manualmente
+ */
+function cerrarSesionAdmin() {
+    pinValidado = false;
+    tiempoSesionAdmin = null;
+
+    if (window.contadorSesionAdmin) {
+        clearInterval(window.contadorSesionAdmin);
+    }
+
+    aplicarBloqueoVisual();
+    $('#indicadorSesionAdmin').remove();
+
+    mostrarInfo('Sesión administrativa cerrada. Inventario bloqueado nuevamente.');
+    console.log('🔒 Sesión administrativa cerrada manualmente');
+}
+
+// ✅ HACER FUNCIONES GLOBALES
+window.solicitarPinAdmin = solicitarPinAdmin;
+window.extenderSesionAdmin = extenderSesionAdmin;
+window.cerrarSesionAdmin = cerrarSesionAdmin;
+
+
+
+/**
+ * ✅ MONITOR DEL BADGE DE ESTADO PARA ACTIVAR BLOQUEO
+ */
+function iniciarMonitorBadgeEstado() {
+    try {
+        console.log('👁️ Iniciando monitor del badge de estado...');
+
+        // ✅ BUSCAR EL BADGE DE ESTADO
+        const selectorBadge = '.estado-inventario .badge, .badge.bg-success, .badge.bg-primary, span[class*="badge"]';
+
+        // ✅ CREAR OBSERVER PARA DETECTAR CAMBIOS EN EL BADGE
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                    verificarEstadoBadge();
+                }
+            });
+        });
+
+        // ✅ OBSERVAR CAMBIOS EN TODA LA SECCIÓN DEL HEADER
+        const headerInventario = document.querySelector('.toma-header');
+        if (headerInventario) {
+            observer.observe(headerInventario, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+            console.log('✅ Observer del badge configurado');
+        }
+
+        // ✅ VERIFICACIÓN INICIAL
+        verificarEstadoBadge();
+
+        // ✅ VERIFICACIÓN PERIÓDICA COMO RESPALDO
+        setInterval(verificarEstadoBadge, 5000);
+
+    } catch (error) {
+        console.error('❌ Error iniciando monitor del badge:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Verificar estado del badge
+ */
+function verificarEstadoBadge() {
+    try {
+        // ✅ BUSCAR TODOS LOS BADGES POSIBLES
+        const badges = document.querySelectorAll(`
+            .estado-inventario .badge,
+            .badge.bg-success,
+            .badge.bg-primary,
+            .toma-header .badge,
+            span[class*="badge"]
+        `);
+
+        let estadoEncontrado = null;
+
+        badges.forEach(badge => {
+            const texto = badge.textContent.trim().toLowerCase();
+
+            // ✅ DETECTAR DIFERENTES VARIACIONES DE "COMPLETADO"
+            if (texto.includes('completado') ||
+                texto.includes('finalizado') ||
+                texto.includes('terminado') ||
+                texto.includes('completo')) {
+
+                estadoEncontrado = texto;
+                console.log(`🎯 Badge de estado detectado: "${texto}"`);
+
+                // ✅ SI NO ESTÁ BLOQUEADO AÚN, ACTIVAR BLOQUEO
+                if (!inventarioBloqueado) {
+                    console.log('🔒 Activando bloqueo por badge "Completado"');
+                    setTimeout(() => {
+                        activarBloqueoInventario();
+                    }, 1000); // Pequeño delay para que se complete la UI
+                }
+            }
+        });
+
+        // ✅ DEBUG: Mostrar todos los badges encontrados
+        if (badges.length > 0) {
+            console.log('🔍 Badges encontrados:', Array.from(badges).map(b => b.textContent.trim()));
+        }
+
+        return estadoEncontrado;
+
+    } catch (error) {
+        console.error('❌ Error verificando estado del badge:', error);
+        return null;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Buscar badge en todo el documento (respaldo)
+ */
+function buscarBadgeCompletadoEnTodoElDocumento() {
+    try {
+        const todosLosElementos = document.querySelectorAll('*');
+        let elementosConCompletado = [];
+
+        todosLosElementos.forEach(elemento => {
+            const texto = elemento.textContent.trim().toLowerCase();
+            if ((elemento.classList.contains('badge') ||
+                elemento.tagName === 'SPAN' ||
+                elemento.classList.contains('estado')) &&
+                (texto.includes('completado') ||
+                    texto.includes('finalizado'))) {
+
+                elementosConCompletado.push({
+                    elemento: elemento,
+                    texto: texto,
+                    clases: elemento.className
+                });
+            }
+        });
+
+        console.log('🔍 Elementos con "completado" encontrados:', elementosConCompletado);
+        return elementosConCompletado;
+
+    } catch (error) {
+        console.error('❌ Error buscando badge en documento:', error);
+        return [];
+    }
+}
+
+/**
+ * ✅ FUNCIÓN DE DEBUG: Encontrar el badge exacto
+ */
+window.debugBuscarBadge = function () {
+    console.log('🔍 === DEBUG: BUSCANDO BADGE DE ESTADO ===');
+
+    // Buscar por diferentes selectores
+    const selectores = [
+        '.estado-inventario .badge',
+        '.badge.bg-success',
+        '.badge.bg-primary',
+        '.toma-header .badge',
+        'span[class*="badge"]',
+        '.badge',
+        '[class*="estado"]'
+    ];
+
+    selectores.forEach(selector => {
+        const elementos = document.querySelectorAll(selector);
+        if (elementos.length > 0) {
+            console.log(`✅ Selector "${selector}":`, Array.from(elementos).map(el => ({
+                texto: el.textContent.trim(),
+                clases: el.className
+            })));
+        }
+    });
+
+    // Búsqueda exhaustiva
+    buscarBadgeCompletadoEnTodoElDocumento();
+
+    return verificarEstadoBadge();
+};
 // =====================================
 // INICIALIZACIÓN
 // =====================================
@@ -41,39 +722,49 @@ $(document).ready(function () {
 // =====================================
 // FUNCIONES DE INICIALIZACIÓN
 // =====================================
+
 async function inicializarEjecutorInventario(inventarioId) {
     try {
         console.log(`📋 Inicializando ejecutor para inventario ID: ${inventarioId}`);
 
         // ✅ CARGAR PERMISOS ESPECÍFICOS PRIMERO
         await cargarPermisosInventarioActual(inventarioId);
-        // Cargar información del inventario
+
+        // ✅ CARGAR INFORMACIÓN DEL INVENTARIO
         await cargarInformacionInventario(inventarioId);
 
-        // Cargar productos del inventario
-        await cargarProductosInventario(inventarioId);
-
-        // ✅ AGREGAR ESTA LÍNEA: Cargar ajustes pendientes
+        // ✅ CAMBIO CRÍTICO: CARGAR AJUSTES PENDIENTES ANTES QUE PRODUCTOS
+        console.log('🔄 Cargando ajustes pendientes ANTES que productos...');
         await cargarAjustesPendientes(inventarioId);
 
-        // Actualizar estadísticas
+        // ✅ AHORA SÍ CARGAR PRODUCTOS (ya con ajustes en memoria)
+        console.log('📦 Cargando productos CON ajustes ya cargados...');
+        await cargarProductosInventario(inventarioId);
+
+        // ✅ ACTUALIZAR ESTADÍSTICAS
         await actualizarEstadisticas();
 
-        // ✅ APLICAR CONTROL DE PERMISOS EN LA UI
+        // ✅ APLICAR CONTROL DE PERMISOS
         aplicarControlPermisos();
 
-        // Configurar auto-refresh cada 30 segundos
+        // ✅ AUTO-REFRESH CADA 30 SEGUNDOS
+        // ✅ CAMBIAR línea 71 por esto:
         setInterval(async () => {
             await actualizarEstadisticas();
             await cargarAjustesPendientes(inventarioId);
         }, 30000);
+        console.log('✅ Ejecutor de inventario inicializado correctamente');
+        // ✅ AGREGAR AL FINAL:
+        // Iniciar monitor del badge de estado
+        setTimeout(() => {
+            iniciarMonitorBadgeEstado();
+        }, 2000);
 
     } catch (error) {
         console.error('❌ Error inicializando ejecutor:', error);
         mostrarError('Error al cargar el inventario');
     }
 }
-
 /**
  * ✅ NUEVA FUNCIÓN: Actualizar panel de ajustes pendientes
  */
@@ -82,16 +773,16 @@ function actualizarPanelAjustesPendientes() {
         console.log('🔄 Actualizando panel de ajustes pendientes...');
 
         const totalAjustes = ajustesPendientes.length;
+        // ✅ POR ESTAS LÍNEAS CORREGIDAS:
         const ajustesPorTipo = contarAjustesPorTipo();
 
-        // ✅ ACTUALIZAR CONTADOR PRINCIPAL
-        $('#contadorAjustesPendientes').text(totalAjustes);
+        console.log('📊 Actualizando estadísticas del panel con:', ajustesPorTipo);
 
-        // ✅ ACTUALIZAR ESTADÍSTICAS POR TIPO
-        $('#totalEntradas').text(ajustesPorTipo.ENTRADA || 0);
-        $('#totalSalidas').text(ajustesPorTipo.SALIDA || 0);
-        $('#totalAjustes').text(ajustesPorTipo.AJUSTE_SISTEMA || 0);
-        $('#totalCorrecciones').text(ajustesPorTipo.CORRECCION_CONTEO || 0);
+        // ✅ ACTUALIZAR ESTADÍSTICAS POR TIPO (IDs CORRECTOS)
+        $('#totalEntradas').text(ajustesPorTipo.entradas || 0);
+        $('#totalSalidas').text(ajustesPorTipo.salidas || 0);
+        $('#totalAjustes').text(ajustesPorTipo.ajustes_sistema || 0);
+        $('#totalCorrecciones').text(ajustesPorTipo.correcciones || 0);
 
         // ✅ MOSTRAR/OCULTAR PANEL
         if (totalAjustes > 0) {
@@ -109,25 +800,78 @@ function actualizarPanelAjustesPendientes() {
 }
 
 /**
- * ✅ NUEVA FUNCIÓN: Contar ajustes por tipo
+ * ✅ FUNCIÓN CORREGIDA: Contar ajustes por tipo
+ * REEMPLAZAR la función existente si la hay, o AGREGAR si no existe
  */
 function contarAjustesPorTipo() {
-    const contadores = {
-        ENTRADA: 0,
-        SALIDA: 0,
-        AJUSTE_SISTEMA: 0,
-        CORRECCION_CONTEO: 0
-    };
+    try {
+        console.log('📊 Contando ajustes por tipo...');
+        console.log('🔍 Ajustes pendientes:', ajustesPendientes);
 
-    ajustesPendientes.forEach(ajuste => {
-        if (ajuste.estado === 'Pendiente' && contadores.hasOwnProperty(ajuste.tipoAjuste)) {
-            contadores[ajuste.tipoAjuste]++;
+        const contadores = {
+            entradas: 0,           // Cuando aumenta el stock
+            salidas: 0,            // Cuando disminuye el stock  
+            ajustes_sistema: 0,    // Ajustes del tipo sistema_a_fisico
+            correcciones: 0,       // Validaciones y reconteos
+            total: ajustesPendientes.length
+        };
+
+        if (!ajustesPendientes || ajustesPendientes.length === 0) {
+            console.log('⚠️ No hay ajustes pendientes para contar');
+            return contadores;
         }
-    });
 
-    return contadores;
+        ajustesPendientes.forEach(ajuste => {
+            if (ajuste.estado !== 'Pendiente' && ajuste.estado !== 'pendiente') {
+                return; // Solo contar ajustes pendientes
+            }
+
+            const diferencia = ajuste.cantidadFinalPropuesta - ajuste.cantidadSistemaOriginal;
+
+            // ✅ CLASIFICAR POR TIPO DE AJUSTE
+            switch (ajuste.tipoAjuste) {
+                case 'sistema_a_fisico':
+                    contadores.ajustes_sistema++;
+                    // También clasificar si es entrada o salida
+                    if (diferencia > 0) {
+                        contadores.entradas++;
+                    } else if (diferencia < 0) {
+                        contadores.salidas++;
+                    }
+                    break;
+
+                case 'validado':
+                case 'reconteo':
+                    contadores.correcciones++;
+                    break;
+
+                default:
+                    // Para tipos no reconocidos, clasificar por diferencia
+                    if (diferencia > 0) {
+                        contadores.entradas++;
+                    } else if (diferencia < 0) {
+                        contadores.salidas++;
+                    } else {
+                        contadores.correcciones++;
+                    }
+                    break;
+            }
+        });
+
+        console.log('✅ Contadores calculados:', contadores);
+        return contadores;
+
+    } catch (error) {
+        console.error('❌ Error contando ajustes por tipo:', error);
+        return {
+            entradas: 0,
+            salidas: 0,
+            ajustes_sistema: 0,
+            correcciones: 0,
+            total: 0
+        };
+    }
 }
-
 /**
  * ✅ NUEVA FUNCIÓN: Llenar tabla de ajustes pendientes
  */
@@ -514,6 +1258,7 @@ function mostrarPanelesSegunProgreso() {
             console.log('🚫 Razón: No hay productos en el inventario');
         }
     }
+    verificarEstadoBloqueo();
 }
 
 /**
@@ -847,12 +1592,98 @@ function configurarEventListeners() {
         actualizarVistaPreviaAjuste();
     });
 
-    //// ✅ CONFIGURAR BOTÓN DE GUARDAR AJUSTE
-    //$('#guardarAjusteInventarioBtn').off('click').on('click', function (e) {
-    //    e.preventDefault();
-    //    console.log('🖱️ Click en botón guardar ajuste de inventario');
-    //    guardarAjusteInventario();
-    //})
+    // ✅ CONFIGURAR BOTÓN DE GUARDAR AJUSTE
+    $('#guardarAjusteInventarioBtn').off('click').on('click', function (e) {
+        e.preventDefault();
+        console.log('🖱️ Click en botón guardar ajuste de inventario');
+        // ✅ CAMBIO: Detectar si es finalización de inventario
+        const esFinalización = $(this).data('es-finalizacion') === true;
+        if (esFinalización) {
+            finalizarInventarioConAjustes();
+        } else {
+            guardarAjusteInventario();
+        }
+    })
+
+
+
+
+
+    /**
+ * ✅ NUEVA FUNCIÓN: Finalizar inventario aplicando ajustes de stock
+ */
+    async function finalizarInventarioConAjustes() {
+        try {
+            console.log('🔥 EJECUTANDO: finalizarInventarioConAjustes');
+            console.log('🏁 === FINALIZANDO INVENTARIO CON AJUSTES ===');
+
+            const inventarioId = window.inventarioConfig.inventarioId;
+            const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
+
+            // ✅ CONFIRMACIÓN ESPECÍFICA PARA FINALIZACIÓN CON AJUSTES
+            const confirmacion = await Swal.fire({
+                title: '🏁 ¿Finalizar inventario y aplicar ajustes?',
+                html: `
+                <div class="text-start">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>¡Atención!</strong> Esta acción aplicará TODOS los ajustes pendientes al stock del sistema.
+                    </div>
+                    <p><strong>Ajustes pendientes:</strong> ${totalAjustes}</p>
+                    <p><strong>Inventario:</strong> Se marcará como completado</p>
+                    <hr>
+                    <small class="text-muted">Esta acción es <strong>irreversible</strong>.</small>
+                </div>
+            `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, finalizar y aplicar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (!confirmacion.isConfirmed) return;
+
+            // ✅ LLAMAR AL ENDPOINT MODIFICADO DE AJUSTAR STOCK
+            const ajusteData = {
+                cantidad: 0, // No importa para finalización
+                tipoAjuste: "ajuste",
+                esFinalizacionInventario: true,
+                inventarioProgramadoId: inventarioId
+            };
+
+            const response = await fetch(`/api/Inventario/productos/0/ajustar-stock`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(ajusteData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            const resultado = await response.json();
+
+            if (resultado.success) {
+                mostrarExito(`¡Inventario finalizado! ${resultado.ajustesAplicados} ajustes aplicados al stock.`);
+
+                // ✅ RECARGAR PÁGINA O REDIRIGIR
+                setTimeout(() => {
+                    window.location.href = '/Inventario/ProgramarInventario';
+                }, 2000);
+            } else {
+                throw new Error(resultado.message || 'Error desconocido');
+            }
+
+        } catch (error) {
+            console.error('❌ Error finalizando inventario:', error);
+            mostrarError(`Error al finalizar inventario: ${error.message}`);
+        }
+    }
 
 
     // ✅ NUEVOS EVENT LISTENERS PARA AJUSTES PENDIENTES
@@ -913,6 +1744,8 @@ function configurarEventListeners() {
     $('#btnVerResumenCompleto').on('click', verResumenCompleto);
     $('#btnExportarInventario').on('click', exportarInventario);
     $('#btnFinalizarInventario').on('click', finalizarInventarioCompleto);
+
+    configurarEventListenersFiltrado();
 }
 
 // =====================================
@@ -1449,14 +2282,15 @@ async function cargarPermisosInventarioActual(inventarioId) {
         const esAdmin = await verificarEsAdministrador();
 
         if (esAdmin) {
+            // Sin permisos específicos
             permisosInventarioActual = {
-                puedeContar: true,
-                puedeAjustar: true,
-                puedeValidar: true,
-                esAdmin: true,
+                puedeContar: false,
+                puedeAjustar: false,
+                puedeValidar: false,
+                puedeCompletar: false, // ← AGREGAR ESTA LÍNEA
+                esAdmin: false,
                 usuarioId: usuarioId
             };
-
             console.log('✅ Usuario es administrador - Todos los permisos concedidos');
             return permisosInventarioActual;
         }
@@ -1477,10 +2311,10 @@ async function cargarPermisosInventarioActual(inventarioId) {
                     puedeContar: resultado.permisos.permisoConteo || false,
                     puedeAjustar: resultado.permisos.permisoAjuste || false,
                     puedeValidar: resultado.permisos.permisoValidacion || false,
+                    puedeCompletar: resultado.permisos.permisoCompletar || false, // ← AGREGAR ESTA LÍNEA
                     esAdmin: false,
                     usuarioId: usuarioId
                 };
-
                 console.log('✅ Permisos específicos cargados:', permisosInventarioActual);
             } else {
                 // Sin permisos específicos
@@ -1503,6 +2337,7 @@ async function cargarPermisosInventarioActual(inventarioId) {
                 puedeContar: configGlobal.puedeContar || false,
                 puedeAjustar: configGlobal.puedeAjustar || false,
                 puedeValidar: configGlobal.puedeValidar || false,
+                puedeCompletar: configGlobal.puedeCompletar || false,
                 esAdmin: configGlobal.esAdmin || false,
                 usuarioId: usuarioId
             };
@@ -1565,6 +2400,12 @@ function verificarPermisoEspecifico(tipoPermiso, accion = '') {
             mensajeError = 'No tienes permisos para validar discrepancias en este inventario.';
             break;
 
+        // ✅ AGREGAR ESTE NUEVO CASO:
+        case 'completar':
+            tienePermiso = permisosInventarioActual.puedeCompletar || permisosInventarioActual.esAdmin;
+            mensajeError = 'No tienes permisos para completar inventarios.';
+            break;
+
         case 'admin':
             tienePermiso = permisosInventarioActual.esAdmin;
             mensajeError = 'Solo los administradores pueden realizar esta acción.';
@@ -1624,6 +2465,8 @@ function aplicarControlPermisos() {
             }
         });
 
+     
+
         // ✅ PANEL DE FINALIZACIÓN (SOLO ADMINS O VALIDADORES)
         const panelFinalizacion = document.getElementById('finalizacionPanel');
         if (panelFinalizacion) {
@@ -1657,6 +2500,7 @@ function mostrarInfoPermisos() {
             if (permisosInventarioActual.puedeContar) permisosInfo.push('📝 Conteo');
             if (permisosInventarioActual.puedeAjustar) permisosInfo.push('🔧 Ajustes');
             if (permisosInventarioActual.puedeValidar) permisosInfo.push('✅ Validación');
+            if (permisosInventarioActual.puedeCompletar) permisosInfo.push('🏁 Completar');
         }
 
         if (permisosInfo.length === 0) {
@@ -2195,9 +3039,7 @@ function renderizarProductos() {
     try {
         console.log('🎨 Renderizando productos...');
         console.log('🎨 Total productos a renderizar:', productosInventario.length);
-
-        const tbody = $('#tablaProductosBody');
-        tbody.empty();
+        console.log('🎨 Filtros activos:', filtrosActivos);
 
         if (productosInventario.length === 0) {
             $('#loadingProductos').hide();
@@ -2206,26 +3048,49 @@ function renderizarProductos() {
             return;
         }
 
-        productosInventario.forEach((producto, index) => {
-            const row = crearFilaProducto(producto, index + 1);
-            tbody.append(row);
-        });
+        // ✅ VERIFICAR SI HAY FILTROS ACTIVOS
+        const hayFiltrosActivos = filtrosActivos.texto || filtrosActivos.estado || filtrosActivos.tipo;
+
+        if (hayFiltrosActivos) {
+            // ✅ SI HAY FILTROS ACTIVOS: Reaplicar filtros con datos actualizados
+            console.log('🔍 Reaplicando filtros activos después de actualización...');
+            filtrarProductos(filtrosActivos.texto, filtrosActivos.estado, filtrosActivos.tipo);
+        } else {
+            // ✅ SI NO HAY FILTROS: Mostrar todos los productos normalmente
+            const tbody = $('#tablaProductosBody');
+            tbody.empty();
+
+            productosInventario.forEach((producto, index) => {
+                const row = crearFilaProducto(producto, index + 1);
+                tbody.append(row);
+            });
+
+            productosFiltrados = productosInventario;
+        }
 
         $('#loadingProductos').hide();
         $('#productosLista').show();
         $('#estadoVacio').hide();
 
-        console.log('✅ Productos renderizados correctamente');
+        console.log('✅ Productos renderizados correctamente con filtros preservados');
 
     } catch (error) {
         console.error('❌ Error renderizando productos:', error);
     }
 }
 
-
 function crearFilaProducto(producto, numero) {
     const tieneDiscrepancia = producto.tieneDiscrepancia;
     const tieneAjustePendiente = verificarAjustePendiente(producto.productoId);
+
+    // ✅ AGREGAR ESTAS LÍNEAS DE DEBUG:
+    console.log(`🔧 DEBUG crearFilaProducto - Producto ${producto.productoId}:`, {
+        nombreProducto: producto.nombreProducto,
+        tieneDiscrepancia: tieneDiscrepancia,
+        tieneAjustePendiente: tieneAjustePendiente,
+        ajustesPendientesTotal: ajustesPendientes ? ajustesPendientes.length : 0,
+        ajustesParaEsteProducto: ajustesPendientes ? ajustesPendientes.filter(a => a.productoId === producto.productoId) : []
+    });
 
     const estadoClass = tieneDiscrepancia ? 'estado-discrepancia' :
         producto.estadoConteo === 'Contado' ? 'estado-contado' : 'estado-pendiente';
@@ -2330,6 +3195,16 @@ function crearBadgesEstado(producto) {
  */
 function crearNuevosBotonesAccion(producto) {
     try {
+        // ✅ DEBUG AL INICIO
+        const tieneAjustePendiente = verificarAjustePendiente(producto.productoId);
+        const ajusteDetalle = tieneAjustePendiente ? obtenerDetallesAjustePendiente(producto.productoId) : null;
+
+        console.log(`🔧 crearNuevosBotonesAccion - Producto ${producto.productoId}:`, {
+            tieneDiscrepancia: producto.tieneDiscrepancia,
+            tieneAjustePendiente: tieneAjustePendiente,
+            detalleAjuste: ajusteDetalle
+        });
+
         const inventarioEnProgreso = inventarioActual?.estado === 'En Progreso';
         let botones = '';
 
@@ -2350,39 +3225,56 @@ function crearNuevosBotonesAccion(producto) {
             `;
         }
 
-        // ✅ BOTÓN DE AJUSTE PENDIENTE (verificar permiso específico)
-        if (permisosInventarioActual.puedeAjustar &&
-            producto.tieneDiscrepancia &&
-            !verificarAjustePendiente(producto.productoId) &&
-            inventarioEnProgreso) {
+        // ✅ LÓGICA CORREGIDA PARA BOTONES DE AJUSTE
+        if (permisosInventarioActual.puedeAjustar && producto.tieneDiscrepancia && inventarioEnProgreso) {
 
-            botones += `
-                <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente" 
-                        onclick="abrirModalAjustePendiente(${producto.productoId})"
-                        data-bs-toggle="tooltip"
-                        title="Crear ajuste pendiente para esta discrepancia">
-                    <i class="bi bi-clock-history me-1"></i>
-                    Crear Ajuste
-                </button>
-            `;
+            if (tieneAjustePendiente) {
+                // ✅ SI YA TIENE AJUSTE: Mostrar botón Ver Ajustes
+                console.log(`🟢 Producto ${producto.productoId}: Mostrando botón VER AJUSTE`);
+
+                botones += `
+                    <button class="btn btn-sm btn-info mb-1" 
+                            onclick="verAjustesProducto(${producto.productoId})"
+                            data-bs-toggle="tooltip"
+                            title="Ver ajuste pendiente: ${ajusteDetalle ? obtenerTextoTipoAjuste(ajusteDetalle.tipoAjuste) : 'Pendiente'}">
+                        <i class="bi bi-eye me-1"></i>
+                        Ver Ajuste
+                    </button>
+                `;
+
+                // ✅ Botón secundario para editar (si existe la función)
+                if (ajusteDetalle && typeof editarAjustePendiente === 'function') {
+                    botones += `
+                        <button class="btn btn-sm btn-outline-warning mb-1" 
+                                onclick="editarAjustePendiente(${ajusteDetalle.ajusteId})"
+                                data-bs-toggle="tooltip"
+                                title="Editar ajuste pendiente">
+                            <i class="bi bi-pencil me-1"></i>
+                            Editar
+                        </button>
+                    `;
+                }
+
+            } else {
+                // ✅ SI NO TIENE AJUSTE: Mostrar botón Crear
+                console.log(`🟡 Producto ${producto.productoId}: Mostrando botón CREAR AJUSTE`);
+
+                botones += `
+                    <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente" 
+                            onclick="abrirModalAjustePendiente(${producto.productoId})"
+                            data-bs-toggle="tooltip"
+                            title="Crear ajuste pendiente para esta discrepancia">
+                        <i class="bi bi-clock-history me-1"></i>
+                        Crear Ajuste
+                    </button>
+                `;
+            }
         }
 
-        // ✅ BOTÓN DE VER AJUSTES (si ya tiene ajustes pendientes)
-        if (verificarAjustePendiente(producto.productoId)) {
-            botones += `
-                <button class="btn btn-sm btn-info mb-1" 
-                        onclick="verAjustesProducto(${producto.productoId})"
-                        data-bs-toggle="tooltip"
-                        title="Ver ajustes pendientes de este producto">
-                    <i class="bi bi-eye me-1"></i>
-                    Ver Ajustes
-                </button>
-            `;
-        }
-
-        // ✅ BOTÓN DE VALIDACIÓN (solo para usuarios con permiso de validación)
+        // ✅ BOTÓN DE VALIDACIÓN (solo si no tiene ajuste pendiente)
         if (permisosInventarioActual.puedeValidar &&
             producto.tieneDiscrepancia &&
+            !tieneAjustePendiente &&
             inventarioEnProgreso) {
 
             botones += `
@@ -2396,18 +3288,8 @@ function crearNuevosBotonesAccion(producto) {
             `;
         }
 
-        // ✅ BOTÓN DE DETALLES (siempre disponible)
-        botones += `
-            <button class="btn btn-sm btn-outline-secondary mb-1" 
-                    onclick="verDetallesProducto(${producto.productoId})"
-                    data-bs-toggle="tooltip"
-                    title="Ver detalles del producto">
-                <i class="bi bi-info-circle me-1"></i>
-                Detalles
-            </button>
-        `;
 
-        // ✅ MENSAJE INFORMATIVO si no tiene permisos
+        // ✅ MENSAJE INFORMATIVO si no tiene permisos de acción
         if (!botones.includes('btn-conteo') && !botones.includes('btn-ajuste') && !botones.includes('btn-validacion')) {
             botones += `
                 <small class="text-muted d-block">
@@ -2416,6 +3298,8 @@ function crearNuevosBotonesAccion(producto) {
                 </small>
             `;
         }
+
+        console.log(`✅ Botones generados para producto ${producto.productoId}:`, botones.includes('Ver Ajuste') ? 'Ver Ajuste' : 'Crear Ajuste');
 
         return `<div class="d-flex flex-column gap-1">${botones}</div>`;
 
@@ -2506,13 +3390,59 @@ async function validarDiscrepancia(productoId) {
 }
 
 /**
- * ✅ NUEVA FUNCIÓN: Verificar si un producto tiene ajustes pendientes
+ * ✅ FUNCIÓN CORREGIDA: Verificar si un producto tiene ajustes pendientes
+ * REEMPLAZAR la función existente completamente
  */
 function verificarAjustePendiente(productoId) {
-    return ajustesPendientes.some(ajuste =>
-        ajuste.productoId === productoId && ajuste.estado === 'Pendiente'
-    );
+    try {
+        // ✅ Verificar en datos locales de ajustesPendientes
+        if (!ajustesPendientes || ajustesPendientes.length === 0) {
+            console.log(`🔍 Producto ${productoId}: No hay ajustes pendientes cargados`);
+            return false;
+        }
+
+        // ✅ Buscar ajuste pendiente para este producto
+        const ajustePendiente = ajustesPendientes.find(ajuste =>
+            ajuste.productoId === productoId &&
+            (ajuste.estado === 'Pendiente' || ajuste.estado === 'pendiente' || !ajuste.estado)
+        );
+
+        if (ajustePendiente) {
+            console.log(`✅ Producto ${productoId} SÍ tiene ajuste pendiente:`, ajustePendiente);
+            return true;
+        } else {
+            console.log(`❌ Producto ${productoId} NO tiene ajuste pendiente`);
+            return false;
+        }
+
+    } catch (error) {
+        console.error('❌ Error verificando ajuste pendiente:', error);
+        return false;
+    }
 }
+
+/**
+ * ✅ FUNCIÓN NUEVA: Obtener detalles del ajuste pendiente
+ */
+function obtenerDetallesAjustePendiente(productoId) {
+    try {
+        if (!ajustesPendientes || ajustesPendientes.length === 0) {
+            return null;
+        }
+
+        const ajuste = ajustesPendientes.find(ajuste =>
+            ajuste.productoId === productoId &&
+            (ajuste.estado === 'Pendiente' || ajuste.estado === 'pendiente' || !ajuste.estado)
+        );
+
+        return ajuste || null;
+
+    } catch (error) {
+        console.error('❌ Error obteniendo detalles de ajuste:', error);
+        return null;
+    }
+}
+
 
 /**
  * ✅ NUEVA FUNCIÓN: Ver detalles del producto (placeholder)
@@ -2563,90 +3493,358 @@ function getEstadoBadgeClass(estado) {
 // =====================================
 // FUNCIONES DE FILTRADO
 // =====================================
-function filtrarProductos(textoFiltro, estadoFiltro) {
+function filtrarProductos(textoFiltro = '', estadoFiltro = '', tipoFiltro = '') {
     try {
-        console.log('🔍 Filtrando productos - Texto:', textoFiltro, 'Estado:', estadoFiltro);
-        console.log('🔍 productosInventario disponibles:', productosInventario.length);
+        console.log('🔍 Aplicando filtros:', { textoFiltro, estadoFiltro, tipoFiltro });
 
+        // ✅ ACTUALIZAR FILTROS ACTIVOS
+        filtrosActivos = {
+            texto: textoFiltro.toLowerCase().trim(),
+            estado: estadoFiltro,
+            tipo: tipoFiltro
+        };
+
+        // ✅ FILTRAR PRODUCTOS
         productosFiltrados = productosInventario.filter(producto => {
-            // ✅ MANEJO SEGURO DE TEXTO CON VERIFICACIONES NULL
+            // Filtro por texto (búsqueda en múltiples campos)
             let cumpleTexto = true;
-            if (textoFiltro && textoFiltro.trim() !== '') {
-                const textoMinuscula = textoFiltro.toLowerCase();
-                cumpleTexto = false;
+            if (filtrosActivos.texto) {
+                const nombreProducto = (producto.nombreProducto || '').toLowerCase();
+                const descripcionProducto = (producto.descripcionProducto || '').toLowerCase();
+                const marcaLlanta = (producto.marcaLlanta || '').toLowerCase();
+                const modeloLlanta = (producto.modeloLlanta || '').toLowerCase();
+                const productoId = producto.productoId.toString();
 
-                // ✅ VERIFICAR TODAS LAS POSIBLES VARIANTES DE NOMBRES
-                const nombreProducto = producto.nombreProducto || producto.NombreProducto || '';
-                const descripcionProducto = producto.descripcionProducto || producto.DescripcionProducto || '';
-                const marcaLlanta = producto.marcaLlanta || producto.MarcaLlanta || '';
-                const modeloLlanta = producto.modeloLlanta || producto.ModeloLlanta || '';
-                const productoId = producto.productoId || producto.ProductoId || '';
-
-                // Verificar en todos los campos posibles
-                if (nombreProducto.toLowerCase().includes(textoMinuscula) ||
-                    descripcionProducto.toLowerCase().includes(textoMinuscula) ||
-                    marcaLlanta.toLowerCase().includes(textoMinuscula) ||
-                    modeloLlanta.toLowerCase().includes(textoMinuscula) ||
-                    productoId.toString().includes(textoMinuscula)) {
-                    cumpleTexto = true;
-                }
+                cumpleTexto = nombreProducto.includes(filtrosActivos.texto) ||
+                    descripcionProducto.includes(filtrosActivos.texto) ||
+                    marcaLlanta.includes(filtrosActivos.texto) ||
+                    modeloLlanta.includes(filtrosActivos.texto) ||
+                    productoId.includes(filtrosActivos.texto);
             }
 
-            // ✅ FILTRO POR ESTADO
+            // Filtro por estado
             let cumpleEstado = true;
-            if (estadoFiltro && estadoFiltro.trim() !== '') {
-                const estadoConteo = producto.estadoConteo || producto.EstadoConteo || 'Pendiente';
-                const tieneDiscrepancia = producto.tieneDiscrepancia || producto.TieneDiscrepancia || false;
-
-                switch (estadoFiltro.toLowerCase()) {
+            if (filtrosActivos.estado) {
+                switch (filtrosActivos.estado) {
                     case 'pendiente':
-                        cumpleEstado = estadoConteo === 'Pendiente';
+                        cumpleEstado = producto.estadoConteo !== 'Contado';
                         break;
                     case 'contado':
-                        cumpleEstado = estadoConteo === 'Contado';
+                        cumpleEstado = producto.estadoConteo === 'Contado';
                         break;
                     case 'discrepancia':
-                        cumpleEstado = tieneDiscrepancia === true;
+                        cumpleEstado = producto.tieneDiscrepancia === true;
                         break;
                 }
             }
 
-            return cumpleTexto && cumpleEstado;
+            // Filtro por tipo
+            let cumpleTipo = true;
+            if (filtrosActivos.tipo) {
+                switch (filtrosActivos.tipo) {
+                    case 'llanta':
+                        cumpleTipo = producto.esLlanta === true;
+                        break;
+                    case 'accesorio':
+                        cumpleTipo = producto.esLlanta !== true;
+                        break;
+                }
+            }
+
+            return cumpleTexto && cumpleEstado && cumpleTipo;
         });
 
-        console.log('✅ Productos filtrados:', productosFiltrados.length);
+        console.log(`✅ Filtrado: ${productosFiltrados.length} de ${productosInventario.length} productos`);
 
-        // Re-renderizar productos filtrados
+        // ✅ RENDERIZAR PRODUCTOS FILTRADOS
         renderizarProductosFiltrados();
 
-    } catch (error) {
-        console.error('❌ Error en filtrarProductos:', error);
-        console.error('❌ Error stack:', error.stack);
+        // ✅ ACTUALIZAR CONTADOR
+        $('#contadorProductosMostrados').text(productosFiltrados.length);
 
-        // Fallback - mostrar todos los productos
+    } catch (error) {
+        console.error('❌ Error filtrando productos:', error);
+        // En caso de error, mostrar todos los productos
         productosFiltrados = productosInventario;
         renderizarProductosFiltrados();
     }
 }
 
-
+/**
+ * ✅ FUNCIÓN: Renderizar productos filtrados
+ */
 function renderizarProductosFiltrados() {
-    const tbody = $('#productosTableBody');
-    tbody.empty();
+    try {
+        const tbody = $('#tablaProductosBody');
+        tbody.empty();
 
-    if (productosFiltrados.length === 0) {
-        $('#listaProductos').hide();
-        $('#emptyState').show();
-        return;
+        if (productosFiltrados.length === 0) {
+            // Mostrar estado vacío
+            $('#productosLista').hide();
+            $('#estadoVacio').show();
+            return;
+        }
+
+        // Renderizar productos filtrados
+        productosFiltrados.forEach((producto, index) => {
+            const fila = crearFilaProducto(producto, index + 1);
+            tbody.append(fila);
+        });
+
+        $('#productosLista').show();
+        $('#estadoVacio').hide();
+
+        console.log(`✅ Renderizados ${productosFiltrados.length} productos filtrados`);
+
+    } catch (error) {
+        console.error('❌ Error renderizando productos filtrados:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Limpiar todos los filtros
+ */
+function limpiarFiltros() {
+    // Limpiar inputs
+    $('#busquedaRapida').val('');
+    $('#filtroEstado').val('');
+    $('#filtroTipo').val('');
+
+    // Aplicar filtros vacíos
+    filtrarProductos('', '', '');
+
+    console.log('🧹 Filtros limpiados');
+}
+
+/**
+ * ✅ FUNCIÓN: Aplicar filtro rápido
+ */
+function aplicarFiltroRapido(tipo) {
+    switch (tipo) {
+        case 'todos':
+            limpiarFiltros();
+            break;
+        case 'pendientes':
+            $('#filtroEstado').val('pendiente');
+            filtrarProductos($('#busquedaRapida').val(), 'pendiente', $('#filtroTipo').val());
+            break;
+        case 'discrepancias':
+            $('#filtroEstado').val('discrepancia');
+            filtrarProductos($('#busquedaRapida').val(), 'discrepancia', $('#filtroTipo').val());
+            break;
     }
 
-    productosFiltrados.forEach((producto, index) => {
-        const row = crearFilaProducto(producto, index + 1);
-        tbody.append(row);
+    console.log(`⚡ Filtro rápido aplicado: ${tipo}`);
+}
+
+/**
+ * ✅ FUNCIÓN: Configurar event listeners del filtrado
+ */
+function configurarEventListenersFiltrado() {
+    try {
+        // ✅ BÚSQUEDA RÁPIDA
+        $('#busquedaRapida').off('input').on('input', function () {
+            const texto = $(this).val();
+            const estado = $('#filtroEstado').val();
+            const tipo = $('#filtroTipo').val();
+            filtrarProductos(texto, estado, tipo);
+        });
+
+        // ✅ BOTÓN BUSCAR
+        $('#btnBuscar').off('click').on('click', function () {
+            const texto = $('#busquedaRapida').val();
+            const estado = $('#filtroEstado').val();
+            const tipo = $('#filtroTipo').val();
+            filtrarProductos(texto, estado, tipo);
+        });
+
+        // ✅ FILTRO POR ESTADO
+        $('#filtroEstado').off('change').on('change', function () {
+            const texto = $('#busquedaRapida').val();
+            const estado = $(this).val();
+            const tipo = $('#filtroTipo').val();
+            filtrarProductos(texto, estado, tipo);
+        });
+
+        // ✅ FILTRO POR TIPO
+        $('#filtroTipo').off('change').on('change', function () {
+            const texto = $('#busquedaRapida').val();
+            const estado = $('#filtroEstado').val();
+            const tipo = $(this).val();
+            filtrarProductos(texto, estado, tipo);
+        });
+
+        // ✅ BOTÓN LIMPIAR BÚSQUEDA
+        $('#btnLimpiarBusqueda').off('click').on('click', function () {
+            $('#busquedaRapida').val('');
+            const estado = $('#filtroEstado').val();
+            const tipo = $('#filtroTipo').val();
+            filtrarProductos('', estado, tipo);
+        });
+
+        // ✅ BOTONES DE FILTRO RÁPIDO
+        $('#btnMostrarTodos').addClass('btn-filtro-rapido').off('click').on('click', function () {
+            aplicarFiltroRapidoConEstado('todos', this);
+        });
+
+        $('#btnSoloPendientes').addClass('btn-filtro-rapido').off('click').on('click', function () {
+            aplicarFiltroRapidoConEstado('pendientes', this);
+        });
+
+        $('#btnSoloDiscrepancias').addClass('btn-filtro-rapido').off('click').on('click', function () {
+            aplicarFiltroRapidoConEstado('discrepancias', this);
+        });
+        // ✅ AGREGAR TAMBIÉN: Guardar estado en inputs
+        $('#busquedaRapida, #filtroEstado, #filtroTipo').on('change input', function () {
+            setTimeout(guardarEstadoFiltrosUI, 100);
+        });
+
+        // ✅ BOTÓN LIMPIAR FILTROS (del estado vacío)
+        $('#btnLimpiarFiltros').off('click').on('click', function () {
+            limpiarFiltros();
+        });
+
+        // ✅ ENTER EN BÚSQUEDA RÁPIDA
+        $('#busquedaRapida').off('keypress').on('keypress', function (e) {
+            if (e.which === 13) { // Enter
+                $('#btnBuscar').click();
+            }
+        });
+
+        console.log('✅ Event listeners de filtrado configurados');
+
+    } catch (error) {
+        console.error('❌ Error configurando event listeners de filtrado:', error);
+    }
+}
+
+
+/**
+ * ✅ FUNCIÓN: Guardar estado actual de filtros en la UI
+ */
+function guardarEstadoFiltrosUI() {
+    const estadoUI = {
+        busquedaRapida: $('#busquedaRapida').val(),
+        filtroEstado: $('#filtroEstado').val(),
+        filtroTipo: $('#filtroTipo').val(),
+        // Guardar qué botón rápido está activo
+        botonActivoClass: $('.btn-filtro-activo').data('filtro') || null
+    };
+
+    // Guardar en variable global
+    window.estadoFiltrosUI = estadoUI;
+    
+    console.log('💾 Estado de filtros UI guardado:', estadoUI);
+    return estadoUI;
+}
+
+/**
+ * ✅ FUNCIÓN: Restaurar estado de filtros en la UI
+ */
+function restaurarEstadoFiltrosUI() {
+    try {
+        const estado = window.estadoFiltrosUI;
+        if (!estado) return;
+
+        console.log('🔄 Restaurando estado de filtros UI:', estado);
+
+        // Restaurar valores en inputs
+        $('#busquedaRapida').val(estado.busquedaRapida || '');
+        $('#filtroEstado').val(estado.filtroEstado || '');
+        $('#filtroTipo').val(estado.filtroTipo || '');
+
+        // ✅ LIMPIAR TODOS LOS EFECTOS PRIMERO
+        $('.btn-filtro-rapido').removeClass('btn-filtro-activo').css({
+            'border': '',
+            'box-shadow': '',
+            'font-weight': ''
+        });
+
+        // ✅ APLICAR SOLO CONTORNO AL BOTÓN ACTIVO
+        if (estado.botonActivoClass) {
+            const $botonActivo = $(`.btn-filtro-rapido[data-filtro="${estado.botonActivoClass}"]`);
+            if ($botonActivo.length === 0) {
+                // Si no encuentra por data-filtro, buscar por ID
+                let selectorBoton = '';
+                switch (estado.botonActivoClass) {
+                    case 'todos':
+                        selectorBoton = '#btnMostrarTodos';
+                        break;
+                    case 'pendientes':
+                        selectorBoton = '#btnSoloPendientes';
+                        break;
+                    case 'discrepancias':
+                        selectorBoton = '#btnSoloDiscrepancias';
+                        break;
+                }
+
+                if (selectorBoton) {
+                    $(selectorBoton).addClass('btn-filtro-activo').css({
+                        'border': '2px solid #007bff',
+                        'box-shadow': '0 0 0 2px rgba(0, 123, 255, 0.25)',
+                        'font-weight': 'bold'
+                    }).data('filtro', estado.botonActivoClass);
+                }
+            } else {
+                $botonActivo.addClass('btn-filtro-activo').css({
+                    'border': '2px solid #007bff',
+                    'box-shadow': '0 0 0 2px rgba(0, 123, 255, 0.25)',
+                    'font-weight': 'bold'
+                });
+            }
+        }
+
+        console.log('✅ Estado de filtros UI restaurado con contorno');
+
+    } catch (error) {
+        console.error('❌ Error restaurando estado de filtros UI:', error);
+    }
+}
+
+
+/**
+ * ✅ FUNCIÓN MEJORADA: Aplicar filtro rápido con estado visual
+ */
+function aplicarFiltroRapidoConEstado(tipo, botonElement = null) {
+    // Guardar estado antes de cambiar
+    guardarEstadoFiltrosUI();
+
+    // ✅ LIMPIAR EFECTOS DE TODOS LOS BOTONES
+    $('.btn-filtro-rapido').removeClass('btn-filtro-activo').css({
+        'border': '',
+        'box-shadow': '',
+        'font-weight': ''
     });
 
-    $('#listaProductos').show();
-    $('#emptyState').hide();
+    switch (tipo) {
+        case 'todos':
+            limpiarFiltros();
+            break;
+
+        case 'pendientes':
+            $('#filtroEstado').val('pendiente');
+            filtrarProductos($('#busquedaRapida').val(), 'pendiente', $('#filtroTipo').val());
+            break;
+
+        case 'discrepancias':
+            $('#filtroEstado').val('discrepancia');
+            filtrarProductos($('#busquedaRapida').val(), 'discrepancia', $('#filtroTipo').val());
+            break;
+    }
+
+    // ✅ APLICAR SOLO EFECTO DE CONTORNO AL BOTÓN ACTIVO
+    if (botonElement) {
+        $(botonElement).addClass('btn-filtro-activo').css({
+            'border': '2px solid #007bff',
+            'box-shadow': '0 0 0 2px rgba(0, 123, 255, 0.25)',
+            'font-weight': 'bold'
+        }).data('filtro', tipo);
+    }
+
+    // Guardar nuevo estado
+    guardarEstadoFiltrosUI();
+
+    console.log(`⚡ Filtro rápido aplicado con contorno: ${tipo}`);
 }
 
 // =====================================
@@ -2654,6 +3852,11 @@ function renderizarProductosFiltrados() {
 // =====================================
 function abrirModalConteo(productoId) {
     try {
+        // ✅ AGREGAR AL INICIO:
+        if (inventarioBloqueado && !pinValidado) {
+            solicitarPinAdmin();
+            return;
+        }
         console.log(`📝 === ABRIENDO MODAL DE CONTEO ===`);
         console.log(`📝 Producto ID: ${productoId}`);
 
@@ -2962,7 +4165,14 @@ async function actualizarEstadisticas() {
             $barra.addClass('bg-success');
         }
 
-        console.log(`📊 Estadísticas actualizadas: ${porcentaje}% completado`);
+
+        console.log(`📊 Estadísticas actualizadas correctamente: ${porcentaje}% completado`);
+
+        // ✅ AGREGAR ESTAS LÍNEAS AL FINAL:
+        // Preservar filtros después de actualización
+        setTimeout(() => {
+            restaurarEstadoFiltrosUI();
+        }, 200);
 
     } catch (error) {
         console.error('❌ Error actualizando estadísticas:', error);
@@ -3072,25 +4282,33 @@ async function completarInventario() {
 // =====================================
 
 /**
- * ✅ FUNCIÓN CORREGIDA: Actualiza las estadísticas en la interfaz de usuario
+ * ✅ FUNCIÓN LIMPIA: Actualizar estadísticas UI con protección de barra
  */
 function actualizarEstadisticasUI() {
     try {
         console.log('📊 Actualizando estadísticas UI...');
         console.log('📊 Estadísticas actuales:', estadisticasActuales);
 
-        // Actualizar contadores
+        if (!estadisticasActuales) {
+            console.warn('⚠️ No hay estadísticas para actualizar');
+            return;
+        }
+
+        const porcentaje = estadisticasActuales.porcentajeProgreso || 0;
+
+        // ✅ ACTUALIZAR CONTADORES
         $('#totalProductos').text(estadisticasActuales.total || 0);
         $('#productosContados').text(estadisticasActuales.contados || 0);
         $('#productosPendientes').text(estadisticasActuales.pendientes || 0);
         $('#discrepancias').text(estadisticasActuales.discrepancias || 0);
+        $('#contadorProductosMostrados').text(productosInventario.length);
 
-        // Actualizar barra de progreso
-        const porcentaje = estadisticasActuales.porcentajeProgreso || 0;
+        // ✅ ACTUALIZAR BARRA DE PROGRESO (PROTEGIDA)
         $('#porcentajeProgreso').text(`${porcentaje}%`);
         $('#barraProgreso').css('width', `${porcentaje}%`);
+        $('#barraProgreso').attr('aria-valuenow', porcentaje);
 
-        // Cambiar color de la barra según el progreso
+        // ✅ ACTUALIZAR COLOR DE LA BARRA
         const $barra = $('#barraProgreso');
         $barra.removeClass('bg-danger bg-warning bg-info bg-success progress-bar-striped progress-bar-animated');
 
@@ -3104,19 +4322,40 @@ function actualizarEstadisticasUI() {
             $barra.addClass('bg-success');
         }
 
-        // Actualizar contador de productos mostrados
-        $('#contadorProductosMostrados').text(productosInventario.length);
+        // ✅ PROTECCIÓN MÁS FUERTE
+        setTimeout(() => {
+            if ($('#barraProgreso').css('width') === '0px' && porcentaje > 0) {
+                $('#barraProgreso').css('width', `${porcentaje}%`);
+                $('#porcentajeProgreso').text(`${porcentaje}%`);
+                console.log(`🛡️ Barra restaurada a: ${porcentaje}%`);
+            }
+        }, 500);
 
-        console.log(`📊 Estadísticas actualizadas: ${porcentaje}% completado`);
+        // Protección continua contra auto-refresh
+        if (!window.barraProteccionInterval) {
+            window.barraProteccionInterval = setInterval(() => {
+                if (estadisticasActuales && estadisticasActuales.porcentajeProgreso > 0) {
+                    const porcentajeActual = estadisticasActuales.porcentajeProgreso;
+                    const anchoActual = $('#barraProgreso').css('width');
 
-        // ✅ AGREGAR ESTA LÍNEA CRUCIAL:
+                    if (anchoActual === '0px') {
+                        $('#barraProgreso').css('width', `${porcentajeActual}%`);
+                        $('#porcentajeProgreso').text(`${porcentajeActual}%`);
+                        console.log(`🔒 Auto-protección: Barra restaurada a ${porcentajeActual}%`);
+                    }
+                }
+            }, 1000);
+        }
+
+        console.log(`✅ Estadísticas actualizadas: ${porcentaje}% completado`);
+
+        // ✅ MOSTRAR PANELES SEGÚN PROGRESO
         mostrarPanelesSegunProgreso();
 
     } catch (error) {
         console.error('❌ Error actualizando estadísticas UI:', error);
     }
 }
-
 
 // =====================================
 // FUNCIONES AUXILIARES
@@ -3365,35 +4604,193 @@ function actualizarProductoConAjustePendiente(productoId, ajusteData) {
     }
 }
 
-// ✅ NUEVA FUNCIÓN: Ver ajustes de un producto
+/**
+ * ✅ FUNCIÓN CORREGIDA: Ver ajustes de un producto con popup rápido
+ * REEMPLAZAR la función existente o AGREGAR si no existe
+ */
 async function verAjustesProducto(productoId) {
     try {
         console.log('👁️ Mostrando ajustes del producto:', productoId);
 
-        const response = await fetch(`/TomaInventario/${window.inventarioConfig.inventarioId}/productos/${productoId}/ajustes`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
+        // ✅ BUSCAR AJUSTES LOCALES DEL PRODUCTO
+        const ajustesProducto = ajustesPendientes.filter(ajuste =>
+            ajuste.productoId === productoId &&
+            (ajuste.estado === 'Pendiente' || ajuste.estado === 'pendiente' || !ajuste.estado)
+        );
+
+        if (ajustesProducto.length === 0) {
+            mostrarInfo('Este producto no tiene ajustes pendientes');
+            return;
+        }
+
+        // ✅ OBTENER DATOS DEL PRODUCTO
+        const producto = productosInventario.find(p => p.productoId === productoId);
+        const nombreProducto = producto ? producto.nombreProducto : `Producto ${productoId}`;
+
+        // ✅ CREAR RESUMEN RÁPIDO Y VISUAL
+        let htmlResumen = `
+            <div class="text-start">
+                <h5 class="text-primary mb-3">
+                    <i class="bi bi-clipboard-check me-2"></i>
+                    Ajustes Pendientes
+                </h5>
+                
+                <div class="alert alert-info">
+                    <strong>📦 Producto:</strong> ${nombreProducto}<br>
+                    <strong>🔄 Ajustes encontrados:</strong> ${ajustesProducto.length}
+                </div>
+        `;
+
+        // ✅ MOSTRAR CADA AJUSTE DE FORMA VISUAL Y SIMPLE
+        ajustesProducto.forEach((ajuste, index) => {
+            const diferencia = ajuste.cantidadFinalPropuesta - ajuste.cantidadSistemaOriginal;
+            const diferenciaTexto = diferencia > 0 ? `+${diferencia}` : `${diferencia}`;
+            const diferenciaColor = diferencia > 0 ? 'text-success' : diferencia < 0 ? 'text-danger' : 'text-muted';
+
+            const tipoTexto = obtenerTextoTipoAjuste(ajuste.tipoAjuste);
+            const fechaCreacion = ajuste.fechaCreacion ? new Date(ajuste.fechaCreacion).toLocaleDateString() : 'Hoy';
+
+            htmlResumen += `
+                <div class="card mb-2 border-left-primary">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <div class="h6 mb-0">${ajuste.cantidadSistemaOriginal}</div>
+                                    <small class="text-muted">Sistema</small>
+                                </div>
+                            </div>
+                            <div class="col-2 text-center">
+                                <i class="bi bi-arrow-right h4 text-primary"></i>
+                            </div>
+                            <div class="col-3">
+                                <div class="text-center">
+                                    <div class="h6 mb-0 text-primary">${ajuste.cantidadFinalPropuesta}</div>
+                                    <small class="text-muted">Propuesto</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-end">
+                                    <span class="badge bg-primary">${tipoTexto}</span><br>
+                                    <span class="fw-bold ${diferenciaColor}">${diferenciaTexto} unidades</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${ajuste.motivoAjuste ? `
+                            <div class="mt-2 pt-2 border-top">
+                                <small class="text-muted">
+                                    <strong>Motivo:</strong> ${ajuste.motivoAjuste}
+                                </small>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+
+        htmlResumen += `
+                <div class="alert alert-warning mt-3">
+                    <small>
+                        <i class="bi bi-info-circle me-1"></i>
+                        Estos ajustes se aplicarán al stock cuando se complete el inventario.
+                    </small>
+                </div>
+            </div>
+        `;
+
+        // ✅ MOSTRAR POPUP CON BOTONES DE ACCIÓN
+        const resultado = await Swal.fire({
+            title: `📋 Ajustes de ${nombreProducto}`,
+            html: htmlResumen,
+            icon: 'info',
+            showCancelButton: true,
+            showDenyButton: ajustesProducto.length === 1, // Solo mostrar editar si hay 1 ajuste
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            denyButtonColor: '#ffc107',
+            confirmButtonText: '<i class="bi bi-check-lg me-1"></i> Entendido',
+            cancelButtonText: '<i class="bi bi-trash me-1"></i> Eliminar Ajuste',
+            denyButtonText: '<i class="bi bi-pencil me-1"></i> Editar Ajuste',
+            width: '600px',
+            customClass: {
+                popup: 'swal-wide'
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}`);
-        }
-
-        const resultado = await response.json();
-
-        if (resultado.success && resultado.ajustes.length > 0) {
-            mostrarModalAjustesProducto(resultado.ajustes);
-        } else {
-            mostrarInfo('Este producto no tiene ajustes pendientes');
+        // ✅ MANEJAR ACCIONES DEL USUARIO
+        if (resultado.isDenied && ajustesProducto.length === 1) {
+            // Editar ajuste
+            editarAjustePendiente(ajustesProducto[0].ajusteId);
+        } else if (resultado.isDismissed && resultado.dismiss === 'cancel') {
+            // Eliminar ajuste
+            if (ajustesProducto.length === 1) {
+                eliminarAjustePendiente(ajustesProducto[0].ajusteId);
+            } else {
+                // Si hay múltiples, preguntar cuál eliminar
+                mostrarSeleccionarAjusteParaEliminar(ajustesProducto);
+            }
         }
 
     } catch (error) {
-        console.error('❌ Error obteniendo ajustes del producto:', error);
-        mostrarError('Error al obtener los ajustes del producto');
+        console.error('❌ Error mostrando ajustes del producto:', error);
+        mostrarError('Error al mostrar los ajustes del producto');
     }
 }
+
+/**
+ * ✅ FUNCIÓN AUXILIAR: Seleccionar ajuste para eliminar cuando hay múltiples
+ */
+async function mostrarSeleccionarAjusteParaEliminar(ajustes) {
+    try {
+        let opcionesHtml = '<div class="text-start">';
+
+        ajustes.forEach((ajuste, index) => {
+            const tipoTexto = obtenerTextoTipoAjuste(ajuste.tipoAjuste);
+            const diferencia = ajuste.cantidadFinalPropuesta - ajuste.cantidadSistemaOriginal;
+
+            opcionesHtml += `
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" name="ajusteSeleccionado" 
+                           id="ajuste${ajuste.ajusteId}" value="${ajuste.ajusteId}">
+                    <label class="form-check-label" for="ajuste${ajuste.ajusteId}">
+                        ${tipoTexto} - ${diferencia > 0 ? '+' : ''}${diferencia} unidades
+                        <br><small class="text-muted">${ajuste.motivoAjuste}</small>
+                    </label>
+                </div>
+            `;
+        });
+
+        opcionesHtml += '</div>';
+
+        const resultado = await Swal.fire({
+            title: '🗑️ ¿Qué ajuste quieres eliminar?',
+            html: opcionesHtml,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Eliminar Seleccionado',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const seleccionado = document.querySelector('input[name="ajusteSeleccionado"]:checked');
+                if (!seleccionado) {
+                    Swal.showValidationMessage('Debes seleccionar un ajuste');
+                    return false;
+                }
+                return seleccionado.value;
+            }
+        });
+
+        if (resultado.isConfirmed) {
+            eliminarAjustePendiente(parseInt(resultado.value));
+        }
+
+    } catch (error) {
+        console.error('❌ Error en selección de ajuste:', error);
+    }
+}
+
 
 // ✅ NUEVA FUNCIÓN: Mostrar modal con ajustes de un producto
 function mostrarModalAjustesProducto(ajustes) {
@@ -3675,6 +5072,7 @@ function crearBotonesAccion(producto) {
 function abrirModalValidacion(productoId) {
     mostrarInfo('Función de validación en desarrollo');
 }
+
 window.abrirModalConteo = abrirModalConteo;
 window.mostrarModalCompletarInventario = mostrarModalCompletarInventario;
 window.completarInventario = completarInventario;
@@ -3685,6 +5083,11 @@ window.completarInventario = completarInventario;
  */
 function abrirModalAjustePendiente(productoId) {
     try {
+        // ✅ AGREGAR AL INICIO:
+        if (inventarioBloqueado && !pinValidado) {
+            solicitarPinAdmin();
+            return;
+        }
         console.log(`🔄 === ABRIENDO MODAL PARA CREAR AJUSTE ===`);
         console.log(`🔄 Producto ID: ${productoId}`);
 
@@ -4410,9 +5813,9 @@ async function finalizarInventarioCompleto() {
         const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
 
         // ✅ VERIFICAR PERMISOS PARA FINALIZAR
-        const verificacionPermisos = verificarPermisoEspecifico('validacion', 'finalizar inventario');
-        if (!verificacionPermisos.tienePermiso && !permisosInventarioActual.esAdmin) {
-            mostrarError('Solo usuarios con permisos de validación o administradores pueden finalizar inventarios.');
+        const verificacionPermisos = verificarPermisoEspecifico('completar', 'finalizar inventario');
+        if (!verificacionPermisos.tienePermiso) {
+            mostrarError(verificacionPermisos.mensaje);
             return;
         }
 
@@ -4652,6 +6055,7 @@ async function mostrarConfirmacionFinalizacion(stats, totalAjustes, validaciones
  * ✅ FUNCIÓN: Ejecutar proceso completo de finalización
  */
 async function ejecutarProcesoFinalizacion(inventarioId, totalAjustes) {
+    console.log('🔥 EJECUTANDO: ejecutarProcesoFinalizacion');
     // ✅ MOSTRAR PROGRESO
     let timerInterval;
 
@@ -4717,6 +6121,7 @@ async function ejecutarProcesoFinalizacion(inventarioId, totalAjustes) {
             }
 
             const resultadoAjustes = await responseAjustes.json();
+            console.log('🔍 RESPUESTA COMPLETA DE AJUSTES:', resultadoAjustes); // ← AGREGAR ESTA LÍNEA
             if (!resultadoAjustes.success) {
                 throw new Error(resultadoAjustes.message || 'Error al aplicar ajustes');
             }
@@ -4784,6 +6189,8 @@ async function ejecutarProcesoFinalizacion(inventarioId, totalAjustes) {
         });
     }
 }
+
+
 
 /**
  * ✅ FUNCIÓN: Mostrar resultado final de la finalización
@@ -4907,7 +6314,7 @@ async function actualizarInterfazInventarioCompletado() {
                                 <button class="btn btn-success btn-sm me-2" onclick="generarReporteInventario(${window.inventarioConfig.inventarioId})">
                                     <i class="bi bi-file-text me-1"></i> Reporte
                                 </button>
-                                <button class="btn btn-outline-success btn-sm" onclick="exportarInventario(${window.inventarioConfig.inventarioId})">
+                                <button class="btn btn-outline-success btn-sm" onclick="exportarInventario(${window.inventarioConfig.inventarioId})"> 
                                     <i class="bi bi-download me-1"></i> Exportar
                                 </button>
                             </div>
@@ -4935,63 +6342,33 @@ async function actualizarInterfazInventarioCompletado() {
  */
 
 /**
- * ✅ FUNCIÓN: Generar reporte completo del inventario
+ * ✅ FUNCIÓN: Generar reporte de inventario (usando utilidades globales)
  */
 async function generarReporteInventario(inventarioId) {
     try {
-        console.log('📊 Generando reporte del inventario:', inventarioId);
+        console.log('📊 Generando reporte para inventario:', inventarioId);
 
-        Swal.fire({
-            title: 'Generando Reporte',
-            html: 'Recopilando información del inventario...',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        // ✅ OBTENER TÍTULO DEL INVENTARIO
+        const tituloInventario = $('#tituloInventario').text().trim() ||
+            $('.inventario-titulo').text().trim() ||
+            window.inventarioConfig?.titulo ||
+            'Inventario';
 
-        // ✅ OBTENER DATOS COMPLETOS
-        const datosReporte = await recopilarDatosReporte(inventarioId);
-
-        // ✅ GENERAR HTML DEL REPORTE
-        const htmlReporte = generarHtmlReporte(datosReporte);
-
-        // ✅ MOSTRAR REPORTE EN MODAL
-        Swal.fire({
-            title: `📊 Reporte de Inventario: ${datosReporte.inventario.titulo}`,
-            html: htmlReporte,
-            width: '90%',
-            showCloseButton: true,
-            showConfirmButton: true,
-            confirmButtonText: '<i class="bi bi-printer me-1"></i> Imprimir',
-            footer: `
-                <div class="d-flex gap-2 justify-content-center">
-                    <button class="btn btn-success btn-sm" onclick="imprimirReporte()">
-                        <i class="bi bi-printer me-1"></i> Imprimir
-                    </button>
-                    <button class="btn btn-primary btn-sm" onclick="exportarReporteExcel(${inventarioId})">
-                        <i class="bi bi-file-excel me-1"></i> Exportar Excel
-                    </button>
-                    <button class="btn btn-info btn-sm" onclick="exportarReportePDF(${inventarioId})">
-                        <i class="bi bi-file-pdf me-1"></i> Exportar PDF
-                    </button>
-                </div>
-            `,
-            customClass: {
-                popup: 'swal-wide'
-            }
-        });
+        // ✅ MOSTRAR MODAL CON RESUMEN DEL REPORTE
+        await mostrarReporteModal(inventarioId, tituloInventario);
 
     } catch (error) {
-        console.error('❌ Error generando reporte:', error);
+        console.error('❌ Error al generar reporte:', error);
+
         Swal.fire({
+            icon: 'error',
             title: 'Error',
-            text: 'No se pudo generar el reporte. Intente nuevamente.',
-            icon: 'error'
+            text: 'No se pudo generar el reporte del inventario',
+            confirmButtonColor: '#d33'
         });
     }
 }
+
 
 /**
  * ✅ FUNCIÓN: Recopilar datos para el reporte
@@ -5343,45 +6720,29 @@ function generarHtmlReporte(datos) {
 }
 
 /**
- * ✅ FUNCIÓN: Exportar inventario a Excel
+ * ✅ FUNCIÓN: Exportar inventario (usando utilidades globales)
  */
 async function exportarInventario(inventarioId) {
     try {
-        console.log('📊 Exportando inventario a Excel:', inventarioId);
+        console.log('📤 Exportando inventario:', inventarioId);
 
-        Swal.fire({
-            title: 'Exportando...',
-            text: 'Generando archivo Excel del inventario',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        // ✅ OBTENER TÍTULO DEL INVENTARIO
+        const tituloInventario = $('#tituloInventario').text().trim() ||
+            $('.inventario-titulo').text().trim() ||
+            window.inventarioConfig?.titulo ||
+            'Inventario';
 
-        // ✅ SIMULAR EXPORTACIÓN (aquí irían llamadas reales a tu API)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        Swal.fire({
-            title: '✅ Exportación Completada',
-            text: 'El archivo Excel ha sido generado exitosamente',
-            icon: 'success',
-            confirmButtonText: 'Descargar',
-            showCancelButton: true,
-            cancelButtonText: 'Cerrar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // ✅ AQUÍ TRIGGEARÍAS LA DESCARGA REAL
-                mostrarInfo('Función de descarga en desarrollo. El archivo se descargará automáticamente.');
-            }
-        });
+        // ✅ LLAMAR A LA FUNCIÓN GLOBAL DE REPORTES
+        mostrarOpcionesDescarga(inventarioId, tituloInventario);
 
     } catch (error) {
-        console.error('❌ Error exportando:', error);
+        console.error('❌ Error al exportar inventario:', error);
+
         Swal.fire({
+            icon: 'error',
             title: 'Error',
-            text: 'No se pudo exportar el inventario',
-            icon: 'error'
+            text: 'No se pudo abrir las opciones de descarga',
+            confirmButtonColor: '#d33'
         });
     }
 }
@@ -5401,6 +6762,8 @@ function volverAInventarios() {
 function imprimirReporte() {
     window.print();
 }
+
+
 
 /**
  * ✅ FUNCIÓN: Exportar reporte a Excel
@@ -5423,3 +6786,107 @@ window.exportarInventario = exportarInventario;
 window.volverAInventarios = volverAInventarios;
 
 
+// ✅ CÓDIGO DETECTIVE - Agregar al final del archivo
+$(document).ready(function () {
+    // Espiar cuando alguien cambia la barra de progreso
+    const barraOriginal = $('#barraProgreso');
+
+    if (barraOriginal.length) {
+        // Crear observador para detectar cambios
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const nuevoAncho = $('#barraProgreso').css('width');
+
+                    if (nuevoAncho === '0px') {
+                        console.error('🚨 DETECTIVE: ¡Alguien reseteó la barra a 0px!');
+                        console.error('🚨 Stack trace del culpable:');
+                        console.trace();
+                    }
+                }
+            });
+        });
+
+        observer.observe(barraOriginal[0], {
+            attributes: true,
+            attributeFilter: ['style']
+        });
+
+        console.log('🕵️ Detective activado - monitoreando cambios en la barra');
+    }
+});
+
+// ✅ ESPIAR FUNCIONES SOSPECHOSAS
+const funcionesOriginales = {};
+
+// Interceptar cargarProductosInventario
+if (typeof cargarProductosInventario === 'function') {
+    funcionesOriginales.cargarProductosInventario = cargarProductosInventario;
+    window.cargarProductosInventario = function (...args) {
+        console.log('🔍 DETECTIVE: cargarProductosInventario ejecutándose...');
+        return funcionesOriginales.cargarProductosInventario.apply(this, args);
+    };
+}
+
+// Interceptar actualizarEstadisticas (si existe)
+if (typeof actualizarEstadisticas === 'function') {
+    funcionesOriginales.actualizarEstadisticas = actualizarEstadisticas;
+    window.actualizarEstadisticas = function (...args) {
+        console.log('🔍 DETECTIVE: actualizarEstadisticas ejecutándose...');
+        return funcionesOriginales.actualizarEstadisticas.apply(this, args);
+    };
+}
+
+// ✅ FUNCIONES DE DEBUG - Agregar al final del archivo
+
+/**
+ * ✅ FUNCIÓN DE DEBUG: Mostrar todos los ajustes pendientes
+ */
+function debugAjustesPendientes() {
+    console.log('🔍 === DEBUG AJUSTES PENDIENTES ===');
+    console.log('📊 Total ajustes cargados:', ajustesPendientes ? ajustesPendientes.length : 0);
+
+    if (ajustesPendientes && ajustesPendientes.length > 0) {
+        ajustesPendientes.forEach((ajuste, index) => {
+            console.log(`${index + 1}. Producto ${ajuste.productoId} - Estado: ${ajuste.estado} - Tipo: ${ajuste.tipoAjuste}`);
+        });
+    } else {
+        console.log('❌ No hay ajustes pendientes cargados');
+    }
+
+    return ajustesPendientes;
+}
+
+/**
+ * ✅ FUNCIÓN DE DEBUG COMPLETO
+ */
+window.debugInventarioCompleto = function () {
+    console.log('🔍 === DEBUG COMPLETO ===');
+    console.log('📦 Productos:', productosInventario ? productosInventario.length : 0);
+    console.log('🔄 Ajustes pendientes:', ajustesPendientes ? ajustesPendientes.length : 0);
+
+    if (productosInventario && productosInventario.length > 0) {
+        console.log('📋 Detalle por producto:');
+        productosInventario.forEach(producto => {
+            const tieneAjuste = verificarAjustePendiente(producto.productoId);
+            console.log(`  Producto ${producto.productoId} (${producto.nombreProducto}): Discrepancia=${producto.tieneDiscrepancia}, Ajuste=${tieneAjuste}`);
+        });
+    }
+
+    debugAjustesPendientes();
+
+    return {
+        productos: productosInventario ? productosInventario.length : 0,
+        ajustes: ajustesPendientes ? ajustesPendientes.length : 0
+    };
+};
+
+/**
+ * ✅ FUNCIÓN PARA VER ESTADO ACTUAL
+ */
+window.verEstadoActual = function () {
+    console.log('📊 Estado actual:');
+    console.log('  productosInventario:', productosInventario ? productosInventario.length : 'undefined');
+    console.log('  ajustesPendientes:', ajustesPendientes ? ajustesPendientes.length : 'undefined');
+    console.log('  estadisticasActuales:', estadisticasActuales);
+};

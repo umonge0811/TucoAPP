@@ -286,7 +286,8 @@ namespace GestionLlantera.Web.Controllers
                     {
                         permisoConteo = asignacion.PermisoConteo,
                         permisoAjuste = asignacion.PermisoAjuste,
-                        permisoValidacion = asignacion.PermisoValidacion
+                        permisoValidacion = asignacion.PermisoValidacion,
+                        permisoCompletar = asignacion.PermisoCompletar
                     },
                     usuario = new
                     {

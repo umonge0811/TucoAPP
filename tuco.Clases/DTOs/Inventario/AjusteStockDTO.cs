@@ -36,6 +36,10 @@ namespace Tuco.Clases.DTOs.Inventario
         /// ID del usuario que realiza el ajuste (se llena automáticamente)
         /// </summary>
         public int? UsuarioId { get; set; }
+
+        // ✅ NUEVOS CAMPOS PARA FINALIZACIÓN DE INVENTARIO
+        public bool EsFinalizacionInventario { get; set; } = false;
+        public int? InventarioProgramadoId { get; set; }
     }
 
     /// <summary>

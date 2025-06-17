@@ -311,8 +311,11 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                var success = resultado?.success ?? false;
-
+                bool success = false;
+                if (resultado?.success != null)
+                {
+                    success = (bool)resultado.success;
+                }
                 if (success)
                 {
                     _logger.LogInformation("✅ Ajustes aplicados exitosamente");

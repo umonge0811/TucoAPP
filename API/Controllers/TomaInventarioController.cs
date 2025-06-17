@@ -252,6 +252,16 @@ namespace API.Controllers
                 _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioId);
                 _logger.LogInformation("🔥 Usuario: {Usuario}", User.Identity?.Name);
 
+                // ✅ AGREGAR ESTA VALIDACIÓN DE AJUSTES
+                var ajustesPendientes = await _ajustesService.ObtenerAjustesPorInventarioAsync(inventarioId);
+                _logger.LogInformation("📋 Ajustes encontrados: {Count}", ajustesPendientes.Count);
+
+                if (!ajustesPendientes.Any())
+                {
+                    _logger.LogWarning("⚠️ No hay ajustes pendientes para aplicar");
+                    return BadRequest(new { success = false, message = "No hay ajustes pendientes para aplicar" });
+                }
+
                 // ✅ AQUÍ PUEDES AGREGAR VALIDACIONES DE PERMISOS ESPECÍFICOS
                 // Por ejemplo, verificar que el usuario tenga permiso "Completar Inventario"
 
@@ -268,8 +278,11 @@ namespace API.Controllers
                         message = "Todos los ajustes pendientes han sido aplicados al stock del sistema",
                         inventarioId = inventarioId,
                         fechaAplicacion = DateTime.Now,
-                        nota = "Los cambios en el stock son irreversibles"
+                        nota = "Los cambios en el stock son irreversibles",
+
+                        
                     });
+                     
                 }
                 else
                 {
@@ -1072,44 +1085,87 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Completa un inventario
+        /// Completa un inventario programado
         /// POST: api/TomaInventario/{inventarioId}/completar
         /// </summary>
         [HttpPost("{inventarioId}/completar")]
-        public async Task<IActionResult> CompletarInventario(int inventarioId)
+        public async Task<IActionResult> CompletarInventarioProgramado(int inventarioId)
         {
             try
             {
-                // 🔒 Verificar permisos
-                var validacion = await this.ValidarPermisoAsync(_permisosService, "Programar Inventario",
+                _logger.LogInformation("🏁 Completando inventario programado: {InventarioId}", inventarioId);
+
+                // ✅ VERIFICAR PERMISOS
+                var validacion = await this.ValidarPermisoAsync(_permisosService, "Completar Inventario",
                     "Solo usuarios con permiso 'Programar Inventario' pueden completar inventarios");
                 if (validacion != null) return validacion;
 
-                _logger.LogInformation("🏁 Completando inventario: {InventarioId}", inventarioId);
+                // ✅ OBTENER INVENTARIO
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
 
-                var resultado = await _tomaInventarioService.CompletarInventarioAsync(inventarioId);
+                if (inventario == null)
+                {
+                    return NotFound(new { success = false, message = "Inventario no encontrado" });
+                }
 
-                if (resultado.Exitoso)
+                if (inventario.Estado != "En Progreso")
                 {
-                    _logger.LogInformation("✅ Inventario completado exitosamente");
-                    return Ok(new
-                    {
-                        message = "Inventario completado exitosamente",
-                        totalProductos = resultado.TotalProductos,
-                        discrepancias = resultado.Discrepancias
-                    });
+                    return BadRequest(new { success = false, message = "El inventario no está en progreso" });
                 }
-                else
+
+                // ✅ CAMBIAR ESTADO A COMPLETADO
+                inventario.Estado = "Completado";
+                await _context.SaveChangesAsync();
+
+                // ✅ NOTIFICAR AL CREADOR
+                await NotificarCreadorInventario(inventario);
+
+                _logger.LogInformation("✅ Inventario completado exitosamente: {InventarioId}", inventarioId);
+
+                return Ok(new
                 {
-                    return BadRequest(new { message = resultado.Mensaje });
-                }
+                    success = true,
+                    message = "Inventario completado exitosamente",
+                    inventarioId = inventarioId,
+                    estado = "Completado"
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error al completar inventario {InventarioId}", inventarioId);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                _logger.LogError(ex, "❌ Error completando inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
+
+        /// <summary>
+        /// Notifica al creador del inventario que fue finalizado
+        /// </summary>
+        private async Task NotificarCreadorInventario(InventarioProgramado inventario)
+        {
+            try
+            {
+                if (inventario?.UsuarioCreadorId == null) return;
+
+                await _notificacionService.CrearNotificacionAsync(
+                    usuarioId: inventario.UsuarioCreadorId,
+                    titulo: "✅ Inventario Completado",
+                    mensaje: $"El inventario '{inventario.Titulo}' ha sido finalizado con ajustes de stock aplicados.",
+                    tipo: "success",
+                    icono: "fas fa-check-circle",
+                    urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: inventario.InventarioProgramadoId
+                );
+
+                _logger.LogInformation("📧 Notificación enviada al creador del inventario (Usuario ID: {UserId})", inventario.UsuarioCreadorId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error enviando notificación al creador");
+            }
+        }
+
 
         // =====================================
         // MÉTODOS AUXILIARES PRIVADOS
