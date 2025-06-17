@@ -1,0 +1,119 @@
+
+<!-- Modal Finalizar Venta -->
+<div class="modal fade" id="modalFinalizarVenta" tabindex="-1" aria-labelledby="modalFinalizarVentaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalFinalizarVentaLabel">
+                    <i class="bi bi-check-circle me-2"></i>Finalizar Venta
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Resumen de la venta -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Información del Cliente</h6>
+                        <div class="card border-light bg-light">
+                            <div class="card-body py-2">
+                                <strong id="resumenNombreCliente">-</strong><br>
+                                <small class="text-muted" id="resumenEmailCliente">-</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Resumen de Venta</h6>
+                        <div class="card border-light bg-light">
+                            <div class="card-body py-2">
+                                <div class="d-flex justify-content-between">
+                                    <span>Subtotal:</span>
+                                    <span id="resumenSubtotal">₡0.00</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>IVA (13%):</span>
+                                    <span id="resumenIVA">₡0.00</span>
+                                </div>
+                                <hr class="my-1">
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Total:</span>
+                                    <span id="resumenTotal" class="text-success">₡0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Método de pago -->
+                <div class="mb-3">
+                    <label for="metodoPago" class="form-label fw-bold">Método de Pago</label>
+                    <select id="metodoPago" class="form-select">
+                        <option value="efectivo">Efectivo</option>
+                        <option value="tarjeta">Tarjeta de Crédito/Débito</option>
+                        <option value="transferencia">Transferencia Bancaria</option>
+                        <option value="cheque">Cheque</option>
+                    </select>
+                </div>
+
+                <!-- Información adicional para efectivo -->
+                <div id="pagoEfectivo" class="mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="montoRecibido" class="form-label">Monto Recibido</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₡</span>
+                                <input type="number" 
+                                       id="montoRecibido" 
+                                       class="form-control" 
+                                       placeholder="0.00" 
+                                       step="0.01" 
+                                       min="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cambio</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₡</span>
+                                <input type="text" 
+                                       id="cambioCalculado" 
+                                       class="form-control" 
+                                       readonly 
+                                       placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="mb-3">
+                    <label for="observacionesVenta" class="form-label">Observaciones (Opcional)</label>
+                    <textarea id="observacionesVenta" 
+                              class="form-control" 
+                              rows="3" 
+                              placeholder="Notas adicionales sobre la venta..."></textarea>
+                </div>
+
+                <!-- Lista de productos -->
+                <div class="mb-3">
+                    <h6 class="text-muted">Productos en la Venta</h6>
+                    <div id="listaProductosResumen" class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" id="btnConfirmarVenta" class="btn btn-success">
+                    <span class="btn-loading-state d-none">
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Procesando...
+                    </span>
+                    <span class="btn-normal-state">
+                        <i class="bi bi-check-circle me-1"></i>Confirmar Venta
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
