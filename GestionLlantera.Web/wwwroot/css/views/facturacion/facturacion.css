@@ -1,385 +1,194 @@
 
-/* ========================================
-   ESTILOS PARA MÓDULO DE FACTURACIÓN
-   ======================================== */
+/* ===== FACTURACIÓN - ESTILOS PRINCIPALES ===== */
 
-:root {
-    --facturacion-primary: #0d6efd;
-    --facturacion-success: #198754;
-    --facturacion-warning: #ffc107;
-    --facturacion-danger: #dc3545;
-    --facturacion-info: #0dcaf0;
-    --facturacion-light: #f8f9fa;
-    --facturacion-dark: #212529;
-    --facturacion-border: #dee2e6;
-    --facturacion-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    --facturacion-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
-}
-
-/* ========================================
-   HEADER Y ESTADÍSTICAS
-   ======================================== */
 .page-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    padding: 1.5rem 2rem;
     color: white;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--facturacion-shadow-lg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
-.page-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
+.page-header h2 {
+    margin: 0;
+    font-weight: 600;
 }
 
-.page-subtitle {
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-.header-actions .btn {
-    border-radius: 8px;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    min-width: 120px;
-}
-
-/* Estadísticas */
 .dashboard-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     border: none;
-    box-shadow: var(--facturacion-shadow);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .dashboard-card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
-    box-shadow: var(--facturacion-shadow-lg);
 }
 
-.stat-icon {
-    width: 60px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
+.card-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
 }
 
-.stat-number {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0.5rem 0;
+.card-header h5 {
+    color: #495057;
+    margin: 0;
 }
 
-.stat-label {
-    font-size: 0.875rem;
-    font-weight: 500;
+.card-body {
+    padding: 1.5rem;
 }
 
-/* ========================================
-   BÚSQUEDA DE PRODUCTOS
-   ======================================== */
-.search-container .input-group {
+/* ===== TABLA DE PRODUCTOS ===== */
+.table-responsive {
     border-radius: 8px;
     overflow: hidden;
 }
 
-.search-container .form-control {
-    border: none;
-    font-size: 1.1rem;
-    padding: 0.75rem 1rem;
+.table {
+    margin: 0;
 }
 
-.search-container .input-group-text {
-    background-color: var(--facturacion-primary);
+.table thead th {
+    background: #495057;
     color: white;
     border: none;
-}
-
-/* Filtros rápidos */
-.filter-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.filter-chip {
-    border-radius: 20px;
-    padding: 0.375rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.filter-chip.active {
-    background-color: var(--facturacion-primary);
-    color: white;
-    border-color: var(--facturacion-primary);
-}
-
-/* Grid de productos */
-.productos-grid {
-    min-height: 400px;
-    max-height: 600px;
-    overflow-y: auto;
-}
-
-.producto-card {
-    border: 1px solid var(--facturacion-border);
-    border-radius: 8px;
     padding: 1rem;
-    margin-bottom: 1rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.producto-card:hover {
-    border-color: var(--facturacion-primary);
-    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
-    transform: translateY(-2px);
-}
-
-.producto-imagen {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid var(--facturacion-border);
-}
-
-.producto-info h6 {
     font-weight: 600;
-    color: var(--facturacion-dark);
-    margin-bottom: 0.25rem;
-}
-
-.producto-precio {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--facturacion-success);
-}
-
-.producto-stock {
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-weight: 500;
-}
-
-.stock-disponible {
-    background-color: rgba(25, 135, 84, 0.1);
-    color: var(--facturacion-success);
-}
-
-.stock-bajo {
-    background-color: rgba(255, 193, 7, 0.1);
-    color: var(--facturacion-warning);
-}
-
-.stock-agotado {
-    background-color: rgba(220, 53, 69, 0.1);
-    color: var(--facturacion-danger);
-}
-
-/* ========================================
-   CARRITO DE VENTA
-   ======================================== */
-.carrito-items {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.cart-item {
-    padding: 1rem;
-    border-bottom: 1px solid var(--facturacion-border);
-    transition: background-color 0.2s ease;
-}
-
-.cart-item:hover {
-    background-color: var(--facturacion-light);
-}
-
-.cart-item:last-child {
-    border-bottom: none;
-}
-
-.cart-item-image {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 4px;
-    border: 1px solid var(--facturacion-border);
-}
-
-.cart-item-info h6 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 0.25rem;
-    line-height: 1.2;
-}
-
-.cart-item-precio {
-    font-weight: 600;
-    color: var(--facturacion-success);
-}
-
-.quantity-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.quantity-controls .btn {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.quantity-controls input {
-    width: 60px;
     text-align: center;
-    border-radius: 4px;
 }
 
-.cart-summary {
-    background-color: var(--facturacion-light);
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    text-align: center;
+    border-color: #e9ecef;
 }
 
-.cart-summary .h5 {
-    font-size: 1.25rem;
-    color: var(--facturacion-success);
+.empty-state {
+    color: #6c757d;
+    font-style: italic;
 }
 
-/* ========================================
-   TABLA DE VENTAS RECIENTES
-   ======================================== */
-.table-hover tbody tr:hover {
-    background-color: rgba(13, 110, 253, 0.05);
+.empty-state i {
+    opacity: 0.5;
 }
 
-.badge-estado {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
+/* ===== RESUMEN DE TOTALES ===== */
+.resumen-totales {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+}
+
+.resumen-totales .d-flex {
+    font-size: 1.1rem;
+}
+
+.resumen-totales strong {
+    font-size: 1.3rem;
+    color: #28a745;
+}
+
+/* ===== BOTONES ===== */
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-outline-info {
+    border-color: #17a2b8;
+    color: #17a2b8;
+}
+
+.btn-outline-info:hover {
+    background: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+/* ===== FORMULARIOS ===== */
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/* ===== ICONOS ===== */
+.bi {
+    margin-right: 0.5rem;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-card {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* ===== BADGES Y ALERTAS ===== */
+.badge {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 6px;
 }
 
-/* ========================================
-   MODALES
-   ======================================== */
-.modal-content {
+.alert {
+    border-radius: 8px;
     border: none;
-    border-radius: 12px;
-    box-shadow: var(--facturacion-shadow-lg);
-}
-
-.modal-header {
-    border-radius: 12px 12px 0 0;
-    padding: 1.5rem 1.5rem 1rem;
-}
-
-.modal-title {
-    font-weight: 600;
-}
-
-.product-image-container img {
-    max-width: 100%;
-    border: 2px solid var(--facturacion-border);
-}
-
-.quantity-controls {
-    max-width: 180px;
-}
-
-.subtotal-preview {
-    border: 1px solid var(--facturacion-border);
-}
-
-/* ========================================
-   ANIMACIONES
-   ======================================== */
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.cart-item {
-    animation: slideIn 0.3s ease;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-.btn-agregar-carrito:active {
-    animation: pulse 0.2s ease;
-}
-
-/* ========================================
-   ESTADOS ESPECIALES
-   ======================================== */
-.empty-cart {
-    padding: 2rem 1rem;
-}
-
-.empty-cart i {
-    font-size: 3rem;
-    opacity: 0.3;
-}
-
-.loading-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255,255,255,.3);
-    border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 1s ease-in-out infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* ========================================
-   UTILIDADES
-   ======================================== */
-.text-truncate-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.border-success-subtle {
-    border-color: rgba(25, 135, 84, 0.3) !important;
-}
-
-.bg-success-subtle {
-    background-color: rgba(25, 135, 84, 0.1) !important;
-}
-
-.sticky-top {
-    position: sticky;
-    top: 1rem;
-    z-index: 1020;
+    padding: 1rem 1.5rem;
 }

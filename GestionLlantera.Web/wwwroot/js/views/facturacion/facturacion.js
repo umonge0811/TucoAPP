@@ -1,671 +1,480 @@
 
-/* ========================================
-   MÓDULO DE FACTURACIÓN - JAVASCRIPT
-   ======================================== */
+// ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
-$(document).ready(function () {
-    console.log('🚀 Facturación - Inicializando módulo...');
-    
-    // ========================================
-    // CONFIGURACIÓN Y VARIABLES GLOBALES
-    // ========================================
-    
-    const CONFIG = {
-        baseUrl: '/Facturacion',
-        pageSize: 20,
-        debounceDelay: 300,
-        maxQuantity: 999,
-        currency: '₡'
-    };
-    
-    let carritoVenta = [];
-    let productosCache = [];
-    let currentPage = 1;
-    let totalPages = 1;
-    let searchTimeout = null;
-    
-    // ========================================
-    // INICIALIZACIÓN
-    // ========================================
-    
-    inicializarEventos();
-    cargarEstadisticas();
-    cargarVentasRecientes();
-    
-    // ========================================
-    // EVENTOS PRINCIPALES
-    // ========================================
-    
-    function inicializarEventos() {
-        console.log('📝 Inicializando eventos...');
-        
-        // Botones principales
-        $('#btnNuevaVenta').on('click', limpiarCarritoYEmpezar);
-        $('#btnConsultarInventario').on('click', abrirModalInventario);
-        
-        // Búsqueda de productos
-        $('#busquedaProducto').on('input', debounce(buscarProductos, CONFIG.debounceDelay));
-        $('#btnEscanearCodigo').on('click', activarEscaneoCodigo);
-        
-        // Filtros rápidos
-        $('.filter-chip').on('click', aplicarFiltroRapido);
-        
-        // Carrito de venta
-        $('#btnLimpiarCarrito').on('click', confirmarLimpiarCarrito);
-        $('#btnFinalizarVenta').on('click', abrirModalFinalizarVenta);
-        $('#btnGenerarProforma').on('click', generarProforma);
-        
-        // Modal inventario
-        $('#btnBuscarInventario').on('click', buscarEnInventario);
-        $('#btnExportarInventario').on('click', exportarInventario);
-        
-        // Modal finalizar venta
-        $('input[name="metodoPago"]').on('change', cambiarMetodoPago);
-        $('#efectivoRecibido').on('input', calcularCambio);
-        $('#btnConfirmarVenta').on('click', confirmarVenta);
-        $('#btnGuardarProforma').on('click', guardarProforma);
-        
-        // Modal detalle producto
-        $('#btnRestarCantidad').on('click', () => ajustarCantidad(-1));
-        $('#btnSumarCantidad').on('click', () => ajustarCantidad(1));
-        $('#cantidadProducto').on('input', validarCantidad);
-        $('#btnAgregarAlCarrito').on('click', agregarProductoAlCarrito);
-        
-        // Eventos de cantidad en carrito
-        $(document).on('click', '.btn-increase-qty', function() {
-            const productId = $(this).data('product-id');
-            cambiarCantidadCarrito(productId, 1);
-        });
-        
-        $(document).on('click', '.btn-decrease-qty', function() {
-            const productId = $(this).data('product-id');
-            cambiarCantidadCarrito(productId, -1);
-        });
-        
-        $(document).on('click', '.btn-remove-item', function() {
-            const productId = $(this).data('product-id');
-            eliminarDelCarrito(productId);
-        });
-        
-        console.log('✅ Eventos inicializados correctamente');
-    }
-    
-    // ========================================
-    // FUNCIONES DE BÚSQUEDA Y PRODUCTOS
-    // ========================================
-    
-    async function buscarProductos() {
-        const termino = $('#busquedaProducto').val().trim();
-        const filtroActivo = $('.filter-chip.active').data('filter');
-        
-        if (termino.length < 2) {
-            mostrarMensajeBusqueda('Ingresa al menos 2 caracteres para buscar');
-            return;
-        }
-        
-        try {
-            mostrarLoadingProductos();
-            
-            const response = await $.ajax({
-                url: `${CONFIG.baseUrl}/BuscarProductos`,
-                method: 'GET',
-                data: {
-                    termino: termino,
-                    categoria: filtroActivo !== 'todos' ? filtroActivo : '',
-                    page: currentPage,
-                    pageSize: CONFIG.pageSize
-                }
-            });
-            
-            if (response.success) {
-                productosCache = response.data.productos;
-                totalPages = response.data.totalPages;
-                renderizarProductos(response.data.productos);
-                actualizarPaginacion();
-            } else {
-                mostrarError('Error al buscar productos: ' + response.message);
-            }
-            
-        } catch (error) {
-            console.error('❌ Error en búsqueda:', error);
-            mostrarError('Error de conexión al buscar productos');
-        }
-    }
-    
-    function renderizarProductos(productos) {
-        const $container = $('#resultadosBusqueda');
-        
-        if (!productos || productos.length === 0) {
-            $container.html(`
-                <div class="text-center text-muted py-4">
-                    <i class="bi bi-search-heart display-1 opacity-25"></i>
-                    <p class="mt-3">No se encontraron productos</p>
-                    <small>Intenta con otros términos de búsqueda</small>
-                </div>
-            `);
-            return;
-        }
-        
-        const productosHtml = productos.map(producto => `
-            <div class="producto-card" data-product-id="${producto.id}">
-                <div class="row align-items-center">
-                    <div class="col-auto">
-                        <img src="${producto.imagenUrl || '/images/no-image.png'}" 
-                             alt="${producto.nombre}" 
-                             class="producto-imagen">
-                    </div>
-                    <div class="col">
-                        <div class="producto-info">
-                            <h6 class="text-truncate-2 mb-1">${producto.nombre}</h6>
-                            <small class="text-muted d-block mb-1">Código: ${producto.codigo}</small>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="producto-precio">${CONFIG.currency}${formatearPrecio(producto.precio)}</span>
-                                <span class="producto-stock ${getClaseStock(producto.stock)}">${producto.stock} un.</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <div class="btn-group-vertical btn-group-sm">
-                            <button class="btn btn-outline-info btn-ver-detalle" data-product-id="${producto.id}">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                            <button class="btn btn-primary btn-agregar-rapido" 
-                                    data-product-id="${producto.id}" 
-                                    ${producto.stock <= 0 ? 'disabled' : ''}>
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-        
-        $container.html(productosHtml);
-        
-        // Eventos para los productos
-        $('.btn-ver-detalle').on('click', function() {
-            const productId = $(this).data('product-id');
-            abrirDetalleProducto(productId);
-        });
-        
-        $('.btn-agregar-rapido').on('click', function() {
-            const productId = $(this).data('product-id');
-            agregarRapidoAlCarrito(productId);
-        });
-    }
-    
-    function aplicarFiltroRapido() {
-        $('.filter-chip').removeClass('active');
-        $(this).addClass('active');
-        
-        currentPage = 1;
-        if ($('#busquedaProducto').val().trim().length >= 2) {
-            buscarProductos();
-        }
-    }
-    
-    // ========================================
-    // FUNCIONES DEL CARRITO
-    // ========================================
-    
-    function agregarRapidoAlCarrito(productId) {
-        const producto = productosCache.find(p => p.id == productId);
-        if (!producto) {
-            mostrarError('Producto no encontrado');
-            return;
-        }
-        
-        if (producto.stock <= 0) {
-            mostrarWarning('Este producto no tiene stock disponible');
-            return;
-        }
-        
-        const itemExistente = carritoVenta.find(item => item.id == productId);
-        
-        if (itemExistente) {
-            if (itemExistente.cantidad + 1 > producto.stock) {
-                mostrarWarning('No hay suficiente stock disponible');
-                return;
-            }
-            itemExistente.cantidad++;
-        } else {
-            carritoVenta.push({
-                id: producto.id,
-                codigo: producto.codigo,
-                nombre: producto.nombre,
-                precio: producto.precio,
-                imagen: producto.imagenUrl,
-                cantidad: 1,
-                stockDisponible: producto.stock,
-                subtotal: producto.precio
-            });
-        }
-        
-        actualizarVistaCarrito();
-        mostrarSuccess(`${producto.nombre} agregado al carrito`);
-        
-        // Efecto visual
-        $(`.btn-agregar-rapido[data-product-id="${productId}"]`)
-            .addClass('btn-success')
-            .html('<i class="bi bi-check"></i>')
-            .delay(1000)
-            .queue(function() {
-                $(this).removeClass('btn-success').addClass('btn-primary').html('<i class="bi bi-plus"></i>').dequeue();
-            });
-    }
-    
-    function cambiarCantidadCarrito(productId, cambio) {
-        const item = carritoVenta.find(item => item.id == productId);
-        if (!item) return;
-        
-        const nuevaCantidad = item.cantidad + cambio;
-        
-        if (nuevaCantidad <= 0) {
-            eliminarDelCarrito(productId);
-            return;
-        }
-        
-        if (nuevaCantidad > item.stockDisponible) {
-            mostrarWarning('No hay suficiente stock disponible');
-            return;
-        }
-        
-        item.cantidad = nuevaCantidad;
-        item.subtotal = item.cantidad * item.precio;
-        
-        actualizarVistaCarrito();
-    }
-    
-    function eliminarDelCarrito(productId) {
-        carritoVenta = carritoVenta.filter(item => item.id != productId);
-        actualizarVistaCarrito();
-        mostrarInfo('Producto eliminado del carrito');
-    }
-    
-    function actualizarVistaCarrito() {
-        const $container = $('#itemsCarrito');
-        const $resumen = $('#resumenCarrito');
-        const $acciones = $('#accionesCarrito');
-        const $contador = $('#contadorItems');
-        
-        if (carritoVenta.length === 0) {
-            $container.html(`
-                <div class="empty-cart text-center py-4">
-                    <i class="bi bi-cart-x display-2 text-muted"></i>
-                    <p class="text-muted mt-2">No hay productos seleccionados</p>
-                    <small class="text-muted">Busca y agrega productos al carrito</small>
-                </div>
-            `);
-            $resumen.hide();
-            $acciones.hide();
-            $contador.text('0');
-            return;
-        }
-        
-        const itemsHtml = carritoVenta.map(item => `
-            <div class="cart-item">
-                <div class="row align-items-center">
-                    <div class="col-auto">
-                        <img src="${item.imagen || '/images/no-image.png'}" 
-                             alt="${item.nombre}" 
-                             class="cart-item-image">
-                    </div>
-                    <div class="col">
-                        <div class="cart-item-info">
-                            <h6 class="text-truncate-2">${item.nombre}</h6>
-                            <small class="text-muted">Código: ${item.codigo}</small>
-                            <div class="cart-item-precio">${CONFIG.currency}${formatearPrecio(item.precio)}</div>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <div class="quantity-controls">
-                            <button class="btn btn-outline-secondary btn-sm btn-decrease-qty" 
-                                    data-product-id="${item.id}">
-                                <i class="bi bi-dash"></i>
-                            </button>
-                            <input type="number" class="form-control form-control-sm" 
-                                   value="${item.cantidad}" readonly>
-                            <button class="btn btn-outline-secondary btn-sm btn-increase-qty" 
-                                    data-product-id="${item.id}">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
-                        <button class="btn btn-outline-danger btn-sm mt-1 btn-remove-item" 
-                                data-product-id="${item.id}">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="text-end mt-2">
-                    <strong>Subtotal: ${CONFIG.currency}${formatearPrecio(item.subtotal)}</strong>
-                </div>
-            </div>
-        `).join('');
-        
-        $container.html(itemsHtml);
-        
-        // Calcular totales
-        const subtotal = carritoVenta.reduce((sum, item) => sum + item.subtotal, 0);
-        const iva = subtotal * 0.13;
-        const total = subtotal + iva;
-        
-        $('#subtotalCarrito').text(`${CONFIG.currency}${formatearPrecio(subtotal)}`);
-        $('#ivaCarrito').text(`${CONFIG.currency}${formatearPrecio(iva)}`);
-        $('#totalCarrito').text(`${CONFIG.currency}${formatearPrecio(total)}`);
-        
-        $contador.text(carritoVenta.length);
-        $resumen.show();
-        $acciones.show();
-    }
-    
-    function confirmarLimpiarCarrito() {
-        if (carritoVenta.length === 0) {
-            mostrarInfo('El carrito ya está vacío');
-            return;
-        }
-        
-        Swal.fire({
-            title: '¿Limpiar carrito?',
-            text: 'Se eliminarán todos los productos del carrito',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, limpiar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                carritoVenta = [];
-                actualizarVistaCarrito();
-                mostrarSuccess('Carrito limpiado correctamente');
-            }
-        });
-    }
-    
-    // ========================================
-    // FUNCIONES DE MODAL DETALLE PRODUCTO
-    // ========================================
-    
-    async function abrirDetalleProducto(productId) {
-        try {
-            const response = await $.ajax({
-                url: `${CONFIG.baseUrl}/ObtenerProducto/${productId}`,
-                method: 'GET'
-            });
-            
-            if (response.success) {
-                llenarModalDetalleProducto(response.data);
-                $('#modalDetalleProducto').modal('show');
-            } else {
-                mostrarError('Error al obtener detalles del producto');
-            }
-            
-        } catch (error) {
-            console.error('❌ Error al obtener producto:', error);
-            mostrarError('Error de conexión');
-        }
-    }
-    
-    function llenarModalDetalleProducto(producto) {
-        $('#productoImagen').attr('src', producto.imagenUrl || '/images/no-image.png');
-        $('#productoNombre').text(producto.nombre);
-        $('#productoDescripcion').text(producto.descripcion || 'Sin descripción');
-        $('#productoCodigo').text(producto.codigo);
-        $('#productoCategoria').text(producto.categoria || 'General');
-        $('#productoPrecio').text(`${CONFIG.currency}${formatearPrecio(producto.precio)}`);
-        $('#productoStock').text(`${producto.stock} unidades`);
-        $('#stockMaximo').text(producto.stock);
-        
-        // Configurar cantidad
-        $('#cantidadProducto').attr('max', producto.stock).val(1);
-        
-        // Información de llanta si aplica
-        if (producto.esLlanta && producto.llanta) {
-            $('#llantaMedida').text(producto.llanta.medida || 'N/A');
-            $('#llantaMarca').text(producto.llanta.marca || 'N/A');
-            $('#llantaTipo').text(producto.llanta.tipo || 'N/A');
-            $('#llantaUso').text(producto.llanta.uso || 'N/A');
-            $('#llantaInfo').show();
-        } else {
-            $('#llantaInfo').hide();
-        }
-        
-        // Calcular subtotal inicial
-        calcularSubtotalPreview();
-        
-        // Deshabilitar agregar si no hay stock
-        $('#btnAgregarAlCarrito').prop('disabled', producto.stock <= 0);
-        
-        // Guardar referencia del producto
-        $('#modalDetalleProducto').data('producto', producto);
-    }
-    
-    function ajustarCantidad(cambio) {
-        const $input = $('#cantidadProducto');
-        const valorActual = parseInt($input.val()) || 1;
-        const maximo = parseInt($input.attr('max')) || 999;
-        const nuevaCantidad = Math.max(1, Math.min(maximo, valorActual + cambio));
-        
-        $input.val(nuevaCantidad);
-        calcularSubtotalPreview();
-    }
-    
-    function validarCantidad() {
-        const $input = $('#cantidadProducto');
-        const valor = parseInt($input.val()) || 1;
-        const maximo = parseInt($input.attr('max')) || 999;
-        
-        if (valor < 1) {
-            $input.val(1);
-        } else if (valor > maximo) {
-            $input.val(maximo);
-            mostrarWarning(`Cantidad máxima disponible: ${maximo}`);
-        }
-        
-        calcularSubtotalPreview();
-    }
-    
-    function calcularSubtotalPreview() {
-        const producto = $('#modalDetalleProducto').data('producto');
-        const cantidad = parseInt($('#cantidadProducto').val()) || 1;
-        const subtotal = producto.precio * cantidad;
-        
-        $('#subtotalPreview').text(`${CONFIG.currency}${formatearPrecio(subtotal)}`);
-    }
-    
-    function agregarProductoAlCarrito() {
-        const producto = $('#modalDetalleProducto').data('producto');
-        const cantidad = parseInt($('#cantidadProducto').val()) || 1;
-        
-        if (cantidad > producto.stock) {
-            mostrarWarning('No hay suficiente stock disponible');
-            return;
-        }
-        
-        const itemExistente = carritoVenta.find(item => item.id == producto.id);
-        
-        if (itemExistente) {
-            const nuevaCantidad = itemExistente.cantidad + cantidad;
-            if (nuevaCantidad > producto.stock) {
-                mostrarWarning('No hay suficiente stock para esa cantidad');
-                return;
-            }
-            itemExistente.cantidad = nuevaCantidad;
-            itemExistente.subtotal = itemExistente.cantidad * itemExistente.precio;
-        } else {
-            carritoVenta.push({
-                id: producto.id,
-                codigo: producto.codigo,
-                nombre: producto.nombre,
-                precio: producto.precio,
-                imagen: producto.imagenUrl,
-                cantidad: cantidad,
-                stockDisponible: producto.stock,
-                subtotal: producto.precio * cantidad
-            });
-        }
-        
-        actualizarVistaCarrito();
-        $('#modalDetalleProducto').modal('hide');
-        mostrarSuccess(`${producto.nombre} agregado al carrito (${cantidad} un.)`);
-    }
-    
-    // ========================================
-    // FUNCIONES AUXILIARES
-    // ========================================
-    
-    function formatearPrecio(precio) {
-        return new Intl.NumberFormat('es-CR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }).format(precio);
-    }
-    
-    function getClaseStock(stock) {
-        if (stock <= 0) return 'stock-agotado';
-        if (stock <= 5) return 'stock-bajo';
-        return 'stock-disponible';
-    }
-    
-    function mostrarLoadingProductos() {
-        $('#resultadosBusqueda').html(`
-            <div class="text-center py-4">
-                <div class="loading-spinner"></div>
-                <p class="mt-2">Buscando productos...</p>
-            </div>
-        `);
-    }
-    
-    function mostrarMensajeBusqueda(mensaje) {
-        $('#resultadosBusqueda').html(`
-            <div class="text-center text-muted py-4">
-                <i class="bi bi-search display-1 opacity-25"></i>
-                <p class="mt-3">${mensaje}</p>
-            </div>
-        `);
-    }
-    
-    function debounce(func, wait) {
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(searchTimeout);
-                func(...args);
-            };
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(later, wait);
-        };
-    }
-    
-    // Funciones de notificación (usando las existentes del proyecto)
-    function mostrarSuccess(mensaje) {
-        if (typeof toastr !== 'undefined') {
-            toastr.success(mensaje);
-        } else {
-            console.log('✅ ' + mensaje);
-        }
-    }
-    
-    function mostrarError(mensaje) {
-        if (typeof toastr !== 'undefined') {
-            toastr.error(mensaje);
-        } else {
-            console.error('❌ ' + mensaje);
-        }
-    }
-    
-    function mostrarWarning(mensaje) {
-        if (typeof toastr !== 'undefined') {
-            toastr.warning(mensaje);
-        } else {
-            console.warn('⚠️ ' + mensaje);
-        }
-    }
-    
-    function mostrarInfo(mensaje) {
-        if (typeof toastr !== 'undefined') {
-            toastr.info(mensaje);
-        } else {
-            console.info('ℹ️ ' + mensaje);
-        }
-    }
-    
-    // ========================================
-    // FUNCIONES PENDIENTES DE IMPLEMENTAR
-    // ========================================
-    
-    function limpiarCarritoYEmpezar() {
-        // TODO: Implementar lógica para limpiar carrito y comenzar nueva venta
-        console.log('🔄 Iniciando nueva venta...');
-    }
-    
-    function abrirModalInventario() {
-        $('#modalInventario').modal('show');
-        // TODO: Cargar datos del inventario
-    }
-    
-    function cargarEstadisticas() {
-        // TODO: Implementar carga de estadísticas del día
-        console.log('📊 Cargando estadísticas...');
-    }
-    
-    function cargarVentasRecientes() {
-        // TODO: Implementar carga de ventas recientes
-        console.log('📋 Cargando ventas recientes...');
-    }
-    
-    function abrirModalFinalizarVenta() {
-        if (carritoVenta.length === 0) {
-            mostrarWarning('Agrega productos al carrito antes de finalizar la venta');
-            return;
-        }
-        $('#modalFinalizarVenta').modal('show');
-        // TODO: Llenar datos del modal
-    }
-    
-    function generarProforma() {
-        // TODO: Implementar generación de proforma
-        console.log('📄 Generando proforma...');
-    }
-    
-    function buscarEnInventario() {
-        // TODO: Implementar búsqueda en inventario
-        console.log('🔍 Buscando en inventario...');
-    }
-    
-    function exportarInventario() {
-        // TODO: Implementar exportación de inventario
-        console.log('📤 Exportando inventario...');
-    }
-    
-    function cambiarMetodoPago() {
-        // TODO: Implementar cambio de método de pago
-        console.log('💳 Cambiando método de pago...');
-    }
-    
-    function calcularCambio() {
-        // TODO: Implementar cálculo de cambio
-        console.log('💰 Calculando cambio...');
-    }
-    
-    function confirmarVenta() {
-        // TODO: Implementar confirmación de venta
-        console.log('✅ Confirmando venta...');
-    }
-    
-    function guardarProforma() {
-        // TODO: Implementar guardado de proforma
-        console.log('💾 Guardando proforma...');
-    }
-    
-    function activarEscaneoCodigo() {
-        // TODO: Implementar escáner de código de barras
-        console.log('📷 Activando escáner...');
-    }
-    
-    function actualizarPaginacion() {
-        // TODO: Implementar paginación
-        console.log('📄 Actualizando paginación...');
-    }
-    
-    console.log('✅ Módulo de facturación inicializado correctamente');
+let productosEnVenta = [];
+let modalInventario = null;
+
+// ===== INICIALIZACIÓN =====
+$(document).ready(function() {
+    console.log('🚀 Inicializando módulo de facturación');
+    inicializarFacturacion();
 });
+
+function inicializarFacturacion() {
+    try {
+        // Inicializar modales
+        inicializarModales();
+        
+        // Configurar eventos
+        configurarEventos();
+        
+        // Actualizar totales
+        actualizarTotales();
+        
+        console.log('✅ Facturación inicializada correctamente');
+    } catch (error) {
+        console.error('❌ Error inicializando facturación:', error);
+    }
+}
+
+function inicializarModales() {
+    // Inicializar modal de inventario si existe
+    const modalInventarioElement = document.getElementById('modalInventario');
+    if (modalInventarioElement) {
+        modalInventario = new bootstrap.Modal(modalInventarioElement);
+    }
+}
+
+function configurarEventos() {
+    // Configurar formularios
+    configurarFormularios();
+    
+    // Configurar botones
+    configurarBotones();
+}
+
+function configurarFormularios() {
+    // Eventos de cantidad y precio
+    $(document).on('input', '[data-campo="cantidad"], [data-campo="precio"]', function() {
+        const fila = $(this).closest('tr');
+        actualizarSubtotalFila(fila);
+    });
+    
+    // Validar números
+    $(document).on('input', 'input[type="number"]', function() {
+        const valor = parseFloat($(this).val()) || 0;
+        if (valor < 0) {
+            $(this).val(0);
+        }
+    });
+}
+
+function configurarBotones() {
+    // Botón de consultar inventario
+    $('#btnConsultarInventario, [onclick="consultarInventario()"]').off('click').on('click', function(e) {
+        e.preventDefault();
+        consultarInventario();
+    });
+    
+    // Botón de nueva venta
+    $('#btnNuevaVenta, [onclick="nuevaVenta()"]').off('click').on('click', function(e) {
+        e.preventDefault();
+        nuevaVenta();
+    });
+    
+    // Botón de agregar producto
+    $('#btnAgregarProducto, [onclick="agregarProducto()"]').off('click').on('click', function(e) {
+        e.preventDefault();
+        agregarProducto();
+    });
+    
+    // Botón de finalizar venta
+    $('#btnFinalizarVenta, [onclick="finalizarVenta()"]').off('click').on('click', function(e) {
+        e.preventDefault();
+        finalizarVenta();
+    });
+    
+    // Botón de limpiar
+    $('#btnLimpiarVenta, [onclick="limpiarVenta()"]').off('click').on('click', function(e) {
+        e.preventDefault();
+        limpiarVenta();
+    });
+}
+
+// ===== FUNCIONES PRINCIPALES =====
+
+function consultarInventario() {
+    console.log('🔍 Abriendo consulta de inventario');
+    
+    if (modalInventario) {
+        modalInventario.show();
+        cargarProductosInventario();
+    } else {
+        console.error('❌ Modal de inventario no encontrado');
+        mostrarNotificacion('Error al abrir inventario', 'danger');
+    }
+}
+
+function nuevaVenta() {
+    console.log('📄 Iniciando nueva venta');
+    limpiarVenta();
+    mostrarNotificacion('Nueva venta iniciada', 'info');
+}
+
+function agregarProducto() {
+    console.log('➕ Agregando producto a la venta');
+    consultarInventario();
+}
+
+function finalizarVenta() {
+    console.log('💰 Finalizando venta');
+    
+    if (productosEnVenta.length === 0) {
+        mostrarNotificacion('No hay productos en la venta', 'warning');
+        return;
+    }
+    
+    // Validar datos del cliente
+    const nombreCliente = $('#clienteNombre').val().trim();
+    if (!nombreCliente) {
+        mostrarNotificacion('Ingrese el nombre del cliente', 'warning');
+        $('#clienteNombre').focus();
+        return;
+    }
+    
+    // Mostrar modal de confirmación o procesar venta
+    mostrarModalFinalizarVenta();
+}
+
+function limpiarVenta() {
+    console.log('🧹 Limpiando venta');
+    
+    // Limpiar productos
+    productosEnVenta = [];
+    actualizarTablaProductos();
+    
+    // Limpiar formulario
+    $('#clienteNombre').val('');
+    $('#clienteTelefono').val('');
+    $('#observaciones').val('');
+    $('#tipoDocumento').val('factura');
+    
+    // Actualizar totales
+    actualizarTotales();
+    
+    mostrarNotificacion('Venta limpiada', 'info');
+}
+
+// ===== FUNCIONES DE PRODUCTOS =====
+
+async function cargarProductosInventario() {
+    try {
+        console.log('📦 Cargando productos del inventario');
+        
+        const response = await fetch('/Facturacion/BuscarProductos', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const resultado = await response.json();
+        
+        if (resultado.success) {
+            mostrarProductosEnModal(resultado.data);
+        } else {
+            throw new Error(resultado.message || 'Error al cargar productos');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error cargando productos:', error);
+        mostrarNotificacion('Error al cargar productos: ' + error.message, 'danger');
+    }
+}
+
+function mostrarProductosEnModal(productos) {
+    const tbody = document.querySelector('#modalInventario tbody');
+    if (!tbody) {
+        console.error('❌ No se encontró la tabla en el modal');
+        return;
+    }
+    
+    if (!productos || productos.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No hay productos disponibles
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    productos.forEach(producto => {
+        html += `
+            <tr>
+                <td>${producto.nombre || 'Sin nombre'}</td>
+                <td>${producto.categoria || 'Sin categoría'}</td>
+                <td>${producto.cantidad || 0}</td>
+                <td>₡${formatearNumero(producto.precio || 0)}</td>
+                <td>
+                    <span class="badge ${producto.cantidad > 0 ? 'bg-success' : 'bg-danger'}">
+                        ${producto.cantidad > 0 ? 'Disponible' : 'Agotado'}
+                    </span>
+                </td>
+                <td>
+                    ${producto.cantidad > 0 ? 
+                        `<button class="btn btn-primary btn-sm" onclick="seleccionarProducto(${producto.productoID})">
+                            <i class="bi bi-plus-circle"></i> Agregar
+                        </button>` : 
+                        `<button class="btn btn-secondary btn-sm" disabled>
+                            <i class="bi bi-x-circle"></i> Agotado
+                        </button>`
+                    }
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+async function seleccionarProducto(productoId) {
+    try {
+        console.log('🎯 Seleccionando producto:', productoId);
+        
+        const response = await fetch(`/Facturacion/ObtenerProducto/${productoId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
+        const resultado = await response.json();
+        
+        if (resultado.success) {
+            agregarProductoAVenta(resultado.data);
+            if (modalInventario) {
+                modalInventario.hide();
+            }
+        } else {
+            throw new Error(resultado.message || 'Error al obtener producto');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error seleccionando producto:', error);
+        mostrarNotificacion('Error al seleccionar producto: ' + error.message, 'danger');
+    }
+}
+
+function agregarProductoAVenta(producto) {
+    // Verificar si ya está en la venta
+    const productoExistente = productosEnVenta.find(p => p.productoID === producto.productoID);
+    
+    if (productoExistente) {
+        productoExistente.cantidad += 1;
+        mostrarNotificacion('Cantidad actualizada', 'info');
+    } else {
+        productosEnVenta.push({
+            productoID: producto.productoID,
+            nombre: producto.nombre,
+            precio: producto.precio || 0,
+            cantidad: 1,
+            subtotal: producto.precio || 0
+        });
+        mostrarNotificacion('Producto agregado a la venta', 'success');
+    }
+    
+    actualizarTablaProductos();
+    actualizarTotales();
+}
+
+function actualizarTablaProductos() {
+    const tbody = document.querySelector('#productosVentaBody');
+    if (!tbody) return;
+    
+    if (productosEnVenta.length === 0) {
+        tbody.innerHTML = `
+            <tr class="empty-state">
+                <td colspan="5" class="text-center text-muted py-4">
+                    <i class="bi bi-cart-x fs-1 d-block mb-2"></i>
+                    No hay productos agregados a la venta
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    productosEnVenta.forEach((producto, index) => {
+        html += `
+            <tr>
+                <td>${producto.nombre}</td>
+                <td>
+                    <input type="number" class="form-control" value="${producto.cantidad}" 
+                           min="1" data-index="${index}" data-campo="cantidad"
+                           onchange="actualizarCantidadProducto(${index}, this.value)">
+                </td>
+                <td>₡${formatearNumero(producto.precio)}</td>
+                <td>₡${formatearNumero(producto.subtotal)}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarProductoVenta(${index})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function actualizarCantidadProducto(index, nuevaCantidad) {
+    const cantidad = parseInt(nuevaCantidad) || 1;
+    if (cantidad <= 0) return;
+    
+    productosEnVenta[index].cantidad = cantidad;
+    productosEnVenta[index].subtotal = productosEnVenta[index].precio * cantidad;
+    
+    actualizarTotales();
+}
+
+function eliminarProductoVenta(index) {
+    const producto = productosEnVenta[index];
+    productosEnVenta.splice(index, 1);
+    
+    actualizarTablaProductos();
+    actualizarTotales();
+    
+    mostrarNotificacion(`${producto.nombre} eliminado de la venta`, 'info');
+}
+
+// ===== FUNCIONES DE CÁLCULOS =====
+
+function actualizarTotales() {
+    const subtotal = productosEnVenta.reduce((total, producto) => total + producto.subtotal, 0);
+    const iva = subtotal * 0.13;
+    const total = subtotal + iva;
+    
+    // Actualizar elementos del DOM
+    $('#subtotalVenta').text('₡' + formatearNumero(subtotal));
+    $('#ivaVenta').text('₡' + formatearNumero(iva));
+    $('#totalVenta').text('₡' + formatearNumero(total));
+    
+    // Habilitar/deshabilitar botón de finalizar
+    const btnFinalizar = $('#btnFinalizarVenta');
+    if (productosEnVenta.length > 0) {
+        btnFinalizar.prop('disabled', false);
+    } else {
+        btnFinalizar.prop('disabled', true);
+    }
+}
+
+function actualizarSubtotalFila(fila) {
+    const cantidad = parseFloat(fila.find('[data-campo="cantidad"]').val()) || 0;
+    const precio = parseFloat(fila.find('[data-campo="precio"]').val()) || 0;
+    const subtotal = cantidad * precio;
+    
+    fila.find('.subtotal').text('₡' + formatearNumero(subtotal));
+    actualizarTotales();
+}
+
+// ===== FUNCIONES DE MODAL =====
+
+function mostrarModalFinalizarVenta() {
+    // Implementar modal de finalización
+    const modalHtml = `
+        <div class="modal fade" id="modalFinalizarVenta" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Finalizar Venta</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>¿Está seguro de finalizar esta venta?</p>
+                        <p><strong>Total: ${$('#totalVenta').text()}</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-success" onclick="procesarVenta()">Confirmar Venta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal anterior si existe
+    $('#modalFinalizarVenta').remove();
+    
+    // Agregar nuevo modal
+    $('body').append(modalHtml);
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalFinalizarVenta'));
+    modal.show();
+}
+
+function procesarVenta() {
+    console.log('💳 Procesando venta...');
+    
+    // Cerrar modal
+    $('#modalFinalizarVenta').modal('hide');
+    
+    // Simular procesamiento (aquí iría la llamada real a la API)
+    setTimeout(() => {
+        mostrarNotificacion('Venta procesada exitosamente', 'success');
+        limpiarVenta();
+    }, 1000);
+}
+
+// ===== FUNCIONES UTILITARIAS =====
+
+function formatearNumero(numero) {
+    return new Intl.NumberFormat('es-CR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(numero);
+}
+
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    // Usar el sistema de notificaciones existente si está disponible
+    if (typeof mostrarAlertaBootstrap === 'function') {
+        mostrarAlertaBootstrap(mensaje, tipo);
+    } else if (typeof mostrarAlerta === 'function') {
+        mostrarAlerta(mensaje, tipo);
+    } else {
+        console.log(`${tipo.toUpperCase()}: ${mensaje}`);
+        
+        // Crear alerta básica
+        const alertClass = tipo === 'danger' ? 'alert-danger' : 
+                          tipo === 'warning' ? 'alert-warning' :
+                          tipo === 'success' ? 'alert-success' : 'alert-info';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                 style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                ${mensaje}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        $('body').append(alertHtml);
+        
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            $('.alert').fadeOut();
+        }, 5000);
+    }
+}
+
+// ===== EXPOSICIÓN GLOBAL =====
+window.consultarInventario = consultarInventario;
+window.nuevaVenta = nuevaVenta;
+window.agregarProducto = agregarProducto;
+window.finalizarVenta = finalizarVenta;
+window.limpiarVenta = limpiarVenta;
+window.seleccionarProducto = seleccionarProducto;
+window.eliminarProductoVenta = eliminarProductoVenta;
+window.actualizarCantidadProducto = actualizarCantidadProducto;
+window.procesarVenta = procesarVenta;
