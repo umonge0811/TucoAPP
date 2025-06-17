@@ -203,8 +203,10 @@ function mostrarResultadosProductos(productos) {
         const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
         const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
 
+        // Validación adicional para stock mínimo (puede ser undefined)
+        const stockMinimo = producto.stockMinimo || 0;
         const stockClase = producto.cantidadEnInventario <= 0 ? 'border-danger' : 
-                          producto.cantidadEnInventario <= producto.stockMinimo ? 'border-warning' : '';
+                          producto.cantidadEnInventario <= stockMinimo ? 'border-warning' : '';
 
         html += `
             <div class="col-md-6 col-lg-4 mb-3">
@@ -217,7 +219,7 @@ function mostrarResultadosProductos(productos) {
                              onerror="this.src='/images/no-image.png'">
                         ${producto.cantidadEnInventario <= 0 ? 
                             '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
-                            producto.cantidadEnInventario <= producto.stockMinimo ?
+                            producto.cantidadEnInventario <= (producto.stockMinimo || 0) ?
                             '<span class="badge bg-warning position-absolute top-0 end-0 m-2">Stock Bajo</span>' : ''
                         }
                     </div>
@@ -244,7 +246,7 @@ function mostrarResultadosProductos(productos) {
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <small class="text-primary">Stock: ${producto.cantidadEnInventario}</small>
-                            ${producto.cantidadEnInventario <= producto.stockMinimo && producto.cantidadEnInventario > 0 ? 
+                            ${producto.cantidadEnInventario <= (producto.stockMinimo || 0) && producto.cantidadEnInventario > 0 ? 
                                 '<small class="badge bg-warning">Stock Bajo</small>' : ''}
                         </div>
 
