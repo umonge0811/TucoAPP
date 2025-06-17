@@ -141,21 +141,14 @@ async function buscarProductos(termino) {
 
         mostrarCargandoBusqueda();
 
-        // Obtener token del usuario autenticado
-        const token = localStorage.getItem('token') || '';
-        if (!token) {
-            console.warn('⚠️ No hay token de autenticación disponible');
-            mostrarErrorBusqueda('productos', 'No hay sesión activa. Por favor inicie sesión.');
-            return;
-        }
-
-        // Usar el endpoint web en lugar del API directo para facturación
+        // El sistema usa autenticación por cookies, no necesitamos token manual
         const response = await fetch('/Inventario/ObtenerProductosParaFacturacion', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
-            }
+            },
+            credentials: 'include' // Incluir cookies de autenticación automáticamente
         });
 
         if (!response.ok) {
@@ -165,7 +158,7 @@ async function buscarProductos(termino) {
         }
 
         const resultado = await response.json();
-        
+
         if (!resultado.success) {
             throw new Error(resultado.message || 'Error al obtener productos');
         }
@@ -178,7 +171,7 @@ async function buscarProductos(termino) {
             const coincideTermino = termino === '' || 
                 (producto.nombreProducto && producto.nombreProducto.toLowerCase().includes(termino.toLowerCase())) ||
                 (producto.descripcion && producto.descripcion.toLowerCase().includes(termino.toLowerCase()));
-            
+
             return tieneStock && coincideTermino;
         }).slice(0, 12); // Limitar a 12 resultados
 
@@ -233,7 +226,7 @@ function mostrarResultadosProductos(productos) {
                                 producto.nombreProducto.substring(0, 25) + '...' : 
                                 producto.nombreProducto}
                         </h6>
-                        
+
                         <!-- Precios diferenciados -->
                         <div class="precios-metodos mb-2">
                             <div class="row text-center">
@@ -247,13 +240,13 @@ function mostrarResultadosProductos(productos) {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <small class="text-primary">Stock: ${producto.cantidadEnInventario}</small>
                             ${producto.cantidadEnInventario <= producto.stockMinimo && producto.cantidadEnInventario > 0 ? 
                                 '<small class="badge bg-warning">Stock Bajo</small>' : ''}
                         </div>
-                        
+
                         <div class="d-grid gap-1">
                             ${producto.cantidadEnInventario > 0 ? `
                                 <button type="button" 
@@ -394,7 +387,7 @@ function mostrarModalSeleccionProducto(producto) {
                             <div class="col-md-8">
                                 <h4 class="mb-3">${producto.nombreProducto}</h4>
                                 ${producto.descripcion ? `<p class="text-muted mb-3">${producto.descripcion}</p>` : ''}
-                                
+
                                 <div class="alert alert-info">
                                     <i class="bi bi-info-circle me-2"></i>
                                     <strong>Stock disponible:</strong> ${producto.cantidadEnInventario} unidades
@@ -479,14 +472,14 @@ function mostrarModalSeleccionProducto(producto) {
 
 function configurarEventosModalProducto(producto, modal) {
     const precioBase = producto.precio || 0;
-    
+
     // Actualizar total cuando cambie el método de pago o cantidad
     function actualizarTotal() {
         const metodoSeleccionado = $('input[name="metodoPagoProducto"]:checked').val();
         const cantidad = parseInt($('#cantidadProducto').val()) || 1;
         const precio = precioBase * CONFIGURACION_PRECIOS[metodoSeleccionado].multiplicador;
         const total = precio * cantidad;
-        
+
         $('#totalCalculado').text(`₡${formatearMoneda(total)}`);
     }
 
@@ -517,10 +510,10 @@ function configurarEventosModalProducto(producto, modal) {
         const valor = parseInt($(this).val()) || 1;
         const min = parseInt($(this).attr('min')) || 1;
         const max = parseInt($(this).attr('max')) || producto.cantidadEnInventario;
-        
+
         if (valor < min) $(this).val(min);
         if (valor > max) $(this).val(max);
-        
+
         actualizarTotal();
     });
 
@@ -529,7 +522,7 @@ function configurarEventosModalProducto(producto, modal) {
         const metodoSeleccionado = $('input[name="metodoPagoProducto"]:checked').val();
         const cantidad = parseInt($('#cantidadProducto').val()) || 1;
         const precio = precioBase * CONFIGURACION_PRECIOS[metodoSeleccionado].multiplicador;
-        
+
         agregarProductoAVenta(producto, cantidad, precio, metodoSeleccionado);
         modal.hide();
     });
@@ -598,7 +591,7 @@ function actualizarVistaCarrito() {
         const subtotal = producto.precioUnitario * producto.cantidad;
         const metodoPago = producto.metodoPago || 'efectivo';
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago];
-        
+
         html += `
             <div class="producto-venta-item border rounded p-2 mb-2">
                 <div class="d-flex justify-content-between align-items-start">
@@ -845,7 +838,7 @@ function mostrarSinResultados(tipo) {
 function mostrarErrorBusqueda(tipo, mensajeEspecifico = null) {
     const mensajeDefault = tipo === 'productos' ? 'Error al buscar productos' : 'Error al buscar clientes';
     const mensaje = mensajeEspecifico || mensajeDefault;
-    
+
     $('#resultadosBusqueda').html(`
         <div class="col-12 text-center py-4 text-danger">
             <i class="bi bi-exclamation-triangle display-1"></i>
@@ -871,7 +864,7 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
 
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
-    
+
     const imagenUrl = producto.imagenesProductos && producto.imagenesProductos.length > 0 
         ? producto.imagenesProductos[0].urlimagen 
         : '/images/no-image.png';
@@ -893,7 +886,7 @@ function verDetalleProducto(producto) {
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
                                      onerror="this.src='/images/no-image.png'">
-                                
+
                                 <!-- Información de stock -->
                                 <div class="mt-3">
                                     <div class="alert ${producto.cantidadEnInventario <= 0 ? 'alert-danger' : 
@@ -908,7 +901,7 @@ function verDetalleProducto(producto) {
                             </div>
                             <div class="col-md-8">
                                 <h3 class="mb-3">${producto.nombreProducto}</h3>
-                                
+
                                 ${producto.descripcion ? `
                                     <div class="mb-3">
                                         <h6><i class="bi bi-card-text me-2"></i>Descripción:</h6>
@@ -1243,14 +1236,14 @@ function getCampoSelector(nombreCampo) {
         'direccion': '#direccionClienteFacturacion',
         'Direccion': '#direccionClienteFacturacion'
     };
-    
+
     return mapaCampos[nombreCampo] || null;
 }
 
 // ===== FUNCIÓN CONSULTAR INVENTARIO =====
 function consultarInventario() {
     console.log('📦 Abriendo consulta de inventario...');
-    
+
     if (modalInventario) {
         modalInventario.show();
     } else {
