@@ -1,0 +1,119 @@
+
+<!-- Modal Consultar Inventario -->
+<div class="modal fade" id="modalInventario" tabindex="-1" aria-labelledby="modalInventarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalInventarioLabel">
+                    <i class="bi bi-boxes me-2"></i>
+                    Consulta de Inventario General
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Filtros de inventario -->
+                <div class="row mb-3">
+                    <div class="col-md-4 mb-2">
+                        <label class="form-label">Buscar:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="busquedaInventario" 
+                                   placeholder="Código, nombre o descripción...">
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Categoría:</label>
+                        <select class="form-select" id="filtroCategoria">
+                            <option value="">Todas las categorías</option>
+                            <option value="llantas">Llantas</option>
+                            <option value="accesorios">Accesorios</option>
+                            <option value="servicios">Servicios</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <label class="form-label">Stock:</label>
+                        <select class="form-select" id="filtroStock">
+                            <option value="">Todos</option>
+                            <option value="disponible">Disponible (> 0)</option>
+                            <option value="bajo">Stock bajo</option>
+                            <option value="agotado">Agotado (0)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary d-block w-100" id="btnBuscarInventario">
+                            <i class="bi bi-search me-1"></i>
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabla de inventario -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped" id="tablaInventario">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th class="d-none d-md-table-cell">Categoría</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th class="d-none d-lg-table-cell">Ubicación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Se llena dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación del inventario -->
+                <nav aria-label="Paginación inventario">
+                    <ul class="pagination justify-content-center" id="paginacionInventario">
+                    </ul>
+                </nav>
+
+                <!-- Estadísticas del inventario -->
+                <div class="row mt-3">
+                    <div class="col-md-3 text-center">
+                        <div class="p-2 bg-light rounded">
+                            <h6 class="text-primary mb-1" id="totalProductos">0</h6>
+                            <small class="text-muted">Total Productos</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-2 bg-light rounded">
+                            <h6 class="text-success mb-1" id="productosDisponibles">0</h6>
+                            <small class="text-muted">Disponibles</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-2 bg-light rounded">
+                            <h6 class="text-warning mb-1" id="productosBajoStock">0</h6>
+                            <small class="text-muted">Stock Bajo</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <div class="p-2 bg-light rounded">
+                            <h6 class="text-danger mb-1" id="productosAgotados">0</h6>
+                            <small class="text-muted">Agotados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
+                    Cerrar
+                </button>
+                <button type="button" class="btn btn-success" id="btnExportarInventario">
+                    <i class="bi bi-download me-1"></i>
+                    Exportar Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
