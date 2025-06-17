@@ -831,6 +831,56 @@ function validarEmailFacturacion(email) {
     return regex.test(email);
 }
 
+// ===== FUNCIÓN CONSULTAR INVENTARIO =====
+function consultarInventario() {
+    console.log('📦 Abriendo consulta de inventario...');
+    
+    if (modalInventario) {
+        modalInventario.show();
+    } else {
+        console.error('❌ Modal de inventario no está inicializado');
+        mostrarToast('Error', 'No se pudo abrir el inventario', 'danger');
+    }
+}
+
+// ===== FUNCIONES AUXILIARES ADICIONALES =====
+function nuevaVenta() {
+    limpiarVenta();
+    console.log('🆕 Nueva venta iniciada');
+}
+
+function agregarProducto(producto) {
+    agregarProductoAVenta(producto);
+}
+
+function finalizarVenta() {
+    mostrarModalFinalizarVenta();
+}
+
+function eliminarProductoVenta(index) {
+    if (index >= 0 && index < productosEnVenta.length) {
+        productosEnVenta.splice(index, 1);
+        actualizarVistaCarrito();
+        actualizarTotales();
+        mostrarToast('Producto eliminado', 'Producto removido de la venta', 'info');
+    }
+}
+
+function actualizarCantidadProducto(index, nuevaCantidad) {
+    if (index >= 0 && index < productosEnVenta.length) {
+        const producto = productosEnVenta[index];
+        if (nuevaCantidad >= 1 && nuevaCantidad <= producto.stockDisponible) {
+            producto.cantidad = nuevaCantidad;
+            actualizarVistaCarrito();
+            actualizarTotales();
+        }
+    }
+}
+
+function procesarVenta() {
+    procesarVentaFinal();
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
