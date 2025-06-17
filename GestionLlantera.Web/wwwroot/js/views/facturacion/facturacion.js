@@ -189,7 +189,12 @@ function mostrarResultadosProductos(productos) {
 
     let html = '';
     productos.forEach(producto => {
-        const imagenUrl = producto.imagenesProductos && producto.imagenesProductos.length > 0 
+        // Validación robusta para imágenes
+        const imagenUrl = (producto.imagenesProductos && 
+                          Array.isArray(producto.imagenesProductos) && 
+                          producto.imagenesProductos.length > 0 && 
+                          producto.imagenesProductos[0] && 
+                          producto.imagenesProductos[0].urlimagen) 
             ? producto.imagenesProductos[0].urlimagen 
             : '/images/no-image.png';
 
@@ -358,7 +363,11 @@ function seleccionarCliente(cliente) {
 // ===== MODAL DE SELECCIÓN DE PRODUCTO =====
 function mostrarModalSeleccionProducto(producto) {
     const precioBase = producto.precio || 0;
-    const imagenUrl = producto.imagenesProductos && producto.imagenesProductos.length > 0 
+    const imagenUrl = (producto.imagenesProductos && 
+                      Array.isArray(producto.imagenesProductos) && 
+                      producto.imagenesProductos.length > 0 && 
+                      producto.imagenesProductos[0] && 
+                      producto.imagenesProductos[0].urlimagen) 
         ? producto.imagenesProductos[0].urlimagen 
         : '/images/no-image.png';
 
@@ -555,7 +564,11 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
             cantidad: cantidad,
             stockDisponible: producto.cantidadEnInventario,
             metodoPago: metodoPago,
-            imagenUrl: producto.imagenesProductos && producto.imagenesProductos.length > 0 ? 
+            imagenUrl: (producto.imagenesProductos && 
+                       Array.isArray(producto.imagenesProductos) && 
+                       producto.imagenesProductos.length > 0 && 
+                       producto.imagenesProductos[0] && 
+                       producto.imagenesProductos[0].urlimagen) ? 
                       producto.imagenesProductos[0].urlimagen : null
         });
 
@@ -860,7 +873,11 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
-    const imagenUrl = producto.imagenesProductos && producto.imagenesProductos.length > 0 
+    const imagenUrl = (producto.imagenesProductos && 
+                      Array.isArray(producto.imagenesProductos) && 
+                      producto.imagenesProductos.length > 0 && 
+                      producto.imagenesProductos[0] && 
+                      producto.imagenesProductos[0].urlimagen) 
         ? producto.imagenesProductos[0].urlimagen 
         : '/images/no-image.png';
 
