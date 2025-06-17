@@ -841,8 +841,7 @@ namespace GestionLlantera.Web.Controllers
 
                 // Crear documento PDF
                 using var memoryStream = new MemoryStream();
-                var document =```csharp
- new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
+                var document = new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
                 var writer = PdfWriter.GetInstance(document, memoryStream);
 
                 // Agregar eventos de encabezado y pie de página
@@ -2624,8 +2623,13 @@ namespace GestionLlantera.Web.Controllers
             public string? Comentario { get; set; }
         }   
         /// <summary>
-                 /// Modelo para recibir datos de ajuste desde el frontend
-                 /// </summary>
+        /// Modelo para recibir datos de ajuste desde el frontend
+        /// </summary>
+        public class AjusteStockRequestModel
+        {
+            public string TipoAjuste { get; set; } = string.Empty;
+            public int Cantidad { get; set; }
+            public string? Comentario { get; set; }
+        }
     }
-
 }
