@@ -13,18 +13,15 @@ namespace GestionLlantera.Web.Controllers
     {
         private readonly ILogger<FacturacionController> _logger;
         private readonly IInventarioService _inventarioService;
-        private readonly IClientesService _clientesService;
         private readonly IFacturacionService _facturacionService;
 
         public FacturacionController(
             ILogger<FacturacionController> logger,
-            IInventarioService inventarioService, 
-            IClientesService clientesService,
+            IInventarioService inventarioService,
             IFacturacionService facturacionService)
         {
             _logger = logger;
             _inventarioService = inventarioService;
-            _clientesService = clientesService;
             _facturacionService = facturacionService;
         }
 
@@ -33,7 +30,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 // Verificar permisos
-                if (!await this.TienePermisoAsync("Ver Ventas"))
+                if (!await this.TienePermisoAsync("Ver Facturación"))
                 {
                     return RedirectToAction("AccessDenied", "Account");
                 }
@@ -110,35 +107,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ObtenerClientes(string termino = "")
-        {
-            try
-            {
-                // Verificar permisos para clientes
-                if (!await this.TienePermisoAsync("Ver Clientes"))
-                {
-                    return Json(new { success = false, message = "Sin permisos para consultar clientes" });
-                }
-
-                var jwtToken = this.ObtenerTokenJWT();
-                var clientes = await _clientesService.BuscarClientesAsync(termino, jwtToken);
-
-                var resultado = clientes.Take(20).Select(c => new {
-                    id = c.ClienteId,
-                    nombre = c.NombreCliente,
-                    email = c.Email,
-                    telefono = c.Telefono
-                }).ToList();
-
-                return Json(new { success = true, data = resultado });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener clientes");
-                return Json(new { success = false, message = "Error al obtener clientes" });
-            }
-        }
+        
 
         [HttpPost]
         public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaDTO> productos)
@@ -167,7 +136,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                if (!await this.TienePermisoAsync("Crear Ventas"))
+                if (!await this.TienePermisoAsync("Crear Facturas"))
                 {
                     return Json(new { success = false, message = "Sin permisos para procesar ventas" });
                 }
@@ -216,35 +185,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CrearCliente([FromBody] Cliente cliente)
-        {
-            try
-            {
-                if (!await this.TienePermisoAsync("Crear Clientes"))
-                {
-                    return Json(new { success = false, message = "Sin permisos para crear clientes" });
-                }
-
-                var jwtToken = this.ObtenerTokenJWT();
-                var clienteCreado = await _clientesService.CrearClienteAsync(cliente, jwtToken);
-
-                if (clienteCreado)
-                {
-                    return Json(new { 
-                        success = true, 
-                        message = "Cliente creado exitosamente"
-                    });
-                }
-
-                return Json(new { success = false, message = "Error al crear cliente" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al crear cliente");
-                return Json(new { success = false, message = "Error interno del servidor" });
-            }
-        }
+        
 
         /// <summary>
         /// Método auxiliar para obtener el token JWT del usuario autenticado

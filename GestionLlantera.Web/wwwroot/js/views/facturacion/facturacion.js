@@ -235,7 +235,7 @@ async function buscarClientes(termino) {
     try {
         console.log(`👥 Buscando clientes: "${termino}"`);
 
-        const response = await fetch(`/Facturacion/ObtenerClientes?termino=${encodeURIComponent(termino)}`);
+        const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(termino)}`);
         
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
