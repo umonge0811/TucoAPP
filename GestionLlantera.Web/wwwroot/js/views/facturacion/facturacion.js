@@ -834,8 +834,6 @@ function mostrarSinResultados(tipo) {
 function mostrarErrorBusqueda(tipo, mensajeEspecifico = null) {
     const mensajeDefault = tipo === 'productos' ? 'Error al buscar productos' : 'Error al buscar clientes';
     const mensaje = mensajeEspecifico || mensajeDefault;
-
-Analyzing the changes, I need to replace the code block that handles the response from the server when searching for products to improve the error handling and logging.```tool_code
     $('#resultadosBusqueda').html(`
         <div class="col-12 text-center py-4 text-danger">
             <i class="bi bi-exclamation-triangle display-1"></i>
