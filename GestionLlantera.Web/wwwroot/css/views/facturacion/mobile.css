@@ -1,0 +1,120 @@
+
+/* ===== FACTURACIÓN - ESTILOS MÓVILES ===== */
+
+@media (max-width: 768px) {
+    .page-header {
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .page-header .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .dashboard-card {
+        margin-bottom: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .row {
+        margin: 0;
+    }
+
+    .col-md-6, .col-md-3, .col-md-4, .col-md-8 {
+        padding: 0.5rem;
+    }
+
+    /* Tabla responsive en móvil */
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .table thead th {
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .table tbody td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    /* Resumen de totales en móvil */
+    .resumen-totales {
+        margin-top: 1rem;
+        padding: 1rem;
+    }
+
+    .resumen-totales .d-flex {
+        font-size: 1rem;
+    }
+
+    .resumen-totales strong {
+        font-size: 1.2rem;
+    }
+
+    /* Botones en móvil */
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .d-grid {
+        gap: 0.75rem !important;
+    }
+
+    /* Formularios en móvil */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-control, .form-select {
+        font-size: 16px; /* Evita zoom en iOS */
+    }
+
+    /* Empty state en móvil */
+    .empty-state {
+        padding: 2rem 1rem !important;
+    }
+
+    .empty-state i {
+        font-size: 2rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-header h2 {
+        font-size: 1.25rem;
+    }
+
+    .card-header h5 {
+        font-size: 1rem;
+    }
+
+    .table-responsive {
+        font-size: 0.75rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .resumen-totales .d-flex {
+        font-size: 0.9rem;
+    }
+
+    .resumen-totales strong {
+        font-size: 1.1rem;
+    }
+}
