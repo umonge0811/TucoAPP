@@ -227,7 +227,7 @@ function mostrarResultadosProductos(productos) {
         const cantidadInventario = (producto && typeof producto.cantidadEnInventario === 'number') ? producto.cantidadEnInventario : 0;
         const nombreProducto = (producto && producto.nombreProducto) ? producto.nombreProducto : 'Producto sin nombre';
         const productoId = (producto && producto.productoId) ? producto.productoId : 'unknown';
-        
+
         const stockClase = cantidadInventario <= 0 ? 'border-danger' : 
                           cantidadInventario <= stockMinimo ? 'border-warning' : '';
 
@@ -390,7 +390,7 @@ function mostrarModalSeleccionProducto(producto) {
     const precioBase = producto.precio || 0;
 
     // Validación robusta para imágenes
-    let imagenUrl = '/images/no-image.png';
+    let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg==';
     try {
         if (producto.imagenesProductos && 
             Array.isArray(producto.imagenesProductos) && 
@@ -403,7 +403,7 @@ function mostrarModalSeleccionProducto(producto) {
         }
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes del producto en modal:', error);
-        imagenUrl = '/images/no-image.png';
+        imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg==';
     }
 
     const modalHtml = `
@@ -422,7 +422,7 @@ function mostrarModalSeleccionProducto(producto) {
                                 <img src="${imagenUrl}" 
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
-                                     onerror="this.src='/images/no-image.png'">
+                                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg=='">
                             </div>
                             <div class="col-md-8">
                                 <h4 class="mb-3">${producto.nombreProducto}</h4>
@@ -916,7 +916,7 @@ function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
     // Validación robusta para imágenes
-    let imagenUrl = '/images/no-image.png';
+    let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg==';
     try {
         if (producto.imagenesProductos && 
             Array.isArray(producto.imagenesProductos) && 
@@ -929,7 +929,7 @@ function verDetalleProducto(producto) {
         }
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes en detalle del producto:', error);
-        imagenUrl = '/images/no-image.png';
+        imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg==';
     }
 
     const modalHtml = `
@@ -948,7 +948,7 @@ function verDetalleProducto(producto) {
                                 <img src="${imagenUrl}" 
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
-                                     onerror="this.src='/images/no-image.png'">
+                                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg=='">
 
                                 <!-- Información de stock -->
                                 <div class="mt-3">
