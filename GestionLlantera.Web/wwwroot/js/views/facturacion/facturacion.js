@@ -744,9 +744,9 @@ async function guardarNuevoCliente() {
         btnGuardar.find('.btn-normal-state').addClass('d-none');
         btnGuardar.find('.btn-loading-state').removeClass('d-none');
 
-        // Recopilar datos
+        // Recopilar datos (usar nombres de propiedades que coincidan con el modelo del servidor)
         const clienteData = {
-            nombre: $('#nombreClienteFacturacion').val().trim(),
+            nombreCliente: $('#nombreClienteFacturacion').val().trim(),
             contacto: $('#contactoClienteFacturacion').val().trim(),
             email: $('#emailClienteFacturacion').val().trim(),
             telefono: $('#telefonoClienteFacturacion').val().trim(),
@@ -775,15 +775,30 @@ async function guardarNuevoCliente() {
 
             // Seleccionar el cliente creado automáticamente
             seleccionarCliente({
-                id: resultado.data.id,
-                nombre: resultado.data.nombre,
-                email: resultado.data.email,
-                telefono: resultado.data.telefono
+                id: resultado.clienteId,
+                nombre: clienteData.nombreCliente,
+                email: clienteData.email,
+                telefono: clienteData.telefono
             });
 
             mostrarToast('Cliente creado', 'Cliente creado exitosamente y seleccionado para la venta', 'success');
         } else {
-            throw new Error(resultado.message || 'Error al crear cliente');
+            // Manejar errores de validación específicos
+            if (resultado.errores) {
+                // Mostrar errores de validación en los campos correspondientes
+                Object.keys(resultado.errores).forEach(campo => {
+                    const mensajes = resultado.errores[campo];
+                    if (mensajes && mensajes.length > 0) {
+                        const campoSelector = getCampoSelector(campo);
+                        if (campoSelector) {
+                            mostrarErrorCampoFacturacion(campoSelector, mensajes[0]);
+                        }
+                    }
+                });
+                return; // No lanzar error, solo mostrar validaciones
+            } else {
+                throw new Error(resultado.message || 'Error al crear cliente');
+            }
         }
 
     } catch (error) {
@@ -829,6 +844,23 @@ function mostrarErrorCampoFacturacion(selector, mensaje) {
 function validarEmailFacturacion(email) {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
+}
+
+function getCampoSelector(nombreCampo) {
+    const mapaCampos = {
+        'nombre': '#nombreClienteFacturacion',
+        'NombreCliente': '#nombreClienteFacturacion',
+        'contacto': '#contactoClienteFacturacion',
+        'Contacto': '#contactoClienteFacturacion',
+        'email': '#emailClienteFacturacion',
+        'Email': '#emailClienteFacturacion',
+        'telefono': '#telefonoClienteFacturacion',
+        'Telefono': '#telefonoClienteFacturacion',
+        'direccion': '#direccionClienteFacturacion',
+        'Direccion': '#direccionClienteFacturacion'
+    };
+    
+    return mapaCampos[nombreCampo] || null;
 }
 
 // ===== FUNCIÓN CONSULTAR INVENTARIO =====
