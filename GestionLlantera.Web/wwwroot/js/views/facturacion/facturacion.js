@@ -191,11 +191,11 @@ function mostrarResultadosProductos(productos) {
     productos.forEach(producto => {
         // Validación robusta para imágenes - más defensiva
         let imagenUrl = '/images/no-image.png';
-        
+
         if (producto.imagenesProductos && 
             Array.isArray(producto.imagenesProductos) && 
             producto.imagenesProductos.length > 0) {
-            
+
             const primeraImagen = producto.imagenesProductos[0];
             if (primeraImagen && primeraImagen.urlimagen) {
                 imagenUrl = primeraImagen.urlimagen;
@@ -369,17 +369,22 @@ function seleccionarCliente(cliente) {
 // ===== MODAL DE SELECCIÓN DE PRODUCTO =====
 function mostrarModalSeleccionProducto(producto) {
     const precioBase = producto.precio || 0;
-    
+
     // Validación robusta para imágenes
     let imagenUrl = '/images/no-image.png';
-    if (producto.imagenesProductos && 
-        Array.isArray(producto.imagenesProductos) && 
-        producto.imagenesProductos.length > 0) {
-        
-        const primeraImagen = producto.imagenesProductos[0];
-        if (primeraImagen && primeraImagen.urlimagen) {
-            imagenUrl = primeraImagen.urlimagen;
+    try {
+        if (producto.imagenesProductos && 
+            Array.isArray(producto.imagenesProductos) && 
+            producto.imagenesProductos.length > 0) {
+
+            const primeraImagen = producto.imagenesProductos[0];
+            if (primeraImagen && primeraImagen.urlimagen) {
+                imagenUrl = primeraImagen.urlimagen;
+            }
         }
+    } catch (error) {
+        console.warn('⚠️ Error procesando imágenes del producto en modal:', error);
+        imagenUrl = '/images/no-image.png';
     }
 
     const modalHtml = `
@@ -573,7 +578,7 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
         if (producto.imagenesProductos && 
             Array.isArray(producto.imagenesProductos) && 
             producto.imagenesProductos.length > 0) {
-            
+
             const primeraImagen = producto.imagenesProductos[0];
             if (primeraImagen && primeraImagen.urlimagen) {
                 imagenUrl = primeraImagen.urlimagen;
@@ -893,14 +898,19 @@ function verDetalleProducto(producto) {
 
     // Validación robusta para imágenes
     let imagenUrl = '/images/no-image.png';
-    if (producto.imagenesProductos && 
-        Array.isArray(producto.imagenesProductos) && 
-        producto.imagenesProductos.length > 0) {
-        
-        const primeraImagen = producto.imagenesProductos[0];
-        if (primeraImagen && primeraImagen.urlimagen) {
-            imagenUrl = primeraImagen.urlimagen;
+    try {
+        if (producto.imagenesProductos && 
+            Array.isArray(producto.imagenesProductos) && 
+            producto.imagenesProductos.length > 0) {
+
+            const primeraImagen = producto.imagenesProductos[0];
+            if (primeraImagen && primeraImagen.urlimagen) {
+                imagenUrl = primeraImagen.urlimagen;
+            }
         }
+    } catch (error) {
+        console.warn('⚠️ Error procesando imágenes en detalle del producto:', error);
+        imagenUrl = '/images/no-image.png';
     }
 
     const modalHtml = `
