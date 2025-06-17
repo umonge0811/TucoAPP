@@ -351,67 +351,67 @@
 
                                         <!-- Acciones -->
                                         <!-- Acciones optimizadas para móviles -->
-<div class="inventario-acciones-mobile">
-    <!-- Botón Ver - Siempre visible y prominente -->
-    <a href="@Url.Action("DetalleInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
-       class="btn btn-info">
-        <i class="bi bi-eye"></i> Ver Detalles
-    </a>
+                                            <div class="inventario-acciones-mobile">
+                                                <!-- Botón Ver - Siempre visible y prominente -->
+                                                <a href="@Url.Action("DetalleInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
+                                                   class="btn btn-info">
+                                                    <i class="bi bi-eye"></i> Ver Detalles
+                                                </a>
     
-    <!-- Container para botones secundarios -->
-    @{
-        var cantidadBotones = 0;
-        if (inventario.Estado == "Programado") cantidadBotones = 3;
-        else if (inventario.Estado == "En Progreso") cantidadBotones = 1;
-        else if (inventario.Estado == "Completado") cantidadBotones = 1;
+                                                <!-- Container para botones secundarios -->
+                                                @{
+                                                    var cantidadBotones = 0;
+                                                    if (inventario.Estado == "Programado") cantidadBotones = 3;
+                                                    else if (inventario.Estado == "En Progreso") cantidadBotones = 1;
+                                                    else if (inventario.Estado == "Completado") cantidadBotones = 1;
         
-        var claseGrid = cantidadBotones switch
-        {
-            1 => "un-boton",
-            2 => "dos-botones", 
-            3 => "tres-botones",
-            _ => "dos-botones"
-        };
-    }
+                                                    var claseGrid = cantidadBotones switch
+                                                    {
+                                                        1 => "un-boton",
+                                                        2 => "dos-botones", 
+                                                        3 => "tres-botones",
+                                                        _ => "dos-botones"
+                                                    };
+                                                }
     
-    <div class="botones-accion-secundarios @claseGrid">
-        @if (inventario.Estado == "Programado")
-        {
-            <a href="@Url.Action("EditarInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
-               class="btn btn-primary">
-                <i class="bi bi-pencil"></i> Editar
-            </a>
-            <button type="button"
-                    class="btn btn-success iniciar-inventario-btn"
-                    data-id="@inventario.InventarioProgramadoId">
-                <i class="bi bi-play-fill"></i> Iniciar
-            </button>
-            <button type="button"
-                    class="btn btn-danger cancelar-inventario-btn"
-                    data-id="@inventario.InventarioProgramadoId">
-                <i class="bi bi-x-lg"></i> Cancelar
-            </button>
-        }
+                                                <div class="botones-accion-secundarios @claseGrid">
+                                                    @if (inventario.Estado == "Programado")
+                                                    {
+                                                        <a href="@Url.Action("EditarInventarioProgramado", "Inventario", new { id = inventario.InventarioProgramadoId })"
+                                                           class="btn btn-primary">
+                                                            <i class="bi bi-pencil"></i> Editar
+                                                        </a>
+                                                        <button type="button"
+                                                                class="btn btn-success iniciar-inventario-btn"
+                                                                data-id="@inventario.InventarioProgramadoId">
+                                                            <i class="bi bi-play-fill"></i> Iniciar
+                                                        </button>
+                                                        <button type="button"
+                                                                class="btn btn-danger cancelar-inventario-btn"
+                                                                data-id="@inventario.InventarioProgramadoId">
+                                                            <i class="bi bi-x-lg"></i> Cancelar
+                                                        </button>
+                                                    }
         
-        @if (inventario.Estado == "En Progreso")
-        {
-            <button type="button"
-                    class="btn btn-success completar-inventario-btn"
-                    data-id="@inventario.InventarioProgramadoId">
-                <i class="bi bi-check-lg"></i> Completar Inventario
-            </button>
-        }
+                                                    @if (inventario.Estado == "En Progreso")
+                                                    {
+                                                        <button type="button"
+                                                                class="btn btn-success completar-inventario-btn"
+                                                                data-id="@inventario.InventarioProgramadoId">
+                                                            <i class="bi bi-check-lg"></i> Completar Inventario
+                                                        </button>
+                                                    }
         
-        @if (inventario.Estado == "Completado")
-        {
-            <button type="button"
-                    class="btn btn-primary exportar-inventario-btn"
-                    data-id="@inventario.InventarioProgramadoId">
-                <i class="bi bi-download"></i> Exportar Resultados
-            </button>
-        }
-    </div>
-</div>
+                                                    @if (inventario.Estado == "Completado")
+                                                    {
+                                                        <button type="button"
+                                                                class="btn btn-primary exportar-inventario-btn"
+                                                                data-id="@inventario.InventarioProgramadoId">
+                                                            <i class="bi bi-download"></i> Exportar Resultados
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </div>
                                     </div>
                                 }
                             </div>                    }

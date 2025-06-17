@@ -17,6 +17,8 @@ let paginacionConfig = {
     filasVisibles: []
 };
 
+
+
 document.addEventListener('DOMContentLoaded', function () {
     const filtrosAvanzados = document.getElementById('filtrosAvanzados');
     const iconoColapsar = document.getElementById('iconoColapsarFiltros');

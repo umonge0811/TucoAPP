@@ -73,45 +73,97 @@ function activarBloqueoInventario() {
  */
 function aplicarBloqueoVisual() {
     try {
-        console.log('🔒 Aplicando bloqueo visual...');
+        console.log('🔒 Aplicando bloqueo visual completo...');
 
-        // ✅ BLOQUEAR BOTONES DE ACCIÓN
-        $('.btn-conteo, .btn-ajuste-pendiente, .btn-validacion').each(function () {
-            const $btn = $(this);
+        // ✅ BLOQUEAR TODOS LOS BOTONES DE ACCIÓN (INCLUYE LOS NUEVOS)
+        const selectoresBotones = [
+            '.btn-conteo',           // Contar/Recontar
+            '.btn-ajuste-pendiente', // Crear Ajuste
+            '.btn-validacion',       // Validar
+            'button[onclick*="verAjustesProducto"]',     // Ver Ajuste
+            'button[onclick*="editarAjustePendiente"]',  // Editar Ajuste
+            'button[onclick*="abrirModalConteo"]',       // Contar (por onclick)
+            'button[onclick*="abrirModalAjustePendiente"]', // Crear Ajuste (por onclick)
+            'button[onclick*="validarDiscrepancia"]'     // Validar (por onclick)
+        ];
 
-            // Guardar estado original
-            if (!$btn.data('estado-original')) {
-                $btn.data('estado-original', {
-                    disabled: $btn.prop('disabled'),
-                    html: $btn.html(),
-                    classes: $btn.attr('class')
-                });
-            }
+        selectoresBotones.forEach(selector => {
+            $(selector).each(function () {
+                const $btn = $(this);
 
-            // Aplicar bloqueo
-            $btn.prop('disabled', true)
-                .removeClass('btn-primary btn-warning btn-success')
-                .addClass('btn-secondary')
-                .html('<i class="bi bi-lock me-1"></i>Bloqueado');
+                // ✅ GUARDAR ESTADO ORIGINAL (solo si no existe)
+                if (!$btn.data('estado-original-bloqueo')) {
+                    $btn.data('estado-original-bloqueo', {
+                        disabled: $btn.prop('disabled'),
+                        html: $btn.html(),
+                        classes: $btn.attr('class'),
+                        onclick: $btn.attr('onclick')
+                    });
+                }
+
+                // ✅ APLICAR BLOQUEO VISUAL
+                $btn.prop('disabled', true)
+                    .removeClass('btn-primary btn-warning btn-success btn-info btn-outline-warning')
+                    .addClass('btn-secondary')
+                    .attr('onclick', 'solicitarPinAdmin(); return false;')
+                    .html('<i class="bi bi-lock me-1"></i>Bloqueado');
+            });
         });
 
-        // ✅ BLOQUEAR PANEL DE AJUSTES PENDIENTES
+        // ✅ BLOQUEAR PANEL DE AJUSTES PENDIENTES COMPLETO
         $('#ajustesPendientesPanel .btn').each(function () {
             const $btn = $(this);
             if (!$btn.hasClass('btn-unlock-admin')) {
+
+                // Guardar estado original
+                if (!$btn.data('estado-original-panel')) {
+                    $btn.data('estado-original-panel', {
+                        disabled: $btn.prop('disabled'),
+                        html: $btn.html(),
+                        classes: $btn.attr('class')
+                    });
+                }
+
                 $btn.prop('disabled', true).addClass('disabled');
             }
+        });
+
+        // ✅ BLOQUEAR BOTONES EN LA TABLA DE AJUSTES PENDIENTES
+        $('#tablaAjustesBody button').each(function () {
+            const $btn = $(this);
+
+            if (!$btn.data('estado-original-tabla')) {
+                $btn.data('estado-original-tabla', {
+                    disabled: $btn.prop('disabled'),
+                    html: $btn.html(),
+                    classes: $btn.attr('class'),
+                    onclick: $btn.attr('onclick')
+                });
+            }
+
+            $btn.prop('disabled', true)
+                .removeClass('btn-danger btn-info btn-outline-danger btn-outline-info')
+                .addClass('btn-secondary')
+                .attr('onclick', 'solicitarPinAdmin(); return false;')
+                .html('<i class="bi bi-lock"></i>');
+        });
+
+        // ✅ BLOQUEAR FILAS DE PRODUCTOS VISUALMENTE
+        $('.producto-row').addClass('producto-bloqueado').css({
+            'opacity': '0.7',
+            'pointer-events': 'none'
         });
 
         // ✅ MOSTRAR OVERLAY DE BLOQUEO EN SECCIONES CRÍTICAS
         mostrarOverlayBloqueo();
 
-        console.log('✅ Bloqueo visual aplicado');
+        console.log('✅ Bloqueo visual completo aplicado a TODOS los botones');
 
     } catch (error) {
-        console.error('❌ Error aplicando bloqueo visual:', error);
+        console.error('❌ Error aplicando bloqueo visual completo:', error);
     }
 }
+
 
 /**
  * ✅ FUNCIÓN: Mostrar overlay de bloqueo
@@ -362,20 +414,75 @@ function desbloquearInventario() {
     try {
         console.log('🔓 Desbloqueando inventario con acceso admin...');
 
-        // ✅ RESTAURAR BOTONES DE ACCIÓN
-        $('.btn-conteo, .btn-ajuste-pendiente, .btn-validacion').each(function () {
+        // ✅ RESTAURAR TODOS LOS BOTONES DE ACCIÓN
+        const selectoresBotones = [
+            '.btn-conteo',
+            '.btn-ajuste-pendiente',
+            '.btn-validacion',
+            'button[onclick*="verAjustesProducto"]',
+            'button[onclick*="editarAjustePendiente"]',
+            'button[onclick*="abrirModalConteo"]',
+            'button[onclick*="abrirModalAjustePendiente"]',
+            'button[onclick*="validarDiscrepancia"]'
+        ];
+
+        selectoresBotones.forEach(selector => {
+            $(selector).each(function () {
+                const $btn = $(this);
+                const estadoOriginal = $btn.data('estado-original-bloqueo');
+
+                if (estadoOriginal) {
+                    // Restaurar estado original completo
+                    $btn.prop('disabled', estadoOriginal.disabled)
+                        .attr('class', estadoOriginal.classes)
+                        .html(estadoOriginal.html);
+
+                    // Restaurar onclick si existía
+                    if (estadoOriginal.onclick) {
+                        $btn.attr('onclick', estadoOriginal.onclick);
+                    } else {
+                        $btn.removeAttr('onclick');
+                    }
+                }
+            });
+        });
+
+        // ✅ DESBLOQUEAR PANEL DE AJUSTES
+        $('#ajustesPendientesPanel .btn').each(function () {
             const $btn = $(this);
-            const estadoOriginal = $btn.data('estado-original');
+            const estadoOriginal = $btn.data('estado-original-panel');
 
             if (estadoOriginal) {
                 $btn.prop('disabled', estadoOriginal.disabled)
+                    .removeClass('disabled')
                     .attr('class', estadoOriginal.classes)
                     .html(estadoOriginal.html);
             }
         });
 
-        // ✅ DESBLOQUEAR PANEL DE AJUSTES
-        $('#ajustesPendientesPanel .btn').prop('disabled', false).removeClass('disabled');
+        // ✅ DESBLOQUEAR TABLA DE AJUSTES PENDIENTES
+        $('#tablaAjustesBody button').each(function () {
+            const $btn = $(this);
+            const estadoOriginal = $btn.data('estado-original-tabla');
+
+            if (estadoOriginal) {
+                $btn.prop('disabled', estadoOriginal.disabled)
+                    .attr('class', estadoOriginal.classes)
+                    .html(estadoOriginal.html);
+
+                if (estadoOriginal.onclick) {
+                    $btn.attr('onclick', estadoOriginal.onclick);
+                } else {
+                    $btn.removeAttr('onclick');
+                }
+            }
+        });
+
+        // ✅ DESBLOQUEAR FILAS DE PRODUCTOS
+        $('.producto-row').removeClass('producto-bloqueado').css({
+            'opacity': '',
+            'pointer-events': ''
+        });
 
         // ✅ REMOVER OVERLAYS DE BLOQUEO
         $('.bloqueo-overlay').remove();
@@ -386,12 +493,13 @@ function desbloquearInventario() {
         // ✅ MOSTRAR INDICADOR DE SESIÓN EN EL HEADER
         mostrarIndicadorSesionAdmin();
 
-        console.log('✅ Inventario desbloqueado - Sesión admin activa');
+        console.log('✅ TODOS los botones desbloqueados - Sesión admin activa');
 
     } catch (error) {
         console.error('❌ Error desbloqueando inventario:', error);
     }
 }
+
 
 /**
  * ✅ FUNCIÓN: Mostrar indicador de sesión admin activa
