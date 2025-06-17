@@ -36,7 +36,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Cliente>>> ObtenerClientes()
+        public async Task<IActionResult> ObtenerClientes()
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Ver Clientes",
                 "Solo usuarios con permiso 'Ver Clientes' pueden consultar clientes");
@@ -64,7 +64,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<ActionResult<Cliente>> ObtenerClientePorId(int id)
+        public async Task<IActionResult> ObtenerClientePorId(int id)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Ver Clientes",
                 "Solo usuarios con permiso 'Ver Clientes' pueden consultar clientes");
@@ -91,7 +91,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("buscar")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Cliente>>> BuscarClientes([FromQuery] string termino = "")
+        public async Task<IActionResult> BuscarClientes([FromQuery] string termino = "")
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Ver Clientes",
                 "Solo usuarios con permiso 'Ver Clientes' pueden buscar clientes");
@@ -132,7 +132,7 @@ namespace API.Controllers
         /// </summary>
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<Cliente>> CrearCliente([FromBody] Cliente cliente)
+        public async Task<IActionResult> CrearCliente([FromBody] Cliente cliente)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Clientes",
                 "Solo usuarios con permiso 'Crear Clientes' pueden crear clientes");
