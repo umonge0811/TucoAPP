@@ -188,7 +188,7 @@ public partial class TucoContext : DbContext
 
             entity.HasOne(d => d.Usuario).WithMany(p => p.Clientes)
                 .HasForeignKey(d => d.UsuarioId)
-                .OnDelete(DeleteBehavior.Restrict) // CAMBIAR A Restrict
+                .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK__Clientes__Usuari__5070F446");
         });
 
