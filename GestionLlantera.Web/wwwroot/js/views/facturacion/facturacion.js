@@ -1,4 +1,3 @@
-
 // ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
 let productosEnVenta = [];
@@ -17,13 +16,13 @@ function inicializarFacturacion() {
     try {
         // Inicializar modales
         inicializarModales();
-        
+
         // Configurar eventos
         configurarEventos();
-        
+
         // Actualizar totales
         actualizarTotales();
-        
+
         console.log('✅ Facturación inicializada correctamente');
     } catch (error) {
         console.error('❌ Error inicializando facturación:', error);
@@ -53,7 +52,7 @@ function configurarEventos() {
     let timeoutBusqueda = null;
     $('#busquedaProducto').on('input', function() {
         const termino = $(this).val().trim();
-        
+
         clearTimeout(timeoutBusqueda);
         timeoutBusqueda = setTimeout(() => {
             if (termino.length >= 2) {
@@ -73,7 +72,7 @@ function configurarEventos() {
     let timeoutCliente = null;
     $('#clienteBusqueda').on('input', function() {
         const termino = $(this).val().trim();
-        
+
         clearTimeout(timeoutCliente);
         timeoutCliente = setTimeout(() => {
             if (termino.length >= 2) {
@@ -98,8 +97,7 @@ function configurarEventos() {
     });
 
     $('#btnNuevoCliente').on('click', function() {
-        // Implementar modal para nuevo cliente
-        console.log('🔄 Funcionalidad de nuevo cliente pendiente');
+        abrirModalNuevoCliente();
     });
 
     // ===== MODAL FINALIZAR VENTA =====
@@ -127,11 +125,11 @@ function configurarEventos() {
 async function buscarProductos(termino) {
     try {
         console.log(`🔍 Buscando productos: "${termino}"`);
-        
+
         mostrarCargandoBusqueda();
 
         const response = await fetch(`/Facturacion/BuscarProductos?termino=${encodeURIComponent(termino)}&tamano=12`);
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -152,7 +150,7 @@ async function buscarProductos(termino) {
 
 function mostrarResultadosProductos(productos) {
     const container = $('#resultadosBusqueda');
-    
+
     if (!productos || productos.length === 0) {
         mostrarSinResultados('productos');
         return;
@@ -236,7 +234,7 @@ async function buscarClientes(termino) {
         console.log(`👥 Buscando clientes: "${termino}"`);
 
         const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(termino)}`);
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -261,7 +259,7 @@ function mostrarResultadosClientes(clientes) {
     }
 
     let html = '<div class="dropdown-clientes position-absolute w-100 bg-white border rounded shadow-sm" style="z-index: 1000; top: 100%;">';
-    
+
     clientes.forEach(cliente => {
         html += `
             <div class="dropdown-item-cliente p-2 border-bottom cursor-pointer" 
@@ -276,7 +274,7 @@ function mostrarResultadosClientes(clientes) {
             </div>
         `;
     });
-    
+
     html += '</div>';
 
     $('#clienteBusqueda').parent().append(html);
@@ -308,7 +306,7 @@ function seleccionarCliente(cliente) {
 function agregarProductoAVenta(producto) {
     // Verificar si el producto ya está en la venta
     const productoExistente = productosEnVenta.find(p => p.productoId === producto.productoId);
-    
+
     if (productoExistente) {
         // Incrementar cantidad si no supera el stock
         if (productoExistente.cantidad < producto.cantidadEnInventario) {
@@ -328,7 +326,7 @@ function agregarProductoAVenta(producto) {
             stockDisponible: producto.cantidadEnInventario,
             imagenUrl: producto.imagenes && producto.imagenes.length > 0 ? producto.imagenes[0].urlImagen : null
         });
-        
+
         mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');
     }
 
@@ -447,7 +445,7 @@ function configurarEventosCantidad() {
 function actualizarTotales() {
     const subtotal = productosEnVenta.reduce((sum, producto) => 
         sum + (producto.precioUnitario * producto.cantidad), 0);
-    
+
     const iva = subtotal * 0.13; // 13% IVA
     const total = subtotal + iva;
 
@@ -553,7 +551,7 @@ async function procesarVentaFinal() {
         // Éxito
         modalFinalizarVenta.hide();
         mostrarToast('¡Venta procesada!', 'La venta ha sido procesada exitosamente', 'success');
-        
+
         // Limpiar venta
         productosEnVenta = [];
         clienteSeleccionado = null;
@@ -624,7 +622,7 @@ function configurarFormularios() {
         const fila = $(this).closest('tr');
         actualizarSubtotalFila(fila);
     });
-    
+
     // Validar números
     $(document).on('input', 'input[type="number"]', function() {
         const valor = parseFloat($(this).val()) || 0;
@@ -640,25 +638,25 @@ function configurarBotones() {
         e.preventDefault();
         consultarInventario();
     });
-    
+
     // Botón de nueva venta
     $('#btnNuevaVenta, [onclick="nuevaVenta()"]').off('click').on('click', function(e) {
         e.preventDefault();
         nuevaVenta();
     });
-    
+
     // Botón de agregar producto
     $('#btnAgregarProducto, [onclick="agregarProducto()"]').off('click').on('click', function(e) {
         e.preventDefault();
         agregarProducto();
     });
-    
+
     // Botón de finalizar venta
     $('#btnFinalizarVenta, [onclick="finalizarVenta()"]').off('click').on('click', function(e) {
         e.preventDefault();
         finalizarVenta();
     });
-    
+
     // Botón de limpiar
     $('#btnLimpiarVenta, [onclick="limpiarVenta()"]').off('click').on('click', function(e) {
         e.preventDefault();
@@ -670,7 +668,7 @@ function configurarBotones() {
 
 function consultarInventario() {
     console.log('🔍 Abriendo consulta de inventario');
-    
+
     if (modalInventario) {
         modalInventario.show();
         cargarProductosInventario();
@@ -693,12 +691,12 @@ function agregarProducto() {
 
 function finalizarVenta() {
     console.log('💰 Finalizando venta');
-    
+
     if (productosEnVenta.length === 0) {
         mostrarNotificacion('No hay productos en la venta', 'warning');
         return;
     }
-    
+
     // Validar datos del cliente
     const nombreCliente = $('#clienteNombre').val().trim();
     if (!nombreCliente) {
@@ -706,27 +704,27 @@ function finalizarVenta() {
         $('#clienteNombre').focus();
         return;
     }
-    
+
     // Mostrar modal de confirmación o procesar venta
     mostrarModalFinalizarVenta();
 }
 
 function limpiarVenta() {
     console.log('🧹 Limpiando venta');
-    
+
     // Limpiar productos
     productosEnVenta = [];
     actualizarTablaProductos();
-    
+
     // Limpiar formulario
     $('#clienteNombre').val('');
     $('#clienteTelefono').val('');
     $('#observaciones').val('');
     $('#tipoDocumento').val('factura');
-    
+
     // Actualizar totales
     actualizarTotales();
-    
+
     mostrarNotificacion('Venta limpiada', 'info');
 }
 
@@ -735,26 +733,26 @@ function limpiarVenta() {
 async function cargarProductosInventario() {
     try {
         console.log('📦 Cargando productos del inventario');
-        
+
         const response = await fetch('/Facturacion/BuscarProductos', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
+
         const resultado = await response.json();
-        
+
         if (resultado.success) {
             mostrarProductosEnModal(resultado.data);
         } else {
             throw new Error(resultado.message || 'Error al cargar productos');
         }
-        
+
     } catch (error) {
         console.error('❌ Error cargando productos:', error);
         mostrarNotificacion('Error al cargar productos: ' + error.message, 'danger');
@@ -767,7 +765,7 @@ function mostrarProductosEnModal(productos) {
         console.error('❌ No se encontró la tabla en el modal');
         return;
     }
-    
+
     if (!productos || productos.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -779,7 +777,7 @@ function mostrarProductosEnModal(productos) {
         `;
         return;
     }
-    
+
     let html = '';
     productos.forEach(producto => {
         html += `
@@ -806,27 +804,27 @@ function mostrarProductosEnModal(productos) {
             </tr>
         `;
     });
-    
+
     tbody.innerHTML = html;
 }
 
 async function seleccionarProducto(productoId) {
     try {
         console.log('🎯 Seleccionando producto:', productoId);
-        
+
         const response = await fetch(`/Facturacion/ObtenerProducto/${productoId}`, {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
+
         const resultado = await response.json();
-        
+
         if (resultado.success) {
             agregarProductoAVenta(resultado.data);
             if (modalInventario) {
@@ -835,7 +833,7 @@ async function seleccionarProducto(productoId) {
         } else {
             throw new Error(resultado.message || 'Error al obtener producto');
         }
-        
+
     } catch (error) {
         console.error('❌ Error seleccionando producto:', error);
         mostrarNotificacion('Error al seleccionar producto: ' + error.message, 'danger');
@@ -845,7 +843,7 @@ async function seleccionarProducto(productoId) {
 function agregarProductoAVenta(producto) {
     // Verificar si ya está en la venta
     const productoExistente = productosEnVenta.find(p => p.productoID === producto.productoID);
-    
+
     if (productoExistente) {
         productoExistente.cantidad += 1;
         mostrarNotificacion('Cantidad actualizada', 'info');
@@ -859,7 +857,7 @@ function agregarProductoAVenta(producto) {
         });
         mostrarNotificacion('Producto agregado a la venta', 'success');
     }
-    
+
     actualizarTablaProductos();
     actualizarTotales();
 }
@@ -867,7 +865,7 @@ function agregarProductoAVenta(producto) {
 function actualizarTablaProductos() {
     const tbody = document.querySelector('#productosVentaBody');
     if (!tbody) return;
-    
+
     if (productosEnVenta.length === 0) {
         tbody.innerHTML = `
             <tr class="empty-state">
@@ -879,7 +877,7 @@ function actualizarTablaProductos() {
         `;
         return;
     }
-    
+
     let html = '';
     productosEnVenta.forEach((producto, index) => {
         html += `
@@ -900,27 +898,27 @@ function actualizarTablaProductos() {
             </tr>
         `;
     });
-    
+
     tbody.innerHTML = html;
 }
 
 function actualizarCantidadProducto(index, nuevaCantidad) {
     const cantidad = parseInt(nuevaCantidad) || 1;
     if (cantidad <= 0) return;
-    
+
     productosEnVenta[index].cantidad = cantidad;
     productosEnVenta[index].subtotal = productosEnVenta[index].precio * cantidad;
-    
+
     actualizarTotales();
 }
 
 function eliminarProductoVenta(index) {
     const producto = productosEnVenta[index];
     productosEnVenta.splice(index, 1);
-    
+
     actualizarTablaProductos();
     actualizarTotales();
-    
+
     mostrarNotificacion(`${producto.nombre} eliminado de la venta`, 'info');
 }
 
@@ -930,12 +928,12 @@ function actualizarTotales() {
     const subtotal = productosEnVenta.reduce((total, producto) => total + producto.subtotal, 0);
     const iva = subtotal * 0.13;
     const total = subtotal + iva;
-    
+
     // Actualizar elementos del DOM
     $('#subtotalVenta').text('₡' + formatearNumero(subtotal));
     $('#ivaVenta').text('₡' + formatearNumero(iva));
     $('#totalVenta').text('₡' + formatearNumero(total));
-    
+
     // Habilitar/deshabilitar botón de finalizar
     const btnFinalizar = $('#btnFinalizarVenta');
     if (productosEnVenta.length > 0) {
@@ -949,7 +947,7 @@ function actualizarSubtotalFila(fila) {
     const cantidad = parseFloat(fila.find('[data-campo="cantidad"]').val()) || 0;
     const precio = parseFloat(fila.find('[data-campo="precio"]').val()) || 0;
     const subtotal = cantidad * precio;
-    
+
     fila.find('.subtotal').text('₡' + formatearNumero(subtotal));
     actualizarTotales();
 }
@@ -978,13 +976,13 @@ function mostrarModalFinalizarVenta() {
             </div>
         </div>
     `;
-    
+
     // Remover modal anterior si existe
     $('#modalFinalizarVenta').remove();
-    
+
     // Agregar nuevo modal
     $('body').append(modalHtml);
-    
+
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById('modalFinalizarVenta'));
     modal.show();
@@ -992,10 +990,10 @@ function mostrarModalFinalizarVenta() {
 
 function procesarVenta() {
     console.log('💳 Procesando venta...');
-    
+
     // Cerrar modal
     $('#modalFinalizarVenta').modal('hide');
-    
+
     // Simular procesamiento (aquí iría la llamada real a la API)
     setTimeout(() => {
         mostrarNotificacion('Venta procesada exitosamente', 'success');
@@ -1020,12 +1018,12 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
         mostrarAlerta(mensaje, tipo);
     } else {
         console.log(`${tipo.toUpperCase()}: ${mensaje}`);
-        
+
         // Crear alerta básica
         const alertClass = tipo === 'danger' ? 'alert-danger' : 
                           tipo === 'warning' ? 'alert-warning' :
                           tipo === 'success' ? 'alert-success' : 'alert-info';
-        
+
         const alertHtml = `
             <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
                  style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
@@ -1033,9 +1031,9 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
-        
+
         $('body').append(alertHtml);
-        
+
         // Auto-remover después de 5 segundos
         setTimeout(() => {
             $('.alert').fadeOut();
@@ -1043,7 +1041,219 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
     }
 }
 
-// ===== EXPOSICIÓN GLOBAL =====
+// ===== GESTIÓN DE CLIENTES =====
+function abrirModalNuevoCliente() {
+    // Crear el modal dinámicamente
+    const modalHtml = `
+        <div class="modal fade" id="modalNuevoClienteFacturacion" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-person-plus me-2"></i>Nuevo Cliente
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formNuevoClienteFacturacion">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nombreClienteFacturacion" class="form-label">
+                                        <i class="bi bi-person me-1"></i>Nombre *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="nombreClienteFacturacion" 
+                                           name="nombre" 
+                                           required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="contactoClienteFacturacion" class="form-label">
+                                        <i class="bi bi-person-badge me-1"></i>Contacto
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="contactoClienteFacturacion" 
+                                           name="contacto">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="emailClienteFacturacion" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Email
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="emailClienteFacturacion" 
+                                           name="email">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="telefonoClienteFacturacion" class="form-label">
+                                        <i class="bi bi-telephone me-1"></i>Teléfono
+                                    </label>
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="telefonoClienteFacturacion" 
+                                           name="telefono">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="direccionClienteFacturacion" class="form-label">
+                                    <i class="bi bi-geo-alt me-1"></i>Dirección
+                                </label>
+                                <textarea class="form-control" 
+                                          id="direccionClienteFacturacion" 
+                                          name="direccion" 
+                                          rows="3"></textarea>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" id="btnGuardarClienteFacturacion">
+                            <span class="btn-normal-state">
+                                <i class="bi bi-check-circle me-1"></i>Guardar Cliente
+                            </span>
+                            <span class="btn-loading-state d-none">
+                                <span class="spinner-border spinner-border-sm me-2"></span>Guardando...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalNuevoClienteFacturacion').remove();
+
+    // Agregar modal al DOM
+    $('body').append(modalHtml);
+
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalNuevoClienteFacturacion'));
+    modal.show();
+
+    // Configurar evento para guardar
+    $('#btnGuardarClienteFacturacion').on('click', function() {
+        guardarNuevoCliente();
+    });
+
+    // Limpiar validaciones en tiempo real
+    $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea').on('input', function() {
+        $(this).removeClass('is-invalid');
+        $(this).siblings('.invalid-feedback').text('');
+    });
+}
+
+async function guardarNuevoCliente() {
+    try {
+        // Validar formulario
+        if (!validarFormularioNuevoCliente()) {
+            return;
+        }
+
+        const btnGuardar = $('#btnGuardarClienteFacturacion');
+        btnGuardar.prop('disabled', true);
+        btnGuardar.find('.btn-normal-state').addClass('d-none');
+        btnGuardar.find('.btn-loading-state').removeClass('d-none');
+
+        // Recopilar datos
+        const clienteData = {
+            nombre: $('#nombreClienteFacturacion').val().trim(),
+            contacto: $('#contactoClienteFacturacion').val().trim(),
+            email: $('#emailClienteFacturacion').val().trim(),
+            telefono: $('#telefonoClienteFacturacion').val().trim(),
+            direccion: $('#direccionClienteFacturacion').val().trim()
+        };
+
+        // Enviar datos
+        const response = await fetch('/Clientes/CrearCliente', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(clienteData)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success) {
+            // Cerrar modal
+            $('#modalNuevoClienteFacturacion').modal('hide');
+
+            // Seleccionar el cliente creado automáticamente
+            seleccionarCliente({
+                id: resultado.data.id,
+                nombre: resultado.data.nombre,
+                email: resultado.data.email,
+                telefono: resultado.data.telefono
+            });
+
+            mostrarToast('Cliente creado', 'Cliente creado exitosamente y seleccionado para la venta', 'success');
+        } else {
+            throw new Error(resultado.message || 'Error al crear cliente');
+        }
+
+    } catch (error) {
+        console.error('❌ Error guardando cliente:', error);
+        mostrarToast('Error', 'No se pudo crear el cliente: ' + error.message, 'danger');
+    } finally {
+        const btnGuardar = $('#btnGuardarClienteFacturacion');
+        btnGuardar.prop('disabled', false);
+        btnGuardar.find('.btn-normal-state').removeClass('d-none');
+        btnGuardar.find('.btn-loading-state').addClass('d-none');
+    }
+}
+
+function validarFormularioNuevoCliente() {
+    let esValido = true;
+
+    // Limpiar validaciones previas
+    $('#modalNuevoClienteFacturacion .form-control').removeClass('is-invalid');
+    $('#modalNuevoClienteFacturacion .invalid-feedback').text('');
+
+    // Validar nombre (requerido)
+    const nombre = $('#nombreClienteFacturacion').val().trim();
+    if (!nombre) {
+        mostrarErrorCampoFacturacion('#nombreClienteFacturacion', 'El nombre del cliente es requerido');
+        esValido = false;
+    }
+
+    // Validar email (formato si se proporciona)
+    const email = $('#emailClienteFacturacion').val().trim();
+    if (email && !validarEmailFacturacion(email)) {
+        mostrarErrorCampoFacturacion('#emailClienteFacturacion', 'El formato del email no es válido');
+        esValido = false;
+    }
+
+    return esValido;
+}
+
+function mostrarErrorCampoFacturacion(selector, mensaje) {
+    $(selector).addClass('is-invalid');
+    $(selector).siblings('.invalid-feedback').text(mensaje);
+}
+
+function validarEmailFacturacion(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+
+// ===== HACER FUNCIONES GLOBALES =====
+window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.consultarInventario = consultarInventario;
 window.nuevaVenta = nuevaVenta;
 window.agregarProducto = agregarProducto;

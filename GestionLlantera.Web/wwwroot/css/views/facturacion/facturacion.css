@@ -1,6 +1,35 @@
 
 /* ===== FACTURACIÓN - ESTILOS PRINCIPALES ===== */
 
+/* Modal de nuevo cliente */
+#modalNuevoClienteFacturacion .modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#modalNuevoClienteFacturacion .form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+#modalNuevoClienteFacturacion .invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #dc3545;
+}
+
+/* Botón de nuevo cliente */
+#btnNuevoCliente {
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
+#btnNuevoCliente:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
 .page-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
