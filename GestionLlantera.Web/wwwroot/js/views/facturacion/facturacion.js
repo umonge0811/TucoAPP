@@ -189,49 +189,68 @@ function mostrarResultadosProductos(productos) {
 
     let html = '';
     productos.forEach(producto => {
-        // Validación robusta para imágenes - más defensiva
+        // Validación ULTRA robusta para imágenes - prevenir cualquier error
         let imagenUrl = '/images/no-image.png';
 
-        if (producto.imagenesProductos && 
-            Array.isArray(producto.imagenesProductos) && 
-            producto.imagenesProductos.length > 0) {
+        try {
+            // Verificar que el producto existe
+            if (producto && typeof producto === 'object') {
+                // Verificar que imagenesProductos existe y es un array
+                if (producto.hasOwnProperty('imagenesProductos') && 
+                    producto.imagenesProductos !== null && 
+                    producto.imagenesProductos !== undefined && 
+                    Array.isArray(producto.imagenesProductos) && 
+                    producto.imagenesProductos.length > 0) {
 
-            const primeraImagen = producto.imagenesProductos[0];
-            if (primeraImagen && primeraImagen.urlimagen) {
-                imagenUrl = primeraImagen.urlimagen;
+                    const primeraImagen = producto.imagenesProductos[0];
+                    if (primeraImagen && 
+                        typeof primeraImagen === 'object' && 
+                        primeraImagen.hasOwnProperty('urlimagen') && 
+                        primeraImagen.urlimagen && 
+                        primeraImagen.urlimagen.trim() !== '') {
+                        imagenUrl = primeraImagen.urlimagen;
+                    }
+                }
             }
+        } catch (error) {
+            console.warn('⚠️ Error procesando imágenes del producto:', error, producto);
+            imagenUrl = '/images/no-image.png';
         }
 
-        // Calcular precios según método de pago
-        const precioBase = producto.precio || 0;
+        // Calcular precios según método de pago - con validación
+        const precioBase = (producto && typeof producto.precio === 'number') ? producto.precio : 0;
         const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
         const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
 
-        // Validación adicional para stock mínimo (puede ser undefined)
-        const stockMinimo = producto.stockMinimo || 0;
-        const stockClase = producto.cantidadEnInventario <= 0 ? 'border-danger' : 
-                          producto.cantidadEnInventario <= stockMinimo ? 'border-warning' : '';
+        // Validación adicional para todas las propiedades del producto
+        const stockMinimo = (producto && typeof producto.stockMinimo === 'number') ? producto.stockMinimo : 0;
+        const cantidadInventario = (producto && typeof producto.cantidadEnInventario === 'number') ? producto.cantidadEnInventario : 0;
+        const nombreProducto = (producto && producto.nombreProducto) ? producto.nombreProducto : 'Producto sin nombre';
+        const productoId = (producto && producto.productoId) ? producto.productoId : 'unknown';
+        
+        const stockClase = cantidadInventario <= 0 ? 'border-danger' : 
+                          cantidadInventario <= stockMinimo ? 'border-warning' : '';
 
         html += `
             <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card h-100 producto-card ${stockClase}" data-producto-id="${producto.productoId}">
+                <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
                     <div class="position-relative">
                         <img src="${imagenUrl}" 
                              class="card-img-top producto-imagen" 
-                             alt="${producto.nombreProducto}"
+                             alt="${nombreProducto}"
                              style="height: 120px; object-fit: cover;"
                              onerror="this.src='/images/no-image.png'">
-                        ${producto.cantidadEnInventario <= 0 ? 
+                        ${cantidadInventario <= 0 ? 
                             '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
-                            producto.cantidadEnInventario <= (producto.stockMinimo || 0) ?
+                            cantidadInventario <= stockMinimo ?
                             '<span class="badge bg-warning position-absolute top-0 end-0 m-2">Stock Bajo</span>' : ''
                         }
                     </div>
                     <div class="card-body p-2">
-                        <h6 class="card-title mb-1" title="${producto.nombreProducto}">
-                            ${producto.nombreProducto.length > 25 ? 
-                                producto.nombreProducto.substring(0, 25) + '...' : 
-                                producto.nombreProducto}
+                        <h6 class="card-title mb-1" title="${nombreProducto}">
+                            ${nombreProducto.length > 25 ? 
+                                nombreProducto.substring(0, 25) + '...' : 
+                                nombreProducto}
                         </h6>
 
                         <!-- Precios diferenciados -->
@@ -249,13 +268,13 @@ function mostrarResultadosProductos(productos) {
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-primary">Stock: ${producto.cantidadEnInventario}</small>
-                            ${producto.cantidadEnInventario <= (producto.stockMinimo || 0) && producto.cantidadEnInventario > 0 ? 
+                            <small class="text-primary">Stock: ${cantidadInventario}</small>
+                            ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
                                 '<small class="badge bg-warning">Stock Bajo</small>' : ''}
                         </div>
 
                         <div class="d-grid gap-1">
-                            ${producto.cantidadEnInventario > 0 ? `
+                            ${cantidadInventario > 0 ? `
                                 <button type="button" 
                                         class="btn btn-primary btn-sm btn-seleccionar-producto"
                                         data-producto='${JSON.stringify(producto)}'>
