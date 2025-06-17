@@ -1,4 +1,3 @@
-csharp
 ﻿using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Models.ViewModels;
 using GestionLlantera.Web.Services;
@@ -2624,11 +2623,5 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Modelo para recibir datos de ajuste desde el frontend
         /// </summary>
-        public class AjusteStockRequestModel
-        {
-            public string TipoAjuste { get; set; } = string.Empty;
-            public int Cantidad { get; set; }
-            public string? Comentario { get; set; }
-        }
     }
 }
