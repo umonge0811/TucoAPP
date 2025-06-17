@@ -3,6 +3,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Text;
+using tuco.Clases.Models;
 using Tuco.Clases.Models;
 
 namespace GestionLlantera.Web.Services

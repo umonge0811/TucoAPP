@@ -1,6 +1,8 @@
+using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
 
@@ -124,7 +126,7 @@ namespace GestionLlantera.Web.Controllers
 
                 var resultado = clientes.Take(20).Select(c => new {
                     id = c.ClienteId,
-                    nombre = c.NombreCompleto,
+                    nombre = c.NombreCliente,
                     email = c.Email,
                     telefono = c.Telefono
                 }).ToList();

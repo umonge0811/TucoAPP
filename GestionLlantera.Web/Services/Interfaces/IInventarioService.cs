@@ -41,4 +41,3 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<Stream> ExportarResultadosInventarioPDFAsync(int id, string jwtToken = null);
     }
 }
-```

@@ -1,4 +1,5 @@
 
+using tuco.Clases.Models;
 using Tuco.Clases.Models;
 
 namespace GestionLlantera.Web.Services.Interfaces

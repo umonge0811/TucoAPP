@@ -1,12 +1,12 @@
     @{
         ViewData["Title"] = "Facturación";
         Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css">
+    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css">
+
     }
 
-    @section Styles {
-        <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css" asp-append-version="true" />
-        <link rel="stylesheet" href="~/css/views/facturacion/mobile.css" asp-append-version="true" />
-    }
 
     <div class="container-fluid">
         <div class="row">
@@ -166,5 +166,5 @@
     @await Html.PartialAsync("_ModalFinalizarVenta")
 
     @section Scripts {
-        <script src="~/js/views/facturacion/facturacion.js" asp-append-version="true"></script>
+        <script src="~/js/views/facturacion/facturacion.js"></script>
     }
