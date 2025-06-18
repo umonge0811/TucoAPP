@@ -1,3 +1,4 @@
+
 using GestionLlantera.Web.Models.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Services.Interfaces
@@ -28,14 +29,12 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// Obtiene productos disponibles para venta
         /// </summary>
         Task<ApiResponse<List<ProductoVentaDTO>>> ObtenerProductosParaVentaAsync(string busqueda = null, bool soloConStock = true);
-        Task<VentaCompletaDTO> ProcesarVentaCompletaAsync(VentaCompletaDTO ventaCompleta);
-        Task<byte[]> GenerarReciboAsync(FacturaDTO factura);
     }
 
     // Clase ApiResponse para manejar respuestas de la API
     public class ApiResponse<T>
     {
-        public bool IsSuccess { get;set; }
+        public bool IsSuccess { get; set; }
         public string Message { get; set; } = string.Empty;
         public T? Data { get; set; }
     }
