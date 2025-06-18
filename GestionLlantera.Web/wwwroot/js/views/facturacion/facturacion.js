@@ -361,16 +361,8 @@ function mostrarResultadosProductos(productos) {
                 if (imagenesArray.length > 0) {
                     const urlImagen = imagenesArray[0];
                     if (urlImagen && urlImagen.trim() !== '') {
-                        // Construir la URL completa con la API base
-                        if (urlImagen.startsWith('http')) {
-                            imagenUrl = urlImagen; // URL completa
-                        } else if (urlImagen.startsWith('/uploads/productos/')) {
-                            imagenUrl = `https://localhost:7273${urlImagen}`;
-                        } else if (urlImagen.startsWith('uploads/productos/')) {
-                            imagenUrl = `https://localhost:7273/${urlImagen}`;
-                        } else {
-                            imagenUrl = urlImagen;
-                        }
+                        // Las URLs ya vienen procesadas desde el controlador, solo usar directamente
+                        imagenUrl = urlImagen;
                     }
                 }
             }
@@ -593,16 +585,8 @@ function mostrarModalSeleccionProducto(producto) {
         if (imagenesArray.length > 0) {
             const urlImagen = imagenesArray[0];
             if (urlImagen && urlImagen.trim() !== '') {
-                // ✅ CONSTRUIR URL COMPLETA PARA LA API
-                if (urlImagen.startsWith('http')) {
-                    imagenUrl = urlImagen;
-                } else if (urlImagen.startsWith('/uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else if (urlImagen.startsWith('uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                } else {
-                    imagenUrl = urlImagen;
-                }
+                // Las URLs ya vienen procesadas desde el controlador, solo usar directamente
+                imagenUrl = urlImagen;
             }
         }
     } catch (error) {
@@ -1161,16 +1145,8 @@ function verDetalleProducto(producto) {
         if (imagenesArray.length > 0) {
             const urlImagen = imagenesArray[0];
             if (urlImagen && urlImagen.trim() !== '') {
-                // ✅ CONSTRUIR URL COMPLETA PARA LA API
-                if (urlImagen.startsWith('http')) {
-                    imagenUrl = urlImagen;
-                } else if (urlImagen.startsWith('/uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else if (urlImagen.startsWith('uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                } else {
-                    imagenUrl = urlImagen;
-                }
+                // Las URLs ya vienen procesadas desde el controlador, solo usar directamente
+                imagenUrl = urlImagen;
             }
         }
     } catch (error) {

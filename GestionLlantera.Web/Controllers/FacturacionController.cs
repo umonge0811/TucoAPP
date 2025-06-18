@@ -123,14 +123,25 @@ namespace GestionLlantera.Web.Controllers
         {
             if (string.IsNullOrEmpty(url)) return "/images/no-image.png";
 
-            // Si ya es una URL completa, extraer solo la ruta
+            // Si ya es una URL completa, mantenerla tal como está
             if (url.StartsWith("http"))
             {
-                var uri = new Uri(url);
-                return uri.AbsolutePath;
+                return url;
             }
 
-            // Si es una ruta relativa, asegurar que esté bien formada
+            // Si es una ruta que empieza con /uploads/, construir URL completa
+            if (url.StartsWith("/uploads/"))
+            {
+                return $"https://localhost:7273{url}";
+            }
+
+            // Si es una ruta sin la barra inicial
+            if (url.StartsWith("uploads/"))
+            {
+                return $"https://localhost:7273/{url}";
+            }
+
+            // Para otras rutas, asegurar que empiecen con /
             return url.StartsWith("/") ? url : "/" + url;
         }
 
