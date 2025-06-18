@@ -212,6 +212,62 @@ function configurarEventos() {
     });
 }
 
+// ===== FUNCIÓN CENTRALIZADA PARA CONSTRUCCIÓN DE URLs DE IMÁGENES =====
+function construirUrlImagen(producto) {
+    let imagenUrl = '/images/no-image.png'; // Imagen por defecto
+    
+    try {
+        console.log('🖼️ Construyendo URL para producto:', producto.nombreProducto || producto.NombreProducto);
+        console.log('🖼️ Datos del producto:', producto);
+        
+        let imagenesArray = [];
+        
+        // Buscar imágenes en múltiples fuentes (EXACTO como verDetalleProducto)
+        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+            imagenesArray = producto.imagenesProductos
+                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                .filter(url => url && url.trim() !== '');
+            console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
+        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
+            console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
+        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+            imagenesArray = producto.imagenes
+                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                .filter(url => url && url.trim() !== '');
+            console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
+        }
+        
+        if (imagenesArray.length > 0) {
+            let urlImagen = imagenesArray[0];
+            console.log('🖼️ URL original encontrada:', urlImagen);
+            
+            if (urlImagen && urlImagen.trim() !== '') {
+                // Lógica robusta de construcción de URLs (EXACTO como verDetalleProducto)
+                if (urlImagen.startsWith('/uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273${urlImagen}`;
+                } else if (urlImagen.startsWith('uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273/${urlImagen}`;
+                } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
+                    imagenUrl = urlImagen; // URL completa
+                } else if (urlImagen.startsWith('/')) {
+                    imagenUrl = `https://localhost:7273${urlImagen}`;
+                } else {
+                    imagenUrl = `https://localhost:7273/${urlImagen}`;
+                }
+                console.log('🖼️ URL final construida:', imagenUrl);
+            }
+        } else {
+            console.log('🖼️ No se encontraron imágenes válidas');
+        }
+    } catch (error) {
+        console.warn('⚠️ Error construyendo URL de imagen:', error);
+        imagenUrl = '/images/no-image.png';
+    }
+    
+    return imagenUrl;
+}
+
 // ===== BÚSQUEDA DE PRODUCTOS =====
 async function buscarProductos(termino) {
     contadorLlamadasBusqueda++;
@@ -257,6 +313,7 @@ async function buscarProductos(termino) {
 
         const data = await response.json();
         console.log('📋 Respuesta del servidor recibida');
+        console.log('📋 DATOS COMPLETOS DEL SERVIDOR:', JSON.stringify(data, null, 2));
 
         if (data && data.productos) {
             console.log(`✅ Se encontraron ${data.productos.length} productos disponibles`);
@@ -345,56 +402,8 @@ function mostrarResultadosProductos(productos) {
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
 
-        // VALIDACIÓN DE IMÁGENES - EXACTAMENTE IGUAL QUE verDetalleProducto
-        let imagenUrl = '/images/no-image.png'; // Imagen por defecto
-        try {
-            console.log('🖼️ Procesando imágenes para card producto:', producto.nombreProducto || producto.NombreProducto);
-            console.log('🖼️ Datos completos del producto:', producto);
-            
-            let imagenesArray = [];
-            
-            // Usar múltiples fuentes de imágenes como fallback (EXACTO como verDetalleProducto)
-            if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-                imagenesArray = producto.imagenesProductos
-                    .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                    .filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-            } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-                imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
-            } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-                imagenesArray = producto.imagenes
-                    .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                    .filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
-            }
-            
-            if (imagenesArray.length > 0) {
-                let urlImagen = imagenesArray[0];
-                console.log('🖼️ URL original en card:', urlImagen);
-                
-                if (urlImagen && urlImagen.trim() !== '') {
-                    // Lógica robusta de construcción de URLs (EXACTO como verDetalleProducto)
-                    if (urlImagen.startsWith('/uploads/productos/')) {
-                        imagenUrl = `https://localhost:7273${urlImagen}`;
-                    } else if (urlImagen.startsWith('uploads/productos/')) {
-                        imagenUrl = `https://localhost:7273/${urlImagen}`;
-                    } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
-                        imagenUrl = urlImagen; // URL completa
-                    } else if (urlImagen.startsWith('/')) {
-                        imagenUrl = `https://localhost:7273${urlImagen}`;
-                    } else {
-                        imagenUrl = `https://localhost:7273/${urlImagen}`;
-                    }
-                    console.log('🖼️ URL final en card:', imagenUrl);
-                }
-            } else {
-                console.log('🖼️ No se encontraron imágenes válidas para card');
-            }
-        } catch (error) {
-            console.warn('⚠️ Error procesando imágenes en card del producto:', error);
-            imagenUrl = '/images/no-image.png';
-        }
+        // USAR FUNCIÓN CENTRALIZADA PARA CONSTRUIR URL DE IMAGEN
+        const imagenUrl = construirUrlImagen(producto);
 
         // CÁLCULO DE PRECIOS
         const precioBase = (typeof precio === 'number') ? precio : 0;
@@ -599,49 +608,8 @@ function seleccionarCliente(cliente) {
 function mostrarModalSeleccionProducto(producto) {
     const precioBase = producto.precio || 0;
 
-    // Validación robusta para imágenes con URL de la API (mejorada)
-    let imagenUrl = '/images/no-image.png';
-    try {
-        console.log('🖼️ Procesando imágenes para modal de producto:', producto.nombreProducto);
-        let imagenesArray = [];
-        
-        // Usar la misma lógica que verDetalleProducto
-        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-            imagenesArray = producto.imagenesProductos
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-            imagenesArray = producto.imagenes
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-        }
-        
-        if (imagenesArray.length > 0) {
-            let urlImagen = imagenesArray[0];
-            console.log('🖼️ URL original en modal:', urlImagen);
-            
-            if (urlImagen && urlImagen.trim() !== '') {
-                // Lógica mejorada de construcción de URLs
-                if (urlImagen.startsWith('/uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else if (urlImagen.startsWith('uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
-                    imagenUrl = urlImagen; // URL completa
-                } else if (urlImagen.startsWith('/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                }
-                console.log('🖼️ URL final en modal:', imagenUrl);
-            }
-        }
-    } catch (error) {
-        console.warn('⚠️ Error procesando imágenes del producto en modal:', error);
-        imagenUrl = '/images/no-image.png';
-    }
+    // USAR FUNCIÓN CENTRALIZADA PARA CONSTRUIR URL DE IMAGEN
+    const imagenUrl = construirUrlImagen(producto);
 
     const modalHtml = `
         <div class="modal fade" id="modalSeleccionProducto" tabindex="-1">
@@ -1180,56 +1148,8 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
-    // Validación robusta para imágenes con URL de la API (lógica consistente)
-    let imagenUrl = '/images/no-image.png';
-    try {
-        console.log('🖼️ Procesando imágenes para detalle de producto:', producto.nombreProducto);
-        console.log('🖼️ Datos del producto completos:', producto);
-        
-        let imagenesArray = [];
-        
-        // Usar múltiples fuentes de imágenes como fallback
-        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-            imagenesArray = producto.imagenesProductos
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
-        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-            imagenesArray = producto.imagenes
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
-        }
-        
-        if (imagenesArray.length > 0) {
-            let urlImagen = imagenesArray[0];
-            console.log('🖼️ URL original en detalle:', urlImagen);
-            
-            if (urlImagen && urlImagen.trim() !== '') {
-                // Lógica robusta de construcción de URLs
-                if (urlImagen.startsWith('/uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else if (urlImagen.startsWith('uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
-                    imagenUrl = urlImagen; // URL completa
-                } else if (urlImagen.startsWith('/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                }
-                console.log('🖼️ URL final en detalle:', imagenUrl);
-            }
-        } else {
-            console.log('🖼️ No se encontraron imágenes válidas para detalle');
-        }
-    } catch (error) {
-        console.warn('⚠️ Error procesando imágenes en detalle del producto:', error);
-        imagenUrl = '/images/no-image.png';
-    }
+    // USAR FUNCIÓN CENTRALIZADA PARA CONSTRUIR URL DE IMAGEN
+    const imagenUrl = construirUrlImagen(producto);
 
     const modalHtml = `
         <div class="modal fade" id="modalDetalleProducto" tabindex="-1">

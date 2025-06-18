@@ -90,8 +90,10 @@ namespace GestionLlantera.Web.Controllers
                     cantidadEnInventario = p.CantidadEnInventario,
                     stockMinimo = p.StockMinimo,
                     imagenesProductos = p.Imagenes?.Select(img => new {
-                        Urlimagen = ProcessImageUrl(img.UrlImagen)
-                    }).ToList() ?? new[] { new { Urlimagen = "/images/no-image.png" } }.ToList(),
+                        Urlimagen = ProcessImageUrl(img.UrlImagen),
+                        urlImagen = ProcessImageUrl(img.UrlImagen), // Agregar diferentes formatos
+                        UrlImagen = ProcessImageUrl(img.UrlImagen)
+                    }).ToList(),
                     imagenesUrls = p.Imagenes?.Select(img => ProcessImageUrl(img.UrlImagen)).ToList() ?? new List<string> { "/images/no-image.png" },
                     esLlanta = p.EsLlanta,
                     llanta = p.EsLlanta && p.Llanta != null ? new
