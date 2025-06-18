@@ -1,4 +1,4 @@
-﻿// Ubicación: GestionLlantera.Web/Services/Interfaces/IInventarioService.cs
+// Ubicación: GestionLlantera.Web/Services/Interfaces/IInventarioService.cs
 
 using Tuco.Clases.DTOs.Inventario;
 using Microsoft.AspNetCore.Http;
@@ -15,7 +15,15 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<List<string>> BuscarMarcasLlantasAsync(string filtro = "", string jwtToken = null);
         Task<List<string>> BuscarModelosLlantasAsync(string filtro = "", string marca = "", string jwtToken = null);
         Task<List<string>> BuscarIndicesVelocidadAsync(string filtro = "", string jwtToken = null);
+        /// <summary>
+        /// Busca tipos de terreno que coincidan con el filtro proporcionado
+        /// </summary>
+        /// <param name="filtro">Texto para filtrar los tipos</param>
+        /// <param name="jwtToken">Token de autenticación</param>
+        /// <returns>Lista de tipos de terreno que coinciden con el filtro</returns>
         Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null);
+
+        
         Task<bool> EliminarProductoAsync(int id, string jwtToken = null);
 
         Task<AjusteStockRapidoResponseDTO> AjustarStockRapidoAsync(int id, AjusteStockRapidoDTO ajusteDto, string jwtToken = null);

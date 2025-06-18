@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Models.ViewModels;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
@@ -19,6 +19,7 @@ using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.DTOs.Inventario;
 using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
+using Microsoft.AspNetCore.Http;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -56,7 +57,90 @@ namespace GestionLlantera.Web.Controllers
             return View();
         }
 
-        // GET: /Inventario
+        [HttpGet]
+        public async Task<IActionResult> ObtenerProductosParaFacturacion()
+        {
+            try
+            {
+                _logger.LogInformation("🛒 === OBTENIENDO PRODUCTOS PARA FACTURACIÓN ===");
+
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para facturación");
+                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
+                }
+
+                _logger.LogInformation("🔐 Token JWT obtenido correctamente");
+
+                // Obtener productos del servicio
+                var productos = await _inventarioService.ObtenerProductosAsync(token);
+
+                if (productos == null)
+                {
+                    _logger.LogError("❌ El servicio retornó null para productos");
+                    return Json(new { success = false, message = "No se pudieron obtener los productos" });
+                }
+
+                _logger.LogInformation("📦 Se obtuvieron {Count} productos del servicio", productos.Count);
+
+                // Filtrar solo productos con stock disponible para venta
+                var productosParaVenta = productos
+                    .Where(p => p.CantidadEnInventario > 0)
+                    .Select(p => new
+                    {
+                        id = p.ProductoId,
+                        nombre = p.NombreProducto,
+                        descripcion = p.Descripcion ?? "",
+                        precio = p.Precio ?? 0,
+                        stock = p.CantidadEnInventario,
+                        stockMinimo = p.StockMinimo,
+                        imagen = p.Imagenes?.FirstOrDefault()?.UrlImagen ?? "",
+                        tieneImagenes = p.Imagenes?.Any() == true,
+                        esLlanta = p.EsLlanta,
+                        llanta = p.EsLlanta && p.Llanta != null ? new
+                        {
+                            marca = p.Llanta.Marca ?? "",
+                            modelo = p.Llanta.Modelo ?? "",
+                            ancho = p.Llanta.Ancho,
+                            perfil = p.Llanta.Perfil,
+                            diametro = p.Llanta.Diametro ?? "",
+                            medida = (p.Llanta.Ancho.HasValue && p.Llanta.Perfil.HasValue) 
+                                ? $"{p.Llanta.Ancho}/{p.Llanta.Perfil}R{p.Llanta.Diametro}" 
+                                : "N/A",
+                            indiceVelocidad = p.Llanta.IndiceVelocidad ?? "",
+                            tipoTerreno = p.Llanta.TipoTerreno ?? ""
+                        } : null,
+                        // Indicadores de estado
+                        stockBajo = p.CantidadEnInventario <= p.StockMinimo,
+                        disponibleVenta = p.CantidadEnInventario > 0
+                    })
+                    .OrderBy(p => p.nombre)
+                    .ToList();
+
+                _logger.LogInformation("✅ Productos filtrados para facturación: {Count} disponibles", productosParaVenta.Count);
+
+                return Json(new { 
+                    success = true, 
+                    data = productosParaVenta,
+                    count = productosParaVenta.Count,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al obtener productos para facturación: {Message}", ex.Message);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    error = ex.Message,
+                    timestamp = DateTime.Now
+                });
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             ViewData["Title"] = "Inventario de Productos";
@@ -1903,7 +1987,7 @@ namespace GestionLlantera.Web.Controllers
 
                 return View(model);
             }
-           
+
         }
 
         // ✅ NUEVO MÉTODO POST PARA JSON (agregar ADEMÁS del existente)
@@ -2188,7 +2272,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        // POST: /Inventario/CompletarInventario/5
+        // POST: /Inventario/CompletarInventario/5```csharp
         [HttpPost]
         public async Task<IActionResult> CompletarInventario(int id)
         {
@@ -2585,9 +2669,7 @@ namespace GestionLlantera.Web.Controllers
             public string? Comentario { get; set; }
         }   
         /// <summary>
-                 /// Modelo para recibir datos de ajuste desde el frontend
-                 /// </summary>
+        /// Modelo para recibir datos de ajuste desde el frontend
+        /// </summary>
     }
-
 }
-    

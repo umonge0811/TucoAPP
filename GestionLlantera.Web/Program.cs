@@ -40,15 +40,18 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// ✅ REGISTRAR SERVICIOS PRIMERO
+// Registrar servicios
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IInventarioService, InventarioService>();
 builder.Services.AddScoped<IUsuariosService, UsuariosService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
-builder.Services.AddScoped<IInventarioService, InventarioService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();
+builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
+builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
+builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>();
 builder.Services.AddScoped<IFacturacionService, FacturacionService>();
-
+builder.Services.AddScoped<IClientesService, ClientesService>();
 
 // ✅ NUEVO: Servicio global de permisos
 builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();

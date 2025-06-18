@@ -1,0 +1,39 @@
+facturacion.js:33 🚀 Inicializando módulo de facturación
+facturacion.js:38 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:41 🚀 Inicializando modales...
+facturacion.js:45 🚀 Configurando eventos...
+facturacion.js:49 🚀 Actualizando totales...
+facturacion.js:53 🚀 Iniciando carga de productos iniciales...
+facturacion.js:1526 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:1527 📦 cargaInicialCompletada: false
+facturacion.js:1543 📦 Iniciando carga de productos iniciales...
+facturacion.js:217 🔍 === INICIO buscarProductos ===
+facturacion.js:218 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:219 🔍 Término recibido: ""
+facturacion.js:220 🔍 busquedaEnProceso: false
+facturacion.js:221 🔍 ultimaBusqueda: ""
+facturacion.js:236 🔍 Iniciando búsqueda válida...
+facturacion.js:1033 ⏳ === mostrarCargandoBusqueda llamada ===
+facturacion.js:1034 ⏳ CONTADOR DE LLAMADAS: 1
+facturacion.js:1035 ⏳ Stack trace: Error
+    at mostrarCargandoBusqueda (https://localhost:7038/js/views/facturacion/facturacion.js:1035:35)
+    at buscarProductos (https://localhost:7038/js/views/facturacion/facturacion.js:242:13)
+    at cargarProductosIniciales (https://localhost:7038/js/views/facturacion/facturacion.js:1555:15)
+    at inicializarFacturacion (https://localhost:7038/js/views/facturacion/facturacion.js:54:9)
+    at HTMLDocument.<anonymous> (https://localhost:7038/js/views/facturacion/facturacion.js:34:5)
+    at e (https://localhost:7038/lib/jquery/dist/jquery.min.js:2:30038)
+    at https://localhost:7038/lib/jquery/dist/jquery.min.js:2:30340
+facturacion.js:1044 ⏳ Loading mostrado
+facturacion.js:56 ✅ Facturación inicializada correctamente
+facturacion.js:57 🚀 === FIN inicializarFacturacion ===
+facturacion.js:261 📋 Respuesta del servidor recibida
+facturacion.js:264 ✅ Se encontraron 3 productos disponibles
+facturacion.js:301 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:302 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:303 🔄 Productos recibidos: 3
+facturacion.js:328 🔄 Construyendo HTML para 3 productos
+facturacion.js:441 🔄 Actualizando DOM (longitud HTML: 11131 caracteres)
+facturacion.js:474 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:281 📦 Carga inicial marcada como completada
+facturacion.js:295 🔍 === FIN buscarProductos ===
+facturacion.js:1556 📦 === FIN cargarProductosIniciales (exitosa) ===

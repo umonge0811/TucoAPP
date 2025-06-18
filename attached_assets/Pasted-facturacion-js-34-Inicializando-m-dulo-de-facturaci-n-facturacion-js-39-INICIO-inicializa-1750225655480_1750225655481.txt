@@ -1,0 +1,60 @@
+facturacion.js:34 🚀 Inicializando módulo de facturación
+facturacion.js:39 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:42 🚀 Inicializando modales...
+facturacion.js:46 🚀 Configurando eventos...
+facturacion.js:50 🚀 Actualizando totales...
+facturacion.js:54 🚀 Iniciando carga de productos iniciales...
+facturacion.js:1580 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:1581 📦 cargaInicialCompletada: false
+facturacion.js:1597 📦 Iniciando carga de productos iniciales...
+facturacion.js:218 🔍 === INICIO buscarProductos ===
+facturacion.js:219 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:220 🔍 Término recibido: ""
+facturacion.js:221 🔍 busquedaEnProceso: false
+facturacion.js:222 🔍 ultimaBusqueda: ""
+facturacion.js:237 🔍 Iniciando búsqueda válida...
+facturacion.js:57 ✅ Facturación inicializada correctamente
+facturacion.js:58 🚀 === FIN inicializarFacturacion ===
+Facturacion/ObtenerProductosParaFacturacion:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:254 ❌ Error del servidor: 
+buscarProductos @ facturacion.js:254
+await in buscarProductos
+cargarProductosIniciales @ facturacion.js:1610
+inicializarFacturacion @ facturacion.js:55
+(anonymous) @ facturacion.js:35
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+facturacion.js:291 ❌ Error buscando productos: Error: Error 404: 
+    at buscarProductos (facturacion.js:255:19)
+    at async cargarProductosIniciales (facturacion.js:1610:9)
+buscarProductos @ facturacion.js:291
+await in buscarProductos
+cargarProductosIniciales @ facturacion.js:1610
+inicializarFacturacion @ facturacion.js:55
+(anonymous) @ facturacion.js:35
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+facturacion.js:295 🔍 === FIN buscarProductos ===
+facturacion.js:1613 📦 Búsqueda inicial ejecutada
+facturacion.js:1615 📦 === FIN cargarProductosIniciales (exitosa) ===

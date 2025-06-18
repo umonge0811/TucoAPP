@@ -1,4 +1,4 @@
-﻿// Ubicación: GestionLlantera.Web/Services/InventarioService.cs
+// Ubicación: GestionLlantera.Web/Services/InventarioService.cs
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -1948,5 +1948,7 @@ namespace GestionLlantera.Web.Services
                 };
             }
         }
+
+        
     }
 }

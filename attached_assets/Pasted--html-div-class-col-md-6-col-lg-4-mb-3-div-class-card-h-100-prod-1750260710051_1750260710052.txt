@@ -1,0 +1,59 @@
+    html += `
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
+                <div class="position-relative">
+                    <img src="${imagenUrl}" 
+                         class="card-img-top producto-imagen" 
+                         alt="${nombreEscapado}"
+                         style="height: 120px; object-fit: cover;"
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSAwMS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'">
+                    ${cantidadInventario <= 0 ? 
+                        '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
+                        cantidadInventario <= stockMinimo ?
+                        '<span class="badge bg-warning position-absolute top-0 end-0 m-2">Stock Bajo</span>' : ''
+                    }
+                </div>
+                <div class="card-body p-2">
+                    <h6 class="card-title mb-1" title="${nombreEscapado}">
+                        ${nombreProducto.length > 25 ? nombreProducto.substring(0, 25) + '...' : nombreProducto}
+                    </h6>
+                    <div class="precios-metodos mb-2">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Efectivo/SINPE</small>
+                                <span class="text-success fw-bold small">₡${formatearMoneda(precioEfectivo)}</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Tarjeta</small>
+                                <span class="text-warning fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-primary">Stock: ${cantidadInventario}</small>
+                        ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
+                            '<small class="badge bg-warning">Stock Bajo</small>' : ''}
+                    </div>
+                    <div class="d-grid gap-1">
+                        ${cantidadInventario > 0 ? `
+                            <button type="button" 
+                                    class="btn btn-primary btn-sm btn-seleccionar-producto"
+                                    data-producto="${productoJson}">
+                                <i class="bi bi-hand-index me-1"></i>Seleccionar
+                            </button>
+                        ` : `
+                            <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                <i class="bi bi-x-circle me-1"></i>Sin Stock
+                            </button>
+                        `}
+                        <button type="button" 
+                                class="btn btn-outline-info btn-sm btn-ver-detalle"
+                                data-producto="${productoJson}">
+                            <i class="bi bi-eye me-1"></i>Ver Detalle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+});
