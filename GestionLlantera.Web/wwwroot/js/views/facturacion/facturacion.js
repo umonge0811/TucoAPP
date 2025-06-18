@@ -272,11 +272,8 @@ async function buscarProductos(termino) {
             
             mostrarResultadosProductos(productosFiltrados);
             
-            // ✅ MARCAR CARGA INICIAL COMO COMPLETADA
-            if (!cargaInicialCompletada) {
-                cargaInicialCompletada = true;
-                console.log('📦 Carga inicial marcada como completada');
-            }
+            // ✅ NO NECESITAMOS MARCAR AQUÍ - YA SE MARCA EN cargarProductosIniciales()
+            console.log('📦 Productos mostrados exitosamente');
         } else {
             const errorMessage = data.message || 'Error desconocido al obtener productos';
             console.error('❌ Error en la respuesta:', errorMessage);
@@ -1549,6 +1546,10 @@ async function cargarProductosIniciales() {
     try {
         console.log('📦 Iniciando carga de productos iniciales...');
         
+        // ✅ MARCAR COMO EN PROCESO INMEDIATAMENTE
+        cargaInicialCompletada = true;
+        console.log('📦 Marcando carga inicial como completada ANTES de la búsqueda');
+        
         // ✅ MOSTRAR MENSAJE INICIAL SOLO SI NO HAY CONTENIDO PREVIO
         const currentContent = $('#resultadosBusqueda').html().trim();
         if (!currentContent || currentContent.includes('Busca productos para agregar')) {
@@ -1566,6 +1567,8 @@ async function cargarProductosIniciales() {
         console.log('📦 === FIN cargarProductosIniciales (exitosa) ===');
     } catch (error) {
         console.error('❌ Error cargando productos iniciales:', error);
+        // ✅ RESETEAR FLAG EN CASO DE ERROR PARA PERMITIR REINTENTO
+        cargaInicialCompletada = false;
         $('#resultadosBusqueda').html(`
             <div class="col-12 text-center py-4 text-danger">
                 <i class="bi bi-exclamation-triangle display-1"></i>
