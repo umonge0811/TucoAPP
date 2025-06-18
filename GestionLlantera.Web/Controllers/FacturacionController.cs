@@ -88,10 +88,10 @@ namespace GestionLlantera.Web.Controllers
                     descripcion = p.Descripcion ?? "",
                     precio = p.Precio ?? 0,
                     cantidadEnInventario = p.CantidadEnInventario,
-                    stockMinimo = p.StockMinimo ?? 0,
+                    stock = p.CantidadEnInventario,
                     imagenesProductos = p.Imagenes?.Select(img => new {
                         Urlimagen = img.UrlImagen
-                    }).ToList() ?? new List<object>(),
+                    }).ToList() ?? new List<object>().Select(x => new { Urlimagen = "" }).ToList(),
                     esLlanta = p.EsLlanta,
                     llanta = p.EsLlanta && p.Llanta != null ? new
                     {
