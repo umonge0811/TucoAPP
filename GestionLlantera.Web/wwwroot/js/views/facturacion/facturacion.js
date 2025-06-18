@@ -669,7 +669,7 @@ function mostrarModalSeleccionProducto(producto) {
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle me-1"></i>Cancelar
                         </button>
-                        <button type="button"` class="btn btn-success btn-lg" id="btnConfirmarAgregarProducto">
+                        <button type="button" class="btn btn-success btn-lg" id="btnConfirmarAgregarProducto">
                             <i class="bi bi-cart-plus me-1"></i>Agregar al Carrito
                         </button>
                     </div>
