@@ -101,7 +101,7 @@ function configurarEventos() {
             console.log('🎯 Término a buscar:', `"${termino}"`);
             console.log('🎯 ultimaBusqueda:', `"${ultimaBusqueda}"`);
             console.log('🎯 busquedaEnProceso:', busquedaEnProceso);
-            
+
             // Prevenir búsquedas duplicadas del mismo término
             if (termino === ultimaBusqueda && busquedaEnProceso === false) {
                 console.log('⏸️ Búsqueda duplicada omitida:', termino);
@@ -195,7 +195,7 @@ async function buscarProductos(termino) {
     console.log('🔍 ultimaBusqueda:', `"${ultimaBusqueda}"`);
     console.log('🔍 cargaInicialCompletada:', cargaInicialCompletada);
     console.log('🔍 Stack trace:', new Error().stack);
-    
+
     // Prevenir múltiples llamadas simultáneas
     if (busquedaEnProceso) {
         console.log('⏸️ Búsqueda ya en proceso, omitiendo llamada duplicada');
@@ -230,10 +230,15 @@ async function buscarProductos(termino) {
 
         const data = await response.json();
         console.log('📋 Respuesta completa del servidor:', data);
+        console.log('📋 Tipo de response:', typeof data);
+        console.log('📋 response.data:', data.data);
+        console.log('📋 Tipo de response.data:', typeof data.data);
+        console.log('📋 Array.isArray(response.data):', Array.isArray(data.data));
 
         if (data.success === true && data.data) {
             console.log(`✅ Se encontraron ${data.data.length} productos disponibles para venta`);
             console.log('🔍 Llamando a mostrarResultadosProductos...');
+            console.log('🔍 Productos que se van a pasar:', data.data);
             mostrarResultadosProductos(data.data, termino);
             console.log('🔍 mostrarResultadosProductos completado');
         } else {
@@ -264,8 +269,9 @@ function mostrarResultadosProductos(productos) {
     console.log('🔄 === INICIO mostrarResultadosProductos ===');
     console.log('🔄 CONTADOR DE LLAMADAS:', contadorLlamadasMostrarResultados);
     console.log('🔄 Productos recibidos:', productos ? productos.length : 'null/undefined');
+    console.log('🔄 Datos completos de productos:', productos);
     console.log('🔄 Stack trace de llamada:', new Error().stack);
-    
+
     const container = $('#resultadosBusqueda');
     console.log('🔄 Container encontrado:', container.length > 0);
 
@@ -278,7 +284,9 @@ function mostrarResultadosProductos(productos) {
     console.log('🔄 Iniciando construcción HTML para', productos.length, 'productos');
     let html = '';
     productos.forEach((producto, index) => {
-        console.log(`🔄 Procesando producto ${index + 1}:`, producto.nombreProducto || producto.productoId);
+        console.log(`🔄 Procesando producto ${index + 1}:`, producto);
+        console.log(`🔄 Nombre del producto ${index + 1}:`, producto?.nombreProducto);
+        console.log(`🔄 ID del producto ${index + 1}:`, producto?.productoId);
         // Validación ULTRA robusta para imágenes - prevenir cualquier error
         let imagenUrl = '/images/no-image.png';
 
@@ -401,7 +409,7 @@ function mostrarResultadosProductos(productos) {
         const producto = JSON.parse($(this).attr('data-producto'));
         verDetalleProducto(producto);
     });
-    
+
     console.log('🔄 Eventos configurados. Total botones seleccionar:', $('.btn-seleccionar-producto').length);
     console.log('🔄 === FIN mostrarResultadosProductos ===');
 }
@@ -1458,7 +1466,7 @@ async function cargarProductosIniciales() {
     console.log('📦 === INICIO cargarProductosIniciales ===');
     console.log('📦 cargaInicialCompletada:', cargaInicialCompletada);
     console.log('📦 Stack trace:', new Error().stack);
-    
+
     // Prevenir carga múltiple
     if (cargaInicialCompletada) {
         console.log('📦 Productos iniciales ya cargados, omitiendo');
@@ -1490,18 +1498,18 @@ async function cargarProductosIniciales() {
 // Nueva función para reiniciar la carga (para el botón de reintentar)
 function reiniciarCargaProductos() {
     console.log('🔄 Reiniciando carga de productos...');
-    
+
     // Limpiar completamente el estado
     cargaInicialCompletada = false;
     busquedaEnProceso = false;
     ultimaBusqueda = '';
-    
+
     // Limpiar timeouts activos
     if (timeoutBusquedaActivo) {
         clearTimeout(timeoutBusquedaActivo);
         timeoutBusquedaActivo = null;
     }
-    
+
     // Recargar productos inmediatamente
     cargarProductosIniciales();
 }
