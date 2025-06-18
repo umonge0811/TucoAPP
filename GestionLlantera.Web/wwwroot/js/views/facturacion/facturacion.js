@@ -345,23 +345,31 @@ function mostrarResultadosProductos(productos) {
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || producto.minimoStock || producto.MinimoStock || 0;
 
         // VALIDACIÓN DE IMÁGENES
-        let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+        let imagenUrl = '/images/no-image.png'; // Imagen por defecto
         try {
             if (producto && typeof producto === 'object') {
                 const imagenesArray = producto.imagenesProductos || producto.imagenes || producto.ImagenesProductos || producto.Imagenes || [];
                 if (Array.isArray(imagenesArray) && imagenesArray.length > 0) {
                     const primeraImagen = imagenesArray[0];
                     if (primeraImagen && typeof primeraImagen === 'object') {
-                        const urlImagen = primeraImagen.urlimagen || primeraImagen.url || primeraImagen.Urlimagen || primeraImagen.Url || primeraImagen.urlImagen || '';
+                        // La propiedad en la base de datos se llama 'Urlimagen'
+                        const urlImagen = primeraImagen.urlImagen || primeraImagen.Urlimagen || '';
                         if (urlImagen && urlImagen.trim() !== '') {
-                            imagenUrl = urlImagen;
+                            // Construir la URL completa con la API base
+                            if (urlImagen.startsWith('/uploads/productos/')) {
+                                imagenUrl = `https://localhost:7273${urlImagen}`;
+                            } else if (urlImagen.startsWith('uploads/productos/')) {
+                                imagenUrl = `https://localhost:7273/${urlImagen}`;
+                            } else {
+                                imagenUrl = urlImagen; // URL completa
+                            }
                         }
                     }
                 }
             }
         } catch (error) {
             console.warn('⚠️ Error procesando imágenes del producto:', error);
-            imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+            imagenUrl = '/images/no-image.png';
         }
 
         // CÁLCULO DE PRECIOS
@@ -691,6 +699,29 @@ function mostrarModalSeleccionProducto(producto) {
 
 function configurarEventosModalProducto(producto, modal) {
     const precioBase = producto.precio || 0;
+        // Extraer imágenes del producto
+        const imagenesProducto = producto.imagenesProductos || producto.imagenes || [];
+
+        // Construir carrusel de imágenes
+        let imagenesParaModal = [];
+        if (Array.isArray(imagenesProducto) && imagenesProducto.length > 0) {
+            imagenesParaModal = imagenesProducto.map(img => {
+                const url = img.urlImagen || img.Urlimagen || '';
+                if (url && url.trim() !== '') {
+                    // Construir la URL completa con la API base
+                    if (url.startsWith('/uploads/productos/')) {
+                        return `https://localhost:7273${url}`;
+                    } else if (url.startsWith('uploads/productos/')) {
+                        return `https://localhost:7273/${url}`;
+                    } else {
+                        return url; // URL completa
+                    }
+                }
+                return '/images/no-image.png';
+            });
+        } else {
+            imagenesParaModal = ['/images/no-image.png'];
+        }
 
     // Actualizar total cuando cambie el método de pago o cantidad
     function actualizarTotal() {
@@ -719,7 +750,7 @@ function configurarEventosModalProducto(producto, modal) {
         const input = $('#cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const stockDisponible = producto.cantidadEnInventario;
-        if (valorActual < stockDisponible) {
+        if (valorActual < stockDisponible){
             input.val(valorActual + 1);
             actualizarTotal();
         }
@@ -1555,7 +1586,7 @@ async function cargarProductosIniciales() {
         return;
     }
 
-    // ✅ PREVENIR CARGA SI YA HAY UNA BÚSQUEDA EN PROCESO
+    //// ✅ PREVENIR CARGA SI YA HAY UNA BÚSQUEDA EN PROCESO
     if (busquedaEnProceso) {
         console.log('📦 Búsqueda en proceso, posponiendo carga inicial');
         setTimeout(() => cargarProductosIniciales(), 500);
