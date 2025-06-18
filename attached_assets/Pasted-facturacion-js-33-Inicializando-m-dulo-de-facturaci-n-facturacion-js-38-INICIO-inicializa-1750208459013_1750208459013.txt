@@ -1,0 +1,80 @@
+facturacion.js:33 🚀 Inicializando módulo de facturación
+facturacion.js:38 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:41 🚀 Inicializando modales...
+facturacion.js:45 🚀 Configurando eventos...
+facturacion.js:49 🚀 Actualizando totales...
+facturacion.js:53 🚀 Iniciando carga de productos iniciales...
+facturacion.js:1466 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:1467 📦 cargaInicialCompletada: false
+facturacion.js:1468 📦 Stack trace: Error
+    at cargarProductosIniciales (https://localhost:7038/js/views/facturacion/facturacion.js:1468:36)
+    at inicializarFacturacion (https://localhost:7038/js/views/facturacion/facturacion.js:54:9)
+    at HTMLDocument.<anonymous> (https://localhost:7038/js/views/facturacion/facturacion.js:34:5)
+    at e (https://localhost:7038/lib/jquery/dist/jquery.min.js:2:30038)
+    at https://localhost:7038/lib/jquery/dist/jquery.min.js:2:30340
+facturacion.js:1478 📦 Cargando productos iniciales...
+facturacion.js:191 🔍 === INICIO buscarProductos ===
+facturacion.js:192 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:193 🔍 Término recibido: ""
+facturacion.js:194 🔍 busquedaEnProceso: false
+facturacion.js:195 🔍 ultimaBusqueda: ""
+facturacion.js:196 🔍 cargaInicialCompletada: false
+facturacion.js:197 🔍 Stack trace: Error
+    at buscarProductos (https://localhost:7038/js/views/facturacion/facturacion.js:197:36)
+    at cargarProductosIniciales (https://localhost:7038/js/views/facturacion/facturacion.js:1479:15)
+    at inicializarFacturacion (https://localhost:7038/js/views/facturacion/facturacion.js:54:9)
+    at HTMLDocument.<anonymous> (https://localhost:7038/js/views/facturacion/facturacion.js:34:5)
+    at e (https://localhost:7038/lib/jquery/dist/jquery.min.js:2:30038)
+    at https://localhost:7038/lib/jquery/dist/jquery.min.js:2:30340
+facturacion.js:206 🔍 Iniciando búsqueda...
+facturacion.js:209 🔍 Buscando productos: ""
+facturacion.js:212 🔍 Mostrando loading...
+facturacion.js:973 ⏳ === mostrarCargandoBusqueda llamada ===
+facturacion.js:974 ⏳ CONTADOR DE LLAMADAS: 1
+facturacion.js:975 ⏳ Stack trace: Error
+    at mostrarCargandoBusqueda (https://localhost:7038/js/views/facturacion/facturacion.js:975:35)
+    at buscarProductos (https://localhost:7038/js/views/facturacion/facturacion.js:213:9)
+    at cargarProductosIniciales (https://localhost:7038/js/views/facturacion/facturacion.js:1479:15)
+    at inicializarFacturacion (https://localhost:7038/js/views/facturacion/facturacion.js:54:9)
+    at HTMLDocument.<anonymous> (https://localhost:7038/js/views/facturacion/facturacion.js:34:5)
+    at e (https://localhost:7038/lib/jquery/dist/jquery.min.js:2:30038)
+    at https://localhost:7038/lib/jquery/dist/jquery.min.js:2:30340
+facturacion.js:984 ⏳ Loading mostrado
+facturacion.js:56 ✅ Facturación inicializada correctamente
+facturacion.js:57 🚀 === FIN inicializarFacturacion ===
+facturacion.js:232 📋 Respuesta completa del servidor: Object
+facturacion.js:233 📋 Tipo de response: object
+facturacion.js:234 📋 response.data: Array(3)
+facturacion.js:235 📋 Tipo de response.data: object
+facturacion.js:236 📋 Array.isArray(response.data): true
+facturacion.js:239 ✅ Se encontraron 3 productos disponibles para venta
+facturacion.js:240 🔍 Llamando a mostrarResultadosProductos...
+facturacion.js:241 🔍 Productos que se van a pasar: Array(3)
+facturacion.js:269 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:270 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:271 🔄 Productos recibidos: 3
+facturacion.js:272 🔄 Datos completos de productos: Array(3)
+facturacion.js:273 🔄 Stack trace de llamada: Error
+    at mostrarResultadosProductos (https://localhost:7038/js/views/facturacion/facturacion.js:273:47)
+    at buscarProductos (https://localhost:7038/js/views/facturacion/facturacion.js:242:13)
+    at async cargarProductosIniciales (https://localhost:7038/js/views/facturacion/facturacion.js:1479:9)
+facturacion.js:276 🔄 Container encontrado: true
+facturacion.js:284 🔄 Iniciando construcción HTML para 3 productos
+facturacion.js:287 🔄 Procesando producto 1: Object
+facturacion.js:288 🔄 Nombre del producto 1: undefined
+facturacion.js:289 🔄 ID del producto 1: undefined
+facturacion.js:287 🔄 Procesando producto 2: Object
+facturacion.js:288 🔄 Nombre del producto 2: undefined
+facturacion.js:289 🔄 ID del producto 2: undefined
+facturacion.js:287 🔄 Procesando producto 3: Object
+facturacion.js:288 🔄 Nombre del producto 3: undefined
+facturacion.js:289 🔄 ID del producto 3: undefined
+facturacion.js:398 🔄 Actualizando DOM con HTML generado (longitud: 9205 caracteres)
+facturacion.js:400 🔄 DOM actualizado, configurando eventos...
+facturacion.js:413 🔄 Eventos configurados. Total botones seleccionar: 0
+facturacion.js:414 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:243 🔍 mostrarResultadosProductos completado
+facturacion.js:261 🔍 Liberando busquedaEnProceso...
+facturacion.js:263 🔍 === FIN buscarProductos ===
+facturacion.js:1480 📦 Búsqueda inicial completada, marcando como completada...
+facturacion.js:1482 📦 === FIN cargarProductosIniciales (exitosa) ===
