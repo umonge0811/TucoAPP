@@ -442,7 +442,7 @@ function mostrarResultadosProductos(productos) {
                              class="card-img-top producto-imagen" 
                              alt="${nombreEscapado}"
                              style="height: 120px; object-fit: cover;"
-                             onerror="this.src='/images/no-image.png'">
+                             onerror="this.onerror=null; this.src='/images/no-image.png';">
                         ${cantidadInventario <= 0 ? 
                             '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
                             cantidadInventario <= stockMinimo ?
