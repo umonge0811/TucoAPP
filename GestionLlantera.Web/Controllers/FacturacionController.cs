@@ -90,7 +90,7 @@ namespace GestionLlantera.Web.Controllers
                     stock = p.CantidadEnInventario,
                     imagenesProductos = p.Imagenes?.Select(img => new {
                         Urlimagen = img.UrlImagen
-                    }).ToList() ?? new List<object>(),
+                    }).ToList() ?? new List<dynamic>(),
                     esLlanta = p.EsLlanta,
                     llanta = p.EsLlanta && p.Llanta != null ? new
                     {
