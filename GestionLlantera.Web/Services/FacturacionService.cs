@@ -186,7 +186,7 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<ApiResponse<object>>(content, _jsonOptions);
+                    var result = System.Text.Json.JsonSerializer.Deserialize<ApiResponse<object>>(content, _jsonOptions);
 
                     if (result?.Data != null)
                     {
@@ -194,7 +194,7 @@ namespace GestionLlantera.Web.Services
                         var jsonElement = (JsonElement)result.Data;
                         if (jsonElement.TryGetProperty("productos", out var productosElement))
                         {
-                            var productos = JsonSerializer.Deserialize<List<ProductoVentaDTO>>(productosElement.GetRawText(), _jsonOptions);
+                            var productos = System.Text.Json.JsonSerializer.Deserialize<List<ProductoVentaDTO>>(productosElement.GetRawText(), _jsonOptions);
                             return new ApiResponse<List<ProductoVentaDTO>>
                             {
                                 IsSuccess = true,

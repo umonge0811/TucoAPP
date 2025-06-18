@@ -91,7 +91,7 @@ namespace GestionLlantera.Web.Controllers
                     stockMinimo = p.StockMinimo,
                     imagenesProductos = p.Imagenes?.Select(img => new {
                         Urlimagen = ProcessImageUrl(img.UrlImagen)
-                    }).ToList() ?? new List<dynamic> { new { Urlimagen = "/images/no-image.png" } },
+                    }).ToList() ?? new[] { new { Urlimagen = "/images/no-image.png" } }.ToList(),
                     imagenesUrls = p.Imagenes?.Select(img => ProcessImageUrl(img.UrlImagen)).ToList() ?? new List<string> { "/images/no-image.png" },
                     esLlanta = p.EsLlanta,
                     llanta = p.EsLlanta && p.Llanta != null ? new
@@ -179,7 +179,7 @@ namespace GestionLlantera.Web.Controllers
                     stock = p.CantidadEnInventario,
                     imagenesProductos = p.Imagenes?.Select(img => new {
                         Urlimagen = ProcessImageUrl(img.UrlImagen)
-                    }).ToList() ?? new List<dynamic> { new { Urlimagen = "/images/no-image.png" } },
+                    }).ToList() ?? new[] { new { Urlimagen = "/images/no-image.png" } }.ToList(),
                     esLlanta = p.EsLlanta,
                     llanta = p.EsLlanta && p.Llanta != null ? new
                     {
