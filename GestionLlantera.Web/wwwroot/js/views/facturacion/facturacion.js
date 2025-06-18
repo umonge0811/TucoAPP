@@ -561,8 +561,8 @@ function seleccionarCliente(cliente) {
 function mostrarModalSeleccionProducto(producto) {
     const precioBase = producto.precio || 0;
 
-    // Validación robusta para imágenes
-    let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+    // Validación robusta para imágenes con URL de la API
+    let imagenUrl = '/images/no-image.png';
     try {
         if (producto.imagenesProductos && 
             Array.isArray(producto.imagenesProductos) && 
@@ -570,12 +570,19 @@ function mostrarModalSeleccionProducto(producto) {
 
             const primeraImagen = producto.imagenesProductos[0];
             if (primeraImagen && primeraImagen.urlimagen) {
-                imagenUrl = primeraImagen.urlimagen;
+                const urlImagen = primeraImagen.urlimagen;
+                // ✅ CONSTRUIR URL COMPLETA PARA LA API
+                if (urlImagen.startsWith('http') || urlImagen.startsWith('https')) {
+                    imagenUrl = urlImagen;
+                } else {
+                    const cleanUrl = urlImagen.startsWith('/') ? urlImagen.substring(1) : urlImagen;
+                    imagenUrl = `https://localhost:7273/${cleanUrl}`;
+                }
             }
         }
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes del producto en modal:', error);
-        imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+        imagenUrl = '/images/no-image.png';
     }
 
     const modalHtml = `
@@ -594,7 +601,7 @@ function mostrarModalSeleccionProducto(producto) {
                                 <img src="${imagenUrl}" 
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
-                                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'">
+                                     onerror="this.onerror=null; this.src='/images/no-image.png';"">
                             </div>
                             <div class="col-md-8">
                                 <h4 class="mb-3">${producto.nombreProducto}</h4>
@@ -662,7 +669,7 @@ function mostrarModalSeleccionProducto(producto) {
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle me-1"></i>Cancelar
                         </button>
-                        <button type="button" class="btn btn-success btn-lg" id="btnConfirmarAgregarProducto">
+                        <button type="button"` class="btn btn-success btn-lg" id="btnConfirmarAgregarProducto">
                             <i class="bi bi-cart-plus me-1"></i>Agregar al Carrito
                         </button>
                     </div>
@@ -1092,8 +1099,8 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
-    // Validación robusta para imágenes
-    let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+    // Validación robusta para imágenes con URL de la API
+    let imagenUrl = '/images/no-image.png';
     try {
         if (producto.imagenesProductos && 
             Array.isArray(producto.imagenesProductos) && 
@@ -1101,12 +1108,19 @@ function verDetalleProducto(producto) {
 
             const primeraImagen = producto.imagenesProductos[0];
             if (primeraImagen && primeraImagen.urlimagen) {
-                imagenUrl = primeraImagen.urlimagen;
+                const urlImagen = primeraImagen.urlimagen;
+                // ✅ CONSTRUIR URL COMPLETA PARA LA API
+                if (urlImagen.startsWith('http') || urlImagen.startsWith('https')) {
+                    imagenUrl = urlImagen;
+                } else {
+                    const cleanUrl = urlImagen.startsWith('/') ? urlImagen.substring(1) : urlImagen;
+                    imagenUrl = `https://localhost:7273/${cleanUrl}`;
+                }
             }
         }
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes en detalle del producto:', error);
-        imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
+        imagenUrl = '/images/no-image.png';
     }
 
     const modalHtml = `
@@ -1125,7 +1139,7 @@ function verDetalleProducto(producto) {
                                 <img src="${imagenUrl}" 
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
-                                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'">
+                                     onerror="this.onerror=null; this.src='/images/no-image.png';"">
 
                                 <!-- Información de stock -->
                                 <div class="mt-3">
