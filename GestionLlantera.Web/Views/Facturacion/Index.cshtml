@@ -1,156 +1,157 @@
-@{
-    ViewData["Title"] = "Facturación";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
-}
+    @{
+        ViewData["Title"] = "Facturación";
+        Layout = "~/Views/Shared/_AdminLayout.cshtml";
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css" />
-}
+    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css">
+    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css">
+
+    }
 
 
-<div class="container-fluid">
-    <div class="row">
-        <!-- Panel izquierdo - Productos y búsqueda -->
-        <div class="col-lg-7">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-search me-2"></i>Buscar Productos
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Barra de búsqueda -->
-                    <div class="row mb-3">
-                        <div class="col-md-10">
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-search"></i>
-                                </span>
-                                <input type="text" 
-                                       id="busquedaProducto" 
-                                       class="form-control" 
-                                       placeholder="Buscar por nombre, marca, modelo..."
-                                       autocomplete="off">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Panel izquierdo - Productos y búsqueda -->
+            <div class="col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-search me-2"></i>Buscar Productos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Barra de búsqueda -->
+                        <div class="row mb-3">
+                            <div class="col-md-10">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" 
+                                           id="busquedaProducto" 
+                                           class="form-control" 
+                                           placeholder="Buscar por nombre, marca, modelo..."
+                                           autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" 
+                                        id="btnAbrirInventario" 
+                                        class="btn btn-outline-secondary w-100"
+                                        title="Ver inventario completo">
+                                    <i class="bi bi-grid-3x3-gap"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <button type="button" 
-                                    id="btnAbrirInventario" 
-                                    class="btn btn-outline-secondary w-100"
-                                    title="Ver inventario completo">
-                                <i class="bi bi-grid-3x3-gap"></i>
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Resultados de búsqueda -->
-                    <div id="resultadosBusqueda" class="row">
-                        <div class="col-12 text-center py-4 text-muted">
-                            <i class="bi bi-search display-1"></i>
-                            <p class="mt-2">Busca productos para agregar a la venta</p>
+                        <!-- Resultados de búsqueda -->
+                        <div id="resultadosBusqueda" class="row">
+                            <div class="col-12 text-center py-4 text-muted">
+                                <i class="bi bi-search display-1"></i>
+                                <p class="mt-2">Busca productos para agregar a la venta</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Panel derecho - Carrito de venta -->
-        <div class="col-lg-5">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-cart me-2"></i>Venta Actual
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Información del cliente -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Cliente</label>
-                        <div class="input-group">
-                            <input type="text" 
-                                   id="clienteBusqueda" 
-                                   class="form-control" 
-                                   placeholder="Buscar cliente..."
-                                   autocomplete="off">
-                            <button type="button" 
-                                    id="btnNuevoCliente" 
-                                    class="btn btn-outline-primary"
-                                    title="Agregar nuevo cliente">
-                                <i class="bi bi-person-plus"></i>
-                            </button>
-                        </div>
-                        <div id="clienteSeleccionado" class="d-none mt-2">
-                            <small class="text-muted">Cliente seleccionado:</small>
-                            <div class="alert alert-info py-2">
-                                <strong id="nombreClienteSeleccionado"></strong><br>
-                                <small id="emailClienteSeleccionado"></small>
-                            </div>
-                        </div>
+            <!-- Panel derecho - Carrito de venta -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-cart me-2"></i>Venta Actual
+                        </h5>
                     </div>
-
-                    <!-- Lista de productos en venta -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold mb-0">Productos</label>
-                            <span id="contadorProductos" class="badge bg-secondary">0 productos</span>
-                        </div>
-
-                        <div id="listaProductosVenta" class="productos-venta-container">
-                            <div class="text-center py-4 text-muted">
-                                <i class="bi bi-cart-x display-4"></i>
-                                <p class="mt-2">No hay productos en la venta</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Totales -->
-                    <div class="border-top pt-3">
-                        <div class="row">
-                            <div class="col-6">
-                                <strong>Subtotal:</strong>
-                            </div>
-                            <div class="col-6 text-end">
-                                <span id="subtotalVenta">₡0.00</span>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-6">
-                                <strong>IVA (13%):</strong>
-                            </div>
-                            <div class="col-6 text-end">
-                                <span id="ivaVenta">₡0.00</span>
-                            </div>
-                        </div>
-                        <div class="row border-top pt-2">
-                            <div class="col-6">
-                                <h5 class="mb-0"><strong>Total:</strong></h5>
-                            </div>
-                            <div class="col-6 text-end">
-                                <h5 class="mb-0 text-success">
-                                    <strong id="totalVenta">₡0.00</strong>
-                                </h5>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Botones de acción -->
-                    <div class="mt-3">
-                        <div class="row">
-                            <div class="col-6">
+                    <div class="card-body">
+                        <!-- Información del cliente -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Cliente</label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       id="clienteBusqueda" 
+                                       class="form-control" 
+                                       placeholder="Buscar cliente..."
+                                       autocomplete="off">
                                 <button type="button" 
-                                        id="btnLimpiarVenta" 
-                                        class="btn btn-outline-danger w-100"
-                                        disabled>
-                                    <i class="bi bi-trash me-1"></i>Limpiar
+                                        id="btnNuevoCliente" 
+                                        class="btn btn-outline-primary"
+                                        title="Agregar nuevo cliente">
+                                    <i class="bi bi-person-plus"></i>
                                 </button>
                             </div>
-                            <div class="col-6">
-                                <button type="button" 
-                                        id="btnFinalizarVenta" 
-                                        class="btn btn-success w-100"
-                                        disabled>
-                                    <i class="bi bi-check-circle me-1"></i>Finalizar
-                                </button>
+                            <div id="clienteSeleccionado" class="d-none mt-2">
+                                <small class="text-muted">Cliente seleccionado:</small>
+                                <div class="alert alert-info py-2">
+                                    <strong id="nombreClienteSeleccionado"></strong><br>
+                                    <small id="emailClienteSeleccionado"></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de productos en venta -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">Productos</label>
+                                <span id="contadorProductos" class="badge bg-secondary">0 productos</span>
+                            </div>
+
+                            <div id="listaProductosVenta" class="productos-venta-container">
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-cart-x display-4"></i>
+                                    <p class="mt-2">No hay productos en la venta</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Totales -->
+                        <div class="border-top pt-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Subtotal:</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span id="subtotalVenta">₡0.00</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>IVA (13%):</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span id="ivaVenta">₡0.00</span>
+                                </div>
+                            </div>
+                            <div class="row border-top pt-2">
+                                <div class="col-6">
+                                    <h5 class="mb-0"><strong>Total:</strong></h5>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <h5 class="mb-0 text-success">
+                                        <strong id="totalVenta">₡0.00</strong>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <button type="button" 
+                                            id="btnLimpiarVenta" 
+                                            class="btn btn-outline-danger w-100"
+                                            disabled>
+                                        <i class="bi bi-trash me-1"></i>Limpiar
+                                    </button>
+                                </div>
+                                <div class="col-6">
+                                    <button type="button" 
+                                            id="btnFinalizarVenta" 
+                                            class="btn btn-success w-100"
+                                            disabled>
+                                        <i class="bi bi-check-circle me-1"></i>Finalizar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -158,13 +159,12 @@
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modales -->
-@await Html.PartialAsync("_ModalInventario")
-@await Html.PartialAsync("_ModalDetalleProducto")
-@await Html.PartialAsync("_ModalFinalizarVenta")
+    <!-- Modales -->
+    @await Html.PartialAsync("_ModalInventario")
+    @await Html.PartialAsync("_ModalDetalleProducto")
+    @await Html.PartialAsync("_ModalFinalizarVenta")
 
-@section Scripts {
-    <script src="~/js/views/facturacion/facturacion.js"></script>
-}
+    @section Scripts {
+        <script src="~/js/views/facturacion/facturacion.js"></script>
+    }
