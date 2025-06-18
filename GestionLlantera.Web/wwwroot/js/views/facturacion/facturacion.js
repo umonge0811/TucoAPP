@@ -220,15 +220,15 @@ async function buscarProductos(termino) {
     console.log('🔍 busquedaEnProceso:', busquedaEnProceso);
     console.log('🔍 ultimaBusqueda:', `"${ultimaBusqueda}"`);
 
-    // ✅ PREVENIR BÚSQUEDAS DUPLICADAS SOLO DESPUÉS DE LA CARGA INICIAL
-    if (termino === ultimaBusqueda && cargaInicialCompletada && termino !== '') {
-        console.log('⏸️ Búsqueda duplicada del mismo término omitida:', termino);
-        return;
-    }
-
     // ✅ PREVENIR MÚLTIPLES LLAMADAS SIMULTÁNEAS
     if (busquedaEnProceso) {
         console.log('⏸️ Búsqueda ya en proceso, omitiendo llamada duplicada');
+        return;
+    }
+
+    // ✅ PREVENIR BÚSQUEDAS DUPLICADAS (EXCEPTO LA PRIMERA CARGA)
+    if (termino === ultimaBusqueda && cargaInicialCompletada) {
+        console.log('⏸️ Búsqueda duplicada del mismo término omitida:', termino);
         return;
     }
 
@@ -272,7 +272,12 @@ async function buscarProductos(termino) {
             
             mostrarResultadosProductos(productosFiltrados);
             
-            // ✅ NO NECESITAMOS MARCAR AQUÍ - YA SE MARCA EN cargarProductosIniciales()
+            // ✅ MARCAR CARGA INICIAL COMO COMPLETADA SI ES UNA BÚSQUEDA VACÍA (PRIMERA CARGA)
+            if (termino === '' && !cargaInicialCompletada) {
+                cargaInicialCompletada = true;
+                console.log('📦 Carga inicial marcada como completada después de primera búsqueda exitosa');
+            }
+            
             console.log('📦 Productos mostrados exitosamente');
         } else {
             const errorMessage = data.message || 'Error desconocido al obtener productos';
@@ -1559,9 +1564,8 @@ async function cargarProductosIniciales() {
         // ✅ REALIZAR BÚSQUEDA INICIAL
         await buscarProductos('');
         
-        // ✅ MARCAR COMO COMPLETADA SOLO SI LA BÚSQUEDA FUE EXITOSA
-        cargaInicialCompletada = true;
-        console.log('📦 Carga inicial completada exitosamente');
+        // ✅ La carga se marca como completada dentro de buscarProductos() cuando es exitosa
+        console.log('📦 Búsqueda inicial ejecutada');
         
         console.log('📦 === FIN cargarProductosIniciales (exitosa) ===');
     } catch (error) {
