@@ -220,8 +220,8 @@ async function buscarProductos(termino) {
     console.log('🔍 busquedaEnProceso:', busquedaEnProceso);
     console.log('🔍 ultimaBusqueda:', `"${ultimaBusqueda}"`);
 
-    // ✅ PREVENIR BÚSQUEDAS DUPLICADAS DEL MISMO TÉRMINO
-    if (termino === ultimaBusqueda && cargaInicialCompletada) {
+    // ✅ PREVENIR BÚSQUEDAS DUPLICADAS SOLO DESPUÉS DE LA CARGA INICIAL
+    if (termino === ultimaBusqueda && cargaInicialCompletada && termino !== '') {
         console.log('⏸️ Búsqueda duplicada del mismo término omitida:', termino);
         return;
     }
@@ -1546,28 +1546,26 @@ async function cargarProductosIniciales() {
     try {
         console.log('📦 Iniciando carga de productos iniciales...');
         
-        // ✅ MARCAR COMO EN PROCESO INMEDIATAMENTE
-        cargaInicialCompletada = true;
-        console.log('📦 Marcando carga inicial como completada ANTES de la búsqueda');
-        
-        // ✅ MOSTRAR MENSAJE INICIAL SOLO SI NO HAY CONTENIDO PREVIO
-        const currentContent = $('#resultadosBusqueda').html().trim();
-        if (!currentContent || currentContent.includes('Busca productos para agregar')) {
-            $('#resultadosBusqueda').html(`
-                <div class="col-12 text-center py-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando productos...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Cargando productos disponibles...</p>
+        // ✅ MOSTRAR LOADING INMEDIATAMENTE
+        $('#resultadosBusqueda').html(`
+            <div class="col-12 text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando productos...</span>
                 </div>
-            `);
-        }
+                <p class="mt-2 text-muted">Cargando productos disponibles...</p>
+            </div>
+        `);
 
+        // ✅ REALIZAR BÚSQUEDA INICIAL
         await buscarProductos('');
+        
+        // ✅ MARCAR COMO COMPLETADA SOLO SI LA BÚSQUEDA FUE EXITOSA
+        cargaInicialCompletada = true;
+        console.log('📦 Carga inicial completada exitosamente');
+        
         console.log('📦 === FIN cargarProductosIniciales (exitosa) ===');
     } catch (error) {
         console.error('❌ Error cargando productos iniciales:', error);
-        // ✅ RESETEAR FLAG EN CASO DE ERROR PARA PERMITIR REINTENTO
         cargaInicialCompletada = false;
         $('#resultadosBusqueda').html(`
             <div class="col-12 text-center py-4 text-danger">
