@@ -71,13 +71,13 @@ namespace GestionLlantera.Web.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError("❌ Error procesando venta: {Status} - {Content}", response.StatusCode, responseContent);
-                    
+
                     // Intentar deserializar el error
                     try
                     {
                         var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
                         var errorMessage = errorResponse?.message?.ToString() ?? "Error desconocido";
-                        
+
                         return new ApiResponse<object>
                         {
                             IsSuccess = false,
@@ -97,9 +97,9 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                
+
                 _logger.LogInformation("✅ Venta procesada exitosamente");
-                
+
                 return new ApiResponse<object>
                 {
                     IsSuccess = true,
@@ -148,7 +148,7 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                
+
                 return new ApiResponse<object>
                 {
                     IsSuccess = true,
@@ -355,5 +355,47 @@ namespace GestionLlantera.Web.Services
         }
 
         // Otros métodos del servicio...
+    
+
+    public async Task<VentaCompletaDTO> ProcesarVentaCompletaAsync(VentaCompletaDTO ventaCompleta)
+    {
+        try
+        {
+            var json = JsonConvert.SerializeObject(ventaCompleta);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("/api/facturacion/procesar-venta", content);
+            response.EnsureSuccessStatusCode();
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var resultado = JsonConvert.DeserializeObject<VentaCompletaDTO>(responseJson);
+
+            return resultado ?? throw new Exception("No se pudo procesar la venta");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error procesando venta completa: {Error}", ex.Message);
+            throw;
+        }
     }
+
+    public async Task<byte[]> GenerarReciboAsync(FacturaDTO factura)
+    {
+        try
+        {
+            var json = JsonConvert.SerializeObject(factura);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("/api/facturacion/generar-recibo", content);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsByteArrayAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generando recibo: {Error}", ex.Message);
+            throw;
+        }
+    }
+}
 }

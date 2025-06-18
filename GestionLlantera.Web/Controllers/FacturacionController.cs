@@ -310,6 +310,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         // GET: Facturación
+        [HttpGet]
         public IActionResult Index()
         {
             return View();
