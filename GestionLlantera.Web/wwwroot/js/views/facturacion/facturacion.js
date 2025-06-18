@@ -237,10 +237,7 @@ async function buscarProductos(termino) {
         busquedaEnProceso = true;
         ultimaBusqueda = termino;
 
-        // ✅ MOSTRAR LOADING SOLO SI NO HAY CONTENIDO PREVIO
-        if (!window.lastProductsHash) {
-            mostrarCargandoBusqueda();
-        }
+        // ✅ NO MOSTRAR LOADING PARA PREVENIR PARPADEO - El contenido se actualiza solo si hay cambios reales
 
         const response = await fetch('/Inventario/ObtenerProductosParaFacturacion', {
             method: 'GET',
@@ -323,6 +320,16 @@ function mostrarResultadosProductos(productos) {
         console.log('🔄 Productos idénticos detectados, omitiendo actualización DOM para prevenir parpadeo');
         console.log('🔄 === FIN mostrarResultadosProductos (sin cambios) ===');
         return;
+    }
+
+    // ✅ VERIFICAR SI EL CONTENEDOR YA TIENE CONTENIDO SIMILAR
+    const currentContent = container.html().trim();
+    if (currentContent && !currentContent.includes('spinner-border') && !currentContent.includes('Cargando')) {
+        // Si ya hay contenido de productos, no actualizar a menos que haya cambios reales
+        if (window.lastProductsHash && productos.length === container.find('.producto-card').length) {
+            console.log('🔄 Mismo número de productos detectado, verificando si actualización es necesaria');
+            // Solo continuar si realmente hay cambios
+        }
     }
 
     console.log('🔄 Construyendo HTML para', productos.length, 'productos');
@@ -1542,15 +1549,18 @@ async function cargarProductosIniciales() {
     try {
         console.log('📦 Iniciando carga de productos iniciales...');
         
-        // ✅ MOSTRAR MENSAJE INICIAL MIENTRAS CARGA
-        $('#resultadosBusqueda').html(`
-            <div class="col-12 text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Cargando productos...</span>
+        // ✅ MOSTRAR MENSAJE INICIAL SOLO SI NO HAY CONTENIDO PREVIO
+        const currentContent = $('#resultadosBusqueda').html().trim();
+        if (!currentContent || currentContent.includes('Busca productos para agregar')) {
+            $('#resultadosBusqueda').html(`
+                <div class="col-12 text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando productos...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando productos disponibles...</p>
                 </div>
-                <p class="mt-2 text-muted">Cargando productos disponibles...</p>
-            </div>
-        `);
+            `);
+        }
 
         await buscarProductos('');
         console.log('📦 === FIN cargarProductosIniciales (exitosa) ===');
@@ -1577,6 +1587,7 @@ function reiniciarCargaProductos() {
     cargaInicialCompletada = false;
     busquedaEnProceso = false;
     ultimaBusqueda = '';
+    window.lastProductsHash = null; // ✅ LIMPIAR HASH PARA FORZAR ACTUALIZACIÓN
 
     // Limpiar timeouts activos
     if (timeoutBusquedaActivo) {
@@ -1584,8 +1595,25 @@ function reiniciarCargaProductos() {
         timeoutBusquedaActivo = null;
     }
 
+    // Limpiar contenido actual
+    $('#resultadosBusqueda').empty();
+
     // Recargar productos inmediatamente
     cargarProductosIniciales();
+}
+
+// ✅ FUNCIÓN PARA LIMPIAR ESTADO COMPLETAMENTE CUANDO SEA NECESARIO
+function limpiarEstadoBusqueda() {
+    console.log('🧹 Limpiando estado de búsqueda...');
+    cargaInicialCompletada = false;
+    busquedaEnProceso = false;
+    ultimaBusqueda = '';
+    window.lastProductsHash = null;
+    
+    if (timeoutBusquedaActivo) {
+        clearTimeout(timeoutBusquedaActivo);
+        timeoutBusquedaActivo = null;
+    }
 }
 
 // ===== FUNCIÓN DE DEPURACIÓN =====
