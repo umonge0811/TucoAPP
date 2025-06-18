@@ -219,33 +219,36 @@ async function buscarProductos(termino) {
     console.log('🔍 Término recibido:', `"${termino}"`);
     console.log('🔍 busquedaEnProceso:', busquedaEnProceso);
     console.log('🔍 ultimaBusqueda:', `"${ultimaBusqueda}"`);
-    console.log('🔍 cargaInicialCompletada:', cargaInicialCompletada);
-    console.log('🔍 Stack trace:', new Error().stack);
 
-    // Prevenir múltiples llamadas simultáneas
+    // ✅ PREVENIR BÚSQUEDAS DUPLICADAS DEL MISMO TÉRMINO
+    if (termino === ultimaBusqueda && cargaInicialCompletada) {
+        console.log('⏸️ Búsqueda duplicada del mismo término omitida:', termino);
+        return;
+    }
+
+    // ✅ PREVENIR MÚLTIPLES LLAMADAS SIMULTÁNEAS
     if (busquedaEnProceso) {
         console.log('⏸️ Búsqueda ya en proceso, omitiendo llamada duplicada');
         return;
     }
 
     try {
-        console.log('🔍 Iniciando búsqueda...');
+        console.log('🔍 Iniciando búsqueda válida...');
         busquedaEnProceso = true;
-        ultimaBusqueda = termino; // Actualizar término actual
-        console.log(`🔍 Buscando productos: "${termino}"`);
+        ultimaBusqueda = termino;
 
-        // Mostrar loading
-        console.log('🔍 Mostrando loading...');
-        mostrarCargandoBusqueda();
+        // ✅ MOSTRAR LOADING SOLO SI NO HAY CONTENIDO PREVIO
+        if (!window.lastProductsHash) {
+            mostrarCargandoBusqueda();
+        }
 
-        // El sistema usa autenticación por cookies, no necesitamos token manual
         const response = await fetch('/Inventario/ObtenerProductosParaFacturacion', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             },
-            credentials: 'include' // Incluir cookies de autenticación automáticamente
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -255,36 +258,39 @@ async function buscarProductos(termino) {
         }
 
         const data = await response.json();
-        console.log('📋 Respuesta completa del servidor:', data);
-        console.log('📋 Tipo de response:', typeof data);
-        console.log('📋 response.data:', data.data);
-        console.log('📋 Tipo de response.data:', typeof data.data);
-        console.log('📋 Array.isArray(response.data):', Array.isArray(data.data));
+        console.log('📋 Respuesta del servidor recibida');
 
         if (data.success === true && data.data) {
-            console.log(`✅ Se encontraron ${data.data.length} productos disponibles para venta`);
-            console.log('🔍 Llamando a mostrarResultadosProductos...');
-            console.log('🔍 Productos que se van a pasar:', data.data);
-            mostrarResultadosProductos(data.data, termino);
-            console.log('🔍 mostrarResultadosProductos completado');
+            console.log(`✅ Se encontraron ${data.data.length} productos disponibles`);
+            
+            // ✅ FILTRAR PRODUCTOS SEGÚN EL TÉRMINO DE BÚSQUEDA (si es necesario)
+            let productosFiltrados = data.data;
+            if (termino && termino.length >= 2) {
+                productosFiltrados = data.data.filter(producto => {
+                    const nombre = (producto.nombreProducto || producto.nombre || '').toLowerCase();
+                    return nombre.includes(termino.toLowerCase());
+                });
+                console.log(`🔍 Productos filtrados por término "${termino}": ${productosFiltrados.length}`);
+            }
+            
+            mostrarResultadosProductos(productosFiltrados);
+            
+            // ✅ MARCAR CARGA INICIAL COMO COMPLETADA
+            if (!cargaInicialCompletada) {
+                cargaInicialCompletada = true;
+                console.log('📦 Carga inicial marcada como completada');
+            }
         } else {
             const errorMessage = data.message || 'Error desconocido al obtener productos';
             console.error('❌ Error en la respuesta:', errorMessage);
-            console.error('❌ Datos completos:', data);
-            console.log('🔍 Mostrando productos vacíos por error...');
-            mostrarResultadosProductos([], termino);
-
-            // Mostrar error específico al usuario
+            mostrarResultadosProductos([]);
             mostrarToast('Error', errorMessage, 'danger');
         }
 
     } catch (error) {
         console.error('❌ Error buscando productos:', error);
-        console.log('🔍 Mostrando error de búsqueda...');
         mostrarErrorBusqueda('productos', error.message);
     } finally {
-        // Liberar el estado inmediatamente
-        console.log('🔍 Liberando busquedaEnProceso...');
         busquedaEnProceso = false;
         console.log('🔍 === FIN buscarProductos ===');
     }
@@ -295,11 +301,8 @@ function mostrarResultadosProductos(productos) {
     console.log('🔄 === INICIO mostrarResultadosProductos ===');
     console.log('🔄 CONTADOR DE LLAMADAS:', contadorLlamadasMostrarResultados);
     console.log('🔄 Productos recibidos:', productos ? productos.length : 'null/undefined');
-    console.log('🔄 Datos completos de productos:', productos);
-    console.log('🔄 Stack trace de llamada:', new Error().stack);
 
     const container = $('#resultadosBusqueda');
-    console.log('🔄 Container encontrado:', container.length > 0);
 
     if (!productos || productos.length === 0) {
         console.log('🔄 No hay productos, mostrando sin resultados');
@@ -307,69 +310,40 @@ function mostrarResultadosProductos(productos) {
         return;
     }
 
-    console.log('🔄 Iniciando construcción HTML para', productos.length, 'productos');
+    // ✅ CREAR HASH ÚNICO DEL CONTENIDO PARA DETECTAR CAMBIOS REALES
+    const productosHash = JSON.stringify(productos.map(p => ({
+        id: p.productoId || p.id,
+        nombre: p.nombreProducto || p.nombre,
+        precio: p.precio,
+        stock: p.cantidadEnInventario || p.stock
+    })));
+
+    // ✅ VARIABLE GLOBAL PARA RASTREAR EL ÚLTIMO HASH
+    if (window.lastProductsHash === productosHash) {
+        console.log('🔄 Productos idénticos detectados, omitiendo actualización DOM para prevenir parpadeo');
+        console.log('🔄 === FIN mostrarResultadosProductos (sin cambios) ===');
+        return;
+    }
+
+    console.log('🔄 Construyendo HTML para', productos.length, 'productos');
     let html = '';
     productos.forEach((producto, index) => {
-        console.log(`🔄 Procesando producto ${index + 1}:`, producto);
-        
-        // ✅ MAPEO CORRECTO DE PROPIEDADES - ADAPTARSE A LA ESTRUCTURA REAL
-        // Intentar múltiples variaciones de nombres de propiedades comunes
-        const nombreProducto = producto.nombreProducto || 
-                               producto.nombre || 
-                               producto.NombreProducto || 
-                               producto.Nombre || 
-                               'Producto sin nombre';
-        
-        const productoId = producto.productoId || 
-                          producto.id || 
-                          producto.ProductoId || 
-                          producto.Id || 
-                          'unknown';
-        
-        const precio = producto.precio || 
-                      producto.Precio || 
-                      producto.precioUnitario || 
-                      producto.PrecioUnitario || 
-                      0;
-        
-        const cantidadInventario = producto.cantidadEnInventario || 
-                                  producto.cantidadInventario || 
-                                  producto.stock || 
-                                  producto.CantidadEnInventario || 
-                                  producto.Stock || 
-                                  0;
-        
-        const stockMinimo = producto.stockMinimo || 
-                           producto.StockMinimo || 
-                           producto.minimoStock || 
-                           producto.MinimoStock || 
-                           0;
+        // MAPEO DE PROPIEDADES
+        const nombreProducto = producto.nombreProducto || producto.nombre || producto.NombreProducto || producto.Nombre || 'Producto sin nombre';
+        const productoId = producto.productoId || producto.id || producto.ProductoId || producto.Id || 'unknown';
+        const precio = producto.precio || producto.Precio || producto.precioUnitario || producto.PrecioUnitario || 0;
+        const cantidadInventario = producto.cantidadEnInventario || producto.cantidadInventario || producto.stock || producto.CantidadEnInventario || producto.Stock || 0;
+        const stockMinimo = producto.stockMinimo || producto.StockMinimo || producto.minimoStock || producto.MinimoStock || 0;
 
-        console.log(`🔄 Propiedades mapeadas - Nombre: "${nombreProducto}", ID: "${productoId}", Precio: ${precio}, Stock: ${cantidadInventario}`);
-        
-        // Validación ULTRA robusta para imágenes - prevenir cualquier error
+        // VALIDACIÓN DE IMÁGENES
         let imagenUrl = '/images/no-image.png';
-
         try {
-            // Verificar que el producto existe
             if (producto && typeof producto === 'object') {
-                // Múltiples variaciones de nombres para imágenes
-                const imagenesArray = producto.imagenesProductos || 
-                                     producto.imagenes || 
-                                     producto.ImagenesProductos || 
-                                     producto.Imagenes ||
-                                     [];
-
+                const imagenesArray = producto.imagenesProductos || producto.imagenes || producto.ImagenesProductos || producto.Imagenes || [];
                 if (Array.isArray(imagenesArray) && imagenesArray.length > 0) {
                     const primeraImagen = imagenesArray[0];
                     if (primeraImagen && typeof primeraImagen === 'object') {
-                        const urlImagen = primeraImagen.urlimagen || 
-                                         primeraImagen.url || 
-                                         primeraImagen.Urlimagen || 
-                                         primeraImagen.Url ||
-                                         primeraImagen.urlImagen ||
-                                         '';
-                        
+                        const urlImagen = primeraImagen.urlimagen || primeraImagen.url || primeraImagen.Urlimagen || primeraImagen.Url || primeraImagen.urlImagen || '';
                         if (urlImagen && urlImagen.trim() !== '') {
                             imagenUrl = urlImagen;
                         }
@@ -377,19 +351,18 @@ function mostrarResultadosProductos(productos) {
                 }
             }
         } catch (error) {
-            console.warn('⚠️ Error procesando imágenes del producto:', error, producto);
+            console.warn('⚠️ Error procesando imágenes del producto:', error);
             imagenUrl = '/images/no-image.png';
         }
 
-        // Calcular precios según método de pago - con validación
+        // CÁLCULO DE PRECIOS
         const precioBase = (typeof precio === 'number') ? precio : 0;
         const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
         const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
 
-        const stockClase = cantidadInventario <= 0 ? 'border-danger' : 
-                          cantidadInventario <= stockMinimo ? 'border-warning' : '';
+        const stockClase = cantidadInventario <= 0 ? 'border-danger' : cantidadInventario <= stockMinimo ? 'border-warning' : '';
 
-        // ✅ CREAR OBJETO PRODUCTO LIMPIO PARA EVITAR ERRORES DE JSON
+        // OBJETO PRODUCTO LIMPIO
         const productoLimpio = {
             productoId: productoId,
             nombreProducto: nombreProducto,
@@ -401,7 +374,7 @@ function mostrarResultadosProductos(productos) {
             llanta: producto.llanta || producto.Llanta || null
         };
 
-        // ✅ ESCAPAR DATOS PARA PREVENIR ERRORES EN EL HTML
+        // ESCAPAR DATOS
         const nombreEscapado = nombreProducto.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
 
@@ -422,12 +395,8 @@ function mostrarResultadosProductos(productos) {
                     </div>
                     <div class="card-body p-2">
                         <h6 class="card-title mb-1" title="${nombreEscapado}">
-                            ${nombreProducto.length > 25 ? 
-                                nombreProducto.substring(0, 25) + '...' : 
-                                nombreProducto}
+                            ${nombreProducto.length > 25 ? nombreProducto.substring(0, 25) + '...' : nombreProducto}
                         </h6>
-
-                        <!-- Precios diferenciados -->
                         <div class="precios-metodos mb-2">
                             <div class="row text-center">
                                 <div class="col-6">
@@ -440,13 +409,11 @@ function mostrarResultadosProductos(productos) {
                                 </div>
                             </div>
                         </div>
-
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <small class="text-primary">Stock: ${cantidadInventario}</small>
                             ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
                                 '<small class="badge bg-warning">Stock Bajo</small>' : ''}
                         </div>
-
                         <div class="d-grid gap-1">
                             ${cantidadInventario > 0 ? `
                                 <button type="button" 
@@ -471,33 +438,19 @@ function mostrarResultadosProductos(productos) {
         `;
     });
 
-    console.log('🔄 Actualizando DOM con HTML generado (longitud:', html.length, 'caracteres)');
+    console.log('🔄 Actualizando DOM (longitud HTML:', html.length, 'caracteres)');
     
-    // ✅ PREVENIR MÚLTIPLES ACTUALIZACIONES - SOLO ACTUALIZAR SI EL CONTENIDO ES DIFERENTE
-    const contenidoActual = container.html();
-    if (contenidoActual === html) {
-        console.log('🔄 El contenido es idéntico, omitiendo actualización para prevenir parpadeo');
-        console.log('🔄 === FIN mostrarResultadosProductos (sin cambios) ===');
-        return;
-    }
-    
+    // ✅ ACTUALIZAR DOM Y GUARDAR HASH
     container.html(html);
-    console.log('🔄 DOM actualizado, configurando eventos...');
+    window.lastProductsHash = productosHash;
 
-    // ✅ REMOVER EVENTOS ANTERIORES PARA PREVENIR DUPLICADOS
-    $('.btn-seleccionar-producto').off('click.facturacion');
-    $('.btn-ver-detalle').off('click.facturacion');
-
-    // ✅ CONFIGURAR EVENTOS CON NAMESPACE PARA EVITAR CONFLICTOS
-    $('.btn-seleccionar-producto').on('click.facturacion', function(e) {
+    // ✅ CONFIGURAR EVENTOS UNA SOLA VEZ
+    $('.btn-seleccionar-producto').off('click.facturacion').on('click.facturacion', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
         try {
             const productoJson = $(this).attr('data-producto');
-            console.log('🔄 JSON del producto a parsear:', productoJson.substring(0, 100) + '...');
             const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
-            console.log('🔄 Producto parseado exitosamente:', producto.nombreProducto);
             mostrarModalSeleccionProducto(producto);
         } catch (error) {
             console.error('❌ Error parseando producto para selección:', error);
@@ -505,14 +458,12 @@ function mostrarResultadosProductos(productos) {
         }
     });
 
-    $('.btn-ver-detalle').on('click.facturacion', function(e) {
+    $('.btn-ver-detalle').off('click.facturacion').on('click.facturacion', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
         try {
             const productoJson = $(this).attr('data-producto');
             const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
-            console.log('🔄 Abriendo detalle para producto:', producto.nombreProducto);
             verDetalleProducto(producto);
         } catch (error) {
             console.error('❌ Error parseando producto para detalle:', error);
@@ -520,7 +471,6 @@ function mostrarResultadosProductos(productos) {
         }
     });
 
-    console.log('🔄 Eventos configurados. Total botones seleccionar:', $('.btn-seleccionar-producto').length);
     console.log('🔄 === FIN mostrarResultadosProductos ===');
 }
 
@@ -1575,20 +1525,34 @@ function procesarVenta() {
 async function cargarProductosIniciales() {
     console.log('📦 === INICIO cargarProductosIniciales ===');
     console.log('📦 cargaInicialCompletada:', cargaInicialCompletada);
-    console.log('📦 Stack trace:', new Error().stack);
 
-    // Prevenir carga múltiple
+    // ✅ PREVENIR MÚLTIPLES CARGAS INICIALES
     if (cargaInicialCompletada) {
         console.log('📦 Productos iniciales ya cargados, omitiendo');
-        console.log('📦 === FIN cargarProductosIniciales (ya completada) ===');
+        return;
+    }
+
+    // ✅ PREVENIR CARGA SI YA HAY UNA BÚSQUEDA EN PROCESO
+    if (busquedaEnProceso) {
+        console.log('📦 Búsqueda en proceso, posponiendo carga inicial');
+        setTimeout(() => cargarProductosIniciales(), 500);
         return;
     }
 
     try {
-        console.log('📦 Cargando productos iniciales...');
-        await buscarProductos(''); // Cargar todos los productos con stock
-        console.log('📦 Búsqueda inicial completada, marcando como completada...');
-        cargaInicialCompletada = true;
+        console.log('📦 Iniciando carga de productos iniciales...');
+        
+        // ✅ MOSTRAR MENSAJE INICIAL MIENTRAS CARGA
+        $('#resultadosBusqueda').html(`
+            <div class="col-12 text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando productos...</span>
+                </div>
+                <p class="mt-2 text-muted">Cargando productos disponibles...</p>
+            </div>
+        `);
+
+        await buscarProductos('');
         console.log('📦 === FIN cargarProductosIniciales (exitosa) ===');
     } catch (error) {
         console.error('❌ Error cargando productos iniciales:', error);
