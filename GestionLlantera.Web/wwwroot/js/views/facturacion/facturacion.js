@@ -247,7 +247,7 @@ async function buscarProductos(termino) {
 
         // ✅ NO MOSTRAR LOADING PARA PREVENIR PARPADEO - El contenido se actualiza solo si hay cambios reales
 
-        const response = await fetch('/Inventario/ObtenerProductosParaFacturacion', {
+        const response = await fetch('/Facturacion/ObtenerProductosParaFacturacion', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -265,13 +265,13 @@ async function buscarProductos(termino) {
         const data = await response.json();
         console.log('📋 Respuesta del servidor recibida');
 
-        if (data.success === true && data.data) {
-            console.log(`✅ Se encontraron ${data.data.length} productos disponibles`);
+        if (data && data.productos) {
+            console.log(`✅ Se encontraron ${data.productos.length} productos disponibles`);
 
             // ✅ FILTRAR PRODUCTOS SEGÚN EL TÉRMINO DE BÚSQUEDA (si es necesario)
-            let productosFiltrados = data.data;
+            let productosFiltrados = data.productos;
             if (termino && termino.length >= 2) {
-                productosFiltrados = data.data.filter(producto => {
+                productosFiltrados = data.productos.filter(producto => {
                     const nombre = (producto.nombreProducto || producto.nombre || '').toLowerCase();
                     return nombre.includes(termino.toLowerCase());
                 });
@@ -346,31 +346,27 @@ function mostrarResultadosProductos(productos) {
     let html = '';
     productos.forEach((producto, index) => {
         // MAPEO DE PROPIEDADES
-        const nombreProducto = producto.nombreProducto || producto.nombre || producto.NombreProducto || producto.Nombre || 'Producto sin nombre';
-        const productoId = producto.productoId || producto.id || producto.ProductoId || producto.Id || 'unknown';
-        const precio = producto.precio || producto.Precio || producto.precioUnitario || producto.PrecioUnitario || 0;
-        const cantidadInventario = producto.cantidadEnInventario || producto.cantidadInventario || producto.stock || producto.CantidadEnInventario || producto.Stock || 0;
-        const stockMinimo = producto.stockMinimo || producto.StockMinimo || producto.minimoStock || producto.MinimoStock || 0;
+        const nombreProducto = producto.nombreProducto || producto.NombreProducto || 'Producto sin nombre';
+        const productoId = producto.productoId || producto.ProductoId || 'unknown';
+        const precio = producto.precio || producto.Precio || 0;
+        const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
+        const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
 
         // VALIDACIÓN DE IMÁGENES
         let imagenUrl = '/images/no-image.png'; // Imagen por defecto
         try {
             if (producto && typeof producto === 'object') {
-                const imagenesArray = producto.imagenesProductos || producto.imagenes || producto.ImagenesProductos || producto.Imagenes || [];
+                const imagenesArray = producto.imagenesUrls || producto.ImagenesUrls || [];
                 if (Array.isArray(imagenesArray) && imagenesArray.length > 0) {
-                    const primeraImagen = imagenesArray[0];
-                    if (primeraImagen && typeof primeraImagen === 'object') {
-                        // La propiedad en la base de datos se llama 'Urlimagen'
-                        const urlImagen = primeraImagen.urlImagen || primeraImagen.Urlimagen || '';
-                        if (urlImagen && urlImagen.trim() !== '') {
-                            // Construir la URL completa con la API base
-                            if (urlImagen.startsWith('/uploads/productos/')) {
-                                imagenUrl = `https://localhost:7273${urlImagen}`;
-                            } else if (urlImagen.startsWith('uploads/productos/')) {
-                                imagenUrl = `https://localhost:7273/${urlImagen}`;
-                            } else {
-                                imagenUrl = urlImagen; // URL completa
-                            }
+                    const urlImagen = imagenesArray[0];
+                    if (urlImagen && urlImagen.trim() !== '') {
+                        // Construir la URL completa con la API base
+                        if (urlImagen.startsWith('/uploads/productos/')) {
+                            imagenUrl = `https://localhost:7273${urlImagen}`;
+                        } else if (urlImagen.startsWith('uploads/productos/')) {
+                            imagenUrl = `https://localhost:7273/${urlImagen}`;
+                        } else {
+                            imagenUrl = urlImagen; // URL completa
                         }
                     }
                 }
@@ -394,9 +390,12 @@ function mostrarResultadosProductos(productos) {
             precio: precioBase,
             cantidadEnInventario: cantidadInventario,
             stockMinimo: stockMinimo,
-            imagenesProductos: producto.imagenesProductos || producto.imagenes || [],
+            imagenesUrls: producto.imagenesUrls || [],
             descripcion: producto.descripcion || producto.Descripcion || '',
-            llanta: producto.llanta || producto.Llanta || null
+            esLlanta: producto.esLlanta || false,
+            marca: producto.marca || null,
+            modelo: producto.modelo || null,
+            medidaCompleta: producto.medidaCompleta || null
         };
 
         // ESCAPAR DATOS
