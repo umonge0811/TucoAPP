@@ -349,17 +349,27 @@ function mostrarResultadosProductos(productos) {
         let imagenUrl = '/images/no-image.png'; // Imagen por defecto
         try {
             if (producto && typeof producto === 'object') {
-                const imagenesArray = producto.imagenesUrls || producto.ImagenesUrls || [];
-                if (Array.isArray(imagenesArray) && imagenesArray.length > 0) {
+                // Intentar primero con imagenesProductos (desde el endpoint)
+                let imagenesArray = [];
+                
+                if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+                    imagenesArray = producto.imagenesProductos.map(img => img.Urlimagen || img.urlImagen).filter(url => url);
+                } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+                    imagenesArray = producto.imagenesUrls.filter(url => url);
+                }
+                
+                if (imagenesArray.length > 0) {
                     const urlImagen = imagenesArray[0];
                     if (urlImagen && urlImagen.trim() !== '') {
                         // Construir la URL completa con la API base
-                        if (urlImagen.startsWith('/uploads/productos/')) {
+                        if (urlImagen.startsWith('http')) {
+                            imagenUrl = urlImagen; // URL completa
+                        } else if (urlImagen.startsWith('/uploads/productos/')) {
                             imagenUrl = `https://localhost:7273${urlImagen}`;
                         } else if (urlImagen.startsWith('uploads/productos/')) {
                             imagenUrl = `https://localhost:7273/${urlImagen}`;
                         } else {
-                            imagenUrl = urlImagen; // URL completa
+                            imagenUrl = urlImagen;
                         }
                     }
                 }
@@ -572,19 +582,26 @@ function mostrarModalSeleccionProducto(producto) {
     // Validación robusta para imágenes con URL de la API
     let imagenUrl = '/images/no-image.png';
     try {
-        if (producto.imagenesProductos && 
-            Array.isArray(producto.imagenesProductos) && 
-            producto.imagenesProductos.length > 0) {
-
-            const primeraImagen = producto.imagenesProductos[0];
-            if (primeraImagen && primeraImagen.Urlimagen) {
-                const urlImagen = primeraImagen.Urlimagen;
+        let imagenesArray = [];
+        
+        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+            imagenesArray = producto.imagenesProductos.map(img => img.Urlimagen || img.urlImagen).filter(url => url);
+        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+            imagenesArray = producto.imagenesUrls.filter(url => url);
+        }
+        
+        if (imagenesArray.length > 0) {
+            const urlImagen = imagenesArray[0];
+            if (urlImagen && urlImagen.trim() !== '') {
                 // ✅ CONSTRUIR URL COMPLETA PARA LA API
-                if (urlImagen.startsWith('http') || urlImagen.startsWith('https')) {
+                if (urlImagen.startsWith('http')) {
                     imagenUrl = urlImagen;
+                } else if (urlImagen.startsWith('/uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273${urlImagen}`;
+                } else if (urlImagen.startsWith('uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273/${urlImagen}`;
                 } else {
-                    const cleanUrl = urlImagen.startsWith('/') ? urlImagen.substring(1) : urlImagen;
-                    imagenUrl = `https://localhost:7273/${cleanUrl}`;
+                    imagenUrl = urlImagen;
                 }
             }
         }
@@ -1133,19 +1150,26 @@ function verDetalleProducto(producto) {
     // Validación robusta para imágenes con URL de la API
     let imagenUrl = '/images/no-image.png';
     try {
-        if (producto.imagenesProductos && 
-            Array.isArray(producto.imagenesProductos) && 
-            producto.imagenesProductos.length > 0) {
-
-            const primeraImagen = producto.imagenesProductos[0];
-            if (primeraImagen && primeraImagen.Urlimagen) {
-                const urlImagen = primeraImagen.Urlimagen;
+        let imagenesArray = [];
+        
+        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+            imagenesArray = producto.imagenesProductos.map(img => img.Urlimagen || img.urlImagen).filter(url => url);
+        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+            imagenesArray = producto.imagenesUrls.filter(url => url);
+        }
+        
+        if (imagenesArray.length > 0) {
+            const urlImagen = imagenesArray[0];
+            if (urlImagen && urlImagen.trim() !== '') {
                 // ✅ CONSTRUIR URL COMPLETA PARA LA API
-                if (urlImagen.startsWith('http') || urlImagen.startsWith('https')) {
+                if (urlImagen.startsWith('http')) {
                     imagenUrl = urlImagen;
+                } else if (urlImagen.startsWith('/uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273${urlImagen}`;
+                } else if (urlImagen.startsWith('uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273/${urlImagen}`;
                 } else {
-                    const cleanUrl = urlImagen.startsWith('/') ? urlImagen.substring(1) : urlImagen;
-                    imagenUrl = `https://localhost:7273/${cleanUrl}`;
+                    imagenUrl = urlImagen;
                 }
             }
         }
