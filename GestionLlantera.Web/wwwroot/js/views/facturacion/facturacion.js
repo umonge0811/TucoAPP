@@ -1094,43 +1094,383 @@ async function procesarVentaFinal() {
         const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
+        const metodoPago = $('#metodoPago').val();
+
+        // Validaciones finales
+        if (metodoPago === 'efectivo') {
+            const montoRecibido = parseFloat($('#montoRecibido').val()) || 0;
+            if (montoRecibido < total) {
+                mostrarToast('Error', 'El monto recibido debe ser mayor o igual al total', 'warning');
+                return;
+            }
+        }
 
         const ventaData = {
             clienteId: clienteSeleccionado.id,
             nombreCliente: clienteSeleccionado.nombre,
-            emailCliente: clienteSeleccionado.email,
-            productos: productosEnVenta,
+            identificacionCliente: clienteSeleccionado.identificacion || '',
+            telefonoCliente: clienteSeleccionado.telefono || '',
+            emailCliente: clienteSeleccionado.email || '',
+            direccionCliente: clienteSeleccionado.direccion || '',
+            productos: productosEnVenta.map(p => ({
+                productoId: p.productoId,
+                nombreProducto: p.nombreProducto,
+                cantidad: p.cantidad,
+                precioUnitario: p.precioUnitario,
+                metodoPago: p.metodoPago || metodoPago
+            })),
             subtotal: subtotal,
             iva: iva,
             total: total,
-            metodoPago: $('#metodoPago').val(),
-            observaciones: $('#observacionesVenta').val()
+            metodoPago: metodoPago,
+            observaciones: $('#observacionesVenta').val() || '',
+            usuarioCreadorId: window.currentUserId || '1', // Asegurarse de tener el ID del usuario
+            montoRecibido: metodoPago === 'efectivo' ? parseFloat($('#montoRecibido').val()) : total,
+            cambio: metodoPago === 'efectivo' ? parseFloat($('#cambioCalculado').val()) || 0 : 0
         };
 
-        // Simular procesamiento (aquí iría la llamada real a la API)
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log('📤 Enviando datos de venta:', ventaData);
 
-        // Éxito
-        modalFinalizarVenta.hide();
-        mostrarToast('¡Venta procesada!', 'La venta ha sido procesada exitosamente', 'success');
+        // ✅ PASO 1: Procesar la venta (crear factura y ajustar stock automáticamente)
+        const response = await fetch('/Facturacion/ProcesarVentaCompleta', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(ventaData)
+        });
 
-        // Limpiar venta
-        productosEnVenta = [];
-        clienteSeleccionado = null;
-        $('#clienteBusqueda').val('');
-        $('#clienteSeleccionado').addClass('d-none');
-        actualizarVistaCarrito();
-        actualizarTotales();
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('✅ Resultado de la venta:', resultado);
+
+        if (resultado.isSuccess && resultado.data) {
+            const datosVenta = resultado.data;
+            
+            // ✅ PASO 2: Cerrar modal y mostrar éxito
+            modalFinalizarVenta.hide();
+            
+            // ✅ PASO 3: Mostrar resumen con opción de imprimir
+            await mostrarResumenVentaExitosa(datosVenta, ventaData);
+
+            // ✅ PASO 4: Limpiar la venta actual
+            limpiarVentaDespuesProceso();
+
+            mostrarToast('¡Venta Exitosa!', 
+                `Factura ${datosVenta.numeroFactura} creada. Stock ajustado automáticamente.`, 
+                'success');
+
+        } else {
+            throw new Error(resultado.message || 'Error procesando la venta');
+        }
 
     } catch (error) {
         console.error('❌ Error procesando venta:', error);
-        mostrarToast('Error', 'No se pudo procesar la venta', 'danger');
+        mostrarToast('Error en Venta', error.message || 'No se pudo procesar la venta', 'danger');
     } finally {
         const btnConfirmar = $('#btnConfirmarVenta');
         btnConfirmar.prop('disabled', false);
         btnConfirmar.find('.btn-normal-state').removeClass('d-none');
         btnConfirmar.find('.btn-loading-state').addClass('d-none');
     }
+}
+
+// ===== FUNCIÓN PARA MOSTRAR RESUMEN DE VENTA EXITOSA =====
+async function mostrarResumenVentaExitosa(datosVenta, ventaOriginal) {
+    const htmlResumen = `
+        <div class="text-center mb-4">
+            <div class="alert alert-success border-success">
+                <i class="bi bi-check-circle-fill display-4 text-success mb-2"></i>
+                <h4 class="alert-heading">¡Venta Procesada Exitosamente!</h4>
+                <hr>
+                <p class="mb-1"><strong>Factura:</strong> ${datosVenta.numeroFactura}</p>
+                <p class="mb-1"><strong>Total:</strong> ₡${formatearMoneda(datosVenta.total)}</p>
+                <p class="mb-0"><strong>Cliente:</strong> ${ventaOriginal.nombreCliente}</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h6><i class="bi bi-receipt me-2"></i>Detalles de la Transacción:</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Método de Pago:</strong> ${ventaOriginal.metodoPago}</li>
+                    <li><strong>Fecha:</strong> ${new Date().toLocaleString()}</li>
+                    ${ventaOriginal.metodoPago === 'efectivo' ? 
+                        `<li><strong>Monto Recibido:</strong> ₡${formatearMoneda(ventaOriginal.montoRecibido)}</li>
+                         <li><strong>Cambio:</strong> ₡${formatearMoneda(ventaOriginal.cambio)}</li>` : ''}
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6><i class="bi bi-box-seam me-2"></i>Ajustes de Stock:</h6>
+                <ul class="list-unstyled small">
+                    ${datosVenta.ajustesStock.map(ajuste => 
+                        `<li>📦 ${ajuste.nombreProducto}: ${ajuste.stockAnterior} → ${ajuste.stockNuevo} (-${ajuste.cantidadVendida})</li>`
+                    ).join('')}
+                </ul>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Stock actualizado automáticamente.</strong> 
+            Los productos vendidos han sido descontados del inventario.
+        </div>
+    `;
+
+    const resultado = await Swal.fire({
+        title: '🎉 Venta Completada',
+        html: htmlResumen,
+        icon: null,
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-printer me-2"></i>Imprimir Recibo',
+        cancelButtonText: '<i class="bi bi-house me-2"></i>Continuar',
+        allowOutsideClick: false,
+        customClass: {
+            popup: 'swal-wide'
+        }
+    });
+
+    if (resultado.isConfirmed) {
+        // Imprimir recibo
+        await imprimirRecibo(datosVenta.facturaId);
+    }
+}
+
+// ===== FUNCIÓN PARA IMPRIMIR RECIBO =====
+async function imprimirRecibo(facturaId) {
+    try {
+        console.log('🖨️ Generando recibo para factura:', facturaId);
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Generando Recibo',
+            html: '<div class="spinner-border text-primary"></div><p class="mt-2">Preparando recibo para impresión...</p>',
+            allowOutsideClick: false,
+            showConfirmButton: false
+        });
+
+        // Obtener datos del recibo
+        const response = await fetch(`/Facturacion/GenerarRecibo?facturaId=${facturaId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        
+        if (resultado.isSuccess && resultado.data?.recibo) {
+            const recibo = resultado.data.recibo;
+            
+            // Cerrar loading
+            Swal.close();
+            
+            // Crear ventana de impresión
+            const ventanaImpresion = window.open('', '_blank', 'width=800,height=600');
+            if (!ventanaImpresion) {
+                throw new Error('No se pudo abrir la ventana de impresión. Verifique que las ventanas emergentes estén permitidas.');
+            }
+
+            // Generar HTML del recibo
+            const htmlRecibo = generarHTMLRecibo(recibo);
+            
+            ventanaImpresion.document.write(htmlRecibo);
+            ventanaImpresion.document.close();
+            
+            // Enfocar ventana y abrir diálogo de impresión
+            ventanaImpresion.focus();
+            
+            // Esperar a que se cargue y luego imprimir
+            ventanaImpresion.onload = function() {
+                setTimeout(() => {
+                    ventanaImpresion.print();
+                }, 500);
+            };
+
+            mostrarToast('Recibo Generado', 'El recibo ha sido enviado a la impresora', 'success');
+        } else {
+            throw new Error(resultado.message || 'Error generando recibo');
+        }
+
+    } catch (error) {
+        console.error('❌ Error imprimiendo recibo:', error);
+        Swal.close();
+        mostrarToast('Error de Impresión', error.message || 'No se pudo generar el recibo', 'danger');
+    }
+}
+
+// ===== FUNCIÓN PARA GENERAR HTML DEL RECIBO =====
+function generarHTMLRecibo(recibo) {
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Recibo - ${recibo.numeroFactura}</title>
+            <style>
+                body {
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                    margin: 20px;
+                    color: #000;
+                }
+                .recibo-container {
+                    max-width: 300px;
+                    margin: 0 auto;
+                }
+                .header {
+                    text-align: center;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 10px;
+                    margin-bottom: 15px;
+                }
+                .empresa {
+                    font-weight: bold;
+                    font-size: 16px;
+                    margin-bottom: 5px;
+                }
+                .info-line {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 3px;
+                }
+                .productos {
+                    margin: 15px 0;
+                    border-top: 1px dashed #000;
+                    border-bottom: 1px dashed #000;
+                    padding: 10px 0;
+                }
+                .producto-item {
+                    margin-bottom: 5px;
+                }
+                .totales {
+                    margin-top: 10px;
+                }
+                .total-final {
+                    font-weight: bold;
+                    border-top: 1px solid #000;
+                    padding-top: 5px;
+                    margin-top: 5px;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 20px;
+                    border-top: 1px dashed #000;
+                    padding-top: 10px;
+                    font-size: 10px;
+                }
+                @media print {
+                    body { margin: 0; }
+                    .recibo-container { max-width: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="recibo-container">
+                <div class="header">
+                    <div class="empresa">GESTIÓN LLANTERA</div>
+                    <div>Tel: (506) 2222-3333</div>
+                    <div>Email: info@gestionllantera.com</div>
+                </div>
+
+                <div class="info-line">
+                    <span><strong>Factura:</strong> ${recibo.numeroFactura}</span>
+                </div>
+                <div class="info-line">
+                    <span><strong>Fecha:</strong> ${recibo.fecha}</span>
+                </div>
+                <div class="info-line">
+                    <span><strong>Cliente:</strong> ${recibo.cliente}</span>
+                </div>
+                ${recibo.email ? `<div class="info-line"><span><strong>Email:</strong> ${recibo.email}</span></div>` : ''}
+                ${recibo.telefono ? `<div class="info-line"><span><strong>Tel:</strong> ${recibo.telefono}</span></div>` : ''}
+                <div class="info-line">
+                    <span><strong>Método:</strong> ${recibo.metodoPago}</span>
+                </div>
+                ${recibo.usuarioCreador ? `<div class="info-line"><span><strong>Vendedor:</strong> ${recibo.usuarioCreador}</span></div>` : ''}
+
+                <div class="productos">
+                    <div style="font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 5px; margin-bottom: 8px;">
+                        PRODUCTOS
+                    </div>
+                    ${recibo.productos.map(producto => `
+                        <div class="producto-item">
+                            <div>${producto.nombre}</div>
+                            <div class="info-line">
+                                <span>${producto.cantidad} x ₡${formatearMoneda(producto.precioUnitario)}</span>
+                                <span>₡${formatearMoneda(producto.subtotal)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="totales">
+                    <div class="info-line">
+                        <span>Subtotal:</span>
+                        <span>₡${formatearMoneda(recibo.subtotal)}</span>
+                    </div>
+                    <div class="info-line">
+                        <span>IVA (13%):</span>
+                        <span>₡${formatearMoneda(recibo.impuesto)}</span>
+                    </div>
+                    <div class="info-line total-final">
+                        <span><strong>TOTAL:</strong></span>
+                        <span><strong>₡${formatearMoneda(recibo.total)}</strong></span>
+                    </div>
+                </div>
+
+                ${recibo.observaciones ? `
+                    <div style="margin-top: 15px;">
+                        <strong>Observaciones:</strong><br>
+                        ${recibo.observaciones}
+                    </div>
+                ` : ''}
+
+                <div class="footer">
+                    <div>¡Gracias por su compra!</div>
+                    <div>Recibo generado: ${new Date().toLocaleString()}</div>
+                    <div>Sistema de Gestión Llantera v1.0</div>
+                </div>
+            </div>
+
+            <script>
+                // Auto-cerrar ventana después de imprimir
+                window.onafterprint = function() {
+                    setTimeout(() => window.close(), 1000);
+                };
+            </script>
+        </body>
+        </html>
+    `;
+}
+
+// ===== FUNCIÓN PARA LIMPIAR VENTA DESPUÉS DEL PROCESO =====
+function limpiarVentaDespuesProceso() {
+    productosEnVenta = [];
+    clienteSeleccionado = null;
+    $('#clienteBusqueda').val('');
+    $('#clienteSeleccionado').addClass('d-none');
+    actualizarVistaCarrito();
+    actualizarTotales();
+    
+    // Resetear formularios
+    $('#metodoPago').val('efectivo').trigger('change');
+    $('#observacionesVenta').val('');
+    $('#montoRecibido').val('');
+    $('#cambioCalculado').val('');
+    
+    console.log('🧹 Venta limpiada después del procesamiento exitoso');
 }
 
 // ===== FUNCIONES AUXILIARES =====

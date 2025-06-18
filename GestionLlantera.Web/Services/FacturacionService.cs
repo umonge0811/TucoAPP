@@ -41,6 +41,133 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<ApiResponse<object>> ProcesarVentaCompletaAsync(object ventaData, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🛒 Procesando venta completa...");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Serializar venta
+                var jsonContent = JsonConvert.SerializeObject(ventaData, new JsonSerializerSettings
+                {
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // Enviar a la API
+                var response = await _httpClient.PostAsync("api/Facturacion/procesar-venta", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error procesando venta: {Status} - {Content}", response.StatusCode, responseContent);
+                    
+                    // Intentar deserializar el error
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorResponse?.message?.ToString() ?? "Error desconocido";
+                        
+                        return new ApiResponse<object>
+                        {
+                            IsSuccess = false,
+                            Message = errorMessage,
+                            Data = null
+                        };
+                    }
+                    catch
+                    {
+                        return new ApiResponse<object>
+                        {
+                            IsSuccess = false,
+                            Message = $"Error del servidor: {response.StatusCode}",
+                            Data = null
+                        };
+                    }
+                }
+
+                var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                
+                _logger.LogInformation("✅ Venta procesada exitosamente");
+                
+                return new ApiResponse<object>
+                {
+                    IsSuccess = true,
+                    Message = "Venta procesada exitosamente",
+                    Data = resultado
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error procesando venta completa");
+                return new ApiResponse<object>
+                {
+                    IsSuccess = false,
+                    Message = $"Error interno: {ex.Message}",
+                    Data = null
+                };
+            }
+        }
+
+        public async Task<ApiResponse<object>> GenerarReciboAsync(int facturaId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📄 Generando recibo para factura: {FacturaId}", facturaId);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.GetAsync($"api/Facturacion/generar-recibo/{facturaId}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error generando recibo: {Status} - {Content}", response.StatusCode, responseContent);
+                    return new ApiResponse<object>
+                    {
+                        IsSuccess = false,
+                        Message = "Error al generar recibo",
+                        Data = null
+                    };
+                }
+
+                var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                
+                return new ApiResponse<object>
+                {
+                    IsSuccess = true,
+                    Message = "Recibo generado exitosamente",
+                    Data = resultado
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generando recibo");
+                return new ApiResponse<object>
+                {
+                    IsSuccess = false,
+                    Message = $"Error interno: {ex.Message}",
+                    Data = null
+                };
+            }
+        }
+
         public async Task<bool> ProcesarVentaAsync(VentaDTO venta, string jwtToken = null)
         {
             try

@@ -309,7 +309,69 @@ namespace GestionLlantera.Web.Controllers
             return token;
         }
 
+        // GET: Facturación
+        public IActionResult Index()
+        {
+            return View();
+        }
 
+        [HttpPost]
+        public async Task<IActionResult> ProcesarVentaCompleta([FromBody] object ventaData)
+        {
+            try
+            {
+                var jwtToken = HttpContext.Session.GetString("JWTToken");
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Unauthorized(new { message = "Token de autorización requerido" });
+                }
+
+                var resultado = await _facturacionService.ProcesarVentaCompletaAsync(ventaData, jwtToken);
+
+                if (resultado.IsSuccess)
+                {
+                    return Ok(resultado);
+                }
+                else
+                {
+                    return BadRequest(resultado);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error procesando venta completa en controlador web");
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GenerarRecibo(int facturaId)
+        {
+            try
+            {
+                var jwtToken = HttpContext.Session.GetString("JWTToken");
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Unauthorized(new { message = "Token de autorización requerido" });
+                }
+
+                var resultado = await _facturacionService.GenerarReciboAsync(facturaId, jwtToken);
+
+                if (resultado.IsSuccess)
+                {
+                    return Ok(resultado);
+                }
+                else
+                {
+                    return BadRequest(resultado);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generando recibo en controlador web");
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
 
         // Aquí puedes agregar más métodos según sea necesario
     }
