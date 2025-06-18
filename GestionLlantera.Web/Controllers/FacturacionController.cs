@@ -46,6 +46,79 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> ObtenerProductosParaFacturacion(string termino = "", int pagina = 1, int tamano = 20)
+        {
+            try
+            {
+                // Verificar permisos
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para buscar productos" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+
+                // Obtener todos los productos disponibles
+                var todosLosProductos = await _inventarioService.ObtenerProductosAsync(jwtToken);
+
+                // Filtrar por término de búsqueda si se proporciona
+                if (!string.IsNullOrWhiteSpace(termino))
+                {
+                    todosLosProductos = todosLosProductos.Where(p => 
+                        p.NombreProducto.Contains(termino, StringComparison.OrdinalIgnoreCase) ||
+                        (p.Descripcion != null && p.Descripcion.Contains(termino, StringComparison.OrdinalIgnoreCase)) ||
+                        (p.Llanta != null && (
+                            (p.Llanta.Marca != null && p.Llanta.Marca.Contains(termino, StringComparison.OrdinalIgnoreCase)) ||
+                            (p.Llanta.Modelo != null && p.Llanta.Modelo.Contains(termino, StringComparison.OrdinalIgnoreCase))
+                        ))
+                    ).ToList();
+                }
+
+                // Filtrar solo productos con stock disponible para la venta
+                var productosDisponibles = todosLosProductos
+                    .Where(p => p.CantidadEnInventario > 0)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
+                    .ToList();
+
+                var productos = productosDisponibles.Select(p => new
+                {
+                    productoId = p.ProductoId,
+                    nombreProducto = p.NombreProducto,
+                    descripcion = p.Descripcion ?? "",
+                    precio = p.Precio ?? 0,
+                    cantidadEnInventario = p.CantidadEnInventario,
+                    stockMinimo = p.StockMinimo ?? 0,
+                    imagenesProductos = p.Imagenes?.Select(img => new {
+                        Urlimagen = img.UrlImagen
+                    }).ToList() ?? new List<object>(),
+                    esLlanta = p.EsLlanta,
+                    llanta = p.EsLlanta && p.Llanta != null ? new
+                    {
+                        marca = p.Llanta.Marca ?? "",
+                        modelo = p.Llanta.Modelo ?? "",
+                        ancho = p.Llanta.Ancho,
+                        perfil = p.Llanta.Perfil,
+                        diametro = p.Llanta.Diametro,
+                        indiceVelocidad = p.Llanta.IndiceVelocidad ?? "",
+                        medidaCompleta = $"{p.Llanta.Ancho}/{p.Llanta.Perfil}R{p.Llanta.Diametro}"
+                    } : null
+                }).ToList();
+
+                return Json(new { 
+                    success = true, 
+                    productos = productos,
+                    total = productos.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener productos para facturación");
+                return Json(new { success = false, message = "Error al obtener productos" });
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> BuscarProductos(string termino = "", int pagina = 1, int tamano = 20)
         {
             try
