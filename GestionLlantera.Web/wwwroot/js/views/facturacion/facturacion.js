@@ -6,6 +6,10 @@ let modalInventario = null;
 let modalFinalizarVenta = null;
 let modalDetalleProducto = null;
 
+// Variables de control para evitar múltiples llamadas
+let busquedaEnProceso = false;
+let cargaInicialCompletada = false;
+
 // ===== CONFIGURACIÓN DE PRECIOS POR MÉTODO DE PAGO =====
 const CONFIGURACION_PRECIOS = {
     efectivo: { multiplicador: 1.0, nombre: 'Efectivo' },
@@ -69,16 +73,24 @@ function configurarEventos() {
         clearTimeout(timeoutBusqueda);
         timeoutBusqueda = setTimeout(() => {
             if (termino.length >= 2) {
-                buscarProductos(termino);
+                // Solo buscar si no hay una búsqueda en proceso
+                if (!busquedaEnProceso) {
+                    buscarProductos(termino);
+                }
             } else if (termino.length === 0) {
-                $('#resultadosBusqueda').html(`
-                    <div class="col-12 text-center py-4 text-muted">
-                        <i class="bi bi-search display-1"></i>
-                        <p class="mt-2">Busca productos para agregar a la venta</p>
-                    </div>
-                `);
+                // Mostrar productos iniciales si el campo está vacío y ya se cargaron
+                if (cargaInicialCompletada && !busquedaEnProceso) {
+                    buscarProductos('');
+                } else if (!cargaInicialCompletada) {
+                    $('#resultadosBusqueda').html(`
+                        <div class="col-12 text-center py-4 text-muted">
+                            <i class="bi bi-search display-1"></i>
+                            <p class="mt-2">Busca productos para agregar a la venta</p>
+                        </div>
+                    `);
+                }
             }
-        }, 300);
+        }, 500); // Aumentar el debounce a 500ms para evitar llamadas excesivas
     });
 
     // ===== BÚSQUEDA DE CLIENTES =====
@@ -136,7 +148,14 @@ function configurarEventos() {
 
 // ===== BÚSQUEDA DE PRODUCTOS =====
 async function buscarProductos(termino) {
+    // Prevenir múltiples llamadas simultáneas
+    if (busquedaEnProceso) {
+        console.log('⏸️ Búsqueda ya en proceso, omitiendo llamada duplicada');
+        return;
+    }
+
     try {
+        busquedaEnProceso = true;
         console.log(`🔍 Buscando productos: "${termino}"`);
 
         mostrarCargandoBusqueda();
@@ -176,6 +195,8 @@ async function buscarProductos(termino) {
     } catch (error) {
         console.error('❌ Error buscando productos:', error);
         mostrarErrorBusqueda('productos', error.message);
+    } finally {
+        busquedaEnProceso = false;
     }
 }
 
@@ -1355,21 +1376,36 @@ function procesarVenta() {
 
 // ===== CARGAR PRODUCTOS INICIALES =====
 async function cargarProductosIniciales() {
+    // Prevenir carga múltiple
+    if (cargaInicialCompletada) {
+        console.log('📦 Productos iniciales ya cargados, omitiendo');
+        return;
+    }
+
     try {
         console.log('📦 Cargando productos iniciales...');
+        cargaInicialCompletada = true;
         await buscarProductos(''); // Cargar todos los productos con stock
     } catch (error) {
         console.error('❌ Error cargando productos iniciales:', error);
+        cargaInicialCompletada = false; // Permitir reintentos en caso de error
         $('#resultadosBusqueda').html(`
             <div class="col-12 text-center py-4 text-danger">
                 <i class="bi bi-exclamation-triangle display-1"></i>
                 <p class="mt-2">Error al cargar productos</p>
-                <button class="btn btn-outline-primary" onclick="cargarProductosIniciales()">
+                <button class="btn btn-outline-primary" onclick="reiniciarCargaProductos()">
                     <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
                 </button>
             </div>
         `);
     }
+}
+
+// Nueva función para reiniciar la carga (para el botón de reintentar)
+function reiniciarCargaProductos() {
+    cargaInicialCompletada = false;
+    busquedaEnProceso = false;
+    cargarProductosIniciales();
 }
 
 // ===== HACER FUNCIONES GLOBALES =====
@@ -1385,3 +1421,4 @@ window.finalizarVenta = finalizarVenta;
 window.eliminarProductoVenta = eliminarProductoVenta;
 window.actualizarCantidadProducto = actualizarCantidadProducto;
 window.procesarVenta = procesarVenta;
+window.reiniciarCargaProductos = reiniciarCargaProductos;
