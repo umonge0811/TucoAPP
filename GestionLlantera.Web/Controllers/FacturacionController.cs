@@ -88,7 +88,7 @@ namespace GestionLlantera.Web.Controllers
                     descripcion = p.Descripcion ?? "",
                     precio = p.Precio.HasValue ? p.Precio.Value : 0,
                     cantidadEnInventario = p.CantidadEnInventario,
-                    stockMinimo = p.StockMinimo.HasValue ? p.StockMinimo.Value : 0,
+                    stockMinimo = p.StockMinimo,
                     imagenesProductos = p.Imagenes?.Select(img => new {
                         Urlimagen = img.UrlImagen
                     }).ToList() ?? new List<object>().Select(x => new { Urlimagen = "" }).ToList(),
