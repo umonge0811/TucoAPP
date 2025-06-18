@@ -82,12 +82,12 @@ function inicializarModales() {
 function configurarEventos() {
     // ===== BÚSQUEDA DE PRODUCTOS =====
     let ultimoEventoInput = 0; // Para throttling adicional
-    
+
     $('#busquedaProducto').on('input', function() {
         contadorEventosInput++;
         const termino = $(this).val().trim();
         const ahora = Date.now();
-        
+
         console.log('🎯 === EVENTO INPUT BÚSQUEDA ===');
         console.log('🎯 CONTADOR DE EVENTOS:', contadorEventosInput);
         console.log('🎯 Término ingresado:', `"${termino}"`);
@@ -259,7 +259,7 @@ async function buscarProductos(termino) {
 
         if (data.success === true && data.data) {
             console.log(`✅ Se encontraron ${data.data.length} productos disponibles`);
-            
+
             // ✅ FILTRAR PRODUCTOS SEGÚN EL TÉRMINO DE BÚSQUEDA (si es necesario)
             let productosFiltrados = data.data;
             if (termino && termino.length >= 2) {
@@ -269,15 +269,15 @@ async function buscarProductos(termino) {
                 });
                 console.log(`🔍 Productos filtrados por término "${termino}": ${productosFiltrados.length}`);
             }
-            
+
             mostrarResultadosProductos(productosFiltrados);
-            
+
             // ✅ MARCAR CARGA INICIAL COMO COMPLETADA SI ES UNA BÚSQUEDA VACÍA (PRIMERA CARGA)
             if (termino === '' && !cargaInicialCompletada) {
                 cargaInicialCompletada = true;
                 console.log('📦 Carga inicial marcada como completada después de primera búsqueda exitosa');
             }
-            
+
             console.log('📦 Productos mostrados exitosamente');
         } else {
             const errorMessage = data.message || 'Error desconocido al obtener productos';
@@ -345,7 +345,7 @@ function mostrarResultadosProductos(productos) {
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || producto.minimoStock || producto.MinimoStock || 0;
 
         // VALIDACIÓN DE IMÁGENES
-        let imagenUrl = '/images/no-image.png';
+        let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
         try {
             if (producto && typeof producto === 'object') {
                 const imagenesArray = producto.imagenesProductos || producto.imagenes || producto.ImagenesProductos || producto.Imagenes || [];
@@ -361,7 +361,7 @@ function mostrarResultadosProductos(productos) {
             }
         } catch (error) {
             console.warn('⚠️ Error procesando imágenes del producto:', error);
-            imagenUrl = '/images/no-image.png';
+            imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
         }
 
         // CÁLCULO DE PRECIOS
@@ -395,7 +395,7 @@ function mostrarResultadosProductos(productos) {
                              class="card-img-top producto-imagen" 
                              alt="${nombreEscapado}"
                              style="height: 120px; object-fit: cover;"
-                             onerror="this.src='/images/no-image.png'">
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'">
                         ${cantidadInventario <= 0 ? 
                             '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
                             cantidadInventario <= stockMinimo ?
@@ -448,7 +448,7 @@ function mostrarResultadosProductos(productos) {
     });
 
     console.log('🔄 Actualizando DOM (longitud HTML:', html.length, 'caracteres)');
-    
+
     // ✅ ACTUALIZAR DOM Y GUARDAR HASH
     container.html(html);
     window.lastProductsHash = productosHash;
@@ -562,7 +562,7 @@ function mostrarModalSeleccionProducto(producto) {
     const precioBase = producto.precio || 0;
 
     // Validación robusta para imágenes
-    let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg==';
+    let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
     try {
         if (producto.imagenesProductos && 
             Array.isArray(producto.imagenesProductos) && 
@@ -575,7 +575,7 @@ function mostrarModalSeleccionProducto(producto) {
         }
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes del producto en modal:', error);
-        imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg==';
+        imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
     }
 
     const modalHtml = `
@@ -594,7 +594,7 @@ function mostrarModalSeleccionProducto(producto) {
                                 <img src="${imagenUrl}" 
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
-                                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg=='">
+                                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'">
                             </div>
                             <div class="col-md-8">
                                 <h4 class="mb-3">${producto.nombreProducto}</h4>
@@ -1093,7 +1093,7 @@ function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
     // Validación robusta para imágenes
-    let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg==';
+    let imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
     try {
         if (producto.imagenesProductos && 
             Array.isArray(producto.imagenesProductos) && 
@@ -1106,7 +1106,7 @@ function verDetalleProducto(producto) {
         }
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes en detalle del producto:', error);
-        imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg==';
+        imagenUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+';
     }
 
     const modalHtml = `
@@ -1125,7 +1125,7 @@ function verDetalleProducto(producto) {
                                 <img src="${imagenUrl}" 
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
-                                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMiA5QzEwLjg5NTQgOSAxMCA5Ljg5NTQzIDEwIDExQzEwIDEyLjEwNDYgMTAuODk1NCAxMyAxMiAxM0MxMy4xMDQ2IDEzIDE0IDEyLjEwNDYgMTQgMTFDMTQgOS44OTU0MyAxMy4xMDQ2IDkgMTIgOVoiIGZpbGw9IiM5Q0E0QUYiLz4KPHA+dGggZD0iTTIxIDNINEM0IDMgMy41IDMuNSAzLjUgNFYxNkMzLjUgMTYuNSA0IDE3IDQgMTdIMjFDMjEgMTcgMjEuNSAxNi41IDIxLjUgMTZWNEM21LjUgMy41IDIxIDMgMjEgM1pNNSA1SDE5VjE1SDVWNVoiIGZpbGw9IiM5Q0E0QUYiLz4KPC9zdmc+Cg=='">
+                                     onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSA4MS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'">
 
                                 <!-- Información de stock -->
                                 <div class="mt-3">
@@ -1550,7 +1550,7 @@ async function cargarProductosIniciales() {
 
     try {
         console.log('📦 Iniciando carga de productos iniciales...');
-        
+
         // ✅ MOSTRAR LOADING INMEDIATAMENTE
         $('#resultadosBusqueda').html(`
             <div class="col-12 text-center py-4">
@@ -1563,10 +1563,10 @@ async function cargarProductosIniciales() {
 
         // ✅ REALIZAR BÚSQUEDA INICIAL
         await buscarProductos('');
-        
+
         // ✅ La carga se marca como completada dentro de buscarProductos() cuando es exitosa
         console.log('📦 Búsqueda inicial ejecutada');
-        
+
         console.log('📦 === FIN cargarProductosIniciales (exitosa) ===');
     } catch (error) {
         console.error('❌ Error cargando productos iniciales:', error);
@@ -1614,7 +1614,7 @@ function limpiarEstadoBusqueda() {
     busquedaEnProceso = false;
     ultimaBusqueda = '';
     window.lastProductsHash = null;
-    
+
     if (timeoutBusquedaActivo) {
         clearTimeout(timeoutBusquedaActivo);
         timeoutBusquedaActivo = null;
