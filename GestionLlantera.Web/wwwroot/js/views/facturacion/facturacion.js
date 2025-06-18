@@ -9,6 +9,8 @@ let modalDetalleProducto = null;
 // Variables de control para evitar múltiples llamadas
 let busquedaEnProceso = false;
 let cargaInicialCompletada = false;
+let ultimaBusqueda = '';
+let timeoutBusquedaActivo = null;
 
 // ===== CONFIGURACIÓN DE PRECIOS POR MÉTODO DE PAGO =====
 const CONFIGURACION_PRECIOS = {
@@ -66,20 +68,32 @@ function inicializarModales() {
 
 function configurarEventos() {
     // ===== BÚSQUEDA DE PRODUCTOS =====
-    let timeoutBusqueda = null;
     $('#busquedaProducto').on('input', function() {
         const termino = $(this).val().trim();
 
-        clearTimeout(timeoutBusqueda);
-        timeoutBusqueda = setTimeout(() => {
+        // Limpiar timeout anterior
+        if (timeoutBusquedaActivo) {
+            clearTimeout(timeoutBusquedaActivo);
+            timeoutBusquedaActivo = null;
+        }
+
+        timeoutBusquedaActivo = setTimeout(() => {
+            // Prevenir búsquedas duplicadas del mismo término
+            if (termino === ultimaBusqueda) {
+                console.log('⏸️ Búsqueda duplicada omitida:', termino);
+                return;
+            }
+
             if (termino.length >= 2) {
                 // Solo buscar si no hay una búsqueda en proceso
                 if (!busquedaEnProceso) {
+                    ultimaBusqueda = termino;
                     buscarProductos(termino);
                 }
             } else if (termino.length === 0) {
                 // Mostrar productos iniciales si el campo está vacío y ya se cargaron
-                if (cargaInicialCompletada && !busquedaEnProceso) {
+                if (cargaInicialCompletada && !busquedaEnProceso && ultimaBusqueda !== '') {
+                    ultimaBusqueda = '';
                     buscarProductos('');
                 } else if (!cargaInicialCompletada) {
                     $('#resultadosBusqueda').html(`
@@ -90,7 +104,8 @@ function configurarEventos() {
                     `);
                 }
             }
-        }, 500); // Aumentar el debounce a 500ms para evitar llamadas excesivas
+            timeoutBusquedaActivo = null;
+        }, 700); // Aumentar el debounce para mayor estabilidad
     });
 
     // ===== BÚSQUEDA DE CLIENTES =====
@@ -154,11 +169,21 @@ async function buscarProductos(termino) {
         return;
     }
 
+    // Verificar si ya se buscó este término recientemente
+    if (termino === ultimaBusqueda && busquedaEnProceso === false) {
+        console.log('⏸️ Término ya buscado recientemente:', termino);
+        return;
+    }
+
     try {
         busquedaEnProceso = true;
         console.log(`🔍 Buscando productos: "${termino}"`);
 
-        mostrarCargandoBusqueda();
+        // Solo mostrar loading si no hay resultados previos
+        const containerActual = $('#resultadosBusqueda').html();
+        if (!containerActual || containerActual.includes('Buscando productos') || containerActual.includes('No se encontraron productos')) {
+            mostrarCargandoBusqueda();
+        }
 
         // El sistema usa autenticación por cookies, no necesitamos token manual
         const response = await fetch('/Inventario/ObtenerProductosParaFacturacion', {
@@ -196,7 +221,10 @@ async function buscarProductos(termino) {
         console.error('❌ Error buscando productos:', error);
         mostrarErrorBusqueda('productos', error.message);
     } finally {
-        busquedaEnProceso = false;
+        // Asegurar que el estado se libere siempre
+        setTimeout(() => {
+            busquedaEnProceso = false;
+        }, 100);
     }
 }
 
@@ -1376,19 +1404,21 @@ function procesarVenta() {
 
 // ===== CARGAR PRODUCTOS INICIALES =====
 async function cargarProductosIniciales() {
-    // Prevenir carga múltiple
-    if (cargaInicialCompletada) {
-        console.log('📦 Productos iniciales ya cargados, omitiendo');
+    // Prevenir carga múltiple con verificación más estricta
+    if (cargaInicialCompletada || busquedaEnProceso) {
+        console.log('📦 Productos iniciales ya cargados o en proceso, omitiendo');
         return;
     }
 
     try {
         console.log('📦 Cargando productos iniciales...');
         cargaInicialCompletada = true;
+        ultimaBusqueda = ''; // Resetear última búsqueda
         await buscarProductos(''); // Cargar todos los productos con stock
     } catch (error) {
         console.error('❌ Error cargando productos iniciales:', error);
         cargaInicialCompletada = false; // Permitir reintentos en caso de error
+        busquedaEnProceso = false; // Liberar el estado
         $('#resultadosBusqueda').html(`
             <div class="col-12 text-center py-4 text-danger">
                 <i class="bi bi-exclamation-triangle display-1"></i>
@@ -1403,9 +1433,23 @@ async function cargarProductosIniciales() {
 
 // Nueva función para reiniciar la carga (para el botón de reintentar)
 function reiniciarCargaProductos() {
+    console.log('🔄 Reiniciando carga de productos...');
+    
+    // Limpiar completamente el estado
     cargaInicialCompletada = false;
     busquedaEnProceso = false;
-    cargarProductosIniciales();
+    ultimaBusqueda = '';
+    
+    // Limpiar timeouts activos
+    if (timeoutBusquedaActivo) {
+        clearTimeout(timeoutBusquedaActivo);
+        timeoutBusquedaActivo = null;
+    }
+    
+    // Recargar productos con pequeño delay para asegurar limpieza de estado
+    setTimeout(() => {
+        cargarProductosIniciales();
+    }, 250);
 }
 
 // ===== HACER FUNCIONES GLOBALES =====
