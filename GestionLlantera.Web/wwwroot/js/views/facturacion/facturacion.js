@@ -345,54 +345,66 @@ function mostrarResultadosProductos(productos) {
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
 
-        // VALIDACIÓN DE IMÁGENES - EXACTAMENTE IGUAL QUE verDetalleProducto
+        // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
         let imagenUrl = '/images/no-image.png'; // Imagen por defecto
         try {
-            console.log('🖼️ Procesando imágenes para card producto:', producto.nombreProducto || producto.NombreProducto);
-            console.log('🖼️ Datos completos del producto:', producto);
-            
-            let imagenesArray = [];
-            
-            // Usar múltiples fuentes de imágenes como fallback (EXACTO como verDetalleProducto)
-            if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-                imagenesArray = producto.imagenesProductos
-                    .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                    .filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-            } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-                imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
-            } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-                imagenesArray = producto.imagenes
-                    .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                    .filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
-            }
-            
-            if (imagenesArray.length > 0) {
-                let urlImagen = imagenesArray[0];
-                console.log('🖼️ URL original en card:', urlImagen);
+            if (producto && typeof producto === 'object') {
+                console.log('🖼️ Procesando imágenes para producto:', producto.nombreProducto);
+                console.log('🖼️ Datos del producto:', {
+                    imagenesProductos: producto.imagenesProductos,
+                    imagenesUrls: producto.imagenesUrls,
+                    imagenes: producto.imagenes
+                });
+
+                let imagenesArray = [];
                 
-                if (urlImagen && urlImagen.trim() !== '') {
-                    // Lógica robusta de construcción de URLs (EXACTO como verDetalleProducto)
-                    if (urlImagen.startsWith('/uploads/productos/')) {
-                        imagenUrl = `https://localhost:7273${urlImagen}`;
-                    } else if (urlImagen.startsWith('uploads/productos/')) {
-                        imagenUrl = `https://localhost:7273/${urlImagen}`;
-                    } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
-                        imagenUrl = urlImagen; // URL completa
-                    } else if (urlImagen.startsWith('/')) {
-                        imagenUrl = `https://localhost:7273${urlImagen}`;
-                    } else {
-                        imagenUrl = `https://localhost:7273/${urlImagen}`;
-                    }
-                    console.log('🖼️ URL final en card:', imagenUrl);
+                // Verificar imagenesProductos (formato principal desde la API)
+                if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+                    imagenesArray = producto.imagenesProductos
+                        .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                        .filter(url => url && url.trim() !== '');
+                    console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
+                } 
+                // Verificar imagenesUrls como alternativa
+                else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+                    imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
+                    console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
                 }
-            } else {
-                console.log('🖼️ No se encontraron imágenes válidas para card');
+                // Verificar imagenes como última alternativa
+                else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+                    imagenesArray = producto.imagenes
+                        .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                        .filter(url => url && url.trim() !== '');
+                    console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
+                }
+                
+                if (imagenesArray.length > 0) {
+                    let urlImagen = imagenesArray[0];
+                    console.log('🖼️ URL original:', urlImagen);
+                    
+                    if (urlImagen && urlImagen.trim() !== '') {
+                        // Lógica mejorada de construcción de URLs (igual que verDetalleProducto)
+                        if (urlImagen.startsWith('/uploads/productos/')) {
+                            imagenUrl = `https://localhost:7273${urlImagen}`;
+                        } else if (urlImagen.startsWith('uploads/productos/')) {
+                            imagenUrl = `https://localhost:7273/${urlImagen}`;
+                        } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
+                            imagenUrl = urlImagen; // URL completa
+                        } else if (urlImagen.startsWith('/')) {
+                            // URL relativa que empieza con /
+                            imagenUrl = `https://localhost:7273${urlImagen}`;
+                        } else {
+                            // URL relativa sin /
+                            imagenUrl = `https://localhost:7273/${urlImagen}`;
+                        }
+                        console.log('🖼️ URL final construida:', imagenUrl);
+                    }
+                } else {
+                    console.log('🖼️ No se encontraron imágenes válidas, usando imagen por defecto');
+                }
             }
         } catch (error) {
-            console.warn('⚠️ Error procesando imágenes en card del producto:', error);
+            console.warn('⚠️ Error procesando imágenes del producto:', error);
             imagenUrl = '/images/no-image.png';
         }
 
@@ -403,17 +415,14 @@ function mostrarResultadosProductos(productos) {
 
         const stockClase = cantidadInventario <= 0 ? 'border-danger' : cantidadInventario <= stockMinimo ? 'border-warning' : '';
 
-        // OBJETO PRODUCTO LIMPIO - INCLUYENDO TODAS LAS FUENTES DE IMÁGENES
+        // OBJETO PRODUCTO LIMPIO
         const productoLimpio = {
             productoId: productoId,
             nombreProducto: nombreProducto,
             precio: precioBase,
             cantidadEnInventario: cantidadInventario,
             stockMinimo: stockMinimo,
-            // Preservar todas las fuentes de imágenes (igual que verDetalleProducto)
-            imagenesProductos: producto.imagenesProductos || [],
             imagenesUrls: producto.imagenesUrls || [],
-            imagenes: producto.imagenes || [],
             descripcion: producto.descripcion || producto.Descripcion || '',
             esLlanta: producto.esLlanta || false,
             marca: producto.marca || null,
