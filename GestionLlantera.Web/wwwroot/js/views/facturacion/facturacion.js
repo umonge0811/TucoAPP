@@ -357,7 +357,7 @@ function mostrarResultadosProductos(productos) {
                 });
 
                 let imagenesArray = [];
-
+                
                 // Verificar imagenesProductos (formato principal desde la API)
                 if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
                     imagenesArray = producto.imagenesProductos
@@ -377,11 +377,11 @@ function mostrarResultadosProductos(productos) {
                         .filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
                 }
-
+                
                 if (imagenesArray.length > 0) {
                     let urlImagen = imagenesArray[0];
                     console.log('🖼️ URL original:', urlImagen);
-
+                    
                     if (urlImagen && urlImagen.trim() !== '') {
                         // Lógica mejorada de construcción de URLs (igual que verDetalleProducto)
                         if (urlImagen.startsWith('/uploads/productos/')) {
@@ -613,7 +613,7 @@ function mostrarModalSeleccionProducto(producto) {
     try {
         console.log('🖼️ Procesando imágenes para modal de producto:', producto.nombreProducto);
         let imagenesArray = [];
-
+        
         // Usar la misma lógica que verDetalleProducto
         if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
             imagenesArray = producto.imagenesProductos
@@ -626,11 +626,11 @@ function mostrarModalSeleccionProducto(producto) {
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
                 .filter(url => url && url.trim() !== '');
         }
-
+        
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
             console.log('🖼️ URL original en modal:', urlImagen);
-
+            
             if (urlImagen && urlImagen.trim() !== '') {
                 // Lógica mejorada de construcción de URLs
                 if (urlImagen.startsWith('/uploads/productos/')) {
@@ -668,7 +668,7 @@ function mostrarModalSeleccionProducto(producto) {
                                 <img src="${imagenUrl}" 
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
-                                     onerror="this.onerror=null; this.src='/images/no-image.png';">
+                                     onerror="this.onerror=null; this.src='/images/no-image.png';"">
                             </div>
                             <div class="col-md-8">
                                 <h4 class="mb-3">${producto.nombreProducto}</h4>
@@ -1194,9 +1194,9 @@ function verDetalleProducto(producto) {
     try {
         console.log('🖼️ Procesando imágenes para detalle de producto:', producto.nombreProducto);
         console.log('🖼️ Datos del producto completos:', producto);
-
+        
         let imagenesArray = [];
-
+        
         // Usar múltiples fuentes de imágenes como fallback
         if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
             imagenesArray = producto.imagenesProductos
@@ -1212,11 +1212,11 @@ function verDetalleProducto(producto) {
                 .filter(url => url && url.trim() !== '');
             console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
         }
-
+        
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
             console.log('🖼️ URL original en detalle:', urlImagen);
-
+            
             if (urlImagen && urlImagen.trim() !== '') {
                 // Lógica robusta de construcción de URLs
                 if (urlImagen.startsWith('/uploads/productos/')) {
@@ -1256,7 +1256,7 @@ function verDetalleProducto(producto) {
                                 <img src="${imagenUrl}" 
                                      class="img-fluid rounded shadow-sm" 
                                      alt="${producto.nombreProducto}"
-                                     onerror="this.onerror=null; this.src='/images/no-image.png';">
+                                     onerror="this.onerror=null; this.src='/images/no-image.png';"">
 
                                 <!-- Información de stock -->
                                 <div class="mt-3">
@@ -1575,8 +1575,7 @@ function validarFormularioNuevoCliente() {
     }
 
     // Validar email (formato si se proporciona)
-    const email```text
-= $('#emailClienteFacturacion').val().trim();
+    const email = $('#emailClienteFacturacion').val().trim();
     if (email && !validarEmailFacturacion(email)) {
         mostrarErrorCampoFacturacion('#emailClienteFacturacion', 'El formato del email no es válido');
         esValido = false;
