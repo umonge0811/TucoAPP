@@ -1,11 +1,4 @@
-` tags.
-
-```text
-Corrected image URL property from `urlimagen` to `Urlimagen` in the specified sections of the code.
-```
-
-<replit_final_file>
-```javascript
+// ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 // ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
 let productosEnVenta = [];
