@@ -345,13 +345,13 @@ function mostrarResultadosProductos(productos) {
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
 
-        // VALIDACIÓN DE IMÁGENES
+        // VALIDACIÓN DE IMÁGENES - CORREGIDA
         let imagenUrl = '/images/no-image.png'; // Imagen por defecto
         try {
             if (producto && typeof producto === 'object') {
-                // Intentar primero con imagenesProductos (desde el endpoint)
                 let imagenesArray = [];
                 
+                // Verificar si hay imágenes disponibles en diferentes formatos
                 if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
                     imagenesArray = producto.imagenesProductos.map(img => img.Urlimagen || img.urlImagen).filter(url => url);
                 } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
@@ -359,10 +359,19 @@ function mostrarResultadosProductos(productos) {
                 }
                 
                 if (imagenesArray.length > 0) {
-                    const urlImagen = imagenesArray[0];
+                    let urlImagen = imagenesArray[0];
                     if (urlImagen && urlImagen.trim() !== '') {
-                        // Las URLs ya vienen procesadas desde el controlador, solo usar directamente
-                        imagenUrl = urlImagen;
+                        // Construir la URL completa si es necesario (igual que en el modal de detalle)
+                        if (urlImagen.startsWith('/uploads/productos/')) {
+                            imagenUrl = `https://localhost:7273${urlImagen}`;
+                        } else if (urlImagen.startsWith('uploads/productos/')) {
+                            imagenUrl = `https://localhost:7273/${urlImagen}`;
+                        } else if (urlImagen.startsWith('http')) {
+                            imagenUrl = urlImagen; // URL completa
+                        } else {
+                            // URL relativa, construir la URL completa
+                            imagenUrl = `https://localhost:7273/${urlImagen}`;
+                        }
                     }
                 }
             }
@@ -583,10 +592,18 @@ function mostrarModalSeleccionProducto(producto) {
         }
         
         if (imagenesArray.length > 0) {
-            const urlImagen = imagenesArray[0];
+            let urlImagen = imagenesArray[0];
             if (urlImagen && urlImagen.trim() !== '') {
-                // Las URLs ya vienen procesadas desde el controlador, solo usar directamente
-                imagenUrl = urlImagen;
+                // Construir la URL completa (consistente con las cards)
+                if (urlImagen.startsWith('/uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273${urlImagen}`;
+                } else if (urlImagen.startsWith('uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273/${urlImagen}`;
+                } else if (urlImagen.startsWith('http')) {
+                    imagenUrl = urlImagen; // URL completa
+                } else {
+                    imagenUrl = `https://localhost:7273/${urlImagen}`;
+                }
             }
         }
     } catch (error) {
@@ -1143,10 +1160,18 @@ function verDetalleProducto(producto) {
         }
         
         if (imagenesArray.length > 0) {
-            const urlImagen = imagenesArray[0];
+            let urlImagen = imagenesArray[0];
             if (urlImagen && urlImagen.trim() !== '') {
-                // Las URLs ya vienen procesadas desde el controlador, solo usar directamente
-                imagenUrl = urlImagen;
+                // Construir la URL completa (consistente con las cards)
+                if (urlImagen.startsWith('/uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273${urlImagen}`;
+                } else if (urlImagen.startsWith('uploads/productos/')) {
+                    imagenUrl = `https://localhost:7273/${urlImagen}`;
+                } else if (urlImagen.startsWith('http')) {
+                    imagenUrl = urlImagen; // URL completa
+                } else {
+                    imagenUrl = `https://localhost:7273/${urlImagen}`;
+                }
             }
         }
     } catch (error) {
