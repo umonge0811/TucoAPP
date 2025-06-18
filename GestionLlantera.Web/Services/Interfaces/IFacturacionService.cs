@@ -24,14 +24,36 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// Genera una factura en PDF
         /// </summary>
         Task<byte[]> GenerarFacturaPDFAsync(int ventaId, string jwtToken = null);
+
+        /// <summary>
+        /// Obtiene productos disponibles para venta
+        /// </summary>
+        Task<ApiResponse<List<ProductoVentaDTO>>> ObtenerProductosParaVentaAsync(string busqueda = null, bool soloConStock = true);
+    }
+
+    // Clase ApiResponse para manejar respuestas de la API
+    public class ApiResponse<T>
+    {
+        public bool IsSuccess { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public T? Data { get; set; }
     }
 
     public class ProductoVentaDTO
     {
         public int ProductoId { get; set; }
         public string NombreProducto { get; set; } = string.Empty;
+        public string? Descripcion { get; set; }
+        public decimal? Precio { get; set; }
         public decimal PrecioUnitario { get; set; }
         public int Cantidad { get; set; }
+        public int CantidadEnInventario { get; set; }
+        public int StockMinimo { get; set; }
+        public bool EsLlanta { get; set; }
+        public string? MedidaCompleta { get; set; }
+        public string? Marca { get; set; }
+        public string? Modelo { get; set; }
+        public List<string>? ImagenesUrls { get; set; }
         public decimal Subtotal => PrecioUnitario * Cantidad;
         public string? ImagenUrl { get; set; }
     }

@@ -90,9 +90,9 @@ namespace GestionLlantera.Web.Controllers
                     cantidadEnInventario = p.CantidadEnInventario,
                     stockMinimo = p.StockMinimo,
                     imagenesProductos = p.Imagenes?.Select(img => new {
-                        Urlimagen = img.UrlImagen
-                    }).ToList() ?? new List<object>().Select(x => new { Urlimagen = "" }).ToList(),
-                    imagenesUrls = p.Imagenes?.Select(img => img.UrlImagen).ToList() ?? new List<string>(),
+                        Urlimagen = ProcessImageUrl(img.UrlImagen)
+                    }).ToList() ?? new List<object> { new { Urlimagen = "/images/no-image.png" } },
+                    imagenesUrls = p.Imagenes?.Select(img => ProcessImageUrl(img.UrlImagen)).ToList() ?? new List<string> { "/images/no-image.png" },
                     esLlanta = p.EsLlanta,
                     llanta = p.EsLlanta && p.Llanta != null ? new
                     {
@@ -117,6 +117,21 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogError(ex, "Error al obtener productos para facturación");
                 return Json(new { success = false, message = "Error al obtener productos" });
             }
+        }
+
+        private string ProcessImageUrl(string? url)
+        {
+            if (string.IsNullOrEmpty(url)) return "/images/no-image.png";
+
+            // Si ya es una URL completa, extraer solo la ruta
+            if (url.StartsWith("http"))
+            {
+                var uri = new Uri(url);
+                return uri.AbsolutePath;
+            }
+
+            // Si es una ruta relativa, asegurar que esté bien formada
+            return url.StartsWith("/") ? url : "/" + url;
         }
 
         [HttpGet]
@@ -163,8 +178,8 @@ namespace GestionLlantera.Web.Controllers
                     precio = p.Precio.HasValue ? p.Precio.Value : 0,
                     stock = p.CantidadEnInventario,
                     imagenesProductos = p.Imagenes?.Select(img => new {
-                        Urlimagen = img.UrlImagen
-                    }).ToList() ?? new List<object>().Select(x => new { Urlimagen = "" }).ToList(),
+                        Urlimagen = ProcessImageUrl(img.UrlImagen)
+                    }).ToList() ?? new List<object> { new { Urlimagen = "/images/no-image.png" } },
                     esLlanta = p.EsLlanta,
                     llanta = p.EsLlanta && p.Llanta != null ? new
                     {
@@ -283,62 +298,7 @@ namespace GestionLlantera.Web.Controllers
             return token;
         }
 
-        // =====================================
-        // OBTENER PRODUCTOS PARA FACTURACIÓN
-        // =====================================
-
-        [HttpGet]
-        public async Task<IActionResult> ObtenerProductosParaFacturacion()
-        {
-            try
-            {
-                _logger.LogInformation("🛒 Obteniendo productos para facturación desde Web Controller");
-
-                var response = await _facturacionService.ObtenerProductosParaVentaAsync();
-
-                if (response.IsSuccess && response.Data != null)
-                {
-                    // Procesar las URLs de imágenes para usar rutas relativas
-                    var productos = response.Data.Select(p => new
-                    {
-                        p.ProductoId,
-                        p.NombreProducto,
-                        p.Descripcion,
-                        p.Precio,
-                        p.CantidadEnInventario,
-                        p.StockMinimo,
-                        p.EsLlanta,
-                        p.MedidaCompleta,
-                        p.Marca,
-                        p.Modelo,
-                        // ✅ PROCESAR IMÁGENES PARA USAR RUTAS RELATIVAS
-                        ImagenesUrls = p.ImagenesUrls?.Select(url => 
-                        {
-                            if (string.IsNullOrEmpty(url)) return "/images/no-image.png";
-
-                            // Si ya es una URL completa, extraer solo la ruta
-                            if (url.StartsWith("http"))
-                            {
-                                var uri = new Uri(url);
-                                return uri.AbsolutePath;
-                            }
-
-                            // Si es una ruta relativa, asegurar que esté bien formada
-                            return url.StartsWith("/") ? url : "/" + url;
-                        }).ToList() ?? new List<string> { "/images/no-image.png" }
-                    }).ToList();
-
-                    return Json(new { success = true, productos = productos });
-                }
-
-                return Json(new { success = false, message = response.Message ?? "Error al obtener productos" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error al obtener productos para facturación");
-                return Json(new { success = false, message = "Error interno del servidor" });
-            }
-        }
+        
 
         // Aquí puedes agregar más métodos según sea necesario
     }
