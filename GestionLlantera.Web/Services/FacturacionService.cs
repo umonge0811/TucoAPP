@@ -286,7 +286,7 @@ namespace GestionLlantera.Web.Services
                             var stockAnterior = resultado?.stockAnterior != null ? Convert.ToInt32(resultado.stockAnterior) : 0;
                             var stockNuevo = resultado?.stockNuevo != null ? Convert.ToInt32(resultado.stockNuevo) : 0;
                             var diferencia = resultado?.diferencia != null ? Convert.ToInt32(resultado.diferencia) : 0;
-                            
+
                             resultados.Add(new {
                                 productoId = productoAjuste.ProductoId,
                                 nombreProducto = productoAjuste.NombreProducto,
@@ -298,9 +298,8 @@ namespace GestionLlantera.Web.Services
                             });
 
                             ajustesExitosos++;
-                            
-                            _logger.LogInformation("✅ Stock ajustado para {Producto}: {StockAnterior} → {StockNuevo}", 
-                                productoAjuste.NombreProducto, stockAnterior, stockNuevo);
+
+                            _logger.LogInformation($"✅ Stock ajustado para {productoAjuste.NombreProducto}: {stockAnterior} → {stockNuevo}");
                         }
                         else
                         {
