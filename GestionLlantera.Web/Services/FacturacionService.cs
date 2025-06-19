@@ -1,7 +1,8 @@
 using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
+using System.Net.Http;
 using System.Text;
-using System.Text.Json;
+using Tuco.Clases.DTOs.Facturacion;
 
 namespace GestionLlantera.Web.Services
 {
@@ -18,7 +19,7 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
         }
 
-        public async Task<decimal> CalcularTotalVentaAsync(List<ProductoVentaDTO> productos)
+        public async Task<decimal> CalcularTotalVentaAsync(List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO> productos)
         {
             try
             {
@@ -87,7 +88,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<bool> VerificarStockDisponibleAsync(List<ProductoVentaDTO> productos, string jwtToken = null)
+        public async Task<bool> VerificarStockDisponibleAsync(List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO> productos, string jwtToken = null)
         {
             try
             {
@@ -176,7 +177,7 @@ namespace GestionLlantera.Web.Services
         // PRODUCTOS PARA VENTA
         // =====================================
 
-        public async Task<ApiResponse<List<ProductoVentaDTO>>> ObtenerProductosParaVentaAsync(string busqueda = null, bool soloConStock = true)
+        public async Task<ApiResponse<List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO>>> ObtenerProductosParaVentaAsync(string busqueda = null, bool soloConStock = true)
         {
             try
             {
@@ -201,11 +202,11 @@ namespace GestionLlantera.Web.Services
                         var jsonElement = (JsonElement)result.Data;
                         if (jsonElement.TryGetProperty("productos", out var productosElement))
                         {
-                            var productos = System.Text.Json.JsonSerializer.Deserialize<List<ProductoVentaDTO>>(productosElement.GetRawText(), _jsonOptions);
-                            return new ApiResponse<List<ProductoVentaDTO>>
+                            var productos = System.Text.Json.JsonSerializer.Deserialize<List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO>>(productosElement.GetRawText(), _jsonOptions);
+                            return new ApiResponse<List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO>>
                             {
                                 IsSuccess = true,
-                                Data = productos ?? new List<ProductoVentaDTO>(),
+                                Data = productos ?? new List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO>(),
                                 Message = "Productos obtenidos exitosamente"
                             };
                         }
@@ -215,25 +216,40 @@ namespace GestionLlantera.Web.Services
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogWarning("⚠️ Error al obtener productos: {StatusCode} - {Content}", response.StatusCode, errorContent);
 
-                return new ApiResponse<List<ProductoVentaDTO>>
+                return new ApiResponse<List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO>>
                 {
                     IsSuccess = false,
                     Message = $"Error al obtener productos: {response.StatusCode}",
-                    Data = new List<ProductoVentaDTO>()
+                    Data = new List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO>()
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error en FacturacionService.ObtenerProductosParaVentaAsync");
-                return new ApiResponse<List<ProductoVentaDTO>>
+                return new ApiResponse<List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO>>
                 {
                     IsSuccess = false,
                     Message = "Error interno al obtener productos",
-                    Data = new List<ProductoVentaDTO>()
+                    Data = new List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO>()
                 };
             }
         }
 
-        // Otros métodos del servicio...
-    }
+        public async Task<decimal> CalcularTotalVentaAsync(List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO> productos)
+        {
+            try
+            {
+                decimal total = 0;
+                foreach (var producto in productos)
+                {
+                    total += producto.Cantidad * producto.PrecioUnitario;
+                }
+                return total;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calculando total de venta");
+                return 0;
+            }
+        }
 }
