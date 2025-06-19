@@ -1547,7 +1547,6 @@ function mostrarReciboEnPantalla(reciboHTML, numeroFactura) {
                             <small><i class="bi bi-exclamation-triangle me-1"></i>
                             La impresión automática falló. Use los botones de abajo para imprimir.</small>
                         </div>
-The code has been modified to correct the API URL to use port 5049 throughout the javascript file.```text
                         ${reciboHTML}
                     </div>
                     <div class="modal-footer">
