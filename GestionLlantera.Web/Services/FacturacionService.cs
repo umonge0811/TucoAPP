@@ -5,19 +5,6 @@ using System.Text.Json;
 
 namespace GestionLlantera.Web.Services
 {
-    public class AjusteStockFacturacionRequest
-    {
-        public string NumeroFactura { get; set; } = string.Empty;
-        public List<ProductoAjusteStock> Productos { get; set; } = new();
-    }
-
-    public class ProductoAjusteStock
-    {
-        public int ProductoId { get; set; }
-        public string NombreProducto { get; set; } = string.Empty;
-        public int Cantidad { get; set; }
-    }
-
     public class FacturacionService : IFacturacionService
     {
         private readonly HttpClient _httpClient;

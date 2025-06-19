@@ -9,7 +9,7 @@ using Tuco.Clases.Models;
 using System.Text.Json;
 using System.Text;
 using static GestionLlantera.Web.Services.Interfaces.IFacturacionService;
-using GestionLlantera.Web.Services;
+using GestionLlantera.Web.Services.Interfaces;
 
 namespace GestionLlantera.Web.Controllers
 {
