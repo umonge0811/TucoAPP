@@ -8,6 +8,7 @@ using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
 using System.Text.Json;
 using System.Text;
+using static GestionLlantera.Web.Services.Interfaces.IFacturacionService;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -403,18 +404,5 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
-    }
-
-    public class AjusteStockFacturacionRequest
-    {
-        public string NumeroFactura { get; set; }
-        public List<ProductoAjusteStock> Productos { get; set; }
-    }
-
-    public class ProductoAjusteStock
-    {
-        public int ProductoId { get; set; }
-        public string NombreProducto { get; set; }
-        public int Cantidad { get; set; }
     }
 }
