@@ -29,6 +29,11 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// Obtiene productos disponibles para venta
         /// </summary>
         Task<ApiResponse<List<ProductoVentaDTO>>> ObtenerProductosParaVentaAsync(string busqueda = null, bool soloConStock = true);
+
+        /// <summary>
+        /// Ajusta el stock de productos después de una facturación
+        /// </summary>
+        Task<object> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null);
     }
 
     // Clase ApiResponse para manejar respuestas de la API
@@ -56,6 +61,19 @@ namespace GestionLlantera.Web.Services.Interfaces
         public List<string>? ImagenesUrls { get; set; }
         public decimal Subtotal => PrecioUnitario * Cantidad;
         public string? ImagenUrl { get; set; }
+    }
+
+    public class AjusteStockFacturacionRequest
+    {
+        public string NumeroFactura { get; set; } = string.Empty;
+        public List<ProductoAjusteStock> Productos { get; set; } = new();
+    }
+
+    public class ProductoAjusteStock
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
     }
 
     public class VentaDTO
