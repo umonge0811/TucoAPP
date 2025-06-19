@@ -282,19 +282,29 @@ namespace GestionLlantera.Web.Services
                             var responseContent = await httpResponse.Content.ReadAsStringAsync();
                             var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
 
+                            // Convertir valores dinámicos a tipos específicos
+                            var stockAnterior = resultado?.stockAnterior != null ? Convert.ToInt32(resultado.stockAnterior) : 0;
+                            var stockNuevo = resultado?.stockNuevo != null ? Convert.ToInt32(resultado.stockNuevo) : 0;
+                            var diferencia = resultado?.diferencia != null ? Convert.ToInt32(resultado.diferencia) : 0;
+                            
                             resultados.Add(new {
                                 productoId = productoAjuste.ProductoId,
                                 nombreProducto = productoAjuste.NombreProducto,
                                 success = true,
-                                stockAnterior = resultado?.stockAnterior ?? 0,
-                                stockNuevo = resultado?.stockNuevo ?? 0,
-                                diferencia = resultado?.diferencia ?? 0,
+                                stockAnterior = stockAnterior,
+                                stockNuevo = stockNuevo,
+                                diferencia = diferencia,
                                 mensaje = $"Stock actualizado correctamente"
                             });
 
                             ajustesExitosos++;
+                            
+                            // Convertir valores dinámicos a tipos específicos para el logging
+                            var stockAnterior = resultado?.stockAnterior != null ? Convert.ToInt32(resultado.stockAnterior) : 0;
+                            var stockNuevo = resultado?.stockNuevo != null ? Convert.ToInt32(resultado.stockNuevo) : 0;
+                            
                             _logger.LogInformation("✅ Stock ajustado para {Producto}: {StockAnterior} → {StockNuevo}", 
-                                productoAjuste.NombreProducto, resultado?.stockAnterior ?? 0, resultado?.stockNuevo ?? 0);
+                                productoAjuste.NombreProducto, stockAnterior, stockNuevo);
                         }
                         else
                         {
