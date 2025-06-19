@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
+using System.Text.Json;
+using System.Text;
+using tuco.Clases.DTOs.Facturacion;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -363,8 +366,119 @@ namespace GestionLlantera.Web.Controllers
             return token;
         }
 
+        [HttpPost]
+        [Route("AjustarStockFacturacion")]
+        public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
+        {
+            try
+            {
+                // Validar productos
+                if (request.Productos == null || !request.Productos.Any())
+                {
+                    return Json(new { success = false, message = "No se proporcionaron productos para ajustar" });
+                }
 
+                var resultados = new List<object>();
+                var errores = new List<string>();
 
-        // Aquí puedes agregar más métodos según sea necesario
+                foreach (var producto in request.Productos)
+                {
+                    try
+                    {
+                        // Preparar datos para la API
+                        var ajusteData = new
+                        {
+                            TipoAjuste = "salida",
+                            Cantidad = producto.Cantidad,
+                            Comentario = $"Venta - Factura {request.NumeroFactura}"
+                        };
+
+                        // Obtener token del usuario actual
+                        var token = HttpContext.Session.GetString("JwtToken") ?? 
+                                   Request.Cookies["AuthToken"] ?? 
+                                   Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
+
+                        using var httpClient = new HttpClient();
+                        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+
+                        var jsonContent = new StringContent(
+                            JsonSerializer.Serialize(ajusteData),
+                            Encoding.UTF8,
+                            "application/json"
+                        );
+
+                        var response = await httpClient.PostAsync(
+                            $"{_configuration["ApiSettings:BaseUrl"]}/api/Inventario/productos/{producto.ProductoId}/ajustar-stock",
+                            jsonContent
+                        );
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var responseContent = await response.Content.ReadAsStringAsync();
+                            var resultado = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+                            resultados.Add(new
+                            {
+                                productoId = producto.ProductoId,
+                                nombreProducto = producto.NombreProducto,
+                                success = true,
+                                stockAnterior = resultado.GetProperty("stockAnterior").GetInt32(),
+                                stockNuevo = resultado.GetProperty("stockNuevo").GetInt32(),
+                                diferencia = -producto.Cantidad
+                            });
+                        }
+                        else
+                        {
+                            var errorContent = await response.Content.ReadAsStringAsync();
+                            errores.Add($"Error ajustando {producto.NombreProducto}: {response.StatusCode} - {errorContent}");
+
+                            resultados.Add(new
+                            {
+                                productoId = producto.ProductoId,
+                                nombreProducto = producto.NombreProducto,
+                                success = false,
+                                error = $"HTTP {response.StatusCode}"
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errores.Add($"Error procesando {producto.NombreProducto}: {ex.Message}");
+                        resultados.Add(new
+                        {
+                            productoId = producto.ProductoId,
+                            nombreProducto = producto.NombreProducto,
+                            success = false,
+                            error = ex.Message
+                        });
+                    }
+                }
+
+                return Json(new
+                {
+                    success = errores.Count == 0,
+                    message = errores.Count == 0 ? "Stock ajustado exitosamente" : "Algunos ajustes fallaron",
+                    resultados = resultados,
+                    errores = errores
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error general: {ex.Message}" });
+            }
+        }
+    }
+
+    public class AjusteStockFacturacionRequest
+    {
+        public string NumeroFactura { get; set; }
+        public List<ProductoAjusteStock> Productos { get; set; }
+    }
+
+    public class ProductoAjusteStock
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; }
+        public int Cantidad { get; set; }
     }
 }

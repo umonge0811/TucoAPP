@@ -1238,46 +1238,64 @@ async function procesarVentaFinal() {
             throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
         }
 
-        // Ajustar stock para cada producto usando el endpoint de la API
-        for (const producto of productosEnVenta) {
-            try {
-                const ajusteStock = {
-                    TipoAjuste: 'salida',
-                    Cantidad: producto.cantidad,
-                    Comentario: `Venta - Factura ${resultadoFactura.numeroFactura || 'N/A'}`
-                };
+        // Ajustar stock usando el endpoint interno del controlador
+        try {
+            const productosParaAjuste = productosEnVenta.map(producto => ({
+                ProductoId: producto.productoId,
+                NombreProducto: producto.nombreProducto,
+                Cantidad: producto.cantidad
+            }));
 
-                console.log(`📦 Ajustando stock para producto ${producto.productoId}: -${producto.cantidad} unidades`);
+            const requestData = {
+                NumeroFactura: resultadoFactura.numeroFactura || 'N/A',
+                Productos: productosParaAjuste
+            };
 
-                const responseStock = await fetch(`https://localhost:7273/api/Inventario/productos/${producto.productoId}/ajustar-stock`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${obtenerTokenJWT()}`,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify(ajusteStock)
-                });
+            console.log('📦 Ajustando stock para todos los productos...');
 
-                if (!responseStock.ok) {
-                    const errorText = await responseStock.text();
-                    console.warn(`⚠️ No se pudo ajustar stock para ${producto.nombreProducto}: ${responseStock.status} - ${errorText}`);
+            const responseStock = await fetch('/Facturacion/AjustarStockFacturacion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (responseStock.ok) {
+                const resultadoStock = await responseStock.json();
+                
+                if (resultadoStock.success) {
+                    console.log('✅ Stock ajustado exitosamente para todos los productos');
                     
-                    // No fallar toda la venta por un error de stock, pero mostrar advertencia
-                    mostrarToast('Advertencia Stock', `No se pudo ajustar stock para ${producto.nombreProducto}`, 'warning');
-                } else {
-                    const resultadoStock = await responseStock.json();
-                    if (resultadoStock.success) {
-                        console.log(`✅ Stock ajustado para ${producto.nombreProducto}: ${resultadoStock.stockAnterior} → ${resultadoStock.stockNuevo}`);
-                    } else {
-                        console.warn(`⚠️ Error en ajuste de stock para ${producto.nombreProducto}: ${resultadoStock.message}`);
-                        mostrarToast('Advertencia Stock', `Error ajustando stock: ${resultadoStock.message}`, 'warning');
+                    // Mostrar resumen de ajustes exitosos
+                    const ajustesExitosos = resultadoStock.resultados.filter(r => r.success);
+                    if (ajustesExitosos.length > 0) {
+                        console.log(`📦 ${ajustesExitosos.length} productos actualizados correctamente`);
                     }
+                } else {
+                    console.warn('⚠️ Algunos ajustes de stock fallaron:', resultadoStock.errores);
+                    mostrarToast('Advertencia Stock', `${resultadoStock.errores.length} productos no se pudieron actualizar`, 'warning');
                 }
-            } catch (error) {
-                console.error(`❌ Error ajustando stock para ${producto.nombreProducto}:`, error);
-                mostrarToast('Error Stock', `Error inesperado ajustando stock para ${producto.nombreProducto}`, 'warning');
+
+                // Mostrar detalles de cada resultado
+                if (resultadoStock.resultados) {
+                    resultadoStock.resultados.forEach(resultado => {
+                        if (resultado.success) {
+                            console.log(`✅ ${resultado.nombreProducto}: ${resultado.stockAnterior} → ${resultado.stockNuevo}`);
+                        } else {
+                            console.warn(`⚠️ ${resultado.nombreProducto}: ${resultado.error}`);
+                        }
+                    });
+                }
+            } else {
+                const errorText = await responseStock.text();
+                console.error('❌ Error en endpoint de ajuste de stock:', errorText);
+                mostrarToast('Error Stock', 'No se pudo conectar con el sistema de inventario', 'warning');
             }
+        } catch (error) {
+            console.error('❌ Error general ajustando stock:', error);
+            mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
         }
 
         // Generar e imprimir recibo

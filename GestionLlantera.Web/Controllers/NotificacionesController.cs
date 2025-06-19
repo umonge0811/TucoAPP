@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -78,6 +78,21 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogError(ex, "Error al marcar todas como leídas");
                 return Json(new { success = false });
+            }
+        }
+
+        [HttpGet]
+        [Route("api/notificaciones/conteo-no-leidas")]
+        public async Task<IActionResult> ConteoNoLeidas()
+        {
+            try
+            {
+                // Por ahora retornamos 0, esto se puede implementar más adelante
+                return Json(new { count = 0, success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { count = 0, success = false, message = ex.Message });
             }
         }
     }
