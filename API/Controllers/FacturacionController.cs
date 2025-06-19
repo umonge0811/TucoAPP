@@ -1,3 +1,4 @@
+
 using API.Data;
 using API.Extensions;
 using API.ServicesAPI.Interfaces;
@@ -49,7 +50,7 @@ namespace API.Controllers
             try
             {
                 var puedeVerCostos = await this.TienePermisoAsync(_permisosService, "VerCostos");
-
+                
                 _logger.LogInformation("🛒 Obteniendo productos para venta - Página: {Pagina}, Tamaño: {Tamano}", pagina, tamano);
 
                 var query = _context.Productos
@@ -126,7 +127,7 @@ namespace API.Controllers
             try
             {
                 var puedeVerCostos = await this.TienePermisoAsync(_permisosService, "VerCostos");
-
+                
                 var producto = await _context.Productos
                     .Include(p => p.ImagenesProductos)
                     .Include(p => p.Llanta)
@@ -408,7 +409,7 @@ namespace API.Controllers
                         NumeroFactura = f.NumeroFactura,
                         ClienteId = f.ClienteId,
                         NombreCliente = f.NombreCliente,
-                        IdentificacionCliente = f.IdentificacionCliente ?? string.Empty,
+                        IdentificacionCliente = f.IdentificacionCliente,
                         TelefonoCliente = f.TelefonoCliente,
                         EmailCliente = f.EmailCliente,
                         DireccionCliente = f.DireccionCliente,
