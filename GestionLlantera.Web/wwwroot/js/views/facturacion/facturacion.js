@@ -1238,35 +1238,45 @@ async function procesarVentaFinal() {
             throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
         }
 
-        // Ajustar stock para cada producto
+        // Ajustar stock para cada producto usando el endpoint de la API
         for (const producto of productosEnVenta) {
-            const ajusteStock = {
-                productoId: producto.productoId,
-                tipoAjuste: 'SALIDA',
-                cantidad: producto.cantidad,
-                motivo: `Venta - Factura ${resultadoFactura.numeroFactura}`,
-                usuarioId: 1
-            };
+            try {
+                const ajusteStock = {
+                    TipoAjuste: 'salida',
+                    Cantidad: producto.cantidad,
+                    Comentario: `Venta - Factura ${resultadoFactura.numeroFactura || 'N/A'}`
+                };
 
-            const responseStock = await fetch('/Inventario/AjustarStock', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(ajusteStock)
-            });
+                console.log(`📦 Ajustando stock para producto ${producto.productoId}: -${producto.cantidad} unidades`);
 
-            if (!responseStock.ok) {
-                const errorText = await responseStock.text();
-                console.warn(`⚠️ No se pudo ajustar stock para ${producto.nombreProducto}: ${responseStock.status} - ${errorText}`);
-            } else {
-                const resultadoStock = await responseStock.json();
-                if (!resultadoStock.success) {
-                    console.warn(`⚠️ No se pudo ajustar stock para ${producto.nombreProducto}: ${resultadoStock.message}`);
+                const responseStock = await fetch(`https://localhost:7273/api/Inventario/productos/${producto.productoId}/ajustar-stock`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${obtenerTokenJWT()}`,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(ajusteStock)
+                });
+
+                if (!responseStock.ok) {
+                    const errorText = await responseStock.text();
+                    console.warn(`⚠️ No se pudo ajustar stock para ${producto.nombreProducto}: ${responseStock.status} - ${errorText}`);
+                    
+                    // No fallar toda la venta por un error de stock, pero mostrar advertencia
+                    mostrarToast('Advertencia Stock', `No se pudo ajustar stock para ${producto.nombreProducto}`, 'warning');
                 } else {
-                    console.log(`✅ Stock ajustado para ${producto.nombreProducto}`);
+                    const resultadoStock = await responseStock.json();
+                    if (resultadoStock.success) {
+                        console.log(`✅ Stock ajustado para ${producto.nombreProducto}: ${resultadoStock.stockAnterior} → ${resultadoStock.stockNuevo}`);
+                    } else {
+                        console.warn(`⚠️ Error en ajuste de stock para ${producto.nombreProducto}: ${resultadoStock.message}`);
+                        mostrarToast('Advertencia Stock', `Error ajustando stock: ${resultadoStock.message}`, 'warning');
+                    }
                 }
+            } catch (error) {
+                console.error(`❌ Error ajustando stock para ${producto.nombreProducto}:`, error);
+                mostrarToast('Error Stock', `Error inesperado ajustando stock para ${producto.nombreProducto}`, 'warning');
             }
         }
 
@@ -2217,6 +2227,38 @@ function obtenerUsuarioActual() {
         nombre: nombreUsuario,
         nombreUsuario: nombreUsuario
     };
+}
+
+// ===== FUNCIÓN PARA OBTENER TOKEN JWT =====
+function obtenerTokenJWT() {
+    // Intentar obtener el token desde localStorage, sessionStorage o cookies
+    let token = localStorage.getItem('jwt_token') || 
+                sessionStorage.getItem('jwt_token') ||
+                localStorage.getItem('authToken') ||
+                sessionStorage.getItem('authToken');
+    
+    // Si no está en storage, intentar desde cookie
+    if (!token) {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'jwt_token' || name === 'authToken') {
+                token = value;
+                break;
+            }
+        }
+    }
+    
+    // Si aún no tenemos token, intentar desde meta tag
+    if (!token) {
+        const metaToken = document.querySelector('meta[name="auth-token"]');
+        if (metaToken) {
+            token = metaToken.getAttribute('content');
+        }
+    }
+    
+    console.log('🔑 Token JWT obtenido:', token ? 'Presente' : 'No encontrado');
+    return token;
 }
 
 // ===== HACER FUNCIONES GLOBALES =====
