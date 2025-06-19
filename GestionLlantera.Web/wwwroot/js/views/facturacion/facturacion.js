@@ -738,7 +738,7 @@ function mostrarModalSeleccionProducto(producto) {
                                                value="1" 
                                                min="1" 
                                                max="${producto.cantidadEnInventario}"
-                                               style="font-size: 16px; min-width: 80px; -moz-appearance: textfield;"
+                                               style="font-size: 16px; min-width: 80px; -moz-appearance: textfield; -webkit-appearance: none;"
                                                onwheel="return false;">
                                         <button type="button" class="btn btn-outline-secondary" id="btnMasCantidad">+</button>
                                     </div>
@@ -782,45 +782,107 @@ function mostrarModalSeleccionProducto(producto) {
 function configurarEventosModalProducto(producto, modal) {
     const precioBase = producto.precio || 0;
 
-    // Eventos de cantidad
-    $('#btnMenosCantidad').off('click').on('click', function() {
+    // Limpiar eventos anteriores para evitar duplicación
+    $('#btnMenosCantidad, #btnMasCantidad, #cantidadProducto, #btnConfirmarAgregarProducto').off();
+
+    // Eventos de cantidad - CORREGIDOS
+    $('#btnMenosCantidad').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const input = $('#cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
-        if (valorActual > 1) {
+        const minimo = parseInt(input.attr('min')) || 1;
+        
+        if (valorActual > minimo) {
             input.val(valorActual - 1);
+            console.log('➖ Cantidad decrementada a:', valorActual - 1);
         }
     });
 
-    $('#btnMasCantidad').off('click').on('click', function() {
+    $('#btnMasCantidad').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const input = $('#cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const stockDisponible = producto.cantidadEnInventario;
-        if (valorActual < stockDisponible){
+        
+        if (valorActual < stockDisponible) {
             input.val(valorActual + 1);
+            console.log('➕ Cantidad incrementada a:', valorActual + 1);
+        } else {
+            mostrarToast('Stock limitado', `Solo hay ${stockDisponible} unidades disponibles`, 'warning');
         }
     });
 
-    $('#cantidadProducto').off('input keydown').on('input', function() {
+    // Validación del input
+    $('#cantidadProducto').on('input', function() {
         const valor = parseInt($(this).val()) || 1;
         const min = parseInt($(this).attr('min')) || 1;
         const max = parseInt($(this).attr('max')) || producto.cantidadEnInventario;
 
-        if (valor < min) $(this).val(min);
-        if (valor > max) $(this).val(max);
+        if (valor < min) {
+            $(this).val(min);
+        } else if (valor > max) {
+            $(this).val(max);
+            mostrarToast('Stock limitado', `Solo hay ${max} unidades disponibles`, 'warning');
+        }
     }).on('keydown', function(e) {
-        // Prevenir las teclas de flecha arriba/abajo
+        // Prevenir las teclas de flecha arriba/abajo para evitar conflicto con botones
         if (e.which === 38 || e.which === 40) {
+            e.preventDefault();
+        }
+        // Permitir solo números, backspace, delete, tab, escape, enter
+        if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+            // Permitir Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true) ||
+            // Permitir home, end, left, right
+            (e.keyCode >= 35 && e.keyCode <= 39)) {
+            return;
+        }
+        // Asegurar que es un número
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
             e.preventDefault();
         }
     });
 
-    // Confirmar agregar producto
-    $('#btnConfirmarAgregarProducto').on('click', function() {
+    // Confirmar agregar producto - MEJORADO
+    $('#btnConfirmarAgregarProducto').on('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
         const cantidad = parseInt($('#cantidadProducto').val()) || 1;
+        
+        console.log('🛒 Agregando producto a venta:', {
+            nombre: producto.nombreProducto,
+            cantidad: cantidad,
+            precio: precioBase,
+            stock: producto.cantidadEnInventario
+        });
 
-        // Agregar con precio base, el método de pago se seleccionará al finalizar
+        // Validar cantidad antes de agregar
+        if (cantidad < 1) {
+            mostrarToast('Cantidad inválida', 'La cantidad debe ser mayor a 0', 'warning');
+            return;
+        }
+        
+        if (cantidad > producto.cantidadEnInventario) {
+            mostrarToast('Stock insuficiente', `Solo hay ${producto.cantidadEnInventario} unidades disponibles`, 'warning');
+            return;
+        }
+
+        // Agregar producto con la cantidad seleccionada
         agregarProductoAVenta(producto, cantidad, precioBase, 'efectivo');
+        
+        // Cerrar modal
         modal.hide();
+        
+        // Mostrar confirmación
+        mostrarToast('Producto agregado', `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${producto.nombreProducto} agregadas`, 'success');
     });
 }
 
