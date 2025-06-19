@@ -18,3 +18,12 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd API && dotnet run"
+
+[[workflows.workflow]]
+name = "Web Application"
+author = 43949241
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd GestionLlantera.Web && dotnet run --urls=http://0.0.0.0:5000"
