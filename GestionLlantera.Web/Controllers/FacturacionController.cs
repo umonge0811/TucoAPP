@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
-using Tuco.Clases.DTOs.Facturacion;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -233,7 +232,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearFactura([FromBody] FacturaDTO facturaDto)
+        public async Task<IActionResult> ProcesarVenta([FromBody] VentaDTO venta)
         {
             try
             {
@@ -245,24 +244,14 @@ namespace GestionLlantera.Web.Controllers
                     });
                 }
 
-                if (!ModelState.IsValid)
-                {
-                    var errores = ModelState
-                        .Where(e => e.Value.Errors.Count > 0)
-                        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray());
-
-                    return Json(new { success = false, message = "Error de validación", errores });
-                }
-
                 var jwtToken = this.ObtenerTokenJWT();
-                var ventaProcesada = await _facturacionService.ProcesarVentaAsync(facturaDto, jwtToken);
+                var ventaProcesada = await _facturacionService.ProcesarVentaAsync(venta, jwtToken);
 
                 if (ventaProcesada)
                 {
                     return Json(new { 
                         success = true, 
                         message = "Venta procesada exitosamente",
-                        numeroFactura = facturaDto.NumeroFactura ?? GenerarNumeroFacturaTemp(),
                         ventaId = 1 // En la implementación real, la API devolvería el ID
                     });
                 }
@@ -271,7 +260,7 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear factura");
+                _logger.LogError(ex, "Error al procesar venta");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
@@ -299,11 +288,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        private string GenerarNumeroFacturaTemp()
-        {
-            return $"FAC-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10)}";
-        }
-
         /// <summary>
         /// Método auxiliar para obtener el token JWT del usuario autenticado
         /// </summary>
@@ -323,6 +307,101 @@ namespace GestionLlantera.Web.Controllers
             }
 
             return token;
+        }
+
+
+
+        // Aquí puedes agregar más métodos según sea necesario
+    }
+}
+using GestionLlantera.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Tuco.Clases.DTOs.Facturacion;
+
+namespace GestionLlantera.Web.Controllers
+{
+    [Authorize]
+    public class FacturacionController : Controller
+    {
+        private readonly IFacturacionService _facturacionService;
+        private readonly ILogger<FacturacionController> _logger;
+
+        public FacturacionController(
+            IFacturacionService facturacionService,
+            ILogger<FacturacionController> logger)
+        {
+            _facturacionService = facturacionService;
+            _logger = logger;
+        }
+
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerProductosParaFacturacion()
+        {
+            try
+            {
+                var resultado = await _facturacionService.ObtenerProductosParaVentaAsync();
+                
+                if (resultado.IsSuccess)
+                {
+                    return Json(new { success = true, productos = resultado.Data });
+                }
+                
+                return Json(new { success = false, message = resultado.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo productos para facturación");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearFactura([FromBody] FacturaDTO facturaDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errores = ModelState
+                        .Where(e => e.Value.Errors.Count > 0)
+                        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray());
+                    
+                    return Json(new { success = false, message = "Error de validación", errores });
+                }
+
+                // Obtener el token JWT del usuario actual
+                var token = HttpContext.Session.GetString("JwtToken");
+                
+                // Llamar al servicio de facturación
+                var resultado = await _facturacionService.ProcesarVentaAsync(facturaDto, token);
+
+                if (resultado)
+                {
+                    return Json(new { 
+                        success = true, 
+                        message = "Factura creada exitosamente",
+                        numeroFactura = facturaDto.NumeroFactura ?? GenerarNumeroFacturaTemp()
+                    });
+                }
+
+                return Json(new { success = false, message = "Error al procesar la venta" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creando factura");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        private string GenerarNumeroFacturaTemp()
+        {
+            return $"FAC-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10)}";
         }
     }
 }
