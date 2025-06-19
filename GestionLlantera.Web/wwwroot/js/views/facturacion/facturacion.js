@@ -1084,31 +1084,111 @@ function calcularCambio() {
 }
 
 async function procesarVentaFinal() {
-    try {
-        const btnConfirmar = $('#btnConfirmarVenta');
-        btnConfirmar.prop('disabled', true);
-        btnConfirmar.find('.btn-normal-state').addClass('d-none');
-        btnConfirmar.find('.btn-loading-state').removeClass('d-none');
+    const $btnFinalizar = $('#btnConfirmarVenta');
 
-        // Preparar datos de la venta
+    try {
+        // Deshabilitar el botón y mostrar el estado de carga
+        $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
+
+        // Preparar datos de la venta (reutilizando cálculos existentes)
         const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        const ventaData = {
-            clienteId: clienteSeleccionado.id,
-            nombreCliente: clienteSeleccionado.nombre,
-            emailCliente: clienteSeleccionado.email,
-            productos: productosEnVenta,
+        // Crear objeto de factura para enviar a la API
+        const facturaData = {
+            clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
+            nombreCliente: clienteSeleccionado?.nombre || 'Cliente General',
+            identificacionCliente: clienteSeleccionado?.identificacion || '',
+            telefonoCliente: clienteSeleccionado?.telefono || '',
+            emailCliente: clienteSeleccionado?.email || '',
+            direccionCliente: clienteSeleccionado?.direccion || '',
+            fechaFactura: new Date().toISOString(),
+            fechaVencimiento: null,
+            subtotal: subtotal,
+            descuentoGeneral: 0,
+            porcentajeImpuesto: 13,
+            montoImpuesto: iva,
+            total: total,
+            estado: 'Pagada',
+            tipoDocumento: 'Factura',
+            metodoPago: $('#metodoPago').val(),
+            observaciones: $('#observacionesVenta').val(),
+            usuarioCreadorId: 1, // Obtener del contexto del usuario
+            detallesFactura: productosEnVenta.map(producto => ({
+                productoId: producto.productoId,
+                nombreProducto: producto.nombreProducto,
+                descripcionProducto: producto.descripcion || '',
+                cantidad: producto.cantidad,
+                precioUnitario: producto.precioUnitario,
+                porcentajeDescuento: 0,
+                montoDescuento: 0,
+                subtotal: producto.precioUnitario * producto.cantidad
+            }))
+        };
+
+        // Crear la factura
+        const responseFactura = await fetch('/Facturacion/CrearFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(facturaData)
+        });
+
+        if (!responseFactura.ok) {
+            const errorText = await responseFactura.text();
+            console.error('❌ Error del servidor al crear factura:', errorText);
+            throw new Error(`Error al crear la factura: ${responseFactura.status} - ${errorText}`);
+        }
+
+        const resultadoFactura = await responseFactura.json();
+        console.log('✅ Factura creada:', resultadoFactura);
+
+        if (!resultadoFactura.success) {
+            throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
+        }
+
+        // Ajustar stock para cada producto
+        for (const producto of productosEnVenta) {
+            const ajusteStock = {
+                productoId: producto.productoId,
+                tipoAjuste: 'SALIDA',
+                cantidad: producto.cantidad,
+                motivo: `Venta - Factura ${resultadoFactura.numeroFactura}`,
+                usuarioId: 1
+            };
+
+            const responseStock = await fetch('/Inventario/AjustarStock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(ajusteStock)
+            });
+
+            if (!responseStock.ok) {
+                const errorText = await responseStock.text();
+                console.warn(`⚠️ No se pudo ajustar stock para ${producto.nombreProducto}: ${responseStock.status} - ${errorText}`);
+            } else {
+                const resultadoStock = await responseStock.json();
+                if (!resultadoStock.success) {
+                    console.warn(`⚠️ No se pudo ajustar stock para ${producto.nombreProducto}: ${resultadoStock.message}`);
+                } else {
+                    console.log(`✅ Stock ajustado para ${producto.nombreProducto}`);
+                }
+            }
+        }
+
+        // Generar e imprimir recibo
+        generarRecibo(resultadoFactura, productosEnVenta, {
             subtotal: subtotal,
             iva: iva,
             total: total,
-            metodoPago: $('#metodoPago').val(),
-            observaciones: $('#observacionesVenta').val()
-        };
-
-        // Simular procesamiento (aquí iría la llamada real a la API)
-        await new Promise(resolve => setTimeout(resolve, 2000));
+            metodoPago: $('#metodoPago').val()
+        });
 
         // Éxito
         modalFinalizarVenta.hide();
@@ -1124,13 +1204,99 @@ async function procesarVentaFinal() {
 
     } catch (error) {
         console.error('❌ Error procesando venta:', error);
-        mostrarToast('Error', 'No se pudo procesar la venta', 'danger');
+        mostrarToast('Error', 'Hubo un problema procesando la venta', 'error');
     } finally {
-        const btnConfirmar = $('#btnConfirmarVenta');
-        btnConfirmar.prop('disabled', false);
-        btnConfirmar.find('.btn-normal-state').removeClass('d-none');
-        btnConfirmar.find('.btn-loading-state').addClass('d-none');
+        // Restaurar botón
+        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
     }
+}
+
+/**
+ * Generar e imprimir recibo de venta
+ */
+function generarRecibo(factura, productos, totales) {
+    const fecha = new Date().toLocaleDateString('es-CR');
+    const hora = new Date().toLocaleTimeString('es-CR');
+
+    const reciboHTML = `
+        <div style="width: 300px; font-family: 'Courier New', monospace; font-size: 12px; margin: 0 auto;">
+            <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+                <h3 style="margin: 0;">GESTIÓN LLANTERA</h3>
+                <p style="margin: 2px 0;">Factura de Venta</p>
+                <p style="margin: 2px 0;">Nº ${factura.numeroFactura || 'N/A'}</p>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <p style="margin: 2px 0;"><strong>Fecha:</strong> ${fecha}</p>
+                <p style="margin: 2px 0;"><strong>Hora:</strong> ${hora}</p>
+                <p style="margin: 2px 0;"><strong>Cliente:</strong> ${factura.nombreCliente || 'Cliente General'}</p>
+                <p style="margin: 2px 0;"><strong>Método Pago:</strong> ${totales.metodoPago || 'Efectivo'}</p>
+            </div>
+
+            <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding: 2px;">Producto</th>
+                            <th style="text-align: center; padding: 2px;">Cant.</th>
+                            <th style="text-align: right; padding: 2px;">Precio</th>
+                            <th style="text-align: right; padding: 2px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${productos.map(p => `
+                            <tr>
+                                <td style="padding: 2px; font-size: 10px;">${p.nombreProducto}</td>
+                                <td style="text-align: center; padding: 2px;">${p.cantidad}</td>
+                                <td style="text-align: right; padding: 2px;">₡${p.precioUnitario.toFixed(2)}</td>
+                                <td style="text-align: right; padding: 2px;">₡${(p.precioUnitario * p.cantidad).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="padding-top: 10px;">
+                <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+                    <span>Subtotal:</span>
+                    <span>₡${totales.subtotal.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+                    <span>IVA (13%):</span>
+                    <span>₡${totales.iva.toFixed(2)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin: 5px 0; font-weight: bold; border-top: 1px dashed #000; padding-top: 5px;">
+                    <span>TOTAL:</span>
+                    <span>₡${totales.total.toFixed(2)}</span>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 15px; font-size: 10px;">
+                <p>¡Gracias por su compra!</p>
+                <p>Gestión Llantera - Sistema de Facturación</p>
+            </div>
+        </div>
+    `;
+
+    // Crear ventana de impresión
+    const ventanaImpresion = window.open('', '_blank', 'width=400,height=600');
+    ventanaImpresion.document.write(`
+        <html>
+            <head>
+                <title>Recibo de Venta</title>
+                <style>
+                    body { margin: 0; padding: 20px; }
+                    @media print {
+                        body { margin: 0; }
+                    }
+                </style>
+            </head>
+            <body onload="window.print(); window.close();">
+                ${reciboHTML}
+            </body>
+        </html>
+    `);
+    ventanaImpresion.document.close();
 }
 
 // ===== FUNCIONES AUXILIARES =====
