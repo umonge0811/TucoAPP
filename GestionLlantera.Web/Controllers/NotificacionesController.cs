@@ -95,5 +95,39 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { count = 0, success = false, message = ex.Message });
             }
         }
+
+        [HttpGet("obtener-notificaciones")]
+        public async Task<IActionResult> ObtenerNotificaciones()
+        {
+            try
+            {
+                var jwtToken = this.ObtenerTokenJWT();
+                var notificaciones = await _notificacionService.ObtenerNotificacionesAsync(jwtToken);
+
+                return Json(new { success = true, data = notificaciones });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener notificaciones");
+                return Json(new { success = false, message = "Error al obtener notificaciones" });
+            }
+        }
+
+        [HttpGet("conteo-no-leidas")]
+        public async Task<IActionResult> ConteoNoLeidas()
+        {
+            try
+            {
+                var jwtToken = this.ObtenerTokenJWT();
+                var conteo = await _notificacionService.ObtenerConteoNoLeidasAsync(jwtToken);
+
+                return Json(new { success = true, conteo = conteo });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener conteo de notificaciones");
+                return Json(new { success = false, conteo = 0 });
+            }
+        }
     }
 }

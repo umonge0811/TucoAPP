@@ -369,7 +369,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        [Route("AjustarStockFacturacion")]
+        [Route("Facturacion/AjustarStockFacturacion")]
         public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
         {
             try
