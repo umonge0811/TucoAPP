@@ -738,7 +738,8 @@ function mostrarModalSeleccionProducto(producto) {
                                                value="1" 
                                                min="1" 
                                                max="${producto.cantidadEnInventario}"
-                                               style="font-size: 16px; min-width: 80px;">
+                                               style="font-size: 16px; min-width: 80px; -moz-appearance: textfield;"
+                                               onwheel="return false;">
                                         <button type="button" class="btn btn-outline-secondary" id="btnMasCantidad">+</button>
                                     </div>
                                 </div>
@@ -782,7 +783,7 @@ function configurarEventosModalProducto(producto, modal) {
     const precioBase = producto.precio || 0;
 
     // Eventos de cantidad
-    $('#btnMenosCantidad').on('click', function() {
+    $('#btnMenosCantidad').off('click').on('click', function() {
         const input = $('#cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         if (valorActual > 1) {
@@ -790,7 +791,7 @@ function configurarEventosModalProducto(producto, modal) {
         }
     });
 
-    $('#btnMasCantidad').on('click', function() {
+    $('#btnMasCantidad').off('click').on('click', function() {
         const input = $('#cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const stockDisponible = producto.cantidadEnInventario;
@@ -799,13 +800,18 @@ function configurarEventosModalProducto(producto, modal) {
         }
     });
 
-    $('#cantidadProducto').on('input', function() {
+    $('#cantidadProducto').off('input keydown').on('input', function() {
         const valor = parseInt($(this).val()) || 1;
         const min = parseInt($(this).attr('min')) || 1;
         const max = parseInt($(this).attr('max')) || producto.cantidadEnInventario;
 
         if (valor < min) $(this).val(min);
         if (valor > max) $(this).val(max);
+    }).on('keydown', function(e) {
+        // Prevenir las teclas de flecha arriba/abajo
+        if (e.which === 38 || e.which === 40) {
+            e.preventDefault();
+        }
     });
 
     // Confirmar agregar producto
@@ -1908,7 +1914,7 @@ function abrirModalNuevoCliente() {
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="contactoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person-badge me-1"></i>Contacto
+                                        <i class="bi bi-person-badge me-1"></i>Identificación
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
