@@ -9,6 +9,7 @@ using Tuco.Clases.Models;
 using System.Text.Json;
 using System.Text;
 using static GestionLlantera.Web.Services.Interfaces.IFacturacionService;
+using GestionLlantera.Web.Services;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -372,7 +373,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        [Route("AjustarStockFacturacion")]
+        [Route("Facturacion/AjustarStockFacturacion")]
         public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
         {
             try
