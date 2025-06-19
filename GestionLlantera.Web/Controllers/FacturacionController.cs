@@ -18,21 +18,18 @@ namespace GestionLlantera.Web.Controllers
         private readonly IInventarioService _inventarioService;
         private readonly IFacturacionService _facturacionService;
         private readonly IConfiguration _configuration;
-        private readonly ApplicationDbContext _context; // Add ApplicationDbContext
 
         public FacturacionController(
             ILogger<FacturacionController> logger,
             IInventarioService inventarioService,
             IFacturacionService facturacionService,
-            IConfiguration configuration,
-            ApplicationDbContext context // Inject ApplicationDbContext
+            IConfiguration configuration
             )
         {
             _logger = logger;
             _inventarioService = inventarioService;
             _facturacionService = facturacionService;
             _configuration = configuration;
-            _context = context; // Initialize ApplicationDbContext
         }
 
         public async Task<IActionResult> Index()
@@ -390,92 +387,11 @@ namespace GestionLlantera.Web.Controllers
                     });
                 }
 
-                var resultados = new List<object>();
-                var ajustesExitosos = 0;
-                var errores = new List<string>();
+                // Usar el servicio de facturación para ajustar el stock
+                var jwtToken = this.ObtenerTokenJWT();
+                var resultado = await _facturacionService.AjustarStockFacturacionAsync(request, jwtToken);
 
-                foreach (var productoAjuste in request.Productos)
-                {
-                    try
-                    {
-                        // Buscar el producto en la base de datos
-                        var producto = await _context.Productos
-                            .FirstOrDefaultAsync(p => p.ProductoId == productoAjuste.ProductoId);
-
-                        if (producto == null)
-                        {
-                            var error = $"Producto ID {productoAjuste.ProductoId} no encontrado";
-                            errores.Add(error);
-                            resultados.Add(new {
-                                productoId = productoAjuste.ProductoId,
-                                nombreProducto = productoAjuste.NombreProducto,
-                                success = false,
-                                error = error
-                            });
-                            continue;
-                        }
-
-                        // Obtener stock anterior
-                        var stockAnterior = (int)(producto.CantidadEnInventario ?? 0);
-
-                        // Calcular nuevo stock (restar la cantidad vendida)
-                        var nuevoStock = Math.Max(0, stockAnterior - productoAjuste.Cantidad);
-
-                        // Actualizar el producto
-                        producto.CantidadEnInventario = nuevoStock;
-                        producto.FechaUltimaActualizacion = DateTime.Now;
-
-                        // Guardar cambios
-                        await _context.SaveChangesAsync();
-
-                        // Agregar resultado exitoso
-                        resultados.Add(new {
-                            productoId = productoAjuste.ProductoId,
-                            nombreProducto = productoAjuste.NombreProducto,
-                            success = true,
-                            stockAnterior = stockAnterior,
-                            stockNuevo = nuevoStock,
-                            diferencia = nuevoStock - stockAnterior,
-                            mensaje = $"Stock actualizado: {stockAnterior} → {stockNuevo}"
-                        });
-
-                        ajustesExitosos++;
-
-                        _logger.LogInformation("✅ Stock ajustado para {Producto}: {StockAnterior} → {StockNuevo}", 
-                            productoAjuste.NombreProducto, stockAnterior, nuevoStock);
-                    }
-                    catch (Exception ex)
-                    {
-                        var error = $"Error ajustando {productoAjuste.NombreProducto}: {ex.Message}";
-                        errores.Add(error);
-                        resultados.Add(new {
-                            productoId = productoAjuste.ProductoId,
-                            nombreProducto = productoAjuste.NombreProducto,
-                            success = false,
-                            error = error
-                        });
-
-                        _logger.LogError(ex, "❌ Error ajustando stock para producto {ProductoId}", 
-                            productoAjuste.ProductoId);
-                    }
-                }
-
-                // Preparar respuesta
-                var response = new {
-                    success = ajustesExitosos > 0,
-                    message = ajustesExitosos > 0 ? 
-                        $"Stock ajustado para {ajustesExitosos} productos" : 
-                        "No se pudo ajustar el stock de ningún producto",
-                    ajustesExitosos = ajustesExitosos,
-                    totalProductos = request.Productos.Count,
-                    resultados = resultados,
-                    errores = errores.Any() ? errores : null
-                };
-
-                _logger.LogInformation("📦 Ajuste completado: {Exitosos}/{Total} productos actualizados", 
-                    ajustesExitosos, request.Productos.Count);
-
-                return Json(response);
+                return Json(resultado);
             }
             catch (Exception ex)
             {
