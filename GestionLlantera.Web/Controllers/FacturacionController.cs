@@ -7,7 +7,6 @@ using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
 using System.Text.Json;
 using System.Text;
-using tuco.Clases.DTOs.Facturacion;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -17,15 +16,18 @@ namespace GestionLlantera.Web.Controllers
         private readonly ILogger<FacturacionController> _logger;
         private readonly IInventarioService _inventarioService;
         private readonly IFacturacionService _facturacionService;
+        private readonly IConfiguration _configuration;
 
         public FacturacionController(
             ILogger<FacturacionController> logger,
             IInventarioService inventarioService,
-            IFacturacionService facturacionService)
+            IFacturacionService facturacionService,
+            IConfiguration configuration)
         {
             _logger = logger;
             _inventarioService = inventarioService;
             _facturacionService = facturacionService;
+            _configuration = configuration;
         }
 
         public async Task<IActionResult> Index()
