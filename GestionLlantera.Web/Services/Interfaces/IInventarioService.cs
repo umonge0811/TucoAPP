@@ -41,3 +41,14 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<Stream> ExportarResultadosInventarioPDFAsync(int id, string jwtToken = null);
     }
 }
+using GestionLlantera.Web.Models.DTOs.Inventario;
+
+namespace GestionLlantera.Web.Services.Interfaces
+{
+    public interface IInventarioService
+    {
+        Task<ProductoDTO?> ObtenerProductoPorIdAsync(int id, string? token = null);
+        Task<bool> AjustarStockProductoAsync(int productoId, int cantidad, string motivo, string? token = null);
+        // Otros métodos existentes...
+    }
+}

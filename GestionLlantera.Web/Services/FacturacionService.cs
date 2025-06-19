@@ -41,11 +41,11 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<bool> ProcesarVentaAsync(VentaDTO venta, string jwtToken = null)
+        public async Task<bool> ProcesarVentaAsync(FacturaDTO factura, string jwtToken = null)
         {
             try
             {
-                _logger.LogInformation("🛒 Procesando venta para cliente: {Cliente}", venta.NombreCliente);
+                _logger.LogInformation("🛒 Procesando venta para cliente: {Cliente}", factura.NombreCliente);
 
                 // Configurar token JWT si se proporciona
                 if (!string.IsNullOrEmpty(jwtToken))
@@ -55,8 +55,8 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                // Serializar venta
-                var jsonContent = JsonConvert.SerializeObject(venta, new JsonSerializerSettings
+                // Serializar factura
+                var jsonContent = JsonConvert.SerializeObject(factura, new JsonSerializerSettings
                 {
                     DateFormatString = "yyyy-MM-ddTHH:mm:ss",
                     NullValueHandling = NullValueHandling.Include
@@ -64,13 +64,20 @@ namespace GestionLlantera.Web.Services
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                // Enviar a la API (cuando esté implementada)
-                // var response = await _httpClient.PostAsync("api/Facturacion/procesar-venta", content);
+                // Crear la factura en la API
+                var response = await _httpClient.PostAsync("api/Facturacion/facturas", content);
 
-                // Por ahora, simular éxito
-                await Task.Delay(500); // Simular tiempo de procesamiento
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al crear factura: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                    return false;
+                }
 
-                _logger.LogInformation("✅ Venta procesada exitosamente");
+                var resultado = await response.Content.ReadAsStringAsync();
+                var facturaResult = JsonConvert.DeserializeObject<dynamic>(resultado);
+
+                _logger.LogInformation("✅ Factura creada exitosamente con ID: {FacturaId}", facturaResult?.facturaId);
                 return true;
             }
             catch (Exception ex)
