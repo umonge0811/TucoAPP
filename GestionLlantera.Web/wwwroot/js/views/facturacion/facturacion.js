@@ -1275,7 +1275,9 @@ async function procesarVentaFinal() {
             subtotal: subtotal,
             iva: iva,
             total: total,
-            metodoPago: metodoPagoSeleccionado
+            metodoPago: metodoPagoSeleccionado,
+            cliente: clienteSeleccionado,
+            usuario: obtenerUsuarioActual()
         });
 
         // Éxito
@@ -1343,9 +1345,9 @@ function generarRecibo(factura, productos, totales) {
             <div style="margin-bottom: 6px; font-size: 8px;">
                 <div>Fecha: ${fecha}</div>
                 <div>Hora: ${hora}</div>
-                <div>Cliente: ${truncarTexto(factura.nombreCliente || 'Cliente General', 25)}</div>
+                <div>Cliente: ${truncarTexto(totales.cliente?.nombre || totales.cliente?.nombreCliente || factura.nombreCliente || 'Cliente General', 25)}</div>
                 <div>Método: ${totales.metodoPago || 'Efectivo'}</div>
-                <div>Cajero: ${factura.usuarioCreadorNombre || 'Sistema'}</div>
+                <div>Cajero: ${totales.usuario?.nombre || totales.usuario?.nombreUsuario || factura.usuarioCreadorNombre || 'Sistema'}</div>
             </div>
 
             <!-- SEPARADOR -->
@@ -2201,6 +2203,20 @@ function mostrarResumenDepuracion() {
     console.log('📊 ultimaBusqueda:', `"${ultimaBusqueda}"`);
     console.log('📊 timeoutBusquedaActivo:', timeoutBusquedaActivo !== null);
     console.log('📊 === FIN RESUMEN ===');
+}
+
+// ===== FUNCIÓN PARA OBTENER USUARIO ACTUAL =====
+function obtenerUsuarioActual() {
+    // Intentar obtener el nombre del usuario desde diferentes fuentes
+    const nombreUsuario = document.querySelector('[data-usuario-nombre]')?.getAttribute('data-usuario-nombre') ||
+                         document.querySelector('.user-name')?.textContent?.trim() ||
+                         document.querySelector('#nombreUsuario')?.textContent?.trim() ||
+                         'Usuario';
+
+    return {
+        nombre: nombreUsuario,
+        nombreUsuario: nombreUsuario
+    };
 }
 
 // ===== HACER FUNCIONES GLOBALES =====

@@ -259,13 +259,17 @@
                                     <div class="user-avatar">
                                         <i class="bi bi-person-circle"></i>
                                     </div>
-                                    @await Component.InvokeAsync("UserInfo")
+                                    
+                                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" data-usuario-nombre="@User.Identity.Name">
+                                        <i class="bi bi-person-circle me-2"></i>
+                                        <span class="user-name">@User.Identity.Name</span>
+                                    </a>
                                 </div>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <div class="dropdown-header">
-                                        @await Component.InvokeAsync("UserInfo")
+                                        
                                     </div>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
