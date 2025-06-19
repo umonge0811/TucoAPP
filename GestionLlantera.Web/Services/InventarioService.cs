@@ -163,7 +163,7 @@ namespace GestionLlantera.Web.Services
                 return new List<ProductoDTO>();
             }
         }
-
+        
         // Añade este método en InventarioService
         private List<ProductoDTO> MapearRespuestaProductos(string jsonResponse)
         {
@@ -285,45 +285,6 @@ namespace GestionLlantera.Web.Services
             // En el servicio no tenemos acceso directo al User
             // El token debe pasarse desde el controlador
             return null;
-        }
-
-        public async Task<bool> AjustarStockProductoAsync(int productoId, int cantidad, string motivo, string? token = null)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(token))
-                {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                }
-
-                var ajusteData = new
-                {
-                    tipoAjuste = "SALIDA",
-                    cantidad = cantidad,
-                    motivo = motivo
-                };
-
-                var json = JsonConvert.SerializeObject(ajusteData);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PostAsync($"api/Inventario/productos/{productoId}/ajustar-stock", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var resultado = await response.Content.ReadAsStringAsync();
-                    var ajusteResult = JsonConvert.DeserializeObject<dynamic>(resultado);
-                    return ajusteResult?.success == true;
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error ajustando stock del producto {ProductoId}", productoId);
-                return false;
-            }
         }
 
         public async Task<ProductoDTO> ObtenerProductoPorIdAsync(int id, string jwtToken = null)
@@ -1988,6 +1949,6 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-
+        
     }
 }

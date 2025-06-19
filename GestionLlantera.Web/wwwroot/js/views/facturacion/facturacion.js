@@ -1182,10 +1182,9 @@ async function procesarVentaFinal() {
 
         // Crear objeto de factura para enviar a la API
         const facturaData = {
-            numeroFactura: `FAC-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${Date.now().toString().slice(-6)}`,
             clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
-            nombreCliente: clienteSeleccionado?.nombre || clienteSeleccionado?.nombreCliente || 'Cliente General',
-            identificacionCliente: clienteSeleccionado?.identificacion || clienteSeleccionado?.contacto || '',
+            nombreCliente: clienteSeleccionado?.nombre || 'Cliente General',
+            identificacionCliente: clienteSeleccionado?.identificacion || '',
             telefonoCliente: clienteSeleccionado?.telefono || '',
             emailCliente: clienteSeleccionado?.email || '',
             direccionCliente: clienteSeleccionado?.direccion || '',
@@ -1199,7 +1198,7 @@ async function procesarVentaFinal() {
             estado: 'Pagada',
             tipoDocumento: 'Factura',
             metodoPago: metodoPagoSeleccionado,
-            observaciones: $('#observacionesVenta').val() || '',
+            observaciones: $('#observacionesVenta').val(),
             usuarioCreadorId: 1, // Obtener del contexto del usuario
             detallesFactura: productosEnVenta.map(producto => {
                 const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
@@ -1216,7 +1215,7 @@ async function procesarVentaFinal() {
             })
         };
 
-        // Crear la factura (el ajuste de stock se hace automáticamente en el servidor)
+        // Crear la factura
         const responseFactura = await fetch('/Facturacion/CrearFactura', {
             method: 'POST',
             headers: {
@@ -1237,6 +1236,38 @@ async function procesarVentaFinal() {
 
         if (!resultadoFactura.success) {
             throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
+        }
+
+        // Ajustar stock para cada producto
+        for (const producto of productosEnVenta) {
+            const ajusteStock = {
+                productoId: producto.productoId,
+                tipoAjuste: 'SALIDA',
+                cantidad: producto.cantidad,
+                motivo: `Venta - Factura ${resultadoFactura.numeroFactura}`,
+                usuarioId: 1
+            };
+
+            const responseStock = await fetch('/Inventario/AjustarStock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(ajusteStock)
+            });
+
+            if (!responseStock.ok) {
+                const errorText = await responseStock.text();
+                console.warn(`⚠️ No se pudo ajustar stock para ${producto.nombreProducto}: ${responseStock.status} - ${errorText}`);
+            } else {
+                const resultadoStock = await responseStock.json();
+                if (!resultadoStock.success) {
+                    console.warn(`⚠️ No se pudo ajustar stock para ${producto.nombreProducto}: ${resultadoStock.message}`);
+                } else {
+                    console.log(`✅ Stock ajustado para ${producto.nombreProducto}`);
+                }
+            }
         }
 
         // Generar e imprimir recibo
@@ -1269,214 +1300,87 @@ async function procesarVentaFinal() {
 }
 
 /**
- * Generar e imprimir recibo de venta optimizado para impresoras Epson
+ * Generar e imprimir recibo de venta
  */
 function generarRecibo(factura, productos, totales) {
-    const fecha = new Date().toLocaleDateString('es-CR', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit' 
-    });
-    const hora = new Date().toLocaleTimeString('es-CR', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit' 
-    });
-
-    // Función para truncar texto según el ancho del recibo
-    const truncarTexto = (texto, maxLength) => {
-        return texto.length > maxLength ? texto.substring(0, maxLength - 3) + '...' : texto;
-    };
+    const fecha = new Date().toLocaleDateString('es-CR');
+    const hora = new Date().toLocaleTimeString('es-CR');
 
     const reciboHTML = `
-        <div style="width: 280px; font-family: 'Courier New', monospace; font-size: 11px; margin: 0 auto; line-height: 1.2;">
-            <!-- ENCABEZADO DEL NEGOCIO -->
-            <div style="text-align: center; margin-bottom: 8px;">
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 2px;">GESTIÓN LLANTERA</div>
-                <div style="font-size: 10px; margin-bottom: 1px;">Venta de Llantas y Servicios</div>
-                <div style="font-size: 10px; margin-bottom: 1px;">Tel: (506) 2222-3333</div>
-                <div style="font-size: 10px; margin-bottom: 1px;">Email: info@gestionllantera.cr</div>
-                <div style="font-size: 10px; margin-bottom: 3px;">San José, Costa Rica</div>
-                <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
+        <div style="width: 300px; font-family: 'Courier New', monospace; font-size: 12px; margin: 0 auto;">
+            <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
+                <h3 style="margin: 0;">GESTIÓN LLANTERA</h3>
+                <p style="margin: 2px 0;">Factura de Venta</p>
+                <p style="margin: 2px 0;">Nº ${factura.numeroFactura || 'N/A'}</p>
             </div>
 
-            <!-- INFORMACIÓN DE LA FACTURA -->
-            <div style="text-align: center; margin-bottom: 8px;">
-                <div style="font-size: 14px; font-weight: bold;">FACTURA DE VENTA</div>
-                <div style="font-size: 12px; font-weight: bold;">Nº ${factura.numeroFactura || 'N/A'}</div>
-                <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
+            <div style="margin-bottom: 10px;">
+                <p style="margin: 2px 0;"><strong>Fecha:</strong> ${fecha}</p>
+                <p style="margin: 2px 0;"><strong>Hora:</strong> ${hora}</p>
+                <p style="margin: 2px 0;"><strong>Cliente:</strong> ${factura.nombreCliente || 'Cliente General'}</p>
+                <p style="margin: 2px 0;"><strong>Método Pago:</strong> ${totales.metodoPago || 'Efectivo'}</p>
             </div>
 
-            <!-- INFORMACIÓN DE FECHA Y CLIENTE -->
-            <div style="margin-bottom: 8px; font-size: 10px;">
-                <div style="margin-bottom: 1px;"><strong>Fecha:</strong> ${fecha}</div>
-                <div style="margin-bottom: 1px;"><strong>Hora:</strong> ${hora}</div>
-                <div style="margin-bottom: 1px;"><strong>Atendido por:</strong> Sistema</div>
-                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
-                <div style="margin-bottom: 1px;"><strong>Cliente:</strong></div>
-                <div style="margin-bottom: 1px;">${truncarTexto(factura.nombreCliente || 'Cliente General', 35)}</div>
-                ${clienteSeleccionado?.identificacion ? `<div style="margin-bottom: 1px;"><strong>Cédula:</strong> ${clienteSeleccionado.identificacion}</div>` : ''}
-                ${clienteSeleccionado?.telefono ? `<div style="margin-bottom: 1px;"><strong>Tel:</strong> ${clienteSeleccionado.telefono}</div>` : ''}
-                ${clienteSeleccionado?.email ? `<div style="margin-bottom: 1px;"><strong>Email:</strong> ${truncarTexto(clienteSeleccionado.email, 30)}</div>` : ''}
-                ${clienteSeleccionado?.direccion ? `<div style="margin-bottom: 1px;"><strong>Dirección:</strong> ${truncarTexto(clienteSeleccionado.direccion, 35)}</div>` : ''}
-                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
+            <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left; padding: 2px;">Producto</th>
+                            <th style="text-align: center; padding: 2px;">Cant.</th>
+                            <th style="text-align: right; padding: 2px;">Precio</th>
+                            <th style="text-align: right; padding: 2px;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${productos.map(p => `
+                            <tr>
+                                <td style="padding: 2px; font-size: 10px;">${p.nombreProducto}</td>
+                                <td style="text-align: center; padding: 2px;">${p.cantidad}</td>
+                                <td style="text-align: right; padding: 2px;">₡${p.precioUnitario.toFixed(2)}</td>
+                                <td style="text-align: right; padding: 2px;">₡${(p.precioUnitario * p.cantidad).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>
 
-            <!-- DETALLE DE PRODUCTOS -->
-            <div style="margin-bottom: 8px;">
-                <div style="font-weight: bold; margin-bottom: 3px; text-align: center;">DETALLE DE PRODUCTOS</div>
-                <div style="border-bottom: 1px solid #000; margin-bottom: 3px;"></div>
-                
-                ${productos.map(p => {
-                    const nombreProducto = truncarTexto(p.nombreProducto, 25);
-                    const precioUnitario = p.precioUnitario;
-                    const subtotalProducto = precioUnitario * p.cantidad;
-                    
-                    return `
-                        <div style="margin-bottom: 4px;">
-                            <div style="font-weight: bold;">${nombreProducto}</div>
-                            <div style="display: flex; justify-content: space-between; font-size: 10px;">
-                                <span>${p.cantidad} x ₡${formatearMoneda(precioUnitario)}</span>
-                                <span>₡${formatearMoneda(subtotalProducto)}</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-                
-                <div style="border-top: 1px dashed #000; margin: 5px 0;"></div>
-            </div>
-
-            <!-- TOTALES -->
-            <div style="margin-bottom: 8px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+            <div style="padding-top: 10px;">
+                <div style="display: flex; justify-content: space-between; margin: 2px 0;">
                     <span>Subtotal:</span>
-                    <span>₡${formatearMoneda(totales.subtotal)}</span>
+                    <span>₡${totales.subtotal.toFixed(2)}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                <div style="display: flex; justify-content: space-between; margin: 2px 0;">
                     <span>IVA (13%):</span>
-                    <span>₡${formatearMoneda(totales.iva)}</span>
+                    <span>₡${totales.iva.toFixed(2)}</span>
                 </div>
-                <div style="border-top: 1px solid #000; margin: 3px 0; padding-top: 3px;">
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px;">
-                        <span>TOTAL:</span>
-                        <span>₡${formatearMoneda(totales.total)}</span>
-                    </div>
+                <div style="display: flex; justify-content: space-between; margin: 5px 0; font-weight: bold; border-top: 1px dashed #000; padding-top: 5px;">
+                    <span>TOTAL:</span>
+                    <span>₡${totales.total.toFixed(2)}</span>
                 </div>
-                
-                <div style="margin-top: 5px; text-align: center; font-size: 10px;">
-                    <strong>Método de Pago: ${CONFIGURACION_PRECIOS[totales.metodoPago]?.nombre || totales.metodoPago}</strong>
-                </div>
-                
-                <div style="border-bottom: 1px dashed #000; margin: 8px 0;"></div>
             </div>
 
-            <!-- INFORMACIÓN LEGAL Y GARANTÍAS -->
-            <div style="text-align: center; font-size: 9px; margin-bottom: 8px;">
-                <div style="font-weight: bold; margin-bottom: 3px;">POLÍTICAS DE GARANTÍA Y DEVOLUCIONES</div>
-                <div style="text-align: justify; margin-bottom: 2px;">
-                    • Las llantas tienen garantía por defectos de fábrica según términos del fabricante.
-                </div>
-                <div style="text-align: justify; margin-bottom: 2px;">
-                    • Devoluciones aceptadas dentro de 8 días con factura y producto en estado original.
-                </div>
-                <div style="text-align: justify; margin-bottom: 2px;">
-                    • No se aceptan devoluciones por productos instalados o dañados por mal uso.
-                </div>
-                <div style="text-align: justify; margin-bottom: 2px;">
-                    • Servicio de instalación no incluye garantía de balanceado posterior.
-                </div>
-                <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
-            </div>
-
-            <!-- PIE DE PÁGINA -->
-            <div style="text-align: center; font-size: 9px;">
-                <div style="font-weight: bold; margin-bottom: 2px;">¡GRACIAS POR SU COMPRA!</div>
-                <div style="margin-bottom: 1px;">Gestión Llantera S.A.</div>
-                <div style="margin-bottom: 1px;">Cédula Jurídica: 3-101-123456</div>
-                <div style="margin-bottom: 1px;">www.gestionllantera.cr</div>
-                <div style="margin-bottom: 1px;">WhatsApp: (506) 8888-9999</div>
-                <div style="margin-top: 3px; font-size: 8px;">
-                    Factura generada el ${fecha} a las ${hora}
-                </div>
-                <div style="margin-top: 5px; border-top: 1px dashed #000; padding-top: 3px; font-size: 8px;">
-                    Sistema de Gestión - Versión 1.0
-                </div>
+            <div style="text-align: center; margin-top: 15px; font-size: 10px;">
+                <p>¡Gracias por su compra!</p>
+                <p>Gestión Llantera - Sistema de Facturación</p>
             </div>
         </div>
     `;
 
-    // Crear ventana de impresión optimizada para impresoras de recibos
-    const ventanaImpresion = window.open('', '_blank', 'width=350,height=700,scrollbars=yes');
+    // Crear ventana de impresión
+    const ventanaImpresion = window.open('', '_blank', 'width=400,height=600');
     ventanaImpresion.document.write(`
         <html>
             <head>
-                <title>Recibo de Venta - ${factura.numeroFactura}</title>
-                <meta charset="UTF-8">
+                <title>Recibo de Venta</title>
                 <style>
-                    @page {
-                        margin: 0;
-                        size: 80mm auto; /* Tamaño estándar para impresoras de recibos */
-                    }
-                    
-                    body { 
-                        margin: 0; 
-                        padding: 5px; 
-                        font-family: 'Courier New', monospace;
-                        background: white;
-                    }
-                    
+                    body { margin: 0; padding: 20px; }
                     @media print {
-                        body { 
-                            margin: 0; 
-                            padding: 2px;
-                            -webkit-print-color-adjust: exact;
-                            color-adjust: exact;
-                        }
-                        
-                        /* Optimizaciones para impresoras Epson */
-                        * {
-                            -webkit-print-color-adjust: exact !important;
-                            color-adjust: exact !important;
-                        }
-                    }
-                    
-                    /* Estilos para visualización en pantalla */
-                    @media screen {
-                        body {
-                            background: #f0f0f0;
-                            padding: 20px;
-                        }
-                        
-                        .recibo-container {
-                            background: white;
-                            padding: 10px;
-                            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                            margin: 0 auto;
-                        }
+                        body { margin: 0; }
                     }
                 </style>
             </head>
-            <body>
-                <div class="recibo-container">
-                    ${reciboHTML}
-                </div>
-                <script>
-                    // Auto-imprimir después de cargar
-                    window.onload = function() {
-                        setTimeout(function() {
-                            window.print();
-                            // Opcional: cerrar ventana después de imprimir
-                            // window.close();
-                        }, 500);
-                    };
-                    
-                    // Manejar evento de después de imprimir
-                    window.onafterprint = function() {
-                        console.log('Recibo enviado a impresora');
-                        // Aquí podrías cerrar la ventana si lo deseas
-                        // window.close();
-                    };
-                </script>
+            <body onload="window.print(); window.close();">
+                ${reciboHTML}
             </body>
         </html>
     `);
