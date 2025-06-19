@@ -258,16 +258,21 @@ namespace GestionLlantera.Web.Services
                 {
                     try
                     {
-                        // Crear DTO para ajuste de stock individual
+                        // Crear DTO que coincida con AjusteStockRapidoDTO de la API
                         var ajusteDto = new
                         {
-                            cantidad = productoAjuste.Cantidad,
-                            tipoAjuste = "venta",
-                            comentario = $"Ajuste por facturación {request.NumeroFactura}"
+                            TipoAjuste = "salida",  // Para ventas es salida de stock
+                            Cantidad = productoAjuste.Cantidad,
+                            Comentario = $"Ajuste por facturación {request.NumeroFactura}",
+                            EsFinalizacionInventario = false,
+                            InventarioProgramadoId = (int?)null
                         };
 
                         var jsonContent = JsonConvert.SerializeObject(ajusteDto);
                         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                        _logger.LogInformation("📤 Enviando ajuste: ProductoId={ProductoId}, TipoAjuste=salida, Cantidad={Cantidad}", 
+                            productoAjuste.ProductoId, productoAjuste.Cantidad);
 
                         // Llamar al endpoint de ajuste de stock en la API
                         var httpResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock", content);
@@ -288,11 +293,13 @@ namespace GestionLlantera.Web.Services
                             });
 
                             ajustesExitosos++;
-                            _logger.LogInformation("✅ Stock ajustado para {Producto}", productoAjuste.NombreProducto);
+                            _logger.LogInformation("✅ Stock ajustado para {Producto}: {StockAnterior} → {StockNuevo}", 
+                                productoAjuste.NombreProducto, resultado?.stockAnterior ?? 0, resultado?.stockNuevo ?? 0);
                         }
                         else
                         {
-                            var error = $"Error ajustando {productoAjuste.NombreProducto}: {httpResponse.StatusCode}";
+                            var errorContent = await httpResponse.Content.ReadAsStringAsync();
+                            var error = $"Error ajustando {productoAjuste.NombreProducto}: {httpResponse.StatusCode} - {errorContent}";
                             errores.Add(error);
                             resultados.Add(new {
                                 productoId = productoAjuste.ProductoId,
@@ -300,6 +307,9 @@ namespace GestionLlantera.Web.Services
                                 success = false,
                                 error = error
                             });
+
+                            _logger.LogError("❌ Error ajustando stock para {Producto}: {Error}", 
+                                productoAjuste.NombreProducto, error);
                         }
                     }
                     catch (Exception ex)
