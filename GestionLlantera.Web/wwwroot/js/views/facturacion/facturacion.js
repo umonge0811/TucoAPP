@@ -1300,91 +1300,274 @@ async function procesarVentaFinal() {
 }
 
 /**
- * Generar e imprimir recibo de venta
+ * Generar e imprimir recibo de venta optimizado para mini impresoras térmicas
  */
 function generarRecibo(factura, productos, totales) {
-    const fecha = new Date().toLocaleDateString('es-CR');
-    const hora = new Date().toLocaleTimeString('es-CR');
+    const fecha = new Date().toLocaleDateString('es-CR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    });
+    const hora = new Date().toLocaleTimeString('es-CR', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+    });
 
+    // Función para truncar texto según el ancho de la impresora
+    function truncarTexto(texto, maxCaracteres) {
+        if (!texto) return '';
+        return texto.length > maxCaracteres ? texto.substring(0, maxCaracteres - 3) + '...' : texto;
+    }
+
+    // Función para formatear línea con espacios
+    function formatearLineaEspacios(izquierda, derecha, anchoTotal = 32) {
+        const espacios = anchoTotal - izquierda.length - derecha.length;
+        return izquierda + ' '.repeat(Math.max(0, espacios)) + derecha;
+    }
+
+    // ✅ RECIBO OPTIMIZADO PARA MINI IMPRESORAS TÉRMICAS (58mm/80mm)
     const reciboHTML = `
-        <div style="width: 300px; font-family: 'Courier New', monospace; font-size: 12px; margin: 0 auto;">
-            <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">
-                <h3 style="margin: 0;">GESTIÓN LLANTERA</h3>
-                <p style="margin: 2px 0;">Factura de Venta</p>
-                <p style="margin: 2px 0;">Nº ${factura.numeroFactura || 'N/A'}</p>
+        <div id="recibo-termica" style="width: 58mm; max-width: 58mm; font-family: 'Courier New', 'Consolas', monospace; font-size: 9px; line-height: 1.2; margin: 0; padding: 0; color: #000;">
+            
+            <!-- ENCABEZADO -->
+            <div style="text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">GESTIÓN LLANTERA</div>
+                <div style="font-size: 8px; margin-bottom: 1px;">Sistema de Facturación</div>
+                <div style="font-size: 8px; margin-bottom: 2px;">Tel: (506) 0000-0000</div>
+                <div style="font-size: 9px; font-weight: bold;">FACTURA DE VENTA</div>
+                <div style="font-size: 8px;">No. ${factura.numeroFactura || 'N/A'}</div>
             </div>
 
-            <div style="margin-bottom: 10px;">
-                <p style="margin: 2px 0;"><strong>Fecha:</strong> ${fecha}</p>
-                <p style="margin: 2px 0;"><strong>Hora:</strong> ${hora}</p>
-                <p style="margin: 2px 0;"><strong>Cliente:</strong> ${factura.nombreCliente || 'Cliente General'}</p>
-                <p style="margin: 2px 0;"><strong>Método Pago:</strong> ${totales.metodoPago || 'Efectivo'}</p>
+            <!-- INFORMACIÓN DE TRANSACCIÓN -->
+            <div style="margin-bottom: 6px; font-size: 8px;">
+                <div>Fecha: ${fecha}</div>
+                <div>Hora: ${hora}</div>
+                <div>Cliente: ${truncarTexto(factura.nombreCliente || 'Cliente General', 25)}</div>
+                <div>Método: ${totales.metodoPago || 'Efectivo'}</div>
+                <div>Cajero: ${factura.usuarioCreadorNombre || 'Sistema'}</div>
             </div>
 
-            <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th style="text-align: left; padding: 2px;">Producto</th>
-                            <th style="text-align: center; padding: 2px;">Cant.</th>
-                            <th style="text-align: right; padding: 2px;">Precio</th>
-                            <th style="text-align: right; padding: 2px;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${productos.map(p => `
-                            <tr>
-                                <td style="padding: 2px; font-size: 10px;">${p.nombreProducto}</td>
-                                <td style="text-align: center; padding: 2px;">${p.cantidad}</td>
-                                <td style="text-align: right; padding: 2px;">₡${p.precioUnitario.toFixed(2)}</td>
-                                <td style="text-align: right; padding: 2px;">₡${(p.precioUnitario * p.cantidad).toFixed(2)}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
+            <!-- SEPARADOR -->
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <!-- PRODUCTOS -->
+            <div style="margin-bottom: 6px;">
+                <div style="font-size: 8px; font-weight: bold; text-align: center; margin-bottom: 3px;">DETALLE DE PRODUCTOS</div>
+                ${productos.map(p => {
+                    const nombreTruncado = truncarTexto(p.nombreProducto, 20);
+                    const subtotalProducto = p.precioUnitario * p.cantidad;
+                    return `
+                        <div style="margin-bottom: 2px;">
+                            <div style="font-size: 8px;">${nombreTruncado}</div>
+                            <div style="font-size: 8px; display: flex; justify-content: space-between;">
+                                <span>${p.cantidad} x ₡${p.precioUnitario.toFixed(0)}</span>
+                                <span>₡${subtotalProducto.toFixed(0)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
             </div>
 
-            <div style="padding-top: 10px;">
-                <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+            <!-- SEPARADOR -->
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <!-- TOTALES -->
+            <div style="margin-bottom: 8px; font-size: 8px;">
+                <div style="display: flex; justify-content: space-between;">
                     <span>Subtotal:</span>
-                    <span>₡${totales.subtotal.toFixed(2)}</span>
+                    <span>₡${totales.subtotal.toFixed(0)}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+                <div style="display: flex; justify-content: space-between;">
                     <span>IVA (13%):</span>
-                    <span>₡${totales.iva.toFixed(2)}</span>
+                    <span>₡${totales.iva.toFixed(0)}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin: 5px 0; font-weight: bold; border-top: 1px dashed #000; padding-top: 5px;">
-                    <span>TOTAL:</span>
-                    <span>₡${totales.total.toFixed(2)}</span>
+                <div style="border-top: 1px solid #000; margin: 3px 0; padding-top: 3px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 9px;">
+                        <span>TOTAL:</span>
+                        <span>₡${totales.total.toFixed(0)}</span>
+                    </div>
                 </div>
             </div>
 
-            <div style="text-align: center; margin-top: 15px; font-size: 10px;">
-                <p>¡Gracias por su compra!</p>
-                <p>Gestión Llantera - Sistema de Facturación</p>
+            <!-- PIE DE PÁGINA -->
+            <div style="text-align: center; margin-top: 8px; font-size: 8px; border-top: 1px dashed #000; padding-top: 6px;">
+                <div style="margin-bottom: 2px;">¡Gracias por su compra!</div>
+                <div style="margin-bottom: 2px;">Vuelva pronto</div>
+                <div style="margin-bottom: 4px;">www.gestionllantera.com</div>
+                <div style="font-size: 7px;">Recibo generado: ${new Date().toLocaleString('es-CR')}</div>
             </div>
+
+            <!-- ESPACIADO FINAL PARA CORTE -->
+            <div style="height: 20px;"></div>
         </div>
     `;
 
-    // Crear ventana de impresión
-    const ventanaImpresion = window.open('', '_blank', 'width=400,height=600');
-    ventanaImpresion.document.write(`
-        <html>
-            <head>
-                <title>Recibo de Venta</title>
-                <style>
-                    body { margin: 0; padding: 20px; }
-                    @media print {
-                        body { margin: 0; }
-                    }
-                </style>
-            </head>
-            <body onload="window.print(); window.close();">
-                ${reciboHTML}
-            </body>
-        </html>
-    `);
-    ventanaImpresion.document.close();
+    // ✅ CONFIGURACIÓN ESPECÍFICA PARA MINI IMPRESORAS TÉRMICAS
+    try {
+        console.log('🖨️ Iniciando impresión de recibo térmico...');
+        
+        // Crear ventana de impresión con configuración optimizada
+        const ventanaImpresion = window.open('', '_blank', 'width=300,height=600,scrollbars=no,resizable=no');
+        
+        if (!ventanaImpresion) {
+            throw new Error('No se pudo abrir la ventana de impresión. Verifique que los pop-ups estén habilitados.');
+        }
+
+        ventanaImpresion.document.write(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Recibo Térmico - ${factura.numeroFactura}</title>
+                    <meta charset="utf-8">
+                    <style>
+                        /* CONFIGURACIÓN ESPECÍFICA PARA IMPRESORAS TÉRMICAS */
+                        @page {
+                            size: 58mm auto; /* Ancho estándar para mini impresoras */
+                            margin: 0;
+                            padding: 0;
+                        }
+                        
+                        @media screen {
+                            body {
+                                background: #f5f5f5;
+                                padding: 10px;
+                                font-family: 'Courier New', 'Consolas', monospace;
+                            }
+                            #recibo-termica {
+                                background: white;
+                                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                                padding: 8px;
+                                margin: 0 auto;
+                            }
+                        }
+                        
+                        @media print {
+                            body {
+                                margin: 0;
+                                padding: 0;
+                                background: none;
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                            }
+                            
+                            #recibo-termica {
+                                box-shadow: none;
+                                padding: 0;
+                                margin: 0;
+                                page-break-inside: avoid;
+                            }
+                            
+                            /* Optimizar para impresión térmica */
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                color-adjust: exact !important;
+                            }
+                        }
+                        
+                        /* Fuente monoespaciada para alineación perfecta */
+                        body, * {
+                            font-family: 'Courier New', 'Consolas', 'Monaco', monospace !important;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${reciboHTML}
+                    
+                    <script>
+                        // Función para imprimir automáticamente
+                        function imprimirRecibo() {
+                            console.log('🖨️ Iniciando impresión...');
+                            
+                            // Configurar para impresoras térmicas
+                            if (window.chrome) {
+                                // Para navegadores basados en Chrome
+                                window.print();
+                            } else {
+                                // Para otros navegadores
+                                setTimeout(() => window.print(), 500);
+                            }
+                        }
+                        
+                        // Imprimir cuando la página esté completamente cargada
+                        if (document.readyState === 'complete') {
+                            imprimirRecibo();
+                        } else {
+                            window.addEventListener('load', imprimirRecibo);
+                        }
+                        
+                        // Cerrar ventana después de intentar imprimir
+                        window.addEventListener('afterprint', function() {
+                            console.log('🖨️ Impresión completada, cerrando ventana...');
+                            setTimeout(() => window.close(), 1000);
+                        });
+                        
+                        // Fallback para cerrar si no se detecta evento afterprint
+                        setTimeout(() => {
+                            if (!window.closed) {
+                                console.log('🖨️ Cerrando ventana por timeout...');
+                                window.close();
+                            }
+                        }, 5000);
+                    </script>
+                </body>
+            </html>
+        `);
+        
+        ventanaImpresion.document.close();
+        
+        // Mostrar mensaje de éxito
+        mostrarToast('Impresión', 'Recibo enviado a impresora', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error al imprimir recibo:', error);
+        mostrarToast('Error de Impresión', 'No se pudo imprimir el recibo: ' + error.message, 'danger');
+        
+        // Fallback: mostrar el recibo en pantalla para copiar/imprimir manualmente
+        mostrarReciboEnPantalla(reciboHTML, factura.numeroFactura);
+    }
+}
+
+/**
+ * Función fallback para mostrar recibo en pantalla si falla la impresión
+ */
+function mostrarReciboEnPantalla(reciboHTML, numeroFactura) {
+    const modalHtml = `
+        <div class="modal fade" id="modalReciboFallback" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="bi bi-printer me-2"></i>Recibo de Venta
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="alert alert-warning m-2">
+                            <small><i class="bi bi-exclamation-triangle me-1"></i>
+                            La impresión automática falló. Use los botones de abajo para imprimir.</small>
+                        </div>
+                        ${reciboHTML}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cerrar
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i>Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remover modal anterior si existe
+    $('#modalReciboFallback').remove();
+    $('body').append(modalHtml);
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalReciboFallback'));
+    modal.show();
 }
 
 // ===== FUNCIONES AUXILIARES =====
