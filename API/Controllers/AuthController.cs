@@ -1,5 +1,4 @@
-﻿using API.Data;
-using Microsoft.AspNetCore.Identity.Data;
+using API.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tuco.Clases.Models;

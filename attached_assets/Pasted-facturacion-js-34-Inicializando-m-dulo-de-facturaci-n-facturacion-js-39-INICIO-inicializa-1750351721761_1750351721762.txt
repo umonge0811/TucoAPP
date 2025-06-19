@@ -1,0 +1,80 @@
+facturacion.js:34 🚀 Inicializando módulo de facturación
+facturacion.js:39 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:42 🚀 Inicializando modales...
+facturacion.js:46 🚀 Configurando eventos...
+facturacion.js:50 🚀 Actualizando totales...
+facturacion.js:54 🚀 Iniciando carga de productos iniciales...
+facturacion.js:2133 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:2134 📦 cargaInicialCompletada: false
+facturacion.js:2150 📦 Iniciando carga de productos iniciales...
+facturacion.js:218 🔍 === INICIO buscarProductos ===
+facturacion.js:219 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:220 🔍 Término recibido: ""
+facturacion.js:221 🔍 busquedaEnProceso: false
+facturacion.js:222 🔍 ultimaBusqueda: ""
+facturacion.js:237 🔍 Iniciando búsqueda válida...
+facturacion.js:57 ✅ Facturación inicializada correctamente
+facturacion.js:58 🚀 === FIN inicializarFacturacion ===
+api/notificaciones/conteo-no-leidas:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:259 📋 Respuesta del servidor recibida
+facturacion.js:262 ✅ Se encontraron 5 productos disponibles
+facturacion.js:301 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:302 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:303 🔄 Productos recibidos: 5
+facturacion.js:338 🔄 Construyendo HTML para 5 productos
+facturacion.js:352 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:353 🖼️ Datos del producto: Object
+facturacion.js:366 🖼️ Imágenes desde imagenesProductos: Array(0)
+facturacion.js:403 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:352 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:353 🖼️ Datos del producto: Object
+facturacion.js:366 🖼️ Imágenes desde imagenesProductos: Array(0)
+facturacion.js:403 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:352 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:353 🖼️ Datos del producto: Object
+facturacion.js:366 🖼️ Imágenes desde imagenesProductos: Array(0)
+facturacion.js:403 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:352 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:353 🖼️ Datos del producto: Object
+facturacion.js:366 🖼️ Imágenes desde imagenesProductos: Array(0)
+facturacion.js:403 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:352 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:353 🖼️ Datos del producto: Object
+facturacion.js:366 🖼️ Imágenes desde imagenesProductos: Array(0)
+facturacion.js:403 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:497 🔄 Actualizando DOM (longitud HTML: 21748 caracteres)
+facturacion.js:530 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:279 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:282 📦 Productos mostrados exitosamente
+facturacion.js:295 🔍 === FIN buscarProductos ===
+facturacion.js:2166 📦 Búsqueda inicial ejecutada
+facturacion.js:2168 📦 === FIN cargarProductosIniciales (exitosa) ===
+facturacion.js:617 🖼️ Procesando imágenes para modal de producto: Llanta Kumho Mobile
+facturacion.js:635 🖼️ URL original en modal: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:650 🖼️ URL final en modal: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:1653 SUCCESS: Producto agregado - Llanta Kumho Mobile agregado a la venta
+facturacion.js:536 👥 Buscando clientes: "ulises"
+facturacion.js:607 Cliente seleccionado: Object
+facturacion.js:1235 ✅ Factura creada: Object
+facturacion.js:1254 📦 Ajustando stock para todos los productos...
+Facturacion/AjustarStockFacturacion:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:1293 ❌ Error en endpoint de ajuste de stock: 
+procesarVentaFinal @ facturacion.js:1293
+await in procesarVentaFinal
+(anonymous) @ facturacion.js:211
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+facturacion.js:1653 WARNING: Error Stock - No se pudo conectar con el sistema de inventario
+facturacion.js:1438 🖨️ Iniciando impresión de recibo térmico...
+facturacion.js:1653 SUCCESS: Impresión - Recibo enviado a impresora
+facturacion.js:1653 SUCCESS: ¡Venta procesada! - La venta ha sido procesada exitosamente
+api/notificaciones/conteo-no-leidas:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()

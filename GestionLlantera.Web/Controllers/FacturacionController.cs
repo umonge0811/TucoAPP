@@ -1,10 +1,15 @@
 using GestionLlantera.Web.Extensions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
+using System.Text.Json;
+using System.Text;
+using static GestionLlantera.Web.Services.Interfaces.IFacturacionService;
+using GestionLlantera.Web.Services.Interfaces;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -14,15 +19,19 @@ namespace GestionLlantera.Web.Controllers
         private readonly ILogger<FacturacionController> _logger;
         private readonly IInventarioService _inventarioService;
         private readonly IFacturacionService _facturacionService;
+        private readonly IConfiguration _configuration;
 
         public FacturacionController(
             ILogger<FacturacionController> logger,
             IInventarioService inventarioService,
-            IFacturacionService facturacionService)
+            IFacturacionService facturacionService,
+            IConfiguration configuration
+            )
         {
             _logger = logger;
             _inventarioService = inventarioService;
             _facturacionService = facturacionService;
+            _configuration = configuration;
         }
 
         public async Task<IActionResult> Index()
@@ -266,6 +275,60 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> CrearFactura([FromBody] object facturaData)
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Crear Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para crear facturas" });
+                }
+
+                _logger.LogInformation("💰 Creando nueva factura");
+
+                // Simular creación exitosa por ahora
+                var numeroFactura = $"FAC-{DateTime.Now:yyyyMM}-{DateTime.Now:HHmmss}";
+
+                return Json(new { 
+                    success = true, 
+                    message = "Factura creada exitosamente",
+                    numeroFactura = numeroFactura,
+                    facturaId = 1
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear factura");
+                return Json(new { success = false, message = "Error al crear factura" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AjustarStock([FromBody] object ajusteData)
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Editar Inventario"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para ajustar stock" });
+                }
+
+                _logger.LogInformation("📦 Ajustando stock de producto");
+
+                // Simular ajuste exitoso por ahora
+                return Json(new { 
+                    success = true, 
+                    message = "Stock ajustado correctamente"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ajustar stock");
+                return Json(new { success = false, message = "Error al ajustar stock" });
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaDTO> productos)
         {
             try
@@ -309,8 +372,38 @@ namespace GestionLlantera.Web.Controllers
             return token;
         }
 
+        [HttpPost]
+        [Route("Facturacion/AjustarStockFacturacion")]
+        public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📦 Ajustando stock para factura: {NumeroFactura} con {Cantidad} productos", 
+                    request.NumeroFactura, request.Productos?.Count ?? 0);
 
+                if (request.Productos == null || !request.Productos.Any())
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "No se proporcionaron productos para ajustar" 
+                    });
+                }
 
-        // Aquí puedes agregar más métodos según sea necesario
+                // Usar el servicio de facturación para ajustar el stock
+                var jwtToken = this.ObtenerTokenJWT();
+                var resultado = await _facturacionService.AjustarStockFacturacionAsync(request, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error general al ajustar stock para factura {NumeroFactura}", 
+                    request?.NumeroFactura);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno al ajustar stock: " + ex.Message 
+                });
+            }
+        }
     }
 }

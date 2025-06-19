@@ -50,6 +50,9 @@ function inicializarFacturacion() {
         console.log('🚀 Actualizando totales...');
         actualizarTotales();
 
+        // ✅ ESTABLECER ESTADO INICIAL DEL BOTÓN FINALIZAR
+        actualizarEstadoBotonFinalizar();
+
         // Cargar productos iniciales
         console.log('🚀 Iniciando carga de productos iniciales...');
         cargarProductosIniciales();
@@ -164,10 +167,23 @@ function configurarEventos() {
     $('#clienteBusqueda').on('input', function() {
         const termino = $(this).val().trim();
 
+        // ✅ LIMPIAR CLIENTE SELECCIONADO CUANDO SE CAMBIA EL TEXTO
+        if (clienteSeleccionado && termino !== clienteSeleccionado.nombre) {
+            clienteSeleccionado = null;
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarEstadoBotonFinalizar();
+        }
+
+        // ✅ LIMPIAR VALIDACIÓN VISUAL SI EXISTE
+        $(this).removeClass('is-invalid');
+
         clearTimeout(timeoutCliente);
         timeoutCliente = setTimeout(() => {
             if (termino.length >= 2) {
                 buscarClientes(termino);
+            } else {
+                // Ocultar dropdown de resultados si el término es muy corto
+                $('.dropdown-clientes').remove();
             }
         }, 300);
     });
@@ -357,7 +373,7 @@ function mostrarResultadosProductos(productos) {
                 });
 
                 let imagenesArray = [];
-                
+
                 // Verificar imagenesProductos (formato principal desde la API)
                 if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
                     imagenesArray = producto.imagenesProductos
@@ -377,11 +393,11 @@ function mostrarResultadosProductos(productos) {
                         .filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
                 }
-                
+
                 if (imagenesArray.length > 0) {
                     let urlImagen = imagenesArray[0];
                     console.log('🖼️ URL original:', urlImagen);
-                    
+
                     if (urlImagen && urlImagen.trim() !== '') {
                         // Lógica mejorada de construcción de URLs (igual que verDetalleProducto)
                         if (urlImagen.startsWith('/uploads/productos/')) {
@@ -602,6 +618,12 @@ function seleccionarCliente(cliente) {
     $('#nombreClienteSeleccionado').text(cliente.nombre);
     $('#emailClienteSeleccionado').text(cliente.email);
     $('#clienteSeleccionado').removeClass('d-none');
+
+    // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR CUANDO SE SELECCIONA CLIENTE
+    actualizarEstadoBotonFinalizar();
+
+    // Debug: verificar que tenemos todos los datos del cliente
+    console.log('Cliente seleccionado:', cliente);
 }
 
 // ===== MODAL DE SELECCIÓN DE PRODUCTO =====
@@ -613,7 +635,7 @@ function mostrarModalSeleccionProducto(producto) {
     try {
         console.log('🖼️ Procesando imágenes para modal de producto:', producto.nombreProducto);
         let imagenesArray = [];
-        
+
         // Usar la misma lógica que verDetalleProducto
         if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
             imagenesArray = producto.imagenesProductos
@@ -626,11 +648,11 @@ function mostrarModalSeleccionProducto(producto) {
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
                 .filter(url => url && url.trim() !== '');
         }
-        
+
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
             console.log('🖼️ URL original en modal:', urlImagen);
-            
+
             if (urlImagen && urlImagen.trim() !== '') {
                 // Lógica mejorada de construcción de URLs
                 if (urlImagen.startsWith('/uploads/productos/')) {
@@ -679,30 +701,28 @@ function mostrarModalSeleccionProducto(producto) {
                                     <strong>Stock disponible:</strong> ${producto.cantidadEnInventario} unidades
                                 </div>
 
-                                <!-- Selección de método de pago -->
+                                <!-- Mostrar precios por método de pago -->
                                 <div class="mb-4">
-                                    <h6 class="mb-3">💳 Selecciona el método de pago:</h6>
-                                    <div class="row g-2">
-                                        ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
-                                            const precio = precioBase * config.multiplicador;
-                                            return `
-                                                <div class="col-sm-6 col-lg-3">
-                                                    <input type="radio" 
-                                                           class="btn-check metodo-pago-radio" 
-                                                           name="metodoPagoProducto" 
-                                                           id="metodo-${metodo}" 
-                                                           value="${metodo}"
-                                                           ${metodo === 'efectivo' ? 'checked' : ''}>
-                                                    <label class="btn btn-outline-primary w-100 text-center p-2" 
-                                                           for="metodo-${metodo}">
-                                                        <div class="fw-bold">${config.nombre}</div>
-                                                        <div class="text-success">₡${formatearMoneda(precio)}</div>
-                                                        ${metodo === 'tarjeta' ? '<small class="text-muted">+5%</small>' : ''}
-                                                    </label>
-                                                </div>
-                                            `;
-                                        }).join('')}
+                                    <h6 class="mb-3">💰 Precios por método de pago:</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped">
+                                            <tbody>
+                                                ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
+                                                    const precio = precioBase * config.multiplicador;
+                                                    return `
+                                                        <tr>
+                                                            <td>
+                                                                <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : metodo === 'sinpe' ? 'phone' : 'cash'} me-2"></i>
+                                                                ${config.nombre}
+                                                            </td>
+                                                            <td class="text-end fw-bold text-success">₡${formatearMoneda(precio)}</td>
+                                                        </tr>
+                                                    `;
+                                                }).join('')}
+                                            </tbody>
+                                        </table>
                                     </div>
+                                    <small class="text-muted">* El método de pago se seleccionará al finalizar la venta</small>
                                 </div>
 
                                 <!-- Cantidad -->
@@ -710,24 +730,27 @@ function mostrarModalSeleccionProducto(producto) {
                                     <label for="cantidadProducto" class="form-label">
                                         <i class="bi bi-123 me-1"></i>Cantidad:
                                     </label>
-                                    <div class="input-group" style="max-width: 150px;">
+                                    <div class="input-group" style="max-width: 200px;">
                                         <button type="button" class="btn btn-outline-secondary" id="btnMenosCantidad">-</button>
                                         <input type="number" 
-                                               class="form-control text-center" 
+                                               class="form-control text-center fw-bold" 
                                                id="cantidadProducto" 
                                                value="1" 
                                                min="1" 
-                                               max="${producto.cantidadEnInventario}">
+                                               max="${producto.cantidadEnInventario}"
+                                               style="font-size: 16px; min-width: 80px; -moz-appearance: textfield; -webkit-appearance: none;"
+                                               onwheel="return false;">
                                         <button type="button" class="btn btn-outline-secondary" id="btnMasCantidad">+</button>
                                     </div>
                                 </div>
 
-                                <!-- Total calculado -->
-                                <div class="alert alert-success">
+                                <!-- Precio base para referencia -->
+                                <div class="alert alert-light">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span><i class="bi bi-calculator me-2"></i><strong>Total:</strong></span>
-                                        <span class="fs-4 fw-bold" id="totalCalculado">₡${formatearMoneda(precioBase)}</span>
+                                        <span><i class="bi bi-tag me-2"></i><strong>Precio base:</strong></span>
+                                        <span class="fs-5 fw-bold text-primary">₡${formatearMoneda(precioBase)}</span>
                                     </div>
+                                    <small class="text-muted">El precio final dependerá del métodode pago seleccionado</small>
                                 </div>
                             </div>
                         </div>
@@ -758,86 +781,115 @@ function mostrarModalSeleccionProducto(producto) {
 
 function configurarEventosModalProducto(producto, modal) {
     const precioBase = producto.precio || 0;
-        // Extraer imágenes del producto
-        const imagenesProducto = producto.imagenesProductos || producto.imagenes || [];
 
-        // Construir carrusel de imágenes
-        let imagenesParaModal = [];
-        if (Array.isArray(imagenesProducto) && imagenesProducto.length > 0) {
-            imagenesParaModal = imagenesProducto.map(img => {
-                const url = img.urlImagen || img.Urlimagen || '';
-                if (url && url.trim() !== '') {
-                    // Construir la URL completa con la API base
-                    if (url.startsWith('/uploads/productos/')) {
-                        return `https://localhost:7273${url}`;
-                    } else if (url.startsWith('uploads/productos/')) {
-                        return `https://localhost:7273/${url}`;
-                    } else {
-                        return url; // URL completa
-                    }
-                }
-                return '/images/no-image.png';
-            });
-        } else {
-            imagenesParaModal = ['/images/no-image.png'];
-        }
+    // Limpiar eventos anteriores ESPECÍFICAMENTE para este modal
+    $('#modalSeleccionProducto #btnMenosCantidad, #modalSeleccionProducto #btnMasCantidad, #modalSeleccionProducto #cantidadProducto, #modalSeleccionProducto #btnConfirmarAgregarProducto').off('click.modalProducto input.modalProducto');
 
-    // Actualizar total cuando cambie el método de pago o cantidad
-    function actualizarTotal() {
-        const metodoSeleccionado = $('input[name="metodoPagoProducto"]:checked').val();
-        const cantidad = parseInt($('#cantidadProducto').val()) || 1;
-        const precio = precioBase * CONFIGURACION_PRECIOS[metodoSeleccionado].multiplicador;
-        const total = precio * cantidad;
-
-        $('#totalCalculado').text(`₡${formatearMoneda(total)}`);
-    }
-
-    // Eventos de cambio de método de pago
-    $('.metodo-pago-radio').on('change', actualizarTotal);
-
-    // Eventos de cantidad
-    $('#btnMenosCantidad').on('click', function() {
-        const input = $('#cantidadProducto');
+    // Eventos de cantidad - CORREGIDOS con namespace específico
+    $('#modalSeleccionProducto #btnMenosCantidad').on('click.modalProducto', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const input = $('#modalSeleccionProducto #cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
-        if (valorActual > 1) {
+        const minimo = parseInt(input.attr('min')) || 1;
+        
+        if (valorActual > minimo) {
             input.val(valorActual - 1);
-            actualizarTotal();
+            console.log('➖ Cantidad decrementada a:', valorActual - 1);
         }
     });
 
-    $('#btnMasCantidad').on('click', function() {
-        const input = $('#cantidadProducto');
+    $('#modalSeleccionProducto #btnMasCantidad').on('click.modalProducto', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const input = $('#modalSeleccionProducto #cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const stockDisponible = producto.cantidadEnInventario;
-        if (valorActual < stockDisponible){
+        
+        if (valorActual < stockDisponible) {
             input.val(valorActual + 1);
-            actualizarTotal();
+            console.log('➕ Cantidad incrementada a:', valorActual + 1);
+        } else {
+            mostrarToast('Stock limitado', `Solo hay ${stockDisponible} unidades disponibles`, 'warning');
         }
     });
 
-    $('#cantidadProducto').on('input', function() {
+    // Validación del input con selector específico
+    $('#modalSeleccionProducto #cantidadProducto').on('input.modalProducto', function() {
         const valor = parseInt($(this).val()) || 1;
         const min = parseInt($(this).attr('min')) || 1;
         const max = parseInt($(this).attr('max')) || producto.cantidadEnInventario;
 
-        if (valor < min) $(this).val(min);
-        if (valor > max) $(this).val(max);
-
-        actualizarTotal();
+        if (valor < min) {
+            $(this).val(min);
+        } else if (valor > max) {
+            $(this).val(max);
+            mostrarToast('Stock limitado', `Solo hay ${max} unidades disponibles`, 'warning');
+        }
+    }).on('keydown.modalProducto', function(e) {
+        // Prevenir las teclas de flecha arriba/abajo para evitar conflicto con botones
+        if (e.which === 38 || e.which === 40) {
+            e.preventDefault();
+        }
+        // Permitir solo números, backspace, delete, tab, escape, enter
+        if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+            // Permitir Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true) ||
+            // Permitir home, end, left, right
+            (e.keyCode >= 35 && e.keyCode <= 39)) {
+            return;
+        }
+        // Asegurar que es un número
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
+        }
     });
 
-    // Confirmar agregar producto
-    $('#btnConfirmarAgregarProducto').on('click', function() {
-        const metodoSeleccionado = $('input[name="metodoPagoProducto"]:checked').val();
-        const cantidad = parseInt($('#cantidadProducto').val()) || 1;
-        const precio = precioBase * CONFIGURACION_PRECIOS[metodoSeleccionado].multiplicador;
+    // Confirmar agregar producto - MEJORADO con selector específico
+    $('#modalSeleccionProducto #btnConfirmarAgregarProducto').on('click.modalProducto', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const cantidad = parseInt($('#modalSeleccionProducto #cantidadProducto').val()) || 1;
+        
+        console.log('🛒 Agregando producto a venta:', {
+            nombre: producto.nombreProducto,
+            cantidad: cantidad,
+            precio: precioBase,
+            stock: producto.cantidadEnInventario
+        });
 
-        agregarProductoAVenta(producto, cantidad, precio, metodoSeleccionado);
+        // Validar cantidad antes de agregar
+        if (cantidad < 1) {
+            mostrarToast('Cantidad inválida', 'La cantidad debe ser mayor a 0', 'warning');
+            return;
+        }
+        
+        if (cantidad > producto.cantidadEnInventario) {
+            mostrarToast('Stock insuficiente', `Solo hay ${producto.cantidadEnInventario} unidades disponibles`, 'warning');
+            return;
+        }
+
+        // Agregar producto con la cantidad seleccionada
+        agregarProductoAVenta(producto, cantidad, precioBase, 'efectivo');
+        
+        // Cerrar modal
         modal.hide();
+        
+        // Mostrar confirmación
+        mostrarToast('Producto agregado', `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${producto.nombreProducto} agregadas`, 'success');
     });
 
-    // Inicializar total
-    actualizarTotal();
+    // Limpiar eventos cuando se cierre el modal
+    $('#modalSeleccionProducto').on('hidden.bs.modal.modalProducto', function() {
+        $('#modalSeleccionProducto #btnMenosCantidad, #modalSeleccionProducto #btnMasCantidad, #modalSeleccionProducto #cantidadProducto, #modalSeleccionProducto #btnConfirmarAgregarProducto').off('.modalProducto');
+        $(this).off('hidden.bs.modal.modalProducto');
+    });
 }
 
 // ===== GESTIÓN DEL CARRITO =====
@@ -952,7 +1004,12 @@ function actualizarVistaCarrito() {
 
     container.html(html);
     contador.text(`${productosEnVenta.length} productos`);
-    $('#btnLimpiarVenta, #btnFinalizarVenta').prop('disabled', false);
+    
+    // ✅ HABILITAR BOTÓN LIMPIAR SOLO SI HAY PRODUCTOS
+    $('#btnLimpiarVenta').prop('disabled', false);
+    
+    // ✅ HABILITAR BOTÓN FINALIZAR SOLO SI HAY PRODUCTOS Y CLIENTE SELECCIONADO
+    actualizarEstadoBotonFinalizar();
 
     // Configurar eventos de cantidad
     configurarEventosCantidad();
@@ -1026,6 +1083,10 @@ function limpiarVenta() {
         $('#clienteSeleccionado').addClass('d-none');
         actualizarVistaCarrito();
         actualizarTotales();
+        
+        // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
+        actualizarEstadoBotonFinalizar();
+        
         mostrarToast('Venta limpiada', 'Se han removido todos los productos', 'info');
     }
 }
@@ -1038,41 +1099,123 @@ function mostrarModalFinalizarVenta() {
     }
 
     if (!clienteSeleccionado) {
-        mostrarToast('Cliente requerido', 'Selecciona un cliente antes de finalizar la venta', 'warning');
+        mostrarToast('Cliente requerido', 'Debes seleccionar un cliente antes de finalizar la venta', 'warning');
+        
+        // ✅ ENFOCAR EL CAMPO DE BÚSQUEDA DE CLIENTE
+        $('#clienteBusqueda').focus();
+        
+        // ✅ RESALTAR EL CAMPO DE CLIENTE
+        $('#clienteBusqueda').addClass('is-invalid');
+        setTimeout(() => {
+            $('#clienteBusqueda').removeClass('is-invalid');
+        }, 3000);
+        
         return;
     }
 
-    // Llenar resumen en el modal
-    $('#resumenNombreCliente').text(clienteSeleccionado.nombre);
-    $('#resumenEmailCliente').text(clienteSeleccionado.email);
+    // ===== LLENAR INFORMACIÓN DEL CLIENTE =====
+    $('#resumenNombreCliente').text(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || 'Cliente');
+    $('#resumenEmailCliente').text(clienteSeleccionado.email || 'Sin email');
 
-    const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
-    const iva = subtotal * 0.13;
-    const total = subtotal + iva;
+    // Llenar campos de cliente en el formulario
+    $('#clienteNombre').val(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || '');
+    $('#clienteCedula').val(clienteSeleccionado.identificacion || clienteSeleccionado.contacto || '');
+    $('#clienteTelefono').val(clienteSeleccionado.telefono || '');
+    $('#clienteEmail').val(clienteSeleccionado.email || '');
+    $('#clienteDireccion').val(clienteSeleccionado.direccion || '');
 
-    $('#resumenSubtotal').text(formatearMoneda(subtotal));
-    $('#resumenIVA').text(formatearMoneda(iva));
-    $('#resumenTotal').text(formatearMoneda(total));
+    // ===== CONFIGURAR MÉTODO DE PAGO INICIAL =====
+    $('input[name="metodoPago"][value="efectivo"]').prop('checked', true);
 
-    // Mostrar lista de productos
-    let htmlProductos = '<table class="table table-sm"><tbody>';
+    // ===== ACTUALIZAR RESUMEN CON MÉTODO DE PAGO INICIAL =====
+    actualizarResumenVentaModal();
+
+    // ===== CONFIGURAR EVENTOS DEL MODAL =====
+    configurarEventosModalFinalizar();
+
+    // Limpiar observaciones
+    $('#observacionesVenta').val('');
+
+    // Mostrar modal
+    modalFinalizarVenta.show();
+}
+
+function actualizarResumenVentaModal() {
+    const metodoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+    const configMetodo = CONFIGURACION_PRECIOS[metodoSeleccionado];
+
+    // Recalcular precios según método de pago seleccionado
+    let subtotal = 0;
+
+    // ===== MOSTRAR RESUMEN DE PRODUCTOS =====
+    let htmlResumen = `
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Cant.</th>
+                        <th class="text-end">Precio Unit.</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
     productosEnVenta.forEach(producto => {
-        htmlProductos += `
+        // Calcular precio según método de pago seleccionado
+        const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+        const subtotalProducto = precioAjustado * producto.cantidad;
+        subtotal += subtotalProducto;
+
+        htmlResumen += `
             <tr>
-                <td>${producto.nombreProducto}</td>
+                <td>
+                    <strong>${producto.nombreProducto}</strong>
+                </td>
                 <td class="text-center">${producto.cantidad}</td>
-                <td class="text-end">₡${formatearMoneda(producto.precioUnitario * producto.cantidad)}</td>
+                <td class="text-end">₡${formatearMoneda(precioAjustado)}</td>
+                <td class="text-end">₡${formatearMoneda(subtotalProducto)}</td>
             </tr>
         `;
     });
-    htmlProductos += '</tbody></table>';
-    $('#listaProductosResumen').html(htmlProductos);
 
-    // Resetear formulario
-    $('#metodoPago').val('efectivo').trigger('change');
-    $('#observacionesVenta').val('');
+    const iva = subtotal * 0.13;
+    const total = subtotal + iva;
 
-    modalFinalizarVenta.show();
+    htmlResumen += `
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="3" class="text-end">Subtotal:</th>
+                        <th class="text-end">₡${formatearMoneda(subtotal)}</th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-end">IVA (13%):</th>
+                        <th class="text-end">₡${formatearMoneda(iva)}</th>
+                    </tr>
+                    <tr class="table-success">
+                        <th colspan="3" class="text-end">TOTAL (${configMetodo.nombre}):</th>
+                        <th class="text-end">₡${formatearMoneda(total)}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+
+    $('#resumenVentaFinal').html(htmlResumen);
+    $('#totalFinalVenta').text(`₡${formatearMoneda(total)}`);
+
+    // Mostrar/ocultar campos según el método de pago
+    if (metodoSeleccionado === 'efectivo') {
+        $('#campoEfectivoRecibido').show();
+        $('#campoCambio').show();
+        $('#efectivoRecibido').val(total.toFixed(2));
+        calcularCambioModal();
+    } else {
+        $('#campoEfectivoRecibido').hide();
+        $('#campoCambio').hide();
+    }
 }
 
 function calcularCambio() {
@@ -1083,36 +1226,203 @@ function calcularCambio() {
     $('#cambioCalculado').val(cambio >= 0 ? formatearMoneda(cambio) : '0.00');
 }
 
-async function procesarVentaFinal() {
-    try {
-        const btnConfirmar = $('#btnConfirmarVenta');
-        btnConfirmar.prop('disabled', true);
-        btnConfirmar.find('.btn-normal-state').addClass('d-none');
-        btnConfirmar.find('.btn-loading-state').removeClass('d-none');
+function calcularCambioModal() {
+    const metodoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+    const configMetodo = CONFIGURACION_PRECIOS[metodoSeleccionado];
 
-        // Preparar datos de la venta
-        const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
+    // Calcular total con el método de pago seleccionado
+    let subtotal = 0;
+    productosEnVenta.forEach(producto => {
+        const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+        subtotal += precioAjustado * producto.cantidad;
+    });
+
+    const iva = subtotal * 0.13;
+    const total = subtotal + iva;
+
+    const efectivoRecibido = parseFloat($('#efectivoRecibido').val()) || 0;
+    const cambio = efectivoRecibido - total;
+
+    $('#cambioCalculado').val(cambio >= 0 ? formatearMoneda(cambio) : '0.00');
+
+    // Cambiar color según si es suficiente o no
+    if (efectivoRecibido >= total) {
+        $('#efectivoRecibido').removeClass('is-invalid').addClass('is-valid');
+        $('#cambioCalculado').removeClass('text-danger').addClass('text-success');
+    } else {
+        $('#efectivoRecibido').removeClass('is-valid').addClass('is-invalid');
+        $('#cambioCalculado').removeClass('text-success').addClass('text-danger');
+    }
+}
+
+function configurarEventosModalFinalizar() {
+    // Remover eventos anteriores para evitar duplicados
+    $('input[name="metodoPago"]').off('change.modalFinalizar');
+    $('#efectivoRecibido').off('input.modalFinalizar');
+
+    // Configurar eventos de método de pago
+    $('input[name="metodoPago"]').on('change.modalFinalizar', function() {
+        // Actualizar todo el resumen cuando cambie el método de pago
+        actualizarResumenVentaModal();
+    });
+
+    // Configurar evento de cambio en efectivo recibido
+    $('#efectivoRecibido').on('input.modalFinalizar', function() {
+        calcularCambioModal();
+    });
+}
+
+async function procesarVentaFinal() {
+    const $btnFinalizar = $('#btnConfirmarVenta');
+
+    try {
+        // Deshabilitar el botón y mostrar el estado de carga
+        $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
+
+        // Preparar datos de la venta con método de pago seleccionado
+        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+        const configMetodo = CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
+
+        let subtotal = 0;
+        productosEnVenta.forEach(producto => {
+            const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+            subtotal += precioAjustado * producto.cantidad;
+        });
+
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        const ventaData = {
-            clienteId: clienteSeleccionado.id,
-            nombreCliente: clienteSeleccionado.nombre,
-            emailCliente: clienteSeleccionado.email,
-            productos: productosEnVenta,
+        // Crear objeto de factura para enviar a la API
+        const facturaData = {
+            clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
+            nombreCliente: clienteSeleccionado?.nombre || 'Cliente General',
+            identificacionCliente: clienteSeleccionado?.identificacion || '',
+            telefonoCliente: clienteSeleccionado?.telefono || '',
+            emailCliente: clienteSeleccionado?.email || '',
+            direccionCliente: clienteSeleccionado?.direccion || '',
+            fechaFactura: new Date().toISOString(),
+            fechaVencimiento: null,
+            subtotal: subtotal,
+            descuentoGeneral: 0,
+            porcentajeImpuesto: 13,
+            montoImpuesto: iva,
+            total: total,
+            estado: 'Pagada',
+            tipoDocumento: 'Factura',
+            metodoPago: metodoPagoSeleccionado,
+            observaciones: $('#observacionesVenta').val(),
+            usuarioCreadorId: 1, // Obtener del contexto del usuario
+            detallesFactura: productosEnVenta.map(producto => {
+                const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+                return {
+                    productoId: producto.productoId,
+                    nombreProducto: producto.nombreProducto,
+                    descripcionProducto: producto.descripcion || '',
+                    cantidad: producto.cantidad,
+                    precioUnitario: precioAjustado,
+                    porcentajeDescuento: 0,
+                    montoDescuento: 0,
+                    subtotal: precioAjustado * producto.cantidad
+                };
+            })
+        };
+
+        // Crear la factura
+        const responseFactura = await fetch('/Facturacion/CrearFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(facturaData)
+        });
+
+        if (!responseFactura.ok) {
+            const errorText = await responseFactura.text();
+            console.error('❌ Error del servidor al crear factura:', errorText);
+            throw new Error(`Error al crear la factura: ${responseFactura.status} - ${errorText}`);
+        }
+
+        const resultadoFactura = await responseFactura.json();
+        console.log('✅ Factura creada:', resultadoFactura);
+
+        if (!resultadoFactura.success) {
+            throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
+        }
+
+        // Ajustar stock usando el endpoint interno del controlador
+        try {
+            const productosParaAjuste = productosEnVenta.map(producto => ({
+                ProductoId: producto.productoId,
+                NombreProducto: producto.nombreProducto,
+                Cantidad: producto.cantidad
+            }));
+
+            const requestData = {
+                NumeroFactura: resultadoFactura.numeroFactura || 'N/A',
+                Productos: productosParaAjuste
+            };
+
+            console.log('📦 Ajustando stock para todos los productos...');
+
+            const responseStock = await fetch('/Facturacion/AjustarStockFacturacion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (responseStock.ok) {
+                const resultadoStock = await responseStock.json();
+                
+                if (resultadoStock.success) {
+                    console.log('✅ Stock ajustado exitosamente para todos los productos');
+                    
+                    // Mostrar resumen de ajustes exitosos
+                    const ajustesExitosos = resultadoStock.resultados.filter(r => r.success);
+                    if (ajustesExitosos.length > 0) {
+                        console.log(`📦 ${ajustesExitosos.length} productos actualizados correctamente`);
+                    }
+                } else {
+                    console.warn('⚠️ Algunos ajustes de stock fallaron:', resultadoStock.errores);
+                    mostrarToast('Advertencia Stock', `${resultadoStock.errores.length} productos no se pudieron actualizar`, 'warning');
+                }
+
+                // Mostrar detalles de cada resultado
+                if (resultadoStock.resultados) {
+                    resultadoStock.resultados.forEach(resultado => {
+                        if (resultado.success) {
+                            console.log(`✅ ${resultado.nombreProducto}: ${resultado.stockAnterior} → ${resultado.stockNuevo}`);
+                        } else {
+                            console.warn(`⚠️ ${resultado.nombreProducto}: ${resultado.error}`);
+                        }
+                    });
+                }
+            } else {
+                const errorText = await responseStock.text();
+                console.error('❌ Error en endpoint de ajuste de stock:', errorText);
+                mostrarToast('Error Stock', 'No se pudo conectar con el sistema de inventario', 'warning');
+            }
+        } catch (error) {
+            console.error('❌ Error general ajustando stock:', error);
+            mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+        }
+
+        // Generar e imprimir recibo
+        generarRecibo(resultadoFactura, productosEnVenta, {
             subtotal: subtotal,
             iva: iva,
             total: total,
-            metodoPago: $('#metodoPago').val(),
-            observaciones: $('#observacionesVenta').val()
-        };
-
-        // Simular procesamiento (aquí iría la llamada real a la API)
-        await new Promise(resolve => setTimeout(resolve, 2000));
+            metodoPago: metodoPagoSeleccionado,
+            cliente: clienteSeleccionado,
+            usuario: obtenerUsuarioActual()
+        });
 
         // Éxito
         modalFinalizarVenta.hide();
-        mostrarToast('¡Venta procesada!', 'La venta ha sido procesada exitosamente', 'success');
+        mostrarToast('¡Venta procesada!', 'La venta ha sido procesada exitosamente. Actualizando inventario...', 'success');
 
         // Limpiar venta
         productosEnVenta = [];
@@ -1122,15 +1432,290 @@ async function procesarVentaFinal() {
         actualizarVistaCarrito();
         actualizarTotales();
 
+        // Recargar la página después de un breve delay para mostrar el toast
+        setTimeout(() => {
+            console.log('🔄 Recargando página para refrescar inventario...');
+            window.location.reload();
+        }, 2000);
+
     } catch (error) {
         console.error('❌ Error procesando venta:', error);
-        mostrarToast('Error', 'No se pudo procesar la venta', 'danger');
+        mostrarToast('Error', 'Hubo un problema procesando la venta', 'error');
     } finally {
-        const btnConfirmar = $('#btnConfirmarVenta');
-        btnConfirmar.prop('disabled', false);
-        btnConfirmar.find('.btn-normal-state').removeClass('d-none');
-        btnConfirmar.find('.btn-loading-state').addClass('d-none');
+        // Restaurar botón
+        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
     }
+}
+
+/**
+ * Generar e imprimir recibo de venta optimizado para mini impresoras térmicas
+ */
+function generarRecibo(factura, productos, totales) {
+    const fecha = new Date().toLocaleDateString('es-CR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    });
+    const hora = new Date().toLocaleTimeString('es-CR', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit' 
+    });
+
+    // Función para truncar texto según el ancho de la impresora
+    function truncarTexto(texto, maxCaracteres) {
+        if (!texto) return '';
+        return texto.length > maxCaracteres ? texto.substring(0, maxCaracteres - 3) + '...' : texto;
+    }
+
+    // Función para formatear línea con espacios
+    function formatearLineaEspacios(izquierda, derecha, anchoTotal = 32) {
+        const espacios = anchoTotal - izquierda.length - derecha.length;
+        return izquierda + ' '.repeat(Math.max(0, espacios)) + derecha;
+    }
+
+    // ✅ RECIBO OPTIMIZADO PARA MINI IMPRESORAS TÉRMICAS (58mm/80mm)
+    const reciboHTML = `
+        <div id="recibo-termica" style="width: 58mm; max-width: 58mm; font-family: 'Courier New', 'Consolas', monospace; font-size: 9px; line-height: 1.2; margin: 0; padding: 0; color: #000;">
+
+            <!-- ENCABEZADO -->
+            <div style="text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">GESTIÓN LLANTERA</div>
+                <div style="font-size: 8px; margin-bottom: 1px;">Sistema de Facturación</div>
+                <div style="font-size: 8px; margin-bottom: 2px;">Tel: (506) 0000-0000</div>
+                <div style="font-size: 9px; font-weight: bold;">FACTURA DE VENTA</div>
+                <div style="font-size: 8px;">No. ${factura.numeroFactura || 'N/A'}</div>
+            </div>
+
+            <!-- INFORMACIÓN DE TRANSACCIÓN -->
+            <div style="margin-bottom: 6px; font-size: 8px;">
+                <div>Fecha: ${fecha}</div>
+                <div>Hora: ${hora}</div>
+                <div>Cliente: ${truncarTexto(totales.cliente?.nombre || totales.cliente?.nombreCliente || factura.nombreCliente || 'Cliente General', 25)}</div>
+                <div>Método: ${totales.metodoPago || 'Efectivo'}</div>
+                <div>Cajero: ${totales.usuario?.nombre || totales.usuario?.nombreUsuario || factura.usuarioCreadorNombre || 'Sistema'}</div>
+            </div>
+
+            <!-- SEPARADOR -->
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <!-- PRODUCTOS -->
+            <div style="margin-bottom: 6px;">
+                <div style="font-size: 8px; font-weight: bold; text-align: center; margin-bottom: 3px;">DETALLE DE PRODUCTOS</div>
+                ${productos.map(p => {
+                    const nombreTruncado = truncarTexto(p.nombreProducto, 20);
+                    const subtotalProducto = p.precioUnitario * p.cantidad;
+                    return `
+                        <div style="margin-bottom: 2px;">
+                            <div style="font-size: 8px;">${nombreTruncado}</div>
+                            <div style="font-size: 8px; display: flex; justify-content: space-between;">
+                                <span>${p.cantidad} x ₡${p.precioUnitario.toFixed(0)}</span>
+                                <span>₡${subtotalProducto.toFixed(0)}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+
+            <!-- SEPARADOR -->
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <!-- TOTALES -->
+            <div style="margin-bottom: 8px; font-size: 8px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Subtotal:</span>
+                    <span>₡${totales.subtotal.toFixed(0)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>IVA (13%):</span>
+                    <span>₡${totales.iva.toFixed(0)}</span>
+                </div>
+                <div style="border-top: 1px solid #000; margin: 3px 0; padding-top: 3px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 9px;">
+                        <span>TOTAL:</span>
+                        <span>₡${totales.total.toFixed(0)}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PIE DE PÁGINA -->
+            <div style="text-align: center; margin-top: 8px; font-size: 8px; border-top: 1px dashed #000; padding-top: 6px;">
+                <div style="margin-bottom: 2px;">¡Gracias por su compra!</div>
+                <div style="margin-bottom: 2px;">Vuelva pronto</div>
+                <div style="margin-bottom: 4px;">www.gestionllantera.com</div>
+                <div style="font-size: 7px;">Recibo generado: ${new Date().toLocaleString('es-CR')}</div>
+            </div>
+
+            <!-- ESPACIADO FINAL PARA CORTE -->
+            <div style="height: 20px;"></div>
+        </div>
+    `;
+
+    // ✅ CONFIGURACIÓN ESPECÍFICA PARA MINI IMPRESORAS TÉRMICAS
+    try {
+        console.log('🖨️ Iniciando impresión de recibo térmico...');
+
+        // Crear ventana de impresión con configuración optimizada
+        const ventanaImpresion = window.open('', '_blank', 'width=300,height=600,scrollbars=no,resizable=no');
+
+        if (!ventanaImpresion) {
+            throw new Error('No se pudo abrir la ventana de impresión. Verifique que los pop-ups estén habilitados.');
+        }
+
+        ventanaImpresion.document.write(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Recibo Térmico - ${factura.numeroFactura}</title>
+                    <meta charset="utf-8">
+                    <style>
+                        /* CONFIGURACIÓN ESPECÍFICA PARA IMPRESORAS TÉRMICAS */
+                        @page {
+                            size: 58mm auto; /* Ancho estándar para mini impresoras */
+                            margin: 0;
+                            padding: 0;
+                        }
+
+                        @media screen {
+                            body {
+                                background: #f5f5f5;
+                                padding: 10px;
+                                font-family: 'Courier New', 'Consolas', monospace;
+                            }
+                            #recibo-termica {
+                                background: white;
+                                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                                padding: 8px;
+                                margin: 0 auto;
+                            }
+                        }
+
+                        @media print {
+                            body {
+                                margin: 0;
+                                padding: 0;
+                                background: none;
+                                -webkit-print-color-adjust: exact;
+                                color-adjust: exact;
+                            }
+
+                            #recibo-termica {
+                                box-shadow: none;
+                                padding: 0;
+                                margin: 0;
+                                page-break-inside: avoid;
+                            }
+
+                            /* Optimizar para impresión térmica */
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                color-adjust: exact !important;
+                            }
+                        }
+
+                        /* Fuente monoespaciada para alineación perfecta */
+                        body, * {
+                            font-family: 'Courier New', 'Consolas', 'Monaco', monospace !important;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${reciboHTML}
+
+                    <script>
+                        // Función para imprimir automáticamente
+                        function imprimirRecibo() {
+                            console.log('🖨️ Iniciando impresión...');
+
+                            // Configurar para impresoras térmicas
+                            if (window.chrome) {
+                                // Para navegadores basados en Chrome
+                                window.print();
+                            } else {
+                                // Para otros navegadores
+                                setTimeout(() => window.print(), 500);
+                            }
+                        }
+
+                        // Imprimir cuando la página esté completamente cargada
+                        if (document.readyState === 'complete') {
+                            imprimirRecibo();
+                        } else {
+                            window.addEventListener('load', imprimirRecibo);
+                        }
+
+                        // Cerrar ventana después de intentar imprimir
+                        window.addEventListener('afterprint', function() {
+                            console.log('🖨️ Impresión completada, cerrando ventana...');
+                            setTimeout(() => window.close(), 1000);
+                        });
+
+                        // Fallback para cerrar si no se detecta evento afterprint
+                        setTimeout(() => {
+                            if (!window.closed) {
+                                console.log('🖨️ Cerrando ventana por timeout...');
+                                window.close();
+                            }
+                        }, 5000);
+                    </script>
+                </body>
+            </html>
+        `);
+
+        ventanaImpresion.document.close();
+
+        // Mostrar mensaje de éxito
+        mostrarToast('Impresión', 'Recibo enviado a impresora', 'success');
+
+    } catch (error) {
+        console.error('❌ Error al imprimir recibo:', error);
+        mostrarToast('Error de Impresión', 'No se pudo imprimir el recibo: ' + error.message, 'danger');
+
+        // Fallback: mostrar el recibo en pantalla para copiar/imprimir manualmente
+        mostrarReciboEnPantalla(reciboHTML, factura.numeroFactura);
+    }
+}
+
+/**
+ * Función fallback para mostrar recibo en pantalla si falla la impresión
+ */
+function mostrarReciboEnPantalla(reciboHTML, numeroFactura) {
+    const modalHtml = `
+        <div class="modal fade" id="modalReciboFallback" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="bi bi-printer me-2"></i>Recibo de Venta
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div class="alert alert-warning m-2">
+                            <small><i class="bi bi-exclamation-triangle me-1"></i>
+                            La impresión automática falló. Use los botones de abajo para imprimir.</small>
+                        </div>
+                        ${reciboHTML}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cerrar
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i>Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalReciboFallback').remove();
+    $('body').append(modalHtml);
+
+    const modal = new bootstrap.Modal(document.getElementById('modalReciboFallback'));
+    modal.show();
 }
 
 // ===== FUNCIONES AUXILIARES =====
@@ -1194,9 +1779,9 @@ function verDetalleProducto(producto) {
     try {
         console.log('🖼️ Procesando imágenes para detalle de producto:', producto.nombreProducto);
         console.log('🖼️ Datos del producto completos:', producto);
-        
+
         let imagenesArray = [];
-        
+
         // Usar múltiples fuentes de imágenes como fallback
         if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
             imagenesArray = producto.imagenesProductos
@@ -1212,11 +1797,11 @@ function verDetalleProducto(producto) {
                 .filter(url => url && url.trim() !== '');
             console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
         }
-        
+
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
             console.log('🖼️ URL original en detalle:', urlImagen);
-            
+
             if (urlImagen && urlImagen.trim() !== '') {
                 // Lógica robusta de construcción de URLs
                 if (urlImagen.startsWith('/uploads/productos/')) {
@@ -1397,7 +1982,7 @@ function abrirModalNuevoCliente() {
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="contactoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person-badge me-1"></i>Contacto
+                                        <i class="bi bi-person-badge me-1"></i>Identificación
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
@@ -1766,6 +2351,87 @@ function mostrarResumenDepuracion() {
     console.log('📊 === FIN RESUMEN ===');
 }
 
+// ===== FUNCIÓN PARA OBTENER USUARIO ACTUAL =====
+function obtenerUsuarioActual() {
+    // Intentar obtener el nombre del usuario desde diferentes fuentes
+    const nombreUsuario = document.querySelector('[data-usuario-nombre]')?.getAttribute('data-usuario-nombre') ||
+                         document.querySelector('.user-name')?.textContent?.trim() ||
+                         document.querySelector('#nombreUsuario')?.textContent?.trim() ||
+                         'Usuario';
+
+    return {
+        nombre: nombreUsuario,
+        nombreUsuario: nombreUsuario
+    };
+}
+
+// ===== FUNCIÓN PARA OBTENER TOKEN JWT =====
+function obtenerTokenJWT() {
+    // Intentar obtener el token desde localStorage, sessionStorage o cookies
+    let token = localStorage.getItem('jwt_token') || 
+                sessionStorage.getItem('jwt_token') ||
+                localStorage.getItem('authToken') ||
+                sessionStorage.getItem('authToken');
+    
+    // Si no está en storage, intentar desde cookie
+    if (!token) {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'jwt_token' || name === 'authToken') {
+                token = value;
+                break;
+            }
+        }
+    }
+    
+    // Si aún no tenemos token, intentar desde meta tag
+    if (!token) {
+        const metaToken = document.querySelector('meta[name="auth-token"]');
+        if (metaToken) {
+            token = metaToken.getAttribute('content');
+        }
+    }
+    
+    console.log('🔑 Token JWT obtenido:', token ? 'Presente' : 'No encontrado');
+    return token;
+}
+
+// ===== FUNCIÓN PARA ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR =====
+function actualizarEstadoBotonFinalizar() {
+    const tieneProductos = productosEnVenta.length > 0;
+    const tieneCliente = clienteSeleccionado !== null;
+    const puedeFinalizarVenta = tieneProductos && tieneCliente;
+    
+    const $btnFinalizar = $('#btnFinalizarVenta');
+    
+    if (puedeFinalizarVenta) {
+        $btnFinalizar.prop('disabled', false)
+                    .removeClass('btn-outline-secondary')
+                    .addClass('btn-success')
+                    .attr('title', 'Finalizar venta');
+    } else {
+        $btnFinalizar.prop('disabled', true)
+                    .removeClass('btn-success')
+                    .addClass('btn-outline-secondary');
+        
+        if (!tieneProductos && !tieneCliente) {
+            $btnFinalizar.attr('title', 'Agrega productos y selecciona un cliente');
+        } else if (!tieneProductos) {
+            $btnFinalizar.attr('title', 'Agrega productos a la venta');
+        } else if (!tieneCliente) {
+            $btnFinalizar.attr('title', 'Selecciona un cliente para continuar');
+        }
+    }
+    
+    console.log('🔄 Estado botón finalizar actualizado:', {
+        tieneProductos,
+        tieneCliente,
+        puedeFinalizarVenta,
+        disabled: $btnFinalizar.prop('disabled')
+    });
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
@@ -1781,3 +2447,4 @@ window.actualizarCantidadProducto = actualizarCantidadProducto;
 window.procesarVenta = procesarVenta;
 window.reiniciarCargaProductos = reiniciarCargaProductos;
 window.mostrarResumenDepuracion = mostrarResumenDepuracion;
+window.actualizarEstadoBotonFinalizar = actualizarEstadoBotonFinalizar;

@@ -99,7 +99,9 @@ namespace GestionLlantera.Web.Controllers
                     nombre = c.NombreCliente,
                     email = c.Email ?? "",
                     telefono = c.Telefono ?? "",
-                    contacto = c.Contacto ?? ""
+                    contacto = c.Contacto ?? "",
+                    identificacion = c.Contacto ?? "",
+                    direccion = c.Direccion ?? ""
                 }).ToList();
 
                 return Json(new { success = true, data = resultado });

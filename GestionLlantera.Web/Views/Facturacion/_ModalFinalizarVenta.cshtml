@@ -1,4 +1,3 @@
-
 <!-- Modal Finalizar Venta -->
 <div class="modal fade" id="modalFinalizarVenta" tabindex="-1" aria-labelledby="modalFinalizarVentaLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -20,6 +19,18 @@
                                 Información del Cliente
                             </h6>
                         </div>
+                        <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-person me-2"></i>Cliente Seleccionado
+                        </label>
+                        <div class="alert alert-info d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong id="resumenNombreCliente">Cliente no seleccionado</strong><br>
+                                <small class="text-muted" id="resumenEmailCliente">-</small>
+                            </div>
+                            <i class="bi bi-person-check fs-3 text-primary"></i>
+                        </div>
+                    </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Nombre Completo *</label>
                             <input type="text" class="form-control" id="clienteNombre" required>
@@ -52,7 +63,7 @@
                         </div>
                         <div class="col-12 mb-3">
                             <div class="row">
-                                <div class="col-md-4 mb-2">
+                                <div class="col-md-3 mb-2">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodoPago" id="pagoEfectivo" value="efectivo" checked>
                                         <label class="form-check-label" for="pagoEfectivo">
@@ -61,16 +72,25 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-4 mb-2">
+                                <div class="col-md-3 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="pagoSinpe" value="sinpe">
+                                        <label class="form-check-label" for="pagoSinpe">
+                                            <i class="bi bi-phone me-1"></i>
+                                            SINPE Móvil
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 mb-2">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodoPago" id="pagoTarjeta" value="tarjeta">
                                         <label class="form-check-label" for="pagoTarjeta">
                                             <i class="bi bi-credit-card me-1"></i>
-                                            Tarjeta
+                                            Tarjeta (+5%)
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-4 mb-2">
+                                <div class="col-md-3 mb-2">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodoPago" id="pagoTransferencia" value="transferencia">
                                         <label class="form-check-label" for="pagoTransferencia">
@@ -83,18 +103,21 @@
                         </div>
 
                         <!-- Campo para efectivo recibido -->
-                        <div class="col-md-6 mb-3" id="campoEfectivoRecibido">
+                        <div class="col-md-6 mb-3" id="campoEfectivoRecibido" style="display: none;">
                             <label class="form-label">Efectivo Recibido</label>
                             <div class="input-group">
                                 <span class="input-group-text">₡</span>
                                 <input type="number" class="form-control" id="efectivoRecibido" min="0" step="0.01">
+                                <div class="invalid-feedback">
+                                    El monto recibido debe ser mayor o igual al total
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3" id="campoCambio" style="display: none;">
                             <label class="form-label">Cambio</label>
                             <div class="input-group">
                                 <span class="input-group-text">₡</span>
-                                <input type="text" class="form-control" id="cambioCalculado" readonly>
+                                <input type="text" class="form-control fw-bold" id="cambioCalculado" readonly>
                             </div>
                         </div>
                     </div>
@@ -150,3 +173,4 @@
         </div>
     </div>
 </div>
+```

@@ -31,6 +31,10 @@
 
     @* Token antiforgery para las llamadas AJAX *@
      @* <meta name="csrf-token" content="@Html.AntiForgeryToken()"/>  *@
+    @if (Context.Request.Cookies.ContainsKey("jwt_token"))
+    {
+        <meta name="auth-token" content="@Context.Request.Cookies["jwt_token"]" />
+    }
 </head>
 
 <body class="admin-body"> 
@@ -80,15 +84,20 @@
                     </li>
 
                     <!-- ✅ VENTAS - Solo si puede facturar -->
-                    <li class="nav-item" asp-permiso="Facturar">
+                    <li class="nav-item" asp-permiso="Ver Facturación">
                         <a class="nav-link" data-bs-toggle="collapse" href="#ventasMenu">
                             <i class="bi bi-cart"></i> Ventas
                         </a>
                         <div class="collapse submenu" id="ventasMenu">
                             <ul class="nav flex-column">
-                                <li class="nav-item" asp-permiso="Facturar">
-                                    <a class="nav-link" asp-controller="Ventas" asp-action="Index">
-                                        <i class="bi bi-receipt"></i> Nueva Venta
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Clientes" asp-action="Index">
+                                        <i class="bi bi-people"></i> Clientes
+                                    </a>
+                                </li>
+                                <li class="nav-item" asp-permiso="Ver Facturación">
+                                    <a class="nav-link" asp-controller="Facturacion" asp-action="Index">
+                                        <i class="bi bi-receipt-cutoff"></i> Facturación
                                     </a>
                                 </li>
                                 <li class="nav-item" asp-permiso="Ver Reportes">
@@ -167,22 +176,7 @@
                             </ul>
                         </div>
                     </li>
-                     <li class="nav-item">
-                        <a class="nav-link" href="/Inventario">
-                            <i class="bi bi-boxes me-2"></i>Inventario
-                        </a>
-                    </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Clientes">
-                                <i class="bi bi-people me-2"></i>Clientes
-                            </a>
-                        </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Facturacion" asp-action="Index">
-                            <i class="bi bi-receipt-cutoff me-2"></i>
-                            Facturación
-                        </a>
-                    </li>
+                     
                 </ul>
 
                 @* ✅ Usuarios Conectados - Solo si puede ver reportes o gestión completa *@
@@ -259,13 +253,16 @@
                                     <div class="user-avatar">
                                         <i class="bi bi-person-circle"></i>
                                     </div>
-                                    @await Component.InvokeAsync("UserInfo")
+                                    <div class="user-info">
+                                        <div class="user-name">@User.Identity.Name</div>
+                                        <div class="user-role">Administrador</div>
+                                    </div>
                                 </div>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <div class="dropdown-header">
-                                        @await Component.InvokeAsync("UserInfo")
+
                                     </div>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
