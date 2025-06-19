@@ -602,6 +602,9 @@ function seleccionarCliente(cliente) {
     $('#nombreClienteSeleccionado').text(cliente.nombre);
     $('#emailClienteSeleccionado').text(cliente.email);
     $('#clienteSeleccionado').removeClass('d-none');
+    
+    // Debug: verificar que tenemos todos los datos del cliente
+    console.log('Cliente seleccionado:', cliente);
 }
 
 // ===== MODAL DE SELECCIÓN DE PRODUCTO =====
