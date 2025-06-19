@@ -24,6 +24,11 @@ namespace GestionLlantera.Web.Services.Interfaces
         // Métodos de stock
         Task<bool> AjustarStockProductoAsync(int productoId, int cantidad, string motivo, string token = null);
         Task<AjusteStockRapidoResponseDTO> AjustarStockRapidoAsync(int id, AjusteStockRapidoDTO ajusteDto, string jwtToken = null);
+        Task<bool> ValidarStockDisponibleAsync(int productoId, int cantidadRequerida);
+        Task<ResultadoOperacionDTO> AgregarProductoAsync(ProductoDTO productoDto);
+        Task<ResultadoOperacionDTO> ActualizarProductoAsync(ProductoDTO productoDto);
+        Task<ResultadoOperacionDTO> EliminarProductoAsync(int productoId);
+        Task<bool> ActualizarStockAsync(int productoId, int cantidadVendida);
 
         // Métodos para inventarios programados
         Task<List<InventarioProgramadoDTO>> ObtenerInventariosProgramadosAsync(string jwtToken = null);

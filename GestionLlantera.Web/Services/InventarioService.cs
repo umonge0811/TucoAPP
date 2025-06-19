@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
 using Tuco.Clases.DTOs.Inventario;
+using System.Net.Http.Json;
 
 namespace GestionLlantera.Web.Services
 {
@@ -12,11 +13,14 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<InventarioService> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly string _apiUrl = "https://localhost:7126";
 
         public InventarioService(IHttpClientFactory httpClientFactory, ILogger<InventarioService> logger)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<List<ProductoDTO>> ObtenerProductosAsync(string jwtToken)
@@ -1575,6 +1579,31 @@ namespace GestionLlantera.Web.Services
             {
                 return null;
             }
+        }
+
+    public async Task<bool> ActualizarStockAsync(int productoId, int cantidadVendida)
+    {
+        try
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+            var response = await httpClient.PostAsJsonAsync($"{_apiUrl}/api/inventario/actualizar-stock", new
+            {
+                ProductoId = productoId,
+                CantidadVendida = cantidadVendida
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ResultadoOperacionDTO>();
+                return result?.Exitoso ?? false;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar stock del producto {ProductoId}", productoId);
+            return false;
         }
     }
 }
