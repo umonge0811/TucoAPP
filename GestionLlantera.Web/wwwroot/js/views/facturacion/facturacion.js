@@ -679,30 +679,28 @@ function mostrarModalSeleccionProducto(producto) {
                                     <strong>Stock disponible:</strong> ${producto.cantidadEnInventario} unidades
                                 </div>
 
-                                <!-- Selección de método de pago -->
+                                <!-- Mostrar precios por método de pago -->
                                 <div class="mb-4">
-                                    <h6 class="mb-3">💳 Selecciona el método de pago:</h6>
-                                    <div class="row g-2">
-                                        ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
-                                            const precio = precioBase * config.multiplicador;
-                                            return `
-                                                <div class="col-sm-6 col-lg-3">
-                                                    <input type="radio" 
-                                                           class="btn-check metodo-pago-radio" 
-                                                           name="metodoPagoProducto" 
-                                                           id="metodo-${metodo}" 
-                                                           value="${metodo}"
-                                                           ${metodo === 'efectivo' ? 'checked' : ''}>
-                                                    <label class="btn btn-outline-primary w-100 text-center p-2" 
-                                                           for="metodo-${metodo}">
-                                                        <div class="fw-bold">${config.nombre}</div>
-                                                        <div class="text-success">₡${formatearMoneda(precio)}</div>
-                                                        ${metodo === 'tarjeta' ? '<small class="text-muted">+5%</small>' : ''}
-                                                    </label>
-                                                </div>
-                                            `;
-                                        }).join('')}
+                                    <h6 class="mb-3">💰 Precios por método de pago:</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-striped">
+                                            <tbody>
+                                                ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
+                                                    const precio = precioBase * config.multiplicador;
+                                                    return `
+                                                        <tr>
+                                                            <td>
+                                                                <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : metodo === 'sinpe' ? 'phone' : 'cash'} me-2"></i>
+                                                                ${config.nombre}
+                                                            </td>
+                                                            <td class="text-end fw-bold text-success">₡${formatearMoneda(precio)}</td>
+                                                        </tr>
+                                                    `;
+                                                }).join('')}
+                                            </tbody>
+                                        </table>
                                     </div>
+                                    <small class="text-muted">* El método de pago se seleccionará al finalizar la venta</small>
                                 </div>
 
                                 <!-- Cantidad -->
@@ -710,24 +708,26 @@ function mostrarModalSeleccionProducto(producto) {
                                     <label for="cantidadProducto" class="form-label">
                                         <i class="bi bi-123 me-1"></i>Cantidad:
                                     </label>
-                                    <div class="input-group" style="max-width: 150px;">
+                                    <div class="input-group" style="max-width: 200px;">
                                         <button type="button" class="btn btn-outline-secondary" id="btnMenosCantidad">-</button>
                                         <input type="number" 
-                                               class="form-control text-center" 
+                                               class="form-control text-center fw-bold" 
                                                id="cantidadProducto" 
                                                value="1" 
                                                min="1" 
-                                               max="${producto.cantidadEnInventario}">
+                                               max="${producto.cantidadEnInventario}"
+                                               style="font-size: 16px; min-width: 80px;">
                                         <button type="button" class="btn btn-outline-secondary" id="btnMasCantidad">+</button>
                                     </div>
                                 </div>
 
-                                <!-- Total calculado -->
-                                <div class="alert alert-success">
+                                <!-- Precio base para referencia -->
+                                <div class="alert alert-light">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <span><i class="bi bi-calculator me-2"></i><strong>Total:</strong></span>
-                                        <span class="fs-4 fw-bold" id="totalCalculado">₡${formatearMoneda(precioBase)}</span>
+                                        <span><i class="bi bi-tag me-2"></i><strong>Precio base:</strong></span>
+                                        <span class="fs-5 fw-bold text-primary">₡${formatearMoneda(precioBase)}</span>
                                     </div>
+                                    <small class="text-muted">El precio final dependerá del método de pago seleccionado</small>
                                 </div>
                             </div>
                         </div>
@@ -758,42 +758,6 @@ function mostrarModalSeleccionProducto(producto) {
 
 function configurarEventosModalProducto(producto, modal) {
     const precioBase = producto.precio || 0;
-        // Extraer imágenes del producto
-        const imagenesProducto = producto.imagenesProductos || producto.imagenes || [];
-
-        // Construir carrusel de imágenes
-        let imagenesParaModal = [];
-        if (Array.isArray(imagenesProducto) && imagenesProducto.length > 0) {
-            imagenesParaModal = imagenesProducto.map(img => {
-                const url = img.urlImagen || img.Urlimagen || '';
-                if (url && url.trim() !== '') {
-                    // Construir la URL completa con la API base
-                    if (url.startsWith('/uploads/productos/')) {
-                        return `https://localhost:7273${url}`;
-                    } else if (url.startsWith('uploads/productos/')) {
-                        return `https://localhost:7273/${url}`;
-                    } else {
-                        return url; // URL completa
-                    }
-                }
-                return '/images/no-image.png';
-            });
-        } else {
-            imagenesParaModal = ['/images/no-image.png'];
-        }
-
-    // Actualizar total cuando cambie el método de pago o cantidad
-    function actualizarTotal() {
-        const metodoSeleccionado = $('input[name="metodoPagoProducto"]:checked').val();
-        const cantidad = parseInt($('#cantidadProducto').val()) || 1;
-        const precio = precioBase * CONFIGURACION_PRECIOS[metodoSeleccionado].multiplicador;
-        const total = precio * cantidad;
-
-        $('#totalCalculado').text(`₡${formatearMoneda(total)}`);
-    }
-
-    // Eventos de cambio de método de pago
-    $('.metodo-pago-radio').on('change', actualizarTotal);
 
     // Eventos de cantidad
     $('#btnMenosCantidad').on('click', function() {
@@ -801,7 +765,6 @@ function configurarEventosModalProducto(producto, modal) {
         const valorActual = parseInt(input.val()) || 1;
         if (valorActual > 1) {
             input.val(valorActual - 1);
-            actualizarTotal();
         }
     });
 
@@ -811,7 +774,6 @@ function configurarEventosModalProducto(producto, modal) {
         const stockDisponible = producto.cantidadEnInventario;
         if (valorActual < stockDisponible){
             input.val(valorActual + 1);
-            actualizarTotal();
         }
     });
 
@@ -822,22 +784,16 @@ function configurarEventosModalProducto(producto, modal) {
 
         if (valor < min) $(this).val(min);
         if (valor > max) $(this).val(max);
-
-        actualizarTotal();
     });
 
     // Confirmar agregar producto
     $('#btnConfirmarAgregarProducto').on('click', function() {
-        const metodoSeleccionado = $('input[name="metodoPagoProducto"]:checked').val();
         const cantidad = parseInt($('#cantidadProducto').val()) || 1;
-        const precio = precioBase * CONFIGURACION_PRECIOS[metodoSeleccionado].multiplicador;
-
-        agregarProductoAVenta(producto, cantidad, precio, metodoSeleccionado);
+        
+        // Agregar con precio base, el método de pago se seleccionará al finalizar
+        agregarProductoAVenta(producto, cantidad, precioBase, 'efectivo');
         modal.hide();
     });
-
-    // Inicializar total
-    actualizarTotal();
 }
 
 // ===== GESTIÓN DEL CARRITO =====
@@ -1053,94 +1009,11 @@ function mostrarModalFinalizarVenta() {
     $('#clienteEmail').val(clienteSeleccionado.email || '');
     $('#clienteDireccion').val(clienteSeleccionado.direccion || '');
 
-    // ===== CALCULAR TOTALES =====
-    const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
-    const iva = subtotal * 0.13;
-    const total = subtotal + iva;
+    // ===== CONFIGURAR MÉTODO DE PAGO INICIAL =====
+    $('input[name="metodoPago"][value="efectivo"]').prop('checked', true);
 
-    // ===== MOSTRAR RESUMEN DE PRODUCTOS =====
-    let htmlResumen = `
-        <div class="table-responsive">
-            <table class="table table-sm">
-                <thead class="table-light">
-                    <tr>
-                        <th>Producto</th>
-                        <th class="text-center">Cant.</th>
-                        <th class="text-center">Método</th>
-                        <th class="text-end">Precio Unit.</th>
-                        <th class="text-end">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
-    productosEnVenta.forEach(producto => {
-        const metodoPago = producto.metodoPago || 'efectivo';
-        const configMetodo = CONFIGURACION_PRECIOS[metodoPago];
-        const subtotalProducto = producto.precioUnitario * producto.cantidad;
-
-        htmlResumen += `
-            <tr>
-                <td>
-                    <strong>${producto.nombreProducto}</strong>
-                </td>
-                <td class="text-center">${producto.cantidad}</td>
-                <td class="text-center">
-                    <span class="badge bg-info">${configMetodo ? configMetodo.nombre : metodoPago}</span>
-                </td>
-                <td class="text-end">₡${formatearMoneda(producto.precioUnitario)}</td>
-                <td class="text-end">₡${formatearMoneda(subtotalProducto)}</td>
-            </tr>
-        `;
-    });
-
-    htmlResumen += `
-                </tbody>
-                <tfoot class="table-light">
-                    <tr>
-                        <th colspan="4" class="text-end">Subtotal:</th>
-                        <th class="text-end">₡${formatearMoneda(subtotal)}</th>
-                    </tr>
-                    <tr>
-                        <th colspan="4" class="text-end">IVA (13%):</th>
-                        <th class="text-end">₡${formatearMoneda(iva)}</th>
-                    </tr>
-                    <tr class="table-success">
-                        <th colspan="4" class="text-end">TOTAL:</th>
-                        <th class="text-end">₡${formatearMoneda(total)}</th>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    `;
-
-    $('#resumenVentaFinal').html(htmlResumen);
-    $('#totalFinalVenta').text(`₡${formatearMoneda(total)}`);
-
-    // ===== CONFIGURAR MÉTODO DE PAGO =====
-    // Detectar el método de pago más común en los productos
-    const metodosMasComunes = {};
-    productosEnVenta.forEach(producto => {
-        const metodo = producto.metodoPago || 'efectivo';
-        metodosMasComunes[metodo] = (metodosMasComunes[metodo] || 0) + 1;
-    });
-
-    const metodoPredominante = Object.keys(metodosMasComunes).reduce((a, b) => 
-        metodosMasComunes[a] > metodosMasComunes[b] ? a : b, 'efectivo');
-
-    // Seleccionar el método de pago predominante
-    $(`input[name="metodoPago"][value="${metodoPredominante}"]`).prop('checked', true);
-
-    // Mostrar/ocultar campos según el método de pago
-    if (metodoPredominante === 'efectivo') {
-        $('#campoEfectivoRecibido').show();
-        $('#campoCambio').show();
-        $('#efectivoRecibido').val(total.toFixed(2)); // Llenar con el total exacto
-        calcularCambioModal();
-    } else {
-        $('#campoEfectivoRecibido').hide();
-        $('#campoCambio').hide();
-    }
+    // ===== ACTUALIZAR RESUMEN CON MÉTODO DE PAGO INICIAL =====
+    actualizarResumenVentaModal();
 
     // ===== CONFIGURAR EVENTOS DEL MODAL =====
     configurarEventosModalFinalizar();
@@ -1152,6 +1025,84 @@ function mostrarModalFinalizarVenta() {
     modalFinalizarVenta.show();
 }
 
+function actualizarResumenVentaModal() {
+    const metodoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+    const configMetodo = CONFIGURACION_PRECIOS[metodoSeleccionado];
+
+    // Recalcular precios según método de pago seleccionado
+    let subtotal = 0;
+    
+    // ===== MOSTRAR RESUMEN DE PRODUCTOS =====
+    let htmlResumen = `
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Cant.</th>
+                        <th class="text-end">Precio Unit.</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    productosEnVenta.forEach(producto => {
+        // Calcular precio según método de pago seleccionado
+        const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+        const subtotalProducto = precioAjustado * producto.cantidad;
+        subtotal += subtotalProducto;
+
+        htmlResumen += `
+            <tr>
+                <td>
+                    <strong>${producto.nombreProducto}</strong>
+                </td>
+                <td class="text-center">${producto.cantidad}</td>
+                <td class="text-end">₡${formatearMoneda(precioAjustado)}</td>
+                <td class="text-end">₡${formatearMoneda(subtotalProducto)}</td>
+            </tr>
+        `;
+    });
+
+    const iva = subtotal * 0.13;
+    const total = subtotal + iva;
+
+    htmlResumen += `
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="3" class="text-end">Subtotal:</th>
+                        <th class="text-end">₡${formatearMoneda(subtotal)}</th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-end">IVA (13%):</th>
+                        <th class="text-end">₡${formatearMoneda(iva)}</th>
+                    </tr>
+                    <tr class="table-success">
+                        <th colspan="3" class="text-end">TOTAL (${configMetodo.nombre}):</th>
+                        <th class="text-end">₡${formatearMoneda(total)}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+
+    $('#resumenVentaFinal').html(htmlResumen);
+    $('#totalFinalVenta').text(`₡${formatearMoneda(total)}`);
+
+    // Mostrar/ocultar campos según el método de pago
+    if (metodoSeleccionado === 'efectivo') {
+        $('#campoEfectivoRecibido').show();
+        $('#campoCambio').show();
+        $('#efectivoRecibido').val(total.toFixed(2));
+        calcularCambioModal();
+    } else {
+        $('#campoEfectivoRecibido').hide();
+        $('#campoCambio').hide();
+    }
+}
+
 function calcularCambio() {
     const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0) * 1.13;
     const montoRecibido = parseFloat($('#montoRecibido').val()) || 0;
@@ -1161,7 +1112,16 @@ function calcularCambio() {
 }
 
 function calcularCambioModal() {
-    const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
+    const metodoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+    const configMetodo = CONFIGURACION_PRECIOS[metodoSeleccionado];
+    
+    // Calcular total con el método de pago seleccionado
+    let subtotal = 0;
+    productosEnVenta.forEach(producto => {
+        const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+        subtotal += precioAjustado * producto.cantidad;
+    });
+    
     const iva = subtotal * 0.13;
     const total = subtotal + iva;
     
@@ -1187,18 +1147,8 @@ function configurarEventosModalFinalizar() {
 
     // Configurar eventos de método de pago
     $('input[name="metodoPago"]').on('change.modalFinalizar', function() {
-        const metodo = $(this).val();
-        if (metodo === 'efectivo') {
-            $('#campoEfectivoRecibido').show();
-            $('#campoCambio').show();
-            const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0) * 1.13;
-            $('#efectivoRecibido').val(total.toFixed(2));
-            calcularCambioModal();
-        } else {
-            $('#campoEfectivoRecibido').hide();
-            $('#campoCambio').hide();
-            $('#efectivoRecibido').removeClass('is-valid is-invalid');
-        }
+        // Actualizar todo el resumen cuando cambie el método de pago
+        actualizarResumenVentaModal();
     });
 
     // Configurar evento de cambio en efectivo recibido
@@ -1214,8 +1164,16 @@ async function procesarVentaFinal() {
         // Deshabilitar el botón y mostrar el estado de carga
         $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
 
-        // Preparar datos de la venta (reutilizando cálculos existentes)
-        const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
+        // Preparar datos de la venta con método de pago seleccionado
+        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+        const configMetodo = CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
+        
+        let subtotal = 0;
+        productosEnVenta.forEach(producto => {
+            const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+            subtotal += precioAjustado * producto.cantidad;
+        });
+        
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
@@ -1236,19 +1194,22 @@ async function procesarVentaFinal() {
             total: total,
             estado: 'Pagada',
             tipoDocumento: 'Factura',
-            metodoPago: $('#metodoPago').val(),
+            metodoPago: metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val(),
             usuarioCreadorId: 1, // Obtener del contexto del usuario
-            detallesFactura: productosEnVenta.map(producto => ({
-                productoId: producto.productoId,
-                nombreProducto: producto.nombreProducto,
-                descripcionProducto: producto.descripcion || '',
-                cantidad: producto.cantidad,
-                precioUnitario: producto.precioUnitario,
-                porcentajeDescuento: 0,
-                montoDescuento: 0,
-                subtotal: producto.precioUnitario * producto.cantidad
-            }))
+            detallesFactura: productosEnVenta.map(producto => {
+                const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+                return {
+                    productoId: producto.productoId,
+                    nombreProducto: producto.nombreProducto,
+                    descripcionProducto: producto.descripcion || '',
+                    cantidad: producto.cantidad,
+                    precioUnitario: precioAjustado,
+                    porcentajeDescuento: 0,
+                    montoDescuento: 0,
+                    subtotal: precioAjustado * producto.cantidad
+                };
+            })
         };
 
         // Crear la factura
@@ -1311,7 +1272,7 @@ async function procesarVentaFinal() {
             subtotal: subtotal,
             iva: iva,
             total: total,
-            metodoPago: $('#metodoPago').val()
+            metodoPago: metodoPagoSeleccionado
         });
 
         // Éxito
