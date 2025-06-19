@@ -299,10 +299,6 @@ namespace GestionLlantera.Web.Services
 
                             ajustesExitosos++;
                             
-                            // Convertir valores dinámicos a tipos específicos para el logging
-                            var stockAnterior = resultado?.stockAnterior != null ? Convert.ToInt32(resultado.stockAnterior) : 0;
-                            var stockNuevo = resultado?.stockNuevo != null ? Convert.ToInt32(resultado.stockNuevo) : 0;
-                            
                             _logger.LogInformation("✅ Stock ajustado para {Producto}: {StockAnterior} → {StockNuevo}", 
                                 productoAjuste.NombreProducto, stockAnterior, stockNuevo);
                         }
