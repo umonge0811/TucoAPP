@@ -270,11 +270,11 @@ namespace GestionLlantera.Web.Services
                         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                         // Llamar al endpoint de ajuste de stock en la API
-                        var response = await _httpClient.PostAsync($"api/Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock", content);
+                        var httpResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock", content);
 
-                        if (response.IsSuccessStatusCode)
+                        if (httpResponse.IsSuccessStatusCode)
                         {
-                            var responseContent = await response.Content.ReadAsStringAsync();
+                            var responseContent = await httpResponse.Content.ReadAsStringAsync();
                             var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
 
                             resultados.Add(new {
@@ -292,7 +292,7 @@ namespace GestionLlantera.Web.Services
                         }
                         else
                         {
-                            var error = $"Error ajustando {productoAjuste.NombreProducto}: {response.StatusCode}";
+                            var error = $"Error ajustando {productoAjuste.NombreProducto}: {httpResponse.StatusCode}";
                             errores.Add(error);
                             resultados.Add(new {
                                 productoId = productoAjuste.ProductoId,
