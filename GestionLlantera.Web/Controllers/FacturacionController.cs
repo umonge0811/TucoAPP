@@ -1,7 +1,8 @@
 using GestionLlantera.Web.Extensions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.Models;
@@ -17,17 +18,21 @@ namespace GestionLlantera.Web.Controllers
         private readonly IInventarioService _inventarioService;
         private readonly IFacturacionService _facturacionService;
         private readonly IConfiguration _configuration;
+        private readonly ApplicationDbContext _context; // Add ApplicationDbContext
 
         public FacturacionController(
             ILogger<FacturacionController> logger,
             IInventarioService inventarioService,
             IFacturacionService facturacionService,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            ApplicationDbContext context // Inject ApplicationDbContext
+            )
         {
             _logger = logger;
             _inventarioService = inventarioService;
             _facturacionService = facturacionService;
             _configuration = configuration;
+            _context = context; // Initialize ApplicationDbContext
         }
 
         public async Task<IActionResult> Index()
@@ -374,99 +379,112 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // Validar productos
+                _logger.LogInformation("📦 Ajustando stock para factura: {NumeroFactura} con {Cantidad} productos", 
+                    request.NumeroFactura, request.Productos?.Count ?? 0);
+
                 if (request.Productos == null || !request.Productos.Any())
                 {
-                    return Json(new { success = false, message = "No se proporcionaron productos para ajustar" });
+                    return Json(new { 
+                        success = false, 
+                        message = "No se proporcionaron productos para ajustar" 
+                    });
                 }
 
                 var resultados = new List<object>();
+                var ajustesExitosos = 0;
                 var errores = new List<string>();
 
-                foreach (var producto in request.Productos)
+                foreach (var productoAjuste in request.Productos)
                 {
                     try
                     {
-                        // Preparar datos para la API
-                        var ajusteData = new
+                        // Buscar el producto en la base de datos
+                        var producto = await _context.Productos
+                            .FirstOrDefaultAsync(p => p.ProductoId == productoAjuste.ProductoId);
+
+                        if (producto == null)
                         {
-                            TipoAjuste = "salida",
-                            Cantidad = producto.Cantidad,
-                            Comentario = $"Venta - Factura {request.NumeroFactura}"
-                        };
-
-                        // Obtener token del usuario actual
-                        var token = HttpContext.Session.GetString("JwtToken") ?? 
-                                   Request.Cookies["AuthToken"] ?? 
-                                   Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", "");
-
-                        using var httpClient = new HttpClient();
-                        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-
-                        var jsonContent = new StringContent(
-                            JsonSerializer.Serialize(ajusteData),
-                            Encoding.UTF8,
-                            "application/json"
-                        );
-
-                        var response = await httpClient.PostAsync(
-                            $"{_configuration["ApiSettings:BaseUrl"]}/api/Inventario/productos/{producto.ProductoId}/ajustar-stock",
-                            jsonContent
-                        );
-
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var responseContent = await response.Content.ReadAsStringAsync();
-                            var resultado = JsonSerializer.Deserialize<JsonElement>(responseContent);
-
-                            resultados.Add(new
-                            {
-                                productoId = producto.ProductoId,
-                                nombreProducto = producto.NombreProducto,
-                                success = true,
-                                stockAnterior = resultado.GetProperty("stockAnterior").GetInt32(),
-                                stockNuevo = resultado.GetProperty("stockNuevo").GetInt32(),
-                                diferencia = -producto.Cantidad
-                            });
-                        }
-                        else
-                        {
-                            var errorContent = await response.Content.ReadAsStringAsync();
-                            errores.Add($"Error ajustando {producto.NombreProducto}: {response.StatusCode} - {errorContent}");
-
-                            resultados.Add(new
-                            {
-                                productoId = producto.ProductoId,
-                                nombreProducto = producto.NombreProducto,
+                            var error = $"Producto ID {productoAjuste.ProductoId} no encontrado";
+                            errores.Add(error);
+                            resultados.Add(new {
+                                productoId = productoAjuste.ProductoId,
+                                nombreProducto = productoAjuste.NombreProducto,
                                 success = false,
-                                error = $"HTTP {response.StatusCode}"
+                                error = error
                             });
+                            continue;
                         }
+
+                        // Obtener stock anterior
+                        var stockAnterior = (int)(producto.CantidadEnInventario ?? 0);
+
+                        // Calcular nuevo stock (restar la cantidad vendida)
+                        var nuevoStock = Math.Max(0, stockAnterior - productoAjuste.Cantidad);
+
+                        // Actualizar el producto
+                        producto.CantidadEnInventario = nuevoStock;
+                        producto.FechaUltimaActualizacion = DateTime.Now;
+
+                        // Guardar cambios
+                        await _context.SaveChangesAsync();
+
+                        // Agregar resultado exitoso
+                        resultados.Add(new {
+                            productoId = productoAjuste.ProductoId,
+                            nombreProducto = productoAjuste.NombreProducto,
+                            success = true,
+                            stockAnterior = stockAnterior,
+                            stockNuevo = nuevoStock,
+                            diferencia = nuevoStock - stockAnterior,
+                            mensaje = $"Stock actualizado: {stockAnterior} → {stockNuevo}"
+                        });
+
+                        ajustesExitosos++;
+
+                        _logger.LogInformation("✅ Stock ajustado para {Producto}: {StockAnterior} → {StockNuevo}", 
+                            productoAjuste.NombreProducto, stockAnterior, nuevoStock);
                     }
                     catch (Exception ex)
                     {
-                        errores.Add($"Error procesando {producto.NombreProducto}: {ex.Message}");
-                        resultados.Add(new
-                        {
-                            productoId = producto.ProductoId,
-                            nombreProducto = producto.NombreProducto,
+                        var error = $"Error ajustando {productoAjuste.NombreProducto}: {ex.Message}";
+                        errores.Add(error);
+                        resultados.Add(new {
+                            productoId = productoAjuste.ProductoId,
+                            nombreProducto = productoAjuste.NombreProducto,
                             success = false,
-                            error = ex.Message
+                            error = error
                         });
+
+                        _logger.LogError(ex, "❌ Error ajustando stock para producto {ProductoId}", 
+                            productoAjuste.ProductoId);
                     }
                 }
 
-                return Json(new
-                {
-                    success = errores.Count == 0,
-                    message = errores.Count == 0 ? "Stock ajustado exitosamente" : "Algunos ajustes fallaron",
+                // Preparar respuesta
+                var response = new {
+                    success = ajustesExitosos > 0,
+                    message = ajustesExitosos > 0 ? 
+                        $"Stock ajustado para {ajustesExitosos} productos" : 
+                        "No se pudo ajustar el stock de ningún producto",
+                    ajustesExitosos = ajustesExitosos,
+                    totalProductos = request.Productos.Count,
                     resultados = resultados,
-                    errores = errores
-                });
+                    errores = errores.Any() ? errores : null
+                };
+
+                _logger.LogInformation("📦 Ajuste completado: {Exitosos}/{Total} productos actualizados", 
+                    ajustesExitosos, request.Productos.Count);
+
+                return Json(response);
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = $"Error general: {ex.Message}" });
+                _logger.LogError(ex, "❌ Error general al ajustar stock para factura {NumeroFactura}", 
+                    request?.NumeroFactura);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno al ajustar stock: " + ex.Message 
+                });
             }
         }
     }
