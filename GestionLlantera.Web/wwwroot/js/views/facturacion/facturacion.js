@@ -782,15 +782,15 @@ function mostrarModalSeleccionProducto(producto) {
 function configurarEventosModalProducto(producto, modal) {
     const precioBase = producto.precio || 0;
 
-    // Limpiar eventos anteriores para evitar duplicación
-    $('#btnMenosCantidad, #btnMasCantidad, #cantidadProducto, #btnConfirmarAgregarProducto').off();
+    // Limpiar eventos anteriores ESPECÍFICAMENTE para este modal
+    $('#modalSeleccionProducto #btnMenosCantidad, #modalSeleccionProducto #btnMasCantidad, #modalSeleccionProducto #cantidadProducto, #modalSeleccionProducto #btnConfirmarAgregarProducto').off('click.modalProducto input.modalProducto');
 
-    // Eventos de cantidad - CORREGIDOS
-    $('#btnMenosCantidad').on('click', function(e) {
+    // Eventos de cantidad - CORREGIDOS con namespace específico
+    $('#modalSeleccionProducto #btnMenosCantidad').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        const input = $('#cantidadProducto');
+        const input = $('#modalSeleccionProducto #cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const minimo = parseInt(input.attr('min')) || 1;
         
@@ -800,11 +800,11 @@ function configurarEventosModalProducto(producto, modal) {
         }
     });
 
-    $('#btnMasCantidad').on('click', function(e) {
+    $('#modalSeleccionProducto #btnMasCantidad').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        const input = $('#cantidadProducto');
+        const input = $('#modalSeleccionProducto #cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const stockDisponible = producto.cantidadEnInventario;
         
@@ -816,8 +816,8 @@ function configurarEventosModalProducto(producto, modal) {
         }
     });
 
-    // Validación del input
-    $('#cantidadProducto').on('input', function() {
+    // Validación del input con selector específico
+    $('#modalSeleccionProducto #cantidadProducto').on('input.modalProducto', function() {
         const valor = parseInt($(this).val()) || 1;
         const min = parseInt($(this).attr('min')) || 1;
         const max = parseInt($(this).attr('max')) || producto.cantidadEnInventario;
@@ -828,7 +828,7 @@ function configurarEventosModalProducto(producto, modal) {
             $(this).val(max);
             mostrarToast('Stock limitado', `Solo hay ${max} unidades disponibles`, 'warning');
         }
-    }).on('keydown', function(e) {
+    }).on('keydown.modalProducto', function(e) {
         // Prevenir las teclas de flecha arriba/abajo para evitar conflicto con botones
         if (e.which === 38 || e.which === 40) {
             e.preventDefault();
@@ -850,12 +850,12 @@ function configurarEventosModalProducto(producto, modal) {
         }
     });
 
-    // Confirmar agregar producto - MEJORADO
-    $('#btnConfirmarAgregarProducto').on('click', function(e) {
+    // Confirmar agregar producto - MEJORADO con selector específico
+    $('#modalSeleccionProducto #btnConfirmarAgregarProducto').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
-        const cantidad = parseInt($('#cantidadProducto').val()) || 1;
+        const cantidad = parseInt($('#modalSeleccionProducto #cantidadProducto').val()) || 1;
         
         console.log('🛒 Agregando producto a venta:', {
             nombre: producto.nombreProducto,
@@ -883,6 +883,12 @@ function configurarEventosModalProducto(producto, modal) {
         
         // Mostrar confirmación
         mostrarToast('Producto agregado', `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${producto.nombreProducto} agregadas`, 'success');
+    });
+
+    // Limpiar eventos cuando se cierre el modal
+    $('#modalSeleccionProducto').on('hidden.bs.modal.modalProducto', function() {
+        $('#modalSeleccionProducto #btnMenosCantidad, #modalSeleccionProducto #btnMasCantidad, #modalSeleccionProducto #cantidadProducto, #modalSeleccionProducto #btnConfirmarAgregarProducto').off('.modalProducto');
+        $(this).off('hidden.bs.modal.modalProducto');
     });
 }
 
