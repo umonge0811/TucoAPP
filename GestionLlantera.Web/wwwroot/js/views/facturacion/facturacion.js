@@ -1310,7 +1310,7 @@ async function procesarVentaFinal() {
 
         // Éxito
         modalFinalizarVenta.hide();
-        mostrarToast('¡Venta procesada!', 'La venta ha sido procesada exitosamente', 'success');
+        mostrarToast('¡Venta procesada!', 'La venta ha sido procesada exitosamente. Actualizando inventario...', 'success');
 
         // Limpiar venta
         productosEnVenta = [];
@@ -1319,6 +1319,12 @@ async function procesarVentaFinal() {
         $('#clienteSeleccionado').addClass('d-none');
         actualizarVistaCarrito();
         actualizarTotales();
+
+        // Recargar la página después de un breve delay para mostrar el toast
+        setTimeout(() => {
+            console.log('🔄 Recargando página para refrescar inventario...');
+            window.location.reload();
+        }, 2000);
 
     } catch (error) {
         console.error('❌ Error procesando venta:', error);
