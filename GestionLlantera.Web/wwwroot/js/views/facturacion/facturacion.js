@@ -1042,36 +1042,113 @@ function mostrarModalFinalizarVenta() {
         return;
     }
 
-    // Llenar resumen en el modal
-    $('#resumenNombreCliente').text(clienteSeleccionado.nombre);
-    $('#resumenEmailCliente').text(clienteSeleccionado.email);
+    // ===== LLENAR INFORMACIÓN DEL CLIENTE =====
+    $('#resumenNombreCliente').text(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || 'Cliente');
+    $('#resumenEmailCliente').text(clienteSeleccionado.email || 'Sin email');
 
+    // Llenar campos de cliente en el formulario
+    $('#clienteNombre').val(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || '');
+    $('#clienteCedula').val(clienteSeleccionado.identificacion || clienteSeleccionado.contacto || '');
+    $('#clienteTelefono').val(clienteSeleccionado.telefono || '');
+    $('#clienteEmail').val(clienteSeleccionado.email || '');
+    $('#clienteDireccion').val(clienteSeleccionado.direccion || '');
+
+    // ===== CALCULAR TOTALES =====
     const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
     const iva = subtotal * 0.13;
     const total = subtotal + iva;
 
-    $('#resumenSubtotal').text(formatearMoneda(subtotal));
-    $('#resumenIVA').text(formatearMoneda(iva));
-    $('#resumenTotal').text(formatearMoneda(total));
+    // ===== MOSTRAR RESUMEN DE PRODUCTOS =====
+    let htmlResumen = `
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto</th>
+                        <th class="text-center">Cant.</th>
+                        <th class="text-center">Método</th>
+                        <th class="text-end">Precio Unit.</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
 
-    // Mostrar lista de productos
-    let htmlProductos = '<table class="table table-sm"><tbody>';
     productosEnVenta.forEach(producto => {
-        htmlProductos += `
+        const metodoPago = producto.metodoPago || 'efectivo';
+        const configMetodo = CONFIGURACION_PRECIOS[metodoPago];
+        const subtotalProducto = producto.precioUnitario * producto.cantidad;
+
+        htmlResumen += `
             <tr>
-                <td>${producto.nombreProducto}</td>
+                <td>
+                    <strong>${producto.nombreProducto}</strong>
+                </td>
                 <td class="text-center">${producto.cantidad}</td>
-                <td class="text-end">₡${formatearMoneda(producto.precioUnitario * producto.cantidad)}</td>
+                <td class="text-center">
+                    <span class="badge bg-info">${configMetodo ? configMetodo.nombre : metodoPago}</span>
+                </td>
+                <td class="text-end">₡${formatearMoneda(producto.precioUnitario)}</td>
+                <td class="text-end">₡${formatearMoneda(subtotalProducto)}</td>
             </tr>
         `;
     });
-    htmlProductos += '</tbody></table>';
-    $('#listaProductosResumen').html(htmlProductos);
 
-    // Resetear formulario
-    $('#metodoPago').val('efectivo').trigger('change');
+    htmlResumen += `
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="4" class="text-end">Subtotal:</th>
+                        <th class="text-end">₡${formatearMoneda(subtotal)}</th>
+                    </tr>
+                    <tr>
+                        <th colspan="4" class="text-end">IVA (13%):</th>
+                        <th class="text-end">₡${formatearMoneda(iva)}</th>
+                    </tr>
+                    <tr class="table-success">
+                        <th colspan="4" class="text-end">TOTAL:</th>
+                        <th class="text-end">₡${formatearMoneda(total)}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+
+    $('#resumenVentaFinal').html(htmlResumen);
+    $('#totalFinalVenta').text(`₡${formatearMoneda(total)}`);
+
+    // ===== CONFIGURAR MÉTODO DE PAGO =====
+    // Detectar el método de pago más común en los productos
+    const metodosMasComunes = {};
+    productosEnVenta.forEach(producto => {
+        const metodo = producto.metodoPago || 'efectivo';
+        metodosMasComunes[metodo] = (metodosMasComunes[metodo] || 0) + 1;
+    });
+
+    const metodoPredominante = Object.keys(metodosMasComunes).reduce((a, b) => 
+        metodosMasComunes[a] > metodosMasComunes[b] ? a : b, 'efectivo');
+
+    // Seleccionar el método de pago predominante
+    $(`input[name="metodoPago"][value="${metodoPredominante}"]`).prop('checked', true);
+
+    // Mostrar/ocultar campos según el método de pago
+    if (metodoPredominante === 'efectivo') {
+        $('#campoEfectivoRecibido').show();
+        $('#campoCambio').show();
+        $('#efectivoRecibido').val(total.toFixed(2)); // Llenar con el total exacto
+        calcularCambioModal();
+    } else {
+        $('#campoEfectivoRecibido').hide();
+        $('#campoCambio').hide();
+    }
+
+    // ===== CONFIGURAR EVENTOS DEL MODAL =====
+    configurarEventosModalFinalizar();
+
+    // Limpiar observaciones
     $('#observacionesVenta').val('');
 
+    // Mostrar modal
     modalFinalizarVenta.show();
 }
 
@@ -1081,6 +1158,53 @@ function calcularCambio() {
     const cambio = montoRecibido - total;
 
     $('#cambioCalculado').val(cambio >= 0 ? formatearMoneda(cambio) : '0.00');
+}
+
+function calcularCambioModal() {
+    const subtotal = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
+    const iva = subtotal * 0.13;
+    const total = subtotal + iva;
+    
+    const efectivoRecibido = parseFloat($('#efectivoRecibido').val()) || 0;
+    const cambio = efectivoRecibido - total;
+    
+    $('#cambioCalculado').val(cambio >= 0 ? formatearMoneda(cambio) : '0.00');
+    
+    // Cambiar color según si es suficiente o no
+    if (efectivoRecibido >= total) {
+        $('#efectivoRecibido').removeClass('is-invalid').addClass('is-valid');
+        $('#cambioCalculado').removeClass('text-danger').addClass('text-success');
+    } else {
+        $('#efectivoRecibido').removeClass('is-valid').addClass('is-invalid');
+        $('#cambioCalculado').removeClass('text-success').addClass('text-danger');
+    }
+}
+
+function configurarEventosModalFinalizar() {
+    // Remover eventos anteriores para evitar duplicados
+    $('input[name="metodoPago"]').off('change.modalFinalizar');
+    $('#efectivoRecibido').off('input.modalFinalizar');
+
+    // Configurar eventos de método de pago
+    $('input[name="metodoPago"]').on('change.modalFinalizar', function() {
+        const metodo = $(this).val();
+        if (metodo === 'efectivo') {
+            $('#campoEfectivoRecibido').show();
+            $('#campoCambio').show();
+            const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0) * 1.13;
+            $('#efectivoRecibido').val(total.toFixed(2));
+            calcularCambioModal();
+        } else {
+            $('#campoEfectivoRecibido').hide();
+            $('#campoCambio').hide();
+            $('#efectivoRecibido').removeClass('is-valid is-invalid');
+        }
+    });
+
+    // Configurar evento de cambio en efectivo recibido
+    $('#efectivoRecibido').on('input.modalFinalizar', function() {
+        calcularCambioModal();
+    });
 }
 
 async function procesarVentaFinal() {

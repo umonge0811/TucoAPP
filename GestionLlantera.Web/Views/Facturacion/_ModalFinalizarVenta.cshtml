@@ -94,18 +94,21 @@
                         </div>
 
                         <!-- Campo para efectivo recibido -->
-                        <div class="col-md-6 mb-3" id="campoEfectivoRecibido">
+                        <div class="col-md-6 mb-3" id="campoEfectivoRecibido" style="display: none;">
                             <label class="form-label">Efectivo Recibido</label>
                             <div class="input-group">
                                 <span class="input-group-text">₡</span>
                                 <input type="number" class="form-control" id="efectivoRecibido" min="0" step="0.01">
+                                <div class="invalid-feedback">
+                                    El monto recibido debe ser mayor o igual al total
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3" id="campoCambio" style="display: none;">
                             <label class="form-label">Cambio</label>
                             <div class="input-group">
                                 <span class="input-group-text">₡</span>
-                                <input type="text" class="form-control" id="cambioCalculado" readonly>
+                                <input type="text" class="form-control fw-bold" id="cambioCalculado" readonly>
                             </div>
                         </div>
                     </div>
