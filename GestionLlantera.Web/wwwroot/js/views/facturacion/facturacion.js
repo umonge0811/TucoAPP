@@ -50,6 +50,9 @@ function inicializarFacturacion() {
         console.log('🚀 Actualizando totales...');
         actualizarTotales();
 
+        // ✅ ESTABLECER ESTADO INICIAL DEL BOTÓN FINALIZAR
+        actualizarEstadoBotonFinalizar();
+
         // Cargar productos iniciales
         console.log('🚀 Iniciando carga de productos iniciales...');
         cargarProductosIniciales();
@@ -164,10 +167,23 @@ function configurarEventos() {
     $('#clienteBusqueda').on('input', function() {
         const termino = $(this).val().trim();
 
+        // ✅ LIMPIAR CLIENTE SELECCIONADO CUANDO SE CAMBIA EL TEXTO
+        if (clienteSeleccionado && termino !== clienteSeleccionado.nombre) {
+            clienteSeleccionado = null;
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarEstadoBotonFinalizar();
+        }
+
+        // ✅ LIMPIAR VALIDACIÓN VISUAL SI EXISTE
+        $(this).removeClass('is-invalid');
+
         clearTimeout(timeoutCliente);
         timeoutCliente = setTimeout(() => {
             if (termino.length >= 2) {
                 buscarClientes(termino);
+            } else {
+                // Ocultar dropdown de resultados si el término es muy corto
+                $('.dropdown-clientes').remove();
             }
         }, 300);
     });
@@ -603,6 +619,9 @@ function seleccionarCliente(cliente) {
     $('#emailClienteSeleccionado').text(cliente.email);
     $('#clienteSeleccionado').removeClass('d-none');
 
+    // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR CUANDO SE SELECCIONA CLIENTE
+    actualizarEstadoBotonFinalizar();
+
     // Debug: verificar que tenemos todos los datos del cliente
     console.log('Cliente seleccionado:', cliente);
 }
@@ -911,7 +930,12 @@ function actualizarVistaCarrito() {
 
     container.html(html);
     contador.text(`${productosEnVenta.length} productos`);
-    $('#btnLimpiarVenta, #btnFinalizarVenta').prop('disabled', false);
+    
+    // ✅ HABILITAR BOTÓN LIMPIAR SOLO SI HAY PRODUCTOS
+    $('#btnLimpiarVenta').prop('disabled', false);
+    
+    // ✅ HABILITAR BOTÓN FINALIZAR SOLO SI HAY PRODUCTOS Y CLIENTE SELECCIONADO
+    actualizarEstadoBotonFinalizar();
 
     // Configurar eventos de cantidad
     configurarEventosCantidad();
@@ -985,6 +1009,10 @@ function limpiarVenta() {
         $('#clienteSeleccionado').addClass('d-none');
         actualizarVistaCarrito();
         actualizarTotales();
+        
+        // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
+        actualizarEstadoBotonFinalizar();
+        
         mostrarToast('Venta limpiada', 'Se han removido todos los productos', 'info');
     }
 }
@@ -997,7 +1025,17 @@ function mostrarModalFinalizarVenta() {
     }
 
     if (!clienteSeleccionado) {
-        mostrarToast('Cliente requerido', 'Selecciona un cliente antes de finalizar la venta', 'warning');
+        mostrarToast('Cliente requerido', 'Debes seleccionar un cliente antes de finalizar la venta', 'warning');
+        
+        // ✅ ENFOCAR EL CAMPO DE BÚSQUEDA DE CLIENTE
+        $('#clienteBusqueda').focus();
+        
+        // ✅ RESALTAR EL CAMPO DE CLIENTE
+        $('#clienteBusqueda').addClass('is-invalid');
+        setTimeout(() => {
+            $('#clienteBusqueda').removeClass('is-invalid');
+        }, 3000);
+        
         return;
     }
 
@@ -2285,6 +2323,41 @@ function obtenerTokenJWT() {
     return token;
 }
 
+// ===== FUNCIÓN PARA ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR =====
+function actualizarEstadoBotonFinalizar() {
+    const tieneProductos = productosEnVenta.length > 0;
+    const tieneCliente = clienteSeleccionado !== null;
+    const puedeFinalizarVenta = tieneProductos && tieneCliente;
+    
+    const $btnFinalizar = $('#btnFinalizarVenta');
+    
+    if (puedeFinalizarVenta) {
+        $btnFinalizar.prop('disabled', false)
+                    .removeClass('btn-outline-secondary')
+                    .addClass('btn-success')
+                    .attr('title', 'Finalizar venta');
+    } else {
+        $btnFinalizar.prop('disabled', true)
+                    .removeClass('btn-success')
+                    .addClass('btn-outline-secondary');
+        
+        if (!tieneProductos && !tieneCliente) {
+            $btnFinalizar.attr('title', 'Agrega productos y selecciona un cliente');
+        } else if (!tieneProductos) {
+            $btnFinalizar.attr('title', 'Agrega productos a la venta');
+        } else if (!tieneCliente) {
+            $btnFinalizar.attr('title', 'Selecciona un cliente para continuar');
+        }
+    }
+    
+    console.log('🔄 Estado botón finalizar actualizado:', {
+        tieneProductos,
+        tieneCliente,
+        puedeFinalizarVenta,
+        disabled: $btnFinalizar.prop('disabled')
+    });
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
@@ -2300,3 +2373,4 @@ window.actualizarCantidadProducto = actualizarCantidadProducto;
 window.procesarVenta = procesarVenta;
 window.reiniciarCargaProductos = reiniciarCargaProductos;
 window.mostrarResumenDepuracion = mostrarResumenDepuracion;
+window.actualizarEstadoBotonFinalizar = actualizarEstadoBotonFinalizar;
