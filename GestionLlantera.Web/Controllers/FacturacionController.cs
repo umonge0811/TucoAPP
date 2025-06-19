@@ -266,6 +266,60 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> CrearFactura([FromBody] object facturaData)
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Crear Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para crear facturas" });
+                }
+
+                _logger.LogInformation("💰 Creando nueva factura");
+
+                // Simular creación exitosa por ahora
+                var numeroFactura = $"FAC-{DateTime.Now:yyyyMM}-{DateTime.Now:HHmmss}";
+
+                return Json(new { 
+                    success = true, 
+                    message = "Factura creada exitosamente",
+                    numeroFactura = numeroFactura,
+                    facturaId = 1
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear factura");
+                return Json(new { success = false, message = "Error al crear factura" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AjustarStock([FromBody] object ajusteData)
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Editar Inventario"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para ajustar stock" });
+                }
+
+                _logger.LogInformation("📦 Ajustando stock de producto");
+
+                // Simular ajuste exitoso por ahora
+                return Json(new { 
+                    success = true, 
+                    message = "Stock ajustado correctamente"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ajustar stock");
+                return Json(new { success = false, message = "Error al ajustar stock" });
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaDTO> productos)
         {
             try
