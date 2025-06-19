@@ -14,11 +14,7 @@ namespace Tuco.Clases.DTOs.Facturacion
         
         [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
-        public decimal PrecioUnitario { get; set; }
-        
-        [Required]
-        [Range(1, int.MaxValue, ErrorMessage = "La cantidad debe ser mayor a 0")]
-        public int Cantidad { get; set; }
+        public decimal Precio { get; set; }
         
         public decimal? Costo { get; set; }
         public decimal? PorcentajeUtilidad { get; set; }
@@ -50,9 +46,6 @@ namespace Tuco.Clases.DTOs.Facturacion
             : null;
         public decimal PrecioCalculado => Costo.HasValue && PorcentajeUtilidad.HasValue 
             ? Costo.Value + (UtilidadEnDinero ?? 0) 
-            : PrecioUnitario;
-        
-        // Subtotal para la venta
-        public decimal Subtotal => PrecioUnitario * Cantidad;
+            : Precio;
     }
 }

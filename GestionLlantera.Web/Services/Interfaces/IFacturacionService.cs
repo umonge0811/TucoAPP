@@ -1,13 +1,22 @@
-
 using System.Threading.Tasks;
 using Tuco.Clases.DTOs.Facturacion;
 
 namespace GestionLlantera.Web.Services.Interfaces
 {
+    public class VentaDTO
+    {
+        public int ClienteId { get; set; }
+        public string NombreCliente { get; set; }
+        public string EmailCliente { get; set; }
+        public string DireccionCliente { get; set; }
+        public string MetodoPago { get; set; }
+        public decimal MontoTotal { get; set; }
+        public List<ProductoVentaDTO> Productos { get; set; } = new List<ProductoVentaDTO>();
+    }
+
     public class ApiResponse<T>
     {
         public bool Success { get; set; }
-        public bool IsSuccess { get; set; }
         public T Data { get; set; }
         public string Message { get; set; }
         public List<string> Errors { get; set; } = new List<string>();
@@ -23,7 +32,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Procesa una venta completa
         /// </summary>
-        Task<bool> ProcesarVentaAsync(FacturaDTO factura, string jwtToken = null);
+        Task<bool> ProcesarVentaAsync(VentaDTO venta, string jwtToken = null);
 
         /// <summary>
         /// Verifica disponibilidad de stock para una lista de productos
