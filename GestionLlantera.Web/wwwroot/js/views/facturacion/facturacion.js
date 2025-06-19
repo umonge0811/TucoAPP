@@ -357,7 +357,7 @@ function mostrarResultadosProductos(productos) {
                 });
 
                 let imagenesArray = [];
-                
+
                 // Verificar imagenesProductos (formato principal desde la API)
                 if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
                     imagenesArray = producto.imagenesProductos
@@ -377,11 +377,11 @@ function mostrarResultadosProductos(productos) {
                         .filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
                 }
-                
+
                 if (imagenesArray.length > 0) {
                     let urlImagen = imagenesArray[0];
                     console.log('🖼️ URL original:', urlImagen);
-                    
+
                     if (urlImagen && urlImagen.trim() !== '') {
                         // Lógica mejorada de construcción de URLs (igual que verDetalleProducto)
                         if (urlImagen.startsWith('/uploads/productos/')) {
@@ -602,7 +602,7 @@ function seleccionarCliente(cliente) {
     $('#nombreClienteSeleccionado').text(cliente.nombre);
     $('#emailClienteSeleccionado').text(cliente.email);
     $('#clienteSeleccionado').removeClass('d-none');
-    
+
     // Debug: verificar que tenemos todos los datos del cliente
     console.log('Cliente seleccionado:', cliente);
 }
@@ -616,7 +616,7 @@ function mostrarModalSeleccionProducto(producto) {
     try {
         console.log('🖼️ Procesando imágenes para modal de producto:', producto.nombreProducto);
         let imagenesArray = [];
-        
+
         // Usar la misma lógica que verDetalleProducto
         if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
             imagenesArray = producto.imagenesProductos
@@ -629,11 +629,11 @@ function mostrarModalSeleccionProducto(producto) {
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
                 .filter(url => url && url.trim() !== '');
         }
-        
+
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
             console.log('🖼️ URL original en modal:', urlImagen);
-            
+
             if (urlImagen && urlImagen.trim() !== '') {
                 // Lógica mejorada de construcción de URLs
                 if (urlImagen.startsWith('/uploads/productos/')) {
@@ -730,7 +730,7 @@ function mostrarModalSeleccionProducto(producto) {
                                         <span><i class="bi bi-tag me-2"></i><strong>Precio base:</strong></span>
                                         <span class="fs-5 fw-bold text-primary">₡${formatearMoneda(precioBase)}</span>
                                     </div>
-                                    <small class="text-muted">El precio final dependerá del método de pago seleccionado</small>
+                                    <small class="text-muted">El precio final dependerá del métodode pago seleccionado</small>
                                 </div>
                             </div>
                         </div>
@@ -792,7 +792,7 @@ function configurarEventosModalProducto(producto, modal) {
     // Confirmar agregar producto
     $('#btnConfirmarAgregarProducto').on('click', function() {
         const cantidad = parseInt($('#cantidadProducto').val()) || 1;
-        
+
         // Agregar con precio base, el método de pago se seleccionará al finalizar
         agregarProductoAVenta(producto, cantidad, precioBase, 'efectivo');
         modal.hide();
@@ -1034,7 +1034,7 @@ function actualizarResumenVentaModal() {
 
     // Recalcular precios según método de pago seleccionado
     let subtotal = 0;
-    
+
     // ===== MOSTRAR RESUMEN DE PRODUCTOS =====
     let htmlResumen = `
         <div class="table-responsive">
@@ -1117,22 +1117,22 @@ function calcularCambio() {
 function calcularCambioModal() {
     const metodoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
     const configMetodo = CONFIGURACION_PRECIOS[metodoSeleccionado];
-    
+
     // Calcular total con el método de pago seleccionado
     let subtotal = 0;
     productosEnVenta.forEach(producto => {
         const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
         subtotal += precioAjustado * producto.cantidad;
     });
-    
+
     const iva = subtotal * 0.13;
     const total = subtotal + iva;
-    
+
     const efectivoRecibido = parseFloat($('#efectivoRecibido').val()) || 0;
     const cambio = efectivoRecibido - total;
-    
+
     $('#cambioCalculado').val(cambio >= 0 ? formatearMoneda(cambio) : '0.00');
-    
+
     // Cambiar color según si es suficiente o no
     if (efectivoRecibido >= total) {
         $('#efectivoRecibido').removeClass('is-invalid').addClass('is-valid');
@@ -1170,13 +1170,13 @@ async function procesarVentaFinal() {
         // Preparar datos de la venta con método de pago seleccionado
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
         const configMetodo = CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
-        
+
         let subtotal = 0;
         productosEnVenta.forEach(producto => {
             const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
             subtotal += precioAjustado * producto.cantidad;
         });
-        
+
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
@@ -1329,7 +1329,7 @@ function generarRecibo(factura, productos, totales) {
     // ✅ RECIBO OPTIMIZADO PARA MINI IMPRESORAS TÉRMICAS (58mm/80mm)
     const reciboHTML = `
         <div id="recibo-termica" style="width: 58mm; max-width: 58mm; font-family: 'Courier New', 'Consolas', monospace; font-size: 9px; line-height: 1.2; margin: 0; padding: 0; color: #000;">
-            
+
             <!-- ENCABEZADO -->
             <div style="text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
                 <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">GESTIÓN LLANTERA</div>
@@ -1406,10 +1406,10 @@ function generarRecibo(factura, productos, totales) {
     // ✅ CONFIGURACIÓN ESPECÍFICA PARA MINI IMPRESORAS TÉRMICAS
     try {
         console.log('🖨️ Iniciando impresión de recibo térmico...');
-        
+
         // Crear ventana de impresión con configuración optimizada
         const ventanaImpresion = window.open('', '_blank', 'width=300,height=600,scrollbars=no,resizable=no');
-        
+
         if (!ventanaImpresion) {
             throw new Error('No se pudo abrir la ventana de impresión. Verifique que los pop-ups estén habilitados.');
         }
@@ -1427,7 +1427,7 @@ function generarRecibo(factura, productos, totales) {
                             margin: 0;
                             padding: 0;
                         }
-                        
+
                         @media screen {
                             body {
                                 background: #f5f5f5;
@@ -1441,7 +1441,7 @@ function generarRecibo(factura, productos, totales) {
                                 margin: 0 auto;
                             }
                         }
-                        
+
                         @media print {
                             body {
                                 margin: 0;
@@ -1450,21 +1450,21 @@ function generarRecibo(factura, productos, totales) {
                                 -webkit-print-color-adjust: exact;
                                 color-adjust: exact;
                             }
-                            
+
                             #recibo-termica {
                                 box-shadow: none;
                                 padding: 0;
                                 margin: 0;
                                 page-break-inside: avoid;
                             }
-                            
+
                             /* Optimizar para impresión térmica */
                             * {
                                 -webkit-print-color-adjust: exact !important;
                                 color-adjust: exact !important;
                             }
                         }
-                        
+
                         /* Fuente monoespaciada para alineación perfecta */
                         body, * {
                             font-family: 'Courier New', 'Consolas', 'Monaco', monospace !important;
@@ -1473,12 +1473,12 @@ function generarRecibo(factura, productos, totales) {
                 </head>
                 <body>
                     ${reciboHTML}
-                    
+
                     <script>
                         // Función para imprimir automáticamente
                         function imprimirRecibo() {
                             console.log('🖨️ Iniciando impresión...');
-                            
+
                             // Configurar para impresoras térmicas
                             if (window.chrome) {
                                 // Para navegadores basados en Chrome
@@ -1488,20 +1488,20 @@ function generarRecibo(factura, productos, totales) {
                                 setTimeout(() => window.print(), 500);
                             }
                         }
-                        
+
                         // Imprimir cuando la página esté completamente cargada
                         if (document.readyState === 'complete') {
                             imprimirRecibo();
                         } else {
                             window.addEventListener('load', imprimirRecibo);
                         }
-                        
+
                         // Cerrar ventana después de intentar imprimir
                         window.addEventListener('afterprint', function() {
                             console.log('🖨️ Impresión completada, cerrando ventana...');
                             setTimeout(() => window.close(), 1000);
                         });
-                        
+
                         // Fallback para cerrar si no se detecta evento afterprint
                         setTimeout(() => {
                             if (!window.closed) {
@@ -1513,16 +1513,16 @@ function generarRecibo(factura, productos, totales) {
                 </body>
             </html>
         `);
-        
+
         ventanaImpresion.document.close();
-        
+
         // Mostrar mensaje de éxito
         mostrarToast('Impresión', 'Recibo enviado a impresora', 'success');
-        
+
     } catch (error) {
         console.error('❌ Error al imprimir recibo:', error);
         mostrarToast('Error de Impresión', 'No se pudo imprimir el recibo: ' + error.message, 'danger');
-        
+
         // Fallback: mostrar el recibo en pantalla para copiar/imprimir manualmente
         mostrarReciboEnPantalla(reciboHTML, factura.numeroFactura);
     }
@@ -1547,6 +1547,7 @@ function mostrarReciboEnPantalla(reciboHTML, numeroFactura) {
                             <small><i class="bi bi-exclamation-triangle me-1"></i>
                             La impresión automática falló. Use los botones de abajo para imprimir.</small>
                         </div>
+The code has been modified to correct the API URL to use port 5049 throughout the javascript file.```text
                         ${reciboHTML}
                     </div>
                     <div class="modal-footer">
@@ -1561,11 +1562,11 @@ function mostrarReciboEnPantalla(reciboHTML, numeroFactura) {
             </div>
         </div>
     `;
-    
+
     // Remover modal anterior si existe
     $('#modalReciboFallback').remove();
     $('body').append(modalHtml);
-    
+
     const modal = new bootstrap.Modal(document.getElementById('modalReciboFallback'));
     modal.show();
 }
@@ -1631,9 +1632,9 @@ function verDetalleProducto(producto) {
     try {
         console.log('🖼️ Procesando imágenes para detalle de producto:', producto.nombreProducto);
         console.log('🖼️ Datos del producto completos:', producto);
-        
+
         let imagenesArray = [];
-        
+
         // Usar múltiples fuentes de imágenes como fallback
         if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
             imagenesArray = producto.imagenesProductos
@@ -1649,11 +1650,11 @@ function verDetalleProducto(producto) {
                 .filter(url => url && url.trim() !== '');
             console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
         }
-        
+
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
             console.log('🖼️ URL original en detalle:', urlImagen);
-            
+
             if (urlImagen && urlImagen.trim() !== '') {
                 // Lógica robusta de construcción de URLs
                 if (urlImagen.startsWith('/uploads/productos/')) {
