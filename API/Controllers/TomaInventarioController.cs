@@ -1277,7 +1277,20 @@ namespace API.Controllers
                 _logger.LogInformation("🔍 === DIAGNÓSTICO DIRECTO DE BD SIN EF ===");
                 _logger.LogInformation("🔍 Inventario ID: {InventarioId}", inventarioId);
 
-                // ✅ USAR LINQ DIRECTO SOBRE LA ENTIDAD EXISTENTE
+                // ✅ VERIFICAR QUE EL INVENTARIO EXISTE PRIMERO
+                var inventarioExiste = await _context.InventariosProgramados
+                    .AnyAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (!inventarioExiste)
+                {
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = $"Inventario {inventarioId} no encontrado"
+                    });
+                }
+
+                // ✅ USAR LINQ DIRECTO CON MANEJO SEGURO DE NULL
                 var detalles = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioId)
                     .Select(d => new
