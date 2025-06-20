@@ -176,7 +176,7 @@
                             </ul>
                         </div>
                     </li>
-                     
+
                 </ul>
 
                 @* ✅ Usuarios Conectados - Solo si puede ver reportes o gestión completa *@
@@ -246,6 +246,9 @@
                     <div class="d-flex align-items-center gap-3">
 
                         @await Component.InvokeAsync("Notificaciones")
+
+                        <!-- User Info Component -->
+                        @await Component.InvokeAsync("UserInfo")
 
                         <div class="dropdown">
                             <button class="btn dropdown-toggle user-dropdown" type="button" data-bs-toggle="dropdown">

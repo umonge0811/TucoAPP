@@ -11,6 +11,7 @@ namespace GestionLlantera.Web.ViewComponents
         public UserInfoViewComponent(ILogger<UserInfoViewComponent> logger)
         {
             _logger = logger;
+            _logger.LogInformation("🚀 UserInfoViewComponent CONSTRUCTOR EJECUTADO 🚀");
         }
 
         public IViewComponentResult Invoke()
