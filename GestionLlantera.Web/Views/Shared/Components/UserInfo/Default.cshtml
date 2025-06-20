@@ -1,11 +1,6 @@
 @using GestionLlantera.Web.ViewComponents
 @model UserInfoViewModel
 
-<!-- DEBUG: Mostrar información del modelo -->
-<div style="background: red; color: white; padding: 5px; font-size: 12px;">
-    DEBUG UserInfo - Usuario: @Model.UserName - Roles: @string.Join(", ", Model.Roles ?? new List<string>())
-</div>
-
 <div class="dropdown">
     <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="bi bi-person-circle me-2"></i>
