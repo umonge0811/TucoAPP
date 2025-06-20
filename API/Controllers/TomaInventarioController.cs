@@ -280,9 +280,9 @@ namespace API.Controllers
                         fechaAplicacion = DateTime.Now,
                         nota = "Los cambios en el stock son irreversibles",
 
-                        
+
                     });
-                     
+
                 }
                 else
                 {
@@ -770,7 +770,7 @@ namespace API.Controllers
                 // ✅ VERIFICAR QUE EL INVENTARIO EXISTE Y ESTÁ VÁLIDO
                 var inventarioExiste = await _context.InventariosProgramados
                     .AnyAsync(i => i.InventarioProgramadoId == inventarioId);
-                
+
                 if (!inventarioExiste)
                 {
                     _logger.LogWarning("❌ Inventario no encontrado: {InventarioId}", inventarioId);
@@ -883,9 +883,9 @@ namespace API.Controllers
                             // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
                             ImagenUrl = imagenPrincipal,
 
-                            // ✅ ESTADOS CALCULADOS CON VALIDACIONES
+                            // ✅ ESTADOS CALCULADOS CON VALIDACIONES - CORREGIDO PARA EVITAR NULL REFERENCE
                             EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0,
+                            TieneDiscrepancia = detalle.Diferencia != null && detalle.Diferencia != 0,
 
                             // ✅ USUARIO QUE HIZO EL CONTEO CON PROTECCIÓN CONTRA NULL
                             NombreUsuarioConteo = usuario?.NombreUsuario
@@ -911,7 +911,7 @@ namespace API.Controllers
                             Diferencia = detalle.Diferencia,
                             NombreProducto = $"ERROR - Producto {detalle.ProductoId}",
                             EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0
+                            TieneDiscrepancia = detalle.Diferencia != null && detalle.Diferencia != 0
                         });
                     }
                 }
@@ -1240,5 +1240,3 @@ namespace API.Controllers
 
     }
 }
-    
-
