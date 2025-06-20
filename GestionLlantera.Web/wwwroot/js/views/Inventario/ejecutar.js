@@ -1,4 +1,4 @@
-﻿/**
+/**
  * JavaScript específico para EJECUTAR INVENTARIOS
  * Separado de programar-inventario.js para evitar conflictos
  */
@@ -805,10 +805,42 @@ window.debugBuscarBadge = function () {
 // INICIALIZACIÓN
 // =====================================
 $(document).ready(function () {
-    console.log('🚀 Ejecutar Inventario - Inicializando...');
+    console.log('🚀 === DEPURACIÓN: INICIALIZANDO EJECUTAR INVENTARIO ===');
+    console.log('🚀 Document ready ejecutado');
+    console.log('🚀 window.inventarioConfig:', window.inventarioConfig);
+    console.log('🚀 URL actual:', window.location.href);
 
     // ✅ OBTENER ID DEL INVENTARIO DESDE LA CONFIGURACIÓN GLOBAL
     const inventarioId = window.inventarioConfig?.inventarioId || getInventarioIdFromUrl();
+
+// ✅ FUNCIÓN PARA OBTENER ID DE LA URL
+function getInventarioIdFromUrl() {
+    try {
+        console.log('🔍 Obteniendo ID del inventario desde URL...');
+        const path = window.location.pathname;
+        console.log('🔍 Path actual:', path);
+        
+        // Esperamos una URL como /TomaInventario/Ejecutar/123
+        const pathParts = path.split('/');
+        console.log('🔍 Partes del path:', pathParts);
+        
+        if (pathParts.length >= 4 && pathParts[1] === 'TomaInventario' && pathParts[2] === 'Ejecutar') {
+            const id = parseInt(pathParts[3]);
+            console.log('🔍 ID extraído:', id);
+            return isNaN(id) ? null : id;
+        }
+        
+        console.log('🔍 No se pudo extraer ID de la URL');
+        return null;
+    } catch (error) {
+        console.error('❌ Error obteniendo ID de URL:', error);
+        return null;
+    }
+}
+
+    console.log('🚀 ID obtenido de config:', window.inventarioConfig?.inventarioId);
+    console.log('🚀 ID obtenido de URL:', getInventarioIdFromUrl());
+    console.log('🚀 ID final seleccionado:', inventarioId);
 
     if (!inventarioId) {
         console.error('❌ No se pudo obtener el ID del inventario');
@@ -819,8 +851,10 @@ $(document).ready(function () {
     }
 
     console.log('✅ ID del inventario obtenido:', inventarioId);
+    console.log('✅ Tipo del ID:', typeof inventarioId);
 
     // Inicializar la página
+    console.log('🚀 Llamando a inicializarEjecutorInventario...');
     inicializarEjecutorInventario(inventarioId);
 
     // Configurar event listeners
@@ -3087,7 +3121,10 @@ async function cargarInformacionInventario(inventarioId) {
 
 async function cargarProductosInventario(inventarioId) {
     try {
-        console.log(`📦 Cargando productos del inventario ${inventarioId}...`);
+        console.log('📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===');
+        console.log('📦 Inventario ID:', inventarioId);
+        console.log('📦 Tipo de inventarioId:', typeof inventarioId);
+        console.log('📦 URL que se va a llamar:', `/TomaInventario/ObtenerProductos/${inventarioId}`);
 
         // Mostrar loading
         $('#loadingProductos').show();
@@ -3095,6 +3132,7 @@ async function cargarProductosInventario(inventarioId) {
         $('#productosTarjetas').hide();
         $('#estadoVacio').hide();
 
+        console.log('📦 Realizando fetch...');
         const response = await fetch(`/TomaInventario/ObtenerProductos/${inventarioId}`, {
             method: 'GET',
             headers: {
@@ -3103,11 +3141,23 @@ async function cargarProductosInventario(inventarioId) {
             }
         });
 
+        console.log('📦 Respuesta recibida:');
+        console.log('📦 Status:', response.status);
+        console.log('📦 StatusText:', response.statusText);
+        console.log('📦 OK:', response.ok);
+
         if (!response.ok) {
+            console.error('❌ Error en la respuesta:', response.status, response.statusText);
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
+        console.log('📦 Parseando JSON...');
         const data = await response.json();
+        console.log('📦 Datos recibidos:', data);
+        console.log('📦 Tipo de data:', typeof data);
+        console.log('📦 Data.success:', data.success);
+        console.log('📦 Data.productos:', data.productos);
+        console.log('📦 Cantidad de productos:', data.productos ? data.productos.length : 'N/A');
 
         console.log('🔍 === DEBUGGING PRODUCTOS CARGADOS ===');
         console.log('🔍 Respuesta completa:', data);

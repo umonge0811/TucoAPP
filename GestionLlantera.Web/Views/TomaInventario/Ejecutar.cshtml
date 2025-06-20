@@ -1,4 +1,4 @@
-﻿@model Tuco.Clases.DTOs.Inventario.InventarioProgramadoDTO
+@model Tuco.Clases.DTOs.Inventario.InventarioProgramadoDTO
 @{
     ViewData["Title"] = "Toma de Inventario - " + Model.Titulo;
     Layout = "_AdminLayout";
@@ -995,6 +995,15 @@
                 esAdmin: @(ViewBag.EsAdmin.ToString().ToLower())
             }
         };
+        
+        // Debug logs para verificar la configuración
+        console.log('🔧 === CONFIGURACIÓN INICIAL ===');
+        console.log('🔧 Model.InventarioProgramadoId:', @Model.InventarioProgramadoId);
+        console.log('🔧 Model.Estado:', '@Model.Estado');
+        console.log('🔧 Model.Titulo:', '@Model.Titulo');
+        console.log('🔧 ViewBag.UsuarioId:', @ViewBag.UsuarioId);
+        console.log('🔧 ViewBag.PuedeContar:', @(ViewBag.PuedeContar.ToString().ToLower()));
+        console.log('🔧 window.inventarioConfig:', window.inventarioConfig);
     </script>
     <script src="~/js/views/Inventario/ejecutar.js"></script>
     <script src="~/js/utils/reportesUtils.js"></script>

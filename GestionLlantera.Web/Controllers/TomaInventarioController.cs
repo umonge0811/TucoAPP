@@ -1,4 +1,4 @@
-﻿// ========================================
+// ========================================
 // CONTROLADOR DEPURADO PARA TOMA DE INVENTARIO (WEB)
 // Ubicación: GestionLlantera.Web/Controllers/TomaInventarioController.cs
 // ========================================
@@ -466,19 +466,36 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo productos del inventario {Id}", id);
+                _logger.LogInformation("📋 === DEPURACIÓN: OBTENIENDO PRODUCTOS ===");
+                _logger.LogInformation("📋 Inventario ID: {Id}", id);
+                _logger.LogInformation("📋 Filtro: '{Filtro}'", filtro ?? "null");
+                _logger.LogInformation("📋 Solo sin contar: {SoloSinContar}", soloSinContar);
+                _logger.LogInformation("📋 Usuario: {Usuario}", User.Identity?.Name ?? "Anónimo");
 
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
+                    _logger.LogError("❌ Token JWT no encontrado");
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
+                _logger.LogInformation("✅ Token JWT obtenido correctamente");
+
                 // ✅ LLAMAR AL SERVICIO PARA OBTENER PRODUCTOS
+                _logger.LogInformation("🔄 Llamando al servicio para obtener productos...");
                 var productos = await _tomaInventarioService.ObtenerProductosInventarioAsync(id, token);
+                
+                _logger.LogInformation("📦 Respuesta del servicio - Productos: {Count}", productos?.Count ?? 0);
+                
                 if (productos == null)
                 {
+                    _logger.LogError("❌ El servicio devolvió null");
                     return Json(new { success = false, message = "No se pudieron obtener los productos" });
+                }
+
+                if (productos.Count == 0)
+                {
+                    _logger.LogWarning("⚠️ El servicio devolvió una lista vacía");
                 }
 
                 // ✅ APLICAR FILTROS SI SE ESPECIFICAN
@@ -510,15 +527,21 @@ namespace GestionLlantera.Web.Controllers
                     resultadosFiltrados = productos.Count
                 };
 
-                _logger.LogInformation("✅ Enviando {Count} productos", productos.Count);
+                _logger.LogInformation("✅ === RESULTADO FINAL ===");
+                _logger.LogInformation("✅ Productos a enviar: {Count}", productos.Count);
+                _logger.LogInformation("✅ Estadísticas calculadas: Total={Total}, Contados={Contados}, Pendientes={Pendientes}, Discrepancias={Discrepancias}", 
+                    estadisticas.total, estadisticas.contados, estadisticas.pendientes, estadisticas.discrepancias);
 
                 // ✅ RETURN JSON DENTRO DEL TRY
-                return Json(new
+                var resultado = new
                 {
                     success = true,
                     productos = productos,
                     estadisticas = estadisticas
-                });
+                };
+
+                _logger.LogInformation("✅ Devolviendo respuesta JSON exitosa");
+                return Json(resultado);
 
             } // ← AQUÍ TERMINA EL TRY
             catch (Exception ex)
