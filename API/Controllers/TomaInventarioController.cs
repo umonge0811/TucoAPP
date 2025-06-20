@@ -5,6 +5,7 @@ using API.ServicesAPI.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Security.Claims;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs;
@@ -822,7 +823,7 @@ namespace API.Controllers
 
                 // Obtener llantas con manejo seguro de valores nullable
                 var llantas = await _context.Llantas
-                    .Where(l => productosIds.Contains(l.ProductoId))
+                    .Where(l => productosIds.Contains((int)l.ProductoId))
                     .Select(l => new { 
                         l.ProductoId, 
                         l.Marca, 
@@ -835,7 +836,7 @@ namespace API.Controllers
 
                 // Obtener imágenes con manejo seguro de valores nullable
                 var imagenes = await _context.ImagenesProductos
-                    .Where(img => productosIds.Contains(img.ProductoId) && 
+                    .Where(img => productosIds.Contains((int)img.ProductoId) && 
                                  img.Urlimagen != null && 
                                  img.Urlimagen.Trim() != "")
                     .GroupBy(img => img.ProductoId)
