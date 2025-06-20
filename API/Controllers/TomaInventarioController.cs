@@ -844,7 +844,7 @@ namespace API.Controllers
                             DetalleId = detalle.DetalleId,
                             InventarioProgramadoId = detalle.InventarioProgramadoId,
                             ProductoId = detalle.ProductoId,
-                            CantidadSistema = detalle.CantidadSistema ?? 0, // ✅ Manejar NULL
+                            CantidadSistema = detalle.CantidadSistema, // ✅ CantidadSistema es int, no nullable
                             CantidadFisica = detalle.CantidadFisica,
                             Diferencia = detalle.Diferencia,
                             Observaciones = detalle.Observaciones ?? "",
