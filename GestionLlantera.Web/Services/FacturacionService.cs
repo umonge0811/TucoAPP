@@ -231,135 +231,140 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📦 Ajustando stock para factura: {NumeroFactura} con {Cantidad} productos", 
-                    request.NumeroFactura, request.Productos?.Count ?? 0);
+                _logger.LogInformation("📦 Ajustando stock para {Cantidad} productos", request.Productos?.Count ?? 0);
 
                 if (request.Productos == null || !request.Productos.Any())
                 {
-                    return new { 
-                        success = false, 
-                        message = "No se proporcionaron productos para ajustar" 
-                    };
+                    return new { success = false, message = "No se proporcionaron productos para ajustar" };
                 }
 
-                // Configurar token JWT si se proporciona
-                if (!string.IsNullOrEmpty(jwtToken))
-                {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                }
-
-                var resultados = new List<object>();
-                var ajustesExitosos = 0;
                 var errores = new List<string>();
+                var productosAjustados = 0;
 
                 foreach (var productoAjuste in request.Productos)
                 {
                     try
                     {
-                        // Crear DTO que coincida con AjusteStockRapidoDTO de la API
-                        var ajusteDto = new
+                        _logger.LogInformation("📦 Ajustando stock - Producto: {ProductoId}, Cantidad: {Cantidad}", 
+                            productoAjuste.ProductoId, productoAjuste.CantidadVendida);
+
+                        var ajusteData = new
                         {
-                            TipoAjuste = "salida",  // Para ventas es salida de stock
-                            Cantidad = productoAjuste.Cantidad,
-                            Comentario = $"Ajuste por facturación {request.NumeroFactura}",
-                            EsFinalizacionInventario = false,
-                            InventarioProgramadoId = (int?)null
+                            productoId = productoAjuste.ProductoId,
+                            tipoAjuste = "venta",
+                            cantidadAjuste = -productoAjuste.CantidadVendida, // Negativo porque es una venta
+                            motivo = $"Venta - Factura: {request.NumeroFactura}",
+                            usuarioId = 1 // TODO: Obtener del contexto real
                         };
 
-                        var jsonContent = JsonConvert.SerializeObject(ajusteDto);
-                        var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                        _logger.LogInformation("📤 Enviando ajuste: ProductoId={ProductoId}, TipoAjuste=salida, Cantidad={Cantidad}", 
-                            productoAjuste.ProductoId, productoAjuste.Cantidad);
-
-                        // Llamar al endpoint de ajuste de stock en la API
-                        var httpResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock", content);
-
-                        if (httpResponse.IsSuccessStatusCode)
+                        if (!string.IsNullOrEmpty(jwtToken))
                         {
-                            var responseContent = await httpResponse.Content.ReadAsStringAsync();
-                            var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                            _httpClient.DefaultRequestHeaders.Authorization = 
+                                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                        }
 
-                            // Convertir valores dinámicos a tipos específicos
-                            var stockAnterior = resultado?.stockAnterior != null ? Convert.ToInt32(resultado.stockAnterior) : 0;
-                            var stockNuevo = resultado?.stockNuevo != null ? Convert.ToInt32(resultado.stockNuevo) : 0;
-                            var diferencia = resultado?.diferencia != null ? Convert.ToInt32(resultado.diferencia) : 0;
+                        var json = System.Text.Json.JsonSerializer.Serialize(ajusteData);
+                        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                            resultados.Add(new {
-                                productoId = productoAjuste.ProductoId,
-                                nombreProducto = productoAjuste.NombreProducto,
-                                success = true,
-                                stockAnterior = stockAnterior,
-                                stockNuevo = stockNuevo,
-                                diferencia = diferencia,
-                                mensaje = $"Stock actualizado correctamente"
-                            });
+                        var response = await _httpClient.PostAsync("api/Inventario/ajustar-stock", content);
 
-                            ajustesExitosos++;
-
-                            _logger.LogInformation($"✅ Stock ajustado para {productoAjuste.NombreProducto}: {stockAnterior} → {stockNuevo}");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            productosAjustados++;
+                            _logger.LogInformation("✅ Stock ajustado correctamente para producto {ProductoId}", 
+                                productoAjuste.ProductoId);
                         }
                         else
                         {
-                            var errorContent = await httpResponse.Content.ReadAsStringAsync();
-                            var error = $"Error ajustando {productoAjuste.NombreProducto}: {httpResponse.StatusCode} - {errorContent}";
+                            var errorContent = await response.Content.ReadAsStringAsync();
+                            var error = $"Error ajustando producto {productoAjuste.ProductoId}: {errorContent}";
                             errores.Add(error);
-                            resultados.Add(new {
-                                productoId = productoAjuste.ProductoId,
-                                nombreProducto = productoAjuste.NombreProducto,
-                                success = false,
-                                error = error
-                            });
-
-                            _logger.LogError("❌ Error ajustando stock para {Producto}: {Error}", 
-                                productoAjuste.NombreProducto, error);
+                            _logger.LogWarning("⚠️ {Error}", error);
                         }
                     }
                     catch (Exception ex)
                     {
-                        var error = $"Error ajustando {productoAjuste.NombreProducto}: {ex.Message}";
+                        var error = $"Excepción ajustando producto {productoAjuste.ProductoId}: {ex.Message}";
                         errores.Add(error);
-                        resultados.Add(new {
-                            productoId = productoAjuste.ProductoId,
-                            nombreProducto = productoAjuste.NombreProducto,
-                            success = false,
-                            error = error
-                        });
-
                         _logger.LogError(ex, "❌ Error ajustando stock para producto {ProductoId}", 
                             productoAjuste.ProductoId);
                     }
                 }
 
-                // Preparar respuesta
-                var response = new {
-                    success = ajustesExitosos > 0,
-                    message = ajustesExitosos > 0 ? 
-                        $"Stock ajustado para {ajustesExitosos} productos" : 
-                        "No se pudo ajustar el stock de ningún producto",
-                    ajustesExitosos = ajustesExitosos,
-                    totalProductos = request.Productos.Count,
-                    resultados = resultados,
-                    errores = errores.Any() ? errores : null
+                var esExitoso = productosAjustados > 0;
+                var mensaje = esExitoso 
+                    ? $"Stock ajustado para {productosAjustados} productos"
+                    : "No se pudo ajustar el stock de ningún producto";
+
+                if (errores.Any())
+                {
+                    mensaje += $". Errores: {string.Join(", ", errores)}";
+                }
+
+                return new { 
+                    success = esExitoso, 
+                    message = mensaje,
+                    productosAjustados = productosAjustados,
+                    errores = errores
                 };
-
-                _logger.LogInformation("📦 Ajuste completado: {Exitosos}/{Total} productos actualizados", 
-                    ajustesExitosos, request.Productos.Count);
-
-                return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error general ajustando stock para facturación");
-                return new { 
-                    success = false, 
-                    message = "Error interno al ajustar stock: " + ex.Message 
-                };
+                _logger.LogError(ex, "❌ Error general en AjustarStockFacturacionAsync");
+                return new { success = false, message = "Error interno al ajustar stock: " + ex.Message };
             }
         }
 
-        // Otros métodos del servicio...
+        public async Task<object> CrearFacturaAsync(object facturaData, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("💰 Enviando factura a la API");
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = 
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var json = System.Text.Json.JsonSerializer.Serialize(facturaData);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/Facturacion/facturas", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = await response.Content.ReadAsStringAsync();
+                    var facturaCreada = System.Text.Json.JsonSerializer.Deserialize<dynamic>(resultado);
+
+                    _logger.LogInformation("✅ Factura creada exitosamente");
+
+                    return new { 
+                        success = true, 
+                        message = "Factura creada exitosamente",
+                        numeroFactura = facturaCreada?.numeroFactura?.ToString(),
+                        facturaId = facturaCreada?.facturaId?.ToString()
+                    };
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error de la API al crear factura: {Error}", errorContent);
+
+                    return new { 
+                        success = false, 
+                        message = "Error al crear la factura: " + errorContent 
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al llamar API para crear factura");
+                return new { 
+                    success = false, 
+                    message = "Error interno al crear factura: " + ex.Message 
+                };
+            }
+        }
     }
 }

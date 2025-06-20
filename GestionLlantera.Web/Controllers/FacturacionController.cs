@@ -286,15 +286,16 @@ namespace GestionLlantera.Web.Controllers
 
                 _logger.LogInformation("💰 Creando nueva factura");
 
-                // Simular creación exitosa por ahora
-                var numeroFactura = $"FAC-{DateTime.Now:yyyyMM}-{DateTime.Now:HHmmss}";
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
 
-                return Json(new { 
-                    success = true, 
-                    message = "Factura creada exitosamente",
-                    numeroFactura = numeroFactura,
-                    facturaId = 1
-                });
+                // Llamar al servicio de facturación para crear la factura real
+                var resultado = await _facturacionService.CrearFacturaAsync(facturaData, jwtToken);
+
+                return Json(resultado);
             }
             catch (Exception ex)
             {
