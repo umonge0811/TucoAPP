@@ -34,11 +34,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// Ajusta el stock de productos después de una facturación
         /// </summary>
         Task<object> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null);
-
-        /// <summary>
-        /// Crea una nueva factura en la base de datos
-        /// </summary>
-        Task<object> CrearFacturaAsync(object facturaData, string jwtToken = null);
     }
 
     // Clase ApiResponse para manejar respuestas de la API
