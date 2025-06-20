@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication;
+
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace GestionLlantera.Web.Middleware
 {
@@ -36,17 +38,44 @@ namespace GestionLlantera.Web.Middleware
                                 if (jwtToken.ValidTo < DateTime.UtcNow)
                                 {
                                     _logger.LogInformation("JWT expirado. Cerrando sesión del usuario.");
-                                    // Si ha expirado, cerrar la sesión
                                     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                                     context.Response.Redirect("/Account/Login");
                                     return;
                                 }
+
+                                // ✅ EXTRAER CLAIMS DEL JWT Y ESTABLECERLOS EN LA IDENTIDAD
+                                var claims = new List<Claim>();
+                                
+                                // Agregar claims existentes del usuario (excepto JwtToken)
+                                claims.AddRange(context.User.Claims.Where(c => c.Type != "JwtToken"));
+                                
+                                // Extraer y agregar claims del JWT
+                                foreach (var claim in jwtToken.Claims)
+                                {
+                                    // Evitar duplicados de claims que ya existen
+                                    if (!claims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
+                                    {
+                                        claims.Add(new Claim(claim.Type, claim.Value));
+                                    }
+                                }
+
+                                _logger.LogInformation("🔥 MIDDLEWARE - Creando nueva identidad con {ClaimsCount} claims", claims.Count);
+                                
+                                // Crear nueva identidad con todos los claims
+                                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                                var principal = new ClaimsPrincipal(identity);
+                                
+                                // Establecer la nueva identidad en el contexto
+                                context.User = principal;
+                                
+                                // Log de los roles encontrados
+                                var roles = claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value);
+                                _logger.LogInformation("🎯 MIDDLEWARE - Roles establecidos: {Roles}", string.Join(", ", roles));
                             }
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error al verificar el token JWT");
-                            // Si hay algún error con el token, continuar con la solicitud
+                            _logger.LogError(ex, "Error al procesar el token JWT en middleware");
                         }
                     }
                 }
@@ -54,7 +83,6 @@ namespace GestionLlantera.Web.Middleware
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error en el middleware JWT");
-                // Continuar con la solicitud incluso si hay un error
             }
 
             await _next(context);
