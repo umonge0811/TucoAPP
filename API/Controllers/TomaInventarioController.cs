@@ -778,11 +778,23 @@ namespace API.Controllers
                     return NotFound("Inventario no encontrado");
                 }
 
-                // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL Y VALIDACIONES MEJORADAS
+                // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL - SOLO LOS CAMPOS REQUERIDOS SON NOT NULL
                 var detalles = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioId && 
-                               d.ProductoId != null && d.ProductoId > 0 && 
-                               d.CantidadSistema != null && d.CantidadSistema >= 0)
+                               d.ProductoId > 0 && 
+                               d.CantidadSistema >= 0)
+                    .Select(d => new
+                    {
+                        d.DetalleId,
+                        d.InventarioProgramadoId,
+                        d.ProductoId,
+                        d.CantidadSistema,
+                        d.CantidadFisica,        // ✅ PUEDE SER NULL
+                        d.Diferencia,            // ✅ PUEDE SER NULL
+                        d.Observaciones,         // ✅ PUEDE SER NULL
+                        d.UsuarioConteoId,       // ✅ PUEDE SER NULL
+                        d.FechaConteo            // ✅ PUEDE SER NULL
+                    })
                     .ToListAsync();
 
                 _logger.LogInformation("🔍 Detalles obtenidos: {Count}", detalles.Count);
@@ -810,7 +822,7 @@ namespace API.Controllers
 
                 // ✅ OBTENER TODOS LOS DATOS RELACIONADOS EN CONSULTAS SEPARADAS PARA EVITAR CONSULTAS ANIDADAS
                 var productosIds = detalles.Select(d => d.ProductoId).ToList();
-                
+
                 // Obtener productos
                 var productos = await _context.Productos
                     .Where(p => productosIds.Contains(p.ProductoId))
@@ -904,7 +916,7 @@ namespace API.Controllers
 
                         // ✅ CREAR DTO CON VALIDACIONES ROBUSTAS CONTRA NULL
                         var dto = new DetalleInventarioDTO();
-                        
+
                         try
                         {
                             // Validar campos básicos
@@ -942,7 +954,7 @@ namespace API.Controllers
                         {
                             _logger.LogError(dtoEx, "❌ Error creando DTO para producto {ProductoId}: {Error}", 
                                 detalle.ProductoId, dtoEx.Message);
-                            
+
                             // DTO mínimo en caso de error
                             dto = new DetalleInventarioDTO
                             {
@@ -1431,7 +1443,7 @@ namespace API.Controllers
             }
         }
 
-        
+
 
         /// <summary>
         /// Obtiene el ID del usuario actual desde los claims
