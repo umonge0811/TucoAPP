@@ -777,21 +777,35 @@ namespace API.Controllers
                     return NotFound("Inventario no encontrado");
                 }
 
-                // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL
+                // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL Y VALIDACIONES
                 var detalles = await _context.DetallesInventarioProgramado
-                    .Where(d => d.InventarioProgramadoId == inventarioId)
+                    .Where(d => d.InventarioProgramadoId == inventarioId && 
+                               d.ProductoId > 0 && 
+                               d.CantidadSistema >= 0)
                     .ToListAsync();
 
                 _logger.LogInformation("🔍 Detalles obtenidos: {Count}", detalles.Count);
 
-                if (!detalles.Any())
+                // Filtrar detalles que tengan datos válidos
+                var detallesValidos = detalles.Where(d => 
+                    d.ProductoId > 0 && 
+                    d.CantidadSistema >= 0).ToList();
+
+                _logger.LogInformation("🔍 Detalles válidos: {Count}", detallesValidos.Count);
+
+                if (!detallesValidos.Any())
                 {
+                    _logger.LogWarning("⚠️ No se encontraron detalles válidos para el inventario {InventarioId}", inventarioId);
                     return Ok(new
                     {
                         productos = new List<DetalleInventarioDTO>(),
-                        estadisticas = new { total = 0, contados = 0, pendientes = 0, discrepancias = 0, porcentajeProgreso = 0.0 }
+                        estadisticas = new { total = 0, contados = 0, pendientes = 0, discrepancias = 0, porcentajeProgreso = 0.0 },
+                        mensaje = "No hay productos válidos para mostrar en este inventario"
                     });
                 }
+
+                // Usar detalles válidos para el resto del procesamiento
+                detalles = detallesValidos;
 
                 // ✅ OBTENER TODOS LOS DATOS RELACIONADOS EN CONSULTAS SEPARADAS PARA EVITAR CONSULTAS ANIDADAS
                 var productosIds = detalles.Select(d => d.ProductoId).ToList();
@@ -838,10 +852,14 @@ namespace API.Controllers
                     .Distinct()
                     .ToList();
 
-                var usuarios = await _context.Usuarios
-                    .Where(u => usuariosConteoIds.Contains(u.UsuarioId))
-                    .Select(u => new { u.UsuarioId, u.NombreUsuario })
-                    .ToListAsync();
+                var usuarios = new List<dynamic>();
+                if (usuariosConteoIds.Any())
+                {
+                    usuarios = await _context.Usuarios
+                        .Where(u => usuariosConteoIds.Contains(u.UsuarioId))
+                        .Select(u => new { u.UsuarioId, u.NombreUsuario })
+                        .ToListAsync<dynamic>();
+                }
 
                 var productosDTO = new List<DetalleInventarioDTO>();
 
@@ -860,7 +878,7 @@ namespace API.Controllers
                         var producto = productos.FirstOrDefault(p => p.ProductoId == detalle.ProductoId);
                         var llanta = llantas.FirstOrDefault(l => l.ProductoId == detalle.ProductoId);
                         var imagen = imagenes.FirstOrDefault(img => img.ProductoId == detalle.ProductoId);
-                        var usuario = detalle.UsuarioConteoId.HasValue ? 
+                        var usuario = detalle.UsuarioConteoId.HasValue && usuarios.Any() ? 
                             usuarios.FirstOrDefault(u => u.UsuarioId == detalle.UsuarioConteoId.Value) : null;
 
                         // ✅ CONSTRUIR MEDIDAS DE LLANTA CON VALIDACIÓN COMPLETA
@@ -870,42 +888,81 @@ namespace API.Controllers
                             llanta.Perfil.HasValue && llanta.Perfil.Value > 0 &&
                             !string.IsNullOrWhiteSpace(llanta.Diametro))
                         {
-                            medidasLlanta = $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}";
+                            try
+                            {
+                                medidasLlanta = $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}";
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning("⚠️ Error construyendo medidas de llanta para producto {ProductoId}: {Error}", 
+                                    detalle.ProductoId, ex.Message);
+                                medidasLlanta = null;
+                            }
                         }
 
                         // ✅ CREAR DTO CON VALIDACIONES ROBUSTAS CONTRA NULL
-                        var dto = new DetalleInventarioDTO
+                        var dto = new DetalleInventarioDTO();
+                        
+                        try
                         {
-                            DetalleId = detalle.DetalleId,
-                            InventarioProgramadoId = detalle.InventarioProgramadoId,
-                            ProductoId = detalle.ProductoId,
-                            CantidadSistema = detalle.CantidadSistema,
-                            CantidadFisica = detalle.CantidadFisica,
-                            Diferencia = detalle.Diferencia,
-                            Observaciones = detalle.Observaciones ?? "",
-                            FechaConteo = detalle.FechaConteo,
-                            UsuarioConteoId = detalle.UsuarioConteoId,
+                            // Validar campos básicos
+                            dto.DetalleId = detalle.DetalleId;
+                            dto.InventarioProgramadoId = detalle.InventarioProgramadoId;
+                            dto.ProductoId = detalle.ProductoId;
+                            dto.CantidadSistema = detalle.CantidadSistema;
+                            dto.CantidadFisica = detalle.CantidadFisica;
+                            dto.Diferencia = detalle.Diferencia;
+                            dto.Observaciones = detalle.Observaciones ?? "";
+                            dto.FechaConteo = detalle.FechaConteo;
+                            dto.UsuarioConteoId = detalle.UsuarioConteoId;
 
                             // ✅ INFORMACIÓN DEL PRODUCTO CON PROTECCIÓN CONTRA NULL
-                            NombreProducto = producto?.NombreProducto ?? $"Producto {detalle.ProductoId}",
-                            DescripcionProducto = producto?.Descripcion ?? "",
+                            dto.NombreProducto = producto?.NombreProducto ?? $"Producto {detalle.ProductoId}";
+                            dto.DescripcionProducto = producto?.Descripcion ?? "";
 
                             // ✅ INFORMACIÓN DE LLANTA CON PROTECCIÓN CONTRA NULL
-                            EsLlanta = llanta != null,
-                            MarcaLlanta = llanta?.Marca,
-                            ModeloLlanta = llanta?.Modelo,
-                            MedidasLlanta = medidasLlanta,
+                            dto.EsLlanta = llanta != null;
+                            dto.MarcaLlanta = llanta?.Marca ?? "";
+                            dto.ModeloLlanta = llanta?.Modelo ?? "";
+                            dto.MedidasLlanta = medidasLlanta ?? "";
 
                             // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
-                            ImagenUrl = imagen?.PrimeraImagen,
+                            dto.ImagenUrl = imagen?.PrimeraImagen ?? "";
 
                             // ✅ ESTADOS CALCULADOS CON VALIDACIONES
-                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia != 0,
+                            dto.EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente";
+                            dto.TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia != 0;
 
                             // ✅ USUARIO QUE HIZO EL CONTEO CON PROTECCIÓN CONTRA NULL
-                            NombreUsuarioConteo = usuario?.NombreUsuario
-                        };
+                            dto.NombreUsuarioConteo = usuario?.NombreUsuario ?? "";
+                        }
+                        catch (Exception dtoEx)
+                        {
+                            _logger.LogError(dtoEx, "❌ Error creando DTO para producto {ProductoId}: {Error}", 
+                                detalle.ProductoId, dtoEx.Message);
+                            
+                            // DTO mínimo en caso de error
+                            dto = new DetalleInventarioDTO
+                            {
+                                DetalleId = detalle.DetalleId,
+                                InventarioProgramadoId = detalle.InventarioProgramadoId,
+                                ProductoId = detalle.ProductoId,
+                                CantidadSistema = detalle.CantidadSistema,
+                                CantidadFisica = detalle.CantidadFisica,
+                                Diferencia = detalle.Diferencia,
+                                NombreProducto = $"ERROR DTO - Producto {detalle.ProductoId}",
+                                EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                                TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia != 0,
+                                Observaciones = "",
+                                DescripcionProducto = "",
+                                EsLlanta = false,
+                                MarcaLlanta = "",
+                                ModeloLlanta = "",
+                                MedidasLlanta = "",
+                                ImagenUrl = "",
+                                NombreUsuarioConteo = ""
+                            };
+                        }
 
                         productosDTO.Add(dto);
 
