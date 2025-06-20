@@ -2424,13 +2424,13 @@ async function cargarPermisosInventarioActual(inventarioId) {
         const esAdmin = await verificarEsAdministrador();
 
         if (esAdmin) {
-            // Sin permisos específicos
+            // ✅ ADMIN TIENE TODOS LOS PERMISOS
             permisosInventarioActual = {
-                puedeContar: false,
-                puedeAjustar: false,
-                puedeValidar: false,
-                puedeCompletar: false, // ← AGREGAR ESTA LÍNEA
-                esAdmin: false,
+                puedeContar: true,
+                puedeAjustar: true,
+                puedeValidar: true,
+                puedeCompletar: true,
+                esAdmin: true,
                 usuarioId: usuarioId
             };
             console.log('✅ Usuario es administrador - Todos los permisos concedidos');
@@ -2508,11 +2508,11 @@ async function cargarPermisosInventarioActual(inventarioId) {
  */
 async function verificarEsAdministrador() {
     try {
-        // Verificar permisos globales de administrador
-        const tienePermisoInventario = await this.TienePermisoAsync("Programar Inventario");
-        const tienePermisoAjustar = await this.TienePermisoAsync("Ajustar Stock");
-
-        return tienePermisoInventario || tienePermisoAjustar;
+        // ✅ VERIFICAR DESDE LA CONFIGURACIÓN GLOBAL
+        const esAdmin = window.inventarioConfig?.permisos?.esAdmin || false;
+        
+        console.log('🔐 Verificando si es admin desde configuración:', esAdmin);
+        return esAdmin;
     } catch (error) {
         console.error('❌ Error verificando permisos de administrador:', error);
         return false;
