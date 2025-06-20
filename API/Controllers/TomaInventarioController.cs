@@ -959,7 +959,7 @@ namespace API.Controllers
 
 
         /// <summary>
-        /// MÉTODO DE DIAGNÓSTICO MEJORADO - Manejo robusto de nulos
+        /// MÉTODO DE DIAGNÓSTICO MEJORADO - Usando SQL RAW para evitar mapeo de EF
         /// GET: api/TomaInventario/{inventarioId}/productos-simple
         /// </summary>
         [HttpGet("{inventarioId}/productos-simple")]
@@ -967,14 +967,16 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("🧪 === MÉTODO DE DIAGNÓSTICO MEJORADO ===");
+                _logger.LogInformation("🧪 === MÉTODO DE DIAGNÓSTICO CON SQL RAW ===");
                 _logger.LogInformation("🧪 Inventario ID: {InventarioId}", inventarioId);
 
-                // ✅ PASO 1: Verificar que el inventario existe
-                var inventarioExiste = await _context.InventariosProgramados
-                    .AnyAsync(i => i.InventarioProgramadoId == inventarioId);
+                // ✅ PASO 1: Verificar que el inventario existe usando SQL RAW
+                var inventarioExisteSQL = "SELECT COUNT(*) FROM InventariosProgramados WHERE InventarioProgramadoId = {0}";
+                var inventarioCount = await _context.Database.SqlQueryRaw<int>(
+                    "SELECT COUNT(*) as Value FROM InventariosProgramados WHERE InventarioProgramadoId = {0}", 
+                    inventarioId).FirstOrDefaultAsync();
 
-                if (!inventarioExiste)
+                if (inventarioCount == 0)
                 {
                     _logger.LogWarning("❌ Inventario no encontrado: {InventarioId}", inventarioId);
                     return NotFound(new
@@ -986,86 +988,64 @@ namespace API.Controllers
 
                 _logger.LogInformation("✅ Inventario existe");
 
-                // ✅ PASO 2: Contar detalles básicos primero
-                var totalDetalles = await _context.DetallesInventarioProgramado
-                    .Where(d => d.InventarioProgramadoId == inventarioId)
-                    .CountAsync();
+                // ✅ PASO 2: Obtener detalles usando SQL RAW con manejo de NULL
+                var sql = @"
+                    SELECT 
+                        DetalleId,
+                        InventarioProgramadoId,
+                        ProductoId,
+                        ISNULL(CantidadSistema, 0) as CantidadSistema,
+                        CantidadFisica,
+                        Diferencia,
+                        ISNULL(Observaciones, '') as Observaciones,
+                        UsuarioConteoId,
+                        FechaConteo
+                    FROM DetallesInventarioProgramado 
+                    WHERE InventarioProgramadoId = {0}
+                    ORDER BY DetalleId";
 
-                _logger.LogInformation("📊 Total detalles en BD: {Count}", totalDetalles);
+                var detallesRaw = await _context.Database.SqlQueryRaw<DiagnosticoDetalleDTO>(sql, inventarioId).ToListAsync();
 
-                if (totalDetalles == 0)
+                _logger.LogInformation("✅ Detalles obtenidos con SQL RAW: {Count}", detallesRaw.Count);
+
+                if (!detallesRaw.Any())
                 {
                     return Ok(new
                     {
                         success = true,
                         total = 0,
                         productos = new List<object>(),
-                        mensaje = "No hay productos en este inventario"
+                        mensaje = "No hay productos en este inventario",
+                        sql = sql
                     });
                 }
 
-                // ✅ PASO 3: Obtener datos con manejo robusto de nulos
-                var detallesRaw = await _context.DetallesInventarioProgramado
-                    .Where(d => d.InventarioProgramadoId == inventarioId)
-                    .ToListAsync(); // Primero obtenemos los datos sin proyección
-
-                _logger.LogInformation("✅ Detalles obtenidos de BD: {Count}", detallesRaw.Count);
-
-                // ✅ PASO 4: Mapear manualmente con validaciones
-                var detalles = new List<object>();
-
-                foreach (var detalle in detallesRaw)
+                // ✅ PASO 3: Mapear a objetos simples
+                var productos = detallesRaw.Select(detalle => new
                 {
-                    try
-                    {
-                        var dto = new
-                        {
-                            DetalleId = detalle.DetalleId,
-                            InventarioProgramadoId = detalle.InventarioProgramadoId,
-                            ProductoId = detalle.ProductoId,
-                            CantidadSistema = detalle.CantidadSistema,
-                            CantidadFisica = detalle.CantidadFisica,
-                            Diferencia = detalle.Diferencia,
-                            Observaciones = detalle.Observaciones ?? "", // ✅ MANEJO SEGURO DE NULL
-                            FechaConteo = detalle.FechaConteo,
-                            UsuarioConteoId = detalle.UsuarioConteoId,
-                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0
-                        };
+                    DetalleId = detalle.DetalleId,
+                    InventarioProgramadoId = detalle.InventarioProgramadoId,
+                    ProductoId = detalle.ProductoId,
+                    CantidadSistema = detalle.CantidadSistema,
+                    CantidadFisica = detalle.CantidadFisica,
+                    Diferencia = detalle.Diferencia,
+                    Observaciones = detalle.Observaciones ?? "",
+                    FechaConteo = detalle.FechaConteo,
+                    UsuarioConteoId = detalle.UsuarioConteoId,
+                    EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                    TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0
+                }).ToList();
 
-                        detalles.Add(dto);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "❌ Error mapeando detalle {DetalleId}: {Error}", detalle.DetalleId, ex.Message);
-                        
-                        // ✅ Agregar objeto básico en caso de error
-                        detalles.Add(new
-                        {
-                            DetalleId = detalle.DetalleId,
-                            ProductoId = detalle.ProductoId,
-                            Error = $"Error mapeando: {ex.Message}",
-                            CantidadSistema = detalle.CantidadSistema,
-                            EstadoConteo = "Error"
-                        });
-                    }
-                }
-
-                _logger.LogInformation("✅ Detalles mapeados exitosamente: {Count}", detalles.Count);
-
-                if (detalles.Count > 0)
-                {
-                    _logger.LogInformation("🧪 Primer detalle mapeado correctamente");
-                }
+                _logger.LogInformation("✅ Productos mapeados exitosamente: {Count}", productos.Count);
 
                 return Ok(new
                 {
                     success = true,
-                    total = detalles.Count,
-                    totalEnBD = totalDetalles,
-                    productos = detalles,
-                    mensaje = $"Diagnóstico exitoso - {detalles.Count} detalles procesados",
-                    inventarioId = inventarioId
+                    total = productos.Count,
+                    productos = productos,
+                    mensaje = $"Diagnóstico exitoso con SQL RAW - {productos.Count} productos procesados",
+                    inventarioId = inventarioId,
+                    sql = sql
                 });
             }
             catch (Exception ex)
@@ -1078,7 +1058,8 @@ namespace API.Controllers
                     success = false,
                     message = $"Error crítico: {ex.Message}",
                     inventarioId = inventarioId,
-                    tipo = ex.GetType().Name
+                    tipo = ex.GetType().Name,
+                    stackTrace = ex.StackTrace
                 });
             }
         }
@@ -1285,7 +1266,7 @@ namespace API.Controllers
         // =====================================
 
         /// <summary>
-        /// MÉTODO DE DIAGNÓSTICO ULTRA BÁSICO - Solo SQL directo
+        /// MÉTODO DE DIAGNÓSTICO ULTRA BÁSICO - SQL directo con manejo de NULL
         /// GET: api/TomaInventario/{inventarioId}/diagnostico-bd
         /// </summary>
         [HttpGet("{inventarioId}/diagnostico-bd")]
@@ -1293,49 +1274,49 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("🔍 === DIAGNÓSTICO DIRECTO DE BD ===");
+                _logger.LogInformation("🔍 === DIAGNÓSTICO DIRECTO DE BD CON SQL RAW ===");
                 _logger.LogInformation("🔍 Inventario ID: {InventarioId}", inventarioId);
 
-                // ✅ CONSULTA ULTRA BÁSICA SIN DTO
-                var query = _context.DetallesInventarioProgramado
-                    .Where(d => d.InventarioProgramadoId == inventarioId);
+                // ✅ USAR SQL RAW PARA EVITAR PROBLEMAS DE MAPEO
+                var sql = @"
+                    SELECT 
+                        DetalleId,
+                        InventarioProgramadoId,
+                        ProductoId,
+                        ISNULL(CantidadSistema, 0) as CantidadSistema,
+                        CantidadFisica,
+                        Diferencia,
+                        ISNULL(Observaciones, '') as Observaciones,
+                        UsuarioConteoId,
+                        FechaConteo
+                    FROM DetallesInventarioProgramado 
+                    WHERE InventarioProgramadoId = {0}
+                    ORDER BY DetalleId";
 
-                var sql = query.ToQueryString();
-                _logger.LogInformation("🔍 SQL generado: {SQL}", sql);
+                var resultados = await _context.Database.SqlQueryRaw<DiagnosticoDetalleDTO>(sql, inventarioId).ToListAsync();
 
-                var count = await query.CountAsync();
-                _logger.LogInformation("🔍 Total registros: {Count}", count);
+                _logger.LogInformation("🔍 Total registros obtenidos: {Count}", resultados.Count);
 
-                if (count == 0)
+                if (!resultados.Any())
                 {
                     return Ok(new
                     {
                         success = true,
                         message = "No hay registros en DetallesInventarioProgramado para este inventario",
                         inventarioId = inventarioId,
+                        totalRegistros = 0,
                         sql = sql
                     });
                 }
 
-                // ✅ OBTENER PRIMER REGISTRO PARA VERIFICAR ESTRUCTURA
-                var primerDetalle = await query.FirstOrDefaultAsync();
-
-                if (primerDetalle == null)
-                {
-                    return Ok(new
-                    {
-                        success = false,
-                        message = "Count > 0 pero FirstOrDefault devuelve null",
-                        count = count
-                    });
-                }
+                var primerDetalle = resultados.First();
 
                 return Ok(new
                 {
                     success = true,
-                    message = "Diagnóstico exitoso",
+                    message = "Diagnóstico exitoso usando SQL RAW",
                     inventarioId = inventarioId,
-                    totalRegistros = count,
+                    totalRegistros = resultados.Count,
                     sql = sql,
                     primerDetalle = new
                     {
@@ -1344,8 +1325,19 @@ namespace API.Controllers
                         ProductoId = primerDetalle.ProductoId,
                         CantidadSistema = primerDetalle.CantidadSistema,
                         CantidadFisica = primerDetalle.CantidadFisica,
-                        TieneObservaciones = !string.IsNullOrEmpty(primerDetalle.Observaciones)
-                    }
+                        Diferencia = primerDetalle.Diferencia,
+                        TieneObservaciones = !string.IsNullOrEmpty(primerDetalle.Observaciones),
+                        UsuarioConteoId = primerDetalle.UsuarioConteoId,
+                        FechaConteo = primerDetalle.FechaConteo
+                    },
+                    muestraDeRegistros = resultados.Take(5).Select(d => new
+                    {
+                        DetalleId = d.DetalleId,
+                        ProductoId = d.ProductoId,
+                        CantidadSistema = d.CantidadSistema,
+                        CantidadFisica = d.CantidadFisica,
+                        EstadoConteo = d.CantidadFisica.HasValue ? "Contado" : "Pendiente"
+                    })
                 });
             }
             catch (Exception ex)
@@ -1355,9 +1347,26 @@ namespace API.Controllers
                 {
                     success = false,
                     message = ex.Message,
-                    stackTrace = ex.StackTrace
+                    stackTrace = ex.StackTrace,
+                    inventarioId = inventarioId
                 });
             }
+        }
+
+        /// <summary>
+        /// DTO para diagnóstico que maneja valores NULL correctamente
+        /// </summary>
+        public class DiagnosticoDetalleDTO
+        {
+            public int DetalleId { get; set; }
+            public int InventarioProgramadoId { get; set; }
+            public int ProductoId { get; set; }
+            public int CantidadSistema { get; set; }
+            public int? CantidadFisica { get; set; }
+            public int? Diferencia { get; set; }
+            public string Observaciones { get; set; } = "";
+            public int? UsuarioConteoId { get; set; }
+            public DateTime? FechaConteo { get; set; }
         }
 
         /// <summary>
