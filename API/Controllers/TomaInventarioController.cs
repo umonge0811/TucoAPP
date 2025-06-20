@@ -1266,7 +1266,7 @@ namespace API.Controllers
         // =====================================
 
         /// <summary>
-        /// MÉTODO DE DIAGNÓSTICO ULTRA BÁSICO - SQL directo con manejo de NULL
+        /// MÉTODO DE DIAGNÓSTICO ULTRA BÁSICO - SQL directo sin Entity Framework
         /// GET: api/TomaInventario/{inventarioId}/diagnostico-bd
         /// </summary>
         [HttpGet("{inventarioId}/diagnostico-bd")]
@@ -1274,50 +1274,48 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("🔍 === DIAGNÓSTICO DIRECTO DE BD CON SQL RAW ===");
+                _logger.LogInformation("🔍 === DIAGNÓSTICO DIRECTO DE BD SIN EF ===");
                 _logger.LogInformation("🔍 Inventario ID: {InventarioId}", inventarioId);
 
-                // ✅ USAR SQL RAW PARA EVITAR PROBLEMAS DE MAPEO
-                var sql = @"
-                    SELECT 
-                        DetalleId,
-                        InventarioProgramadoId,
-                        ProductoId,
-                        ISNULL(CantidadSistema, 0) as CantidadSistema,
-                        CantidadFisica,
-                        Diferencia,
-                        ISNULL(Observaciones, '') as Observaciones,
-                        UsuarioConteoId,
-                        FechaConteo
-                    FROM DetallesInventarioProgramado 
-                    WHERE InventarioProgramadoId = {0}
-                    ORDER BY DetalleId";
+                // ✅ USAR LINQ DIRECTO SOBRE LA ENTIDAD EXISTENTE
+                var detalles = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId)
+                    .Select(d => new
+                    {
+                        DetalleId = d.DetalleId,
+                        InventarioProgramadoId = d.InventarioProgramadoId,
+                        ProductoId = d.ProductoId,
+                        CantidadSistema = d.CantidadSistema,
+                        CantidadFisica = d.CantidadFisica,
+                        Diferencia = d.Diferencia,
+                        Observaciones = d.Observaciones ?? "",
+                        UsuarioConteoId = d.UsuarioConteoId,
+                        FechaConteo = d.FechaConteo
+                    })
+                    .OrderBy(d => d.DetalleId)
+                    .ToListAsync();
 
-                var resultados = await _context.Database.SqlQueryRaw<DiagnosticoDetalleDTO>(sql, inventarioId).ToListAsync();
+                _logger.LogInformation("🔍 Total registros obtenidos: {Count}", detalles.Count);
 
-                _logger.LogInformation("🔍 Total registros obtenidos: {Count}", resultados.Count);
-
-                if (!resultados.Any())
+                if (!detalles.Any())
                 {
                     return Ok(new
                     {
                         success = true,
                         message = "No hay registros en DetallesInventarioProgramado para este inventario",
                         inventarioId = inventarioId,
-                        totalRegistros = 0,
-                        sql = sql
+                        totalRegistros = 0
                     });
                 }
 
-                var primerDetalle = resultados.First();
+                var primerDetalle = detalles.First();
 
                 return Ok(new
                 {
                     success = true,
-                    message = "Diagnóstico exitoso usando SQL RAW",
+                    message = "Diagnóstico exitoso usando LINQ directo",
                     inventarioId = inventarioId,
-                    totalRegistros = resultados.Count,
-                    sql = sql,
+                    totalRegistros = detalles.Count,
                     primerDetalle = new
                     {
                         DetalleId = primerDetalle.DetalleId,
@@ -1330,7 +1328,7 @@ namespace API.Controllers
                         UsuarioConteoId = primerDetalle.UsuarioConteoId,
                         FechaConteo = primerDetalle.FechaConteo
                     },
-                    muestraDeRegistros = resultados.Take(5).Select(d => new
+                    muestraDeRegistros = detalles.Take(5).Select(d => new
                     {
                         DetalleId = d.DetalleId,
                         ProductoId = d.ProductoId,
@@ -1353,21 +1351,7 @@ namespace API.Controllers
             }
         }
 
-        /// <summary>
-        /// DTO para diagnóstico que maneja valores NULL correctamente
-        /// </summary>
-        public class DiagnosticoDetalleDTO
-        {
-            public int DetalleId { get; set; }
-            public int InventarioProgramadoId { get; set; }
-            public int ProductoId { get; set; }
-            public int CantidadSistema { get; set; }
-            public int? CantidadFisica { get; set; }
-            public int? Diferencia { get; set; }
-            public string Observaciones { get; set; } = "";
-            public int? UsuarioConteoId { get; set; }
-            public DateTime? FechaConteo { get; set; }
-        }
+        
 
         /// <summary>
         /// Obtiene el ID del usuario actual desde los claims
