@@ -959,7 +959,7 @@ namespace API.Controllers
 
 
         /// <summary>
-        /// MÉTODO DE PRUEBA - Solo datos básicos sin relaciones
+        /// MÉTODO DE DIAGNÓSTICO MEJORADO - Manejo robusto de nulos
         /// GET: api/TomaInventario/{inventarioId}/productos-simple
         /// </summary>
         [HttpGet("{inventarioId}/productos-simple")]
@@ -967,53 +967,118 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("🧪 === MÉTODO DE PRUEBA SIMPLE ===");
+                _logger.LogInformation("🧪 === MÉTODO DE DIAGNÓSTICO MEJORADO ===");
                 _logger.LogInformation("🧪 Inventario ID: {InventarioId}", inventarioId);
 
-                // ✅ AHORA DEBERÍA FUNCIONAR CON EL MODELO CORREGIDO
-                var detalles = await _context.DetallesInventarioProgramado
-                    .Where(d => d.InventarioProgramadoId == inventarioId)
-                    .Select(d => new DetalleInventarioSimpleDTO
-                    {
-                        DetalleId = d.DetalleId,
-                        InventarioProgramadoId = d.InventarioProgramadoId,
-                        ProductoId = d.ProductoId,
-                        CantidadSistema = d.CantidadSistema,
-                        CantidadFisica = d.CantidadFisica,
-                        Diferencia = d.Diferencia,
-                        Observaciones = d.Observaciones,  // ✅ AHORA ES NULLABLE
-                        FechaConteo = d.FechaConteo,
-                        UsuarioConteoId = d.UsuarioConteoId,
-                        EstadoConteo = d.CantidadFisica != null ? "Contado" : "Pendiente",
-                        TieneDiscrepancia = d.Diferencia != null && d.Diferencia != 0
-                    })
-                    .ToListAsync();
+                // ✅ PASO 1: Verificar que el inventario existe
+                var inventarioExiste = await _context.InventariosProgramados
+                    .AnyAsync(i => i.InventarioProgramadoId == inventarioId);
 
-                _logger.LogInformation("🧪 Detalles obtenidos: {Count}", detalles.Count);
-
-                if (detalles.Any())
+                if (!inventarioExiste)
                 {
-                    var primer = detalles.First();
-                    _logger.LogInformation("🧪 Primer detalle - ID: {DetalleId}, ProductoId: {ProductoId}, Estado: {Estado}",
-                        primer.DetalleId, primer.ProductoId, primer.EstadoConteo);
+                    _logger.LogWarning("❌ Inventario no encontrado: {InventarioId}", inventarioId);
+                    return NotFound(new
+                    {
+                        success = false,
+                        message = $"Inventario {inventarioId} no encontrado"
+                    });
+                }
+
+                _logger.LogInformation("✅ Inventario existe");
+
+                // ✅ PASO 2: Contar detalles básicos primero
+                var totalDetalles = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId)
+                    .CountAsync();
+
+                _logger.LogInformation("📊 Total detalles en BD: {Count}", totalDetalles);
+
+                if (totalDetalles == 0)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        total = 0,
+                        productos = new List<object>(),
+                        mensaje = "No hay productos en este inventario"
+                    });
+                }
+
+                // ✅ PASO 3: Obtener datos con manejo robusto de nulos
+                var detallesRaw = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId)
+                    .ToListAsync(); // Primero obtenemos los datos sin proyección
+
+                _logger.LogInformation("✅ Detalles obtenidos de BD: {Count}", detallesRaw.Count);
+
+                // ✅ PASO 4: Mapear manualmente con validaciones
+                var detalles = new List<object>();
+
+                foreach (var detalle in detallesRaw)
+                {
+                    try
+                    {
+                        var dto = new
+                        {
+                            DetalleId = detalle.DetalleId,
+                            InventarioProgramadoId = detalle.InventarioProgramadoId,
+                            ProductoId = detalle.ProductoId,
+                            CantidadSistema = detalle.CantidadSistema,
+                            CantidadFisica = detalle.CantidadFisica,
+                            Diferencia = detalle.Diferencia,
+                            Observaciones = detalle.Observaciones ?? "", // ✅ MANEJO SEGURO DE NULL
+                            FechaConteo = detalle.FechaConteo,
+                            UsuarioConteoId = detalle.UsuarioConteoId,
+                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0
+                        };
+
+                        detalles.Add(dto);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ Error mapeando detalle {DetalleId}: {Error}", detalle.DetalleId, ex.Message);
+                        
+                        // ✅ Agregar objeto básico en caso de error
+                        detalles.Add(new
+                        {
+                            DetalleId = detalle.DetalleId,
+                            ProductoId = detalle.ProductoId,
+                            Error = $"Error mapeando: {ex.Message}",
+                            CantidadSistema = detalle.CantidadSistema,
+                            EstadoConteo = "Error"
+                        });
+                    }
+                }
+
+                _logger.LogInformation("✅ Detalles mapeados exitosamente: {Count}", detalles.Count);
+
+                if (detalles.Count > 0)
+                {
+                    _logger.LogInformation("🧪 Primer detalle mapeado correctamente");
                 }
 
                 return Ok(new
                 {
                     success = true,
                     total = detalles.Count,
+                    totalEnBD = totalDetalles,
                     productos = detalles,
-                    mensaje = $"Método simple - {detalles.Count} detalles encontrados"
+                    mensaje = $"Diagnóstico exitoso - {detalles.Count} detalles procesados",
+                    inventarioId = inventarioId
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "🧪 💥 Error en método simple: {Message}", ex.Message);
+                _logger.LogError(ex, "🧪 💥 Error crítico en diagnóstico: {Message}", ex.Message);
+                _logger.LogError(ex, "🧪 💥 Stack trace: {StackTrace}", ex.StackTrace);
 
                 return StatusCode(500, new
                 {
                     success = false,
-                    message = ex.Message
+                    message = $"Error crítico: {ex.Message}",
+                    inventarioId = inventarioId,
+                    tipo = ex.GetType().Name
                 });
             }
         }
@@ -1218,6 +1283,82 @@ namespace API.Controllers
         // =====================================
         // MÉTODOS AUXILIARES PRIVADOS
         // =====================================
+
+        /// <summary>
+        /// MÉTODO DE DIAGNÓSTICO ULTRA BÁSICO - Solo SQL directo
+        /// GET: api/TomaInventario/{inventarioId}/diagnostico-bd
+        /// </summary>
+        [HttpGet("{inventarioId}/diagnostico-bd")]
+        public async Task<ActionResult> DiagnosticoBD(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 === DIAGNÓSTICO DIRECTO DE BD ===");
+                _logger.LogInformation("🔍 Inventario ID: {InventarioId}", inventarioId);
+
+                // ✅ CONSULTA ULTRA BÁSICA SIN DTO
+                var query = _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId);
+
+                var sql = query.ToQueryString();
+                _logger.LogInformation("🔍 SQL generado: {SQL}", sql);
+
+                var count = await query.CountAsync();
+                _logger.LogInformation("🔍 Total registros: {Count}", count);
+
+                if (count == 0)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "No hay registros en DetallesInventarioProgramado para este inventario",
+                        inventarioId = inventarioId,
+                        sql = sql
+                    });
+                }
+
+                // ✅ OBTENER PRIMER REGISTRO PARA VERIFICAR ESTRUCTURA
+                var primerDetalle = await query.FirstOrDefaultAsync();
+
+                if (primerDetalle == null)
+                {
+                    return Ok(new
+                    {
+                        success = false,
+                        message = "Count > 0 pero FirstOrDefault devuelve null",
+                        count = count
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Diagnóstico exitoso",
+                    inventarioId = inventarioId,
+                    totalRegistros = count,
+                    sql = sql,
+                    primerDetalle = new
+                    {
+                        DetalleId = primerDetalle.DetalleId,
+                        InventarioProgramadoId = primerDetalle.InventarioProgramadoId,
+                        ProductoId = primerDetalle.ProductoId,
+                        CantidadSistema = primerDetalle.CantidadSistema,
+                        CantidadFisica = primerDetalle.CantidadFisica,
+                        TieneObservaciones = !string.IsNullOrEmpty(primerDetalle.Observaciones)
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "🔍 💥 Error en diagnóstico BD: {Message}", ex.Message);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = ex.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
+        }
 
         /// <summary>
         /// Obtiene el ID del usuario actual desde los claims
