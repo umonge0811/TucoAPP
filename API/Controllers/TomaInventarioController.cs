@@ -793,6 +793,56 @@ namespace API.Controllers
                     });
                 }
 
+                // ✅ OBTENER TODOS LOS DATOS RELACIONADOS EN CONSULTAS SEPARADAS PARA EVITAR CONSULTAS ANIDADAS
+                var productosIds = detalles.Select(d => d.ProductoId).ToList();
+                
+                // Obtener productos
+                var productos = await _context.Productos
+                    .Where(p => productosIds.Contains(p.ProductoId))
+                    .Select(p => new { 
+                        p.ProductoId, 
+                        p.NombreProducto, 
+                        p.Descripcion 
+                    })
+                    .ToListAsync();
+
+                // Obtener llantas
+                var llantas = await _context.Llantas
+                    .Where(l => productosIds.Contains(l.ProductoId))
+                    .Select(l => new { 
+                        l.ProductoId, 
+                        l.Marca, 
+                        l.Modelo, 
+                        l.Ancho, 
+                        l.Perfil, 
+                        l.Diametro 
+                    })
+                    .ToListAsync();
+
+                // Obtener imágenes
+                var imagenes = await _context.ImagenesProductos
+                    .Where(img => productosIds.Contains(img.ProductoId) && 
+                                 img.Urlimagen != null && 
+                                 img.Urlimagen.Trim() != "")
+                    .GroupBy(img => img.ProductoId)
+                    .Select(g => new { 
+                        ProductoId = g.Key, 
+                        PrimeraImagen = g.OrderBy(img => img.ImagenId).First().Urlimagen 
+                    })
+                    .ToListAsync();
+
+                // Obtener usuarios de conteo
+                var usuariosConteoIds = detalles
+                    .Where(d => d.UsuarioConteoId.HasValue && d.UsuarioConteoId.Value > 0)
+                    .Select(d => d.UsuarioConteoId.Value)
+                    .Distinct()
+                    .ToList();
+
+                var usuarios = await _context.Usuarios
+                    .Where(u => usuariosConteoIds.Contains(u.UsuarioId))
+                    .Select(u => new { u.UsuarioId, u.NombreUsuario })
+                    .ToListAsync();
+
                 var productosDTO = new List<DetalleInventarioDTO>();
 
                 foreach (var detalle in detalles)
@@ -806,46 +856,12 @@ namespace API.Controllers
                             continue;
                         }
 
-                        // ✅ OBTENER PRODUCTO CON MANEJO SEGURO Y VALIDACIÓN NULL
-                        var producto = await _context.Productos
-                            .Where(p => p.ProductoId == detalle.ProductoId)
-                            .Select(p => new { 
-                                p.ProductoId, 
-                                p.NombreProducto, 
-                                p.Descripcion 
-                            })
-                            .FirstOrDefaultAsync();
-
-                        // ✅ OBTENER LLANTA CON MANEJO SEGURO Y VALIDACIÓN NULL
-                        var llanta = await _context.Llantas
-                            .Where(l => l.ProductoId == detalle.ProductoId)
-                            .Select(l => new { 
-                                l.ProductoId, 
-                                l.Marca, 
-                                l.Modelo, 
-                                l.Ancho, 
-                                l.Perfil, 
-                                l.Diametro 
-                            })
-                            .FirstOrDefaultAsync();
-
-                        // ✅ OBTENER IMAGEN CON MANEJO SEGURO Y VALIDACIÓN NULL
-                        var imagenPrincipal = await _context.ImagenesProductos
-                            .Where(img => img.ProductoId == detalle.ProductoId && 
-                                         img.Urlimagen != null && 
-                                         img.Urlimagen.Trim() != "")
-                            .OrderBy(img => img.ImagenId)
-                            .Select(img => img.Urlimagen)
-                            .FirstOrDefaultAsync();
-
-                        // ✅ OBTENER USUARIO DE CONTEO CON VALIDACIÓN ROBUSTA
-                        Usuario? usuario = null;
-                        if (detalle.UsuarioConteoId.HasValue && detalle.UsuarioConteoId.Value > 0)
-                        {
-                            usuario = await _context.Usuarios
-                                .Where(u => u.UsuarioId == detalle.UsuarioConteoId.Value)
-                                .FirstOrDefaultAsync();
-                        }
+                        // ✅ BUSCAR EN LAS COLECCIONES YA OBTENIDAS
+                        var producto = productos.FirstOrDefault(p => p.ProductoId == detalle.ProductoId);
+                        var llanta = llantas.FirstOrDefault(l => l.ProductoId == detalle.ProductoId);
+                        var imagen = imagenes.FirstOrDefault(img => img.ProductoId == detalle.ProductoId);
+                        var usuario = detalle.UsuarioConteoId.HasValue ? 
+                            usuarios.FirstOrDefault(u => u.UsuarioId == detalle.UsuarioConteoId.Value) : null;
 
                         // ✅ CONSTRUIR MEDIDAS DE LLANTA CON VALIDACIÓN COMPLETA
                         string? medidasLlanta = null;
@@ -878,21 +894,14 @@ namespace API.Controllers
                             EsLlanta = llanta != null,
                             MarcaLlanta = llanta?.Marca,
                             ModeloLlanta = llanta?.Modelo,
-                            MedidasLlanta = (llanta != null && llanta.Ancho.HasValue && llanta.Perfil.HasValue && !string.IsNullOrWhiteSpace(llanta.Diametro))
-                        ? $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}"
-                        : null,
+                            MedidasLlanta = medidasLlanta,
 
                             // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
-                            ImagenUrl = _context.ImagenesProductos
-                        .Where(img => img.ProductoId == detalle.ProductoId &&
-                               !string.IsNullOrEmpty(img.Urlimagen) &&
-                               img.Urlimagen.Trim() != "")
-                        .Select(img => img.Urlimagen)
-                        .FirstOrDefault() ?? null,
+                            ImagenUrl = imagen?.PrimeraImagen,
 
-                            // ✅ ESTADOS CALCULADOS CON VALIDACIONES - CORREGIDO PARA EVITAR NULL REFERENCE
+                            // ✅ ESTADOS CALCULADOS CON VALIDACIONES
                             EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                            TieneDiscrepancia = detalle.Diferencia != null && detalle.Diferencia != 0,
+                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia != 0,
 
                             // ✅ USUARIO QUE HIZO EL CONTEO CON PROTECCIÓN CONTRA NULL
                             NombreUsuarioConteo = usuario?.NombreUsuario
@@ -918,7 +927,7 @@ namespace API.Controllers
                             Diferencia = detalle.Diferencia,
                             NombreProducto = $"ERROR - Producto {detalle.ProductoId}",
                             EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                            TieneDiscrepancia = detalle.Diferencia != null && detalle.Diferencia != 0
+                            TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia != 0
                         });
                     }
                 }
