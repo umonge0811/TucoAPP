@@ -17,9 +17,14 @@ namespace GestionLlantera.Web.ViewComponents
         {
             try
             {
+                _logger.LogInformation("🔥 USERINFO VIEWCOMPONENT SE ESTÁ EJECUTANDO 🔥");
+                
                 var userEmail = User.Identity?.Name;
+                _logger.LogInformation("📧 Email obtenido: {Email}", userEmail ?? "NULL");
+                
                 if (string.IsNullOrEmpty(userEmail))
                 {
+                    _logger.LogWarning("⚠️ No hay email, retornando usuario genérico");
                     return View(new UserInfoViewModel
                     {
                         UserName = "Usuario",
@@ -31,7 +36,7 @@ namespace GestionLlantera.Web.ViewComponents
                 var claimsPrincipal = User as ClaimsPrincipal;
 
                 // ✅ AGREGAR LOGGING PARA DEBUGGEAR LOS CLAIMS
-                _logger.LogInformation("=== DEBUGGING CLAIMS ===");
+                _logger.LogInformation("🔍 === USERINFO DEBUGGING CLAIMS ===");
                 if (claimsPrincipal?.Claims != null)
                 {
                     foreach (var claim in claimsPrincipal.Claims)
@@ -69,17 +74,22 @@ namespace GestionLlantera.Web.ViewComponents
                 // Eliminar duplicados
                 roles = roles.Distinct().ToList();
 
-                _logger.LogInformation($"Roles encontrados: {string.Join(", ", roles)}");
+                _logger.LogInformation("🎯 Roles encontrados: {Roles}", string.Join(", ", roles));
 
-                return View(new UserInfoViewModel
+                var viewModel = new UserInfoViewModel
                 {
                     UserName = userEmail,
                     Roles = roles.Any() ? roles : new List<string> { "Usuario" }
-                });
+                };
+
+                _logger.LogInformation("📋 ViewModel final - Usuario: {Usuario}, Roles: {Roles}", 
+                    viewModel.UserName, string.Join(", ", viewModel.Roles));
+
+                return View(viewModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener información del usuario");
+                _logger.LogError(ex, "💥 Error al obtener información del usuario");
                 return View(new UserInfoViewModel
                 {
                     UserName = User.Identity?.Name ?? "Usuario",
