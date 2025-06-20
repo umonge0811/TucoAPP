@@ -843,7 +843,8 @@ namespace API.Controllers
                         if (detalle.UsuarioConteoId.HasValue && detalle.UsuarioConteoId.Value > 0)
                         {
                             usuario = await _context.Usuarios
-                                .Where(u => u.UsuarioId == detalle.UsuarioConteoId.Value)
+                                .Where(```text
+u => u.UsuarioId == detalle.UsuarioConteoId.Value)
                                 .FirstOrDefaultAsync();
                         }
 
@@ -878,10 +879,17 @@ namespace API.Controllers
                             EsLlanta = llanta != null,
                             MarcaLlanta = llanta?.Marca,
                             ModeloLlanta = llanta?.Modelo,
-                            MedidasLlanta = medidasLlanta,
+                            MedidasLlanta = (llanta != null && llanta.Ancho.HasValue && llanta.Perfil.HasValue && llanta.Diametro.HasValue)
+                        ? $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Value}"
+                        : null,
 
                             // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
-                            ImagenUrl = imagenPrincipal,
+                            ImagenUrl = _context.ImagenesProductos
+                        .Where(img => img.ProductoId == detalle.ProductoId &&
+                               !string.IsNullOrEmpty(img.Urlimagen) &&
+                               img.Urlimagen.Trim() != "")
+                        .Select(img => img.Urlimagen)
+                        .FirstOrDefault() ?? null,
 
                             // ✅ ESTADOS CALCULADOS CON VALIDACIONES - CORREGIDO PARA EVITAR NULL REFERENCE
                             EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
