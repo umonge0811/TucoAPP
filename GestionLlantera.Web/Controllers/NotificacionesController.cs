@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -6,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GestionLlantera.Web.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("web/api/[controller]")]
     public class NotificacionesController : Controller
     {
         private readonly INotificacionService _notificacionService;
@@ -18,21 +17,6 @@ namespace GestionLlantera.Web.Controllers
         {
             _notificacionService = notificacionService;
             _logger = logger;
-        }
-
-        [HttpGet("conteo-no-leidas")]
-        public async Task<IActionResult> ObtenerConteoNoLeidas()
-        {
-            try
-            {
-                var conteo = await _notificacionService.ObtenerConteoNoLeidasAsync();
-                return Json(conteo);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener conteo de notificaciones no leídas");
-                return Json(0);
-            }
         }
 
         [HttpGet("mis-notificaciones")]
@@ -50,7 +34,23 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpGet("conteo-no-leidas")]
+        public async Task<IActionResult> ObtenerConteoNoLeidas()
+        {
+            try
+            {
+                var conteo = await _notificacionService.ObtenerConteoNoLeidasAsync();
+                return Json(conteo);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener conteo");
+                return Json(0);
+            }
+        }
+
         [HttpPut("{id}/marcar-leida")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarcarComoLeida(int id)
         {
             try
@@ -66,6 +66,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPut("marcar-todas-leidas")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarcarTodasComoLeidas()
         {
             try
@@ -75,7 +76,7 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al marcar todas las notificaciones como leídas");
+                _logger.LogError(ex, "Error al marcar todas como leídas");
                 return Json(new { success = false });
             }
         }

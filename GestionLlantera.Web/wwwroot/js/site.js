@@ -62,7 +62,7 @@ let conteoNoLeidas = 0;
 // Función para cargar notificaciones
 async function cargarNotificaciones() {
     try {
-        const response = await fetch('/api/Notificaciones/mis-notificaciones');
+        const response = await fetch('/web/api/Notificaciones/mis-notificaciones');
         if (response.ok) {
             notificacionesCache = await response.json();
             renderizarNotificaciones();
@@ -76,7 +76,7 @@ async function cargarNotificaciones() {
 // Función para cargar conteo
 async function cargarConteoNotificaciones() {
     try {
-        const response = await fetch('/api/Notificaciones/conteo-no-leidas');
+        const response = await fetch('/web/api/Notificaciones/conteo-no-leidas');
         if (response.ok) {
             conteoNoLeidas = await response.json();
             actualizarBadges();
@@ -212,7 +212,7 @@ function getCSRFToken() {
 // Función para marcar como leída
 async function marcarNotificacionComoLeida(notificacionId) {
     try {
-        const response = await fetch(`/api/Notificaciones/${notificacionId}/marcar-leida`, {
+        const response = await fetch(`/web/api/Notificaciones/${notificacionId}/marcar-leida`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -243,7 +243,7 @@ async function marcarNotificacionComoLeida(notificacionId) {
 // Función para marcar todas como leídas
 async function marcarTodasComoLeidas() {
     try {
-        const response = await fetch('/api/Notificaciones/marcar-todas-leidas', {
+        const response = await fetch('/web/api/Notificaciones/marcar-todas-leidas', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
