@@ -779,29 +779,35 @@ namespace API.Controllers
                 }
 
                 // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL - SOLO LOS CAMPOS REQUERIDOS SON NOT NULL
+                //var dataRow = await _context.DetallesInventarioProgramado.AsNoTracking()
+                //    .Where(d => d.InventarioProgramadoId == inventarioId &&
+                //               d.ProductoId > 0 &&
+                //               d.CantidadSistema >= 0)
+                //    .ToListAsync();
+
                 var detalles = await _context.DetallesInventarioProgramado
-                    .Where(d => d.InventarioProgramadoId == inventarioId && 
-                               d.ProductoId > 0 && 
+                    .Where(d => d.InventarioProgramadoId == inventarioId &&
+                               d.ProductoId > 0 &&
                                d.CantidadSistema >= 0)
-                    .Select(d => new
+                    .Select(d => new DetalleInventarioProgramado
                     {
-                        d.DetalleId,
-                        d.InventarioProgramadoId,
-                        d.ProductoId,
-                        d.CantidadSistema,
-                        d.CantidadFisica,        // ✅ PUEDE SER NULL
-                        d.Diferencia,            // ✅ PUEDE SER NULL
-                        d.Observaciones,         // ✅ PUEDE SER NULL
-                        d.UsuarioConteoId,       // ✅ PUEDE SER NULL
-                        d.FechaConteo            // ✅ PUEDE SER NULL
+                        DetalleId = d.DetalleId,
+                        InventarioProgramadoId = d.InventarioProgramadoId,
+                        ProductoId = d.ProductoId,
+                        CantidadSistema = d.CantidadSistema,
+                        CantidadFisica = d.CantidadFisica,        // ✅ PUEDE SER NULL
+                        Diferencia = d.Diferencia,            // ✅ PUEDE SER NULL
+                        Observaciones = d.Observaciones ?? string.Empty,// ✅ PUEDE SER NULL
+                        UsuarioConteoId = d.UsuarioConteoId,       // ✅ PUEDE SER NULL
+                        FechaConteo = d.FechaConteo            // ✅ PUEDE SER NULL
                     })
                     .ToListAsync();
 
                 _logger.LogInformation("🔍 Detalles obtenidos: {Count}", detalles.Count);
 
                 // Filtrar detalles que tengan datos válidos
-                var detallesValidos = detalles.Where(d => 
-                    d.ProductoId > 0 && 
+                var detallesValidos = detalles.Where(d =>
+                    d.ProductoId > 0 &&
                     d.CantidadSistema >= 0).ToList();
 
                 _logger.LogInformation("🔍 Detalles válidos: {Count}", detallesValidos.Count);
@@ -826,35 +832,38 @@ namespace API.Controllers
                 // Obtener productos
                 var productos = await _context.Productos
                     .Where(p => productosIds.Contains(p.ProductoId))
-                    .Select(p => new { 
-                        p.ProductoId, 
-                        p.NombreProducto, 
-                        p.Descripcion 
+                    .Select(p => new
+                    {
+                        p.ProductoId,
+                        p.NombreProducto,
+                        p.Descripcion
                     })
                     .ToListAsync();
 
                 // Obtener llantas con manejo seguro de valores nullable
                 var llantas = await _context.Llantas
                     .Where(l => productosIds.Contains((int)l.ProductoId))
-                    .Select(l => new { 
-                        l.ProductoId, 
-                        l.Marca, 
-                        l.Modelo, 
-                        l.Ancho, 
-                        l.Perfil, 
-                        l.Diametro 
+                    .Select(l => new
+                    {
+                        l.ProductoId,
+                        l.Marca,
+                        l.Modelo,
+                        l.Ancho,
+                        l.Perfil,
+                        l.Diametro
                     })
                     .ToListAsync();
 
                 // Obtener imágenes con manejo seguro de valores nullable
                 var imagenes = await _context.ImagenesProductos
-                    .Where(img => productosIds.Contains((int)img.ProductoId) && 
-                                 img.Urlimagen != null && 
+                    .Where(img => productosIds.Contains((int)img.ProductoId) &&
+                                 img.Urlimagen != null &&
                                  img.Urlimagen.Trim() != "")
                     .GroupBy(img => img.ProductoId)
-                    .Select(g => new { 
-                        ProductoId = g.Key, 
-                        PrimeraImagen = g.OrderBy(img => img.ImagenId).First().Urlimagen 
+                    .Select(g => new
+                    {
+                        ProductoId = g.Key,
+                        PrimeraImagen = g.OrderBy(img => img.ImagenId).First().Urlimagen
                     })
                     .ToListAsync();
 
@@ -892,12 +901,12 @@ namespace API.Controllers
                         var producto = productos.FirstOrDefault(p => p.ProductoId == detalle.ProductoId);
                         var llanta = llantas.FirstOrDefault(l => l.ProductoId == detalle.ProductoId);
                         var imagen = imagenes.FirstOrDefault(img => img.ProductoId == detalle.ProductoId);
-                        var usuario = detalle.UsuarioConteoId.HasValue && usuarios.Any() ? 
+                        var usuario = detalle.UsuarioConteoId.HasValue && usuarios.Any() ?
                             usuarios.FirstOrDefault(u => ((dynamic)u).UsuarioId == detalle.UsuarioConteoId.Value) : null;
 
                         // ✅ CONSTRUIR MEDIDAS DE LLANTA CON VALIDACIÓN COMPLETA
                         string? medidasLlanta = null;
-                        if (llanta != null && 
+                        if (llanta != null &&
                             llanta.Ancho.HasValue && llanta.Ancho.Value > 0 &&
                             llanta.Perfil.HasValue && llanta.Perfil.Value > 0 &&
                             !string.IsNullOrWhiteSpace(llanta.Diametro))
@@ -908,7 +917,7 @@ namespace API.Controllers
                             }
                             catch (Exception ex)
                             {
-                                _logger.LogWarning("⚠️ Error construyendo medidas de llanta para producto {ProductoId}: {Error}", 
+                                _logger.LogWarning("⚠️ Error construyendo medidas de llanta para producto {ProductoId}: {Error}",
                                     detalle.ProductoId, ex.Message);
                                 medidasLlanta = null;
                             }
@@ -952,7 +961,7 @@ namespace API.Controllers
                         }
                         catch (Exception dtoEx)
                         {
-                            _logger.LogError(dtoEx, "❌ Error creando DTO para producto {ProductoId}: {Error}", 
+                            _logger.LogError(dtoEx, "❌ Error creando DTO para producto {ProductoId}: {Error}",
                                 detalle.ProductoId, dtoEx.Message);
 
                             // DTO mínimo en caso de error
@@ -1052,7 +1061,7 @@ namespace API.Controllers
 
                 // ✅ PASO 1: Verificar que el inventario existe usando SQL RAW
                 var inventarioCount = await _context.Database.SqlQueryRaw<int>(
-                    "SELECT COUNT(*) as Value FROM InventariosProgramados WHERE InventarioProgramadoId = {0}", 
+                    "SELECT COUNT(*) as Value FROM InventariosProgramados WHERE InventarioProgramadoId = {0}",
                     inventarioId).FirstOrDefaultAsync();
 
                 if (inventarioCount == 0)

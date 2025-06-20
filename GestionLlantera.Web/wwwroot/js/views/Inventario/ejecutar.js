@@ -3253,7 +3253,7 @@ function crearFilaProducto(producto, numero) {
     const estadoClass = tieneDiscrepancia ? 'estado-discrepancia' :
         producto.estadoConteo === 'Contado' ? 'estado-contado' : 'estado-pendiente';
 
-    const imagenSrc = producto.imagenUrl || '/images/no-image.png';
+   /* const imagenSrc = producto.imagenUrl || '/images/no-image.png';*/
     const diferencia = producto.diferencia || 0;
     const diferenciaClass = diferencia > 0 ? 'diferencia-positiva' :
         diferencia < 0 ? 'diferencia-negativa' : 'diferencia-cero';
@@ -3284,10 +3284,6 @@ function crearFilaProducto(producto, numero) {
     return $(`
         <tr class="producto-row ${estadoClass}" data-producto-id="${producto.productoId}">
             <td class="text-center fw-bold">${numero}</td>
-            <td class="text-center">
-                <img src="${imagenSrc}" alt="Producto" class="producto-imagen" 
-                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
-            </td>
             <td>
                 <div class="fw-semibold">${producto.nombreProducto}</div>
                 <div class="small text-muted">${producto.descripcionProducto || ''}</div>
