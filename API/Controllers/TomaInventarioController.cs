@@ -748,17 +748,16 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Obtiene los productos de un inventario para realizar conteo
+        /// Obtiene los productos de un inventario para realizar conteo - VERSIÓN ROBUSTA CON SQL RAW
         /// GET: api/TomaInventario/{inventarioId}/productos
         /// </summary>
         [HttpGet("{inventarioId}/productos")]
-        public async Task<ActionResult<List<DetalleInventarioDTO>>> ObtenerProductosInventario(int inventarioId)
+        public async Task<ActionResult> ObtenerProductosInventario(int inventarioId)
         {
             try
             {
-                _logger.LogInformation("📦 === OBTENIENDO PRODUCTOS DEL INVENTARIO ===");
-                _logger.LogInformation("📦 Inventario ID: {InventarioId}, Usuario: {Usuario}",
-                    inventarioId, User.Identity?.Name ?? "Anónimo");
+                _logger.LogInformation("📦 === OBTENIENDO PRODUCTOS DEL INVENTARIO (SQL RAW) ===");
+                _logger.LogInformation("📦 Inventario ID: {InventarioId}", inventarioId);
 
                 // ✅ VERIFICAR ACCESO AL INVENTARIO
                 var tieneAcceso = await VerificarAccesoInventario(inventarioId);
@@ -767,192 +766,174 @@ namespace API.Controllers
                     return Forbid("No tienes acceso a este inventario");
                 }
 
-                // ✅ VERIFICAR QUE EL INVENTARIO EXISTE Y ESTÁ VÁLIDO
+                // ✅ VERIFICAR QUE EL INVENTARIO EXISTE
                 var inventarioExiste = await _context.InventariosProgramados
                     .AnyAsync(i => i.InventarioProgramadoId == inventarioId);
 
                 if (!inventarioExiste)
                 {
                     _logger.LogWarning("❌ Inventario no encontrado: {InventarioId}", inventarioId);
-                    return NotFound("Inventario no encontrado");
+                    return NotFound(new { success = false, message = "Inventario no encontrado" });
                 }
 
-                // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL
-                var detalles = await _context.DetallesInventarioProgramado
-                    .Where(d => d.InventarioProgramadoId == inventarioId)
-                    .ToListAsync();
+                // ✅ CONSULTA SQL RAW OPTIMIZADA CON MANEJO DE NULL
+                var sql = @"
+                    SELECT 
+                        d.DetalleId,
+                        d.InventarioProgramadoId,
+                        d.ProductoId,
+                        ISNULL(d.CantidadSistema, 0) as CantidadSistema,
+                        d.CantidadFisica,
+                        d.Diferencia,
+                        ISNULL(d.Observaciones, '') as Observaciones,
+                        d.UsuarioConteoId,
+                        d.FechaConteo,
+                        
+                        -- Información del producto
+                        ISNULL(p.NombreProducto, 'Producto Sin Nombre') as NombreProducto,
+                        ISNULL(p.Descripcion, '') as DescripcionProducto,
+                        
+                        -- Información de llanta (si existe)
+                        l.Marca as MarcaLlanta,
+                        l.Modelo as ModeloLlanta,
+                        l.Ancho as AnchoLlanta,
+                        l.Perfil as PerfilLlanta,
+                        l.Diametro as DiametroLlanta,
+                        
+                        -- Usuario que hizo el conteo
+                        u.NombreUsuario as NombreUsuarioConteo,
+                        
+                        -- Imagen principal
+                        (SELECT TOP 1 img.Urlimagen 
+                         FROM ImagenesProductos img 
+                         WHERE img.ProductoId = d.ProductoId 
+                           AND img.Urlimagen IS NOT NULL 
+                           AND LEN(TRIM(img.Urlimagen)) > 0
+                         ORDER BY img.ImagenId) as ImagenUrl
+                         
+                    FROM DetallesInventarioProgramado d
+                    LEFT JOIN Productos p ON d.ProductoId = p.ProductoId
+                    LEFT JOIN Llantas l ON d.ProductoId = l.ProductoId
+                    LEFT JOIN Usuarios u ON d.UsuarioConteoId = u.UsuarioId
+                    WHERE d.InventarioProgramadoId = {0}
+                    ORDER BY d.DetalleId";
 
-                _logger.LogInformation("🔍 Detalles obtenidos: {Count}", detalles.Count);
+                // ✅ EJECUTAR CONSULTA USANDO ADO.NET DIRECTO (MÁS ROBUSTO QUE EF)
+                using var command = _context.Database.GetDbConnection().CreateCommand();
+                command.CommandText = sql;
+                command.Parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@inventarioId", inventarioId));
 
-                if (!detalles.Any())
-                {
-                    return Ok(new
-                    {
-                        productos = new List<DetalleInventarioDTO>(),
-                        estadisticas = new { total = 0, contados = 0, pendientes = 0, discrepancias = 0, porcentajeProgreso = 0.0 }
-                    });
-                }
+                await _context.Database.OpenConnectionAsync();
+                using var reader = await command.ExecuteReaderAsync();
 
-                var productosDTO = new List<DetalleInventarioDTO>();
+                var productos = new List<object>();
 
-                foreach (var detalle in detalles)
+                while (await reader.ReadAsync())
                 {
                     try
                     {
-                        // ✅ VALIDAR QUE EL DETALLE TENGA VALORES VÁLIDOS
-                        if (detalle.ProductoId <= 0)
-                        {
-                            _logger.LogWarning("⚠️ Detalle con ProductoId inválido: {DetalleId}", detalle.DetalleId);
-                            continue;
-                        }
+                        // ✅ LEER VALORES CON MANEJO SEGURO DE NULL
+                        var detalleId = reader.GetInt32("DetalleId");
+                        var productoId = reader.GetInt32("ProductoId");
+                        var cantidadSistema = reader.GetInt32("CantidadSistema");
+                        var cantidadFisica = reader.IsDBNull("CantidadFisica") ? (int?)null : reader.GetInt32("CantidadFisica");
+                        var diferencia = reader.IsDBNull("Diferencia") ? (int?)null : reader.GetInt32("Diferencia");
+                        var observaciones = reader.IsDBNull("Observaciones") ? "" : reader.GetString("Observaciones");
+                        var usuarioConteoId = reader.IsDBNull("UsuarioConteoId") ? (int?)null : reader.GetInt32("UsuarioConteoId");
+                        var fechaConteo = reader.IsDBNull("FechaConteo") ? (DateTime?)null : reader.GetDateTime("FechaConteo");
 
-                        // ✅ OBTENER PRODUCTO CON MANEJO SEGURO Y VALIDACIÓN NULL
-                        var producto = await _context.Productos
-                            .Where(p => p.ProductoId == detalle.ProductoId)
-                            .Select(p => new { 
-                                p.ProductoId, 
-                                p.NombreProducto, 
-                                p.Descripcion 
-                            })
-                            .FirstOrDefaultAsync();
+                        var nombreProducto = reader.IsDBNull("NombreProducto") ? $"Producto {productoId}" : reader.GetString("NombreProducto");
+                        var descripcionProducto = reader.IsDBNull("DescripcionProducto") ? "" : reader.GetString("DescripcionProducto");
 
-                        // ✅ OBTENER LLANTA CON MANEJO SEGURO Y VALIDACIÓN NULL
-                        var llanta = await _context.Llantas
-                            .Where(l => l.ProductoId == detalle.ProductoId)
-                            .Select(l => new { 
-                                l.ProductoId, 
-                                l.Marca, 
-                                l.Modelo, 
-                                l.Ancho, 
-                                l.Perfil, 
-                                l.Diametro 
-                            })
-                            .FirstOrDefaultAsync();
+                        // ✅ INFORMACIÓN DE LLANTA
+                        var marcaLlanta = reader.IsDBNull("MarcaLlanta") ? null : reader.GetString("MarcaLlanta");
+                        var modeloLlanta = reader.IsDBNull("ModeloLlanta") ? null : reader.GetString("ModeloLlanta");
+                        var anchoLlanta = reader.IsDBNull("AnchoLlanta") ? (int?)null : reader.GetInt32("AnchoLlanta");
+                        var perfilLlanta = reader.IsDBNull("PerfilLlanta") ? (int?)null : reader.GetInt32("PerfilLlanta");
+                        var diametroLlanta = reader.IsDBNull("DiametroLlanta") ? null : reader.GetString("DiametroLlanta");
 
-                        // ✅ OBTENER IMAGEN CON MANEJO SEGURO Y VALIDACIÓN NULL
-                        var imagenPrincipal = await _context.ImagenesProductos
-                            .Where(img => img.ProductoId == detalle.ProductoId && 
-                                         img.Urlimagen != null && 
-                                         img.Urlimagen.Trim() != "")
-                            .OrderBy(img => img.ImagenId)
-                            .Select(img => img.Urlimagen)
-                            .FirstOrDefaultAsync();
+                        var nombreUsuarioConteo = reader.IsDBNull("NombreUsuarioConteo") ? null : reader.GetString("NombreUsuarioConteo");
+                        var imagenUrl = reader.IsDBNull("ImagenUrl") ? null : reader.GetString("ImagenUrl");
 
-                        // ✅ OBTENER USUARIO DE CONTEO CON VALIDACIÓN ROBUSTA
-                        Usuario? usuario = null;
-                        if (detalle.UsuarioConteoId.HasValue && detalle.UsuarioConteoId.Value > 0)
-                        {
-                            usuario = await _context.Usuarios
-                                .Where(u => u.UsuarioId == detalle.UsuarioConteoId.Value)
-                                .FirstOrDefaultAsync();
-                        }
-
-                        // ✅ CONSTRUIR MEDIDAS DE LLANTA CON VALIDACIÓN COMPLETA
+                        // ✅ CONSTRUIR MEDIDAS DE LLANTA
                         string? medidasLlanta = null;
-                        if (llanta != null && 
-                            llanta.Ancho.HasValue && llanta.Ancho.Value > 0 &&
-                            llanta.Perfil.HasValue && llanta.Perfil.Value > 0 &&
-                            !string.IsNullOrWhiteSpace(llanta.Diametro))
+                        bool esLlanta = marcaLlanta != null;
+                        if (esLlanta && anchoLlanta.HasValue && perfilLlanta.HasValue && !string.IsNullOrWhiteSpace(diametroLlanta))
                         {
-                            medidasLlanta = $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}";
+                            medidasLlanta = $"{anchoLlanta.Value}/{perfilLlanta.Value}R{diametroLlanta.Trim()}";
                         }
 
-                        // ✅ CREAR DTO CON VALIDACIONES ROBUSTAS CONTRA NULL
-                        var dto = new DetalleInventarioDTO
+                        // ✅ CREAR OBJETO PRODUCTO
+                        var producto = new
                         {
-                            DetalleId = detalle.DetalleId,
-                            InventarioProgramadoId = detalle.InventarioProgramadoId,
-                            ProductoId = detalle.ProductoId,
-                            CantidadSistema = detalle.CantidadSistema,
-                            CantidadFisica = detalle.CantidadFisica,
-                            Diferencia = detalle.Diferencia,
-                            Observaciones = detalle.Observaciones ?? "",
-                            FechaConteo = detalle.FechaConteo,
-                            UsuarioConteoId = detalle.UsuarioConteoId,
+                            DetalleId = detalleId,
+                            InventarioProgramadoId = inventarioId,
+                            ProductoId = productoId,
+                            CantidadSistema = cantidadSistema,
+                            CantidadFisica = cantidadFisica,
+                            Diferencia = diferencia,
+                            Observaciones = observaciones,
+                            FechaConteo = fechaConteo,
+                            UsuarioConteoId = usuarioConteoId,
 
-                            // ✅ INFORMACIÓN DEL PRODUCTO CON PROTECCIÓN CONTRA NULL
-                            NombreProducto = producto?.NombreProducto ?? $"Producto {detalle.ProductoId}",
-                            DescripcionProducto = producto?.Descripcion ?? "",
+                            // Información del producto
+                            NombreProducto = nombreProducto,
+                            DescripcionProducto = descripcionProducto,
 
-                            // ✅ INFORMACIÓN DE LLANTA CON PROTECCIÓN CONTRA NULL
-                            EsLlanta = llanta != null,
-                            MarcaLlanta = llanta?.Marca,
-                            ModeloLlanta = llanta?.Modelo,
-                            MedidasLlanta = (llanta != null && llanta.Ancho.HasValue && llanta.Perfil.HasValue && !string.IsNullOrWhiteSpace(llanta.Diametro))
-                        ? $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}"
-                        : null,
+                            // Información de llanta
+                            EsLlanta = esLlanta,
+                            MarcaLlanta = marcaLlanta,
+                            ModeloLlanta = modeloLlanta,
+                            MedidasLlanta = medidasLlanta,
 
-                            // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
-                            ImagenUrl = _context.ImagenesProductos
-                        .Where(img => img.ProductoId == detalle.ProductoId &&
-                               !string.IsNullOrEmpty(img.Urlimagen) &&
-                               img.Urlimagen.Trim() != "")
-                        .Select(img => img.Urlimagen)
-                        .FirstOrDefault() ?? null,
+                            // Estados calculados
+                            EstadoConteo = cantidadFisica.HasValue ? "Contado" : "Pendiente",
+                            TieneDiscrepancia = diferencia.HasValue && diferencia.Value != 0,
 
-                            // ✅ ESTADOS CALCULADOS CON VALIDACIONES - CORREGIDO PARA EVITAR NULL REFERENCE
-                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                            TieneDiscrepancia = detalle.Diferencia != null && detalle.Diferencia != 0,
-
-                            // ✅ USUARIO QUE HIZO EL CONTEO CON PROTECCIÓN CONTRA NULL
-                            NombreUsuarioConteo = usuario?.NombreUsuario
+                            // Usuario y imagen
+                            NombreUsuarioConteo = nombreUsuarioConteo,
+                            ImagenUrl = imagenUrl
                         };
 
-                        productosDTO.Add(dto);
-
-                        _logger.LogInformation("✅ Producto {ProductoId} mapeado: {Nombre} (Llanta: {EsLlanta})",
-                            detalle.ProductoId, dto.NombreProducto, dto.EsLlanta);
+                        productos.Add(producto);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "❌ Error mapeando producto {ProductoId}: {Error}", detalle.ProductoId, ex.Message);
-
-                        // ✅ PRODUCTO BÁSICO EN CASO DE ERROR
-                        productosDTO.Add(new DetalleInventarioDTO
-                        {
-                            DetalleId = detalle.DetalleId,
-                            InventarioProgramadoId = detalle.InventarioProgramadoId,
-                            ProductoId = detalle.ProductoId,
-                            CantidadSistema = detalle.CantidadSistema,
-                            CantidadFisica = detalle.CantidadFisica,
-                            Diferencia = detalle.Diferencia,
-                            NombreProducto = $"ERROR - Producto {detalle.ProductoId}",
-                            EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
-                            TieneDiscrepancia = detalle.Diferencia != null && detalle.Diferencia != 0
-                        });
+                        _logger.LogError(ex, "❌ Error procesando fila del reader");
+                        // Continuar con la siguiente fila
                     }
                 }
 
-                _logger.LogInformation("✅ Productos mapeados correctamente: {Count}", productosDTO.Count);
+                _logger.LogInformation("✅ Productos procesados exitosamente: {Count}", productos.Count);
 
-                // ✅ ESTADÍSTICAS
-                var contados = productosDTO.Count(p => p.EstadoConteo == "Contado");
-                var pendientes = productosDTO.Count(p => p.EstadoConteo == "Pendiente");
-                var discrepancias = productosDTO.Count(p => p.TieneDiscrepancia);
-
-                _logger.LogInformation("📊 Estadísticas: {Contados} contados, {Pendientes} pendientes, {Discrepancias} discrepancias",
-                    contados, pendientes, discrepancias);
+                // ✅ CALCULAR ESTADÍSTICAS
+                var contados = productos.Count(p => ((dynamic)p).EstadoConteo == "Contado");
+                var pendientes = productos.Count(p => ((dynamic)p).EstadoConteo == "Pendiente");
+                var discrepancias = productos.Count(p => ((dynamic)p).TieneDiscrepancia == true);
 
                 return Ok(new
                 {
-                    productos = productosDTO,
+                    success = true,
+                    productos = productos,
                     estadisticas = new
                     {
-                        total = productosDTO.Count,
+                        total = productos.Count,
                         contados = contados,
                         pendientes = pendientes,
                         discrepancias = discrepancias,
-                        porcentajeProgreso = productosDTO.Count > 0 ? Math.Round((double)contados / productosDTO.Count * 100, 1) : 0
+                        porcentajeProgreso = productos.Count > 0 ? Math.Round((double)contados / productos.Count * 100, 1) : 0
                     }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error al obtener productos del inventario {InventarioId}", inventarioId);
+                _logger.LogError(ex, "💥 Error crítico al obtener productos del inventario {InventarioId}", inventarioId);
                 return StatusCode(500, new
                 {
-                    message = "Error interno del servidor",
-                    timestamp = DateTime.Now
+                    success = false,
+                    message = $"Error crítico: {ex.Message}",
+                    inventarioId = inventarioId,
+                    tipo = ex.GetType().Name
                 });
             }
         }
