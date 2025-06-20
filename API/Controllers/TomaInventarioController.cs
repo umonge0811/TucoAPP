@@ -806,27 +806,46 @@ namespace API.Controllers
                             continue;
                         }
 
-                        // ✅ OBTENER PRODUCTO CON MANEJO SEGURO
+                        // ✅ OBTENER PRODUCTO CON MANEJO SEGURO Y VALIDACIÓN NULL
                         var producto = await _context.Productos
                             .Where(p => p.ProductoId == detalle.ProductoId)
+                            .Select(p => new { 
+                                p.ProductoId, 
+                                p.NombreProducto, 
+                                p.Descripcion 
+                            })
                             .FirstOrDefaultAsync();
 
-                        // ✅ OBTENER LLANTA CON MANEJO SEGURO
+                        // ✅ OBTENER LLANTA CON MANEJO SEGURO Y VALIDACIÓN NULL
                         var llanta = await _context.Llantas
                             .Where(l => l.ProductoId == detalle.ProductoId)
+                            .Select(l => new { 
+                                l.ProductoId, 
+                                l.Marca, 
+                                l.Modelo, 
+                                l.Ancho, 
+                                l.Perfil, 
+                                l.Diametro 
+                            })
                             .FirstOrDefaultAsync();
 
-                        // ✅ OBTENER IMAGEN CON MANEJO SEGURO
+                        // ✅ OBTENER IMAGEN CON MANEJO SEGURO Y VALIDACIÓN NULL
                         var imagenPrincipal = await _context.ImagenesProductos
-                            .Where(img => img.ProductoId == detalle.ProductoId && !string.IsNullOrEmpty(img.Urlimagen))
+                            .Where(img => img.ProductoId == detalle.ProductoId && 
+                                         img.Urlimagen != null && 
+                                         img.Urlimagen.Trim() != "")
                             .OrderBy(img => img.ImagenId)
                             .Select(img => img.Urlimagen)
                             .FirstOrDefaultAsync();
 
-                        // ✅ OBTENER USUARIO DE CONTEO CON VALIDACIÓN
-                        var usuario = detalle.UsuarioConteoId.HasValue && detalle.UsuarioConteoId.Value > 0
-                            ? await _context.Usuarios.Where(u => u.UsuarioId == detalle.UsuarioConteoId.Value).FirstOrDefaultAsync()
-                            : null;
+                        // ✅ OBTENER USUARIO DE CONTEO CON VALIDACIÓN ROBUSTA
+                        Usuario? usuario = null;
+                        if (detalle.UsuarioConteoId.HasValue && detalle.UsuarioConteoId.Value > 0)
+                        {
+                            usuario = await _context.Usuarios
+                                .Where(u => u.UsuarioId == detalle.UsuarioConteoId.Value)
+                                .FirstOrDefaultAsync();
+                        }
 
                         // ✅ CONSTRUIR MEDIDAS DE LLANTA CON VALIDACIÓN COMPLETA
                         string? medidasLlanta = null;
@@ -838,40 +857,38 @@ namespace API.Controllers
                             medidasLlanta = $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}";
                         }
 
-                        // ✅ CREAR DTO CON VALIDACIONES COMPLETAS
+                        // ✅ CREAR DTO CON VALIDACIONES ROBUSTAS CONTRA NULL
                         var dto = new DetalleInventarioDTO
                         {
                             DetalleId = detalle.DetalleId,
                             InventarioProgramadoId = detalle.InventarioProgramadoId,
                             ProductoId = detalle.ProductoId,
-                            CantidadSistema = detalle.CantidadSistema, // ✅ CantidadSistema es int, no nullable
+                            CantidadSistema = detalle.CantidadSistema,
                             CantidadFisica = detalle.CantidadFisica,
                             Diferencia = detalle.Diferencia,
                             Observaciones = detalle.Observaciones ?? "",
                             FechaConteo = detalle.FechaConteo,
                             UsuarioConteoId = detalle.UsuarioConteoId,
 
-                            // ✅ INFORMACIÓN DEL PRODUCTO CON VALIDACIONES
-                            NombreProducto = !string.IsNullOrWhiteSpace(producto?.NombreProducto) 
-                                ? producto.NombreProducto 
-                                : $"Producto {detalle.ProductoId}",
+                            // ✅ INFORMACIÓN DEL PRODUCTO CON PROTECCIÓN CONTRA NULL
+                            NombreProducto = producto?.NombreProducto ?? $"Producto {detalle.ProductoId}",
                             DescripcionProducto = producto?.Descripcion ?? "",
 
-                            // ✅ INFORMACIÓN DE LLANTA CON VALIDACIONES
+                            // ✅ INFORMACIÓN DE LLANTA CON PROTECCIÓN CONTRA NULL
                             EsLlanta = llanta != null,
-                            MarcaLlanta = !string.IsNullOrWhiteSpace(llanta?.Marca) ? llanta.Marca : null,
-                            ModeloLlanta = !string.IsNullOrWhiteSpace(llanta?.Modelo) ? llanta.Modelo : null,
+                            MarcaLlanta = llanta?.Marca,
+                            ModeloLlanta = llanta?.Modelo,
                             MedidasLlanta = medidasLlanta,
 
-                            // ✅ IMAGEN PRINCIPAL CON VALIDACIÓN
-                            ImagenUrl = !string.IsNullOrWhiteSpace(imagenPrincipal) ? imagenPrincipal : null,
+                            // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
+                            ImagenUrl = imagenPrincipal,
 
                             // ✅ ESTADOS CALCULADOS CON VALIDACIONES
                             EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
                             TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0,
 
-                            // ✅ USUARIO QUE HIZO EL CONTEO CON VALIDACIÓN
-                            NombreUsuarioConteo = !string.IsNullOrWhiteSpace(usuario?.NombreUsuario) ? usuario.NombreUsuario : null
+                            // ✅ USUARIO QUE HIZO EL CONTEO CON PROTECCIÓN CONTRA NULL
+                            NombreUsuarioConteo = usuario?.NombreUsuario
                         };
 
                         productosDTO.Add(dto);
