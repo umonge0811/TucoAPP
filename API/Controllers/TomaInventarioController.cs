@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.Extensions; // ✅ CONSISTENTE CON TU ESTILO
 using API.Services.Interfaces;
 using API.ServicesAPI.Interfaces;
@@ -767,7 +767,17 @@ namespace API.Controllers
                     return Forbid("No tienes acceso a este inventario");
                 }
 
-                // ✅ OBTENER DETALLES SIN RELACIONES COMPLEJAS
+                // ✅ VERIFICAR QUE EL INVENTARIO EXISTE Y ESTÁ VÁLIDO
+                var inventarioExiste = await _context.InventariosProgramados
+                    .AnyAsync(i => i.InventarioProgramadoId == inventarioId);
+                
+                if (!inventarioExiste)
+                {
+                    _logger.LogWarning("❌ Inventario no encontrado: {InventarioId}", inventarioId);
+                    return NotFound("Inventario no encontrado");
+                }
+
+                // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL
                 var detalles = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioId)
                     .ToListAsync();
@@ -789,65 +799,79 @@ namespace API.Controllers
                 {
                     try
                     {
-                        // ✅ OBTENER PRODUCTO
+                        // ✅ VALIDAR QUE EL DETALLE TENGA VALORES VÁLIDOS
+                        if (detalle.ProductoId <= 0)
+                        {
+                            _logger.LogWarning("⚠️ Detalle con ProductoId inválido: {DetalleId}", detalle.DetalleId);
+                            continue;
+                        }
+
+                        // ✅ OBTENER PRODUCTO CON MANEJO SEGURO
                         var producto = await _context.Productos
-                            .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);
+                            .Where(p => p.ProductoId == detalle.ProductoId)
+                            .FirstOrDefaultAsync();
 
-                        // ✅ OBTENER LLANTA (SOLO UNA)
+                        // ✅ OBTENER LLANTA CON MANEJO SEGURO
                         var llanta = await _context.Llantas
-                            .FirstOrDefaultAsync(l => l.ProductoId == detalle.ProductoId);
+                            .Where(l => l.ProductoId == detalle.ProductoId)
+                            .FirstOrDefaultAsync();
 
-                        // ✅ OBTENER SOLO LA PRIMERA IMAGEN (EVITAR DUPLICADOS)
+                        // ✅ OBTENER IMAGEN CON MANEJO SEGURO
                         var imagenPrincipal = await _context.ImagenesProductos
-                            .Where(img => img.ProductoId == detalle.ProductoId)
-                            .OrderBy(img => img.ImagenId) // Tomar la primera imagen por ID
+                            .Where(img => img.ProductoId == detalle.ProductoId && !string.IsNullOrEmpty(img.Urlimagen))
+                            .OrderBy(img => img.ImagenId)
                             .Select(img => img.Urlimagen)
                             .FirstOrDefaultAsync();
 
-                        // ✅ OBTENER USUARIO DE CONTEO
-                        var usuario = detalle.UsuarioConteoId.HasValue
-                            ? await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == detalle.UsuarioConteoId.Value)
+                        // ✅ OBTENER USUARIO DE CONTEO CON VALIDACIÓN
+                        var usuario = detalle.UsuarioConteoId.HasValue && detalle.UsuarioConteoId.Value > 0
+                            ? await _context.Usuarios.Where(u => u.UsuarioId == detalle.UsuarioConteoId.Value).FirstOrDefaultAsync()
                             : null;
 
-                        // ✅ CONSTRUIR MEDIDAS DE LLANTA
+                        // ✅ CONSTRUIR MEDIDAS DE LLANTA CON VALIDACIÓN COMPLETA
                         string? medidasLlanta = null;
-                        if (llanta != null && llanta.Ancho.HasValue && llanta.Perfil.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
+                        if (llanta != null && 
+                            llanta.Ancho.HasValue && llanta.Ancho.Value > 0 &&
+                            llanta.Perfil.HasValue && llanta.Perfil.Value > 0 &&
+                            !string.IsNullOrWhiteSpace(llanta.Diametro))
                         {
-                            medidasLlanta = $"{llanta.Ancho}/{llanta.Perfil}R{llanta.Diametro}";
+                            medidasLlanta = $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}";
                         }
 
-                        // ✅ CREAR DTO COMPLETO
+                        // ✅ CREAR DTO CON VALIDACIONES COMPLETAS
                         var dto = new DetalleInventarioDTO
                         {
                             DetalleId = detalle.DetalleId,
                             InventarioProgramadoId = detalle.InventarioProgramadoId,
                             ProductoId = detalle.ProductoId,
-                            CantidadSistema = detalle.CantidadSistema,
+                            CantidadSistema = detalle.CantidadSistema ?? 0, // ✅ Manejar NULL
                             CantidadFisica = detalle.CantidadFisica,
                             Diferencia = detalle.Diferencia,
                             Observaciones = detalle.Observaciones ?? "",
                             FechaConteo = detalle.FechaConteo,
                             UsuarioConteoId = detalle.UsuarioConteoId,
 
-                            // ✅ INFORMACIÓN DEL PRODUCTO
-                            NombreProducto = producto?.NombreProducto ?? $"Producto {detalle.ProductoId}",
+                            // ✅ INFORMACIÓN DEL PRODUCTO CON VALIDACIONES
+                            NombreProducto = !string.IsNullOrWhiteSpace(producto?.NombreProducto) 
+                                ? producto.NombreProducto 
+                                : $"Producto {detalle.ProductoId}",
                             DescripcionProducto = producto?.Descripcion ?? "",
 
-                            // ✅ INFORMACIÓN DE LLANTA
+                            // ✅ INFORMACIÓN DE LLANTA CON VALIDACIONES
                             EsLlanta = llanta != null,
-                            MarcaLlanta = llanta?.Marca,
-                            ModeloLlanta = llanta?.Modelo,
+                            MarcaLlanta = !string.IsNullOrWhiteSpace(llanta?.Marca) ? llanta.Marca : null,
+                            ModeloLlanta = !string.IsNullOrWhiteSpace(llanta?.Modelo) ? llanta.Modelo : null,
                             MedidasLlanta = medidasLlanta,
 
-                            // ✅ IMAGEN PRINCIPAL (SOLO UNA)
-                            ImagenUrl = imagenPrincipal,
+                            // ✅ IMAGEN PRINCIPAL CON VALIDACIÓN
+                            ImagenUrl = !string.IsNullOrWhiteSpace(imagenPrincipal) ? imagenPrincipal : null,
 
-                            // ✅ ESTADOS CALCULADOS
+                            // ✅ ESTADOS CALCULADOS CON VALIDACIONES
                             EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
                             TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0,
 
-                            // ✅ USUARIO QUE HIZO EL CONTEO
-                            NombreUsuarioConteo = usuario?.NombreUsuario
+                            // ✅ USUARIO QUE HIZO EL CONTEO CON VALIDACIÓN
+                            NombreUsuarioConteo = !string.IsNullOrWhiteSpace(usuario?.NombreUsuario) ? usuario.NombreUsuario : null
                         };
 
                         productosDTO.Add(dto);
