@@ -1,0 +1,22 @@
+WHERE [n].[UsuarioId] = @__userId_Value_0 AND [n].[Leida] = CAST(0 AS bit)
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Usuario 1 tiene 0 notificaciones no leídas
+GestionLlantera.Web.Services.NotificacionDirectService: Information: === CLAIMS DISPONIBLES ===
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: JwtToken, Valor: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiVWxpc2VzIE1vbmdlIEFndWlsYXIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJ1bW9uZ2VnZHNAZ21haWwuY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiIxIiwidXNlcklkIjoiMSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkNvbGFib3JhZG9yIiwiUGVybWlzc2lvbiI6WyJNb2RpZmljYXIgSW52ZW50YXJpbyIsIkNyZWFyIEZhY3R1cmFzIiwiQWp1c3RhciBTdG9jayIsIlZlciBSZXBvcnRlcyIsIkluaWNpYXIgSW52ZW50YXJpbyIsIkNvbXBsZXRhciBJbnZlbnRhcmlvIiwiRGVzY2FyZ2FyIFJlcG9ydGVzIl0sImV4cCI6MTc1MDM4NzQxOSwiaXNzIjoiVHVjby5BUEkiLCJhdWQiOiJUdWNvLkNsaWVudCJ9.ebHISinSkG9SPYFSlMepsI7nNF5mVrRRSS6TixX43tg
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name, Valor: Ulises Monge Aguilar
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress, Valor: umongegds@gmail.com
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier, Valor: 1
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: userId, Valor: 1
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: http://schemas.microsoft.com/ws/2008/06/identity/claims/role, Valor: Colaborador
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: Permission, Valor: Modificar Inventario
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: Permission, Valor: Crear Facturas
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: Permission, Valor: Ajustar Stock
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: Permission, Valor: Ver Reportes
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: Permission, Valor: Iniciar Inventario
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: Permission, Valor: Completar Inventario
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: Permission, Valor: Descargar Reportes
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: exp, Valor: 1750387419
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: iss, Valor: Tuco.API
+GestionLlantera.Web.Services.NotificacionDirectService: Information: Claim - Tipo: aud, Valor: Tuco.Client
+GestionLlantera.Web.Services.NotificacionDirectService: Information: === FIN CLAIMS ===
+GestionLlantera.Web.Services.NotificacionDirectService: Information: ID de usuario obtenido de claims: 1
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (2ms) [Parameters=[@__userId_Value_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
