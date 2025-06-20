@@ -777,11 +777,11 @@ namespace API.Controllers
                     return NotFound("Inventario no encontrado");
                 }
 
-                // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL Y VALIDACIONES
+                // ✅ OBTENER DETALLES CON MANEJO SEGURO DE NULL Y VALIDACIONES MEJORADAS
                 var detalles = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioId && 
-                               d.ProductoId > 0 && 
-                               d.CantidadSistema >= 0)
+                               d.ProductoId != null && d.ProductoId > 0 && 
+                               d.CantidadSistema != null && d.CantidadSistema >= 0)
                     .ToListAsync();
 
                 _logger.LogInformation("🔍 Detalles obtenidos: {Count}", detalles.Count);
@@ -820,7 +820,7 @@ namespace API.Controllers
                     })
                     .ToListAsync();
 
-                // Obtener llantas
+                // Obtener llantas con manejo seguro de valores nullable
                 var llantas = await _context.Llantas
                     .Where(l => productosIds.Contains(l.ProductoId))
                     .Select(l => new { 
@@ -833,7 +833,7 @@ namespace API.Controllers
                     })
                     .ToListAsync();
 
-                // Obtener imágenes
+                // Obtener imágenes con manejo seguro de valores nullable
                 var imagenes = await _context.ImagenesProductos
                     .Where(img => productosIds.Contains(img.ProductoId) && 
                                  img.Urlimagen != null && 
@@ -845,20 +845,21 @@ namespace API.Controllers
                     })
                     .ToListAsync();
 
-                // Obtener usuarios de conteo
+                // Obtener usuarios de conteo con manejo seguro de nullable
                 var usuariosConteoIds = detalles
                     .Where(d => d.UsuarioConteoId.HasValue && d.UsuarioConteoId.Value > 0)
-                    .Select(d => d.UsuarioConteoId.Value)
+                    .Select(d => d.UsuarioConteoId!.Value) // ✅ USAR ! para indicar que sabemos que no es null
                     .Distinct()
                     .ToList();
 
-                var usuarios = new List<dynamic>();
+                var usuarios = new List<object>(); // ✅ CAMBIAR A object en lugar de dynamic
                 if (usuariosConteoIds.Any())
                 {
                     usuarios = await _context.Usuarios
                         .Where(u => usuariosConteoIds.Contains(u.UsuarioId))
                         .Select(u => new { u.UsuarioId, u.NombreUsuario })
-                        .ToListAsync<dynamic>();
+                        .Cast<object>() // ✅ USAR Cast<object>() en lugar de ToListAsync<dynamic>()
+                        .ToListAsync();
                 }
 
                 var productosDTO = new List<DetalleInventarioDTO>();
@@ -879,7 +880,7 @@ namespace API.Controllers
                         var llanta = llantas.FirstOrDefault(l => l.ProductoId == detalle.ProductoId);
                         var imagen = imagenes.FirstOrDefault(img => img.ProductoId == detalle.ProductoId);
                         var usuario = detalle.UsuarioConteoId.HasValue && usuarios.Any() ? 
-                            usuarios.FirstOrDefault(u => u.UsuarioId == detalle.UsuarioConteoId.Value) : null;
+                            usuarios.FirstOrDefault(u => ((dynamic)u).UsuarioId == detalle.UsuarioConteoId.Value) : null;
 
                         // ✅ CONSTRUIR MEDIDAS DE LLANTA CON VALIDACIÓN COMPLETA
                         string? medidasLlanta = null;
@@ -934,7 +935,7 @@ namespace API.Controllers
                             dto.TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia != 0;
 
                             // ✅ USUARIO QUE HIZO EL CONTEO CON PROTECCIÓN CONTRA NULL
-                            dto.NombreUsuarioConteo = usuario?.NombreUsuario ?? "";
+                            dto.NombreUsuarioConteo = usuario != null ? ((dynamic)usuario).NombreUsuario ?? "" : "";
                         }
                         catch (Exception dtoEx)
                         {
@@ -1037,7 +1038,6 @@ namespace API.Controllers
                 _logger.LogInformation("🧪 Inventario ID: {InventarioId}", inventarioId);
 
                 // ✅ PASO 1: Verificar que el inventario existe usando SQL RAW
-                var inventarioExisteSQL = "SELECT COUNT(*) FROM InventariosProgramados WHERE InventarioProgramadoId = {0}";
                 var inventarioCount = await _context.Database.SqlQueryRaw<int>(
                     "SELECT COUNT(*) as Value FROM InventariosProgramados WHERE InventarioProgramadoId = {0}", 
                     inventarioId).FirstOrDefaultAsync();
