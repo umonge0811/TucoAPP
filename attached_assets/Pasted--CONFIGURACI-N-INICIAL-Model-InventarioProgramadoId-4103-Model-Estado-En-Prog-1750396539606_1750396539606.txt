@@ -1,0 +1,95 @@
+ 🔧 === CONFIGURACIÓN INICIAL ===
+ 🔧 Model.InventarioProgramadoId: 4103
+ 🔧 Model.Estado: En Progreso
+ 🔧 Model.Titulo: Inventario de Prueba Sin Alertas
+ 🔧 ViewBag.UsuarioId: 1
+ 🔧 ViewBag.PuedeContar: true
+ 🔧 window.inventarioConfig: Object
+ 🚀 === DEPURACIÓN: INICIALIZANDO EJECUTAR INVENTARIO ===
+ejecutar.js:809 🚀 Document ready ejecutado
+ejecutar.js:810 🚀 window.inventarioConfig: Object
+ejecutar.js:811 🚀 URL actual: https://localhost:7038/TomaInventario/Ejecutar/4103
+ejecutar.js:841 🚀 ID obtenido de config: 4103
+ejecutar.js:819 🔍 Obteniendo ID del inventario desde URL...
+ejecutar.js:821 🔍 Path actual: /TomaInventario/Ejecutar/4103
+ejecutar.js:825 🔍 Partes del path: Array(4)
+ejecutar.js:829 🔍 ID extraído: 4103
+ejecutar.js:842 🚀 ID obtenido de URL: 4103
+ejecutar.js:843 🚀 ID final seleccionado: 4103
+ejecutar.js:853 ✅ ID del inventario obtenido: 4103
+ejecutar.js:854 ✅ Tipo del ID: number
+ejecutar.js:857 🚀 Llamando a inicializarEjecutorInventario...
+ejecutar.js:870 📋 Inicializando ejecutor para inventario ID: 4103
+ejecutar.js:2417 🔒 === CARGANDO PERMISOS ESPECÍFICOS DEL INVENTARIO ===
+ejecutar.js:2418 🔒 Inventario ID: 4103
+ejecutar.js:2421 🔒 Usuario ID: 1
+ejecutar.js:2514 🔐 Verificando si es admin desde configuración: false
+ejecutar.js:3872 ✅ Event listeners de filtrado configurados
+ejecutar.js:6973 🕵️ Detective activado - monitoreando cambios en la barra
+ejecutar.js:2460 ✅ Permisos específicos cargados: Object
+ejecutar.js:3088 📋 Cargando información del inventario 4103...
+ejecutar.js:3092 ✅ Usando información del inventario desde configuración global
+ejecutar.js:3107 ✅ Información del inventario cargada desde configuración
+ejecutar.js:879 🔄 Cargando ajustes pendientes ANTES que productos...
+ejecutar.js:1902 📋 Cargando ajustes pendientes...
+ejecutar.js:1922 ✅ Cargados 0 ajustes pendientes
+ejecutar.js:915 🔄 Actualizando panel de ajustes pendientes...
+ejecutar.js:950 📊 Contando ajustes por tipo...
+ejecutar.js:951 🔍 Ajustes pendientes: Array(0)
+ejecutar.js:962 ⚠️ No hay ajustes pendientes para contar
+ejecutar.js:921 📊 Actualizando estadísticas del panel con: Object
+ejecutar.js:937 ✅ Panel actualizado: 0 ajustes pendientes
+ejecutar.js:883 📦 Cargando productos CON ajustes ya cargados...
+ejecutar.js:6984 🔍 DETECTIVE: cargarProductosInventario ejecutándose...
+ejecutar.js:3124 📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===
+ejecutar.js:3125 📦 Inventario ID: 4103
+ejecutar.js:3126 📦 Tipo de inventarioId: number
+ejecutar.js:3127 📦 URL que se va a llamar: /TomaInventario/ObtenerProductos/4103
+ejecutar.js:3135 📦 Realizando fetch...
+ejecutar.js:3144 📦 Respuesta recibida:
+ejecutar.js:3145 📦 Status: 200
+ejecutar.js:3146 📦 StatusText: 
+ejecutar.js:3147 📦 OK: true
+ejecutar.js:3154 📦 Parseando JSON...
+ejecutar.js:3156 📦 Datos recibidos: Object
+ejecutar.js:3157 📦 Tipo de data: object
+ejecutar.js:3158 📦 Data.success: false
+ejecutar.js:3159 📦 Data.productos: undefined
+ejecutar.js:3160 📦 Cantidad de productos: N/A
+ejecutar.js:3162 🔍 === DEBUGGING PRODUCTOS CARGADOS ===
+ejecutar.js:3163 🔍 Respuesta completa: Object
+ejecutar.js:3164 🔍 Productos array: undefined
+ejecutar.js:3165 🔍 Estadísticas: undefined
+ejecutar.js:3176 ✅ Cargados 0 productos
+ejecutar.js:3198 🎨 Renderizando productos...
+ejecutar.js:3199 🎨 Total productos a renderizar: 0
+ejecutar.js:3200 🎨 Filtros activos: Object
+ejecutar.js:4447 📊 Actualizando estadísticas UI...
+ejecutar.js:4448 📊 Estadísticas actuales: Object
+ejecutar.js:4508 ✅ Estadísticas actualizadas: 0% completado
+ejecutar.js:1306 🔍 === DEBUG: VERIFICANDO PANELES ===
+ejecutar.js:1309 📊 Estadísticas actuales: Object
+ejecutar.js:1310 🔄 Ajustes pendientes: 0
+ejecutar.js:1311 🔒 Permisos inventario actual: Object
+ejecutar.js:1319 ❌ Ocultando panel de ajustes pendientes
+ejecutar.js:1330 🔍 === CONDICIONES BÁSICAS ===
+ejecutar.js:1331 📊 Todo contado: false (pendientes: undefined )
+ejecutar.js:1332 📦 Hay productos: false (total: undefined )
+ejecutar.js:1333 📝 Tiene permisos conteo: true
+ejecutar.js:1334 ✅ Tiene permisos validación: true
+ejecutar.js:1335 👑 Es admin: false
+ejecutar.js:1341 🎛️ Panel finalización existe: true
+ejecutar.js:1342 🎛️ Panel conteo completado existe: false
+ejecutar.js:1389 ❌ === INVENTARIO NO LISTO ===
+ejecutar.js:1397 🚫 Razón: Aún hay productos pendientes de contar
+ejecutar.js:1400 🚫 Razón: No hay productos en el inventario
+ejecutar.js:6993 🔍 DETECTIVE: actualizarEstadisticas ejecutándose...
+ejecutar.js:4327 📊 Estadísticas actualizadas correctamente: 0% completado
+ejecutar.js:2575 🔒 Aplicando control de permisos en la interfaz...
+ejecutar.js:2671 ✅ Info de permisos mostrada: 📝 Conteo, 🔧 Ajustes, ✅ Validación, 🏁 Completar
+ejecutar.js:2625 ✅ Control de permisos aplicado correctamente
+ejecutar.js:898 ✅ Ejecutor de inventario inicializado correctamente
+ejecutar.js:652 👁️ Iniciando monitor del badge de estado...
+ejecutar.js:674 ✅ Observer del badge configurado
+ejecutar.js:728 🔍 Badges encontrados: Array(10)
+ejecutar.js:728 🔍 Badges encontrados: (10) ['1', '1', '📝 Conteo • 🔧 Ajustes • ✅ Validación • 🏁 Completar', 'En Progreso', '0', 'Listo para finalizar', '0', 'Listo para finalizar', 'ID: -', 'Tipo']
