@@ -843,8 +843,7 @@ namespace API.Controllers
                         if (detalle.UsuarioConteoId.HasValue && detalle.UsuarioConteoId.Value > 0)
                         {
                             usuario = await _context.Usuarios
-                                .Where(```text
-u => u.UsuarioId == detalle.UsuarioConteoId.Value)
+                                .Where(u => u.UsuarioId == detalle.UsuarioConteoId.Value)
                                 .FirstOrDefaultAsync();
                         }
 
@@ -879,8 +878,8 @@ u => u.UsuarioId == detalle.UsuarioConteoId.Value)
                             EsLlanta = llanta != null,
                             MarcaLlanta = llanta?.Marca,
                             ModeloLlanta = llanta?.Modelo,
-                            MedidasLlanta = (llanta != null && llanta.Ancho.HasValue && llanta.Perfil.HasValue && llanta.Diametro.HasValue)
-                        ? $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Value}"
+                            MedidasLlanta = (llanta != null && llanta.Ancho.HasValue && llanta.Perfil.HasValue && !string.IsNullOrWhiteSpace(llanta.Diametro))
+                        ? $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}"
                         : null,
 
                             // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
