@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -30,11 +30,46 @@ namespace GestionLlantera.Web.ViewComponents
                 // Convertir User a ClaimsPrincipal para poder acceder a Claims
                 var claimsPrincipal = User as ClaimsPrincipal;
 
-                // Obtener los roles del usuario desde los claims
-                var roles = claimsPrincipal?.Claims
+                // ✅ AGREGAR LOGGING PARA DEBUGGEAR LOS CLAIMS
+                _logger.LogInformation("=== DEBUGGING CLAIMS ===");
+                if (claimsPrincipal?.Claims != null)
+                {
+                    foreach (var claim in claimsPrincipal.Claims)
+                    {
+                        _logger.LogInformation($"Claim Type: {claim.Type}, Value: {claim.Value}");
+                    }
+                }
+
+                // ✅ BUSCAR ROLES EN DIFERENTES TIPOS DE CLAIMS
+                var roles = new List<string>();
+
+                // Buscar en ClaimTypes.Role (estándar)
+                var standardRoles = claimsPrincipal?.Claims
                     .Where(c => c.Type == ClaimTypes.Role)
                     .Select(c => c.Value)
                     .ToList() ?? new List<string>();
+
+                // Buscar en "role" (común en JWT)
+                var jwtRoles = claimsPrincipal?.Claims
+                    .Where(c => c.Type == "role")
+                    .Select(c => c.Value)
+                    .ToList() ?? new List<string>();
+
+                // Buscar en "roles" (también común)
+                var rolesPlural = claimsPrincipal?.Claims
+                    .Where(c => c.Type == "roles")
+                    .Select(c => c.Value)
+                    .ToList() ?? new List<string>();
+
+                // Combinar todos los roles encontrados
+                roles.AddRange(standardRoles);
+                roles.AddRange(jwtRoles);
+                roles.AddRange(rolesPlural);
+
+                // Eliminar duplicados
+                roles = roles.Distinct().ToList();
+
+                _logger.LogInformation($"Roles encontrados: {string.Join(", ", roles)}");
 
                 return View(new UserInfoViewModel
                 {
