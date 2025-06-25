@@ -538,5 +538,63 @@ namespace GestionLlantera.Web.Services
                     new AuthenticationHeaderValue("Bearer", jwtToken);
             }
         }
+
+        /// <summary>
+        /// 📚 NUEVO: Obtiene los inventarios asignados a un usuario específico (versión Web con token)
+        /// </summary>
+        public async Task<List<InventarioProgramadoDTO>?> ObtenerInventariosAsignadosAsync(int usuarioId, string jwtToken)
+        {
+             try
+            {
+                _logger.LogInformation("📦 === SERVICIO: OBTENIENDO INVENTARIOS ASIGNADOS ===");
+                _logger.LogInformation("📦 Usuario ID: {UsuarioId}", usuarioId);
+                _logger.LogInformation("📦 Token presente: {TokenPresente}", !string.IsNullOrEmpty(jwtToken));
+                _logger.LogInformation("📦 URL llamada: api/TomaInventario/inventarios-asignados/{UsuarioId}", usuarioId);
+
+                ConfigurarAutenticacion(jwtToken);
+
+                var response = await _httpClient.GetAsync($"api/TomaInventario/inventarios-asignados/{usuarioId}");
+
+                _logger.LogInformation("📦 Código de respuesta: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📦 Respuesta exitosa: {IsSuccess}", response.IsSuccessStatusCode);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("📦 Contenido recibido (primeros 500 chars): {Content}",
+                        content.Length > 500 ? content.Substring(0, 500) + "..." : content);
+
+                    // ✅ LA API DEVUELVE UNA LISTA DE INVENTARIOS
+                    var inventarios = JsonConvert.DeserializeObject<List<InventarioProgramadoDTO>>(content);
+
+                    _logger.LogInformation("📦 Respuesta deserializada - Inventarios: {Count}",
+                        inventarios?.Count ?? 0);
+
+                    if (inventarios != null)
+                    {
+                        _logger.LogInformation("✅ Se obtuvieron {Count} inventarios del API",
+                            inventarios.Count);
+
+                        return inventarios;
+                    }
+
+                    _logger.LogWarning("⚠️ No se encontraron inventarios en la respuesta");
+                    return new List<InventarioProgramadoDTO>();
+
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al obtener inventarios: {StatusCode} - {Content}",
+                        response.StatusCode, errorContent);
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al obtener inventarios asignados al usuario");
+                return null;
+            }
+        }
     }
 }

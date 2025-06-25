@@ -896,5 +896,155 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
+
+        // =====================================
+        // 📚 NUEVO: MÓDULO DE HISTORIAL DE INVENTARIOS
+        // =====================================
+
+        /// <summary>
+        /// 📚 Muestra el historial de inventarios del usuario actual
+        /// GET: /TomaInventario/Historial
+        /// </summary>
+        public async Task<IActionResult> Historial()
+        {
+            ViewData["Title"] = "Historial de Inventarios";
+            ViewData["Layout"] = "_AdminLayout";
+
+            try
+            {
+                _logger.LogInformation("📚 === CARGANDO HISTORIAL DE INVENTARIOS ===");
+                _logger.LogInformation("📚 Usuario: {Usuario}", User.Identity?.Name ?? "Anónimo");
+
+                // ✅ VERIFICAR SESIÓN
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // ✅ VERIFICAR PERMISOS
+                var puedeVerHistorialCompleto = await this.TienePermisoAsync("Ver Historial Inventarios Completo");
+                var usuarioId = ObtenerIdUsuarioActual();
+
+                _logger.LogInformation("🔐 === PERMISOS DE HISTORIAL ===");
+                _logger.LogInformation("🔐 Usuario ID: {UsuarioId}", usuarioId);
+                _logger.LogInformation("🔐 Puede ver historial completo: {PuedeVer}", puedeVerHistorialCompleto);
+
+                List<InventarioProgramadoDTO> inventarios;
+
+                if (puedeVerHistorialCompleto)
+                {
+                    // ✅ ADMINISTRADOR: VER TODOS LOS INVENTARIOS
+                    _logger.LogInformation("👑 Cargando historial completo (administrador)");
+                    inventarios = await _inventarioService.ObtenerTodosLosInventariosAsync(token);
+                }
+                else
+                {
+                    // ✅ USUARIO NORMAL: SOLO SUS INVENTARIOS ASIGNADOS
+                    _logger.LogInformation("👤 Cargando historial personal del usuario {UsuarioId}", usuarioId);
+                    inventarios = await _tomaInventarioService.ObtenerInventariosAsignadosAsync(usuarioId, token);
+                }
+
+                // ✅ FILTRAR SOLO INVENTARIOS EN PROGRESO Y COMPLETADOS
+                var inventariosConHistorial = inventarios
+                    .Where(i => i.Estado == "En Progreso" || i.Estado == "Completado")
+                    .OrderByDescending(i => i.FechaCreacion)
+                    .ToList();
+
+                _logger.LogInformation("✅ Inventarios con historial: {Count}", inventariosConHistorial.Count);
+
+                // ✅ PREPARAR DATOS PARA LA VISTA
+                ViewBag.PuedeVerHistorialCompleto = puedeVerHistorialCompleto;
+                ViewBag.UsuarioId = usuarioId;
+                ViewBag.TotalInventarios = inventariosConHistorial.Count;
+
+                return View(inventariosConHistorial);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al cargar historial de inventarios");
+                TempData["Error"] = "Error al cargar el historial de inventarios.";
+                return RedirectToAction("Index", "Dashboard");
+            }
+        }
+
+        /// <summary>
+        /// 📖 Muestra un inventario del historial (solo lectura si está completado)
+        /// GET: /TomaInventario/VerHistorial/5
+        /// </summary>
+        public async Task<IActionResult> VerHistorial(int id)
+        {
+            ViewData["Title"] = "Ver Inventario";
+            ViewData["Layout"] = "_AdminLayout";
+
+            try
+            {
+                _logger.LogInformation("📖 === VER INVENTARIO DEL HISTORIAL ===");
+                _logger.LogInformation("📖 Inventario ID: {Id}", id);
+                _logger.LogInformation("📖 Usuario: {Usuario}", User.Identity?.Name ?? "Anónimo");
+
+                // ✅ VERIFICAR SESIÓN
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // ✅ OBTENER INFORMACIÓN DEL INVENTARIO
+                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(id, token);
+
+                if (inventario == null)
+                {
+                    _logger.LogError("❌ Inventario no encontrado - ID: {Id}", id);
+                    TempData["Error"] = "Inventario no encontrado.";
+                    return RedirectToAction("Historial");
+                }
+
+                // ✅ VERIFICAR ACCESO DEL USUARIO
+                var usuarioId = ObtenerIdUsuarioActual();
+                var puedeVerHistorialCompleto = await this.TienePermisoAsync("Ver Historial Inventarios Completo");
+                var estaAsignado = inventario.AsignacionesUsuarios?.Any(a => a.UsuarioId == usuarioId) ?? false;
+
+                if (!puedeVerHistorialCompleto && !estaAsignado)
+                {
+                    _logger.LogWarning("🚫 Usuario sin acceso al inventario {Id}", id);
+                    TempData["Error"] = "No tienes acceso a este inventario.";
+                    return RedirectToAction("Historial");
+                }
+
+                // ✅ DETERMINAR MODO DE VISTA SEGÚN EL ESTADO
+                var modoSoloLectura = inventario.Estado == "Completado";
+
+                _logger.LogInformation("📋 === CONFIGURACIÓN DE VISTA ===");
+                _logger.LogInformation("📋 Estado: {Estado}", inventario.Estado);
+                _logger.LogInformation("📋 Modo solo lectura: {SoloLectura}", modoSoloLectura);
+
+                // ✅ SI ESTÁ EN PROGRESO, REDIRIGIR A EJECUTAR NORMAL
+                if (inventario.Estado == "En Progreso")
+                {
+                    _logger.LogInformation("🔄 Redirigiendo a ejecución normal (en progreso)");
+                    return RedirectToAction("Ejecutar", new { id });
+                }
+
+                // ✅ PREPARAR DATOS PARA VISTA DE SOLO LECTURA
+                ViewBag.InventarioId = id;
+                ViewBag.UsuarioId = usuarioId;
+                ViewBag.ModoSoloLectura = modoSoloLectura;
+                ViewBag.PuedeVerHistorialCompleto = puedeVerHistorialCompleto;
+                ViewBag.EstaAsignado = estaAsignado;
+
+                return View("EjecutarSoloLectura", inventario);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al ver inventario del historial {Id}", id);
+                TempData["Error"] = "Error al cargar el inventario.";
+                return RedirectToAction("Historial");
+            }
+        }
     }
 }
