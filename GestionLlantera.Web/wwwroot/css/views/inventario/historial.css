@@ -1,0 +1,450 @@
+/* ========================================
+   ESTILOS PARA HISTORIAL DE INVENTARIOS
+   ======================================== */
+
+.historial-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.historial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.historial-title {
+    color: #1e293b;
+    font-weight: 600;
+    margin: 0;
+}
+
+.filtros-historial {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filtro-estado {
+    min-width: 150px;
+}
+
+/* ========================================
+   TARJETAS DE INVENTARIOS
+   ======================================== */
+
+.inventarios-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.inventario-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.inventario-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-color: #3b82f6;
+}
+
+.inventario-header {
+    padding: 18px 22px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.inventario-header-info {
+    flex: 1;
+}
+
+.inventario-titulo {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+    line-height: 1.3;
+}
+
+.inventario-id {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    font-weight: 500;
+    background: rgba(255,255,255,0.2);
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.inventario-body {
+    padding: 22px;
+}
+
+.inventario-fechas {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0 0 15px 0;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+}
+
+/* ========================================
+   ESTADOS Y BADGES
+   ======================================== */
+
+.estado-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.estado-programado {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
+}
+
+.estado-progreso {
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fcd34d;
+}
+
+.estado-completado {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.estado-cancelado {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+/* ========================================
+   INFORMACIÓN DEL INVENTARIO
+   ======================================== */
+
+.inventario-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 18px 0;
+}
+
+.info-item {
+    text-align: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.info-value {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+/* ========================================
+   BARRA DE PROGRESO
+   ======================================== */
+
+.progreso-container {
+    margin: 20px 0;
+}
+
+.progreso-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.progreso-texto {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.progreso-porcentaje {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 10px;
+    background-color: #e5e7eb;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+}
+
+/* ========================================
+   BOTONES DE ACCIÓN
+   ======================================== */
+
+.acciones-container {
+    margin-top: 20px;
+}
+
+.acciones-principales {
+    margin-bottom: 12px;
+}
+
+.acciones-descarga {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-accion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.btn-continuar {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.btn-continuar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    color: white;
+}
+
+.btn-ver {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.btn-ver:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+.btn-deshabilitado {
+    background: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    border: 1px solid #e5e7eb;
+}
+
+.btn-descarga {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-excel {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+}
+
+.btn-excel:hover {
+    background: #10b981;
+    color: white;
+}
+
+.btn-pdf {
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+.btn-pdf:hover {
+    background: #dc2626;
+    color: white;
+}
+
+/* ========================================
+   ESTADO VACÍO
+   ======================================== */
+
+.estado-vacio {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.icono-vacio {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+    color: #9ca3af;
+}
+
+.mensaje-vacio {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #374151;
+}
+
+.submensaje-vacio {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+@media (max-width: 768px) {
+    .historial-container {
+        padding: 15px;
+    }
+
+    .historial-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .filtros-historial {
+        justify-content: center;
+    }
+
+    .inventarios-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .inventario-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .inventario-info {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .acciones-descarga {
+        flex-direction: column;
+        gap: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .inventario-header {
+        padding: 12px 15px;
+    }
+
+    .inventario-body {
+        padding: 15px;
+    }
+
+    .inventario-titulo {
+        font-size: 1rem;
+    }
+
+    .info-value {
+        font-size: 1.2rem;
+    }
+}
+
+/* ========================================
+   ANIMACIONES Y TRANSICIONES
+   ======================================== */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.inventario-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.inventario-card:nth-child(1) { animation-delay: 0.1s; }
+.inventario-card:nth-child(2) { animation-delay: 0.2s; }
+.inventario-card:nth-child(3) { animation-delay: 0.3s; }
+.inventario-card:nth-child(4) { animation-delay: 0.4s; }
+.inventario-card:nth-child(5) { animation-delay: 0.5s; }
+.inventario-card:nth-child(6) { animation-delay: 0.6s; }
+
+/* ========================================
+   UTILIDADES
+   ======================================== */
+
+.text-muted-custom {
+    color: #6c757d !important;
+}
+
+.font-weight-600 {
+    font-weight: 600 !important;
+}
+
+.border-radius-lg {
+    border-radius: 12px !important;
+}
+
+.shadow-hover {
+    transition: box-shadow 0.3s ease;
+}
+
+.shadow-hover:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}

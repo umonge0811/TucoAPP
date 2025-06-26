@@ -1,4 +1,4 @@
-﻿// ========================================
+// ========================================
 // INTERFAZ PARA SERVICIO DE TOMA DE INVENTARIO (WEB)
 // Ubicación: GestionLlantera.Web/Services/Interfaces/ITomaInventarioService.cs
 // ========================================
@@ -150,5 +150,17 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <param name="jwtToken">Token JWT para autenticación</param>
         /// <returns>True si está en estado válido</returns>
         Task<bool> ValidarEstadoInventarioAsync(int inventarioId, string jwtToken);
+
+        // =====================================
+        // HISTORIAL DE INVENTARIOS
+        // =====================================
+
+        /// <summary>
+        /// Obtiene los inventarios asignados a un usuario específico
+        /// </summary>
+        /// <param name="usuarioId">ID del usuario</param>
+        /// <param name="jwtToken">Token JWT para autenticación</param>
+        /// <returns>Lista de inventarios asignados al usuario</returns>
+        Task<List<InventarioProgramadoDTO>?> ObtenerInventariosAsignadosAsync(int usuarioId, string jwtToken);
     }
 }

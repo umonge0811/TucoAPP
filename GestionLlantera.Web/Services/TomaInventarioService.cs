@@ -1,4 +1,4 @@
-﻿// ========================================
+// ========================================
 // SERVICIO DE TOMA DE INVENTARIO (WEB)
 // Ubicación: GestionLlantera.Web/Services/TomaInventarioService.cs
 // ========================================
@@ -126,49 +126,57 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📦 Obteniendo productos del inventario {InventarioId}", inventarioId);
+                _logger.LogInformation("📦 === SERVICIO: OBTENIENDO PRODUCTOS ===");
+                _logger.LogInformation("📦 Inventario ID: {InventarioId}", inventarioId);
+                _logger.LogInformation("📦 Token presente: {TokenPresente}", !string.IsNullOrEmpty(jwtToken));
+                _logger.LogInformation("📦 URL llamada: api/TomaInventario/{InventarioId}/productos", inventarioId);
 
                 ConfigurarAutenticacion(jwtToken);
 
                 var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/productos");
 
-                // ✅ DEBUGGING DETALLADO
-                _logger.LogInformation("📡 Respuesta de la API: Status={Status}", response.StatusCode);
+                _logger.LogInformation("📦 Código de respuesta: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📦 Respuesta exitosa: {IsSuccess}", response.IsSuccessStatusCode);
 
-                if (!response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("📦 Contenido recibido (primeros 500 chars): {Content}",
+                        content.Length > 500 ? content.Substring(0, 500) + "..." : content);
+
+                    // ✅ LA API DEVUELVE UN OBJETO CON productos Y estadisticas
+                    var responseObject = JsonConvert.DeserializeObject<ApiResponse>(content);
+
+                    _logger.LogInformation("📦 Respuesta deserializada - Productos: {Count}",
+                        responseObject?.productos?.Count ?? 0);
+
+                    if (responseObject?.productos != null)
+                    {
+                        _logger.LogInformation("✅ Se obtuvieron {Count} productos del API",
+                            responseObject.productos.Count);
+
+                        return responseObject.productos;
+                    }
+
+                    _logger.LogWarning("⚠️ No se encontraron productos en la respuesta");
+                    return new List<DetalleInventarioDTO>();
+
+                }
+                else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error al obtener productos: {StatusCode} - {Error}",
+                    _logger.LogError("❌ Error al obtener productos: {StatusCode} - {Content}",
                         response.StatusCode, errorContent);
                     return null;
                 }
-
-                var content = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("📄 Contenido recibido de la API: {Content}", content);
-
-                // ✅ LA API DEVUELVE UN OBJETO CON productos Y estadisticas
-                var responseObject = JsonConvert.DeserializeObject<ApiResponse>(content);
-
-                _logger.LogInformation("📄 Respuesta deserializada - Productos: {Count}",
-                    responseObject?.productos?.Count ?? 0);
-
-                if (responseObject?.productos != null)
-                {
-                    _logger.LogInformation("✅ Se obtuvieron {Count} productos del API",
-                        responseObject.productos.Count);
-
-                    return responseObject.productos;
-                }
-
-                _logger.LogWarning("⚠️ No se encontraron productos en la respuesta");
-                return new List<DetalleInventarioDTO>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error al obtener productos del inventario {InventarioId}", inventarioId);
+                _logger.LogError(ex, "💥 Error crítico al obtener productos del inventario");
                 return null;
             }
         }
+
         /// <summary>
         /// Busca un producto específico en el inventario
         /// </summary>
@@ -528,6 +536,64 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", jwtToken);
+            }
+        }
+
+        /// <summary>
+        /// 📚 NUEVO: Obtiene los inventarios asignados a un usuario específico (versión Web con token)
+        /// </summary>
+        public async Task<List<InventarioProgramadoDTO>?> ObtenerInventariosAsignadosAsync(int usuarioId, string jwtToken)
+        {
+             try
+            {
+                _logger.LogInformation("📦 === SERVICIO: OBTENIENDO INVENTARIOS ASIGNADOS ===");
+                _logger.LogInformation("📦 Usuario ID: {UsuarioId}", usuarioId);
+                _logger.LogInformation("📦 Token presente: {TokenPresente}", !string.IsNullOrEmpty(jwtToken));
+                _logger.LogInformation("📦 URL llamada: api/TomaInventario/inventarios-asignados/{UsuarioId}", usuarioId);
+
+                ConfigurarAutenticacion(jwtToken);
+
+                var response = await _httpClient.GetAsync($"api/TomaInventario/inventarios-asignados/{usuarioId}");
+
+                _logger.LogInformation("📦 Código de respuesta: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📦 Respuesta exitosa: {IsSuccess}", response.IsSuccessStatusCode);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("📦 Contenido recibido (primeros 500 chars): {Content}",
+                        content.Length > 500 ? content.Substring(0, 500) + "..." : content);
+
+                    // ✅ LA API DEVUELVE UNA LISTA DE INVENTARIOS
+                    var inventarios = JsonConvert.DeserializeObject<List<InventarioProgramadoDTO>>(content);
+
+                    _logger.LogInformation("📦 Respuesta deserializada - Inventarios: {Count}",
+                        inventarios?.Count ?? 0);
+
+                    if (inventarios != null)
+                    {
+                        _logger.LogInformation("✅ Se obtuvieron {Count} inventarios del API",
+                            inventarios.Count);
+
+                        return inventarios;
+                    }
+
+                    _logger.LogWarning("⚠️ No se encontraron inventarios en la respuesta");
+                    return new List<InventarioProgramadoDTO>();
+
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al obtener inventarios: {StatusCode} - {Content}",
+                        response.StatusCode, errorContent);
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al obtener inventarios asignados al usuario");
+                return null;
             }
         }
     }

@@ -1,0 +1,247 @@
+@model List<Tuco.Clases.DTOs.Inventario.InventarioProgramadoDTO>
+
+@{
+    ViewData["Title"] = "Historial de Inventarios";
+    Layout = "_AdminLayout";
+
+    var puedeVerHistorialCompleto = ViewBag.PuedeVerHistorialCompleto as bool? ?? false;
+    var usuarioId = ViewBag.UsuarioId as int? ?? 0;
+    var totalInventarios = ViewBag.TotalInventarios as int? ?? 0;
+
+    <link rel="stylesheet" href="~/css/views/inventario/historial.css" />
+}
+
+<!-- ✅ HEADER CON TÍTULO Y ESTADÍSTICAS -->
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-history text-primary"></i>
+                        Historial de Inventarios
+                    </h2>
+                    <p class="text-muted mb-0">
+                        @if (puedeVerHistorialCompleto)
+                        {
+                            <span class="badge bg-success me-2">Administrador</span>
+                            <span>Visualizando todos los inventarios del sistema</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-info me-2">Usuario</span>
+                            <span>Visualizando tus inventarios asignados</span>
+                        }
+                    </p>
+                </div>
+                <div class="text-end">
+                    <div class="bg-light p-3 rounded">
+                        <h5 class="mb-0 text-primary" id="contadorInventarios">@totalInventarios</h5>
+                        <small class="text-muted" id="labelInventarios">Inventarios</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ FILTROS Y CONTROLES -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Buscar inventario</label>
+                            <input type="text" id="filtroTitulo" class="form-control" placeholder="Título del inventario...">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Estado</label>
+                            <select id="filtroEstado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                <option value="En Progreso">En Progreso</option>
+                                <option value="Completado">Completado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Tipo</label>
+                            <select id="filtroTipo" class="form-select">
+                                <option value="">Todos los tipos</option>
+                                <option value="Completo">Completo</option>
+                                <option value="Parcial">Parcial</option>
+                                <option value="Cíclico">Cíclico</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-times"></i> Limpiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ LISTA DE INVENTARIOS -->
+    <div class="row" id="inventariosContainer">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var inventario in Model)
+            {
+                <!-- Card de Inventario -->
+                <div class="col-12 col-md-6 col-lg-4 mb-4 inventario-card" 
+                     data-titulo="@inventario.Titulo.ToLower()" 
+                     data-estado="@inventario.Estado" 
+                     data-tipo="@inventario.TipoInventario">
+                    <div class="card h-100 shadow-sm border-0 @(inventario.Estado == "Completado" ? "border-success" : "border-warning")">
+
+                        <!-- Header del Card -->
+                        <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 text-truncate me-2">@inventario.Titulo</h6>
+                            <span class="badge @(inventario.Estado == "Completado" ? "bg-success" : "bg-warning text-dark")">
+                                @inventario.Estado
+                            </span>
+                        </div>
+
+                        <!-- Cuerpo del Card -->
+                        <div class="card-body">
+                            <!-- Información básica -->
+                            <div class="mb-3">
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-tag me-1"></i>
+                                    <strong>Tipo:</strong> @inventario.TipoInventario
+                                </p>
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    <strong>Inicio:</strong> @inventario.FechaInicio.ToString("dd/MM/yyyy")
+                                </p>
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-calendar-check me-1"></i>
+                                    <strong>Fin:</strong> @inventario.FechaFin.ToString("dd/MM/yyyy")
+                                </p>
+                            </div>
+
+                            <!-- Estadísticas de progreso -->
+                            @if (inventario.TotalProductos > 0)
+                            {
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="small">Progreso</span>
+                                        <span class="small">@inventario.PorcentajeProgreso%</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar @(inventario.Estado == "Completado" ? "bg-success" : "bg-warning")" 
+                                             style="width: @inventario.PorcentajeProgreso%"></div>
+                                    </div>
+                                    <div class="row mt-2 text-center">
+                                        <div class="col-4">
+                                            <small class="text-muted">Total</small><br>
+                                            <strong>@inventario.TotalProductos</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Contados</small><br>
+                                            <strong class="text-success">@inventario.ProductosContados</strong>
+                                        </div>
+                                        <div class="col-4">
+                                            <small class="text-muted">Diferencias</small><br>
+                                            <strong class="text-danger">@inventario.Discrepancias</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Usuarios asignados -->
+                            @if (puedeVerHistorialCompleto && inventario.AsignacionesUsuarios != null && inventario.AsignacionesUsuarios.Any())
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted">Usuarios asignados:</small>
+                                    <div class="mt-1">
+                                        @foreach (var asignacion in inventario.AsignacionesUsuarios.Take(3))
+                                        {
+                                            <span class="badge bg-light text-dark me-1 mb-1">@asignacion.NombreUsuario</span>
+                                        }
+                                        @if (inventario.AsignacionesUsuarios.Count > 3)
+                                        {
+                                            <span class="badge bg-secondary">+@(inventario.AsignacionesUsuarios.Count - 3) más</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Footer del Card con Acciones -->
+                        <div class="card-footer bg-transparent border-0 pt-0">
+                            @if (inventario.Estado == "En Progreso")
+                            {
+                                <!-- Inventario en progreso: puede continuar -->
+                                <a href="@Url.Action("Ejecutar", new { id = inventario.InventarioProgramadoId })" 
+                                   class="btn btn-warning w-100">
+                                    <i class="fas fa-play me-1"></i>
+                                    Continuar Inventario
+                                </a>
+                            }
+                            else if (inventario.Estado == "Completado")
+                            {
+                                <!-- Inventario completado: solo lectura -->
+                                <div class="d-grid gap-2">
+                                    <a href="@Url.Action("VerHistorial", new { id = inventario.InventarioProgramadoId })" 
+                                       class="btn btn-outline-success">
+                                        <i class="fas fa-eye me-1"></i>
+                                        Ver Detalles
+                                    </a>
+                                    <button type="button" class="btn btn-primary btn-sm" 
+                                            onclick="mostrarOpcionesDescarga(@inventario.InventarioProgramadoId, '@inventario.Titulo')">
+                                        <i class="fas fa-download me-1"></i>
+                                        Descargar Reporte
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <!-- Mensaje cuando no hay inventarios -->
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-archive fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No hay inventarios en el historial</h5>
+                    <p class="text-muted">
+                        @if (puedeVerHistorialCompleto)
+                        {
+                            <span>No se han ejecutado inventarios en el sistema.</span>
+                        }
+                        else
+                        {
+                            <span>No tienes inventarios asignados con historial.</span>
+                        }
+                    </p>
+                    <a href="@Url.Action("ProgramarInventario", "Inventario")" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Programar Nuevo Inventario
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="~/js/views/Inventario/historial.js"></script>
+    <script>
+        // ========================================
+        // CONFIGURACIÓN GLOBAL DE USUARIO
+        // ========================================
+        window.userConfig = {
+            userId: @ViewBag.UsuarioId,
+            userName: '@ViewBag.UsuarioNombre',
+            roles: @Html.Raw(Json.Serialize(ViewBag.UsuarioRoles ?? new string[0]))
+        };
+
+        console.log('🔧 Configuración de usuario cargada:', window.userConfig);
+    </script>
+}

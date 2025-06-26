@@ -362,7 +362,7 @@ function mostrarResultadosProductos(productos) {
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
 
         // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
-        let imagenUrl = '/images/no-image.png'; // Imagen por defecto
+        //let imagenUrl = '/images/no-image.png'; // Imagen por defecto
         try {
             if (producto && typeof producto === 'object') {
                 console.log('🖼️ Procesando imágenes para producto:', producto.nombreProducto);
