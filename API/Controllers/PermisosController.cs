@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using tuco.Clases.Models;
 using tuco.Utilities;
 using Tuco.Clases.Utilities;
-using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
+using Tuco.Clases.DTOs;
 using Microsoft.AspNetCore.Cors;
 using API.Extensions; // Para las extensiones de permisos
 using API.ServicesAPI.Interfaces; // Para IPermisosService
@@ -19,19 +19,22 @@ public class PermisosController : ControllerBase
 {
     TucoContext _context;
     HttpClient _httpClient;
-    IPermisosService _permisosService; // ← AGREGAR ESTA LÍNEA
-    ILogger<PermisosController> _logger; // ← AGREGAR ESTA LÍNEA
+    IPermisosService _permisosService;
+    ILogger<PermisosController> _logger;
+    INotificacionService _notificacionService;
 
     public PermisosController(
     TucoContext context,
     IHttpClientFactory httpClientFactory,
-    IPermisosService permisosService, // ← AGREGAR ESTE PARÁMETRO
-    ILogger<PermisosController> logger) // ← AGREGAR ESTE PARÁMETRO
+    IPermisosService permisosService,
+    ILogger<PermisosController> logger,
+    INotificacionService notificacionService)
     {
         _context = context;
         _httpClient = httpClientFactory.CreateClient("TucoApi");
-        _permisosService = permisosService; // ← AGREGAR ESTA ASIGNACIÓN
-        _logger = logger; // ← AGREGAR ESTA ASIGNACIÓN
+        _permisosService = permisosService;
+        _logger = logger;
+        _notificacionService = notificacionService;
     }
 
     #region Creacion de Permisos
@@ -321,32 +324,14 @@ public class PermisosController : ControllerBase
                 return Unauthorized(new { message = "Usuario no autenticado" });
             }
 
-            // Crear notificación para el administrador
-            var notificacion = new Notificacion
-            {
-                Titulo = "Solicitud de Permisos",
-                Mensaje = $"El usuario {User.Identity.Name} solicita permisos para: {request.Funcion}. Justificación: {request.Justificacion}",
-                FechaCreacion = DateTime.Now,
-                Leida = false,
-                UsuarioId = 1, // ID del administrador
-                Tipo = "SolicitudPermisos"
-            };
-
-            // Assuming _notificacionService is available and properly injected
-            // This part depends on how your services are set up
-            // and how Notificacion model looks like.
-            // You might need to adjust the code accordingly
-            // For example, if Notificacion requires more information
-            // or if _notificacionService.CrearNotificacionAsync expects different parameters
-
-            // Check if _notificacionService is properly injected
-            if (_notificacionService == null)
-            {
-                _logger.LogError("Servicio de notificaciones no está disponible.");
-                return StatusCode(500, new { success = false, message = "Error interno del servidor: Servicio de notificaciones no disponible." });
-            }
-
-            await _notificacionService.CrearNotificacionAsync(notificacion);
+            // Crear notificación para el administrador usando el servicio
+            await _notificacionService.CrearNotificacionAsync(
+                usuarioId: 1, // ID del administrador
+                titulo: "Solicitud de Permisos",
+                mensaje: $"El usuario {User.Identity.Name} solicita permisos para: {request.Funcion}. Justificación: {request.Justificacion}",
+                tipo: "SolicitudPermisos",
+                icono: "fas fa-user-shield"
+            );
 
             return Ok(new { success = true, message = "Solicitud enviada correctamente" });
         }
