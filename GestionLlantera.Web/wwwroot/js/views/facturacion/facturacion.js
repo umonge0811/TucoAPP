@@ -734,7 +734,6 @@ function mostrarModalSeleccionProducto(producto) {
                                         <button type="button" class="btn btn-outline-secondary" id="btnMenosCantidad">-</button>
                                         <input type="number" 
                                                class="form-control text-center fw-bold" 
-                               ```text
                 id="cantidadProducto" 
                                                value="1" 
                                                min="1" 
@@ -1511,7 +1510,7 @@ function generarRecibo(factura, productos, totales) {
                             <div style="font-size: 8px;">${nombreTruncado}</div>
                             <div style="font-size: 8px; display: flex; justify-content: space-between;">
                                 <span>${p.cantidad} x ₡${p.precioUnitario.toFixed(0)}</span>
-                                <span>₡${subtotalProducto.toFixed(0)}</span>```text
+                                <span>₡${subtotalProducto.toFixed(0)}</span>
                             </div>
                         </div>
                     `;
@@ -2346,7 +2345,7 @@ function mostrarResumenDepuracion() {
     console.log('📊 Llamadas a mostrarCargandoBusqueda:', contadorLlamadasCargandoBusqueda);
     console.log('📊 Eventos input disparados:', contadorEventosInput);
     console.log('📊 busquedaEnProceso:', busquedaEnProceso);
-    console.log('📊 cargaInicialCompletada:', cargaInicialCompletada);```text
+    console.log('📊 cargaInicialCompletada:', cargaInicialCompletada);
     console.log('📊 ultimaBusqueda:', `"${ultimaBusqueda}"`);
     console.log('📊 timeoutBusquedaActivo:', timeoutBusquedaActivo !== null);
     console.log('📊 === FIN RESUMEN ===');
