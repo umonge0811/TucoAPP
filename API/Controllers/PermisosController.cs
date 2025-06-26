@@ -263,8 +263,7 @@ public class PermisosController : ControllerBase
                 {
                     PermisoId = p.PermisoId,
                     NombrePermiso = p.NombrePermiso,
-                    DescripcionPermiso = p.DescripcionPermiso,
-                    Categoria = p.Categoria
+                    DescripcionPermiso = p.DescripcionPermiso
                 }).ToList());
 
             return Ok(permisosPorCategoria);
@@ -282,7 +281,7 @@ public class PermisosController : ControllerBase
         {
             // Aquí podrías implementar la lógica para crear una notificación
             // Por ahora solo retornamos éxito
-            var notificacion = new tuco.Clases.Models.Notificacion
+            var notificacion = new Tuco.Clases.Models.Notificacion
             {
                 UsuarioId = 1, // ID del administrador
                 Titulo = "Solicitud de Permiso",
