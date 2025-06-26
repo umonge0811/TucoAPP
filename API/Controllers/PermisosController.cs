@@ -8,7 +8,8 @@ using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 using Microsoft.AspNetCore.Cors;
 using API.Extensions; // Para las extensiones de permisos
 using API.ServicesAPI.Interfaces; // Para IPermisosService
-using Microsoft.AspNetCore.Authorization; // Para [Authorize]
+using Microsoft.AspNetCore.Authorization;
+using Tuco.Clases.Models; // Para [Authorize]
 
 [ApiController]
 [Route("api/[controller]")]
