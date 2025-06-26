@@ -1357,28 +1357,71 @@ namespace API.Controllers
         /// Obtiene todos los inventarios asignados a un usuario específico
         /// GET: api/TomaInventario/inventarios-asignados/{usuarioId}
         /// </summary>
-        [HttpGet("inventarios-asignados/{usuarioId}")]
-        public async Task<ActionResult<List<InventarioProgramadoDTO>>> ObtenerInventariosAsignados(int usuarioId)
+        [HttpGet("inventarios-asignados")]
+        [Authorize]
+        public async Task<ActionResult<List<InventarioProgramadoDTO>>> ObtenerInventariosAsignados()
         {
             try
             {
-                _logger.LogInformation("📚 === OBTENIENDO INVENTARIOS ASIGNADOS ===");
-                _logger.LogInformation("📚 Usuario ID: {UsuarioId}", usuarioId);
+                _logger.LogInformation("🔍 === OBTENIENDO INVENTARIOS ASIGNADOS ===");
 
+                // ✅ OBTENER ID DEL USUARIO ACTUAL DESDE EL TOKEN JWT
+                var usuarioIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioIdClaim) || !int.TryParse(usuarioIdClaim, out int usuarioId))
+                {
+                    _logger.LogError("❌ No se pudo obtener el ID del usuario desde el token");
+                    return BadRequest(new { message = "Token de usuario inválido" });
+                }
+
+                _logger.LogInformation("👤 Usuario ID obtenido: {UsuarioId}", usuarioId);
+
+                // ✅ LLAMAR AL SERVICIO
                 var inventarios = await _tomaInventarioService.ObtenerInventariosAsignadosAsync(usuarioId);
 
-                _logger.LogInformation("📚 Inventarios encontrados: {Count}", inventarios.Count);
+                _logger.LogInformation("📊 Inventarios asignados encontrados: {Count}", inventarios.Count);
+
+                return Ok(inventarios);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener inventarios asignados");
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpGet("inventarios-asignados/{usuarioId}")]
+        [Authorize]
+        public async Task<ActionResult<List<InventarioProgramadoDTO>>> ObtenerInventariosAsignadosPorUsuario(int usuarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 === OBTENIENDO INVENTARIOS ASIGNADOS PARA USUARIO {UsuarioId} ===", usuarioId);
+
+                // ✅ VERIFICAR QUE EL USUARIO ACTUAL TENGA PERMISOS PARA VER INVENTARIOS DE OTROS
+                var usuarioActualIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioActualIdClaim) || !int.TryParse(usuarioActualIdClaim, out int usuarioActualId))
+                {
+                    return BadRequest(new { message = "Token de usuario inválido" });
+                }
+
+                // Solo permitir si es el mismo usuario o si tiene permisos de administrador
+                var esAdmin = await this.EsAdministradorAsync(_permisosService);
+                if (usuarioActualId != usuarioId && !esAdmin)
+                {
+                    return Forbid("No tienes permisos para ver inventarios de otros usuarios");
+                }
+
+                // ✅ LLAMAR AL SERVICIO
+                var inventarios = await _tomaInventarioService.ObtenerInventariosAsignadosAsync(usuarioId);
+
+                _logger.LogInformation("📊 Inventarios asignados encontrados para usuario {UsuarioId}: {Count}", usuarioId, inventarios.Count);
 
                 return Ok(inventarios);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "💥 Error al obtener inventarios asignados para usuario {UsuarioId}", usuarioId);
-                return StatusCode(500, new
-                {
-                    message = "Error interno del servidor al obtener inventarios",
-                    timestamp = DateTime.Now
-                });
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
 
@@ -1508,6 +1551,10 @@ namespace API.Controllers
             }
         }
 
+        private async Task<bool> EsAdministradorAsync(IPermisosService permisosService)
+        {
+            return await permisosService.TienePermisoAsync(ObtenerIdUsuarioActual(), "Programar Inventario");
+        }
 
     }
 }
