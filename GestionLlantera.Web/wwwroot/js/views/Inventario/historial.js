@@ -65,31 +65,43 @@ function configurarEventListeners() {
 
     // Búsqueda por texto
     $('#busquedaTexto').on('input', debounce(function () {
-        const texto = $(this).val() || '';
-        console.log('🔍 Evento input - Texto de búsqueda:', texto);
-        
-        // Aplicar filtros combinados (estado + búsqueda)
-        const estadoFiltro = $('#filtroEstado').val() || '';
-        filtrarInventarios(estadoFiltro);
+        try {
+            const texto = String($(this).val() || '');
+            console.log('🔍 Evento input - Texto de búsqueda:', texto);
+            
+            // Aplicar filtros combinados (estado + búsqueda)
+            const estadoFiltro = String($('#filtroEstado').val() || '');
+            filtrarInventarios(estadoFiltro);
+        } catch (error) {
+            console.error('❌ Error en evento input:', error);
+        }
     }, 300));
 
     // También aplicar búsqueda al hacer paste
     $('#busquedaTexto').on('paste', function () {
         setTimeout(() => {
-            const texto = $(this).val() || '';
-            console.log('🔍 Evento paste - Texto pegado:', texto);
-            const estadoFiltro = $('#filtroEstado').val() || '';
-            filtrarInventarios(estadoFiltro);
+            try {
+                const texto = String($(this).val() || '');
+                console.log('🔍 Evento paste - Texto pegado:', texto);
+                const estadoFiltro = String($('#filtroEstado').val() || '');
+                filtrarInventarios(estadoFiltro);
+            } catch (error) {
+                console.error('❌ Error en evento paste:', error);
+            }
         }, 100);
     });
 
     // Evento keyup como respaldo
     $('#busquedaTexto').on('keyup', debounce(function () {
-        const texto = $(this).val() || '';
-        console.log('🔍 Evento keyup - Texto:', texto);
-        
-        const estadoFiltro = $('#filtroEstado').val() || '';
-        filtrarInventarios(estadoFiltro);
+        try {
+            const texto = String($(this).val() || '');
+            console.log('🔍 Evento keyup - Texto:', texto);
+            
+            const estadoFiltro = String($('#filtroEstado').val() || '');
+            filtrarInventarios(estadoFiltro);
+        } catch (error) {
+            console.error('❌ Error en evento keyup:', error);
+        }
     }, 300));
 }
 
@@ -193,9 +205,10 @@ function filtrarInventarios(estado = '') {
     }
 
     // 2. Aplicar búsqueda por texto si existe
-    const textoBusqueda = $('#busquedaTexto').val();
+    const elementoBusqueda = $('#busquedaTexto');
+    const textoBusqueda = elementoBusqueda.length > 0 ? elementoBusqueda.val() : '';
     if (textoBusqueda && typeof textoBusqueda === 'string' && textoBusqueda.trim()) {
-        const textoBusquedaLower = textoBusqueda.toLowerCase().trim();
+        const textoBusquedaLower = String(textoBusqueda).toLowerCase().trim();
         console.log('🔍 Aplicando filtro de texto:', textoBusquedaLower);
         
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
