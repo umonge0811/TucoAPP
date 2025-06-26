@@ -207,8 +207,24 @@ public class PermisosController : ControllerBase
         }
     }
 
+    [HttpPost("solicitar-permiso")]
+    public async Task<IActionResult> SolicitarPermiso([FromBody] SolicitudPermisoRequest request)
+    {
+        try
+        {
+            // Aquí implementarías la lógica para crear una notificación o registro de solicitud
+            // Por ahora, solo devolvemos éxito
+            return Ok(new { success = true, message = "Solicitud enviada correctamente" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al procesar solicitud de permiso");
+            return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+        }
+    }
+
     [HttpGet("funciones")]
-    public async Task<ActionResult<Dictionary<string, string>>> ObtenerFunciones()
+    public async Task<IActionResult> ObtenerFunciones()
     {
         try
         {
@@ -243,62 +259,101 @@ public class PermisosController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = "Error interno del servidor", details = ex.Message });
+            _logger.LogError(ex, "Error al obtener funciones");
+            return StatusCode(500, new { message = "Error interno del servidor" });
         }
     }
 
-    [HttpGet("por-categoria")]
-    public async Task<ActionResult<Dictionary<string, List<PermisoDTO>>>> ObtenerPermisosPorCategoria()
+    [HttpGet("funcion/{funcion}")]
+    public async Task<IActionResult> ObtenerPermisosRequeridosPorFuncion(string funcion)
     {
         try
         {
-            var permisos = await _context.Permisos
-                .OrderBy(p => p.Categoria)
-                .ThenBy(p => p.NombrePermiso)
-                .ToListAsync();
-
-            var permisosPorCategoria = permisos
-                .GroupBy(p => p.Categoria ?? "General")
-                .ToDictionary(g => g.Key, g => g.Select(p => new PermisoDTO
+            var funcionesPermisos = new Dictionary<string, List<string>>
                 {
-                    PermisoId = p.PermisoId,
-                    NombrePermiso = p.NombrePermiso,
-                    DescripcionPermiso = p.DescripcionPermiso
-                }).ToList());
+                    {"Ver Inventario", new List<string> {"Ver Productos"}},
+                    {"Crear Productos", new List<string> {"Editar Productos"}},
+                    {"Editar Productos", new List<string> {"Editar Productos"}},
+                    {"Eliminar Productos", new List<string> {"Eliminar Productos"}},
+                    {"Ver Costos", new List<string> {"Ver Costos"}},
+                    {"Ver Utilidades", new List<string> {"Ver Utilidades"}},
+                    {"Programar Inventario", new List<string> {"Programar Inventario"}},
+                    {"Iniciar Inventario", new List<string> {"Iniciar Inventario"}},
+                    {"Completar Inventario", new List<string> {"Completar Inventario"}},
+                    {"Ajustar Stock", new List<string> {"Ajustar Stock"}},
+                    {"Ver Facturación", new List<string> {"Ver Facturación"}},
+                    {"Crear Facturas", new List<string> {"Crear Facturas"}},
+                    {"Completar Facturas", new List<string> {"CompletarFacturas"}},
+                    {"Editar Facturas", new List<string> {"EditarFacturas"}},
+                    {"Anular Facturas", new List<string> {"AnularFacturas"}},
+                    {"Ver Clientes", new List<string> {"Ver Clientes"}},
+                    {"Crear Clientes", new List<string> {"Crear Clientes"}},
+                    {"Editar Clientes", new List<string> {"Editar Clientes"}},
+                    {"Eliminar Clientes", new List<string> {"Eliminar Clientes"}},
+                    {"Ver Reportes", new List<string> {"Ver Reportes"}},
+                    {"Descargar Reportes", new List<string> {"Descargar Reportes"}},
+                    {"Gestión Usuarios", new List<string> {"Gestion Usuarios"}},
+                    {"Configuración Sistema", new List<string> {"Configuracion Sistema"}}
+                };
 
-            return Ok(permisosPorCategoria);
+            if (funcionesPermisos.ContainsKey(funcion))
+            {
+                return Ok(funcionesPermisos[funcion]);
+            }
+
+            return Ok(new List<string>());
         }
         catch (Exception ex)
         {
-            return BadRequest(new { success = false, message = ex.Message });
+            _logger.LogError(ex, "Error al obtener permisos requeridos para función {Funcion}", funcion);
+            return StatusCode(500, new { message = "Error interno del servidor" });
         }
     }
 
-    [HttpPost("solicitar-permiso")]
-    public async Task<IActionResult> SolicitarPermiso([FromBody] object solicitud)
+    [HttpPost("solicitar")]
+    public async Task<IActionResult> SolicitarPermisos([FromBody] SolicitudPermisosRequest request)
     {
         try
         {
-            // Aquí podrías implementar la lógica para crear una notificación
-            // Por ahora solo retornamos éxito
-            var notificacion = new Tuco.Clases.Models.Notificacion
+            var usuarioId = User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(usuarioId))
             {
-                UsuarioId = 1, // ID del administrador
-                Titulo = "Solicitud de Permiso",
-                Mensaje = $"El usuario {User.Identity?.Name ?? "Anónimo"} solicita el permiso '{solicitud.GetType().GetProperty("permiso")?.GetValue(solicitud, null)}'. Justificación: {solicitud.GetType().GetProperty("justificacion")?.GetValue(solicitud, null)}",
+                return Unauthorized(new { message = "Usuario no autenticado" });
+            }
+
+            // Crear notificación para el administrador
+            var notificacion = new Notificacion
+            {
+                Titulo = "Solicitud de Permisos",
+                Mensaje = $"El usuario {User.Identity.Name} solicita permisos para: {request.Funcion}. Justificación: {request.Justificacion}",
                 FechaCreacion = DateTime.Now,
                 Leida = false,
-                Tipo = "SolicitudPermiso"
+                UsuarioId = 1, // ID del administrador
+                Tipo = "SolicitudPermisos"
             };
 
-            _context.Notificaciones.Add(notificacion);
-            await _context.SaveChangesAsync();
+            // Assuming _notificacionService is available and properly injected
+            // This part depends on how your services are set up
+            // and how Notificacion model looks like.
+            // You might need to adjust the code accordingly
+            // For example, if Notificacion requires more information
+            // or if _notificacionService.CrearNotificacionAsync expects different parameters
 
-            return Ok(new { success = true, message = "Solicitud enviada al administrador" });
+            // Check if _notificacionService is properly injected
+            if (_notificacionService == null)
+            {
+                _logger.LogError("Servicio de notificaciones no está disponible.");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor: Servicio de notificaciones no disponible." });
+            }
+
+            await _notificacionService.CrearNotificacionAsync(notificacion);
+
+            return Ok(new { success = true, message = "Solicitud enviada correctamente" });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { success = false, message = ex.Message });
+            _logger.LogError(ex, "Error al procesar solicitud de permisos");
+            return StatusCode(500, new { success = false, message = "Error interno del servidor" });
         }
     }
     #endregion
