@@ -89,7 +89,7 @@ async function cargarHistorialInventarios() {
         console.log('📦 Llamando al controlador para obtener inventarios...');
         console.log('📦 Usuario ID:', usuarioActual.id);
 
-        const response = await fetch(`/TomaInventario/ObtenerInventariosAsignados/${usuarioActual.id}`, {
+        const response = await fetch('/TomaInventario/ObtenerInventariosAsignados', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
