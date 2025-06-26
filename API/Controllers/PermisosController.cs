@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tuco.Clases.Models;
@@ -185,58 +185,86 @@ public class PermisosController : ControllerBase
 
     #region Eliminación de Permisos
     [HttpDelete("eliminar/{id}")]
-    public async Task<IActionResult> EliminarPermiso(int id)
+    public async Task<ActionResult> EliminarPermiso(int id)
     {
         try
         {
-            // Buscar el permiso existente por ID
             var permiso = await _context.Permisos.FindAsync(id);
             if (permiso == null)
             {
-                // Registrar intento fallido en el historial
-                await HistorialHelper.RegistrarHistorial(
-                    httpClient: _httpClient,
-                    usuarioId: 1, // Usuario ID para pruebas
-                    tipoAccion: "Eliminación de Permiso",
-                    modulo: "Permisos",
-                    detalle: $"Intento de eliminar permiso fallido. Permiso con ID '{id}' no encontrado.",
-                    estadoAccion: "Error",
-                    errorDetalle: "Permiso no encontrado."
-                );
-
-                return NotFound(new { Message = "Permiso no encontrado." });
+                return NotFound("Permiso no encontrado");
             }
 
-            // Eliminar el permiso de la base de datos
             _context.Permisos.Remove(permiso);
             await _context.SaveChangesAsync();
 
-            // Registrar acción exitosa en el historial
-            await HistorialHelper.RegistrarHistorial(
-                httpClient: _httpClient,
-                usuarioId: 1, // Usuario ID para pruebas
-                tipoAccion: "Eliminación de Permiso",
-                modulo: "Permisos",
-                detalle: $"Permiso eliminado exitosamente: {permiso.NombrePermiso}.",
-                estadoAccion: "Éxito"
-            );
-
-            return Ok(new { Message = "Permiso eliminado exitosamente." });
+            return Ok(new { success = true, message = "Permiso eliminado exitosamente" });
         }
         catch (Exception ex)
         {
-            // Registrar error en el historial
-            await HistorialHelper.RegistrarHistorial(
-                httpClient: _httpClient,
-                usuarioId: 1, // Usuario ID para pruebas
-                tipoAccion: "Eliminación de Permiso",
-                modulo: "Permisos",
-                detalle: "Error al eliminar el permiso.",
-                estadoAccion: "Error",
-                errorDetalle: ex.Message
-            );
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
 
-            return StatusCode(500, new { Message = $"Ocurrió un error: {ex.Message}" });
+    [HttpGet("por-categoria")]
+    public async Task<ActionResult> ObtenerPermisosPorCategoria()
+    {
+        try
+        {
+            var permisos = await _context.Permisos
+                .OrderBy(p => p.Categoria)
+                .ThenBy(p => p.NombrePermiso)
+                .ToListAsync();
+
+            var permisosPorCategoria = permisos
+                .GroupBy(p => p.Categoria ?? "General")
+                .ToDictionary(g => g.Key, g => g.Select(p => new PermisoDTO
+                {
+                    PermisoId = p.PermisoId,
+                    NombrePermiso = p.NombrePermiso,
+                    DescripcionPermiso = p.DescripcionPermiso,
+                    Categoria = p.Categoria
+                }).ToList());
+
+            return Ok(permisosPorCategoria);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpPost("solicitar-permiso")]
+    public async Task<ActionResult> SolicitarPermiso([FromBody] dynamic solicitud)
+    {
+        try
+        {
+            // Aquí puedes implementar la lógica para enviar notificación al administrador
+            // Por ejemplo, crear una notificación en base de datos o enviar email
+
+            var usuarioId = User.FindFirst("userId")?.Value;
+            var permiso = solicitud.GetProperty("permiso").GetString();
+            var justificacion = solicitud.GetProperty("justificacion").GetString();
+
+            // Crear notificación para administrador
+            var notificacion = new Notificacion
+            {
+                UsuarioId = 1, // ID del administrador
+                Titulo = "Solicitud de Permiso",
+                Mensaje = $"El usuario {usuarioId} solicita el permiso '{permiso}'. Justificación: {justificacion}",
+                FechaCreacion = DateTime.Now,
+                Leida = false,
+                Tipo = "SolicitudPermiso"
+            };
+
+            _context.Notificaciones.Add(notificacion);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Solicitud enviada al administrador" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
         }
     }
     #endregion

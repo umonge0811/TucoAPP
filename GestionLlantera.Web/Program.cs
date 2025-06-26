@@ -55,6 +55,8 @@ builder.Services.AddScoped<IClientesService, ClientesService>();
 
 // ✅ NUEVO: Servicio global de permisos
 builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();
+builder.Services.AddScoped<IPermisosService, PermisosService>();
+builder.Services.AddScoped<IPermisosInfoService, PermisosInfoService>();
 
 // ✅ NUEVO: Agregar cache en memoria para optimización
 builder.Services.AddMemoryCache();

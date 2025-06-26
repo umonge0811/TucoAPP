@@ -1,4 +1,4 @@
-﻿@model List<Tuco.Clases.DTOs.RoleDTO>
+@model List<Tuco.Clases.DTOs.RoleDTO>
 @{
     ViewData["Title"] = "Roles y Permisos";
     Layout = "_AdminLayout";
@@ -253,8 +253,8 @@
                         <textarea class="form-control" id="descripcionRol" rows="3"></textarea>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label">Permisos</label>
-                        <div id="listaPermisos" class="permisos-grid">
+                        <label class="form-label">Permisos por Categoría</label>
+                        <div id="listaPermisos" class="permisos-categorias">
                             <!-- Se cargará dinámicamente vía JavaScript -->
                         </div>
                     </div>
