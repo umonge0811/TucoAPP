@@ -86,7 +86,8 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                if (!await this.TienePermisoAsync("Ver Clientes"))
+                // Permitir búsqueda si tiene permisos de ver clientes O de ver facturación (para el módulo de ventas)
+                if (!await this.TienePermisoAsync("Ver Clientes") && !await this.TienePermisoAsync("Ver Facturación"))
                 {
                     return Json(new { success = false, message = "Sin permisos para buscar clientes" });
                 }
@@ -160,7 +161,8 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                if (!await this.TienePermisoAsync("Crear Clientes"))
+                // Permitir crear clientes si tiene el permiso específico O si tiene permiso de facturación (para ventas)
+                if (!await this.TienePermisoAsync("Crear Clientes") && !await this.TienePermisoAsync("Ver Facturación"))
                 {
                     return Json(new { success = false, message = "Sin permisos para crear clientes" });
                 }

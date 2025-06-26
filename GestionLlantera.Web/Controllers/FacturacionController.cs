@@ -14,6 +14,7 @@ using GestionLlantera.Web.Services.Interfaces;
 namespace GestionLlantera.Web.Controllers
 {
     [Authorize]
+    [PermisoRequerido("Ver Facturación")]
     public class FacturacionController : Controller
     {
         private readonly ILogger<FacturacionController> _logger;
