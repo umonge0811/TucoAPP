@@ -196,14 +196,38 @@ namespace API.Controllers
                 if (!facturaDto.DetallesFactura.Any())
                     return BadRequest(new { message = "La factura debe tener al menos un producto" });
 
+                // ✅ VERIFICAR PERMISOS PARA DETERMINAR ESTADO INICIAL
+                var puedeCompletar = await this.TienePermisoAsync(_permisosService, "CompletarFacturas");
+                
+                // Determinar estado inicial según permisos
+                string estadoInicial;
+                if (facturaDto.TipoDocumento == "Proforma")
+                {
+                    estadoInicial = "Pendiente"; // Las proformas siempre inician como pendientes
+                }
+                else if (facturaDto.Estado == "Pagada" && puedeCompletar)
+                {
+                    estadoInicial = "Pagada"; // Solo si tiene permisos y está marcada como pagada
+                }
+                else
+                {
+                    estadoInicial = "Pendiente"; // Por defecto pendiente si no tiene permisos
+                }
+
+                _logger.LogInformation("🔐 Estado inicial determinado: {Estado} (Usuario puede completar: {PuedeCompletar})", 
+                    estadoInicial, puedeCompletar);
+
                 // Generar número de factura automáticamente
                 var numeroFactura = await GenerarNumeroFactura(facturaDto.TipoDocumento);
 
-                // Verificar stock de productos
-                var erroresStock = await ValidarStockProductos(facturaDto.DetallesFactura, facturaDto.TipoDocumento);
-                if (erroresStock.Any())
+                // Verificar stock de productos solo para facturas pagadas
+                if (estadoInicial == "Pagada")
                 {
-                    return BadRequest(new { message = "Error de stock", errores = erroresStock });
+                    var erroresStock = await ValidarStockProductos(facturaDto.DetallesFactura, facturaDto.TipoDocumento);
+                    if (erroresStock.Any())
+                    {
+                        return BadRequest(new { message = "Error de stock", errores = erroresStock });
+                    }
                 }
 
                 // Crear factura
@@ -223,7 +247,7 @@ namespace API.Controllers
                     PorcentajeImpuesto = facturaDto.PorcentajeImpuesto,
                     MontoImpuesto = facturaDto.ImpuestoCalculado,
                     Total = facturaDto.TotalCalculado,
-                    Estado = facturaDto.Estado,
+                    Estado = estadoInicial, // ✅ Usar estado determinado por permisos
                     TipoDocumento = facturaDto.TipoDocumento,
                     MetodoPago = facturaDto.MetodoPago,
                     Observaciones = facturaDto.Observaciones,
@@ -252,8 +276,8 @@ namespace API.Controllers
 
                     _context.DetallesFactura.Add(detalleFactura);
 
-                    // Actualizar inventario solo si no es proforma
-                    if (facturaDto.TipoDocumento == "Factura")
+                    // ✅ Actualizar inventario solo si es factura pagada (no proforma ni pendiente)
+                    if (facturaDto.TipoDocumento == "Factura" && estadoInicial == "Pagada")
                     {
                         var producto = await _context.Productos.FindAsync(detalle.ProductoId);
                         if (producto != null)
@@ -261,6 +285,9 @@ namespace API.Controllers
                             producto.CantidadEnInventario = Math.Max(0, 
                                 (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
                             producto.FechaUltimaActualizacion = DateTime.Now;
+                            
+                            _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
+                                producto.NombreProducto, detalle.Cantidad);
                         }
                     }
                 }
@@ -268,11 +295,18 @@ namespace API.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                var mensajeRespuesta = estadoInicial == "Pendiente" 
+                    ? $"{facturaDto.TipoDocumento} creada exitosamente en estado PENDIENTE" 
+                    : $"{facturaDto.TipoDocumento} creada y COMPLETADA exitosamente";
+
                 return CreatedAtAction(nameof(ObtenerFacturaPorId), new { id = factura.FacturaId },
                     new { 
                         facturaId = factura.FacturaId, 
                         numeroFactura = factura.NumeroFactura,
-                        message = $"{facturaDto.TipoDocumento} creada exitosamente"
+                        estado = estadoInicial,
+                        puedeCompletar = puedeCompletar,
+                        message = mensajeRespuesta,
+                        timestamp = DateTime.Now
                     });
             }
             catch (Exception ex)
@@ -461,13 +495,118 @@ namespace API.Controllers
             }
         }
 
+        [HttpPut("facturas/{id}/completar")]
+        [Authorize]
+        public async Task<IActionResult> CompletarFactura(int id)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
+                "Solo usuarios con permiso 'CompletarFacturas' pueden completar facturas");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .FirstOrDefaultAsync(f => f.FacturaId == id);
+
+                if (factura == null)
+                    return NotFound(new { message = "Factura no encontrada" });
+
+                if (factura.Estado == "Pagada")
+                    return BadRequest(new { message = "La factura ya está completada" });
+
+                if (factura.Estado == "Anulada")
+                    return BadRequest(new { message = "No se puede completar una factura anulada" });
+
+                if (factura.TipoDocumento == "Proforma")
+                    return BadRequest(new { message = "No se puede completar una proforma. Debe convertirse a factura primero" });
+
+                // ✅ Verificar stock antes de completar
+                var erroresStock = new List<string>();
+                foreach (var detalle in factura.DetallesFactura)
+                {
+                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                    if (producto == null)
+                    {
+                        erroresStock.Add($"Producto {detalle.NombreProducto} no encontrado");
+                        continue;
+                    }
+
+                    if ((producto.CantidadEnInventario ?? 0) < detalle.Cantidad)
+                    {
+                        erroresStock.Add($"Stock insuficiente para {detalle.NombreProducto}. Disponible: {producto.CantidadEnInventario}, Requerido: {detalle.Cantidad}");
+                    }
+                }
+
+                if (erroresStock.Any())
+                {
+                    return BadRequest(new { message = "Error de stock", errores = erroresStock });
+                }
+
+                // ✅ Actualizar inventario
+                foreach (var detalle in factura.DetallesFactura)
+                {
+                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                    if (producto != null)
+                    {
+                        producto.CantidadEnInventario = Math.Max(0, 
+                            (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
+                        producto.FechaUltimaActualizacion = DateTime.Now;
+                        
+                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
+                            producto.NombreProducto, detalle.Cantidad);
+                    }
+                }
+
+                // ✅ Completar factura
+                factura.Estado = "Pagada";
+                factura.FechaActualizacion = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Factura {NumeroFactura} completada exitosamente por usuario {Usuario}", 
+                    factura.NumeroFactura, User.Identity?.Name);
+
+                return Ok(new { 
+                    message = "Factura completada exitosamente", 
+                    numeroFactura = factura.NumeroFactura,
+                    estado = factura.Estado,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error al completar factura: {Id}", id);
+                return StatusCode(500, new { message = "Error al completar factura" });
+            }
+        }
+
         [HttpPut("facturas/{id}/estado")]
         [Authorize]
         public async Task<IActionResult> ActualizarEstadoFactura(int id, [FromBody] string nuevoEstado)
         {
-            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "EditarFacturas",
-                "Solo usuarios con permiso 'EditarFacturas' pueden actualizar facturas");
-            if (validacionPermiso != null) return validacionPermiso;
+            // ✅ Verificar permisos según el tipo de cambio de estado
+            if (nuevoEstado == "Pagada")
+            {
+                var validacionCompleto = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
+                    "Solo usuarios con permiso 'CompletarFacturas' pueden marcar facturas como pagadas");
+                if (validacionCompleto != null) return validacionCompleto;
+            }
+            else if (nuevoEstado == "Anulada")
+            {
+                var validacionAnular = await this.ValidarPermisoAsync(_permisosService, "AnularFacturas",
+                    "Solo usuarios con permiso 'AnularFacturas' pueden anular facturas");
+                if (validacionAnular != null) return validacionAnular;
+            }
+            else
+            {
+                var validacionEditar = await this.ValidarPermisoAsync(_permisosService, "EditarFacturas",
+                    "Solo usuarios con permiso 'EditarFacturas' pueden actualizar facturas");
+                if (validacionEditar != null) return validacionEditar;
+            }
 
             try
             {
@@ -479,12 +618,21 @@ namespace API.Controllers
                 if (!estadosValidos.Contains(nuevoEstado))
                     return BadRequest(new { message = "Estado no válido" });
 
+                var estadoAnterior = factura.Estado;
                 factura.Estado = nuevoEstado;
                 factura.FechaActualizacion = DateTime.Now;
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { message = "Estado actualizado exitosamente", nuevoEstado });
+                _logger.LogInformation("📝 Estado de factura {NumeroFactura} cambiado de {EstadoAnterior} a {EstadoNuevo}", 
+                    factura.NumeroFactura, estadoAnterior, nuevoEstado);
+
+                return Ok(new { 
+                    message = "Estado actualizado exitosamente", 
+                    estadoAnterior = estadoAnterior,
+                    estadoNuevo = nuevoEstado,
+                    timestamp = DateTime.Now
+                });
             }
             catch (Exception ex)
             {

@@ -38,19 +38,43 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // Verificar permisos
-                if (!await this.TienePermisoAsync("Ver Facturación"))
-                {
-                    return RedirectToAction("AccessDenied", "Account");
-                }
+                _logger.LogInformation("🛒 Accediendo al módulo de facturación");
 
-                ViewData["Title"] = "Facturación";
+                // Obtener información del usuario actual
+                var usuarioId = User.FindFirst("UserId")?.Value;
+                var nombreUsuario = User.Identity?.Name;
+
+                // ✅ Verificar permisos específicos de facturación
+                var permisos = new
+                {
+                    puedeCrearFacturas = await this.TienePermisoAsync("CrearFacturas"),
+                    puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas"),
+                    puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas"),
+                    puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas"),
+                    esAdmin = User.IsInRole("Administrador")
+                };
+
+                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}", 
+                    nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
+                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas);
+
+                var viewModel = new
+                {
+                    UsuarioId = usuarioId,
+                    NombreUsuario = nombreUsuario,
+                    FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
+                    HoraActual = DateTime.Now.ToString("HH:mm"),
+                    Permisos = permisos
+                };
+
+                ViewBag.ConfiguracionFacturacion = viewModel;
                 return View();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en vista de facturación");
-                return View("Error");
+                _logger.LogError(ex, "❌ Error al cargar módulo de facturación");
+                TempData["Error"] = "Error al cargar el módulo de facturación";
+                return RedirectToAction("Index", "Dashboard");
             }
         }
 
