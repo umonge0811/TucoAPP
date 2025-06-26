@@ -1,4 +1,3 @@
-
 @model List<Tuco.Clases.DTOs.Inventario.InventarioProgramadoDTO>
 
 @{
@@ -92,7 +91,7 @@
                      data-estado="@inventario.Estado" 
                      data-tipo="@inventario.TipoInventario">
                     <div class="card h-100 shadow-sm border-0 @(inventario.Estado == "Completado" ? "border-success" : "border-warning")">
-                        
+
                         <!-- Header del Card -->
                         <div class="card-header bg-light border-0 d-flex justify-content-between align-items-center">
                             <h6 class="mb-0 text-truncate me-2">@inventario.Titulo</h6>
@@ -226,107 +225,10 @@
     </div>
 </div>
 
-<!-- ✅ ESTILOS ESPECÍFICOS -->
-<style>
-.inventario-card {
-    transition: transform 0.2s ease-in-out;
+@section Styles {
+    <link rel="stylesheet" href="~/css/views/inventario/historial.css" />
 }
 
-.inventario-card:hover {
-    transform: translateY(-2px);
+@section Scripts {
+    <script src="~/js/views/Inventario/historial.js"></script>
 }
-
-.card {
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-}
-
-.progress {
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.badge {
-    font-size: 0.7rem;
-}
-
-.text-truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-@media (max-width: 768px) {
-    .inventario-card {
-        margin-bottom: 1rem;
-    }
-    
-    .card-body {
-        padding: 1rem;
-    }
-}
-</style>
-
-<!-- ✅ JAVASCRIPT PARA FILTROS -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📚 === INICIALIZANDO HISTORIAL DE INVENTARIOS ===');
-
-    // ✅ ELEMENTOS DE FILTRO
-    const filtroTitulo = document.getElementById('filtroTitulo');
-    const filtroEstado = document.getElementById('filtroEstado');
-    const filtroTipo = document.getElementById('filtroTipo');
-    const limpiarFiltros = document.getElementById('limpiarFiltros');
-    const inventariosContainer = document.getElementById('inventariosContainer');
-
-    // ✅ FUNCIÓN DE FILTRADO
-    function aplicarFiltros() {
-        const cards = inventariosContainer.querySelectorAll('.inventario-card');
-        const titulo = filtroTitulo.value.toLowerCase();
-        const estado = filtroEstado.value;
-        const tipo = filtroTipo.value;
-
-        let contadorVisible = 0;
-
-        cards.forEach(card => {
-            const cardTitulo = card.dataset.titulo || '';
-            const cardEstado = card.dataset.estado || '';
-            const cardTipo = card.dataset.tipo || '';
-
-            const cumpleTitulo = !titulo || cardTitulo.includes(titulo);
-            const cumpleEstado = !estado || cardEstado === estado;
-            const cumpleTipo = !tipo || cardTipo === tipo;
-
-            if (cumpleTitulo && cumpleEstado && cumpleTipo) {
-                card.style.display = 'block';
-                contadorVisible++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-
-        console.log(`📊 Filtros aplicados: ${contadorVisible} inventarios visibles`);
-    }
-
-    // ✅ EVENT LISTENERS
-    filtroTitulo.addEventListener('input', aplicarFiltros);
-    filtroEstado.addEventListener('change', aplicarFiltros);
-    filtroTipo.addEventListener('change', aplicarFiltros);
-
-    limpiarFiltros.addEventListener('click', function() {
-        filtroTitulo.value = '';
-        filtroEstado.value = '';
-        filtroTipo.value = '';
-        aplicarFiltros();
-        console.log('🧹 Filtros limpiados');
-    });
-
-    console.log('✅ Historial de inventarios inicializado correctamente');
-});
-
-// ✅ FUNCIÓN GLOBAL PARA OPCIONES DE DESCARGA (desde reportesUtils.js)
-// Esta función ya existe en el sistema, no necesitamos redefinirla
-</script>

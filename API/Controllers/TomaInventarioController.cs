@@ -1354,6 +1354,35 @@ namespace API.Controllers
         // =====================================
 
         /// <summary>
+        /// Obtiene todos los inventarios asignados a un usuario específico
+        /// GET: api/TomaInventario/inventarios-asignados/{usuarioId}
+        /// </summary>
+        [HttpGet("inventarios-asignados/{usuarioId}")]
+        public async Task<ActionResult<List<InventarioProgramadoDTO>>> ObtenerInventariosAsignados(int usuarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📚 === OBTENIENDO INVENTARIOS ASIGNADOS ===");
+                _logger.LogInformation("📚 Usuario ID: {UsuarioId}", usuarioId);
+
+                var inventarios = await _tomaInventarioService.ObtenerInventariosAsignadosAsync(usuarioId);
+
+                _logger.LogInformation("📚 Inventarios encontrados: {Count}", inventarios.Count);
+
+                return Ok(inventarios);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener inventarios asignados para usuario {UsuarioId}", usuarioId);
+                return StatusCode(500, new
+                {
+                    message = "Error interno del servidor al obtener inventarios",
+                    timestamp = DateTime.Now
+                });
+            }
+        }
+
+        /// <summary>
         /// MÉTODO DE DIAGNÓSTICO ULTRA BÁSICO - SQL directo sin Entity Framework
         /// GET: api/TomaInventario/{inventarioId}/diagnostico-bd
         /// </summary>
