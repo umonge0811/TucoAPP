@@ -458,7 +458,7 @@ function mostrarResultadosProductos(productos) {
                              class="card-img-top producto-imagen" 
                              alt="${nombreEscapado}"
                              style="height: 120px; object-fit: cover;"
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSAwMS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'">
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSAwMS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmci+">
                         ${cantidadInventario <= 0 ? 
                             '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
                             cantidadInventario <= stockMinimo ?
@@ -654,7 +654,7 @@ function mostrarModalSeleccionProducto(producto) {
             console.log('🖼️ URL original en modal:', urlImagen);
 
             if (urlImagen && urlImagen.trim() !== '') {
-                // Lógica mejorada de construcción de URLs
+                // Construir URL correcta para el servidor API (puerto 7273 HTTPS)
                 if (urlImagen.startsWith('/uploads/productos/')) {
                     imagenUrl = `https://localhost:7273${urlImagen}`;
                 } else if (urlImagen.startsWith('uploads/productos/')) {
@@ -734,7 +734,8 @@ function mostrarModalSeleccionProducto(producto) {
                                         <button type="button" class="btn btn-outline-secondary" id="btnMenosCantidad">-</button>
                                         <input type="number" 
                                                class="form-control text-center fw-bold" 
-                                               id="cantidadProducto" 
+                               ```text
+                id="cantidadProducto" 
                                                value="1" 
                                                min="1" 
                                                max="${producto.cantidadEnInventario}"
@@ -789,11 +790,11 @@ function configurarEventosModalProducto(producto, modal) {
     $('#modalSeleccionProducto #btnMenosCantidad').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const input = $('#modalSeleccionProducto #cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const minimo = parseInt(input.attr('min')) || 1;
-        
+
         if (valorActual > minimo) {
             input.val(valorActual - 1);
             console.log('➖ Cantidad decrementada a:', valorActual - 1);
@@ -803,11 +804,11 @@ function configurarEventosModalProducto(producto, modal) {
     $('#modalSeleccionProducto #btnMasCantidad').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const input = $('#modalSeleccionProducto #cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const stockDisponible = producto.cantidadEnInventario;
-        
+
         if (valorActual < stockDisponible) {
             input.val(valorActual + 1);
             console.log('➕ Cantidad incrementada a:', valorActual + 1);
@@ -854,9 +855,9 @@ function configurarEventosModalProducto(producto, modal) {
     $('#modalSeleccionProducto #btnConfirmarAgregarProducto').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const cantidad = parseInt($('#modalSeleccionProducto #cantidadProducto').val()) || 1;
-        
+
         console.log('🛒 Agregando producto a venta:', {
             nombre: producto.nombreProducto,
             cantidad: cantidad,
@@ -869,7 +870,7 @@ function configurarEventosModalProducto(producto, modal) {
             mostrarToast('Cantidad inválida', 'La cantidad debe ser mayor a 0', 'warning');
             return;
         }
-        
+
         if (cantidad > producto.cantidadEnInventario) {
             mostrarToast('Stock insuficiente', `Solo hay ${producto.cantidadEnInventario} unidades disponibles`, 'warning');
             return;
@@ -877,10 +878,10 @@ function configurarEventosModalProducto(producto, modal) {
 
         // Agregar producto con la cantidad seleccionada
         agregarProductoAVenta(producto, cantidad, precioBase, 'efectivo');
-        
+
         // Cerrar modal
         modal.hide();
-        
+
         // Mostrar confirmación
         mostrarToast('Producto agregado', `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${producto.nombreProducto} agregadas`, 'success');
     });
@@ -1004,10 +1005,10 @@ function actualizarVistaCarrito() {
 
     container.html(html);
     contador.text(`${productosEnVenta.length} productos`);
-    
+
     // ✅ HABILITAR BOTÓN LIMPIAR SOLO SI HAY PRODUCTOS
     $('#btnLimpiarVenta').prop('disabled', false);
-    
+
     // ✅ HABILITAR BOTÓN FINALIZAR SOLO SI HAY PRODUCTOS Y CLIENTE SELECCIONADO
     actualizarEstadoBotonFinalizar();
 
@@ -1083,10 +1084,10 @@ function limpiarVenta() {
         $('#clienteSeleccionado').addClass('d-none');
         actualizarVistaCarrito();
         actualizarTotales();
-        
+
         // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
         actualizarEstadoBotonFinalizar();
-        
+
         mostrarToast('Venta limpiada', 'Se han removido todos los productos', 'info');
     }
 }
@@ -1100,16 +1101,16 @@ function mostrarModalFinalizarVenta() {
 
     if (!clienteSeleccionado) {
         mostrarToast('Cliente requerido', 'Debes seleccionar un cliente antes de finalizar la venta', 'warning');
-        
+
         // ✅ ENFOCAR EL CAMPO DE BÚSQUEDA DE CLIENTE
         $('#clienteBusqueda').focus();
-        
+
         // ✅ RESALTAR EL CAMPO DE CLIENTE
         $('#clienteBusqueda').addClass('is-invalid');
         setTimeout(() => {
             $('#clienteBusqueda').removeClass('is-invalid');
         }, 3000);
-        
+
         return;
     }
 
@@ -1376,12 +1377,12 @@ async function procesarVentaFinal() {
 
             if (responseStock.ok) {
                 const resultadoStock = await responseStock.json();
-                
+
                 if (resultadoStock.success) {
                     console.log('✅ Stock ajustado exitosamente para todos los productos');
-                    
+
                     // Mostrar resumen de ajustes exitosos
-                    const ajustesExitosos = resultadoStock.resultados.filter(r => r.success);
+                    const ajustesExitosos = resultadoStock.filter(r => r.success);
                     if (ajustesExitosos.length > 0) {
                         console.log(`📦 ${ajustesExitosos.length} productos actualizados correctamente`);
                     }
@@ -1510,7 +1511,7 @@ function generarRecibo(factura, productos, totales) {
                             <div style="font-size: 8px;">${nombreTruncado}</div>
                             <div style="font-size: 8px; display: flex; justify-content: space-between;">
                                 <span>${p.cantidad} x ₡${p.precioUnitario.toFixed(0)}</span>
-                                <span>₡${subtotalProducto.toFixed(0)}</span>
+                                <span>₡${subtotalProducto.toFixed(0)}</span>```text
                             </div>
                         </div>
                     `;
@@ -1803,7 +1804,7 @@ function verDetalleProducto(producto) {
             console.log('🖼️ URL original en detalle:', urlImagen);
 
             if (urlImagen && urlImagen.trim() !== '') {
-                // Lógica robusta de construcción de URLs
+                // Construir URL correcta para el servidor API (puerto 7273 HTTPS)
                 if (urlImagen.startsWith('/uploads/productos/')) {
                     imagenUrl = `https://localhost:7273${urlImagen}`;
                 } else if (urlImagen.startsWith('uploads/productos/')) {
@@ -2345,7 +2346,7 @@ function mostrarResumenDepuracion() {
     console.log('📊 Llamadas a mostrarCargandoBusqueda:', contadorLlamadasCargandoBusqueda);
     console.log('📊 Eventos input disparados:', contadorEventosInput);
     console.log('📊 busquedaEnProceso:', busquedaEnProceso);
-    console.log('📊 cargaInicialCompletada:', cargaInicialCompletada);
+    console.log('📊 cargaInicialCompletada:', cargaInicialCompletada);```text
     console.log('📊 ultimaBusqueda:', `"${ultimaBusqueda}"`);
     console.log('📊 timeoutBusquedaActivo:', timeoutBusquedaActivo !== null);
     console.log('📊 === FIN RESUMEN ===');
@@ -2372,7 +2373,7 @@ function obtenerTokenJWT() {
                 sessionStorage.getItem('jwt_token') ||
                 localStorage.getItem('authToken') ||
                 sessionStorage.getItem('authToken');
-    
+
     // Si no está en storage, intentar desde cookie
     if (!token) {
         const cookies = document.cookie.split(';');
@@ -2384,7 +2385,7 @@ function obtenerTokenJWT() {
             }
         }
     }
-    
+
     // Si aún no tenemos token, intentar desde meta tag
     if (!token) {
         const metaToken = document.querySelector('meta[name="auth-token"]');
@@ -2392,7 +2393,7 @@ function obtenerTokenJWT() {
             token = metaToken.getAttribute('content');
         }
     }
-    
+
     console.log('🔑 Token JWT obtenido:', token ? 'Presente' : 'No encontrado');
     return token;
 }
@@ -2402,9 +2403,9 @@ function actualizarEstadoBotonFinalizar() {
     const tieneProductos = productosEnVenta.length > 0;
     const tieneCliente = clienteSeleccionado !== null;
     const puedeFinalizarVenta = tieneProductos && tieneCliente;
-    
+
     const $btnFinalizar = $('#btnFinalizarVenta');
-    
+
     if (puedeFinalizarVenta) {
         $btnFinalizar.prop('disabled', false)
                     .removeClass('btn-outline-secondary')
@@ -2414,7 +2415,7 @@ function actualizarEstadoBotonFinalizar() {
         $btnFinalizar.prop('disabled', true)
                     .removeClass('btn-success')
                     .addClass('btn-outline-secondary');
-        
+
         if (!tieneProductos && !tieneCliente) {
             $btnFinalizar.attr('title', 'Agrega productos y selecciona un cliente');
         } else if (!tieneProductos) {
@@ -2423,7 +2424,7 @@ function actualizarEstadoBotonFinalizar() {
             $btnFinalizar.attr('title', 'Selecciona un cliente para continuar');
         }
     }
-    
+
     console.log('🔄 Estado botón finalizar actualizado:', {
         tieneProductos,
         tieneCliente,
