@@ -23,7 +23,6 @@ namespace Tuco.Clases.DTOs
             /// <summary>
             /// Descripción detallada del permiso
             /// </summary>
-            /// s
             public string? DescripcionPermiso { get; set; }
 
             /// <summary>
