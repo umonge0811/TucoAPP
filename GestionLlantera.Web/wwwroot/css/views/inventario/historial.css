@@ -19,7 +19,7 @@
 }
 
 .historial-title {
-    color: #2c3e50;
+    color: #1e293b;
     font-weight: 600;
     margin: 0;
 }
@@ -58,12 +58,12 @@
 .inventario-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-    border-color: #5a67d8;
+    border-color: #3b82f6;
 }
 
 .inventario-header {
     padding: 18px 22px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     color: white;
     display: flex;
     justify-content: space-between;
@@ -120,27 +120,27 @@
 }
 
 .estado-programado {
-    background: #e3f2fd;
-    color: #1976d2;
-    border: 1px solid #bbdefb;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1px solid #93c5fd;
 }
 
 .estado-progreso {
-    background: #fff3e0;
-    color: #f57c00;
-    border: 1px solid #ffcc02;
+    background: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fcd34d;
 }
 
 .estado-completado {
-    background: #e8f5e8;
-    color: #2e7d32;
-    border: 1px solid #81c784;
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
 }
 
 .estado-cancelado {
-    background: #ffebee;
-    color: #d32f2f;
-    border: 1px solid #ef9a9a;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
 }
 
 /* ========================================
@@ -157,15 +157,15 @@
 .info-item {
     text-align: center;
     padding: 12px;
-    background: #f8f9fa;
+    background: #f1f5f9;
     border-radius: 10px;
-    border: 1px solid #e9ecef;
+    border: 1px solid #e2e8f0;
 }
 
 .info-label {
     display: block;
     font-size: 0.8rem;
-    color: #6c757d;
+    color: #64748b;
     margin-bottom: 4px;
     font-weight: 500;
 }
@@ -174,7 +174,7 @@
     display: block;
     font-size: 1.4rem;
     font-weight: 700;
-    color: #495057;
+    color: #1e293b;
 }
 
 /* ========================================
@@ -194,14 +194,14 @@
 
 .progreso-texto {
     font-size: 0.9rem;
-    color: #6c757d;
+    color: #64748b;
     font-weight: 500;
 }
 
 .progreso-porcentaje {
     font-size: 0.9rem;
     font-weight: 600;
-    color: #495057;
+    color: #1e293b;
 }
 
 .progress {
@@ -249,24 +249,24 @@
 }
 
 .btn-continuar {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
 }
 
 .btn-continuar:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
     color: white;
 }
 
 .btn-ver {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     color: white;
 }
 
 .btn-ver:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     color: white;
 }
 
@@ -503,7 +503,7 @@
 .estado-vacio {
     text-align: center;
     padding: 60px 20px;
-    color: #6c757d;
+    color: #64748b;
 }
 
 .icono-vacio {
