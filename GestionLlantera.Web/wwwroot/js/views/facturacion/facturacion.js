@@ -453,63 +453,59 @@ function mostrarResultadosProductos(productos) {
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
 
         html += `
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
-                    <div class="position-relative">
-                        <img src="${imagenUrl}" 
-                             class="card-img-top producto-imagen" 
-                             alt="${nombreEscapado}"
-                             style="height: 120px; object-fit: cover;"
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSAwMS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmci+">
-                        ${cantidadInventario <= 0 ? 
-                            '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
-                            cantidadInventario <= stockMinimo ?
-                            '<span class="badge bg-warning position-absolute top-0 end-0 m-2">Stock Bajo</span>' : ''
-                        }
-                    </div>
-                    <div class="card-body p-2">
-                        <h6 class="card-title mb-1" title="${nombreEscapado}">
-                            ${nombreProducto.length > 25 ? nombreProducto.substring(0, 25) + '...' : nombreProducto}
-                        </h6>
-                        <div class="precios-metodos mb-2">
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <small class="text-muted d-block">Efectivo/SINPE</small>
-                                    <span class="text-success fw-bold small">₡${formatearMoneda(precioEfectivo)}</span>
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
+                                <div class="producto-card-imagen-container">
+                                    ${imagenUrl ? 
+                                        `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'producto-card-sin-imagen\\'><i class=\\'bi bi-image\\'></i></div>';">` :
+                                        `<div class="producto-card-sin-imagen">
+                                             <i class="bi bi-image"></i>
+                                         </div>`
+                                    }
                                 </div>
-                                <div class="col-6">
-                                    <small class="text-muted d-block">Tarjeta</small>
-                                    <span class="text-warning fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
+                                <div class="producto-card-body">
+                                    <h6 class="producto-card-titulo" title="${nombreEscapado}">
+                                      ${nombreProducto.length > 25 ? nombreProducto.substring(0, 25) + '...' : nombreProducto}
+                                    </h6>
+                                    <div class="precios-metodos mb-2">
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Efectivo/SINPE</small>
+                                                <span class="text-success fw-bold small">₡${formatearMoneda(precioEfectivo)}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Tarjeta</small>
+                                                <span class="text-warning fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-primary">Stock: ${cantidadInventario}</small>
+                                        ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
+                                            '<small class="badge bg-warning">Stock Bajo</small>' : ''}
+                                    </div>
+                                    <div class="producto-card-acciones">
+                                        ${cantidadInventario > 0 ? `
+                                            <button type="button" 
+                                                    class="btn btn-primary btn-sm btn-seleccionar-producto"
+                                                    data-producto="${productoJson}">
+                                                <i class="bi bi-hand-index me-1"></i>Seleccionar
+                                            </button>
+                                        ` : `
+                                            <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                                <i class="bi bi-x-circle me-1"></i>Sin Stock
+                                            </button>
+                                        `}
+                                        <button type="button" 
+                                                class="btn btn-outline-info btn-sm btn-ver-detalle"
+                                                data-producto="${productoJson}">
+                                            <i class="bi bi-eye me-1"></i>Ver Detalle
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-primary">Stock: ${cantidadInventario}</small>
-                            ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
-                                '<small class="badge bg-warning">Stock Bajo</small>' : ''}
-                        </div>
-                        <div class="d-grid gap-1">
-                            ${cantidadInventario > 0 ? `
-                                <button type="button" 
-                                        class="btn btn-primary btn-sm btn-seleccionar-producto"
-                                        data-producto="${productoJson}">
-                                    <i class="bi bi-hand-index me-1"></i>Seleccionar
-                                </button>
-                            ` : `
-                                <button type="button" class="btn btn-secondary btn-sm" disabled>
-                                    <i class="bi bi-x-circle me-1"></i>Sin Stock
-                                </button>
-                            `}
-                            <button type="button" 
-                                    class="btn btn-outline-info btn-sm btn-ver-detalle"
-                                    data-producto="${productoJson}">
-                                <i class="bi bi-eye me-1"></i>Ver Detalle
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+                    `;
     });
 
     console.log('🔄 Actualizando DOM (longitud HTML:', html.length, 'caracteres)');
@@ -1543,7 +1539,7 @@ function generarRecibo(factura, productos, totales) {
             <!-- PIE DE PÁGINA -->
             <div style="text-align: center; margin-top: 8px; font-size: 8px; border-top: 1px dashed #000; padding-top: 6px;">
                 <div style="margin-bottom: 2px;">¡Gracias por su compra!</div>
-                <div style="margin-bottom: 2px;">Vuelva pronto</div>
+                <div style="margin-bottom: 2px.">Vuelva pronto</div>
                 <div style="margin-bottom: 4px;">www.gestionllantera.com</div>
                 <div style="font-size: 7px;">Recibo generado: ${new Date().toLocaleString('es-CR')}</div>
             </div>
@@ -2388,8 +2384,7 @@ function obtenerTokenJWT() {
     }
 
     // Si aún no tenemos token, intentar desde meta tag
-    if (!token) {
-        const metaToken = document.querySelector('meta[name="auth-token"]');
+    if (!token) {        const metaToken = document.querySelector('meta[name="auth-token"]');
         if (metaToken) {
             token = metaToken.getAttribute('content');
         }
@@ -2450,3 +2445,107 @@ window.procesarVenta = procesarVenta;
 window.reiniciarCargaProductos = reiniciarCargaProductos;
 window.mostrarResumenDepuracion = mostrarResumenDepuracion;
 window.actualizarEstadoBotonFinalizar = actualizarEstadoBotonFinalizar;
+
+// Estilos CSS para cards de productos
+const estilosCSS = `
+/* ===== ESTILOS PARA CARDS DE PRODUCTOS ===== */
+.producto-card-imagen-container {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    overflow: hidden; /* Importante para que la imagen no se desborde */
+}
+
+.producto-card-imagen {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* La imagen cubre el contenedor manteniendo su relación de aspecto */
+    transition: transform 0.3s ease; /* Transición suave para efectos hover */
+}
+
+.producto-card:hover .producto-card-imagen {
+    transform: scale(1.05); /* Ligeramente más grande al hacer hover */
+}
+
+.producto-card-sin-imagen {
+    color: #6c757d;
+    font-size: 3rem;
+}
+
+.producto-card-body {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.producto-card-titulo {
+    margin-bottom: 0.3rem;
+    font-size: 1rem;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.producto-card-descripcion {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    flex-grow: 1;
+}
+
+.producto-card-precio {
+    font-size: 1rem;
+    color: #28a745;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.producto-card-stock {
+    font-size: 0.75rem;
+    color: #fff;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.producto-card-acciones {
+    display: grid;
+    gap: 0.3rem;
+}
+
+/* ===== MEDIA QUERIES PARA RESPONSIVE ===== */
+/* Para pantallas más pequeñas, como teléfonos */
+@media (max-width: 576px) {
+    .producto-card-imagen-container {
+        height: 150px; /* Aumenta la altura en pantallas pequeñas */
+    }
+
+    .producto-card-titulo {
+        font-size: 0.9rem; /* Reduce el tamaño del título */
+    }
+
+    .producto-card-descripcion {
+        display: none; /* Oculta la descripción en pantallas muy pequeñas */
+    }
+}
+
+/* Para tabletas */
+@media (min-width: 577px) and (max-width: 992px) {
+    .producto-card-imagen-container {
+        height: 180px; /* Altura moderada para tabletas */
+    }
+
+    .producto-card-titulo {
+        font-size: 0.95rem; /* Tamaño de título ligeramente menor */
+    }
+}
+`;
+
+// Agregar estilos al head del documento
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = estilosCSS;
+document.head.appendChild(styleSheet);

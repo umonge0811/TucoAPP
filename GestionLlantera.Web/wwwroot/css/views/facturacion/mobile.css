@@ -117,4 +117,66 @@
     .resumen-totales strong {
         font-size: 1.1rem;
     }
+
+    /* ===== CARDS DE PRODUCTOS RESPONSIVOS ===== */
+    .producto-card-imagen-container {
+        height: 150px;
+    }
+
+    .producto-card-body {
+        padding: 1rem;
+    }
+
+    .producto-card-titulo {
+        font-size: 1rem;
+    }
+
+    .producto-card-descripcion {
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .producto-card-precio {
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .producto-card-acciones {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .producto-card-acciones .btn {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .producto-card-imagen-container {
+        height: 120px;
+    }
+
+    .producto-card-sin-imagen {
+        font-size: 2rem;
+    }
+
+    .producto-card-body {
+        padding: 0.75rem;
+    }
+
+    .producto-card-titulo {
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .producto-card-descripcion {
+        font-size: 0.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .producto-card-precio {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
 }
