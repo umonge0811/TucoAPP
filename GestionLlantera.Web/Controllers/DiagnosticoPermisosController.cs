@@ -98,7 +98,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 var misPermisos = await _permisosService.ObtenerMisPermisosAsync();
-                return Json(misPermisos);
+                return Json(misPermisos.Select(p => p.NombrePermiso).ToList());
             }
             catch (Exception ex)
             {
