@@ -39,5 +39,12 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<bool> CompletarInventarioAsync(int id, string jwtToken = null);
         Task<Stream> ExportarResultadosInventarioExcelAsync(int id, string jwtToken = null);
         Task<Stream> ExportarResultadosInventarioPDFAsync(int id, string jwtToken = null);
+
+        /// <summary>
+        /// Obtiene todos los inventarios del sistema (para administradores)
+        /// </summary>
+        /// <param name="jwtToken">Token de autenticación</param>
+        /// <returns>Lista completa de inventarios</returns>
+        Task<List<InventarioProgramadoDTO>> ObtenerTodosLosInventariosAsync(string jwtToken = null);
     }
 }

@@ -163,7 +163,7 @@ namespace GestionLlantera.Web.Services
                 return new List<ProductoDTO>();
             }
         }
-        
+
         // Añade este método en InventarioService
         private List<ProductoDTO> MapearRespuestaProductos(string jsonResponse)
         {
@@ -870,7 +870,8 @@ namespace GestionLlantera.Web.Services
                 }
 
                 // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
-                if (!string.IsNullOrEmpty(jwtToken))
+                The code adds the ObtenerTodosLosInventariosAsync method to the IInventarioService interface and its implementation in the InventarioService class.```text
+        if (!string.IsNullOrEmpty(jwtToken))
                 {
                     _httpClient.DefaultRequestHeaders.Clear();
                     _httpClient.DefaultRequestHeaders.Authorization =
@@ -1728,6 +1729,7 @@ namespace GestionLlantera.Web.Services
                     url += $"?filtro={Uri.EscapeDataString(filtro)}";
                 }
 
+```text
                 _logger.LogInformation("📡 Realizando petición a: {Url}", url);
 
                 var response = await _httpClient.GetAsync(url);
@@ -1949,6 +1951,50 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        
+
+        /// <summary>
+        /// Obtiene todos los inventarios del sistema (para administradores)
+        /// </summary>
+        public async Task<List<InventarioProgramadoDTO>> ObtenerTodosLosInventariosAsync(string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Obteniendo todos los inventarios del sistema");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para obtener todos los inventarios");
+                }
+
+                // ✅ REALIZAR PETICIÓN A LA API
+                var response = await _httpClient.GetAsync("api/Inventario/inventarios-programados");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"❌ Error obteniendo todos los inventarios: {response.StatusCode} - {errorContent}");
+                    return new List<InventarioProgramadoDTO>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("✅ Contenido recibido de la API para todos los inventarios");
+
+                // ✅ DESERIALIZAR RESPUESTA
+                var inventarios = JsonConvert.DeserializeObject<List<InventarioProgramadoDTO>>(content);
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} inventarios del sistema", inventarios?.Count ?? 0);
+
+                return inventarios ?? new List<InventarioProgramadoDTO>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener todos los inventarios del sistema");
+                return new List<InventarioProgramadoDTO>();
+            }
+        }
     }
 }
