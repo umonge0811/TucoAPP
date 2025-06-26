@@ -11,6 +11,25 @@
     <link rel="stylesheet" href="~/css/views/inventario/historial.css" />
 }
 
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Dashboard")">
+                <i class="fas fa-home me-1"></i>Inicio
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Inventario")">
+                <i class="fas fa-boxes me-1"></i>Inventario
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="fas fa-history me-1"></i>Historial de Inventarios
+        </li>
+    </ol>
+</nav>
+
 <!-- ✅ HEADER CON TÍTULO Y ESTADÍSTICAS -->
 <div class="container-fluid">
     <div class="row mb-4">
@@ -49,21 +68,22 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Buscar inventario</label>
-                            <input type="text" id="filtroTitulo" class="form-control" placeholder="Título del inventario...">
+                    <!-- ✅ FILTROS BÁSICOS -->
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-4 col-lg-4">
+                            <label class="form-label fw-semibold">Buscar inventario</label>
+                            <input type="text" id="busquedaTexto" class="form-control" placeholder="Título del inventario...">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Estado</label>
+                        <div class="col-6 col-md-3 col-lg-3">
+                            <label class="form-label fw-semibold">Estado</label>
                             <select id="filtroEstado" class="form-select">
                                 <option value="">Todos los estados</option>
                                 <option value="En Progreso">En Progreso</option>
                                 <option value="Completado">Completado</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Tipo</label>
+                        <div class="col-6 col-md-3 col-lg-3">
+                            <label class="form-label fw-semibold">Tipo</label>
                             <select id="filtroTipo" class="form-select">
                                 <option value="">Todos los tipos</option>
                                 <option value="Completo">Completo</option>
@@ -71,10 +91,11 @@
                                 <option value="Cíclico">Cíclico</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary w-100">
-                                <i class="fas fa-times"></i> Limpiar
+                        <div class="col-12 col-md-2 col-lg-2">
+                            <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center">
+                                <i class="fas fa-times me-2"></i>
+                                <span class="d-none d-md-inline">Limpiar</span>
+                                <span class="d-md-none">Limpiar Filtros</span>
                             </button>
                         </div>
                     </div>

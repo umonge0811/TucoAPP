@@ -48,8 +48,10 @@ $(document).ready(function () {
 // =====================================
 
 function configurarEventListeners() {
-    console.log('🔗 Configurando event listeners...');
+    console.log('🔗 Configurando event listeners para filtros avanzados...');
 
+    // ✅ FILTROS BÁSICOS
+    
     // Filtro por estado
     $('#filtroEstado').on('change', function () {
         const estadoSeleccionado = $(this).val();
@@ -57,18 +59,105 @@ function configurarEventListeners() {
         filtrarInventarios(estadoSeleccionado);
     });
 
+    // Búsqueda por texto con debounce
+    let timeoutBusqueda;
+    $('#busquedaTexto').on('input', function () {
+        clearTimeout(timeoutBusqueda);
+        timeoutBusqueda = setTimeout(() => {
+            try {
+                const texto = String($(this).val() || '');
+                console.log('🔍 Evento input - Texto de búsqueda:', texto);
+                filtrarInventarios();
+            } catch (error) {
+                console.error('❌ Error en evento input:', error);
+            }
+        }, 300);
+    });
+
+    // ✅ FILTROS AVANZADOS DE FECHAS
+    
+    $('#filtroFechaDesde, #filtroFechaHasta').on('change', function () {
+        console.log('📅 Filtro de fecha cambiado');
+        filtrarInventarios();
+    });
+
+    // ✅ FILTRO POR PROGRESO
+    
+    $('#filtroProgreso').on('change', function () {
+        const progreso = $(this).val();
+        console.log('📊 Filtrando por progreso:', progreso);
+        filtrarInventarios();
+    });
+
+    // ✅ FILTROS DE RANGO CON DEBOUNCE
+    
+    let timeoutRangos;
+    $('#filtroProductosMin, #filtroProductosMax').on('input', function () {
+        clearTimeout(timeoutRangos);
+        timeoutRangos = setTimeout(() => {
+            console.log('📦 Filtro de rango productos cambiado');
+            filtrarInventarios();
+        }, 500);
+    });
+
+    // ✅ BOTONES DE CONTROL
+    
     // Botón de actualizar
     $('#btnActualizar').on('click', function () {
         console.log('🔄 Recargando historial...');
         cargarHistorialInventarios();
     });
 
-    // Búsqueda por texto
-    $('#busquedaTexto').on('input', debounce(function () {
-        const texto = $(this).val().toLowerCase();
-        console.log('🔍 Buscando:', texto);
-        buscarInventarios(texto);
+    // Botón limpiar filtros
+    $('#btnLimpiarFiltros').on('click', function () {
+        console.log('🧹 Limpiando filtros...');
+        limpiarTodosLosFiltros();
+    });
+
+    // ✅ TOGGLE PARA FILTROS AVANZADOS
+    
+    $('#btnToggleFiltrosAvanzados').on('click', function () {
+        const $filtrosAvanzados = $('#filtrosAvanzadosHistorial');
+        const $icono = $(this).find('i');
+        
+        if ($filtrosAvanzados.is(':visible')) {
+            $filtrosAvanzados.slideUp();
+            $icono.removeClass('bi-chevron-up').addClass('bi-chevron-down');
+            $(this).find('span').text('Mostrar Filtros Avanzados');
+        } else {
+            $filtrosAvanzados.slideDown();
+            $icono.removeClass('bi-chevron-down').addClass('bi-chevron-up');
+            $(this).find('span').text('Ocultar Filtros Avanzados');
+        }
+    });
+
+    // ✅ EVENTOS ADICIONALES
+    
+    // Paste en búsqueda
+    $('#busquedaTexto').on('paste', function () {
+        setTimeout(() => {
+            try {
+                const texto = String($(this).val() || '');
+                console.log('🔍 Evento paste - Texto pegado:', texto);
+                filtrarInventarios();
+            } catch (error) {
+                console.error('❌ Error en evento paste:', error);
+            }
+        }, 100);
+    });
+
+    // Keyup como respaldo
+    $('#busquedaTexto').on('keyup', debounce(function () {
+        try {
+            const texto = String($(this).val() || '');
+            console.log('🔍 Evento keyup - Texto:', texto);
+            filtrarInventarios();
+        } catch (error) {
+            console.error('❌ Error en evento keyup:', error);
+        }
     }, 300));
+
+    console.log('✅ Event listeners de filtros avanzados configurados');
 }
 
 // =====================================
@@ -123,7 +212,7 @@ async function cargarHistorialInventarios() {
             // Aplicar filtros actuales
             const estadoFiltro = $('#filtroEstado').val();
             filtrarInventarios(estadoFiltro);
-            
+
             // Actualizar contador inicial
             actualizarContadorInventarios(inventariosData.length);
 
@@ -142,113 +231,291 @@ async function cargarHistorialInventarios() {
 }
 
 // =====================================
-// FILTRADO Y BÚSQUEDA
+// SISTEMA DE FILTROS AVANZADOS
 // =====================================
 
+// ✅ CONFIGURACIÓN DE FILTROS SIMILAR A INVENTARIO
+let filtrosHistorialConfig = {
+    activos: {
+        texto: '',
+        estado: '',
+        fechaDesde: '',
+        fechaHasta: '',
+        progreso: '',
+        usuario: '',
+        productosMin: null,
+        productosMax: null
+    },
+    estadosDisponibles: ['programado', 'en progreso', 'completado', 'cancelado'],
+    usuariosDisponibles: []
+};
+
+// ✅ FUNCIÓN PRINCIPAL DE FILTRADO AVANZADO
 function filtrarInventarios(estado = '') {
-    console.log('🔍 Filtrando inventarios por estado:', estado);
+    console.log('🔍 === APLICANDO FILTROS AVANZADOS ===');
+    console.log('🔍 Estado seleccionado:', estado);
 
     let inventariosFiltrados = [...inventariosData];
 
-    // Filtrar por estado si se especifica
-    if (estado && estado !== 'todos') {
-        inventariosFiltrados = inventariosFiltrados.filter(inv => {
-            // Función segura para obtener valor string
-            const obtenerValorSeguro = (obj, propiedades) => {
-                for (let prop of propiedades) {
-                    if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
-                        return String(obj[prop]).toLowerCase();
-                    }
-                }
-                return '';
-            };
-
-            const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
-            return estadoInventario === estado.toLowerCase();
-        });
-    }
-
-    // Aplicar búsqueda por texto si existe
-    const textoBusqueda = $('#busquedaTexto').val();
-    if (textoBusqueda) {
-        const textoBusquedaLower = textoBusqueda.toLowerCase();
-        inventariosFiltrados = inventariosFiltrados.filter(inv => {
-            // Función segura para obtener valor string
-            const obtenerValorSeguro = (obj, propiedades) => {
-                for (let prop of propiedades) {
-                    if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
-                        return String(obj[prop]).toLowerCase();
-                    }
-                }
-                return '';
-            };
-
-            const titulo = obtenerValorSeguro(inv, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario']);
-            const descripcion = obtenerValorSeguro(inv, ['descripcion', 'Descripcion', 'observaciones', 'Observaciones']);
-
-            return titulo.includes(textoBusquedaLower) || descripcion.includes(textoBusquedaLower);
-        });
-    }
-
-    console.log('🔍 Inventarios después del filtro:', inventariosFiltrados.length);
-    renderizarInventarios(inventariosFiltrados);
-}
-
-
-function buscarInventarios(texto) {
-    console.log('🔍 Buscando inventarios con texto:', texto);
-
-    if (!texto.trim()) {
-        // Si no hay texto, aplicar solo filtro de estado
-        const estadoFiltro = $('#filtroEstado').val();
-        filtrarInventarios(estadoFiltro);
-        return;
-    }
-
-    const textoLower = texto.toLowerCase();
-
-    let inventariosFiltrados = inventariosData.filter(inv => {
-        // Función segura para obtener valor string
-        const obtenerValorSeguro = (obj, propiedades) => {
-            for (let prop of propiedades) {
-                if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
-                    return String(obj[prop]).toLowerCase();
-                }
+    // Función segura para obtener valor string
+    const obtenerValorSeguro = (obj, propiedades) => {
+        for (let prop of propiedades) {
+            if (obj && obj.hasOwnProperty(prop) && obj[prop] != null && obj[prop] !== undefined) {
+                const valor = String(obj[prop]);
+                return valor ? valor.toLowerCase() : '';
             }
-            return '';
-        };
+        }
+        return '';
+    };
 
-        const titulo = obtenerValorSeguro(inv, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario']);
-        const descripcion = obtenerValorSeguro(inv, ['descripcion', 'Descripcion', 'observaciones', 'Observaciones']);
-        const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
+    // Función segura para obtener valor numérico
+    const obtenerValorNumerico = (obj, propiedades) => {
+        for (let prop of propiedades) {
+            if (obj && obj.hasOwnProperty(prop) && obj[prop] != null && obj[prop] !== undefined) {
+                return parseInt(obj[prop]) || 0;
+            }
+        }
+        return 0;
+    };
 
-        return titulo.includes(textoLower) ||
-            descripcion.includes(textoLower) ||
-            estadoInventario.includes(textoLower);
-    });
-
-    // Aplicar también filtro de estado
-    const estadoFiltro = $('#filtroEstado').val();
+    // ✅ 1. FILTRO POR ESTADO
+    const estadoFiltro = estado || $('#filtroEstado').val();
     if (estadoFiltro && estadoFiltro !== 'todos') {
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
-            // Función segura para obtener valor string
-            const obtenerValorSeguro = (obj, propiedades) => {
-                for (let prop of propiedades) {
-                    if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
-                        return String(obj[prop]).toLowerCase();
-                    }
-                }
-                return '';
-            };
-
             const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
             return estadoInventario === estadoFiltro.toLowerCase();
         });
+        console.log('🔍 Después de filtro por estado:', inventariosFiltrados.length);
     }
 
-    console.log('🔍 Resultados de búsqueda:', inventariosFiltrados.length);
+    // ✅ 2. FILTRO POR TEXTO DE BÚSQUEDA
+    const elementoBusqueda = $('#busquedaTexto');
+    const textoBusqueda = elementoBusqueda.length > 0 ? elementoBusqueda.val() : '';
+    if (textoBusqueda && typeof textoBusqueda === 'string' && textoBusqueda.trim()) {
+        const textoBusquedaLower = String(textoBusqueda).toLowerCase().trim();
+        console.log('🔍 Aplicando filtro de texto:', textoBusquedaLower);
+        
+        inventariosFiltrados = inventariosFiltrados.filter(inv => {
+            const titulo = obtenerValorSeguro(inv, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario']);
+            const descripcion = obtenerValorSeguro(inv, ['descripcion', 'Descripcion', 'observaciones', 'Observaciones']);
+            const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
+            const inventarioId = obtenerValorSeguro(inv, ['inventarioProgramadoId', 'InventarioProgramadoId', 'id', 'Id']);
+
+            const cumple = titulo.includes(textoBusquedaLower) || 
+                          descripcion.includes(textoBusquedaLower) ||
+                          estadoInventario.includes(textoBusquedaLower) ||
+                          inventarioId.includes(textoBusquedaLower);
+
+            return cumple;
+        });
+        console.log('🔍 Después de filtro por texto:', inventariosFiltrados.length);
+    }
+
+    // ✅ 3. FILTRO POR RANGO DE FECHAS
+    const fechaDesde = $('#filtroFechaDesde').val();
+    const fechaHasta = $('#filtroFechaHasta').val();
+    
+    if (fechaDesde || fechaHasta) {
+        inventariosFiltrados = inventariosFiltrados.filter(inv => {
+            const fechaInicio = inv.fechaInicio ? new Date(inv.fechaInicio) : null;
+            
+            if (!fechaInicio) return false;
+            
+            let cumpleFecha = true;
+            
+            if (fechaDesde) {
+                const fechaDesdeFiltro = new Date(fechaDesde);
+                if (fechaInicio < fechaDesdeFiltro) cumpleFecha = false;
+            }
+            
+            if (fechaHasta && cumpleFecha) {
+                const fechaHastaFiltro = new Date(fechaHasta);
+                fechaHastaFiltro.setHours(23, 59, 59, 999); // Incluir todo el día
+                if (fechaInicio > fechaHastaFiltro) cumpleFecha = false;
+            }
+            
+            return cumpleFecha;
+        });
+        console.log('🔍 Después de filtro por fechas:', inventariosFiltrados.length);
+    }
+
+    // ✅ 4. FILTRO POR PROGRESO
+    const progresoFiltro = $('#filtroProgreso').val();
+    if (progresoFiltro && progresoFiltro !== 'todos') {
+        inventariosFiltrados = inventariosFiltrados.filter(inv => {
+            const porcentaje = obtenerValorNumerico(inv, ['porcentajeProgreso', 'PorcentajeProgreso']);
+            
+            switch (progresoFiltro) {
+                case 'sin_empezar':
+                    return porcentaje === 0;
+                case 'en_proceso':
+                    return porcentaje > 0 && porcentaje < 100;
+                case 'completado':
+                    return porcentaje === 100;
+                default:
+                    return true;
+            }
+        });
+        console.log('🔍 Después de filtro por progreso:', inventariosFiltrados.length);
+    }
+
+    // ✅ 5. FILTRO POR RANGO DE PRODUCTOS
+    const productosMin = parseInt($('#filtroProductosMin').val()) || null;
+    const productosMax = parseInt($('#filtroProductosMax').val()) || null;
+    
+    if (productosMin !== null || productosMax !== null) {
+        inventariosFiltrados = inventariosFiltrados.filter(inv => {
+            const totalProductos = obtenerValorNumerico(inv, ['totalProductos', 'TotalProductos']);
+            
+            let cumpleRango = true;
+            
+            if (productosMin !== null && totalProductos < productosMin) {
+                cumpleRango = false;
+            }
+            
+            if (productosMax !== null && totalProductos > productosMax) {
+                cumpleRango = false;
+            }
+            
+            return cumpleRango;
+        });
+        console.log('🔍 Después de filtro por productos:', inventariosFiltrados.length);
+    }
+
+    console.log('🔍 === TOTAL INVENTARIOS FILTRADOS ===:', inventariosFiltrados.length);
+    
+    // Actualizar indicadores de filtros activos
+    actualizarIndicadoresFiltrosActivos();
+    
     renderizarInventarios(inventariosFiltrados);
 }
+
+// ✅ FUNCIÓN PARA ACTUALIZAR INDICADORES DE FILTROS ACTIVOS
+function actualizarIndicadoresFiltrosActivos() {
+    const filtrosActivos = [];
+    
+    // Verificar filtros activos
+    const textoBusqueda = $('#busquedaTexto').val();
+    if (textoBusqueda && textoBusqueda.trim()) {
+        filtrosActivos.push(`🔍 "${textoBusqueda.trim()}"`);
+    }
+    
+    const estadoFiltro = $('#filtroEstado').val();
+    if (estadoFiltro && estadoFiltro !== 'todos') {
+        const estadosTexto = {
+            'programado': '📅 Programado',
+            'en progreso': '⚙️ En Progreso', 
+            'completado': '✅ Completado',
+            'cancelado': '❌ Cancelado'
+        };
+        filtrosActivos.push(estadosTexto[estadoFiltro] || estadoFiltro);
+    }
+    
+    const fechaDesde = $('#filtroFechaDesde').val();
+    const fechaHasta = $('#filtroFechaHasta').val();
+    if (fechaDesde || fechaHasta) {
+        const desde = fechaDesde ? new Date(fechaDesde).toLocaleDateString() : '∞';
+        const hasta = fechaHasta ? new Date(fechaHasta).toLocaleDateString() : '∞';
+        filtrosActivos.push(`📅 ${desde} - ${hasta}`);
+    }
+    
+    const progresoFiltro = $('#filtroProgreso').val();
+    if (progresoFiltro && progresoFiltro !== 'todos') {
+        const progresoTexto = {
+            'sin_empezar': '📊 0%',
+            'en_proceso': '📊 En proceso',
+            'completado': '📊 100%'
+        };
+        filtrosActivos.push(progresoTexto[progresoFiltro] || progresoFiltro);
+    }
+    
+    const productosMin = $('#filtroProductosMin').val();
+    const productosMax = $('#filtroProductosMax').val();
+    if (productosMin || productosMax) {
+        const min = productosMin || '0';
+        const max = productosMax || '∞';
+        filtrosActivos.push(`📦 ${min} - ${max} productos`);
+    }
+    
+    // Actualizar UI de filtros activos
+    const $contadorFiltros = $('#contadorFiltrosActivos');
+    const $btnLimpiar = $('#btnLimpiarFiltros');
+    const $contenedorTags = $('#tagsFilttrosActivos');
+    
+    if (filtrosActivos.length > 0) {
+        if ($contadorFiltros.length > 0) {
+            $contadorFiltros.text(`${filtrosActivos.length} activos`).show();
+        }
+        
+        if ($btnLimpiar.length > 0) {
+            $btnLimpiar.prop('disabled', false).removeClass('btn-outline-secondary').addClass('btn-outline-danger');
+        }
+        
+        if ($contenedorTags.length > 0) {
+            $contenedorTags.empty();
+            filtrosActivos.forEach((filtro, index) => {
+                const $tag = $('<span class="badge bg-primary me-1 mb-1"></span>').text(filtro);
+                setTimeout(() => {
+                    $contenedorTags.append($tag);
+                }, index * 50);
+            });
+            $contenedorTags.parent().show();
+        }
+    } else {
+        if ($contadorFiltros.length > 0) $contadorFiltros.hide();
+        if ($btnLimpiar.length > 0) {
+            $btnLimpiar.prop('disabled', true).removeClass('btn-outline-danger').addClass('btn-outline-secondary');
+        }
+        if ($contenedorTags.length > 0) $contenedorTags.parent().hide();
+    }
+}
+
+// ✅ FUNCIÓN PARA LIMPIAR TODOS LOS FILTROS
+function limpiarTodosLosFiltros() {
+    console.log('🧹 Limpiando todos los filtros del historial');
+    
+    // Limpiar inputs
+    $('#busquedaTexto').val('');
+    $('#filtroEstado').val('todos');
+    $('#filtroFechaDesde').val('');
+    $('#filtroFechaHasta').val('');
+    $('#filtroProgreso').val('todos');
+    $('#filtroProductosMin').val('');
+    $('#filtroProductosMax').val('');
+    
+    // Resetear configuración
+    filtrosHistorialConfig.activos = {
+        texto: '',
+        estado: '',
+        fechaDesde: '',
+        fechaHasta: '',
+        progreso: '',
+        usuario: '',
+        productosMin: null,
+        productosMax: null
+    };
+    
+    // Aplicar filtros (mostrará todos)
+    filtrarInventarios();
+    
+    console.log('✅ Filtros del historial limpiados');
+}
+
+// ✅ FUNCIÓN CON DEBOUNCE PARA FILTROS DE TEXTO Y RANGOS
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+
+
 
 
 // =====================================
@@ -487,19 +754,19 @@ function actualizarContadorInventarios(cantidad) {
     try {
         const $contador = $('#contadorInventarios');
         const $label = $('#labelInventarios');
-        
+
         if ($contador.length > 0) {
             $contador.text(cantidad);
-            
+
             // Actualizar el texto del label según la cantidad
             if ($label.length > 0) {
                 const textoLabel = cantidad === 1 ? 'Inventario' : 'Inventarios';
-                const textoCompleto = cantidad === inventariosData.length ? 
-                    textoLabel : 
+                const textoCompleto = cantidad === inventariosData.length ?
+                    textoLabel :
                     `${textoLabel} (${inventariosData.length} total)`;
                 $label.text(textoCompleto);
             }
-            
+
             console.log('✅ Contador de inventarios actualizado:', cantidad);
         }
     } catch (error) {
@@ -553,45 +820,169 @@ if (window.DEBUG) {
 // FUNCIONES DE DESCARGA (TEMPORALES)
 // =====================================
 
-function descargarReporteExcel(inventarioId, titulo) {
-    console.log('📊 Solicitando descarga Excel para inventario:', inventarioId);
-    
-    // Por ahora mostrar mensaje de que se implementará
-    if (typeof Swal !== 'undefined') {
+/**
+ * ✅ Descarga el reporte Excel del inventario
+ */
+async function descargarReporteExcel(inventarioId, titulo) {
+    try {
+        console.log('📊 Iniciando descarga Excel para inventario:', inventarioId);
+
+        // Mostrar indicador de carga
         Swal.fire({
-            icon: 'info',
-            title: 'Función en desarrollo',
+            title: 'Generando Excel...',
             html: `
-                <p>La descarga de reportes Excel está en desarrollo.</p>
-                <p><strong>Inventario:</strong> ${titulo}</p>
-                <p><strong>ID:</strong> ${inventarioId}</p>
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+                <p class="mt-3 text-muted">Preparando reporte de "${titulo}"</p>
             `,
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: '#2e7d32'
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
-    } else {
-        alert(`Descarga Excel para inventario "${titulo}" (ID: ${inventarioId}) - En desarrollo`);
+
+        // Realizar la petición
+        const response = await fetch(`/Reportes/inventario/${inventarioId}/excel`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener el blob y descargarlo
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_${titulo.replace(/[^a-zA-Z0-9]/g, '_')}_${inventarioId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-file-earmark-excel text-success display-1"></i>
+                    <p class="mt-3">El reporte Excel de <strong>"${titulo}"</strong> se ha descargado correctamente.</p>
+                </div>
+            `,
+            timer: 3000,
+            timerProgressBar: true,
+            confirmButtonColor: '#28a745'
+        });
+
+        console.log('✅ Descarga Excel completada exitosamente');
+
+    } catch (error) {
+        console.error('❌ Error descargando Excel:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar Excel',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-exclamation-triangle text-danger display-1"></i>
+                    <p class="mt-3">${error.message || 'No se pudo descargar el archivo Excel'}</p>
+                    <small class="text-muted">Inventario: ${titulo} (ID: ${inventarioId})</small>
+                </div>
+            `,
+            confirmButtonColor: '#d33'
+        });
     }
 }
 
-function descargarReportePdf(inventarioId, titulo) {
-    console.log('📋 Solicitando descarga PDF para inventario:', inventarioId);
-    
-    // Por ahora mostrar mensaje de que se implementará
-    if (typeof Swal !== 'undefined') {
+/**
+ * ✅ Descarga el reporte PDF del inventario
+ */
+async function descargarReportePdf(inventarioId, titulo) {
+    try {
+        console.log('📋 Iniciando descarga PDF para inventario:', inventarioId);
+
+        // Mostrar indicador de carga
         Swal.fire({
-            icon: 'info',
-            title: 'Función en desarrollo',
+            title: 'Generando PDF...',
             html: `
-                <p>La descarga de reportes PDF está en desarrollo.</p>
-                <p><strong>Inventario:</strong> ${titulo}</p>
-                <p><strong>ID:</strong> ${inventarioId}</p>
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+                <p class="mt-3 text-muted">Preparando reporte de "${titulo}"</p>
             `,
-            confirmButtonText: 'Entendido',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Realizar la petición
+        const response = await fetch(`/Reportes/inventario/${inventarioId}/pdf`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener el blob y descargarlo
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_${titulo.replace(/[^a-zA-Z0-9]/g, '_')}_${inventarioId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-file-earmark-pdf text-danger display-1"></i>
+                    <p class="mt-3">El reporte PDF de <strong>"${titulo}"</strong> se ha descargado correctamente.</p>
+                </div>
+            `,
+            timer: 3000,
+            timerProgressBar: true,
             confirmButtonColor: '#d32f2f'
         });
-    } else {
-        alert(`Descarga PDF para inventario "${titulo}" (ID: ${inventarioId}) - En desarrollo`);
+
+        console.log('✅ Descarga PDF completada exitosamente');
+
+    } catch (error) {
+        console.error('❌ Error descargando PDF:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar PDF',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-exclamation-triangle text-danger display-1"></i>
+                    <p class="mt-3">${error.message || 'No se pudo descargar el archivo PDF'}</p>
+                    <small class="text-muted">Inventario: ${titulo} (ID: ${inventarioId})</small>
+                </div>
+            `,
+            confirmButtonColor: '#d33'
+        });
     }
 }
 
