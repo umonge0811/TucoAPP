@@ -32,7 +32,7 @@ namespace GestionLlantera.Web.Controllers
     {
         private readonly ITomaInventarioService _tomaInventarioService;
         private readonly IInventarioService _inventarioService;
-       
+
         private readonly ILogger<TomaInventarioController> _logger;
         private readonly IAjustesInventarioService _ajustesInventarioService;
 
@@ -484,9 +484,9 @@ namespace GestionLlantera.Web.Controllers
                 // ✅ LLAMAR AL SERVICIO PARA OBTENER PRODUCTOS
                 _logger.LogInformation("🔄 Llamando al servicio para obtener productos...");
                 var productos = await _tomaInventarioService.ObtenerProductosInventarioAsync(id, token);
-                
+
                 _logger.LogInformation("📦 Respuesta del servicio - Productos: {Count}", productos?.Count ?? 0);
-                
+
                 if (productos == null)
                 {
                     _logger.LogError("❌ El servicio devolvió null");
@@ -529,7 +529,7 @@ namespace GestionLlantera.Web.Controllers
 
                 _logger.LogInformation("✅ === RESULTADO FINAL ===");
                 _logger.LogInformation("✅ Productos a enviar: {Count}", productos.Count);
-                _logger.LogInformation("✅ Estadísticas calculadas: Total={Total}, Contados={Contados}, Pendientes={Pendientes}, Discrepancias={Discrepancias}", 
+                _logger.LogInformation("✅ Estadísticas calculadas: Total={Total}, Contados={Contados}, Pendientes={Pendientes}, Discrepancias={Discrepancias}",
                     estadisticas.total, estadisticas.contados, estadisticas.pendientes, estadisticas.discrepancias);
 
                 // ✅ RETURN JSON DENTRO DEL TRY
@@ -711,9 +711,9 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🚀 === INICIANDO INVENTARIO DESDE CONTROLADOR WEB ===");
-                _logger.LogInformation("👤 Usuario: {Usuario}, Inventario ID: {Id}", User.Identity?.Name, id);               
+                _logger.LogInformation("👤 Usuario: {Usuario}, Inventario ID: {Id}", User.Identity?.Name, id);
 
-               
+
 
                 // ✅ VERIFICACIÓN DE PERMISOS
                 var validacion = await this.ValidarPermisoMvcAsync("Iniciar Inventario",
@@ -977,20 +977,17 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Obtiene los inventarios asignados al usuario actual (AJAX)
-        /// GET: /TomaInventario/ObtenerInventariosAsignados/{usuarioId}
+        /// Obtiene los inventarios según los permisos del usuario actual (AJAX)
+        /// GET: /TomaInventario/ObtenerInventariosAsignados
         /// </summary>
         [HttpGet]
-        [Route("TomaInventario/ObtenerInventariosAsignados/{usuarioId}")]
-        public async Task<IActionResult> ObtenerInventariosAsignados(int usuarioId)
+        public async Task<IActionResult> ObtenerInventariosAsignados()
         {
             try
             {
-                _logger.LogInformation("📚 === OBTENIENDO INVENTARIOS ASIGNADOS (WEB) ===");
-                _logger.LogInformation("📚 Usuario ID: {UsuarioId}", usuarioId);
-                _logger.LogInformation("📚 Usuario autenticado: {Usuario}", User.Identity?.Name ?? "Anónimo");
+                _logger.LogInformation("📋 === OBTENIENDO INVENTARIOS PARA HISTORIAL ===");
 
-                // ✅ VERIFICAR SESIÓN
+                // ✅ OBTENER TOKEN JWT
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
@@ -998,46 +995,42 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                // ✅ VERIFICAR PERMISOS - Solo puede ver sus propios inventarios o ser admin
-                var usuarioActual = ObtenerIdUsuarioActual();
-                var esAdmin = await this.TienePermisoAsync("Ver Historial Inventarios Completo");
+                // ✅ VERIFICAR SI EL USUARIO ES ADMINISTRADOR
+                var esAdmin = await this.EsAdministradorAsync();
+                var usuarioId = ObtenerIdUsuarioActual();
 
-                if (!esAdmin && usuarioActual != usuarioId)
+                _logger.LogInformation("👤 Usuario actual ID: {UsuarioId}, Es Admin: {EsAdmin}", usuarioId, esAdmin);
+
+                List<InventarioProgramadoDTO> inventarios;
+
+                if (esAdmin)
                 {
-                    _logger.LogWarning("🚫 Usuario {UsuarioActual} intentando acceder a inventarios del usuario {UsuarioId}",
-                        usuarioActual, usuarioId);
-                    return Json(new { success = false, message = "No tienes permisos para ver estos inventarios" });
+                    // ✅ ADMINISTRADORES VEN TODOS LOS INVENTARIOS
+                    _logger.LogInformation("🔑 Usuario administrador - obteniendo TODOS los inventarios");
+                    inventarios = await _inventarioService.ObtenerTodosLosInventariosAsync(token);
+                }
+                else
+                {
+                    // ✅ USUARIOS REGULARES SOLO VEN LOS ASIGNADOS
+                    _logger.LogInformation("👤 Usuario regular - obteniendo inventarios asignados");
+                    inventarios = await _tomaInventarioService.ObtenerInventariosAsignadosAsync(usuarioId, token);
                 }
 
-                // ✅ LLAMAR AL SERVICIO PARA OBTENER INVENTARIOS ASIGNADOS
-                var inventarios = await _tomaInventarioService.ObtenerInventariosAsignadosAsync(usuarioId, token);
-
-                if (inventarios == null)
-                {
-                    _logger.LogError("❌ Error obteniendo inventarios del servicio");
-                    return Json(new { success = false, message = "Error al obtener inventarios" });
-                }
-
-                _logger.LogInformation("✅ Se obtuvieron {Count} inventarios asignados", inventarios.Count);
+                _logger.LogInformation("📊 Inventarios encontrados: {Count}", inventarios.Count);
 
                 return Json(new
                 {
                     success = true,
-                    inventarios = inventarios,
-                    totalInventarios = inventarios.Count,
+                    data = inventarios,
+                    count = inventarios.Count,
                     usuarioId = usuarioId,
-                    message = $"Se encontraron {inventarios.Count} inventarios"
+                    esAdmin = esAdmin
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error al obtener inventarios asignados para usuario {UsuarioId}", usuarioId);
-                return Json(new
-                {
-                    success = false,
-                    message = "Error interno del servidor",
-                    error = ex.Message
-                });
+                _logger.LogError(ex, "💥 Error al obtener inventarios asignados");
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
@@ -1116,6 +1109,11 @@ namespace GestionLlantera.Web.Controllers
                 TempData["Error"] = "Error al cargar el inventario.";
                 return RedirectToAction("Historial");
             }
+        }
+
+        private async Task<bool> EsAdministradorAsync()
+        {
+            return await this.TienePermisoAsync("Ver Historial Inventarios Completo");
         }
     }
 }

@@ -1,4 +1,3 @@
-
 // ========================================
 // MÓDULO DE HISTORIAL DE INVENTARIOS
 // Ubicación: /js/views/Inventario/historial.js
@@ -18,9 +17,9 @@ let usuarioActual = null;
 // INICIALIZACIÓN
 // =====================================
 
-$(document).ready(function() {
+$(document).ready(function () {
     console.log('📚 DOM cargado, inicializando historial...');
-    
+
     try {
         // Obtener información del usuario desde la configuración global
         if (window.userConfig) {
@@ -35,9 +34,9 @@ $(document).ready(function() {
         // Inicializar componentes
         configurarEventListeners();
         cargarHistorialInventarios();
-        
+
         console.log('✅ Módulo de historial inicializado correctamente');
-        
+
     } catch (error) {
         console.error('❌ Error inicializando módulo de historial:', error);
         mostrarError('Error al inicializar la página');
@@ -50,22 +49,22 @@ $(document).ready(function() {
 
 function configurarEventListeners() {
     console.log('🔗 Configurando event listeners...');
-    
+
     // Filtro por estado
-    $('#filtroEstado').on('change', function() {
+    $('#filtroEstado').on('change', function () {
         const estadoSeleccionado = $(this).val();
         console.log('🔍 Filtrando por estado:', estadoSeleccionado);
         filtrarInventarios(estadoSeleccionado);
     });
-    
+
     // Botón de actualizar
-    $('#btnActualizar').on('click', function() {
+    $('#btnActualizar').on('click', function () {
         console.log('🔄 Recargando historial...');
         cargarHistorialInventarios();
     });
-    
+
     // Búsqueda por texto
-    $('#busquedaTexto').on('input', debounce(function() {
+    $('#busquedaTexto').on('input', debounce(function () {
         const texto = $(this).val().toLowerCase();
         console.log('🔍 Buscando:', texto);
         buscarInventarios(texto);
@@ -79,59 +78,61 @@ function configurarEventListeners() {
 async function cargarHistorialInventarios() {
     try {
         console.log('📦 === CARGANDO HISTORIAL DE INVENTARIOS ===');
-        
+
         if (!usuarioActual?.id) {
             throw new Error('No se pudo obtener la información del usuario');
         }
-        
+
         // Mostrar indicador de carga
         mostrarCargando(true);
-        
+
         console.log('📦 Llamando al controlador para obtener inventarios...');
         console.log('📦 Usuario ID:', usuarioActual.id);
-        
-        const response = await fetch(`/TomaInventario/ObtenerInventariosAsignados/${usuarioActual.id}`, {
+
+        const response = await fetch('/TomaInventario/ObtenerInventariosAsignados', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
-        
+
         console.log('📦 Respuesta del servidor:', response.status, response.statusText);
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Error en la respuesta:', errorText);
             throw new Error(`Error del servidor: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('📦 Datos recibidos:', data);
-        
-        if (data.success) {
-            inventariosData = data.inventarios || [];
+
+        if (data.success && data.data) {
+            inventariosData = data.data;
             console.log('✅ Inventarios cargados:', inventariosData.length);
+            console.log('👤 Usuario ID:', data.usuarioId);
+            console.log('🔑 Es Administrador:', data.esAdmin);
 
             // ✅ DEBUG: Ver la estructura de los inventarios recibidos
             if (inventariosData.length > 0) {
                 console.log('🔍 DEBUG - Primer inventario recibido:', inventariosData[0]);
                 console.log('🔍 DEBUG - Propiedades disponibles:', Object.keys(inventariosData[0]));
             }
-            
+
             // Aplicar filtros actuales
             const estadoFiltro = $('#filtroEstado').val();
             filtrarInventarios(estadoFiltro);
-            
+
         } else {
             throw new Error(data.message || 'Error desconocido al cargar inventarios');
         }
-        
+
     } catch (error) {
         console.error('❌ Error cargando historial:', error);
         mostrarError(`Error al cargar el historial: ${error.message}`);
         mostrarEstadoVacio('Error al cargar inventarios');
-        
+
     } finally {
         mostrarCargando(false);
     }
@@ -219,8 +220,8 @@ function buscarInventarios(texto) {
         const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
 
         return titulo.includes(textoLower) ||
-               descripcion.includes(textoLower) ||
-               estadoInventario.includes(textoLower);
+            descripcion.includes(textoLower) ||
+            estadoInventario.includes(textoLower);
     });
 
     // Aplicar también filtro de estado
@@ -253,25 +254,25 @@ function buscarInventarios(texto) {
 
 function renderizarInventarios(inventarios) {
     console.log('🎨 Renderizando inventarios:', inventarios.length);
-    
+
     const $contenedor = $('#inventariosContainer');
-    
+
     if (!inventarios || inventarios.length === 0) {
         mostrarEstadoVacio();
         return;
     }
-    
+
     let html = '<div class="inventarios-grid">';
-    
+
     inventarios.forEach(inventario => {
         html += generarTarjetaInventario(inventario);
     });
-    
+
     html += '</div>';
-    
+
     $contenedor.html(html);
     $('#estadoVacio').hide();
-    
+
     console.log('✅ Inventarios renderizados correctamente');
 }
 
@@ -293,11 +294,11 @@ function generarTarjetaInventario(inventario) {
     const fechaFin = obtenerValor(inventario, ['fechaFin', 'FechaFin']);
     const totalProductos = obtenerValor(inventario, ['totalProductos', 'TotalProductos'], 0);
     const productosContados = obtenerValor(inventario, ['productosContados', 'ProductosContados'], 0);
-    
+
     const estadoClass = obtenerClaseEstado(estado);
     const fechaFormato = fechaInicio ? formatearFecha(fechaInicio) : 'Sin fecha';
     const fechaFinFormato = fechaFin ? formatearFecha(fechaFin) : 'En progreso';
-    
+
     return `
         <div class="inventario-card">
             <div class="inventario-header">
@@ -307,12 +308,12 @@ function generarTarjetaInventario(inventario) {
                     ${fechaFin ? `- ${fechaFinFormato}` : ''}
                 </p>
             </div>
-            
+
             <div class="inventario-body">
                 <span class="estado-badge ${estadoClass}">
                     ${estado}
                 </span>
-                
+
                 <div class="inventario-info">
                     <div class="info-item">
                         <span class="info-label">Total Productos</span>
@@ -323,9 +324,9 @@ function generarTarjetaInventario(inventario) {
                         <span class="info-value">${productosContados}</span>
                     </div>
                 </div>
-                
+
                 ${generarBarraProgreso(porcentajeProgreso)}
-                
+
                 <div class="inventario-acciones">
                     ${generarBotonesAccion(inventario)}
                 </div>
@@ -336,9 +337,9 @@ function generarTarjetaInventario(inventario) {
 
 function generarBarraProgreso(porcentaje) {
     const porcentajeRedondeado = Math.round(porcentaje);
-    const colorBarra = porcentaje < 30 ? 'bg-danger' : 
-                      porcentaje < 70 ? 'bg-warning' : 'bg-success';
-    
+    const colorBarra = porcentaje < 30 ? 'bg-danger' :
+        porcentaje < 70 ? 'bg-warning' : 'bg-success';
+
     return `
         <div class="progreso-container">
             <div class="progreso-label">
@@ -368,7 +369,7 @@ function generarBotonesAccion(inventario) {
 
     const estado = String(obtenerValor(inventario, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario'], 'sin estado')).toLowerCase();
     const inventarioId = obtenerValor(inventario, ['inventarioProgramadoId', 'InventarioProgramadoId', 'id', 'Id'], '');
-    
+
     if (estado === 'en progreso') {
         return `
             <a href="/TomaInventario/Ejecutar/${inventarioId}" 
@@ -403,7 +404,7 @@ function obtenerClaseEstado(estado) {
     if (!estado || typeof estado !== 'string') {
         return 'estado-programado';
     }
-    
+
     const estadoLower = estado.toLowerCase();
     switch (estadoLower) {
         case 'programado': return 'estado-programado';
@@ -441,7 +442,7 @@ function mostrarCargando(mostrar) {
 function mostrarEstadoVacio(mensaje = null) {
     const mensajeDefault = 'No tienes inventarios asignados';
     const mensajeFinal = mensaje || mensajeDefault;
-    
+
     $('#estadoVacio .mensaje-vacio').text(mensajeFinal);
     $('#estadoVacio').show();
     $('#inventariosContainer').hide();
@@ -449,7 +450,7 @@ function mostrarEstadoVacio(mensaje = null) {
 
 function mostrarError(mensaje) {
     console.error('❌ Error mostrado al usuario:', mensaje);
-    
+
     // Si existe Swal (SweetAlert2), usarlo
     if (typeof Swal !== 'undefined') {
         Swal.fire({
