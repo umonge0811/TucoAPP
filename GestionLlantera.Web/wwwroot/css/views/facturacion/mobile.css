@@ -120,7 +120,16 @@
 
     /* ===== CARDS DE PRODUCTOS RESPONSIVOS ===== */
     .producto-card-imagen-container {
-        height: 150px;
+        height: 180px;
+    }
+
+    .producto-card-imagen {
+        padding: 6px;
+    }
+
+    .producto-card-imagen:hover {
+        transform: scale(1.02);
+        padding: 3px;
     }
 
     .producto-card-body {
@@ -152,13 +161,33 @@
     }
 }
 
+/* ===== TABLET ESPECÍFICO ===== */
+@media (min-width: 577px) and (max-width: 992px) {
+    .producto-card-imagen-container {
+        height: 200px;
+    }
+    
+    .producto-card-imagen {
+        padding: 8px;
+    }
+}
+
 @media (max-width: 576px) {
     .producto-card-imagen-container {
-        height: 120px;
+        height: 160px;
+    }
+
+    .producto-card-imagen {
+        padding: 4px;
+    }
+
+    .producto-card-imagen:hover {
+        transform: scale(1.01);
+        padding: 2px;
     }
 
     .producto-card-sin-imagen {
-        font-size: 2rem;
+        font-size: 2.5rem;
     }
 
     .producto-card-body {

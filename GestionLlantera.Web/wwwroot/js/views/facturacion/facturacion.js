@@ -457,7 +457,13 @@ function mostrarResultadosProductos(productos) {
                             <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
                                 <div class="producto-card-imagen-container">
                                     ${imagenUrl ? 
-                                        `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'producto-card-sin-imagen\\'><i class=\\'bi bi-image\\'></i></div>';">` :
+                                        `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen" 
+                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
+                                              onload="this.style.opacity='1';" 
+                                              style="opacity:0; transition: opacity 0.3s ease;">
+                                         <div class="producto-card-sin-imagen" style="display:none;">
+                                             <i class="bi bi-image"></i>
+                                         </div>` :
                                         `<div class="producto-card-sin-imagen">
                                              <i class="bi bi-image"></i>
                                          </div>`
