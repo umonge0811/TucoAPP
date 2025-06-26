@@ -362,7 +362,7 @@ function mostrarResultadosProductos(productos) {
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
 
         // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
-        //let imagenUrl = '/images/no-image.png'; // Imagen por defecto
+        let imagenUrl = '/images/no-image.png'; // Imagen por defecto
         try {
             if (producto && typeof producto === 'object') {
                 console.log('🖼️ Procesando imágenes para producto:', producto.nombreProducto);
@@ -377,14 +377,21 @@ function mostrarResultadosProductos(productos) {
                 // Verificar imagenesProductos (formato principal desde la API)
                 if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
                     imagenesArray = producto.imagenesProductos
-                        .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                        .map(img => img.urlimagen || img.Urlimagen || img.urlImagen || img.UrlImagen)
                         .filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
                 } 
-                // Verificar imagenesUrls como alternativa
-                else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+                // Verificar imagenesUrls como alternativa (ya vienen con URLs completas)
+                if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
                     imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
+                }
+                // Verificar imagenesProductos (formato principal desde la API)
+                else if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+                    imagenesArray = producto.imagenesProductos
+                        .map(img => img.urlimagen || img.Urlimagen || img.urlImagen || img.UrlImagen)
+                        .filter(url => url && url.trim() !== '');
+                    console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
                 }
                 // Verificar imagenes como última alternativa
                 else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
@@ -399,19 +406,14 @@ function mostrarResultadosProductos(productos) {
                     console.log('🖼️ URL original:', urlImagen);
 
                     if (urlImagen && urlImagen.trim() !== '') {
-                        // Lógica mejorada de construcción de URLs (igual que verDetalleProducto)
-                        if (urlImagen.startsWith('/uploads/productos/')) {
-                            imagenUrl = `https://localhost:7273${urlImagen}`;
-                        } else if (urlImagen.startsWith('uploads/productos/')) {
-                            imagenUrl = `https://localhost:7273/${urlImagen}`;
-                        } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
-                            imagenUrl = urlImagen; // URL completa
-                        } else if (urlImagen.startsWith('/')) {
-                            // URL relativa que empieza con /
-                            imagenUrl = `https://localhost:7273${urlImagen}`;
+                        // Las URLs ya vienen completas desde la API, usar directamente
+                        if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
+                            imagenUrl = urlImagen; // URL completa desde la API
                         } else {
-                            // URL relativa sin /
-                            imagenUrl = `https://localhost:7273/${urlImagen}`;
+                            // Fallback para URLs relativas
+                            imagenUrl = urlImagen.startsWith('/') ? 
+                                `https://localhost:7273${urlImagen}` : 
+                                `https://localhost:7273/${urlImagen}`;
                         }
                         console.log('🖼️ URL final construida:', imagenUrl);
                     }
@@ -451,63 +453,65 @@ function mostrarResultadosProductos(productos) {
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
 
         html += `
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
-                    <div class="position-relative">
-                        <img src="${imagenUrl}" 
-                             class="card-img-top producto-imagen" 
-                             alt="${nombreEscapado}"
-                             style="height: 120px; object-fit: cover;"
-                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzVDOTEuNzE1NyA3NSA4NSAwMS43MTU3IDg1IDkwQzg1IDk4LjI4NDMgOTEuNzE1NyAxMDUgMTAwIDEwNUMxMDguMjg0IDEwNSAxMTUgOTguMjg0MyAxMTUgOTBDMTE1IDgxLjcxNTcgMTA4LjI4NCA3NSAxMDAgNzVaIiBmaWxsPSIjOUNBM0FGIi8+CjxwYXRoIGQ9Ik0xNzUgNTBINDBDMzUgNTAgMzAgNTUgMzAgNjBWMTQwQzMwIDE0NSAzNSAxNTAgNDAgMTUwSDE3NUMxODAgMTUwIDE4NSAxNDUgMTg1IDE0MFY2MEMxODUgNTUgMTgwIDUwIDE3NSA1MFpNNTAgNzBIMTYwVjEzMEg1MFY3MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'">
-                        ${cantidadInventario <= 0 ? 
-                            '<span class="badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</span>' :
-                            cantidadInventario <= stockMinimo ?
-                            '<span class="badge bg-warning position-absolute top-0 end-0 m-2">Stock Bajo</span>' : ''
-                        }
-                    </div>
-                    <div class="card-body p-2">
-                        <h6 class="card-title mb-1" title="${nombreEscapado}">
-                            ${nombreProducto.length > 25 ? nombreProducto.substring(0, 25) + '...' : nombreProducto}
-                        </h6>
-                        <div class="precios-metodos mb-2">
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <small class="text-muted d-block">Efectivo/SINPE</small>
-                                    <span class="text-success fw-bold small">₡${formatearMoneda(precioEfectivo)}</span>
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
+                                <div class="producto-card-imagen-container">
+                                    ${imagenUrl ? 
+                                        `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen" 
+                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
+                                              onload="this.style.opacity='1';" 
+                                              style="opacity:0; transition: opacity 0.3s ease;">
+                                         <div class="producto-card-sin-imagen" style="display:none;">
+                                             <i class="bi bi-image"></i>
+                                         </div>` :
+                                        `<div class="producto-card-sin-imagen">
+                                             <i class="bi bi-image"></i>
+                                         </div>`
+                                    }
                                 </div>
-                                <div class="col-6">
-                                    <small class="text-muted d-block">Tarjeta</small>
-                                    <span class="text-warning fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
+                                <div class="producto-card-body">
+                                    <h6 class="producto-card-titulo" title="${nombreEscapado}">
+                                      ${nombreProducto.length > 25 ? nombreProducto.substring(0, 25) + '...' : nombreProducto}
+                                    </h6>
+                                    <div class="precios-metodos mb-2">
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Efectivo/SINPE</small>
+                                                <span class="text-success fw-bold small">₡${formatearMoneda(precioEfectivo)}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Tarjeta</small>
+                                                <span class="text-warning fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-primary">Stock: ${cantidadInventario}</small>
+                                        ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
+                                            '<small class="badge bg-warning">Stock Bajo</small>' : ''}
+                                    </div>
+                                    <div class="producto-card-acciones">
+                                        ${cantidadInventario > 0 ? `
+                                            <button type="button" 
+                                                    class="btn btn-primary btn-sm btn-seleccionar-producto"
+                                                    data-producto="${productoJson}">
+                                                <i class="bi bi-hand-index me-1"></i>Seleccionar
+                                            </button>
+                                        ` : `
+                                            <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                                <i class="bi bi-x-circle me-1"></i>Sin Stock
+                                            </button>
+                                        `}
+                                        <button type="button" 
+                                                class="btn btn-outline-info btn-sm btn-ver-detalle"
+                                                data-producto="${productoJson}">
+                                            <i class="bi bi-eye me-1"></i>Ver Detalle
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-primary">Stock: ${cantidadInventario}</small>
-                            ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
-                                '<small class="badge bg-warning">Stock Bajo</small>' : ''}
-                        </div>
-                        <div class="d-grid gap-1">
-                            ${cantidadInventario > 0 ? `
-                                <button type="button" 
-                                        class="btn btn-primary btn-sm btn-seleccionar-producto"
-                                        data-producto="${productoJson}">
-                                    <i class="bi bi-hand-index me-1"></i>Seleccionar
-                                </button>
-                            ` : `
-                                <button type="button" class="btn btn-secondary btn-sm" disabled>
-                                    <i class="bi bi-x-circle me-1"></i>Sin Stock
-                                </button>
-                            `}
-                            <button type="button" 
-                                    class="btn btn-outline-info btn-sm btn-ver-detalle"
-                                    data-producto="${productoJson}">
-                                <i class="bi bi-eye me-1"></i>Ver Detalle
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+                    `;
     });
 
     console.log('🔄 Actualizando DOM (longitud HTML:', html.length, 'caracteres)');
@@ -654,7 +658,7 @@ function mostrarModalSeleccionProducto(producto) {
             console.log('🖼️ URL original en modal:', urlImagen);
 
             if (urlImagen && urlImagen.trim() !== '') {
-                // Lógica mejorada de construcción de URLs
+                // Construir URL correcta para el servidor API (puerto 7273 HTTPS)
                 if (urlImagen.startsWith('/uploads/productos/')) {
                     imagenUrl = `https://localhost:7273${urlImagen}`;
                 } else if (urlImagen.startsWith('uploads/productos/')) {
@@ -734,7 +738,7 @@ function mostrarModalSeleccionProducto(producto) {
                                         <button type="button" class="btn btn-outline-secondary" id="btnMenosCantidad">-</button>
                                         <input type="number" 
                                                class="form-control text-center fw-bold" 
-                                               id="cantidadProducto" 
+                id="cantidadProducto" 
                                                value="1" 
                                                min="1" 
                                                max="${producto.cantidadEnInventario}"
@@ -789,11 +793,11 @@ function configurarEventosModalProducto(producto, modal) {
     $('#modalSeleccionProducto #btnMenosCantidad').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const input = $('#modalSeleccionProducto #cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const minimo = parseInt(input.attr('min')) || 1;
-        
+
         if (valorActual > minimo) {
             input.val(valorActual - 1);
             console.log('➖ Cantidad decrementada a:', valorActual - 1);
@@ -803,11 +807,11 @@ function configurarEventosModalProducto(producto, modal) {
     $('#modalSeleccionProducto #btnMasCantidad').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const input = $('#modalSeleccionProducto #cantidadProducto');
         const valorActual = parseInt(input.val()) || 1;
         const stockDisponible = producto.cantidadEnInventario;
-        
+
         if (valorActual < stockDisponible) {
             input.val(valorActual + 1);
             console.log('➕ Cantidad incrementada a:', valorActual + 1);
@@ -854,9 +858,9 @@ function configurarEventosModalProducto(producto, modal) {
     $('#modalSeleccionProducto #btnConfirmarAgregarProducto').on('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const cantidad = parseInt($('#modalSeleccionProducto #cantidadProducto').val()) || 1;
-        
+
         console.log('🛒 Agregando producto a venta:', {
             nombre: producto.nombreProducto,
             cantidad: cantidad,
@@ -869,7 +873,7 @@ function configurarEventosModalProducto(producto, modal) {
             mostrarToast('Cantidad inválida', 'La cantidad debe ser mayor a 0', 'warning');
             return;
         }
-        
+
         if (cantidad > producto.cantidadEnInventario) {
             mostrarToast('Stock insuficiente', `Solo hay ${producto.cantidadEnInventario} unidades disponibles`, 'warning');
             return;
@@ -877,10 +881,10 @@ function configurarEventosModalProducto(producto, modal) {
 
         // Agregar producto con la cantidad seleccionada
         agregarProductoAVenta(producto, cantidad, precioBase, 'efectivo');
-        
+
         // Cerrar modal
         modal.hide();
-        
+
         // Mostrar confirmación
         mostrarToast('Producto agregado', `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${producto.nombreProducto} agregadas`, 'success');
     });
@@ -1004,10 +1008,10 @@ function actualizarVistaCarrito() {
 
     container.html(html);
     contador.text(`${productosEnVenta.length} productos`);
-    
+
     // ✅ HABILITAR BOTÓN LIMPIAR SOLO SI HAY PRODUCTOS
     $('#btnLimpiarVenta').prop('disabled', false);
-    
+
     // ✅ HABILITAR BOTÓN FINALIZAR SOLO SI HAY PRODUCTOS Y CLIENTE SELECCIONADO
     actualizarEstadoBotonFinalizar();
 
@@ -1083,10 +1087,10 @@ function limpiarVenta() {
         $('#clienteSeleccionado').addClass('d-none');
         actualizarVistaCarrito();
         actualizarTotales();
-        
+
         // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
         actualizarEstadoBotonFinalizar();
-        
+
         mostrarToast('Venta limpiada', 'Se han removido todos los productos', 'info');
     }
 }
@@ -1100,16 +1104,16 @@ function mostrarModalFinalizarVenta() {
 
     if (!clienteSeleccionado) {
         mostrarToast('Cliente requerido', 'Debes seleccionar un cliente antes de finalizar la venta', 'warning');
-        
+
         // ✅ ENFOCAR EL CAMPO DE BÚSQUEDA DE CLIENTE
         $('#clienteBusqueda').focus();
-        
+
         // ✅ RESALTAR EL CAMPO DE CLIENTE
         $('#clienteBusqueda').addClass('is-invalid');
         setTimeout(() => {
             $('#clienteBusqueda').removeClass('is-invalid');
         }, 3000);
-        
+
         return;
     }
 
@@ -1376,12 +1380,12 @@ async function procesarVentaFinal() {
 
             if (responseStock.ok) {
                 const resultadoStock = await responseStock.json();
-                
+
                 if (resultadoStock.success) {
                     console.log('✅ Stock ajustado exitosamente para todos los productos');
-                    
+
                     // Mostrar resumen de ajustes exitosos
-                    const ajustesExitosos = resultadoStock.resultados.filter(r => r.success);
+                    const ajustesExitosos = resultadoStock.filter(r => r.success);
                     if (ajustesExitosos.length > 0) {
                         console.log(`📦 ${ajustesExitosos.length} productos actualizados correctamente`);
                     }
@@ -1541,7 +1545,7 @@ function generarRecibo(factura, productos, totales) {
             <!-- PIE DE PÁGINA -->
             <div style="text-align: center; margin-top: 8px; font-size: 8px; border-top: 1px dashed #000; padding-top: 6px;">
                 <div style="margin-bottom: 2px;">¡Gracias por su compra!</div>
-                <div style="margin-bottom: 2px;">Vuelva pronto</div>
+                <div style="margin-bottom: 2px.">Vuelva pronto</div>
                 <div style="margin-bottom: 4px;">www.gestionllantera.com</div>
                 <div style="font-size: 7px;">Recibo generado: ${new Date().toLocaleString('es-CR')}</div>
             </div>
@@ -1803,7 +1807,7 @@ function verDetalleProducto(producto) {
             console.log('🖼️ URL original en detalle:', urlImagen);
 
             if (urlImagen && urlImagen.trim() !== '') {
-                // Lógica robusta de construcción de URLs
+                // Construir URL correcta para el servidor API (puerto 7273 HTTPS)
                 if (urlImagen.startsWith('/uploads/productos/')) {
                     imagenUrl = `https://localhost:7273${urlImagen}`;
                 } else if (urlImagen.startsWith('uploads/productos/')) {
@@ -2372,7 +2376,7 @@ function obtenerTokenJWT() {
                 sessionStorage.getItem('jwt_token') ||
                 localStorage.getItem('authToken') ||
                 sessionStorage.getItem('authToken');
-    
+
     // Si no está en storage, intentar desde cookie
     if (!token) {
         const cookies = document.cookie.split(';');
@@ -2384,15 +2388,14 @@ function obtenerTokenJWT() {
             }
         }
     }
-    
+
     // Si aún no tenemos token, intentar desde meta tag
-    if (!token) {
-        const metaToken = document.querySelector('meta[name="auth-token"]');
+    if (!token) {        const metaToken = document.querySelector('meta[name="auth-token"]');
         if (metaToken) {
             token = metaToken.getAttribute('content');
         }
     }
-    
+
     console.log('🔑 Token JWT obtenido:', token ? 'Presente' : 'No encontrado');
     return token;
 }
@@ -2402,9 +2405,9 @@ function actualizarEstadoBotonFinalizar() {
     const tieneProductos = productosEnVenta.length > 0;
     const tieneCliente = clienteSeleccionado !== null;
     const puedeFinalizarVenta = tieneProductos && tieneCliente;
-    
+
     const $btnFinalizar = $('#btnFinalizarVenta');
-    
+
     if (puedeFinalizarVenta) {
         $btnFinalizar.prop('disabled', false)
                     .removeClass('btn-outline-secondary')
@@ -2414,7 +2417,7 @@ function actualizarEstadoBotonFinalizar() {
         $btnFinalizar.prop('disabled', true)
                     .removeClass('btn-success')
                     .addClass('btn-outline-secondary');
-        
+
         if (!tieneProductos && !tieneCliente) {
             $btnFinalizar.attr('title', 'Agrega productos y selecciona un cliente');
         } else if (!tieneProductos) {
@@ -2423,7 +2426,7 @@ function actualizarEstadoBotonFinalizar() {
             $btnFinalizar.attr('title', 'Selecciona un cliente para continuar');
         }
     }
-    
+
     console.log('🔄 Estado botón finalizar actualizado:', {
         tieneProductos,
         tieneCliente,
@@ -2448,3 +2451,107 @@ window.procesarVenta = procesarVenta;
 window.reiniciarCargaProductos = reiniciarCargaProductos;
 window.mostrarResumenDepuracion = mostrarResumenDepuracion;
 window.actualizarEstadoBotonFinalizar = actualizarEstadoBotonFinalizar;
+
+// Estilos CSS para cards de productos
+const estilosCSS = `
+/* ===== ESTILOS PARA CARDS DE PRODUCTOS ===== */
+.producto-card-imagen-container {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    overflow: hidden; /* Importante para que la imagen no se desborde */
+}
+
+.producto-card-imagen {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* La imagen cubre el contenedor manteniendo su relación de aspecto */
+    transition: transform 0.3s ease; /* Transición suave para efectos hover */
+}
+
+.producto-card:hover .producto-card-imagen {
+    transform: scale(1.05); /* Ligeramente más grande al hacer hover */
+}
+
+.producto-card-sin-imagen {
+    color: #6c757d;
+    font-size: 3rem;
+}
+
+.producto-card-body {
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.producto-card-titulo {
+    margin-bottom: 0.3rem;
+    font-size: 1rem;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.producto-card-descripcion {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    flex-grow: 1;
+}
+
+.producto-card-precio {
+    font-size: 1rem;
+    color: #28a745;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.producto-card-stock {
+    font-size: 0.75rem;
+    color: #fff;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.producto-card-acciones {
+    display: grid;
+    gap: 0.3rem;
+}
+
+/* ===== MEDIA QUERIES PARA RESPONSIVE ===== */
+/* Para pantallas más pequeñas, como teléfonos */
+@media (max-width: 576px) {
+    .producto-card-imagen-container {
+        height: 150px; /* Aumenta la altura en pantallas pequeñas */
+    }
+
+    .producto-card-titulo {
+        font-size: 0.9rem; /* Reduce el tamaño del título */
+    }
+
+    .producto-card-descripcion {
+        display: none; /* Oculta la descripción en pantallas muy pequeñas */
+    }
+}
+
+/* Para tabletas */
+@media (min-width: 577px) and (max-width: 992px) {
+    .producto-card-imagen-container {
+        height: 180px; /* Altura moderada para tabletas */
+    }
+
+    .producto-card-titulo {
+        font-size: 0.95rem; /* Tamaño de título ligeramente menor */
+    }
+}
+`;
+
+// Agregar estilos al head del documento
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = estilosCSS;
+document.head.appendChild(styleSheet);

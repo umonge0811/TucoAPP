@@ -1,0 +1,53 @@
+facturacion.js:34 🚀 Inicializando módulo de facturación
+facturacion.js:39 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:42 🚀 Inicializando modales...
+facturacion.js:46 🚀 Configurando eventos...
+facturacion.js:50 🚀 Actualizando totales...
+facturacion.js:2427 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:57 🚀 Iniciando carga de productos iniciales...
+facturacion.js:2251 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:2252 📦 cargaInicialCompletada: false
+facturacion.js:2268 📦 Iniciando carga de productos iniciales...
+facturacion.js:234 🔍 === INICIO buscarProductos ===
+facturacion.js:235 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:236 🔍 Término recibido: ""
+facturacion.js:237 🔍 busquedaEnProceso: false
+facturacion.js:238 🔍 ultimaBusqueda: ""
+facturacion.js:253 🔍 Iniciando búsqueda válida...
+facturacion.js:60 ✅ Facturación inicializada correctamente
+facturacion.js:61 🚀 === FIN inicializarFacturacion ===
+facturacion.js:275 📋 Respuesta del servidor recibida
+facturacion.js:278 ✅ Se encontraron 5 productos disponibles
+facturacion.js:317 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:318 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:319 🔄 Productos recibidos: 5
+facturacion.js:354 🔄 Construyendo HTML para 5 productos
+facturacion.js:368 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:369 🖼️ Datos del producto: Object
+facturacion.js:382 🖼️ Imágenes desde imagenesProductos: Array(0)
+facturacion.js:419 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:307 ❌ Error buscando productos: ReferenceError: imagenUrl is not defined
+    at facturacion.js:457:37
+    at Array.forEach (<anonymous>)
+    at mostrarResultadosProductos (facturacion.js:356:15)
+    at buscarProductos (facturacion.js:290:13)
+    at async cargarProductosIniciales (facturacion.js:2281:9)
+buscarProductos @ facturacion.js:307
+await in buscarProductos
+cargarProductosIniciales @ facturacion.js:2281
+inicializarFacturacion @ facturacion.js:58
+(anonymous) @ facturacion.js:35
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+facturacion.js:311 🔍 === FIN buscarProductos ===
+facturacion.js:2284 📦 Búsqueda inicial ejecutada
+facturacion.js:2286 📦 === FIN cargarProductosIniciales (exitosa) ===

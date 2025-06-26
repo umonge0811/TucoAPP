@@ -1,0 +1,56 @@
+facturacion.js:34 🚀 Inicializando módulo de facturación
+facturacion.js:39 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:42 🚀 Inicializando modales...
+facturacion.js:46 🚀 Configurando eventos...
+facturacion.js:50 🚀 Actualizando totales...
+facturacion.js:2427 🔄 Estado botón finalizar actualizado: {tieneProductos: false, tieneCliente: false, puedeFinalizarVenta: false, disabled: true}
+facturacion.js:57 🚀 Iniciando carga de productos iniciales...
+facturacion.js:2251 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:2252 📦 cargaInicialCompletada: false
+facturacion.js:2268 📦 Iniciando carga de productos iniciales...
+facturacion.js:234 🔍 === INICIO buscarProductos ===
+facturacion.js:235 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:236 🔍 Término recibido: ""
+facturacion.js:237 🔍 busquedaEnProceso: false
+facturacion.js:238 🔍 ultimaBusqueda: ""
+facturacion.js:253 🔍 Iniciando búsqueda válida...
+facturacion.js:60 ✅ Facturación inicializada correctamente
+facturacion.js:61 🚀 === FIN inicializarFacturacion ===
+facturacion.js:275 📋 Respuesta del servidor recibida
+facturacion.js:278 ✅ Se encontraron 5 productos disponibles
+facturacion.js:317 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:318 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:319 🔄 Productos recibidos: 5
+facturacion.js:354 🔄 Construyendo HTML para 5 productos
+facturacion.js:368 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:369 🖼️ Datos del producto: {imagenesProductos: Array(1), imagenesUrls: Array(1), imagenes: undefined}
+facturacion.js:382 🖼️ Imágenes desde imagenesProductos: []
+facturacion.js:419 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:368 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:369 🖼️ Datos del producto: {imagenesProductos: Array(1), imagenesUrls: Array(1), imagenes: undefined}
+facturacion.js:382 🖼️ Imágenes desde imagenesProductos: []
+facturacion.js:419 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:368 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:369 🖼️ Datos del producto: {imagenesProductos: Array(1), imagenesUrls: Array(1), imagenes: undefined}
+facturacion.js:382 🖼️ Imágenes desde imagenesProductos: []
+facturacion.js:419 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:368 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:369 🖼️ Datos del producto: {imagenesProductos: Array(1), imagenesUrls: Array(1), imagenes: undefined}
+facturacion.js:382 🖼️ Imágenes desde imagenesProductos: []
+facturacion.js:419 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:368 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:369 🖼️ Datos del producto: {imagenesProductos: Array(3), imagenesUrls: Array(3), imagenes: undefined}imagenes: undefinedimagenesProductos: Array(3)0: urlimagen: "https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png"[[Prototype]]: Object1: urlimagen: "https://localhost:7273/uploads/productos/0bd3761e-6d04-47ee-9114-df9040fb3004_sun2.png"[[Prototype]]: Object2: urlimagen: "https://localhost:7273/uploads/productos/47bada1a-ff10-4360-b467-40dab2cb4f73_hoyoun-lee-wFUjcFocCv4-unsplash (1).jpg"[[Prototype]]: Objectlength: 3[[Prototype]]: Array(0)imagenesUrls: (3) ['https://localhost:7273/uploads/productos/19020e25-…e-4914-a654-8f9b50b61128_ss1-removebg-preview.png', 'https://localhost:7273/uploads/productos/0bd3761e-6d04-47ee-9114-df9040fb3004_sun2.png', 'https://localhost:7273/uploads/productos/47bada1a-…ab2cb4f73_hoyoun-lee-wFUjcFocCv4-unsplash (1).jpg'][[Prototype]]: Object
+facturacion.js:382 🖼️ Imágenes desde imagenesProductos: []length: 0[[Prototype]]: Array(0)
+facturacion.js:419 🖼️ No se encontraron imágenes válidas, usando imagen por defecto
+facturacion.js:513 🔄 Actualizando DOM (longitud HTML: 21891 caracteres)
+facturacion.js:546 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:295 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:298 📦 Productos mostrados exitosamente
+facturacion.js:311 🔍 === FIN buscarProductos ===
+facturacion.js:2284 📦 Búsqueda inicial ejecutada
+facturacion.js:2286 📦 === FIN cargarProductosIniciales (exitosa) ===
+Facturacion:1 Uncaught SyntaxError: Invalid or unexpected token (at Facturacion:1:10)
+Facturacion:1 Uncaught SyntaxError: Invalid or unexpected token (at Facturacion:1:10)
+Facturacion:1 Uncaught SyntaxError: Invalid or unexpected token (at Facturacion:1:10)
+Facturacion:1 Uncaught SyntaxError: Invalid or unexpected token (at Facturacion:1:10)
+Facturacion:1 Uncaught SyntaxError: Invalid or unexpected token (at Facturacion:1:10)
