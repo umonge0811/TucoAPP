@@ -207,8 +207,48 @@ public class PermisosController : ControllerBase
         }
     }
 
+    [HttpGet("funciones")]
+    public async Task<ActionResult<Dictionary<string, string>>> ObtenerFunciones()
+    {
+        try
+        {
+            var funciones = new Dictionary<string, string>
+                {
+                    {"Ver Inventario", "Permite visualizar el listado de productos en inventario"},
+                    {"Crear Productos", "Permite agregar nuevos productos al sistema"},
+                    {"Editar Productos", "Permite modificar información de productos existentes"},
+                    {"Eliminar Productos", "Permite eliminar productos del sistema"},
+                    {"Ver Costos", "Permite visualizar los costos de compra de los productos"},
+                    {"Ver Utilidades", "Permite ver márgenes de ganancia y utilidades"},
+                    {"Programar Inventario", "Permite crear y programar nuevos inventarios"},
+                    {"Iniciar Inventario", "Permite dar inicio a inventarios programados"},
+                    {"Completar Inventario", "Permite finalizar inventarios en proceso"},
+                    {"Ajustar Stock", "Permite realizar ajustes manuales de inventario"},
+                    {"Ver Facturación", "Permite acceder al módulo de ventas y facturación"},
+                    {"Crear Facturas", "Permite crear nuevas facturas de venta"},
+                    {"Completar Facturas", "Permite finalizar y cobrar facturas"},
+                    {"Editar Facturas", "Permite modificar facturas existentes"},
+                    {"Anular Facturas", "Permite anular facturas procesadas"},
+                    {"Ver Clientes", "Permite visualizar el listado de clientes"},
+                    {"Crear Clientes", "Permite registrar nuevos clientes"},
+                    {"Editar Clientes", "Permite modificar información de clientes"},
+                    {"Eliminar Clientes", "Permite eliminar clientes del sistema"},
+                    {"Ver Reportes", "Permite acceder a reportes y estadísticas"},
+                    {"Descargar Reportes", "Permite descargar reportes en Excel y PDF"},
+                    {"Gestión Usuarios", "Permite gestionar usuarios y sus permisos"},
+                    {"Configuración Sistema", "Permite acceder a configuraciones avanzadas"}
+                };
+
+            return Ok(funciones);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Error interno del servidor", details = ex.Message });
+        }
+    }
+
     [HttpGet("por-categoria")]
-    public async Task<ActionResult> ObtenerPermisosPorCategoria()
+    public async Task<ActionResult<Dictionary<string, List<PermisoDTO>>>> ObtenerPermisosPorCategoria()
     {
         try
         {
@@ -236,23 +276,17 @@ public class PermisosController : ControllerBase
     }
 
     [HttpPost("solicitar-permiso")]
-    public async Task<ActionResult> SolicitarPermiso([FromBody] dynamic solicitud)
+    public async Task<IActionResult> SolicitarPermiso([FromBody] object solicitud)
     {
         try
         {
-            // Aquí puedes implementar la lógica para enviar notificación al administrador
-            // Por ejemplo, crear una notificación en base de datos o enviar email
-
-            var usuarioId = User.FindFirst("userId")?.Value;
-            var permiso = solicitud.GetProperty("permiso").GetString();
-            var justificacion = solicitud.GetProperty("justificacion").GetString();
-
-            // Crear notificación para administrador
-            var notificacion = new Notificacion
+            // Aquí podrías implementar la lógica para crear una notificación
+            // Por ahora solo retornamos éxito
+            var notificacion = new tuco.Clases.Models.Notificacion
             {
                 UsuarioId = 1, // ID del administrador
                 Titulo = "Solicitud de Permiso",
-                Mensaje = $"El usuario {usuarioId} solicita el permiso '{permiso}'. Justificación: {justificacion}",
+                Mensaje = $"El usuario {User.Identity?.Name ?? "Anónimo"} solicita el permiso '{solicitud.GetType().GetProperty("permiso")?.GetValue(solicitud, null)}'. Justificación: {solicitud.GetType().GetProperty("justificacion")?.GetValue(solicitud, null)}",
                 FechaCreacion = DateTime.Now,
                 Leida = false,
                 Tipo = "SolicitudPermiso"
