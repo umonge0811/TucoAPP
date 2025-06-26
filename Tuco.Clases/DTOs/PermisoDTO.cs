@@ -20,14 +20,11 @@ namespace Tuco.Clases.DTOs
             [StringLength(100, ErrorMessage = "El nombre del permiso no puede exceder los 100 caracteres.")]
             public string NombrePermiso { get; set; }
 
-            /// <summary>
-            /// Descripción detallada del permiso
-            /// </summary>
+            [StringLength(255, ErrorMessage = "La descripción no puede exceder los 255 caracteres.")]
             public string? DescripcionPermiso { get; set; }
 
-            /// <summary>
-            /// Categoría del permiso para organización
-            /// </summary>
+
+            [StringLength(100, ErrorMessage = "La categoría no puede exceder los 100 caracteres.")]
             public string? Categoria { get; set; }
         }
     }
