@@ -1,4 +1,4 @@
-// Controllers/ConfiguracionController.cs
+﻿// Controllers/ConfiguracionController.cs
 
 // Importaciones necesarias para el controlador
 using GestionLlantera.Web.Extensions;
@@ -19,20 +19,17 @@ public class ConfiguracionController : Controller
     private readonly IRolesService _rolesService;        // Servicio para gestionar roles
     private readonly IPermisosService _permisosService;  // Servicio para gestionar permisos
     private readonly ILogger<ConfiguracionController> _logger;  // Logger para registro de eventos
-    private readonly IPermisosInfoService _permisosInfoService;
 
     // Constructor que recibe las dependencias necesarias mediante inyección
     public ConfiguracionController(
         IRolesService rolesService,
         IPermisosService permisosService,
-        ILogger<ConfiguracionController> logger,
-        IPermisosInfoService permisosInfoService)
+        ILogger<ConfiguracionController> logger)
     {
         // Inicialización de las dependencias
         _rolesService = rolesService;
         _permisosService = permisosService;
         _logger = logger;
-        _permisosInfoService = permisosInfoService;
     }
 
     // Método que renderiza la vista principal de gestión de roles y permisos
@@ -372,23 +369,8 @@ public class ConfiguracionController : Controller
     }
 
     // Endpoint API para obtener un permiso específico por su ID
-    [HttpGet("funciones")]
-    public async Task<IActionResult> ObtenerFunciones()
-    {
-        try
-        {
-            var funciones = await _permisosInfoService.ObtenerDescripcionesFunciones();
-            return Json(funciones);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener funciones");
-            return StatusCode(500, new { message = "Error interno del servidor" });
-        }
-    }
-
     [HttpGet("permiso/{id}")]
-    public async Task<IActionResult> ObtenerPermisoAsync(int id)
+    public async Task<IActionResult> ObtenerPermiso(int id)
     {
         try
         {

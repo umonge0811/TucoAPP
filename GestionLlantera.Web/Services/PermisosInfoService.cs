@@ -131,9 +131,9 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<Dictionary<string, string>> ObtenerDescripcionesFunciones()
+        public Dictionary<string, string> ObtenerDescripcionesFunciones()
         {
-            return await Task.FromResult(_descripcionesFunciones);
+            return _descripcionesFunciones;
         }
     }
 }

@@ -8,6 +8,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<Dictionary<string, List<PermisoDTO>>> ObtenerPermisosPorCategoriaAsync();
         Task<List<string>> ObtenerPermisosRequeridosParaFuncion(string funcion);
         Task<bool> SolicitarPermisoAlAdministrador(string usuarioId, string permiso, string justificacion);
-        Task<Dictionary<string, string>> ObtenerDescripcionesFunciones();
+        Dictionary<string, string> ObtenerDescripcionesFunciones();
     }
 }
