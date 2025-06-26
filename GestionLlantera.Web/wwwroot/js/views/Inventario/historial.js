@@ -112,6 +112,12 @@ async function cargarHistorialInventarios() {
         if (data.success) {
             inventariosData = data.inventarios || [];
             console.log('✅ Inventarios cargados:', inventariosData.length);
+
+            // ✅ DEBUG: Ver la estructura de los inventarios recibidos
+            if (inventariosData.length > 0) {
+                console.log('🔍 DEBUG - Primer inventario recibido:', inventariosData[0]);
+                console.log('🔍 DEBUG - Propiedades disponibles:', Object.keys(inventariosData[0]));
+            }
             
             // Aplicar filtros actuales
             const estadoFiltro = $('#filtroEstado').val();
@@ -137,56 +143,68 @@ async function cargarHistorialInventarios() {
 
 function filtrarInventarios(estado = '') {
     console.log('🔍 Filtrando inventarios por estado:', estado);
-    
+
     let inventariosFiltrados = [...inventariosData];
-    
+
     // Filtrar por estado si se especifica
     if (estado && estado !== 'todos') {
-        inventariosFiltrados = inventariosFiltrados.filter(inv => 
-            inv.estado.toLowerCase() === estado.toLowerCase()
-        );
+        inventariosFiltrados = inventariosFiltrados.filter(inv => {
+            // Verificar diferentes posibles nombres de la propiedad estado
+            const estadoInventario = inv.estado || inv.Estado || inv.estadoInventario || inv.EstadoInventario || '';
+            return estadoInventario.toString().toLowerCase() === estado.toLowerCase();
+        });
     }
-    
+
     // Aplicar búsqueda por texto si existe
     const textoBusqueda = $('#busquedaTexto').val().toLowerCase();
     if (textoBusqueda) {
-        inventariosFiltrados = inventariosFiltrados.filter(inv =>
-            inv.titulo.toLowerCase().includes(textoBusqueda) ||
-            inv.descripcion?.toLowerCase().includes(textoBusqueda)
-        );
+        inventariosFiltrados = inventariosFiltrados.filter(inv => {
+            const titulo = inv.titulo || inv.Titulo || inv.nombreInventario || inv.NombreInventario || '';
+            const descripcion = inv.descripcion || inv.Descripcion || inv.observaciones || inv.Observaciones || '';
+
+            return titulo.toString().toLowerCase().includes(textoBusqueda) ||
+                descripcion.toString().toLowerCase().includes(textoBusqueda);
+        });
     }
-    
+
     console.log('🔍 Inventarios después del filtro:', inventariosFiltrados.length);
     renderizarInventarios(inventariosFiltrados);
 }
 
+
 function buscarInventarios(texto) {
     console.log('🔍 Buscando inventarios con texto:', texto);
-    
+
     if (!texto.trim()) {
         // Si no hay texto, aplicar solo filtro de estado
         const estadoFiltro = $('#filtroEstado').val();
         filtrarInventarios(estadoFiltro);
         return;
     }
-    
-    let inventariosFiltrados = inventariosData.filter(inv =>
-        inv.titulo.toLowerCase().includes(texto) ||
-        inv.descripcion?.toLowerCase().includes(texto) ||
-        inv.estado.toLowerCase().includes(texto)
-    );
-    
+
+    let inventariosFiltrados = inventariosData.filter(inv => {
+        const titulo = inv.titulo || inv.Titulo || inv.nombreInventario || inv.NombreInventario || '';
+        const descripcion = inv.descripcion || inv.Descripcion || inv.observaciones || inv.Observaciones || '';
+        const estadoInventario = inv.estado || inv.Estado || inv.estadoInventario || inv.EstadoInventario || '';
+
+        return titulo.toString().toLowerCase().includes(texto) ||
+            descripcion.toString().toLowerCase().includes(texto) ||
+            estadoInventario.toString().toLowerCase().includes(texto);
+    });
+
     // Aplicar también filtro de estado
     const estadoFiltro = $('#filtroEstado').val();
     if (estadoFiltro && estadoFiltro !== 'todos') {
-        inventariosFiltrados = inventariosFiltrados.filter(inv => 
-            inv.estado.toLowerCase() === estadoFiltro.toLowerCase()
-        );
+        inventariosFiltrados = inventariosFiltrados.filter(inv => {
+            const estadoInventario = inv.estado || inv.Estado || inv.estadoInventario || inv.EstadoInventario || '';
+            return estadoInventario.toString().toLowerCase() === estadoFiltro.toLowerCase();
+        });
     }
-    
+
     console.log('🔍 Resultados de búsqueda:', inventariosFiltrados.length);
     renderizarInventarios(inventariosFiltrados);
 }
+
 
 // =====================================
 // RENDERIZADO DE INVENTARIOS

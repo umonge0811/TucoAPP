@@ -944,7 +944,11 @@ namespace GestionLlantera.Web.Controllers
                 {
                     // ✅ USUARIO NORMAL: SOLO SUS INVENTARIOS ASIGNADOS
                     _logger.LogInformation("👤 Cargando historial personal del usuario {UsuarioId}", usuarioId);
-                    inventarios = await _tomaInventarioService.ObtenerInventariosAsignadosAsync(usuarioId, token);
+                    // Temporal: usar el mismo método que para admin pero filtrar después
+                    var todosInventarios = await _inventarioService.ObtenerTodosLosInventariosAsync(token);
+                    inventarios = todosInventarios.Where(i =>
+                        i.AsignacionesUsuarios?.Any(a => a.UsuarioId == usuarioId) ?? false
+                    ).ToList();
                 }
 
                 // ✅ FILTRAR SOLO INVENTARIOS EN PROGRESO Y COMPLETADOS
@@ -959,6 +963,8 @@ namespace GestionLlantera.Web.Controllers
                 ViewBag.PuedeVerHistorialCompleto = puedeVerHistorialCompleto;
                 ViewBag.UsuarioId = usuarioId;
                 ViewBag.TotalInventarios = inventariosConHistorial.Count;
+                ViewBag.UsuarioNombre = User.Identity?.Name ?? "Usuario";
+                ViewBag.UsuarioRoles = User.Claims.Where(c => c.Type == "Role").Select(c => c.Value).ToArray();
 
                 return View(inventariosConHistorial);
             }
@@ -967,6 +973,71 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogError(ex, "💥 Error al cargar historial de inventarios");
                 TempData["Error"] = "Error al cargar el historial de inventarios.";
                 return RedirectToAction("Index", "Dashboard");
+            }
+        }
+
+        /// <summary>
+        /// Obtiene los inventarios asignados al usuario actual (AJAX)
+        /// GET: /TomaInventario/ObtenerInventariosAsignados/{usuarioId}
+        /// </summary>
+        [HttpGet]
+        [Route("TomaInventario/ObtenerInventariosAsignados/{usuarioId}")]
+        public async Task<IActionResult> ObtenerInventariosAsignados(int usuarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📚 === OBTENIENDO INVENTARIOS ASIGNADOS (WEB) ===");
+                _logger.LogInformation("📚 Usuario ID: {UsuarioId}", usuarioId);
+                _logger.LogInformation("📚 Usuario autenticado: {Usuario}", User.Identity?.Name ?? "Anónimo");
+
+                // ✅ VERIFICAR SESIÓN
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ VERIFICAR PERMISOS - Solo puede ver sus propios inventarios o ser admin
+                var usuarioActual = ObtenerIdUsuarioActual();
+                var esAdmin = await this.TienePermisoAsync("Ver Historial Inventarios Completo");
+
+                if (!esAdmin && usuarioActual != usuarioId)
+                {
+                    _logger.LogWarning("🚫 Usuario {UsuarioActual} intentando acceder a inventarios del usuario {UsuarioId}",
+                        usuarioActual, usuarioId);
+                    return Json(new { success = false, message = "No tienes permisos para ver estos inventarios" });
+                }
+
+                // ✅ LLAMAR AL SERVICIO PARA OBTENER INVENTARIOS ASIGNADOS
+                var inventarios = await _tomaInventarioService.ObtenerInventariosAsignadosAsync(usuarioId, token);
+
+                if (inventarios == null)
+                {
+                    _logger.LogError("❌ Error obteniendo inventarios del servicio");
+                    return Json(new { success = false, message = "Error al obtener inventarios" });
+                }
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} inventarios asignados", inventarios.Count);
+
+                return Json(new
+                {
+                    success = true,
+                    inventarios = inventarios,
+                    totalInventarios = inventarios.Count,
+                    usuarioId = usuarioId,
+                    message = $"Se encontraron {inventarios.Count} inventarios"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener inventarios asignados para usuario {UsuarioId}", usuarioId);
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor",
+                    error = ex.Message
+                });
             }
         }
 
