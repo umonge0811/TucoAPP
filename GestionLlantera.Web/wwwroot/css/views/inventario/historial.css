@@ -1,4 +1,3 @@
-
 /* ========================================
    ESTILOS PARA HISTORIAL DE INVENTARIOS
    ======================================== */
@@ -47,23 +46,23 @@
 }
 
 .inventario-card {
-    border: 1px solid #e3e6f0;
-    border-radius: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 1rem;
     overflow: hidden;
     transition: all 0.3s ease;
     background: white;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .inventario-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     border-color: #3b82f6;
 }
 
 .inventario-header {
     padding: 18px 22px;
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
     display: flex;
     justify-content: space-between;
@@ -83,7 +82,7 @@
 
 .inventario-id {
     font-size: 0.8rem;
-    opacity: 0.85;
+    opacity: 0.9;
     font-weight: 500;
     background: rgba(255,255,255,0.2);
     padding: 2px 8px;
@@ -91,18 +90,18 @@
     display: inline-block;
 }
 
+.inventario-body {
+    padding: 22px;
+}
+
 .inventario-fechas {
     font-size: 0.9rem;
     color: #6c757d;
     margin: 0 0 15px 0;
     padding: 8px 0;
-    border-bottom: 1px solid #f1f3f4;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
     align-items: center;
-}
-
-.inventario-body {
-    padding: 22px;
 }
 
 /* ========================================
@@ -121,7 +120,7 @@
 
 .estado-programado {
     background: #dbeafe;
-    color: #1d4ed8;
+    color: #1e40af;
     border: 1px solid #93c5fd;
 }
 
@@ -157,15 +156,15 @@
 .info-item {
     text-align: center;
     padding: 12px;
-    background: #f1f5f9;
+    background: #f8f9fa;
     border-radius: 10px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #e5e7eb;
 }
 
 .info-label {
     display: block;
     font-size: 0.8rem;
-    color: #64748b;
+    color: #6c757d;
     margin-bottom: 4px;
     font-weight: 500;
 }
@@ -194,7 +193,7 @@
 
 .progreso-texto {
     font-size: 0.9rem;
-    color: #64748b;
+    color: #6c757d;
     font-weight: 500;
 }
 
@@ -207,13 +206,14 @@
 .progress {
     height: 8px;
     border-radius: 10px;
-    background-color: #e9ecef;
+    background-color: #e5e7eb;
     overflow: hidden;
 }
 
 .progress-bar {
     border-radius: 10px;
     transition: width 0.3s ease;
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
 }
 
 /* ========================================
@@ -260,7 +260,7 @@
 }
 
 .btn-ver {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
 }
 
@@ -274,7 +274,7 @@
     background: #f8f9fa;
     color: #6c757d;
     cursor: not-allowed;
-    border: 1px solid #e9ecef;
+    border: 1px solid #e5e7eb;
 }
 
 .btn-descarga {
@@ -292,208 +292,25 @@
 }
 
 .btn-excel {
-    background: #e8f5e8;
-    color: #2e7d32;
-    border: 1px solid #81c784;
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
 }
 
 .btn-excel:hover {
-    background: #2e7d32;
+    background: #10b981;
     color: white;
 }
 
 .btn-pdf {
-    background: #ffebee;
-    color: #d32f2f;
-    border: 1px solid #ef9a9a;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
 }
 
 .btn-pdf:hover {
-    background: #d32f2f;
+    background: #dc2626;
     color: white;
-}
-
-/* ========================================
-   RESPONSIVE
-   ======================================== */
-
-@media (max-width: 768px) {
-    .inventarios-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-    
-    .inventario-header {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .inventario-info {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    
-    .acciones-descarga {
-        flex-direction: column;
-        gap: 6px;
-    }
-}
-
-.inventario-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.info-item {
-    text-align: center;
-}
-
-.info-label {
-    display: block;
-    font-size: 0.8rem;
-    color: #6c757d;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.info-value {
-    display: block;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-/* ========================================
-   BADGES DE ESTADO
-   ======================================== */
-
-.estado-badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 15px;
-}
-
-.estado-programado {
-    background-color: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
-}
-
-.estado-progreso {
-    background-color: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
-}
-
-.estado-completado {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.estado-cancelado {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-/* ========================================
-   BARRA DE PROGRESO
-   ======================================== */
-
-.progreso-container {
-    margin: 15px 0;
-}
-
-.progreso-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.progreso-texto {
-    font-size: 0.9rem;
-    color: #495057;
-    font-weight: 500;
-}
-
-.progreso-porcentaje {
-    font-size: 0.85rem;
-    color: #6c757d;
-    font-weight: 600;
-}
-
-.progress {
-    height: 8px;
-    border-radius: 10px;
-    background-color: #e9ecef;
-    overflow: hidden;
-}
-
-.progress-bar {
-    transition: width 0.3s ease;
-    border-radius: 10px;
-}
-
-/* ========================================
-   BOTONES DE ACCIÓN
-   ======================================== */
-
-.inventario-acciones {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-.btn-accion {
-    flex: 1;
-    padding: 10px 15px;
-    border-radius: 8px;
-    font-weight: 500;
-    text-decoration: none;
-    text-align: center;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.btn-continuar {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-}
-
-.btn-continuar:hover {
-    background: linear-gradient(135deg, #218838, #1ba085);
-    color: white;
-    transform: translateY(-1px);
-}
-
-.btn-ver {
-    background: linear-gradient(135deg, #17a2b8, #6f42c1);
-    color: white;
-}
-
-.btn-ver:hover {
-    background: linear-gradient(135deg, #138496, #5a2d91);
-    color: white;
-    transform: translateY(-1px);
-}
-
-.btn-deshabilitado {
-    background: #e9ecef;
-    color: #6c757d;
-    cursor: not-allowed;
 }
 
 /* ========================================
@@ -503,18 +320,20 @@
 .estado-vacio {
     text-align: center;
     padding: 60px 20px;
-    color: #64748b;
+    color: #6c757d;
 }
 
 .icono-vacio {
     font-size: 4rem;
     margin-bottom: 20px;
     opacity: 0.5;
+    color: #9ca3af;
 }
 
 .mensaje-vacio {
     font-size: 1.2rem;
     margin-bottom: 10px;
+    color: #374151;
 }
 
 .submensaje-vacio {
@@ -530,34 +349,35 @@
     .historial-container {
         padding: 15px;
     }
-    
+
     .historial-header {
         flex-direction: column;
         align-items: stretch;
         text-align: center;
     }
-    
+
     .filtros-historial {
         justify-content: center;
     }
-    
+
     .inventarios-grid {
         grid-template-columns: 1fr;
         gap: 15px;
     }
-    
+
+    .inventario-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
     .inventario-info {
         grid-template-columns: 1fr;
         gap: 10px;
     }
-    
-    .inventario-acciones {
+
+    .acciones-descarga {
         flex-direction: column;
-    }
-    
-    .btn-accion {
-        flex: none;
-        margin-bottom: 5px;
+        gap: 6px;
     }
 }
 
@@ -565,17 +385,17 @@
     .inventario-header {
         padding: 12px 15px;
     }
-    
+
     .inventario-body {
         padding: 15px;
     }
-    
+
     .inventario-titulo {
         font-size: 1rem;
     }
-    
+
     .info-value {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
     }
 }
 
