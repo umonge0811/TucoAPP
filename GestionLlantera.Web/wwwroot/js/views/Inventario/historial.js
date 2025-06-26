@@ -65,30 +65,30 @@ function configurarEventListeners() {
 
     // Búsqueda por texto
     $('#busquedaTexto').on('input', debounce(function () {
-        const texto = $(this).val();
+        const texto = $(this).val() || '';
         console.log('🔍 Evento input - Texto de búsqueda:', texto);
         
         // Aplicar filtros combinados (estado + búsqueda)
-        const estadoFiltro = $('#filtroEstado').val();
+        const estadoFiltro = $('#filtroEstado').val() || '';
         filtrarInventarios(estadoFiltro);
     }, 300));
 
     // También aplicar búsqueda al hacer paste
     $('#busquedaTexto').on('paste', function () {
         setTimeout(() => {
-            const texto = $(this).val();
+            const texto = $(this).val() || '';
             console.log('🔍 Evento paste - Texto pegado:', texto);
-            const estadoFiltro = $('#filtroEstado').val();
+            const estadoFiltro = $('#filtroEstado').val() || '';
             filtrarInventarios(estadoFiltro);
         }, 100);
     });
 
     // Evento keyup como respaldo
     $('#busquedaTexto').on('keyup', debounce(function () {
-        const texto = $(this).val();
+        const texto = $(this).val() || '';
         console.log('🔍 Evento keyup - Texto:', texto);
         
-        const estadoFiltro = $('#filtroEstado').val();
+        const estadoFiltro = $('#filtroEstado').val() || '';
         filtrarInventarios(estadoFiltro);
     }, 300));
 }
@@ -175,8 +175,9 @@ function filtrarInventarios(estado = '') {
     // Función segura para obtener valor string
     const obtenerValorSeguro = (obj, propiedades) => {
         for (let prop of propiedades) {
-            if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
-                return String(obj[prop]).toLowerCase();
+            if (obj && obj.hasOwnProperty(prop) && obj[prop] != null && obj[prop] !== undefined) {
+                const valor = String(obj[prop]);
+                return valor ? valor.toLowerCase() : '';
             }
         }
         return '';
@@ -193,7 +194,7 @@ function filtrarInventarios(estado = '') {
 
     // 2. Aplicar búsqueda por texto si existe
     const textoBusqueda = $('#busquedaTexto').val();
-    if (textoBusqueda && textoBusqueda.trim()) {
+    if (textoBusqueda && typeof textoBusqueda === 'string' && textoBusqueda.trim()) {
         const textoBusquedaLower = textoBusqueda.toLowerCase().trim();
         console.log('🔍 Aplicando filtro de texto:', textoBusquedaLower);
         
