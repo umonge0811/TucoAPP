@@ -123,6 +123,9 @@ async function cargarHistorialInventarios() {
             // Aplicar filtros actuales
             const estadoFiltro = $('#filtroEstado').val();
             filtrarInventarios(estadoFiltro);
+            
+            // Actualizar contador inicial
+            actualizarContadorInventarios(inventariosData.length);
 
         } else {
             throw new Error(data.message || 'Error desconocido al cargar inventarios');
@@ -259,6 +262,7 @@ function renderizarInventarios(inventarios) {
 
     if (!inventarios || inventarios.length === 0) {
         mostrarEstadoVacio();
+        actualizarContadorInventarios(0);
         return;
     }
 
@@ -272,6 +276,9 @@ function renderizarInventarios(inventarios) {
 
     $contenedor.html(html);
     $('#estadoVacio').hide();
+
+    // Actualizar contador con inventarios visibles
+    actualizarContadorInventarios(inventarios.length);
 
     console.log('✅ Inventarios renderizados correctamente');
 }
@@ -446,6 +453,30 @@ function mostrarEstadoVacio(mensaje = null) {
     $('#estadoVacio .mensaje-vacio').text(mensajeFinal);
     $('#estadoVacio').show();
     $('#inventariosContainer').hide();
+}
+
+function actualizarContadorInventarios(cantidad) {
+    try {
+        const $contador = $('#contadorInventarios');
+        const $label = $('#labelInventarios');
+        
+        if ($contador.length > 0) {
+            $contador.text(cantidad);
+            
+            // Actualizar el texto del label según la cantidad
+            if ($label.length > 0) {
+                const textoLabel = cantidad === 1 ? 'Inventario' : 'Inventarios';
+                const textoCompleto = cantidad === inventariosData.length ? 
+                    textoLabel : 
+                    `${textoLabel} (${inventariosData.length} total)`;
+                $label.text(textoCompleto);
+            }
+            
+            console.log('✅ Contador de inventarios actualizado:', cantidad);
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando contador de inventarios:', error);
+    }
 }
 
 function mostrarError(mensaje) {
