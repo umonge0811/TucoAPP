@@ -123,7 +123,7 @@ async function cargarHistorialInventarios() {
             // Aplicar filtros actuales
             const estadoFiltro = $('#filtroEstado').val();
             filtrarInventarios(estadoFiltro);
-            
+
             // Actualizar contador inicial
             actualizarContadorInventarios(inventariosData.length);
 
@@ -487,19 +487,19 @@ function actualizarContadorInventarios(cantidad) {
     try {
         const $contador = $('#contadorInventarios');
         const $label = $('#labelInventarios');
-        
+
         if ($contador.length > 0) {
             $contador.text(cantidad);
-            
+
             // Actualizar el texto del label según la cantidad
             if ($label.length > 0) {
                 const textoLabel = cantidad === 1 ? 'Inventario' : 'Inventarios';
-                const textoCompleto = cantidad === inventariosData.length ? 
-                    textoLabel : 
+                const textoCompleto = cantidad === inventariosData.length ?
+                    textoLabel :
                     `${textoLabel} (${inventariosData.length} total)`;
                 $label.text(textoCompleto);
             }
-            
+
             console.log('✅ Contador de inventarios actualizado:', cantidad);
         }
     } catch (error) {
@@ -553,45 +553,169 @@ if (window.DEBUG) {
 // FUNCIONES DE DESCARGA (TEMPORALES)
 // =====================================
 
-function descargarReporteExcel(inventarioId, titulo) {
-    console.log('📊 Solicitando descarga Excel para inventario:', inventarioId);
-    
-    // Por ahora mostrar mensaje de que se implementará
-    if (typeof Swal !== 'undefined') {
+/**
+ * ✅ Descarga el reporte Excel del inventario
+ */
+async function descargarReporteExcel(inventarioId, titulo) {
+    try {
+        console.log('📊 Iniciando descarga Excel para inventario:', inventarioId);
+
+        // Mostrar indicador de carga
         Swal.fire({
-            icon: 'info',
-            title: 'Función en desarrollo',
+            title: 'Generando Excel...',
             html: `
-                <p>La descarga de reportes Excel está en desarrollo.</p>
-                <p><strong>Inventario:</strong> ${titulo}</p>
-                <p><strong>ID:</strong> ${inventarioId}</p>
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+                <p class="mt-3 text-muted">Preparando reporte de "${titulo}"</p>
             `,
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: '#2e7d32'
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
-    } else {
-        alert(`Descarga Excel para inventario "${titulo}" (ID: ${inventarioId}) - En desarrollo`);
+
+        // Realizar la petición
+        const response = await fetch(`/Reportes/inventario/${inventarioId}/excel`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener el blob y descargarlo
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_${titulo.replace(/[^a-zA-Z0-9]/g, '_')}_${inventarioId}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-file-earmark-excel text-success display-1"></i>
+                    <p class="mt-3">El reporte Excel de <strong>"${titulo}"</strong> se ha descargado correctamente.</p>
+                </div>
+            `,
+            timer: 3000,
+            timerProgressBar: true,
+            confirmButtonColor: '#28a745'
+        });
+
+        console.log('✅ Descarga Excel completada exitosamente');
+
+    } catch (error) {
+        console.error('❌ Error descargando Excel:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar Excel',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-exclamation-triangle text-danger display-1"></i>
+                    <p class="mt-3">${error.message || 'No se pudo descargar el archivo Excel'}</p>
+                    <small class="text-muted">Inventario: ${titulo} (ID: ${inventarioId})</small>
+                </div>
+            `,
+            confirmButtonColor: '#d33'
+        });
     }
 }
 
-function descargarReportePdf(inventarioId, titulo) {
-    console.log('📋 Solicitando descarga PDF para inventario:', inventarioId);
-    
-    // Por ahora mostrar mensaje de que se implementará
-    if (typeof Swal !== 'undefined') {
+/**
+ * ✅ Descarga el reporte PDF del inventario
+ */
+async function descargarReportePdf(inventarioId, titulo) {
+    try {
+        console.log('📋 Iniciando descarga PDF para inventario:', inventarioId);
+
+        // Mostrar indicador de carga
         Swal.fire({
-            icon: 'info',
-            title: 'Función en desarrollo',
+            title: 'Generando PDF...',
             html: `
-                <p>La descarga de reportes PDF está en desarrollo.</p>
-                <p><strong>Inventario:</strong> ${titulo}</p>
-                <p><strong>ID:</strong> ${inventarioId}</p>
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-danger" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+                <p class="mt-3 text-muted">Preparando reporte de "${titulo}"</p>
             `,
-            confirmButtonText: 'Entendido',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Realizar la petición
+        const response = await fetch(`/Reportes/inventario/${inventarioId}/pdf`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener el blob y descargarlo
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Reporte_${titulo.replace(/[^a-zA-Z0-9]/g, '_')}_${inventarioId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-file-earmark-pdf text-danger display-1"></i>
+                    <p class="mt-3">El reporte PDF de <strong>"${titulo}"</strong> se ha descargado correctamente.</p>
+                </div>
+            `,
+            timer: 3000,
+            timerProgressBar: true,
             confirmButtonColor: '#d32f2f'
         });
-    } else {
-        alert(`Descarga PDF para inventario "${titulo}" (ID: ${inventarioId}) - En desarrollo`);
+
+        console.log('✅ Descarga PDF completada exitosamente');
+
+    } catch (error) {
+        console.error('❌ Error descargando PDF:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar PDF',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-exclamation-triangle text-danger display-1"></i>
+                    <p class="mt-3">${error.message || 'No se pudo descargar el archivo PDF'}</p>
+                    <small class="text-muted">Inventario: ${titulo} (ID: ${inventarioId})</small>
+                </div>
+            `,
+            confirmButtonColor: '#d33'
+        });
     }
 }
 
