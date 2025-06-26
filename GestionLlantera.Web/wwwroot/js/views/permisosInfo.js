@@ -32,6 +32,7 @@ class PermisosInfoService {
             const response = await fetch('/DiagnosticoPermisos/mis-permisos');
             if (response.ok) {
                 this.permisosUsuario = await response.json();
+                console.log('Permisos del usuario cargados:', this.permisosUsuario);
             }
         } catch (error) {
             console.error('Error al cargar permisos del usuario:', error);
