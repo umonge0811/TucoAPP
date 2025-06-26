@@ -231,5 +231,17 @@
 
 
 @section Scripts {
+    <script>
+        // ========================================
+        // CONFIGURACIÓN GLOBAL DE USUARIO
+        // ========================================
+        window.userConfig = {
+            userId: @ViewBag.UsuarioId,
+            userName: '@ViewBag.UsuarioNombre',
+            roles: @Html.Raw(Json.Serialize(ViewBag.UsuarioRoles ?? new string[0]))
+        };
+        
+        console.log('🔧 Configuración de usuario cargada:', window.userConfig);
+    </script>
     <script src="~/js/views/Inventario/historial.js"></script>
 }

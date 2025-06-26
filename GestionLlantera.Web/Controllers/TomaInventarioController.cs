@@ -32,7 +32,7 @@ namespace GestionLlantera.Web.Controllers
     {
         private readonly ITomaInventarioService _tomaInventarioService;
         private readonly IInventarioService _inventarioService;
-       
+
         private readonly ILogger<TomaInventarioController> _logger;
         private readonly IAjustesInventarioService _ajustesInventarioService;
 
@@ -484,9 +484,9 @@ namespace GestionLlantera.Web.Controllers
                 // ✅ LLAMAR AL SERVICIO PARA OBTENER PRODUCTOS
                 _logger.LogInformation("🔄 Llamando al servicio para obtener productos...");
                 var productos = await _tomaInventarioService.ObtenerProductosInventarioAsync(id, token);
-                
+
                 _logger.LogInformation("📦 Respuesta del servicio - Productos: {Count}", productos?.Count ?? 0);
-                
+
                 if (productos == null)
                 {
                     _logger.LogError("❌ El servicio devolvió null");
@@ -713,7 +713,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("🚀 === INICIANDO INVENTARIO DESDE CONTROLADOR WEB ===");
                 _logger.LogInformation("👤 Usuario: {Usuario}, Inventario ID: {Id}", User.Identity?.Name, id);               
 
-               
+
 
                 // ✅ VERIFICACIÓN DE PERMISOS
                 var validacion = await this.ValidarPermisoMvcAsync("Iniciar Inventario",
@@ -861,6 +861,7 @@ namespace GestionLlantera.Web.Controllers
 
         /// <summary>
         /// Completa un inventario
+        ```tool_code
         /// </summary>
         [HttpPost]
         [Route("TomaInventario/CompletarInventario/{inventarioId}")]
@@ -907,26 +908,24 @@ namespace GestionLlantera.Web.Controllers
         /// </summary>
         public async Task<IActionResult> Historial()
         {
-            ViewData["Title"] = "Historial de Inventarios";
-            ViewData["Layout"] = "_AdminLayout";
-
             try
             {
-                _logger.LogInformation("📚 === CARGANDO HISTORIAL DE INVENTARIOS ===");
-                _logger.LogInformation("📚 Usuario: {Usuario}", User.Identity?.Name ?? "Anónimo");
+                _logger.LogInformation("📚 === ACCESO A HISTORIAL DE INVENTARIOS ===");
 
-                // ✅ VERIFICAR SESIÓN
+                // ✅ VERIFICAR PERMISOS
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogError("❌ Token JWT no encontrado");
-                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    _logger.LogWarning("⚠️ Token JWT no encontrado");
                     return RedirectToAction("Login", "Account");
                 }
 
-                // ✅ VERIFICAR PERMISOS
-                var puedeVerHistorialCompleto = await this.TienePermisoAsync("Ver Historial Inventarios Completo");
                 var usuarioId = ObtenerIdUsuarioActual();
+
+                // ✅ VERIFICAR SI PUEDE VER HISTORIAL COMPLETO (ADMINISTRADORES)
+                var puedeVerHistorialCompleto = await _permisosService.VerificarPermisoAsync(
+                    usuarioId,
+                    "VerHistorialCompleto");
 
                 _logger.LogInformation("🔐 === PERMISOS DE HISTORIAL ===");
                 _logger.LogInformation("🔐 Usuario ID: {UsuarioId}", usuarioId);
@@ -950,23 +949,24 @@ namespace GestionLlantera.Web.Controllers
                 // ✅ FILTRAR SOLO INVENTARIOS EN PROGRESO Y COMPLETADOS
                 var inventariosConHistorial = inventarios
                     .Where(i => i.Estado == "En Progreso" || i.Estado == "Completado")
-                    .OrderByDescending(i => i.FechaCreacion)
+                    .OrderByDescending(i => i.FechaInicio)
                     .ToList();
 
-                _logger.LogInformation("✅ Inventarios con historial: {Count}", inventariosConHistorial.Count);
+                _logger.LogInformation("✅ Historial cargado: {Count} inventarios", inventariosConHistorial.Count);
 
-                // ✅ PREPARAR DATOS PARA LA VISTA
-                ViewBag.PuedeVerHistorialCompleto = puedeVerHistorialCompleto;
+                // ✅ CONFIGURAR INFORMACIÓN DEL USUARIO PARA JAVASCRIPT
                 ViewBag.UsuarioId = usuarioId;
-                ViewBag.TotalInventarios = inventariosConHistorial.Count;
+                ViewBag.UsuarioNombre = ObtenerNombreUsuarioActual();
+                ViewBag.UsuarioRoles = ObtenerRolesUsuarioActual();
 
                 return View(inventariosConHistorial);
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "💥 Error al cargar historial de inventarios");
-                TempData["Error"] = "Error al cargar el historial de inventarios.";
-                return RedirectToAction("Index", "Dashboard");
+                TempData["ErrorMessage"] = "Error al cargar el historial de inventarios";
+                return View(new List<InventarioProgramadoDTO>());
             }
         }
 
@@ -1045,6 +1045,19 @@ namespace GestionLlantera.Web.Controllers
                 TempData["Error"] = "Error al cargar el inventario.";
                 return RedirectToAction("Historial");
             }
+        }
+
+        private string ObtenerNombreUsuarioActual()
+        {
+            return User.Identity?.Name ?? "Anónimo";
+        }
+
+        private List<string> ObtenerRolesUsuarioActual()
+        {
+            return User.Claims
+                       .Where(c => c.Type == ClaimTypes.Role)
+                       .Select(c => c.Value)
+                       .ToList();
         }
     }
 }
