@@ -66,22 +66,31 @@ function configurarEventListeners() {
     // Búsqueda por texto
     $('#busquedaTexto').on('input', debounce(function () {
         const texto = $(this).val();
-        console.log('🔍 Texto de búsqueda:', texto);
+        console.log('🔍 Evento input - Texto de búsqueda:', texto);
         
         // Aplicar filtros combinados (estado + búsqueda)
         const estadoFiltro = $('#filtroEstado').val();
         filtrarInventarios(estadoFiltro);
-    }, 250));
+    }, 300));
 
     // También aplicar búsqueda al hacer paste
-    $('#busquedaTexto').on('paste', debounce(function () {
+    $('#busquedaTexto').on('paste', function () {
         setTimeout(() => {
             const texto = $(this).val();
-            console.log('🔍 Texto pegado:', texto);
+            console.log('🔍 Evento paste - Texto pegado:', texto);
             const estadoFiltro = $('#filtroEstado').val();
             filtrarInventarios(estadoFiltro);
-        }, 50);
-    }, 100));
+        }, 100);
+    });
+
+    // Evento keyup como respaldo
+    $('#busquedaTexto').on('keyup', debounce(function () {
+        const texto = $(this).val();
+        console.log('🔍 Evento keyup - Texto:', texto);
+        
+        const estadoFiltro = $('#filtroEstado').val();
+        filtrarInventarios(estadoFiltro);
+    }, 300));
 }
 
 // =====================================
@@ -159,7 +168,7 @@ async function cargarHistorialInventarios() {
 // =====================================
 
 function filtrarInventarios(estado = '') {
-    console.log('🔍 Filtrando inventarios por estado:', estado);
+    console.log('🔍 Aplicando filtros - Estado:', estado);
 
     let inventariosFiltrados = [...inventariosData];
 
@@ -173,91 +182,43 @@ function filtrarInventarios(estado = '') {
         return '';
     };
 
-    // Filtrar por estado si se especifica
+    // 1. Filtrar por estado si se especifica
     if (estado && estado !== 'todos') {
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
             const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
             return estadoInventario === estado.toLowerCase();
         });
+        console.log('🔍 Después de filtro por estado:', inventariosFiltrados.length);
     }
 
-    // Aplicar búsqueda por texto si existe
+    // 2. Aplicar búsqueda por texto si existe
     const textoBusqueda = $('#busquedaTexto').val();
     if (textoBusqueda && textoBusqueda.trim()) {
         const textoBusquedaLower = textoBusqueda.toLowerCase().trim();
+        console.log('🔍 Aplicando filtro de texto:', textoBusquedaLower);
+        
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
             const titulo = obtenerValorSeguro(inv, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario']);
             const descripcion = obtenerValorSeguro(inv, ['descripcion', 'Descripcion', 'observaciones', 'Observaciones']);
             const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
             const inventarioId = obtenerValorSeguro(inv, ['inventarioProgramadoId', 'InventarioProgramadoId', 'id', 'Id']);
 
-            return titulo.includes(textoBusquedaLower) || 
-                   descripcion.includes(textoBusquedaLower) ||
-                   estadoInventario.includes(textoBusquedaLower) ||
-                   inventarioId.includes(textoBusquedaLower);
+            const cumple = titulo.includes(textoBusquedaLower) || 
+                          descripcion.includes(textoBusquedaLower) ||
+                          estadoInventario.includes(textoBusquedaLower) ||
+                          inventarioId.includes(textoBusquedaLower);
+
+            return cumple;
         });
+        console.log('🔍 Después de filtro por texto:', inventariosFiltrados.length);
     }
 
-    console.log('🔍 Inventarios después del filtro:', inventariosFiltrados.length);
+    console.log('🔍 Total inventarios después de todos los filtros:', inventariosFiltrados.length);
     renderizarInventarios(inventariosFiltrados);
 }
 
 
-function buscarInventarios(texto) {
-    console.log('🔍 Buscando inventarios con texto:', texto);
 
-    if (!texto.trim()) {
-        // Si no hay texto, aplicar solo filtro de estado
-        const estadoFiltro = $('#filtroEstado').val();
-        filtrarInventarios(estadoFiltro);
-        return;
-    }
-
-    const textoLower = texto.toLowerCase();
-
-    let inventariosFiltrados = inventariosData.filter(inv => {
-        // Función segura para obtener valor string
-        const obtenerValorSeguro = (obj, propiedades) => {
-            for (let prop of propiedades) {
-                if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
-                    return String(obj[prop]).toLowerCase();
-                }
-            }
-            return '';
-        };
-
-        const titulo = obtenerValorSeguro(inv, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario']);
-        const descripcion = obtenerValorSeguro(inv, ['descripcion', 'Descripcion', 'observaciones', 'Observaciones']);
-        const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
-        const inventarioId = obtenerValorSeguro(inv, ['inventarioProgramadoId', 'InventarioProgramadoId', 'id', 'Id']);
-
-        return titulo.includes(textoLower) ||
-            descripcion.includes(textoLower) ||
-            estadoInventario.includes(textoLower) ||
-            inventarioId.includes(textoLower);
-    });
-
-    // Aplicar también filtro de estado
-    const estadoFiltro = $('#filtroEstado').val();
-    if (estadoFiltro && estadoFiltro !== 'todos') {
-        inventariosFiltrados = inventariosFiltrados.filter(inv => {
-            const obtenerValorSeguro = (obj, propiedades) => {
-                for (let prop of propiedades) {
-                    if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
-                        return String(obj[prop]).toLowerCase();
-                    }
-                }
-                return '';
-            };
-
-            const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
-            return estadoInventario === estadoFiltro.toLowerCase();
-        });
-    }
-
-    console.log('🔍 Resultados de búsqueda:', inventariosFiltrados.length);
-    renderizarInventarios(inventariosFiltrados);
-}
 
 
 // =====================================
