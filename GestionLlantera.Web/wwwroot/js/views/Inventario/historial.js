@@ -149,21 +149,40 @@ function filtrarInventarios(estado = '') {
     // Filtrar por estado si se especifica
     if (estado && estado !== 'todos') {
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
-            // Verificar diferentes posibles nombres de la propiedad estado
-            const estadoInventario = inv.estado || inv.Estado || inv.estadoInventario || inv.EstadoInventario || '';
-            return estadoInventario.toString().toLowerCase() === estado.toLowerCase();
+            // Función segura para obtener valor string
+            const obtenerValorSeguro = (obj, propiedades) => {
+                for (let prop of propiedades) {
+                    if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
+                        return String(obj[prop]).toLowerCase();
+                    }
+                }
+                return '';
+            };
+
+            const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
+            return estadoInventario === estado.toLowerCase();
         });
     }
 
     // Aplicar búsqueda por texto si existe
-    const textoBusqueda = $('#busquedaTexto').val().toLowerCase();
+    const textoBusqueda = $('#busquedaTexto').val();
     if (textoBusqueda) {
+        const textoBusquedaLower = textoBusqueda.toLowerCase();
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
-            const titulo = inv.titulo || inv.Titulo || inv.nombreInventario || inv.NombreInventario || '';
-            const descripcion = inv.descripcion || inv.Descripcion || inv.observaciones || inv.Observaciones || '';
+            // Función segura para obtener valor string
+            const obtenerValorSeguro = (obj, propiedades) => {
+                for (let prop of propiedades) {
+                    if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
+                        return String(obj[prop]).toLowerCase();
+                    }
+                }
+                return '';
+            };
 
-            return titulo.toString().toLowerCase().includes(textoBusqueda) ||
-                descripcion.toString().toLowerCase().includes(textoBusqueda);
+            const titulo = obtenerValorSeguro(inv, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario']);
+            const descripcion = obtenerValorSeguro(inv, ['descripcion', 'Descripcion', 'observaciones', 'Observaciones']);
+
+            return titulo.includes(textoBusquedaLower) || descripcion.includes(textoBusquedaLower);
         });
     }
 
@@ -182,22 +201,44 @@ function buscarInventarios(texto) {
         return;
     }
 
-    let inventariosFiltrados = inventariosData.filter(inv => {
-        const titulo = inv.titulo || inv.Titulo || inv.nombreInventario || inv.NombreInventario || '';
-        const descripcion = inv.descripcion || inv.Descripcion || inv.observaciones || inv.Observaciones || '';
-        const estadoInventario = inv.estado || inv.Estado || inv.estadoInventario || inv.EstadoInventario || '';
+    const textoLower = texto.toLowerCase();
 
-        return titulo.toString().toLowerCase().includes(texto) ||
-            descripcion.toString().toLowerCase().includes(texto) ||
-            estadoInventario.toString().toLowerCase().includes(texto);
+    let inventariosFiltrados = inventariosData.filter(inv => {
+        // Función segura para obtener valor string
+        const obtenerValorSeguro = (obj, propiedades) => {
+            for (let prop of propiedades) {
+                if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
+                    return String(obj[prop]).toLowerCase();
+                }
+            }
+            return '';
+        };
+
+        const titulo = obtenerValorSeguro(inv, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario']);
+        const descripcion = obtenerValorSeguro(inv, ['descripcion', 'Descripcion', 'observaciones', 'Observaciones']);
+        const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
+
+        return titulo.includes(textoLower) ||
+               descripcion.includes(textoLower) ||
+               estadoInventario.includes(textoLower);
     });
 
     // Aplicar también filtro de estado
     const estadoFiltro = $('#filtroEstado').val();
     if (estadoFiltro && estadoFiltro !== 'todos') {
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
-            const estadoInventario = inv.estado || inv.Estado || inv.estadoInventario || inv.EstadoInventario || '';
-            return estadoInventario.toString().toLowerCase() === estadoFiltro.toLowerCase();
+            // Función segura para obtener valor string
+            const obtenerValorSeguro = (obj, propiedades) => {
+                for (let prop of propiedades) {
+                    if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
+                        return String(obj[prop]).toLowerCase();
+                    }
+                }
+                return '';
+            };
+
+            const estadoInventario = obtenerValorSeguro(inv, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario']);
+            return estadoInventario === estadoFiltro.toLowerCase();
         });
     }
 
@@ -235,34 +276,51 @@ function renderizarInventarios(inventarios) {
 }
 
 function generarTarjetaInventario(inventario) {
-    const porcentajeProgreso = inventario.porcentajeProgreso || 0;
-    const estadoClass = obtenerClaseEstado(inventario.estado);
-    const fechaFormato = formatearFecha(inventario.fechaInicio);
-    const fechaFinFormato = inventario.fechaFin ? formatearFecha(inventario.fechaFin) : 'En progreso';
+    // Función segura para obtener valor
+    const obtenerValor = (obj, propiedades, valorPorDefecto = '') => {
+        for (let prop of propiedades) {
+            if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
+                return obj[prop];
+            }
+        }
+        return valorPorDefecto;
+    };
+
+    const porcentajeProgreso = obtenerValor(inventario, ['porcentajeProgreso', 'PorcentajeProgreso'], 0);
+    const estado = obtenerValor(inventario, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario'], 'Sin estado');
+    const titulo = obtenerValor(inventario, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario'], 'Sin título');
+    const fechaInicio = obtenerValor(inventario, ['fechaInicio', 'FechaInicio']);
+    const fechaFin = obtenerValor(inventario, ['fechaFin', 'FechaFin']);
+    const totalProductos = obtenerValor(inventario, ['totalProductos', 'TotalProductos'], 0);
+    const productosContados = obtenerValor(inventario, ['productosContados', 'ProductosContados'], 0);
+    
+    const estadoClass = obtenerClaseEstado(estado);
+    const fechaFormato = fechaInicio ? formatearFecha(fechaInicio) : 'Sin fecha';
+    const fechaFinFormato = fechaFin ? formatearFecha(fechaFin) : 'En progreso';
     
     return `
         <div class="inventario-card">
             <div class="inventario-header">
-                <h3 class="inventario-titulo">${inventario.titulo || 'Sin título'}</h3>
+                <h3 class="inventario-titulo">${titulo}</h3>
                 <p class="inventario-fechas">
                     <i class="bi bi-calendar"></i> ${fechaFormato}
-                    ${inventario.fechaFin ? `- ${fechaFinFormato}` : ''}
+                    ${fechaFin ? `- ${fechaFinFormato}` : ''}
                 </p>
             </div>
             
             <div class="inventario-body">
                 <span class="estado-badge ${estadoClass}">
-                    ${inventario.estado}
+                    ${estado}
                 </span>
                 
                 <div class="inventario-info">
                     <div class="info-item">
                         <span class="info-label">Total Productos</span>
-                        <span class="info-value">${inventario.totalProductos || 0}</span>
+                        <span class="info-value">${totalProductos}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Contados</span>
-                        <span class="info-value">${inventario.productosContados || 0}</span>
+                        <span class="info-value">${productosContados}</span>
                     </div>
                 </div>
                 
@@ -298,11 +356,22 @@ function generarBarraProgreso(porcentaje) {
 }
 
 function generarBotonesAccion(inventario) {
-    const estado = inventario.estado.toLowerCase();
+    // Función segura para obtener valor
+    const obtenerValor = (obj, propiedades, valorPorDefecto = '') => {
+        for (let prop of propiedades) {
+            if (obj && obj.hasOwnProperty(prop) && obj[prop] != null) {
+                return obj[prop];
+            }
+        }
+        return valorPorDefecto;
+    };
+
+    const estado = String(obtenerValor(inventario, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario'], 'sin estado')).toLowerCase();
+    const inventarioId = obtenerValor(inventario, ['inventarioProgramadoId', 'InventarioProgramadoId', 'id', 'Id'], '');
     
     if (estado === 'en progreso') {
         return `
-            <a href="/TomaInventario/Ejecutar/${inventario.inventarioProgramadoId}" 
+            <a href="/TomaInventario/Ejecutar/${inventarioId}" 
                class="btn-accion btn-continuar">
                 <i class="bi bi-play-circle me-1"></i>
                 Continuar
@@ -310,7 +379,7 @@ function generarBotonesAccion(inventario) {
         `;
     } else if (estado === 'completado') {
         return `
-            <a href="/TomaInventario/Ejecutar/${inventario.inventarioProgramadoId}" 
+            <a href="/TomaInventario/Ejecutar/${inventarioId}" 
                class="btn-accion btn-ver">
                 <i class="bi bi-eye me-1"></i>
                 Ver Detalle
@@ -331,6 +400,10 @@ function generarBotonesAccion(inventario) {
 // =====================================
 
 function obtenerClaseEstado(estado) {
+    if (!estado || typeof estado !== 'string') {
+        return 'estado-programado';
+    }
+    
     const estadoLower = estado.toLowerCase();
     switch (estadoLower) {
         case 'programado': return 'estado-programado';
