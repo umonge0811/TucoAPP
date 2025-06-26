@@ -197,6 +197,138 @@
     font-weight: 500;
 }
 
+
+/* ========================================
+   FILTROS AVANZADOS DEL HISTORIAL
+======================================== */
+
+.filtros-avanzados-historial {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.filtros-avanzados-historial .card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.filtros-avanzados-historial .card-header {
+    border-bottom: 1px solid #dee2e6;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+.filtros-avanzados-historial .form-control,
+.filtros-avanzados-historial .form-select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filtros-avanzados-historial .form-control:focus,
+.filtros-avanzados-historial .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.1);
+}
+
+/* Indicadores de filtros activos */
+.filtros-activos {
+    animation: slideDown 0.3s ease-out;
+}
+
+.filtros-activos .card {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+#tagsFilttrosActivos .badge {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+    border-radius: 4px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Botón toggle filtros */
+#btnToggleFiltrosAvanzados {
+    transition: all 0.2s ease;
+}
+
+#btnToggleFiltrosAvanzados:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+#btnToggleFiltrosAvanzados i {
+    transition: transform 0.2s ease;
+}
+
+/* Responsive para filtros avanzados */
+@media (max-width: 767px) {
+    .filtros-avanzados-historial .row > div {
+        margin-bottom: 1rem;
+    }
+    
+    .filtros-avanzados-historial .row.g-1 > div {
+        margin-bottom: 0.5rem;
+    }
+    
+    #btnToggleFiltrosAvanzados span {
+        font-size: 0.9rem;
+    }
+    
+    .filtros-activos .card-body {
+        padding: 0.75rem;
+    }
+    
+    #tagsFilttrosActivos .badge {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.5rem;
+    }
+}
+
+/* Mejoras visuales para inputs de rango */
+.filtros-avanzados-historial input[type="number"] {
+    font-size: 0.9rem;
+}
+
+.filtros-avanzados-historial input[type="date"] {
+    font-size: 0.9rem;
+}
+
+/* Estilos para botón limpiar filtros */
+#btnLimpiarFiltros:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#btnLimpiarFiltros:not(:disabled):hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
 .progreso-porcentaje {
     font-size: 0.9rem;
     font-weight: 600;
