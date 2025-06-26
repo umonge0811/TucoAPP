@@ -301,6 +301,7 @@ function generarTarjetaInventario(inventario) {
     const fechaFin = obtenerValor(inventario, ['fechaFin', 'FechaFin']);
     const totalProductos = obtenerValor(inventario, ['totalProductos', 'TotalProductos'], 0);
     const productosContados = obtenerValor(inventario, ['productosContados', 'ProductosContados'], 0);
+    const inventarioId = obtenerValor(inventario, ['inventarioProgramadoId', 'InventarioProgramadoId', 'id', 'Id'], '');
 
     const estadoClass = obtenerClaseEstado(estado);
     const fechaFormato = fechaInicio ? formatearFecha(fechaInicio) : 'Sin fecha';
@@ -309,17 +310,21 @@ function generarTarjetaInventario(inventario) {
     return `
         <div class="inventario-card">
             <div class="inventario-header">
-                <h3 class="inventario-titulo">${titulo}</h3>
-                <p class="inventario-fechas">
-                    <i class="bi bi-calendar"></i> ${fechaFormato}
-                    ${fechaFin ? `- ${fechaFinFormato}` : ''}
-                </p>
-            </div>
-
-            <div class="inventario-body">
+                <div class="inventario-header-info">
+                    <h3 class="inventario-titulo">${titulo}</h3>
+                    <span class="inventario-id">ID: ${inventarioId}</span>
+                </div>
                 <span class="estado-badge ${estadoClass}">
                     ${estado}
                 </span>
+            </div>
+
+            <div class="inventario-body">
+                <div class="inventario-fechas">
+                    <i class="fas fa-calendar me-2"></i>
+                    <span>${fechaFormato}</span>
+                    ${fechaFin ? `<i class="fas fa-arrow-right mx-2"></i><span>${fechaFinFormato}</span>` : ''}
+                </div>
 
                 <div class="inventario-info">
                     <div class="info-item">
@@ -376,29 +381,52 @@ function generarBotonesAccion(inventario) {
 
     const estado = String(obtenerValor(inventario, ['estado', 'Estado', 'estadoInventario', 'EstadoInventario'], 'sin estado')).toLowerCase();
     const inventarioId = obtenerValor(inventario, ['inventarioProgramadoId', 'InventarioProgramadoId', 'id', 'Id'], '');
+    const titulo = obtenerValor(inventario, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario'], 'Inventario');
 
     if (estado === 'en progreso') {
         return `
-            <a href="/TomaInventario/Ejecutar/${inventarioId}" 
-               class="btn-accion btn-continuar">
-                <i class="bi bi-play-circle me-1"></i>
-                Continuar
-            </a>
+            <div class="acciones-container">
+                <a href="/TomaInventario/Ejecutar/${inventarioId}" 
+                   class="btn-accion btn-continuar">
+                    <i class="fas fa-play me-1"></i>
+                    Continuar
+                </a>
+            </div>
         `;
     } else if (estado === 'completado') {
         return `
-            <a href="/TomaInventario/Ejecutar/${inventarioId}" 
-               class="btn-accion btn-ver">
-                <i class="bi bi-eye me-1"></i>
-                Ver Detalle
-            </a>
+            <div class="acciones-container">
+                <div class="acciones-principales">
+                    <a href="/TomaInventario/Ejecutar/${inventarioId}" 
+                       class="btn-accion btn-ver">
+                        <i class="fas fa-eye me-1"></i>
+                        Ver Detalle
+                    </a>
+                </div>
+                <div class="acciones-descarga">
+                    <button onclick="descargarReporteExcel(${inventarioId}, '${titulo}')" 
+                            class="btn-descarga btn-excel" 
+                            title="Descargar Excel">
+                        <i class="fas fa-file-excel me-1"></i>
+                        Excel
+                    </button>
+                    <button onclick="descargarReportePdf(${inventarioId}, '${titulo}')" 
+                            class="btn-descarga btn-pdf" 
+                            title="Descargar PDF">
+                        <i class="fas fa-file-pdf me-1"></i>
+                        PDF
+                    </button>
+                </div>
+            </div>
         `;
     } else {
         return `
-            <button class="btn-accion btn-deshabilitado" disabled>
-                <i class="bi bi-lock me-1"></i>
-                ${estado === 'cancelado' ? 'Cancelado' : 'No Disponible'}
-            </button>
+            <div class="acciones-container">
+                <button class="btn-accion btn-deshabilitado" disabled>
+                    <i class="fas fa-lock me-1"></i>
+                    ${estado === 'cancelado' ? 'Cancelado' : 'No Disponible'}
+                </button>
+            </div>
         `;
     }
 }
@@ -519,6 +547,52 @@ if (window.DEBUG) {
         filtrarInventarios,
         renderizarInventarios
     };
+}
+
+// =====================================
+// FUNCIONES DE DESCARGA (TEMPORALES)
+// =====================================
+
+function descargarReporteExcel(inventarioId, titulo) {
+    console.log('📊 Solicitando descarga Excel para inventario:', inventarioId);
+    
+    // Por ahora mostrar mensaje de que se implementará
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Función en desarrollo',
+            html: `
+                <p>La descarga de reportes Excel está en desarrollo.</p>
+                <p><strong>Inventario:</strong> ${titulo}</p>
+                <p><strong>ID:</strong> ${inventarioId}</p>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#2e7d32'
+        });
+    } else {
+        alert(`Descarga Excel para inventario "${titulo}" (ID: ${inventarioId}) - En desarrollo`);
+    }
+}
+
+function descargarReportePdf(inventarioId, titulo) {
+    console.log('📋 Solicitando descarga PDF para inventario:', inventarioId);
+    
+    // Por ahora mostrar mensaje de que se implementará
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'info',
+            title: 'Función en desarrollo',
+            html: `
+                <p>La descarga de reportes PDF está en desarrollo.</p>
+                <p><strong>Inventario:</strong> ${titulo}</p>
+                <p><strong>ID:</strong> ${inventarioId}</p>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#d32f2f'
+        });
+    } else {
+        alert(`Descarga PDF para inventario "${titulo}" (ID: ${inventarioId}) - En desarrollo`);
+    }
 }
 
 console.log('✅ Módulo de historial de inventarios cargado completamente');
