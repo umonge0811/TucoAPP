@@ -30,14 +30,14 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 
     @* Token antiforgery para las llamadas AJAX *@
-     @* <meta name="csrf-token" content="@Html.AntiForgeryToken()"/>  *@
+    @* <meta name="csrf-token" content="@Html.AntiForgeryToken()"/>  *@
     @if (Context.Request.Cookies.ContainsKey("jwt_token"))
     {
         <meta name="auth-token" content="@Context.Request.Cookies["jwt_token"]" />
     }
 </head>
 
-<body class="admin-body"> 
+<body class="admin-body">
     <div class="admin-wrapper">
         @* Sidebar *@
         <aside class="admin-sidebar d-none d-lg-flex">
@@ -77,6 +77,12 @@
                                 <li class="nav-item" asp-permiso="Programar Inventario">
                                     <a class="nav-link" asp-controller="Inventario" asp-action="ProgramarInventario">
                                         <i class="bi bi-calendar-check"></i> Programar Inventario
+                                    </a>
+                                </li>
+                                <!-- Historial de Inventarios - Para usuarios asignados -->
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
+                                        <i class="bi bi-clock-history"></i> Historial de Inventarios
                                     </a>
                                 </li>
                             </ul>
@@ -252,15 +258,14 @@
                                     <div class="user-avatar">
                                         <i class="bi bi-person-circle"></i>
                                     </div>
-                                    
+
                                     @await Component.InvokeAsync("UserInfo")
-                                    
+
                                 </div>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <div class="dropdown-header">
-
                                     </div>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
@@ -336,13 +341,18 @@
                                         <i class="bi bi-calendar-check"></i> Inventarios Programados
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
+                                        <i class="bi bi-clock-history"></i> Historial de Inventarios
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>
-                        <!-- En _AdminLayout.cshtml, en la sección del mobileSidebar -->
+                    <!-- En _AdminLayout.cshtml, en la sección del mobileSidebar -->
                     <li class="nav-item">
-                            @if (User.IsInRole("Administrador"))
-                            {
+                        @if (User.IsInRole("Administrador"))
+                        {
                             <a class="nav-link" data-bs-toggle="collapse" href="#configMenuMobile">
                                 <i class="bi bi-gear"></i> Configuración
                             </a>
@@ -360,7 +370,7 @@
                                     </li>
                                 </ul>
                             </div>
-                            }
+                        }
                     </li>
 
                 </ul>
@@ -397,7 +407,7 @@
         </div>
     </div>
 
-@* Panel de Usuarios Conectados *@
+    @* Panel de Usuarios Conectados *@
     <div class="offcanvas offcanvas-bottom" tabindex="-1" id="usersPanel">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title">

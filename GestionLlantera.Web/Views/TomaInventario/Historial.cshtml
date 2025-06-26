@@ -2,9 +2,13 @@
 
 @{
     ViewData["Title"] = "Historial de Inventarios";
+    Layout = "_AdminLayout";
+
     var puedeVerHistorialCompleto = ViewBag.PuedeVerHistorialCompleto as bool? ?? false;
     var usuarioId = ViewBag.UsuarioId as int? ?? 0;
     var totalInventarios = ViewBag.TotalInventarios as int? ?? 0;
+
+    <link rel="stylesheet" href="~/css/views/inventario/historial.css" />
 }
 
 <!-- ✅ HEADER CON TÍTULO Y ESTADÍSTICAS -->
@@ -225,9 +229,6 @@
     </div>
 </div>
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/views/inventario/historial.css" />
-}
 
 @section Scripts {
     <script src="~/js/views/Inventario/historial.js"></script>

@@ -22,6 +22,8 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <param name="jwtToken">Token de autenticación</param>
         /// <returns>Lista de tipos de terreno que coinciden con el filtro</returns>
         Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null);
+        Task<List<InventarioProgramadoDTO>> ObtenerTodosLosInventariosAsync(string jwtToken = null);
+    
 
         
         Task<bool> EliminarProductoAsync(int id, string jwtToken = null);
