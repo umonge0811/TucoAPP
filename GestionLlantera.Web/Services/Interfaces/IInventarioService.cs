@@ -23,7 +23,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <returns>Lista de tipos de terreno que coinciden con el filtro</returns>
         Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null);
         Task<List<InventarioProgramadoDTO>> ObtenerTodosLosInventariosAsync(string jwtToken = null);
-        Task<List<InventarioProgramadoDTO>> ObtenerInventariosAsignadosAsync(int usuarioId, string jwtToken = null);
     
 
         
