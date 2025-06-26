@@ -1,38 +1,107 @@
-/* Responsive utilities */
-@media (max-width: 768px) {
-    .d-md-none {
-        display: none !important;
-    }
+/* Variables globales */
+:root {
+    --primary-color: #dc2626;
+    --primary-hover: #b91c1c;
+}
 
-    .d-md-block {
-        display: block !important;
+/* Estilos base */
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
     }
 }
 
-/* Botón flotante para información de permisos */
-.floating-permissions-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.btn-floating {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    flex-direction: column;
+}
+
+/* Layout principal */
+.content-wrap {
+    flex: 1 0 auto;
+}
+
+.footer {
+    flex-shrink: 0;
+    background-color: #f8f9fa;
+    padding: 1rem 0;
+    margin-top: auto;
+}
+
+/* Utilidades */
+.btn-primary-custom {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
     transition: all 0.3s ease;
 }
 
-.btn-floating:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    .btn-primary-custom:hover {
+        background-color: var(--primary-hover);
+        border-color: var(--primary-hover);
+        color: white;
+    }
+
+.text-primary-custom {
+    color: var(--primary-color) !important;
 }
 
-.btn-floating i {
-    font-size: 1.5rem;
+/* Formularios */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.25);
+}
+
+/* Ocultar elementos del navegador */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+    display: none;
+}
+
+
+/* Estilos para alertas de acceso restringido */
+.alert-warning.border-warning {
+    border-left: 4px solid #ffc107 !important;
+}
+
+.alert-icon {
+    min-width: 40px;
+}
+
+.alert-details {
+    font-size: 0.875rem;
+}
+
+.alert-actions .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Animaci�n suave para alertas */
+.alert.fade.show {
+    animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
