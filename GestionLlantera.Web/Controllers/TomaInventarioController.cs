@@ -977,8 +977,8 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Obtiene los inventarios según los permisos del usuario actual (AJAX)
-        /// GET: /TomaInventario/ObtenerInventariosAsignados
+        /// Obtiene los inventarios asignados al usuario actual (AJAX)
+        /// GET: /TomaInventario/ObtenerInventariosAsignados/{usuarioId}
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> ObtenerInventariosAsignados()
@@ -1007,7 +1007,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     // ✅ ADMINISTRADORES VEN TODOS LOS INVENTARIOS
                     _logger.LogInformation("🔑 Usuario administrador - obteniendo TODOS los inventarios");
-                    inventarios = await _inventarioService.ObtenerTodosInventariosAsync(token);
+                    inventarios = await _inventarioService.ObtenerTodosLosInventariosAsync(token);
                 }
                 else
                 {
