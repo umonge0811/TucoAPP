@@ -66,20 +66,20 @@ function cargarPermisosUsuario() {
                 esAdmin: window.inventarioConfig.permisos.esAdmin || false
             };
             console.log('✅ Permisos obtenidos desde inventarioConfig (fallback):', permisosUsuario);
-        } else {
-            console.warn('⚠️ No se encontraron configuraciones de permisos válidas, usando permisos por defecto');
-            console.log('🔍 window.facturaConfig:', window.facturaConfig);
-            console.log('🔍 window.inventarioConfig:', window.inventarioConfig);
+        }
+        else {
+            console.error('❌ No se encontró configuración de permisos');
+            console.log('🔍 Debug - facturaConfig:', window.facturaConfig);
+            console.log('🔍 Debug - inventarioConfig:', window.inventarioConfig);
 
-            // ✅ PERMISOS POR DEFECTO FUNCIONALES - al menos crear facturas
+            // Permisos por defecto muy restrictivos
             permisosUsuario = {
-                puedeCrearFacturas: true,  // ✅ Permitir al menos crear facturas
+                puedeCrearFacturas: false,
                 puedeCompletarFacturas: false,
                 puedeEditarFacturas: false,
                 puedeAnularFacturas: false,
                 esAdmin: false
             };
-            console.log('✅ Usando permisos por defecto (crear facturas habilitado):', permisosUsuario);
         }
 
         console.log('🔐 Permisos finales cargados:', permisosUsuario);
@@ -1359,25 +1359,25 @@ function configurarModalSegunPermisos() {
         $btnConfirmar.removeClass('btn-warning btn-info').addClass('btn-success');
         $textoBoton.text('Confirmar Venta');
         $btnConfirmar.attr('title', 'Procesar venta completa e imprimir factura');
-
+        
         console.log('👑 Modal configurado para usuario con permisos completos');
-
+        
     } else if (permisosUsuario.puedeCrearFacturas) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
         $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
         $btnConfirmar.removeClass('btn-success btn-info').addClass('btn-warning');
         $textoBoton.text('Enviar Factura');
         $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
-
+        
         console.log('📝 Modal configurado para usuario colaborador');
-
+        
     } else {
         // ❌ SIN PERMISOS
         $tituloModal.html('<i class="bi bi-lock me-2"></i>Sin Permisos');
         $btnConfirmar.removeClass('btn-success btn-warning').addClass('btn-secondary').prop('disabled', true);
         $textoBoton.text('Sin Permisos');
         $btnConfirmar.attr('title', 'No tienes permisos para procesar ventas');
-
+        
         console.log('🔒 Modal configurado para usuario sin permisos');
     }
 }
@@ -1658,7 +1658,7 @@ async function procesarVentaFinal() {
 
             // ✅ ÉXITO PARA FACTURA PENDIENTE
             modalFinalizarVenta.hide();
-
+            
             // Mostrar mensaje específico para colaboradores
             if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
                 mostrarToast('¡Factura Enviada!', 'Factura enviada exitosamente a caja para procesamiento de pago.', 'success');
@@ -2325,8 +2325,7 @@ async function guardarNuevoCliente() {
         // Recopilar datos (usar nombres de propiedades que coincidan con el modelo del servidor)
         const clienteData = {
             nombreCliente: $('#nombreClienteFacturacion').val().trim(),
-            contacto: $('#contactoClienteFacturacion').val().trim```text
-,
+            contacto: $('#contactoClienteFacturacion').val().trim(),
             email: $('#emailClienteFacturacion').val().trim(),
             telefono: $('#telefonoClienteFacturacion').val().trim(),
             direccion: $('#direccionClienteFacturacion').val().trim()
@@ -2715,13 +2714,13 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
     let tituloModal = 'Factura Procesada';
     let mensajePrincipal = 'Factura guardada como pendiente';
     let descripcionMensaje = 'La factura ha sido guardada y está pendiente de procesamiento.';
-
+    
     if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
         tituloModal = 'Factura Enviada Exitosamente';
         mensajePrincipal = '¡Factura enviada a caja!';
         descripcionMensaje = 'La factura ha sido enviada exitosamente al área de caja para procesamiento de pago.';
     }
-
+    
     const modalHtml = `
         <div class="modal fade" id="modalFacturaPendiente" tabindex="-1">
             <div class="modal-dialog modal-lg">
