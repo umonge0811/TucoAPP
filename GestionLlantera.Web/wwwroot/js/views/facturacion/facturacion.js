@@ -1120,8 +1120,8 @@ function actualizarVistaCarrito() {
                                min="1" 
                                max="${producto.stockDisponible}">
                         <button type="button" 
-                                class="btn btn-outline-secondary btn-cantidad-mas"
-                                data-index="${index}">+</button>
+                               class="btn btn-outline-secondary btn-cantidad-mas"
+                               data-index="${index}">+</button>
                     </div>
                     <strong class="text-success">₡${formatearMoneda(subtotal)}</strong>
                 </div>
@@ -1500,14 +1500,42 @@ async function procesarVentaFinal() {
         const resultadoFactura = await responseFactura.json();
         console.log('✅ Factura creada:', resultadoFactura);
 
-        if (!resultadoFactura.success) {
+        if (resultadoFactura.success) {
+            console.log('✅ Factura procesada exitosamente');
+
+            // Determinar mensaje según el tipo de factura creada
+            const facturaData = resultadoFactura.data;
+            let mensaje = 'Factura procesada exitosamente';
+            let esFacturaPendiente = false;
+
+            if (facturaData && facturaData.estado) {
+                if (facturaData.estado === 'Pendiente') {
+                    mensaje = 'Factura guardada como PENDIENTE. Requiere completar información de pago.';
+                    esFacturaPendiente = true;
+                } else if (facturaData.estado === 'Completada') {
+                    mensaje = 'Factura COMPLETADA exitosamente';
+                }
+            }
+
+            mostrarMensajeExito(mensaje);
+
+            // Si es factura pendiente, mostrar opciones adicionales
+            if (esFacturaPendiente && facturaData.facturaId) {
+                mostrarModalFacturaPendiente(facturaData);
+            }
+
+            // Limpiar formulario después del éxito
+            limpiarVenta();
+
+            console.log('📄 Datos de factura creada:', resultadoFactura.data);
+        } else {
             // Manejar caso específico de sesión expirada
             if (resultadoFactura.redirectToLogin) {
                 console.log('🔄 Redirigiendo a login por sesión expirada');
                 window.location.href = '/Account/Login';
                 return;
             }
-            
+
             throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
         }
 
@@ -1541,7 +1569,7 @@ async function procesarVentaFinal() {
             if (responseStock.ok) {
                 const resultadoStock = await responseStock.json();
 
-                if (resultadoStock.success) {
+                if (resultadoStock.success){
                     console.log('✅ Stock ajustado exitosamente para todos los productos');
 
                     // Mostrar resumen de ajustes exitosos

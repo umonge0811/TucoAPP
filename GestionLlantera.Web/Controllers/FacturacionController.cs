@@ -507,6 +507,95 @@ namespace GestionLlantera.Web.Controllers
             return token;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFacturasPendientes()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo facturas pendientes");
+
+                if (!await this.TienePermisoAsync("Ver Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para ver facturas" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new { 
+                        success = true, 
+                        data = resultado.data,
+                        message = resultado.message 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut]
+        [Route("Facturacion/CompletarFactura/{facturaId}")]
+        public async Task<IActionResult> CompletarFactura(int facturaId, [FromBody] object datosCompletamiento)
+        {
+            try
+            {
+                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
+
+                if (!await this.TienePermisoAsync("CompletarFacturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para completar facturas" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.CompletarFacturaAsync(facturaId, datosCompletamiento, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new { 
+                        success = true, 
+                        data = resultado.data,
+                        message = resultado.message 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error completando factura");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
         [HttpPost]
         [Route("Facturacion/AjustarStockFacturacion")]
         public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)

@@ -360,6 +360,87 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo facturas pendientes");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.GetAsync("api/Facturacion/facturas/pendientes");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject(responseContent);
+                    return (success: true, data: resultado, message: "Facturas pendientes obtenidas", details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error obteniendo facturas pendientes: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (success: false, data: null, message: "Error al obtener facturas pendientes", details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+            }
+        }
+
+        public async Task<(bool success, object? data, string? message, string? details)> CompletarFacturaAsync(int facturaId, object datosCompletamiento, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(datosCompletamiento, new JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"api/Facturacion/facturas/{facturaId}/completar", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject(responseContent);
+                    return (success: true, data: resultado, message: "Factura completada exitosamente", details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error completando factura: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (success: false, data: null, message: "Error al completar factura", details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error completando factura");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+            }
+        }
+
         public async Task<(bool success, object? data, string? message, string? details)> CrearFacturaAsync(object facturaDto, string jwtToken = null)
         {
             try
@@ -501,8 +582,14 @@ namespace GestionLlantera.Web.Services
                     }
                 }
 
-                // ✅ 3. ESTABLECER FECHA DE CREACIÓN
+                // ✅ 3. ESTABLECER FECHA DE CREACIÓN Y ESTADO SEGÚN ROL
                 factura.fechaCreacion = DateTime.Now;
+                
+                // ✅ DETERMINAR ESTADO SEGÚN ROL DEL USUARIO
+                var estadoFactura = DeterminarEstadoFacturaSegunUsuario(jwtToken);
+                factura.estado = estadoFactura;
+                
+                _logger.LogInformation("📋 Estado de factura asignado: {Estado}", estadoFactura);
 
                 // ✅ 4. VALIDAR CAMPOS REQUERIDOS
                 var nombreCliente = factura.nombreCliente?.ToString() ?? 
@@ -596,6 +683,56 @@ namespace GestionLlantera.Web.Services
                 _logger.LogError(ex, "❌ Error generando número de factura");
                 // Fallback a un número simple
                 return $"FAC-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10, 6)}";
+            }
+        }
+
+        private string DeterminarEstadoFacturaSegunUsuario(string jwtToken)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(jwtToken))
+                    return "Pendiente"; // Estado por defecto si no hay token
+
+                // Decodificar el token JWT para obtener roles
+                var parts = jwtToken.Split('.');
+                if (parts.Length != 3)
+                    return "Pendiente";
+
+                // Decodificar el payload (segunda parte)
+                var payload = parts[1];
+
+                // Agregar padding necesario para Base64
+                switch (payload.Length % 4)
+                {
+                    case 2: payload += "=="; break;
+                    case 3: payload += "="; break;
+                }
+
+                var payloadBytes = Convert.FromBase64String(payload);
+                var payloadJson = Encoding.UTF8.GetString(payloadBytes);
+
+                dynamic claims = JsonConvert.DeserializeObject(payloadJson);
+
+                // Buscar roles en el token
+                var roles = claims?.role?.ToString() ?? 
+                           claims?.roles?.ToString() ?? 
+                           claims?["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]?.ToString() ?? "";
+
+                _logger.LogInformation("🔍 Roles encontrados en token: {Roles}", roles);
+
+                // Si es Administrador, puede crear facturas completadas
+                if (roles.Contains("Administrador", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "Completada";
+                }
+
+                // Para cualquier otro rol (Colaborador, etc.), crear como pendiente
+                return "Pendiente";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error determinando estado de factura según usuario");
+                return "Pendiente"; // Estado seguro por defecto
             }
         }
 
