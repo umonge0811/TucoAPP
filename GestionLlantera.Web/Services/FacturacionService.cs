@@ -718,6 +718,7 @@ namespace GestionLlantera.Web.Services
                            claims?.roles?.ToString() ?? 
                            claims?["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]?.ToString() ?? "";
 
+                _logger.LogInformation("🔍 Roles encontrados en token: {Roles}", roles);
 
                 // Si es Administrador, puede crear facturas completadas
                 if (roles.Contains("Administrador", StringComparison.OrdinalIgnoreCase))
