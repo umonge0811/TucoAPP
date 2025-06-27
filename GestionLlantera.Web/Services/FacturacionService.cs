@@ -470,6 +470,8 @@ namespace GestionLlantera.Web.Services
                 var facturaJson = JsonConvert.SerializeObject(facturaDto);
                 dynamic factura = JsonConvert.DeserializeObject(facturaJson);
 
+                _logger.LogInformation("📋 Factura recibida para procesamiento: {FacturaJson}", facturaJson);
+
                 // ✅ 1. GENERAR NÚMERO DE FACTURA AUTOMÁTICAMENTE
                 var tipoDocumento = factura.tipoDocumento?.ToString() ?? "Factura";
                 var numeroFactura = GenerarNumeroFactura(tipoDocumento);
@@ -491,10 +493,20 @@ namespace GestionLlantera.Web.Services
                 factura.fechaCreacion = DateTime.Now;
 
                 // ✅ 4. VALIDAR CAMPOS REQUERIDOS
-                if (string.IsNullOrEmpty(factura.nombreCliente?.ToString()))
+                var nombreCliente = factura.nombreCliente?.ToString() ?? 
+                                  factura.NombreCliente?.ToString() ?? 
+                                  factura.cliente?.ToString() ?? 
+                                  factura.Cliente?.ToString() ?? "";
+
+                if (string.IsNullOrEmpty(nombreCliente))
                 {
+                    _logger.LogError("❌ Validación fallida: No se encontró nombre del cliente. Propiedades disponibles: {Propiedades}", 
+                        string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p.Name)));
                     throw new ArgumentException("El nombre del cliente es requerido");
                 }
+
+                // Asegurar que la propiedad esté correctamente asignada
+                factura.nombreCliente = nombreCliente;
 
                 if (factura.detallesFactura == null || !((System.Collections.IEnumerable)factura.detallesFactura).Cast<object>().Any())
                 {
