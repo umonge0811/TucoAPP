@@ -348,7 +348,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("🧾 Autenticado: {Autenticado}", User.Identity?.IsAuthenticated);
 
                 // Verificar permisos
-                if (!await this.TienePermisoAsync("CrearFacturas"))
+                if (!await this.TienePermisoAsync("Crear Facturas"))
                 {
                     _logger.LogWarning("🚫 Usuario sin permisos para crear facturas");
                     return Json(new { success = false, message = "Sin permisos para crear facturas" });
