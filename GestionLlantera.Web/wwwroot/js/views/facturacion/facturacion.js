@@ -1254,6 +1254,9 @@ function mostrarModalFinalizarVenta() {
     // ===== CONFIGURAR MÉTODO DE PAGO INICIAL =====
     $('input[name="metodoPago"][value="efectivo"]').prop('checked', true);
 
+    // ===== CONFIGURAR TEXTO DEL BOTÓN SEGÚN PERMISOS =====
+    configurarTextoBotonConfirmar();
+
     // ===== ACTUALIZAR RESUMEN CON MÉTODO DE PAGO INICIAL =====
     actualizarResumenVentaModal();
 
@@ -1510,18 +1513,26 @@ async function procesarVentaFinal() {
 
             if (facturaData && facturaData.estado) {
                 if (facturaData.estado === 'Pendiente') {
-                    mensaje = 'Factura guardada como PENDIENTE. Requiere completar información de pago.';
+                    mensaje = 'Factura enviada exitosamente y está pendiente de aprobación.';
                     esFacturaPendiente = true;
                 } else if (facturaData.estado === 'Completada') {
                     mensaje = 'Factura COMPLETADA exitosamente';
                 }
             }
 
+            // Cerrar modal inmediatamente para factura pendiente
+            if (esFacturaPendiente) {
+                modalFinalizarVenta.hide();
+            }
+
             mostrarMensajeExito(mensaje);
 
-            // Si es factura pendiente, mostrar opciones adicionales
-            if (esFacturaPendiente && facturaData.facturaId) {
-                mostrarModalFacturaPendiente(facturaData);
+            // Si es factura pendiente, mostrar modal informativo solo para colaboradores
+            if (esFacturaPendiente && facturaData.facturaId && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
+                // Esperar un poco para que se cierre el modal de finalizar venta
+                setTimeout(() => {
+                    mostrarModalFacturaPendiente(facturaData);
+                }, 500);
             }
 
             // Limpiar formulario después del éxito
@@ -1645,8 +1656,14 @@ async function procesarVentaFinal() {
         console.error('❌ Error procesando venta:', error);
         mostrarToast('Error', 'Hubo un problema procesando la venta', 'error');
     } finally {
-        // Restaurar botón
-        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+        // Restaurar botón según permisos
+        $btnFinalizar.prop('disabled', false);
+        
+        if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+            $btnFinalizar.html('<i class="bi bi-check-circle me-2"></i><span>Confirmar Venta</span>');
+        } else {
+            $btnFinalizar.html('<i class="bi bi-send me-2"></i><span>Enviar Factura</span>');
+        }
     }
 }
 
@@ -2665,6 +2682,42 @@ function actualizarEstadoBotonFinalizar() {
     });
 }
 
+// ===== CONFIGURACIÓN DEL BOTÓN DE CONFIRMACIÓN =====
+function configurarTextoBotonConfirmar() {
+    const $btnConfirmar = $('#btnConfirmarVenta');
+    const $iconoBtn = $btnConfirmar.find('i');
+    const $textoBtn = $('#textoBotonConfirmar');
+
+    if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+        // ✅ USUARIO PUEDE COMPLETAR FACTURAS
+        $iconoBtn.removeClass('bi-send').addClass('bi-check-circle');
+        $textoBtn.text('Confirmar Venta');
+        $btnConfirmar.removeClass('btn-primary').addClass('btn-success')
+                    .attr('title', 'Procesar venta completa e imprimir factura');
+
+        console.log('👑 Modal configurado para COMPLETAR venta');
+
+    } else if (permisosUsuario.puedeCrearFacturas) {
+        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
+        $iconoBtn.removeClass('bi-check-circle').addClass('bi-send');
+        $textoBtn.text('Enviar Factura');
+        $btnConfirmar.removeClass('btn-success').addClass('btn-primary')
+                    .attr('title', 'Enviar factura para aprobación');
+
+        console.log('📝 Modal configurado para ENVIAR factura (pendiente)');
+
+    } else {
+        // ❌ SIN PERMISOS
+        $iconoBtn.removeClass('bi-check-circle bi-send').addClass('bi-lock');
+        $textoBtn.text('Sin Permisos');
+        $btnConfirmar.removeClass('btn-success btn-primary').addClass('btn-secondary')
+                    .prop('disabled', true)
+                    .attr('title', 'No tienes permisos para procesar ventas');
+
+        console.log('🔒 Modal configurado SIN permisos');
+    }
+}
+
 // ===== MODAL FACTURA PENDIENTE =====
 function mostrarModalFacturaPendiente(resultadoFactura) {
     const modalHtml = `
@@ -2743,6 +2796,7 @@ function irAFacturasPendientes() {
 }
 
 // ===== HACER FUNCIONES GLOBALES =====
+window.configurarTextoBotonConfirmar = configurarTextoBotonConfirmar;
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
 window.limpiarVenta = limpiarVenta;
