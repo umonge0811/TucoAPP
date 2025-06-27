@@ -375,7 +375,10 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                 }
 
-                var jsonContent = JsonConvert.SerializeObject(facturaDto, new JsonSerializerSettings
+                // Procesar el DTO para generar campos automáticos
+                var facturaData = await ProcesarFacturaParaEnvio(facturaDto, jwtToken);
+
+                var jsonContent = JsonConvert.SerializeObject(facturaData, new JsonSerializerSettings
                 {
                     ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
                     DateFormatString = "yyyy-MM-ddTHH:mm:ss",
@@ -455,6 +458,129 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Otros métodos del servicio...
+        // =====================================
+        // MÉTODOS AUXILIARES PRIVADOS
+        // =====================================
+
+        private async Task<object> ProcesarFacturaParaEnvio(object facturaDto, string jwtToken = null)
+        {
+            try
+            {
+                // Convertir a dynamic para poder modificar propiedades
+                var facturaJson = JsonConvert.SerializeObject(facturaDto);
+                dynamic factura = JsonConvert.DeserializeObject(facturaJson);
+
+                // ✅ 1. GENERAR NÚMERO DE FACTURA AUTOMÁTICAMENTE
+                var tipoDocumento = factura.tipoDocumento?.ToString() ?? "Factura";
+                var numeroFactura = GenerarNumeroFactura(tipoDocumento);
+                factura.numeroFactura = numeroFactura;
+
+
+                // ✅ 2. EXTRAER INFORMACIÓN DEL USUARIO DEL TOKEN JWT
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    var nombreUsuario = ExtraerNombreUsuarioDelToken(jwtToken);
+                    if (!string.IsNullOrEmpty(nombreUsuario))
+                    {
+                        factura.usuarioCreadorNombre = nombreUsuario;
+                        _logger.LogInformation("👤 Usuario extraído del token: {Usuario}", nombreUsuario);
+                    }
+                }
+
+                // ✅ 3. ESTABLECER FECHA DE CREACIÓN
+                factura.fechaCreacion = DateTime.Now;
+
+                // ✅ 4. VALIDAR CAMPOS REQUERIDOS
+                if (string.IsNullOrEmpty(factura.nombreCliente?.ToString()))
+                {
+                    throw new ArgumentException("El nombre del cliente es requerido");
+                }
+
+                if (factura.detallesFactura == null || !((System.Collections.IEnumerable)factura.detallesFactura).Cast<object>().Any())
+                {
+                    throw new ArgumentException("La factura debe tener al menos un producto");
+                }
+
+                return factura;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error procesando factura para envío");
+                throw;
+            }
+        }
+
+        private string GenerarNumeroFactura(string tipoDocumento)
+        {
+            try
+            {
+                var prefijo = tipoDocumento == "Proforma" ? "PRO" : "FAC";
+                var año = DateTime.Now.Year;
+                var mes = DateTime.Now.Month;
+                var dia = DateTime.Now.Day;
+                var hora = DateTime.Now.Hour;
+                var minuto = DateTime.Now.Minute;
+                var segundo = DateTime.Now.Second;
+
+                // Generar número único basado en timestamp
+                var timestamp = DateTime.Now.Ticks.ToString().Substring(10); // Últimos dígitos del timestamp
+                var numeroConsecutivo = timestamp.Substring(0, Math.Min(6, timestamp.Length)).PadLeft(6, '0');
+
+                var numeroFactura = $"{prefijo}-{año:D4}{mes:D2}-{numeroConsecutivo}";
+
+                _logger.LogInformation("📋 Número de factura generado: {NumeroFactura}", numeroFactura);
+
+                return numeroFactura;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error generando número de factura");
+                // Fallback a un número simple
+                return $"FAC-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10, 6)}";
+            }
+        }
+
+        private string ExtraerNombreUsuarioDelToken(string jwtToken)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(jwtToken))
+                    return null;
+
+                // Decodificar el token JWT (formato: header.payload.signature)
+                var parts = jwtToken.Split('.');
+                if (parts.Length != 3)
+                    return null;
+
+                // Decodificar el payload (segunda parte)
+                var payload = parts[1];
+
+                // Agregar padding necesario para Base64
+                switch (payload.Length % 4)
+                {
+                    case 2: payload += "=="; break;
+                    case 3: payload += "="; break;
+                }
+
+                var payloadBytes = Convert.FromBase64String(payload);
+                var payloadJson = Encoding.UTF8.GetString(payloadBytes);
+
+                dynamic claims = JsonConvert.DeserializeObject(payloadJson);
+
+                // Buscar el nombre del usuario en diferentes campos posibles
+                var nombreUsuario = claims?.unique_name?.ToString() ??
+                                 claims?.name?.ToString() ??
+                                 claims?.username?.ToString() ??
+                                 claims?.sub?.ToString();
+
+
+                return nombreUsuario;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error extrayendo usuario del token JWT");
+                return null;
+            }
+        }
     }
 }
