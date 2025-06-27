@@ -174,7 +174,7 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> CrearFactura([FromBody] FacturaDTO facturaDto)
         {
-            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "CrearFacturas",
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Facturas",
                 "Solo usuarios con permiso 'CrearFacturas' pueden crear facturas");
             if (validacionPermiso != null) return validacionPermiso;
 
