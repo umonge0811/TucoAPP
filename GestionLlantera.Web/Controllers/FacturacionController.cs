@@ -5,6 +5,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
+using Tuco.Clases.DTOs.Facturacion;
 using Tuco.Clases.Models;
 using System.Text.Json;
 using System.Text;
@@ -304,7 +305,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 // Verificar permisos
-                if (!await this.TienePermisoAsync("Crear Facturas"))
+                if (!await this.TienePermisoAsync("CrearFacturas"))
                 {
                     return Json(new { success = false, message = "Sin permisos para crear facturas" });
                 }
@@ -329,9 +330,7 @@ namespace GestionLlantera.Web.Controllers
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                // Llamar directamente a la API
-                var apiUrl = "https://workspace-api-url.repl.co/api/Facturacion/facturas"; // Usar la URL de tu API
-                // Para desarrollo local, usar:
+                // Para desarrollo local, usar localhost
                 var apiUrlLocal = "http://localhost:5049/api/Facturacion/facturas";
 
                 var response = await httpClient.PostAsync(apiUrlLocal, content);
