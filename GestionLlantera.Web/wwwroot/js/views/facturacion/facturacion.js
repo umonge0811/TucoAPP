@@ -530,7 +530,7 @@ function mostrarResultadosProductos(productos) {
                     if (urlImagen && urlImagen.trim() !== '') {
                         // Las URLs ya vienen completas desde la API, usar directamente
                         if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
-                            imagenUrl = urlImagen; // URL completa desde la API
+                            imagenUrl = urlImagen; // URL completa
                         } else {
                             // Fallback para URLs relativas
                             imagenUrl = urlImagen.startsWith('/') ? 
@@ -773,7 +773,7 @@ function mostrarModalSeleccionProducto(producto) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
                 .filter(url => url && url && url.trim() !== '');
-        }
+                }
 
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
@@ -1507,7 +1507,7 @@ async function procesarVentaFinal() {
                 window.location.href = '/Account/Login';
                 return;
             }
-            
+
             throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
         }
 
@@ -1566,7 +1566,8 @@ async function procesarVentaFinal() {
                 }
             } else {
                 const errorText = await responseStock.text();
-                console.error('❌ Error en endpoint de ajuste de stock:', errorText);
+                ```text
+console.error('❌ Error en endpoint de ajuste de stock:', errorText);
                 mostrarToast('Error Stock', 'No se pudo conectar con el sistema de inventario', 'warning');
             }
         } catch (error) {
@@ -1969,7 +1970,6 @@ function verDetalleProducto(producto) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
                 .filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
         }
 
         if (imagenesArray.length > 0) {
@@ -2354,6 +2354,7 @@ function validarEmailFacturacion(email) {
 }
 
 function getCampoSelector(nombreCampo) {
+    ```text
     const mapaCampos = {
         'nombre': '#nombreClienteFacturacion',
         'NombreCliente': '#nombreClienteFacturacion',
@@ -2525,9 +2526,12 @@ function mostrarResumenDepuracion() {
     console.log('📊 === FIN RESUMEN ===');
 }
 
-function obtenerUsuarioActual() {
+// ===== OBTENER INFORMACIÓN DEL USUARIO ACTUAL =====
+async function obtenerUsuarioActual() {
     try {
-        // Primera opción: desde configuración de facturación
+        console.log('🔍 Obteniendo información del usuario actual...');
+
+        // Intentar obtener desde facturaConfig (si está disponible)
         if (window.facturaConfig && window.facturaConfig.Usuario) {
             console.log('👤 Usuario desde facturaConfig:', window.facturaConfig.Usuario);
             return window.facturaConfig.Usuario;
