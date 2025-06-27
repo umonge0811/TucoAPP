@@ -71,14 +71,15 @@ function cargarPermisosUsuario() {
             console.log('🔍 Debug - facturaConfig:', window.facturaConfig);
             console.log('🔍 Debug - inventarioConfig:', window.inventarioConfig);
 
-            // Permisos por defecto muy restrictivos
+            // ✅ PERMISOS POR DEFECTO PARA COLABORADORES (PUEDEN CREAR FACTURAS)
             permisosUsuario = {
-                puedeCrearFacturas: false,
+                puedeCrearFacturas: true,  // Permitir por defecto para colaboradores
                 puedeCompletarFacturas: false,
                 puedeEditarFacturas: false,
                 puedeAnularFacturas: false,
                 esAdmin: false
             };
+            console.log('⚠️ Usando permisos por defecto de colaborador:', permisosUsuario);
         }
 
         console.log('🔐 Permisos finales cargados:', permisosUsuario);
@@ -88,14 +89,16 @@ function cargarPermisosUsuario() {
 
     } catch (error) {
         console.error('❌ Error cargando permisos:', error);
-        // Permisos por defecto (solo crear facturas)
+        // ✅ PERMISOS POR DEFECTO PARA COLABORADORES EN CASO DE ERROR
         permisosUsuario = {
-            puedeCrearFacturas: true,
+            puedeCrearFacturas: true,  // Permitir por defecto
             puedeCompletarFacturas: false,
             puedeEditarFacturas: false,
             puedeAnularFacturas: false,
             esAdmin: false
         };
+        console.log('🔧 Permisos de emergencia aplicados:', permisosUsuario);
+        configurarInterfazSegunPermisos();
     }
 }
 
@@ -1351,33 +1354,47 @@ function configurarModalSegunPermisos() {
     const $textoBoton = $('#textoBotonConfirmar');
     const $tituloModal = $('#modalFinalizarVentaLabel');
 
+    // ✅ VERIFICAR PERMISOS Y CONFIGURAR MODAL
+    console.log('🎯 Configurando modal con permisos:', permisosUsuario);
+
     if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
         // ✅ USUARIO PUEDE COMPLETAR FACTURAS
         $tituloModal.html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
-        $btnConfirmar.removeClass('btn-warning btn-info').addClass('btn-success');
+        $btnConfirmar.removeClass('btn-warning btn-secondary btn-info').addClass('btn-success')
+                    .prop('disabled', false);
         $textoBoton.text('Confirmar Venta');
         $btnConfirmar.attr('title', 'Procesar venta completa e imprimir factura');
 
         console.log('👑 Modal configurado para usuario con permisos completos');
 
     } else if (permisosUsuario.puedeCrearFacturas) {
-        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
+        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS - ENVIAR A CAJA
         $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
-        $btnConfirmar.removeClass('btn-success btn-info').addClass('btn-warning');
-        $textoBoton.text('Enviar Factura');
+        $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
+                    .prop('disabled', false);
+        $textoBoton.text('Enviar a Caja');
         $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
 
-        console.log('📝 Modal configurado para usuario colaborador');
+        console.log('📝 Modal configurado para colaborador - Envío a caja habilitado');
 
     } else {
         // ❌ SIN PERMISOS
-        $tituloModal.html('<i class="bi bi-lock me-2"></i>Sin Permisos');
-        $btnConfirmar.removeClass('btn-success btn-warning').addClass('btn-secondary').prop('disabled', true);
+        $tituloModal.html('<i class="bi bi-lock me-2"></i>Sin Permisos de Facturación');
+        $btnConfirmar.removeClass('btn-success btn-warning').addClass('btn-secondary')
+                    .prop('disabled', true);
         $textoBoton.text('Sin Permisos');
         $btnConfirmar.attr('title', 'No tienes permisos para procesar ventas');
 
         console.log('🔒 Modal configurado para usuario sin permisos');
     }
+
+    // ✅ LOG ADICIONAL PARA DEPURACIÓN
+    console.log('🎯 Estado final del botón:', {
+        disabled: $btnConfirmar.prop('disabled'),
+        classes: $btnConfirmar.attr('class'),
+        text: $textoBoton.text(),
+        permisos: permisosUsuario
+    });
 }
 
 function calcularCambio() {
@@ -1659,7 +1676,7 @@ async function procesarVentaFinal() {
 
             // Mostrar mensaje específico para colaboradores
             if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
-                mostrarToast('¡Factura Enviada!', 'Factura enviada exitosamente a caja para procesamiento de pago.', 'success');
+                mostrarToast('¡Factura Enviada a Caja!', 'La factura ha sido enviada exitosamente al área de caja para procesamiento de pago.', 'success');
             } else {
                 mostrarToast('Factura Guardada', 'Factura guardada como pendiente exitosamente.', 'success');
             }
@@ -2012,6 +2029,67 @@ function formatearMoneda(valor) {
 function mostrarToast(titulo, mensaje, tipo = 'info') {
     // Implementar toast notifications
     console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
+    
+    // ✅ IMPLEMENTACIÓN DE TOAST VISUAL
+    try {
+        // Verificar si existe un contenedor de toasts
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            // Crear contenedor de toasts
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Mapear tipos de toast a clases de Bootstrap
+        const tipoClases = {
+            'success': 'text-bg-success',
+            'error': 'text-bg-danger',
+            'danger': 'text-bg-danger',
+            'warning': 'text-bg-warning',
+            'info': 'text-bg-info'
+        };
+
+        const claseColor = tipoClases[tipo] || 'text-bg-info';
+
+        // Crear toast HTML
+        const toastId = 'toast-' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast ${claseColor}" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">${titulo}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${mensaje}
+                </div>
+            </div>
+        `;
+
+        // Agregar toast al contenedor
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+        // Mostrar toast usando Bootstrap
+        const toastElement = document.getElementById(toastId);
+        if (toastElement && typeof bootstrap !== 'undefined') {
+            const toast = new bootstrap.Toast(toastElement, {
+                delay: tipo === 'success' ? 5000 : 3000 // 5 segundos para éxito, 3 para otros
+            });
+            toast.show();
+
+            // Limpiar toast después de que se oculte
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                this.remove();
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando toast:', error);
+        // Fallback a alert si falla el toast
+        alert(`${titulo}: ${mensaje}`);
+    }
 }
 
 function verDetalleProducto(producto) {
