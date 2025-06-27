@@ -532,74 +532,28 @@ namespace GestionLlantera.Web.Controllers
 
         /// <summary>
         /// Método auxiliar para obtener el token JWT del usuario autenticado
-        /// Implementa la misma lógica exitosa de otros controladores
+        /// Usa exactamente la misma lógica exitosa del InventarioController
         /// </summary>
         private string? ObtenerTokenJWT()
         {
-            try
+            var token = User.FindFirst("JwtToken")?.Value;
+
+            if (string.IsNullOrEmpty(token))
             {
-                _logger.LogInformation("🔐 === VERIFICACIÓN DE TOKEN JWT EN FACTURACIÓN ===");
+                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
                 
-                // Mostrar información de autenticación
-                _logger.LogInformation("🔐 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
-                _logger.LogInformation("🔐 Nombre de usuario: {Name}", User.Identity?.Name);
-                
-                // Mostrar todos los claims disponibles para debug
-                _logger.LogInformation("📋 Claims disponibles:");
-                foreach (var claim in User.Claims)
-                {
-                    _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
-                }
-
-                // Buscar el token JWT en los claims (misma lógica que otros controladores exitosos)
-                var token = User.FindFirst("JwtToken")?.Value;
-
-                if (string.IsNullOrEmpty(token))
-                {
-                    _logger.LogWarning("⚠️ Token JWT no encontrado en claim 'JwtToken'");
-                    
-                    // Intentar desde cookies como fallback (igual que otros controladores)
-                    if (Request.Cookies.TryGetValue("JwtToken", out string? cookieToken))
-                    {
-                        _logger.LogInformation("🍪 Token encontrado en cookie como fallback");
-                        token = cookieToken;
-                    }
-                    else
-                    {
-                        _logger.LogError("❌ No se pudo obtener token JWT desde claims ni cookies");
-                        return null;
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(token))
-                {
-                    _logger.LogInformation("✅ Token JWT obtenido exitosamente - Longitud: {Length}", token.Length);
-                    
-                    // Verificar que el token no esté vacío ni corrupto
-                    if (token.Split('.').Length == 3)
-                    {
-                        _logger.LogInformation("✅ Token JWT tiene formato válido (3 partes)");
-                        return token;
-                    }
-                    else
-                    {
-                        _logger.LogError("❌ Token JWT tiene formato inválido: {Token}", token.Substring(0, Math.Min(50, token.Length)));
-                        return null;
-                    }
-                }
-
-                _logger.LogError("❌ Token JWT está vacío después de todas las verificaciones");
-                return null;
+                // Listar todos los claims disponibles para debug
+                var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
+                _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "❌ Error crítico obteniendo token JWT");
-                return null;
+                _logger.LogInformation("✅ Token JWT obtenido correctamente para usuario: {Usuario}, Longitud: {Length}",
+                    User.Identity?.Name ?? "Anónimo", token.Length);
             }
-            finally
-            {
-                _logger.LogInformation("🔐 === FIN VERIFICACIÓN TOKEN JWT ===");
-            }
+
+            return token;
         }
 
         [HttpPost]
