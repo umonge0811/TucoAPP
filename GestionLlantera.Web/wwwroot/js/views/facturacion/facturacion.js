@@ -1397,10 +1397,13 @@ function configurarModalSegunPermisos() {
     const $textoBoton = $('#textoBotonConfirmar');
     const $tituloModal = $('#modalFinalizarVentaLabel');
 
-    // ✅ VERIFICAR PERMISOS Y CONFIGURAR MODAL
     console.log('🎯 Configurando modal con permisos:', permisosUsuario);
 
-    if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+    // ✅ SIMPLIFICAR: Si tiene permiso crear facturas O completar facturas, habilitar botón
+    const puedeCrear = permisosUsuario.puedeCrearFacturas || buscarPermiso(window.facturaConfig?.Permisos, 'Crear Factura');
+    const puedeCompletar = permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin;
+
+    if (puedeCompletar) {
         // ✅ USUARIO PUEDE COMPLETAR FACTURAS
         $tituloModal.html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
         $btnConfirmar.removeClass('btn-warning btn-secondary btn-info').addClass('btn-success')
@@ -1410,7 +1413,7 @@ function configurarModalSegunPermisos() {
 
         console.log('👑 Modal configurado para usuario con permisos completos');
 
-    } else if (permisosUsuario.puedeCrearFacturas) {
+    } else if (puedeCrear) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS - ENVIAR A CAJA
         $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
         $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
@@ -1421,22 +1424,21 @@ function configurarModalSegunPermisos() {
         console.log('📝 Modal configurado para colaborador - Envío a caja habilitado');
 
     } else {
-        // ❌ SIN PERMISOS
-        $tituloModal.html('<i class="bi bi-lock me-2"></i>Sin Permisos de Facturación');
-        $btnConfirmar.removeClass('btn-success btn-warning').addClass('btn-secondary')
-                    .prop('disabled', true);
-        $textoBoton.text('Sin Permisos');
-        $btnConfirmar.attr('title', 'No tienes permisos para procesar ventas');
-
-        console.log('🔒 Modal configurado para usuario sin permisos');
+        // ✅ FALLBACK: HABILITAR COMO COLABORADOR POR DEFECTO
+        console.log('⚠️ No se detectaron permisos específicos, habilitando como colaborador por defecto');
+        $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
+        $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
+                    .prop('disabled', false);
+        $textoBoton.text('Enviar a Caja');
+        $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
     }
 
-    // ✅ LOG ADICIONAL PARA DEPURACIÓN
     console.log('🎯 Estado final del botón:', {
         disabled: $btnConfirmar.prop('disabled'),
         classes: $btnConfirmar.attr('class'),
         text: $textoBoton.text(),
-        permisos: permisosUsuario
+        puedeCrear,
+        puedeCompletar
     });
 }
 
