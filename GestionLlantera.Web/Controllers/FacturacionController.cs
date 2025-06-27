@@ -262,7 +262,7 @@ namespace GestionLlantera.Web.Controllers
                     ProductoId = p.ProductoId,
                     NombreProducto = p.NombreProducto,
                     Descripcion = p.Descripcion,
-                    PrecioUnitario = p.Precio ?? 0,
+                    PrecioUnitario = p.Precio,
                     Cantidad = 1, // Valor por defecto
                     CantidadEnInventario = p.CantidadEnInventario,
                     StockMinimo = p.StockMinimo,
@@ -441,7 +441,7 @@ namespace GestionLlantera.Web.Controllers
                     ProductoId = p.ProductoId,
                     NombreProducto = p.NombreProducto,
                     Descripcion = p.Descripcion,
-                    PrecioUnitario = p.Precio ?? 0,
+                    PrecioUnitario = p.Precio,
                     Cantidad = 1, // Se necesitará enviar este dato desde el frontend
                     CantidadEnInventario = p.CantidadEnInventario,
                     StockMinimo = p.StockMinimo,
