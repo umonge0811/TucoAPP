@@ -42,7 +42,9 @@ let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 function cargarPermisosUsuario() {
     try {
         console.log('🔍 Iniciando carga de permisos...');
-        
+        console.log('🔍 window.facturaConfig disponible:', !!window.facturaConfig);
+        console.log('🔍 Contenido facturaConfig:', window.facturaConfig);
+
         // ✅ OBTENER PERMISOS DESDE LA CONFIGURACIÓN CORRECTA
         if (window.facturaConfig && window.facturaConfig.Permisos) {
             permisosUsuario = {
@@ -66,7 +68,10 @@ function cargarPermisosUsuario() {
             console.log('✅ Permisos obtenidos desde inventarioConfig (fallback):', permisosUsuario);
         }
         else {
-            console.warn('⚠️ No se encontró configuración de permisos en facturaConfig ni inventarioConfig');
+            console.error('❌ No se encontró configuración de permisos');
+            console.log('🔍 Debug - facturaConfig:', window.facturaConfig);
+            console.log('🔍 Debug - inventarioConfig:', window.inventarioConfig);
+
             // Permisos por defecto muy restrictivos
             permisosUsuario = {
                 puedeCrearFacturas: false,
@@ -84,61 +89,55 @@ function cargarPermisosUsuario() {
 
     } catch (error) {
         console.error('❌ Error cargando permisos:', error);
-        // En caso de error, permisos muy restrictivos
+        // Permisos por defecto (solo crear facturas)
         permisosUsuario = {
-            puedeCrearFacturas: false,
+            puedeCrearFacturas: true,
             puedeCompletarFacturas: false,
             puedeEditarFacturas: false,
             puedeAnularFacturas: false,
             esAdmin: false
         };
-        
-        // Mostrar el error en la interfaz
-        const $btnFinalizar = $('#btnFinalizarVenta');
-        $btnFinalizar.prop('disabled', true)
-                    .html(`<i class="bi bi-exclamation-triangle me-2"></i>Error de Permisos`)
-                    .attr('title', 'Error al cargar permisos de usuario');
     }
 }
 
 function configurarInterfazSegunPermisos() {
     console.log('🎯 Configurando interfaz según permisos:', permisosUsuario);
-    
+
     const $btnFinalizar = $('#btnFinalizarVenta');
-    
+
     if (!$btnFinalizar.length) {
         console.error('❌ No se encontró el botón #btnFinalizarVenta');
         return;
     }
-    
+
     // Resetear el botón
     $btnFinalizar.prop('disabled', false).removeClass('btn-secondary btn-success btn-primary').addClass('btn-primary');
-    
+
     if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
         // ✅ USUARIO PUEDE COMPLETAR FACTURAS
         $btnFinalizar.removeClass('btn-primary btn-secondary').addClass('btn-success')
                     .prop('disabled', false)
                     .html(`<i class="bi bi-check-circle me-2"></i>Completar Venta`)
                     .attr('title', 'Procesar venta completa e imprimir factura');
-        
+
         console.log('👑 Usuario puede completar facturas - Interfaz configurada para flujo completo');
-        
+
     } else if (permisosUsuario.puedeCrearFacturas) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
         $btnFinalizar.removeClass('btn-success btn-secondary').addClass('btn-primary')
                     .prop('disabled', false)
                     .html(`<i class="bi bi-file-earmark-plus me-2"></i>Crear Factura`)
                     .attr('title', 'Crear factura pendiente (requiere aprobación)');
-        
+
         console.log('📝 Usuario solo puede crear facturas - Interfaz configurada para flujo de pendientes');
-        
+
     } else {
         // ❌ SIN PERMISOS
         $btnFinalizar.removeClass('btn-primary btn-success').addClass('btn-secondary')
                     .prop('disabled', true)
                     .html(`<i class="bi bi-lock me-2"></i>Sin Permisos`)
                     .attr('title', 'No tienes permisos para procesar ventas');
-        
+
         console.log('🔒 Usuario sin permisos de facturación');
         console.log('🔍 Debug permisos:', {
             puedeCrear: permisosUsuario.puedeCrearFacturas,
@@ -773,7 +772,7 @@ function mostrarModalSeleccionProducto(producto) {
         } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
+                .filter(url => url && url && url.trim() !== '');
         }
 
         if (imagenesArray.length > 0) {
@@ -842,7 +841,8 @@ function mostrarModalSeleccionProducto(producto) {
                                                                 <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : metodo === 'sinpe' ? 'phone' : 'cash'} me-2"></i>
                                                                 ${config.nombre}
                                                             </td>
-                                                            <td class="text-end fw-bold text-success">₡${formatearMoneda(precio)}</td>
+                                                            <td class="text-end fw-bold text-success">₡${formatearMoneda(precio)}</span>
+                                                            </td>
                                                         </tr>
                                                     `;
                                                 }).join('')}
@@ -1423,11 +1423,13 @@ async function procesarVentaFinal() {
         let estadoFactura = 'Pendiente'; // Por defecto
         let mensajeExito = 'Factura creada como pendiente';
         let debeImprimir = false;
+        let debeAjustarInventario = false;
 
         if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
             estadoFactura = 'Pagada';
             mensajeExito = 'Venta procesada exitosamente';
             debeImprimir = true;
+            debeAjustarInventario = true;
             console.log('👑 Procesando como FACTURA COMPLETA (usuario puede completar)');
         } else {
             console.log('📝 Procesando como FACTURA PENDIENTE (usuario solo puede crear)');
@@ -1492,11 +1494,10 @@ async function procesarVentaFinal() {
             throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
         }
 
-        // ✅ SOLO AJUSTAR STOCK SI ES FACTURA COMPLETA
-        if (debeImprimir) {
-            console.log('💰 Factura completa - Ajustando stock automáticamente');
-            
-            // Ajustar stock usando el endpoint interno del controlador
+        // ✅ AJUSTAR STOCK SOLO SI EL USUARIO TIENE PERMISOS
+        if (debeAjustarInventario && estadoFactura === 'Pagada') {
+            console.log('💰 Usuario autorizado - Ajustando inventario automáticamente');
+
             try {
             const productosParaAjuste = productosEnVenta.map(producto => ({
                 ProductoId: producto.productoId,
@@ -1572,11 +1573,11 @@ async function procesarVentaFinal() {
 
         } else {
             console.log('📋 Factura pendiente - NO se ajusta stock automáticamente');
-            
+
             // ✅ ÉXITO PARA FACTURA PENDIENTE
             modalFinalizarVenta.hide();
             mostrarToast('Factura Creada', 'Factura creada como pendiente. Requiere aprobación para completar.', 'info');
-            
+
             // ✅ MOSTRAR MODAL INFORMATIVO PARA FACTURAS PENDIENTES
             mostrarModalFacturaPendiente(resultadoFactura);
         }
@@ -2660,7 +2661,7 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
 function irAFacturasPendientes() {
     // Cerrar modal
     $('#modalFacturaPendiente').modal('hide');
-    
+
     // Redirigir a módulo de facturas (ajustar ruta según tu estructura)
     window.location.href = '/Facturacion/Pendientes';
 }

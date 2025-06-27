@@ -6,7 +6,7 @@
 }
 
 
-    
+
 
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
@@ -185,11 +185,11 @@
 
     @section Scripts {
         <script src="~/js/views/facturacion/facturacion.js"></script>
-       
+
     <script>
-        // ✅ CONFIGURACIÓN DE PERMISOS PARA JAVASCRIPT
-        window.facturaConfig = @Html.Raw(Json.Serialize(ViewBag.ConfiguracionFacturacion));
-        console.log('🔐 Configuración de facturación cargada:', window.facturaConfig);
+        // ✅ CONFIGURACIÓN GLOBAL DE FACTURACIÓN
+        window.facturaConfig = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ConfiguracionFacturacion ?? new {}));
+        console.log('📋 Configuración de facturación cargada:', window.facturaConfig);
     </script>
 
 

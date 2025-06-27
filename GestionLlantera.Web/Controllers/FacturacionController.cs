@@ -54,9 +54,9 @@ namespace GestionLlantera.Web.Controllers
                     esAdmin = User.IsInRole("Administrador")
                 };
 
-                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}", 
+                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}, Admin={Admin}", 
                     nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
-                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas);
+                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas, permisos.esAdmin);
 
                 var viewModel = new
                 {
