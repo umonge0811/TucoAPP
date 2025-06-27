@@ -472,6 +472,18 @@ namespace GestionLlantera.Web.Services
 
                 _logger.LogInformation("📋 Factura recibida para procesamiento: {FacturaJson}", facturaJson);
 
+                // ✅ DIAGNÓSTICO DETALLADO DE LA FACTURA
+                _logger.LogInformation("🔍 Propiedades de la factura recibida:");
+                if (factura is Newtonsoft.Json.Linq.JObject jObject)
+                {
+                    foreach (var property in jObject.Properties())
+                    {
+                        var value = property.Value?.ToString() ?? "null";
+                        if (value.Length > 100) value = value.Substring(0, 100) + "...";
+                        _logger.LogInformation("🔍   {PropertyName}: {PropertyValue}", property.Name, value);
+                    }
+                }
+
                 // ✅ 1. GENERAR NÚMERO DE FACTURA AUTOMÁTICAMENTE
                 var tipoDocumento = factura.tipoDocumento?.ToString() ?? "Factura";
                 var numeroFactura = GenerarNumeroFactura(tipoDocumento);
@@ -508,10 +520,45 @@ namespace GestionLlantera.Web.Services
                 // Asegurar que la propiedad esté correctamente asignada
                 factura.nombreCliente = nombreCliente;
 
-                if (factura.detallesFactura == null || !((System.Collections.IEnumerable)factura.detallesFactura).Cast<object>().Any())
+                // ✅ VALIDAR QUE EXISTAN PRODUCTOS - BÚSQUEDA ROBUSTA
+                var detallesFactura = factura.detallesFactura ?? 
+                                    factura.DetallesFactura ?? 
+                                    factura.productos ?? 
+                                    factura.Productos ?? 
+                                    factura.items ?? 
+                                    factura.Items;
+
+                if (detallesFactura == null)
                 {
+                    _logger.LogError("❌ No se encontraron productos en la factura. Propiedades disponibles: {Propiedades}", 
+                        string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p.Name)));
                     throw new ArgumentException("La factura debe tener al menos un producto");
                 }
+
+                // Verificar que es enumerable y tiene elementos
+                bool tieneProductos = false;
+                try
+                {
+                    if (detallesFactura is System.Collections.IEnumerable enumerable)
+                    {
+                        tieneProductos = enumerable.Cast<object>().Any();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Error validando productos de la factura");
+                }
+
+                if (!tieneProductos)
+                {
+                    _logger.LogError("❌ La factura no contiene productos válidos");
+                    throw new ArgumentException("La factura debe tener al menos un producto");
+                }
+
+                // Asegurar que la propiedad esté correctamente asignada
+                factura.detallesFactura = detallesFactura;
+
+                _logger.LogInformation("✅ Validación de productos exitosa: se encontraron productos en la factura");
 
                 return factura;
             }
