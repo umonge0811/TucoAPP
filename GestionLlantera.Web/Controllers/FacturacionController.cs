@@ -490,27 +490,42 @@ namespace GestionLlantera.Web.Controllers
 
         /// <summary>
         /// Método auxiliar para obtener el token JWT del usuario autenticado
+        /// Usa la misma lógica exitosa de otros controladores
         /// </summary>
         private string? ObtenerTokenJWT()
         {
-            var token = User.FindFirst("JwtToken")?.Value;
+            try
+            {
+                // Buscar el token usando la misma lógica de AccountController y otros controladores exitosos
+                var token = User.FindFirst("JwtToken")?.Value;
 
-            if (string.IsNullOrEmpty(token))
-            {
-                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
-                    User.Identity?.Name ?? "Anónimo");
-                
-                // Listar todos los claims disponibles para debug
-                var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
-                _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
-            }
-            else
-            {
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado en claim 'JwtToken' para usuario: {Usuario}",
+                        User.Identity?.Name ?? "Anónimo");
+                    
+                    // Debug: Mostrar todos los claims disponibles
+                    _logger.LogInformation("📋 === CLAIMS DISPONIBLES ===");
+                    foreach (var claim in User.Claims)
+                    {
+                        _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
+                    }
+                    _logger.LogInformation("📋 === FIN CLAIMS ===");
+                    
+                    return null;
+                }
+
                 _logger.LogInformation("✅ Token JWT obtenido correctamente para usuario: {Usuario}, Longitud: {Length}",
                     User.Identity?.Name ?? "Anónimo", token.Length);
-            }
 
-            return token;
+                return token;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener token JWT para usuario: {Usuario}", 
+                    User.Identity?.Name ?? "Anónimo");
+                return null;
+            }
         }
 
         [HttpPost]
