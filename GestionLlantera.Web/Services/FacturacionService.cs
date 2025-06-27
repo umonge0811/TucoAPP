@@ -476,7 +476,7 @@ namespace GestionLlantera.Web.Services
                 var numeroFactura = GenerarNumeroFactura(tipoDocumento);
                 factura.numeroFactura = numeroFactura;
                 
-                _logger.LogInformation("📋 Número de factura generado: {NumeroFactura}", numeroFactura.ToString());
+                _logger.LogInformation("📋 Número de factura generado: {NumeroFactura}", numeroFactura);
 
                 // ✅ 2. EXTRAER INFORMACIÓN DEL USUARIO DEL TOKEN JWT
                 if (!string.IsNullOrEmpty(jwtToken))
@@ -485,7 +485,7 @@ namespace GestionLlantera.Web.Services
                     if (!string.IsNullOrEmpty(nombreUsuario))
                     {
                         factura.usuarioCreadorNombre = nombreUsuario;
-                        _logger.LogInformation("👤 Usuario extraído del token: {Usuario}", nombreUsuario.ToString());
+                        _logger.LogInformation("👤 Usuario extraído del token: {Usuario}", nombreUsuario);
                     }
                 }
 
