@@ -299,31 +299,91 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearFactura([FromBody] object facturaData)
+        public async Task<IActionResult> CrearFactura([FromBody] FacturaDTO facturaDto)
         {
             try
             {
+                // Verificar permisos
                 if (!await this.TienePermisoAsync("Crear Facturas"))
                 {
                     return Json(new { success = false, message = "Sin permisos para crear facturas" });
                 }
 
-                _logger.LogInformation("💰 Creando nueva factura");
+                var jwtToken = this.ObtenerTokenJWT();
 
-                // Simular creación exitosa por ahora
-                var numeroFactura = $"FAC-{DateTime.Now:yyyyMM}-{DateTime.Now:HHmmss}";
+                _logger.LogInformation("🚀 Enviando factura a API: {Cliente}", facturaDto.NombreCliente);
+                _logger.LogInformation("📊 Total productos: {Count}, Total: {Total}", facturaDto.DetallesFactura.Count, facturaDto.Total);
 
-                return Json(new { 
-                    success = true, 
-                    message = "Factura creada exitosamente",
-                    numeroFactura = numeroFactura,
-                    facturaId = 1
+                // Configurar HttpClient con headers apropiados
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+
+                var jsonContent = JsonSerializer.Serialize(facturaDto, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    WriteIndented = true
                 });
+
+                _logger.LogInformation("📤 JSON enviado a API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // Llamar directamente a la API
+                var apiUrl = "https://workspace-api-url.repl.co/api/Facturacion/facturas"; // Usar la URL de tu API
+                // Para desarrollo local, usar:
+                var apiUrlLocal = "http://localhost:5049/api/Facturacion/facturas";
+
+                var response = await httpClient.PostAsync(apiUrlLocal, content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta de API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+                    return Json(new { 
+                        success = true, 
+                        data = resultado,
+                        message = "Factura procesada exitosamente" 
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error de API al crear factura: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    // Intentar deserializar el error para obtener más detalles
+                    try
+                    {
+                        var errorData = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                        var errorMessage = errorData.TryGetProperty("message", out var msgProp) ? msgProp.GetString() : "Error desconocido";
+
+                        return Json(new { 
+                            success = false, 
+                            message = errorMessage,
+                            details = responseContent 
+                        });
+                    }
+                    catch
+                    {
+                        return Json(new { 
+                            success = false, 
+                            message = $"Error del servidor: {response.StatusCode}",
+                            details = responseContent 
+                        });
+                    }
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear factura");
-                return Json(new { success = false, message = "Error al crear factura" });
+                _logger.LogError(ex, "❌ Error crítico al crear factura");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor: " + ex.Message,
+                    details = ex.ToString()
+                });
             }
         }
 

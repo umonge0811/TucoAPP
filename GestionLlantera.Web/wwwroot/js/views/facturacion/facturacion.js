@@ -1435,6 +1435,15 @@ async function procesarVentaFinal() {
             console.log('📝 Procesando como FACTURA PENDIENTE (usuario solo puede crear)');
         }
 
+        // Obtener información del usuario actual
+        const usuarioActual = obtenerUsuarioActual();
+        const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
+
+        console.log('👤 Usuario actual para factura:', {
+            usuario: usuarioActual,
+            usuarioId: usuarioId
+        });
+
         // Crear objeto de factura para enviar a la API
         const facturaData = {
             clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
@@ -1453,9 +1462,8 @@ async function procesarVentaFinal() {
             estado: estadoFactura, // ✅ Estado dinámico según permisos
             tipoDocumento: 'Factura',
             metodoPago: metodoPagoSeleccionado,
-            observaciones: $('#observacionesVenta').val(),
-            usuarioCreadorId: 1, // Obtener del contexto del usuario
-            requiresApproval: !debeImprimir, // ✅ Flag para indicar si requiere aprobación
+            observaciones: $('#observacionesVenta').val() || '',
+            usuarioCreadorId: usuarioId, // ✅ ID del usuario actual
             detallesFactura: productosEnVenta.map(producto => {
                 const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
                 return {
@@ -1470,6 +1478,8 @@ async function procesarVentaFinal() {
                 };
             })
         };
+
+        console.log('📋 Datos de factura preparados:', facturaData);
 
         // Crear la factura
         const responseFactura = await fetch('/Facturacion/CrearFactura', {
@@ -1616,8 +1626,7 @@ function generarRecibo(factura, productos, totales) {
     });
     const hora = new Date().toLocaleTimeString('es-CR', { 
         hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit' 
+        minute: '2-digit' 
     });
 
     // Función para truncar texto según el ancho de la impresora
@@ -2509,18 +2518,50 @@ function mostrarResumenDepuracion() {
     console.log('📊 === FIN RESUMEN ===');
 }
 
-// ===== FUNCIÓN PARA OBTENER USUARIO ACTUAL =====
 function obtenerUsuarioActual() {
-    // Intentar obtener el nombre del usuario desde diferentes fuentes
-    const nombreUsuario = document.querySelector('[data-usuario-nombre]')?.getAttribute('data-usuario-nombre') ||
-                         document.querySelector('.user-name')?.textContent?.trim() ||
-                         document.querySelector('#nombreUsuario')?.textContent?.trim() ||
-                         'Usuario';
+    try {
+        // Primera opción: desde configuración de facturación
+        if (window.facturaConfig && window.facturaConfig.Usuario) {
+            console.log('👤 Usuario desde facturaConfig:', window.facturaConfig.Usuario);
+            return window.facturaConfig.Usuario;
+        }
 
-    return {
-        nombre: nombreUsuario,
-        nombreUsuario: nombreUsuario
-    };
+        // Segunda opción: desde configuración global
+        if (window.inventarioConfig && window.inventarioConfig.usuario) {
+            console.log('👤 Usuario desde inventarioConfig:', window.inventarioConfig.usuario);
+            return window.inventarioConfig.usuario;
+        }
+
+        // Tercera opción: desde elemento DOM o meta tags
+        const userDataElement = document.querySelector('[data-user-info]');
+        if (userDataElement && userDataElement.dataset.userInfo) {
+            try {
+                const userData = JSON.parse(userDataElement.dataset.userInfo);
+                console.log('👤 Usuario desde DOM:', userData);
+                return userData;
+            } catch (e) {
+                console.warn('⚠️ Error parseando datos de usuario desde DOM:', e);
+            }
+        }
+
+        console.warn('⚠️ No se pudo obtener información del usuario, usando valores por defecto');
+
+        // Fallback básico
+        return {
+            usuarioId: 1,
+            id: 1,
+            nombre: 'Usuario Sistema',
+            nombreUsuario: 'sistema'
+        };
+    } catch (error) {
+        console.error('❌ Error obteniendo usuario actual:', error);
+        return {
+            usuarioId: 1,
+            id: 1,
+            nombre: 'Usuario Error',
+            nombreUsuario: 'error'
+        };
+    }
 }
 
 // ===== FUNCIÓN PARA OBTENER TOKEN JWT =====
