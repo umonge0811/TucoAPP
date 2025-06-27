@@ -9,8 +9,9 @@ using Tuco.Clases.DTOs.Facturacion;
 using Tuco.Clases.Models;
 using System.Text.Json;
 using System.Text;
-using static GestionLlantera.Web.Services.Interfaces.IFacturacionService;
 using GestionLlantera.Web.Services.Interfaces;
+using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
+using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -244,7 +245,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaDTO> productos)
+        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaFacturacion> productos)
         {
             try
             {
@@ -254,7 +255,25 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
-                var stockDisponible = await _facturacionService.VerificarStockDisponibleAsync(productos, jwtToken);
+                
+                // Convertir a la clase esperada por el servicio
+                var productosService = productos.Select(p => new ProductoVentaService
+                {
+                    ProductoId = p.ProductoId,
+                    NombreProducto = p.NombreProducto,
+                    Descripcion = p.Descripcion,
+                    PrecioUnitario = p.Precio ?? 0,
+                    Cantidad = 1, // Valor por defecto
+                    CantidadEnInventario = p.CantidadEnInventario,
+                    StockMinimo = p.StockMinimo,
+                    EsLlanta = p.EsLlanta,
+                    MedidaCompleta = p.MedidaCompleta,
+                    Marca = p.Marca,
+                    Modelo = p.Modelo,
+                    ImagenesUrls = p.ImagenesUrls
+                }).ToList();
+
+                var stockDisponible = await _facturacionService.VerificarStockDisponibleAsync(productosService, jwtToken);
 
                 return Json(new { success = stockDisponible });
             }
@@ -412,12 +431,29 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaDTO> productos)
+        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaFacturacion> productos)
         {
             try
             {
-                var total = await _facturacionService.CalcularTotalVentaAsync(productos);
-                var subtotal = productos.Sum(p => p.Subtotal);
+                // Convertir a la clase esperada por el servicio
+                var productosService = productos.Select(p => new ProductoVentaService
+                {
+                    ProductoId = p.ProductoId,
+                    NombreProducto = p.NombreProducto,
+                    Descripcion = p.Descripcion,
+                    PrecioUnitario = p.Precio ?? 0,
+                    Cantidad = 1, // Se necesitará enviar este dato desde el frontend
+                    CantidadEnInventario = p.CantidadEnInventario,
+                    StockMinimo = p.StockMinimo,
+                    EsLlanta = p.EsLlanta,
+                    MedidaCompleta = p.MedidaCompleta,
+                    Marca = p.Marca,
+                    Modelo = p.Modelo,
+                    ImagenesUrls = p.ImagenesUrls
+                }).ToList();
+
+                var total = await _facturacionService.CalcularTotalVentaAsync(productosService);
+                var subtotal = productosService.Sum(p => p.Subtotal);
                 var iva = subtotal * 0.13m; // 13% IVA
 
                 return Json(new { 
