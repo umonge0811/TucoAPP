@@ -377,7 +377,7 @@ namespace GestionLlantera.Web.Services
 
                 var jsonContent = JsonConvert.SerializeObject(facturaDto, new JsonSerializerSettings
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
                     DateFormatString = "yyyy-MM-ddTHH:mm:ss",
                     NullValueHandling = NullValueHandling.Include
                 });
