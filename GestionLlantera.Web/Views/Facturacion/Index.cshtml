@@ -1,4 +1,4 @@
-@{
+    @{
         ViewData["Title"] = "Facturación";
         Layout = "~/Views/Shared/_AdminLayout.cshtml";
 
@@ -183,12 +183,5 @@
     @await Html.PartialAsync("_ModalFinalizarVenta")
 
     @section Scripts {
-        <script>
-            // ✅ PASAR CONFIGURACIÓN DE FACTURACIÓN AL JAVASCRIPT
-            window.ViewBag = @Html.Raw(Json.Serialize(new { 
-                ConfiguracionFacturacion = ViewBag.ConfiguracionFacturacion 
-            }));
-            console.log('🔧 Configuración de facturación pasada al JavaScript:', window.ViewBag);
-        </script>
         <script src="~/js/views/facturacion/facturacion.js"></script>
     }
