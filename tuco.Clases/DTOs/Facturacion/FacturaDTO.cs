@@ -9,6 +9,7 @@ namespace Tuco.Clases.DTOs.Facturacion
     {
         public int FacturaId { get; set; }
         
+        [Required(ErrorMessage = "El número de factura es requerido")]
         public string NumeroFactura { get; set; } = string.Empty;
         
         public int? ClienteId { get; set; }
