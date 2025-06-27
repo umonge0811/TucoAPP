@@ -124,10 +124,10 @@ function configurarInterfazSegunPermisos() {
 
     } else if (permisosUsuario.puedeCrearFacturas) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
-        $btnFinalizar.removeClass('btn-success btn-secondary').addClass('btn-primary')
+        $btnFinalizar.removeClass('btn-success btn-secondary').addClass('btn-warning')
                     .prop('disabled', false)
-                    .html(`<i class="bi bi-file-earmark-plus me-2"></i>Crear Factura`)
-                    .attr('title', 'Crear factura pendiente (requiere aprobación)');
+                    .html(`<i class="bi bi-send me-2"></i>Enviar Factura`)
+                    .attr('title', 'Enviar factura a caja para procesamiento de pago');
 
         console.log('📝 Usuario solo puede crear facturas - Interfaz configurada para flujo de pendientes');
 
@@ -1254,9 +1254,6 @@ function mostrarModalFinalizarVenta() {
     // ===== CONFIGURAR MÉTODO DE PAGO INICIAL =====
     $('input[name="metodoPago"][value="efectivo"]').prop('checked', true);
 
-    // ===== CONFIGURAR TEXTO DEL BOTÓN SEGÚN PERMISOS =====
-    configurarTextoBotonConfirmar();
-
     // ===== ACTUALIZAR RESUMEN CON MÉTODO DE PAGO INICIAL =====
     actualizarResumenVentaModal();
 
@@ -1513,26 +1510,18 @@ async function procesarVentaFinal() {
 
             if (facturaData && facturaData.estado) {
                 if (facturaData.estado === 'Pendiente') {
-                    mensaje = 'Factura enviada exitosamente y está pendiente de aprobación.';
+                    mensaje = 'Factura guardada como PENDIENTE. Requiere completar información de pago.';
                     esFacturaPendiente = true;
                 } else if (facturaData.estado === 'Completada') {
                     mensaje = 'Factura COMPLETADA exitosamente';
                 }
             }
 
-            // Cerrar modal inmediatamente para factura pendiente
-            if (esFacturaPendiente) {
-                modalFinalizarVenta.hide();
-            }
-
             mostrarMensajeExito(mensaje);
 
-            // Si es factura pendiente, mostrar modal informativo solo para colaboradores
-            if (esFacturaPendiente && facturaData.facturaId && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
-                // Esperar un poco para que se cierre el modal de finalizar venta
-                setTimeout(() => {
-                    mostrarModalFacturaPendiente(facturaData);
-                }, 500);
+            // Si es factura pendiente, mostrar opciones adicionales
+            if (esFacturaPendiente && facturaData.facturaId) {
+                mostrarModalFacturaPendiente(facturaData);
             }
 
             // Limpiar formulario después del éxito
@@ -1632,7 +1621,7 @@ async function procesarVentaFinal() {
 
             // ✅ ÉXITO PARA FACTURA PENDIENTE
             modalFinalizarVenta.hide();
-            mostrarToast('Factura Creada', 'Factura creada como pendiente. Requiere aprobación para completar.', 'info');
+            mostrarToast('Factura Enviada', 'Factura enviada exitosamente a caja para procesamiento.', 'success');
 
             // ✅ MOSTRAR MODAL INFORMATIVO PARA FACTURAS PENDIENTES
             mostrarModalFacturaPendiente(resultadoFactura);
@@ -1656,14 +1645,8 @@ async function procesarVentaFinal() {
         console.error('❌ Error procesando venta:', error);
         mostrarToast('Error', 'Hubo un problema procesando la venta', 'error');
     } finally {
-        // Restaurar botón según permisos
-        $btnFinalizar.prop('disabled', false);
-        
-        if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
-            $btnFinalizar.html('<i class="bi bi-check-circle me-2"></i><span>Confirmar Venta</span>');
-        } else {
-            $btnFinalizar.html('<i class="bi bi-send me-2"></i><span>Enviar Factura</span>');
-        }
+        // Restaurar botón
+        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
     }
 }
 
@@ -2682,61 +2665,25 @@ function actualizarEstadoBotonFinalizar() {
     });
 }
 
-// ===== CONFIGURACIÓN DEL BOTÓN DE CONFIRMACIÓN =====
-function configurarTextoBotonConfirmar() {
-    const $btnConfirmar = $('#btnConfirmarVenta');
-    const $iconoBtn = $btnConfirmar.find('i');
-    const $textoBtn = $('#textoBotonConfirmar');
-
-    if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
-        // ✅ USUARIO PUEDE COMPLETAR FACTURAS
-        $iconoBtn.removeClass('bi-send').addClass('bi-check-circle');
-        $textoBtn.text('Confirmar Venta');
-        $btnConfirmar.removeClass('btn-primary').addClass('btn-success')
-                    .attr('title', 'Procesar venta completa e imprimir factura');
-
-        console.log('👑 Modal configurado para COMPLETAR venta');
-
-    } else if (permisosUsuario.puedeCrearFacturas) {
-        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
-        $iconoBtn.removeClass('bi-check-circle').addClass('bi-send');
-        $textoBtn.text('Enviar Factura');
-        $btnConfirmar.removeClass('btn-success').addClass('btn-primary')
-                    .attr('title', 'Enviar factura para aprobación');
-
-        console.log('📝 Modal configurado para ENVIAR factura (pendiente)');
-
-    } else {
-        // ❌ SIN PERMISOS
-        $iconoBtn.removeClass('bi-check-circle bi-send').addClass('bi-lock');
-        $textoBtn.text('Sin Permisos');
-        $btnConfirmar.removeClass('btn-success btn-primary').addClass('btn-secondary')
-                    .prop('disabled', true)
-                    .attr('title', 'No tienes permisos para procesar ventas');
-
-        console.log('🔒 Modal configurado SIN permisos');
-    }
-}
-
 // ===== MODAL FACTURA PENDIENTE =====
 function mostrarModalFacturaPendiente(resultadoFactura) {
     const modalHtml = `
         <div class="modal fade" id="modalFacturaPendiente" tabindex="-1">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header bg-warning text-dark">
+                    <div class="modal-header bg-success text-white">
                         <h5 class="modal-title">
-                            <i class="bi bi-clock-history me-2"></i>Factura Creada como Pendiente
+                            <i class="bi bi-check-circle me-2"></i>Factura Enviada Exitosamente
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="alert alert-info">
+                        <div class="alert alert-success">
                             <div class="d-flex align-items-center">
-                                <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                                <i class="bi bi-send-check-fill me-3 fs-4"></i>
                                 <div>
-                                    <h6 class="mb-1">Factura en estado pendiente</h6>
-                                    <p class="mb-0">La factura ha sido creada exitosamente pero requiere aprobación de un supervisor para ser completada.</p>
+                                    <h6 class="mb-1">¡Factura enviada a caja!</h6>
+                                    <p class="mb-0">La factura ha sido enviada exitosamente al área de caja para procesamiento de pago.</p>
                                 </div>
                             </div>
                         </div>
@@ -2744,26 +2691,32 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <strong>Número de Factura:</strong><br>
-                                <span class="text-primary">${resultadoFactura.numeroFactura || 'N/A'}</span>
+                                <span class="text-primary fs-5">${resultadoFactura.numeroFactura || 'N/A'}</span>
                             </div>
                             <div class="col-md-6">
                                 <strong>Estado:</strong><br>
-                                <span class="badge bg-warning">Pendiente de Aprobación</span>
+                                <span class="badge bg-warning fs-6">Pendiente de Pago</span>
                             </div>
                         </div>
 
-                        <div class="alert alert-warning">
-                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Importante:</h6>
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>Siguiente paso:</h6>
                             <ul class="mb-0">
-                                <li>El stock <strong>NO</strong> se ha ajustado automáticamente</li>
-                                <li>La factura debe ser aprobada por un supervisor</li>
-                                <li>Una vez aprobada, se ajustará el stock y se podrá imprimir</li>
-                                <li>Puedes encontrar esta factura en el módulo de facturas pendientes</li>
+                                <li>La factura está disponible en el sistema de caja</li>
+                                <li>El cajero procesará el pago cuando el cliente se presente</li>
+                                <li>Una vez pagada, se ajustará automáticamente el inventario</li>
+                                <li>Se generará el comprobante de pago final</li>
                             </ul>
                         </div>
 
-                        <div class="text-center mt-3">
-                            <p class="text-muted">Un supervisor recibirá una notificación para aprobar esta factura.</p>
+                        <div class="bg-light p-3 rounded text-center">
+                            <h6 class="text-primary mb-2">
+                                <i class="bi bi-clipboard-check me-2"></i>Instrucciones para el cliente
+                            </h6>
+                            <p class="mb-1"><strong>Presente este número de factura en caja:</strong></p>
+                            <div class="bg-white p-2 rounded border">
+                                <code class="fs-4 text-primary">${resultadoFactura.numeroFactura || 'N/A'}</code>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -2772,6 +2725,9 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                         </button>
                         <button type="button" class="btn btn-primary" onclick="irAFacturasPendientes()">
                             <i class="bi bi-list-check me-1"></i>Ver Facturas Pendientes
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="imprimirComprobanteEnvio('${resultadoFactura.numeroFactura || 'N/A'}')">
+                            <i class="bi bi-printer me-1"></i>Imprimir Comprobante
                         </button>
                     </div>
                 </div>
@@ -2795,8 +2751,97 @@ function irAFacturasPendientes() {
     window.location.href = '/Facturacion/Pendientes';
 }
 
+function imprimirComprobanteEnvio(numeroFactura) {
+    const fecha = new Date().toLocaleDateString('es-CR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    });
+    const hora = new Date().toLocaleTimeString('es-CR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+
+    const comprobanteHTML = `
+        <div id="comprobante-envio" style="width: 58mm; max-width: 58mm; font-family: 'Courier New', monospace; font-size: 9px; line-height: 1.2; margin: 0; padding: 0;">
+            <!-- ENCABEZADO -->
+            <div style="text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">GESTIÓN LLANTERA</div>
+                <div style="font-size: 8px; margin-bottom: 1px;">Sistema de Facturación</div>
+                <div style="font-size: 9px; font-weight: bold;">COMPROBANTE DE ENVÍO</div>
+            </div>
+
+            <!-- INFORMACIÓN -->
+            <div style="margin-bottom: 6px; font-size: 8px;">
+                <div>Fecha: ${fecha}</div>
+                <div>Hora: ${hora}</div>
+                <div>Factura: ${numeroFactura}</div>
+                <div>Estado: ENVIADA A CAJA</div>
+            </div>
+
+            <!-- SEPARADOR -->
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <!-- INSTRUCCIONES -->
+            <div style="text-align: center; margin-bottom: 8px;">
+                <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px;">INSTRUCCIONES PARA EL CLIENTE</div>
+                <div style="font-size: 8px; margin-bottom: 2px;">Presente este número en caja:</div>
+                <div style="font-size: 12px; font-weight: bold; border: 1px solid #000; padding: 4px; margin: 4px 0;">${numeroFactura}</div>
+            </div>
+
+            <!-- PIE -->
+            <div style="text-align: center; margin-top: 8px; font-size: 7px; border-top: 1px dashed #000; padding-top: 6px;">
+                <div>Gracias por su preferencia</div>
+                <div>Comprobante generado: ${fecha} ${hora}</div>
+            </div>
+
+            <!-- ESPACIADO FINAL -->
+            <div style="height: 20px;"></div>
+        </div>
+    `;
+
+    try {
+        const ventanaImpresion = window.open('', '_blank', 'width=300,height=400,scrollbars=no,resizable=no');
+        if (!ventanaImpresion) {
+            throw new Error('No se pudo abrir ventana de impresión');
+        }
+
+        ventanaImpresion.document.write(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Comprobante de Envío - ${numeroFactura}</title>
+                    <meta charset="utf-8">
+                    <style>
+                        @page { size: 58mm auto; margin: 0; }
+                        @media print {
+                            body { margin: 0; padding: 0; }
+                            #comprobante-envio { page-break-inside: avoid; }
+                        }
+                        body { font-family: 'Courier New', monospace; }
+                    </style>
+                </head>
+                <body>
+                    ${comprobanteHTML}
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(() => window.close(), 1000);
+                        };
+                    </script>
+                </body>
+            </html>
+        `);
+        ventanaImpresion.document.close();
+
+        mostrarToast('Impresión', 'Comprobante de envío generado', 'success');
+    } catch (error) {
+        console.error('Error al imprimir comprobante:', error);
+        mostrarToast('Error', 'No se pudo imprimir el comprobante', 'danger');
+    }
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
-window.configurarTextoBotonConfirmar = configurarTextoBotonConfirmar;
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
 window.limpiarVenta = limpiarVenta;
@@ -2816,6 +2861,7 @@ window.cargarPermisosUsuario = cargarPermisosUsuario;
 window.configurarInterfazSegunPermisos = configurarInterfazSegunPermisos;
 window.mostrarModalFacturaPendiente = mostrarModalFacturaPendiente;
 window.irAFacturasPendientes = irAFacturasPendientes;
+window.imprimirComprobanteEnvio = imprimirComprobanteEnvio;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `
