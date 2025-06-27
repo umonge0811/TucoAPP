@@ -1,11 +1,18 @@
-    @{
-        ViewData["Title"] = "Facturación";
-        Layout = "~/Views/Shared/_AdminLayout.cshtml";
+@{
+    ViewData["Title"] = "Facturación";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+@section Scripts {
+    <script>
+        // ✅ CONFIGURACIÓN DE PERMISOS PARA JAVASCRIPT
+        window.facturaConfig = @Html.Raw(Json.Serialize(ViewBag.ConfiguracionFacturacion));
+        console.log('🔐 Configuración de facturación cargada:', window.facturaConfig);
+    </script>
+}
 
     <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css">
     <link rel="stylesheet" href="~/css/views/facturacion/mobile.css">
-
-    }
 
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">

@@ -41,11 +41,20 @@ let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 // ===== CARGA DE PERMISOS =====
 function cargarPermisosUsuario() {
     try {
-        // Obtener permisos desde la configuración del ViewBag
-        if (window.ViewBag && window.ViewBag.ConfiguracionFacturacion && window.ViewBag.ConfiguracionFacturacion.Permisos) {
-            permisosUsuario = window.ViewBag.ConfiguracionFacturacion.Permisos;
+        console.log('🔍 Iniciando carga de permisos...');
+        
+        // ✅ OBTENER PERMISOS DESDE LA CONFIGURACIÓN CORRECTA
+        if (window.facturaConfig && window.facturaConfig.Permisos) {
+            permisosUsuario = {
+                puedeCrearFacturas: window.facturaConfig.Permisos.puedeCrearFacturas || false,
+                puedeCompletarFacturas: window.facturaConfig.Permisos.puedeCompletarFacturas || false,
+                puedeEditarFacturas: window.facturaConfig.Permisos.puedeEditarFacturas || false,
+                puedeAnularFacturas: window.facturaConfig.Permisos.puedeAnularFacturas || false,
+                esAdmin: window.facturaConfig.Permisos.esAdmin || false
+            };
+            console.log('✅ Permisos obtenidos desde facturaConfig:', permisosUsuario);
         }
-        // Fallback: intentar desde configuración global
+        // Fallback: intentar desde configuración global de inventario
         else if (window.inventarioConfig && window.inventarioConfig.permisos) {
             permisosUsuario = {
                 puedeCrearFacturas: window.inventarioConfig.permisos.puedeCrearFacturas || false,
@@ -54,54 +63,88 @@ function cargarPermisosUsuario() {
                 puedeAnularFacturas: window.inventarioConfig.permisos.puedeAnularFacturas || false,
                 esAdmin: window.inventarioConfig.permisos.esAdmin || false
             };
+            console.log('✅ Permisos obtenidos desde inventarioConfig (fallback):', permisosUsuario);
+        }
+        else {
+            console.warn('⚠️ No se encontró configuración de permisos en facturaConfig ni inventarioConfig');
+            // Permisos por defecto muy restrictivos
+            permisosUsuario = {
+                puedeCrearFacturas: false,
+                puedeCompletarFacturas: false,
+                puedeEditarFacturas: false,
+                puedeAnularFacturas: false,
+                esAdmin: false
+            };
         }
 
-        console.log('🔐 Permisos cargados:', permisosUsuario);
+        console.log('🔐 Permisos finales cargados:', permisosUsuario);
 
         // ✅ CONFIGURAR INTERFAZ SEGÚN PERMISOS
         configurarInterfazSegunPermisos();
 
     } catch (error) {
         console.error('❌ Error cargando permisos:', error);
-        // Permisos por defecto (solo crear facturas)
+        // En caso de error, permisos muy restrictivos
         permisosUsuario = {
-            puedeCrearFacturas: true,
+            puedeCrearFacturas: false,
             puedeCompletarFacturas: false,
             puedeEditarFacturas: false,
             puedeAnularFacturas: false,
             esAdmin: false
         };
+        
+        // Mostrar el error en la interfaz
+        const $btnFinalizar = $('#btnFinalizarVenta');
+        $btnFinalizar.prop('disabled', true)
+                    .html(`<i class="bi bi-exclamation-triangle me-2"></i>Error de Permisos`)
+                    .attr('title', 'Error al cargar permisos de usuario');
     }
 }
 
 function configurarInterfazSegunPermisos() {
+    console.log('🎯 Configurando interfaz según permisos:', permisosUsuario);
+    
     const $btnFinalizar = $('#btnFinalizarVenta');
+    
+    if (!$btnFinalizar.length) {
+        console.error('❌ No se encontró el botón #btnFinalizarVenta');
+        return;
+    }
+    
+    // Resetear el botón
+    $btnFinalizar.prop('disabled', false).removeClass('btn-secondary btn-success btn-primary').addClass('btn-primary');
     
     if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
         // ✅ USUARIO PUEDE COMPLETAR FACTURAS
-        $btnFinalizar.html(`
-            <i class="bi bi-check-circle me-2"></i>
-            Completar Venta
-        `).attr('title', 'Procesar venta completa e imprimir factura');
+        $btnFinalizar.removeClass('btn-primary btn-secondary').addClass('btn-success')
+                    .prop('disabled', false)
+                    .html(`<i class="bi bi-check-circle me-2"></i>Completar Venta`)
+                    .attr('title', 'Procesar venta completa e imprimir factura');
         
         console.log('👑 Usuario puede completar facturas - Interfaz configurada para flujo completo');
         
     } else if (permisosUsuario.puedeCrearFacturas) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
-        $btnFinalizar.html(`
-            <i class="bi bi-file-earmark-plus me-2"></i>
-            Crear Factura
-        `).attr('title', 'Crear factura pendiente (requiere aprobación)');
+        $btnFinalizar.removeClass('btn-success btn-secondary').addClass('btn-primary')
+                    .prop('disabled', false)
+                    .html(`<i class="bi bi-file-earmark-plus me-2"></i>Crear Factura`)
+                    .attr('title', 'Crear factura pendiente (requiere aprobación)');
         
         console.log('📝 Usuario solo puede crear facturas - Interfaz configurada para flujo de pendientes');
         
     } else {
         // ❌ SIN PERMISOS
-        $btnFinalizar.prop('disabled', true)
+        $btnFinalizar.removeClass('btn-primary btn-success').addClass('btn-secondary')
+                    .prop('disabled', true)
                     .html(`<i class="bi bi-lock me-2"></i>Sin Permisos`)
                     .attr('title', 'No tienes permisos para procesar ventas');
         
         console.log('🔒 Usuario sin permisos de facturación');
+        console.log('🔍 Debug permisos:', {
+            puedeCrear: permisosUsuario.puedeCrearFacturas,
+            puedeCompletar: permisosUsuario.puedeCompletarFacturas,
+            esAdmin: permisosUsuario.esAdmin
+        });
     }
 }
 
