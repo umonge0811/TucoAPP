@@ -1554,7 +1554,7 @@ async function procesarVentaFinal() {
                 }
             }
 
-            mostrarMensajeExito(mensaje);
+            mostrarToast('Éxito', mensaje, 'success');
 
             // Si es factura pendiente, mostrar opciones adicionales
             if (esFacturaPendiente && facturaData.facturaId) {
