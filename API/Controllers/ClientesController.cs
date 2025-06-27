@@ -93,9 +93,14 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> BuscarClientes([FromQuery] string termino = "")
         {
-            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Ver Clientes",
-                "Solo usuarios con permiso 'Ver Clientes' pueden buscar clientes");
-            if (validacionPermiso != null) return validacionPermiso;
+            // Permitir búsqueda si tiene permisos de ver clientes O de ver facturación
+            var tienePermiso = await _permisosService.TienePermisoAsync(User, "Ver Clientes") ||
+                              await _permisosService.TienePermisoAsync(User, "Ver Facturación");
+            
+            if (!tienePermiso)
+            {
+                return Forbid("Solo usuarios con permiso 'Ver Clientes' o 'Ver Facturación' pueden buscar clientes");
+            }
 
             try
             {
@@ -134,9 +139,14 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> CrearCliente([FromBody] Cliente cliente)
         {
-            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Clientes",
-                "Solo usuarios con permiso 'Crear Clientes' pueden crear clientes");
-            if (validacionPermiso != null) return validacionPermiso;
+            // Permitir crear clientes si tiene el permiso específico O si tiene permiso de facturación
+            var tienePermiso = await _permisosService.TienePermisoAsync(User, "Crear Clientes") ||
+                              await _permisosService.TienePermisoAsync(User, "Ver Facturación");
+            
+            if (!tienePermiso)
+            {
+                return Forbid("Solo usuarios con permiso 'Crear Clientes' o 'Ver Facturación' pueden crear clientes");
+            }
 
             try
             {

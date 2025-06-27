@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 

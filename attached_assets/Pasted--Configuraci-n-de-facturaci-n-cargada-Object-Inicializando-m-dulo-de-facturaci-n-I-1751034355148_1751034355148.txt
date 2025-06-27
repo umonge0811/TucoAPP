@@ -1,0 +1,103 @@
+ 📋 Configuración de facturación cargada: Object
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 Iniciando carga de permisos...
+ 🔍 window.facturaConfig disponible: true
+ 🔍 Contenido facturaConfig: Object
+ ✅ Permisos obtenidos desde facturaConfig: Object
+ 🔐 Permisos finales cargados: Object
+ 🎯 Configurando interfaz según permisos: Object
+ 👑 Usuario puede completar facturas - Interfaz configurada para flujo completo
+ 🚀 Inicializando modales...
+ 🚀 Configurando eventos...
+facturacion.js:172 🚀 Actualizando totales...
+facturacion.js:2632 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:179 🚀 Iniciando carga de productos iniciales...
+facturacion.js:2425 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:2426 📦 cargaInicialCompletada: false
+facturacion.js:2442 📦 Iniciando carga de productos iniciales...
+facturacion.js:356 🔍 === INICIO buscarProductos ===
+facturacion.js:357 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:358 🔍 Término recibido: ""
+facturacion.js:359 🔍 busquedaEnProceso: false
+facturacion.js:360 🔍 ultimaBusqueda: ""
+facturacion.js:375 🔍 Iniciando búsqueda válida...
+facturacion.js:182 ✅ Facturación inicializada correctamente
+facturacion.js:183 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:397 📋 Respuesta del servidor recibida
+facturacion.js:400 ✅ Se encontraron 5 productos disponibles
+facturacion.js:439 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:440 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:441 🔄 Productos recibidos: 5
+facturacion.js:476 🔄 Construyendo HTML para 5 productos
+facturacion.js:490 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:491 🖼️ Datos del producto: Object
+facturacion.js:504 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:509 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:528 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:540 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:490 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:491 🖼️ Datos del producto: Object
+facturacion.js:504 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:509 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:528 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:540 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:490 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:491 🖼️ Datos del producto: Object
+facturacion.js:504 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:509 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:528 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:540 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:490 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:491 🖼️ Datos del producto: Object
+facturacion.js:504 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:509 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:528 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:540 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:490 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:491 🖼️ Datos del producto: Object
+facturacion.js:504 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:509 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:528 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:540 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:639 🔄 Actualizando DOM (longitud HTML: 23235 caracteres)
+facturacion.js:672 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:417 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:420 📦 Productos mostrados exitosamente
+facturacion.js:433 🔍 === FIN buscarProductos ===
+facturacion.js:2458 📦 Búsqueda inicial ejecutada
+facturacion.js:2460 📦 === FIN cargarProductosIniciales (exitosa) ===
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:762 🖼️ Procesando imágenes para modal de producto: Llanta Kumho Mobile
+facturacion.js:780 🖼️ URL original en modal: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:795 🖼️ URL final en modal: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:987 🛒 Agregando producto a venta: Object
+facturacion.js:1945 SUCCESS: Producto agregado - Llanta Kumho Mobile agregado a la venta
+facturacion.js:2632 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:1945 SUCCESS: Producto agregado - 1 unidad de Llanta Kumho Mobile agregadas
+facturacion.js:678 👥 Buscando clientes: "uyli"
+facturacion.js:678 👥 Buscando clientes: "ulises"
+facturacion.js:2632 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:752 Cliente seleccionado: Object
+facturacion.js:1433 👑 Procesando como FACTURA COMPLETA (usuario puede completar)
+facturacion.js:2554 ⚠️ No se pudo obtener información del usuario, usando valores por defecto
+obtenerUsuarioActual @ facturacion.js:2554
+procesarVentaFinal @ facturacion.js:1439
+(anonymous) @ facturacion.js:349
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+facturacion.js:1442 👤 Usuario actual para factura: Object
+facturacion.js:1482 📋 Datos de factura preparados: Object
+facturacion.js:1501 ✅ Factura creada: Object
+facturacion.js:1617 ❌ Error procesando venta: Error: Error desconocido
+    at procesarVentaFinal (facturacion.js:1511:19)
+procesarVentaFinal @ facturacion.js:1617
+await in procesarVentaFinal
+(anonymous) @ facturacion.js:349
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+facturacion.js:1945 ERROR: Error - Hubo un problema procesando la venta

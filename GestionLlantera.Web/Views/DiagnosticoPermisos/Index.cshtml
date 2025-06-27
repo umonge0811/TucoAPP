@@ -1,0 +1,184 @@
+
+@{
+    ViewData["Title"] = "Diagnóstico de Permisos";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="page-header">
+        <h2><i class="bi bi-shield-check me-2"></i>Diagnóstico de Permisos</h2>
+        <p class="mb-0">Verificación detallada de permisos del usuario actual</p>
+    </div>
+
+    <div class="row">
+        <!-- Información del Usuario -->
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5><i class="bi bi-person-circle me-2"></i>Información del Usuario</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Usuario:</strong> @ViewBag.Usuario
+                    </div>
+                    <div class="mb-3">
+                        <strong>User ID:</strong> @ViewBag.UserId
+                    </div>
+                    <div class="mb-3">
+                        <strong>Es Administrador:</strong> 
+                        <span class="badge bg-@(ViewBag.EsAdmin ? "success" : "secondary")">
+                            @(ViewBag.EsAdmin ? "SÍ" : "NO")
+                        </span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Autenticado:</strong> 
+                        <span class="badge bg-@(User.Identity.IsAuthenticated ? "success" : "danger")">
+                            @(User.Identity.IsAuthenticated ? "SÍ" : "NO")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permisos de Facturación -->
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5><i class="bi bi-receipt-cutoff me-2"></i>Permisos de Facturación</h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.PermisosFacturacion != null)
+                    {
+                        @foreach (var permiso in ViewBag.PermisosFacturacion)
+                        {
+                            <div class="mb-2 d-flex justify-content-between align-items-center">
+                                <strong>@permiso.Key:</strong>
+                                <span class="badge bg-@(permiso.Value ? "success" : "danger")">
+                                    @(permiso.Value ? "SÍ" : "NO")
+                                </span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Todos los Permisos del Usuario -->
+        <div class="col-12 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5><i class="bi bi-list-check me-2"></i>Todos los Permisos del Usuario</h5>
+                </div>
+                <div class="card-body">
+                    @if (ViewBag.MisPermisos != null && ViewBag.MisPermisos.Count > 0)
+                    {
+                        <div class="row">
+                            @foreach (var permiso in ViewBag.MisPermisos)
+                            {
+                                <div class="col-md-4 mb-2">
+                                    <span class="badge bg-primary">@permiso</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            No se encontraron permisos para este usuario
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Pruebas de TagHelper -->
+        <div class="col-12 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5><i class="bi bi-code-square me-2"></i>Pruebas de TagHelper</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Elemento con permiso "Ver Facturación":</h6>
+                            <div asp-permiso="Ver Facturación" class="alert alert-success">
+                                ✅ Este elemento debe verse si tienes el permiso "Ver Facturación"
+                            </div>
+                            <div asp-permiso="Ver Facturación" asp-mensaje-sin-permiso="No tienes el permiso Ver Facturación"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Elemento con permiso "Crear Facturas":</h6>
+                            <div asp-permiso="Crear Facturas" class="alert alert-info">
+                                ✅ Este elemento debe verse si tienes el permiso "Crear Facturas"
+                            </div>
+                            <div asp-permiso="Crear Facturas" asp-mensaje-sin-permiso="No tienes el permiso Crear Facturas"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Claims del Usuario -->
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-header">
+                    <h5><i class="bi bi-key me-2"></i>Claims del Usuario</h5>
+                </div>
+                <div class="card-body">
+                    @if (User.Claims.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var claim in User.Claims)
+                                    {
+                                        <tr>
+                                            <td><code>@claim.Type</code></td>
+                                            <td>@claim.Value</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+                            No se encontraron claims para este usuario
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón de Refrescar -->
+    <div class="text-center mt-4">
+        <a href="@Url.Action("Index")" class="btn btn-primary">
+            <i class="bi bi-arrow-clockwise me-2"></i>Refrescar Diagnóstico
+        </a>
+    </div>
+</div>
+
+<style>
+.badge {
+    font-size: 0.9em;
+}
+
+.alert {
+    margin-bottom: 0.5rem;
+}
+
+code {
+    background-color: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+</style>

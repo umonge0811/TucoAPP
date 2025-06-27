@@ -13,6 +13,15 @@ let cargaInicialCompletada = false;
 let ultimaBusqueda = '';
 let timeoutBusquedaActivo = null;
 
+// ===== VARIABLES DE PERMISOS =====
+let permisosUsuario = {
+    puedeCrearFacturas: false,
+    puedeCompletarFacturas: false,
+    puedeEditarFacturas: false,
+    puedeAnularFacturas: false,
+    esAdmin: false
+};
+
 // ===== CONTADORES DE DEPURACIÓN =====
 let contadorLlamadasBusqueda = 0;
 let contadorLlamadasMostrarResultados = 0;
@@ -29,6 +38,115 @@ const CONFIGURACION_PRECIOS = {
 
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 
+// ===== CARGA DE PERMISOS =====
+function cargarPermisosUsuario() {
+    try {
+        console.log('🔍 Iniciando carga de permisos...');
+        console.log('🔍 window.facturaConfig disponible:', !!window.facturaConfig);
+        console.log('🔍 Contenido facturaConfig:', window.facturaConfig);
+
+        // ✅ OBTENER PERMISOS DESDE LA CONFIGURACIÓN CORRECTA
+        if (window.facturaConfig && window.facturaConfig.Permisos) {
+            permisosUsuario = {
+                puedeCrearFacturas: window.facturaConfig.Permisos.puedeCrearFacturas || false,
+                puedeCompletarFacturas: window.facturaConfig.Permisos.puedeCompletarFacturas || false,
+                puedeEditarFacturas: window.facturaConfig.Permisos.puedeEditarFacturas || false,
+                puedeAnularFacturas: window.facturaConfig.Permisos.puedeAnularFacturas || false,
+                esAdmin: window.facturaConfig.Permisos.esAdmin || false
+            };
+            console.log('✅ Permisos obtenidos desde facturaConfig:', permisosUsuario);
+        }
+        // Fallback: intentar desde configuración global de inventario
+        else if (window.inventarioConfig && window.inventarioConfig.permisos) {
+            permisosUsuario = {
+                puedeCrearFacturas: window.inventarioConfig.permisos.puedeCrearFacturas || false,
+                puedeCompletarFacturas: window.inventarioConfig.permisos.puedeCompletarFacturas || false,
+                puedeEditarFacturas: window.inventarioConfig.permisos.puedeEditarFacturas || false,
+                puedeAnularFacturas: window.inventarioConfig.permisos.puedeAnularFacturas || false,
+                esAdmin: window.inventarioConfig.permisos.esAdmin || false
+            };
+            console.log('✅ Permisos obtenidos desde inventarioConfig (fallback):', permisosUsuario);
+        }
+        else {
+            console.error('❌ No se encontró configuración de permisos');
+            console.log('🔍 Debug - facturaConfig:', window.facturaConfig);
+            console.log('🔍 Debug - inventarioConfig:', window.inventarioConfig);
+
+            // Permisos por defecto muy restrictivos
+            permisosUsuario = {
+                puedeCrearFacturas: false,
+                puedeCompletarFacturas: false,
+                puedeEditarFacturas: false,
+                puedeAnularFacturas: false,
+                esAdmin: false
+            };
+        }
+
+        console.log('🔐 Permisos finales cargados:', permisosUsuario);
+
+        // ✅ CONFIGURAR INTERFAZ SEGÚN PERMISOS
+        configurarInterfazSegunPermisos();
+
+    } catch (error) {
+        console.error('❌ Error cargando permisos:', error);
+        // Permisos por defecto (solo crear facturas)
+        permisosUsuario = {
+            puedeCrearFacturas: true,
+            puedeCompletarFacturas: false,
+            puedeEditarFacturas: false,
+            puedeAnularFacturas: false,
+            esAdmin: false
+        };
+    }
+}
+
+function configurarInterfazSegunPermisos() {
+    console.log('🎯 Configurando interfaz según permisos:', permisosUsuario);
+
+    const $btnFinalizar = $('#btnFinalizarVenta');
+
+    if (!$btnFinalizar.length) {
+        console.error('❌ No se encontró el botón #btnFinalizarVenta');
+        return;
+    }
+
+    // Resetear el botón
+    $btnFinalizar.prop('disabled', false).removeClass('btn-secondary btn-success btn-primary').addClass('btn-primary');
+
+    if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+        // ✅ USUARIO PUEDE COMPLETAR FACTURAS
+        $btnFinalizar.removeClass('btn-primary btn-secondary').addClass('btn-success')
+                    .prop('disabled', false)
+                    .html(`<i class="bi bi-check-circle me-2"></i>Completar Venta`)
+                    .attr('title', 'Procesar venta completa e imprimir factura');
+
+        console.log('👑 Usuario puede completar facturas - Interfaz configurada para flujo completo');
+
+    } else if (permisosUsuario.puedeCrearFacturas) {
+        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
+        $btnFinalizar.removeClass('btn-success btn-secondary').addClass('btn-primary')
+                    .prop('disabled', false)
+                    .html(`<i class="bi bi-file-earmark-plus me-2"></i>Crear Factura`)
+                    .attr('title', 'Crear factura pendiente (requiere aprobación)');
+
+        console.log('📝 Usuario solo puede crear facturas - Interfaz configurada para flujo de pendientes');
+
+    } else {
+        // ❌ SIN PERMISOS
+        $btnFinalizar.removeClass('btn-primary btn-success').addClass('btn-secondary')
+                    .prop('disabled', true)
+                    .html(`<i class="bi bi-lock me-2"></i>Sin Permisos`)
+                    .attr('title', 'No tienes permisos para procesar ventas');
+
+        console.log('🔒 Usuario sin permisos de facturación');
+        console.log('🔍 Debug permisos:', {
+            puedeCrear: permisosUsuario.puedeCrearFacturas,
+            puedeCompletar: permisosUsuario.puedeCompletarFacturas,
+            esAdmin: permisosUsuario.esAdmin
+        });
+    }
+}
+
 // ===== INICIALIZACIÓN =====
 $(document).ready(function() {
     console.log('🚀 Inicializando módulo de facturación');
@@ -38,6 +156,10 @@ $(document).ready(function() {
 function inicializarFacturacion() {
     console.log('🚀 === INICIO inicializarFacturacion ===');
     try {
+        // ✅ CARGAR PERMISOS PRIMERO
+        console.log('🔐 Cargando permisos del usuario...');
+        cargarPermisosUsuario();
+
         // Inicializar modales
         console.log('🚀 Inicializando modales...');
         inicializarModales();
@@ -650,7 +772,7 @@ function mostrarModalSeleccionProducto(producto) {
         } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
+                .filter(url => url && url && url.trim() !== '');
         }
 
         if (imagenesArray.length > 0) {
@@ -719,7 +841,8 @@ function mostrarModalSeleccionProducto(producto) {
                                                                 <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : metodo === 'sinpe' ? 'phone' : 'cash'} me-2"></i>
                                                                 ${config.nombre}
                                                             </td>
-                                                            <td class="text-end fw-bold text-success">₡${formatearMoneda(precio)}</td>
+                                                            <td class="text-end fw-bold text-success">₡${formatearMoneda(precio)}</span>
+                                                            </td>
                                                         </tr>
                                                     `;
                                                 }).join('')}
@@ -1296,6 +1419,31 @@ async function procesarVentaFinal() {
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
+        // ✅ DETERMINAR ESTADO SEGÚN PERMISOS
+        let estadoFactura = 'Pendiente'; // Por defecto
+        let mensajeExito = 'Factura creada como pendiente';
+        let debeImprimir = false;
+        let debeAjustarInventario = false;
+
+        if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+            estadoFactura = 'Pagada';
+            mensajeExito = 'Venta procesada exitosamente';
+            debeImprimir = true;
+            debeAjustarInventario = true;
+            console.log('👑 Procesando como FACTURA COMPLETA (usuario puede completar)');
+        } else {
+            console.log('📝 Procesando como FACTURA PENDIENTE (usuario solo puede crear)');
+        }
+
+        // Obtener información del usuario actual
+        const usuarioActual = obtenerUsuarioActual();
+        const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
+
+        console.log('👤 Usuario actual para factura:', {
+            usuario: usuarioActual,
+            usuarioId: usuarioId
+        });
+
         // Crear objeto de factura para enviar a la API
         const facturaData = {
             clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
@@ -1311,11 +1459,11 @@ async function procesarVentaFinal() {
             porcentajeImpuesto: 13,
             montoImpuesto: iva,
             total: total,
-            estado: 'Pagada',
+            estado: estadoFactura, // ✅ Estado dinámico según permisos
             tipoDocumento: 'Factura',
             metodoPago: metodoPagoSeleccionado,
-            observaciones: $('#observacionesVenta').val(),
-            usuarioCreadorId: 1, // Obtener del contexto del usuario
+            observaciones: $('#observacionesVenta').val() || '',
+            usuarioCreadorId: usuarioId, // ✅ ID del usuario actual
             detallesFactura: productosEnVenta.map(producto => {
                 const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
                 return {
@@ -1330,6 +1478,8 @@ async function procesarVentaFinal() {
                 };
             })
         };
+
+        console.log('📋 Datos de factura preparados:', facturaData);
 
         // Crear la factura
         const responseFactura = await fetch('/Facturacion/CrearFactura', {
@@ -1351,11 +1501,21 @@ async function procesarVentaFinal() {
         console.log('✅ Factura creada:', resultadoFactura);
 
         if (!resultadoFactura.success) {
+            // Manejar caso específico de sesión expirada
+            if (resultadoFactura.redirectToLogin) {
+                console.log('🔄 Redirigiendo a login por sesión expirada');
+                window.location.href = '/Account/Login';
+                return;
+            }
+            
             throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
         }
 
-        // Ajustar stock usando el endpoint interno del controlador
-        try {
+        // ✅ AJUSTAR STOCK SOLO SI EL USUARIO TIENE PERMISOS
+        if (debeAjustarInventario && estadoFactura === 'Pagada') {
+            console.log('💰 Usuario autorizado - Ajustando inventario automáticamente');
+
+            try {
             const productosParaAjuste = productosEnVenta.map(producto => ({
                 ProductoId: producto.productoId,
                 NombreProducto: producto.nombreProducto,
@@ -1410,23 +1570,34 @@ async function procesarVentaFinal() {
                 mostrarToast('Error Stock', 'No se pudo conectar con el sistema de inventario', 'warning');
             }
         } catch (error) {
-            console.error('❌ Error general ajustando stock:', error);
-            mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+                console.error('❌ Error general ajustando stock:', error);
+                mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+            }
+
+            // ✅ GENERAR E IMPRIMIR RECIBO SOLO SI FACTURA ESTÁ COMPLETA
+            generarRecibo(resultadoFactura, productosEnVenta, {
+                subtotal: subtotal,
+                iva: iva,
+                total: total,
+                metodoPago: metodoPagoSeleccionado,
+                cliente: clienteSeleccionado,
+                usuario: obtenerUsuarioActual()
+            });
+
+            // Éxito para factura completa
+            modalFinalizarVenta.hide();
+            mostrarToast('¡Venta Completada!', 'La venta ha sido procesada e impresa exitosamente', 'success');
+
+        } else {
+            console.log('📋 Factura pendiente - NO se ajusta stock automáticamente');
+
+            // ✅ ÉXITO PARA FACTURA PENDIENTE
+            modalFinalizarVenta.hide();
+            mostrarToast('Factura Creada', 'Factura creada como pendiente. Requiere aprobación para completar.', 'info');
+
+            // ✅ MOSTRAR MODAL INFORMATIVO PARA FACTURAS PENDIENTES
+            mostrarModalFacturaPendiente(resultadoFactura);
         }
-
-        // Generar e imprimir recibo
-        generarRecibo(resultadoFactura, productosEnVenta, {
-            subtotal: subtotal,
-            iva: iva,
-            total: total,
-            metodoPago: metodoPagoSeleccionado,
-            cliente: clienteSeleccionado,
-            usuario: obtenerUsuarioActual()
-        });
-
-        // Éxito
-        modalFinalizarVenta.hide();
-        mostrarToast('¡Venta procesada!', 'La venta ha sido procesada exitosamente. Actualizando inventario...', 'success');
 
         // Limpiar venta
         productosEnVenta = [];
@@ -1462,8 +1633,7 @@ function generarRecibo(factura, productos, totales) {
     });
     const hora = new Date().toLocaleTimeString('es-CR', { 
         hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit' 
+        minute: '2-digit' 
     });
 
     // Función para truncar texto según el ancho de la impresora
@@ -2355,18 +2525,50 @@ function mostrarResumenDepuracion() {
     console.log('📊 === FIN RESUMEN ===');
 }
 
-// ===== FUNCIÓN PARA OBTENER USUARIO ACTUAL =====
 function obtenerUsuarioActual() {
-    // Intentar obtener el nombre del usuario desde diferentes fuentes
-    const nombreUsuario = document.querySelector('[data-usuario-nombre]')?.getAttribute('data-usuario-nombre') ||
-                         document.querySelector('.user-name')?.textContent?.trim() ||
-                         document.querySelector('#nombreUsuario')?.textContent?.trim() ||
-                         'Usuario';
+    try {
+        // Primera opción: desde configuración de facturación
+        if (window.facturaConfig && window.facturaConfig.Usuario) {
+            console.log('👤 Usuario desde facturaConfig:', window.facturaConfig.Usuario);
+            return window.facturaConfig.Usuario;
+        }
 
-    return {
-        nombre: nombreUsuario,
-        nombreUsuario: nombreUsuario
-    };
+        // Segunda opción: desde configuración global
+        if (window.inventarioConfig && window.inventarioConfig.usuario) {
+            console.log('👤 Usuario desde inventarioConfig:', window.inventarioConfig.usuario);
+            return window.inventarioConfig.usuario;
+        }
+
+        // Tercera opción: desde elemento DOM o meta tags
+        const userDataElement = document.querySelector('[data-user-info]');
+        if (userDataElement && userDataElement.dataset.userInfo) {
+            try {
+                const userData = JSON.parse(userDataElement.dataset.userInfo);
+                console.log('👤 Usuario desde DOM:', userData);
+                return userData;
+            } catch (e) {
+                console.warn('⚠️ Error parseando datos de usuario desde DOM:', e);
+            }
+        }
+
+        console.warn('⚠️ No se pudo obtener información del usuario, usando valores por defecto');
+
+        // Fallback básico
+        return {
+            usuarioId: 1,
+            id: 1,
+            nombre: 'Usuario Sistema',
+            nombreUsuario: 'sistema'
+        };
+    } catch (error) {
+        console.error('❌ Error obteniendo usuario actual:', error);
+        return {
+            usuarioId: 1,
+            id: 1,
+            nombre: 'Usuario Error',
+            nombreUsuario: 'error'
+        };
+    }
 }
 
 // ===== FUNCIÓN PARA OBTENER TOKEN JWT =====
@@ -2435,6 +2637,83 @@ function actualizarEstadoBotonFinalizar() {
     });
 }
 
+// ===== MODAL FACTURA PENDIENTE =====
+function mostrarModalFacturaPendiente(resultadoFactura) {
+    const modalHtml = `
+        <div class="modal fade" id="modalFacturaPendiente" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="bi bi-clock-history me-2"></i>Factura Creada como Pendiente
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="mb-1">Factura en estado pendiente</h6>
+                                    <p class="mb-0">La factura ha sido creada exitosamente pero requiere aprobación de un supervisor para ser completada.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Número de Factura:</strong><br>
+                                <span class="text-primary">${resultadoFactura.numeroFactura || 'N/A'}</span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Estado:</strong><br>
+                                <span class="badge bg-warning">Pendiente de Aprobación</span>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Importante:</h6>
+                            <ul class="mb-0">
+                                <li>El stock <strong>NO</strong> se ha ajustado automáticamente</li>
+                                <li>La factura debe ser aprobada por un supervisor</li>
+                                <li>Una vez aprobada, se ajustará el stock y se podrá imprimir</li>
+                                <li>Puedes encontrar esta factura en el módulo de facturas pendientes</li>
+                            </ul>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <p class="text-muted">Un supervisor recibirá una notificación para aprobar esta factura.</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-check me-1"></i>Entendido
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="irAFacturasPendientes()">
+                            <i class="bi bi-list-check me-1"></i>Ver Facturas Pendientes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalFacturaPendiente').remove();
+    $('body').append(modalHtml);
+
+    const modal = new bootstrap.Modal(document.getElementById('modalFacturaPendiente'));
+    modal.show();
+}
+
+function irAFacturasPendientes() {
+    // Cerrar modal
+    $('#modalFacturaPendiente').modal('hide');
+
+    // Redirigir a módulo de facturas (ajustar ruta según tu estructura)
+    window.location.href = '/Facturacion/Pendientes';
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
@@ -2451,6 +2730,10 @@ window.procesarVenta = procesarVenta;
 window.reiniciarCargaProductos = reiniciarCargaProductos;
 window.mostrarResumenDepuracion = mostrarResumenDepuracion;
 window.actualizarEstadoBotonFinalizar = actualizarEstadoBotonFinalizar;
+window.cargarPermisosUsuario = cargarPermisosUsuario;
+window.configurarInterfazSegunPermisos = configurarInterfazSegunPermisos;
+window.mostrarModalFacturaPendiente = mostrarModalFacturaPendiente;
+window.irAFacturasPendientes = irAFacturasPendientes;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `

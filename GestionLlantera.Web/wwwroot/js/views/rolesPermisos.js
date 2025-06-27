@@ -1,4 +1,4 @@
-﻿// Archivo: wwwroot/js/views/rolesPermisos.js
+// Archivo: wwwroot/js/views/rolesPermisos.js
 console.log('ButtonUtils disponible:', typeof ButtonUtils !== 'undefined');
 // Variables globales para los modales
 let modalRol = null;
@@ -248,18 +248,44 @@ async function abrirModalNuevoRol() {
             throw new Error('No se encontró el elemento listaPermisos');
         }
 
-        // 3. Generar los checkboxes
-        listaPermisos.innerHTML = permisos.map(permiso => `
-            <div class="form-check mb-2">
-                <input class="form-check-input" type="checkbox" 
-                       value="${permiso.permisoId}" 
-                       id="permiso_${permiso.permisoId}">
-                <label class="form-check-label" for="permiso_${permiso.permisoId}">
-                    ${permiso.nombrePermiso}
-                </label>
-                <small class="text-muted d-block">${permiso.descripcionPermiso || ''}</small>
-            </div>
-        `).join('');
+        // Obtener permisos por categoría
+        const responsePermisos = await fetch(`/api/Permisos/por-categoria`);
+        if (!responsePermisos.ok) {
+            throw new Error('Error al cargar permisos disponibles');
+        }
+
+        const permisosPorCategoria = await responsePermisos.json();
+        console.log('Permisos por categoría:', permisosPorCategoria);
+
+        // Generar HTML para lista de permisos categorizados
+        const listaPermisos = document.getElementById('listaPermisos');
+        let html = '';
+
+        Object.keys(permisosPorCategoria).forEach(categoria => {
+            html += `
+                <div class="categoria-group">
+                    <div class="categoria-header">
+                        <i class="bi bi-folder me-2"></i>
+                        ${categoria}
+                    </div>
+                    <div class="categoria-permisos">
+                        ${permisosPorCategoria[categoria].map(permiso => `
+                            <div class="permiso-item">
+                                <input class="form-check-input" type="checkbox" value="${permiso.permisoId}" id="permiso_${permiso.permisoId}">
+                                <div class="permiso-label">
+                                    <label class="form-check-label" for="permiso_${permiso.permisoId}">
+                                        ${permiso.nombrePermiso}
+                                    </label>
+                                    ${permiso.descripcionPermiso ? `<div class="permiso-description">${permiso.descripcionPermiso}</div>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+
+        listaPermisos.innerHTML = html;
 
         // 4. Resetear el formulario
         document.getElementById('formRol').reset();

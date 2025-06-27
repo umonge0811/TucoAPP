@@ -5,11 +5,13 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
+using Tuco.Clases.DTOs.Facturacion;
 using Tuco.Clases.Models;
 using System.Text.Json;
 using System.Text;
-using static GestionLlantera.Web.Services.Interfaces.IFacturacionService;
 using GestionLlantera.Web.Services.Interfaces;
+using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
+using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -38,19 +40,63 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // Verificar permisos
-                if (!await this.TienePermisoAsync("Ver Facturación"))
+                _logger.LogInformation("🛒 === ACCESO AL MÓDULO DE FACTURACIÓN ===");
+                _logger.LogInformation("🛒 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
+                _logger.LogInformation("🛒 Nombre de usuario: {Name}", User.Identity?.Name);
+
+                // Debug: Mostrar todos los claims al cargar facturación
+                _logger.LogInformation("📋 Claims al cargar facturación:");
+                foreach (var claim in User.Claims)
                 {
-                    return RedirectToAction("AccessDenied", "Account");
+                    _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
                 }
 
-                ViewData["Title"] = "Facturación";
+                // Verificar token JWT desde el inicio
+                var tokenJWT = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(tokenJWT))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no disponible al cargar facturación");
+                }
+                else
+                {
+                    _logger.LogInformation("✅ Token JWT disponible al cargar facturación");
+                }
+
+                // Obtener información del usuario actual
+                var usuarioId = User.FindFirst("UserId")?.Value ?? User.FindFirst("userId")?.Value;
+                var nombreUsuario = User.Identity?.Name;
+
+                // ✅ Verificar permisos específicos de facturación
+                var permisos = new
+                {
+                    puedeCrearFacturas = await this.TienePermisoAsync("CrearFacturas"),
+                    puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas"),
+                    puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas"),
+                    puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas"),
+                    esAdmin = User.IsInRole("Administrador")
+                };
+
+                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}, Admin={Admin}", 
+                    nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
+                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas, permisos.esAdmin);
+
+                var viewModel = new
+                {
+                    UsuarioId = usuarioId,
+                    NombreUsuario = nombreUsuario,
+                    FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
+                    HoraActual = DateTime.Now.ToString("HH:mm"),
+                    Permisos = permisos
+                };
+
+                ViewBag.ConfiguracionFacturacion = viewModel;
                 return View();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en vista de facturación");
-                return View("Error");
+                _logger.LogError(ex, "❌ Error al cargar módulo de facturación");
+                TempData["Error"] = "Error al cargar el módulo de facturación";
+                return RedirectToAction("Index", "Dashboard");
             }
         }
 
@@ -219,7 +265,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaDTO> productos)
+        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaFacturacion> productos)
         {
             try
             {
@@ -229,7 +275,25 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
-                var stockDisponible = await _facturacionService.VerificarStockDisponibleAsync(productos, jwtToken);
+                
+                // Convertir a la clase esperada por el servicio
+                var productosService = productos.Select(p => new ProductoVentaService
+                {
+                    ProductoId = p.ProductoId,
+                    NombreProducto = p.NombreProducto,
+                    Descripcion = p.Descripcion,
+                    PrecioUnitario = p.Precio,
+                    Cantidad = 1, // Valor por defecto
+                    CantidadEnInventario = p.CantidadEnInventario,
+                    StockMinimo = p.StockMinimo,
+                    EsLlanta = p.EsLlanta,
+                    MedidaCompleta = p.MedidaCompleta,
+                    Marca = p.Marca,
+                    Modelo = p.Modelo,
+                    ImagenesUrls = p.ImagenesUrls
+                }).ToList();
+
+                var stockDisponible = await _facturacionService.VerificarStockDisponibleAsync(productosService, jwtToken);
 
                 return Json(new { success = stockDisponible });
             }
@@ -275,31 +339,80 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearFactura([FromBody] object facturaData)
+        public async Task<IActionResult> CrearFactura([FromBody] FacturaDTO facturaDto)
         {
             try
             {
-                if (!await this.TienePermisoAsync("Crear Facturas"))
+                _logger.LogInformation("🧾 === INICIO CrearFactura ===");
+                _logger.LogInformation("🧾 Usuario: {Usuario}", User.Identity?.Name);
+                _logger.LogInformation("🧾 Autenticado: {Autenticado}", User.Identity?.IsAuthenticated);
+
+                // Verificar permisos
+                if (!await this.TienePermisoAsync("CrearFacturas"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permisos para crear facturas");
                     return Json(new { success = false, message = "Sin permisos para crear facturas" });
                 }
 
-                _logger.LogInformation("💰 Creando nueva factura");
+                var jwtToken = this.ObtenerTokenJWT();
 
-                // Simular creación exitosa por ahora
-                var numeroFactura = $"FAC-{DateTime.Now:yyyyMM}-{DateTime.Now:HHmmss}";
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogError("❌ Token JWT no disponible para crear factura");
+                    _logger.LogError("❌ Posible causa: Sesión expirada o middleware JwtClaimsMiddleware cerró la sesión");
+                    
+                    // Verificar si el usuario sigue autenticado
+                    if (!User.Identity?.IsAuthenticated ?? true)
+                    {
+                        _logger.LogError("❌ Usuario no está autenticado - redirigir a login");
+                        return Json(new { 
+                            success = false, 
+                            message = "Sesión expirada. Inicie sesión nuevamente.",
+                            redirectToLogin = true
+                        });
+                    }
+                    
+                    return Json(new { 
+                        success = false, 
+                        message = "Token de autenticación no disponible. Intente refrescar la página.",
+                        details = "No se pudo obtener el token JWT necesario para la operación"
+                    });
+                }
 
-                return Json(new { 
-                    success = true, 
-                    message = "Factura creada exitosamente",
-                    numeroFactura = numeroFactura,
-                    facturaId = 1
-                });
+                _logger.LogInformation("🚀 Enviando factura usando servicio: {Cliente}", facturaDto.NombreCliente);
+                _logger.LogInformation("📊 Total productos: {Count}, Total: {Total}", facturaDto.DetallesFactura.Count, facturaDto.Total);
+                _logger.LogInformation("🔐 Token JWT disponible: {TokenLength} caracteres", jwtToken.Length);
+
+                // ✅ USAR EL SERVICIO DE FACTURACIÓN en lugar de llamada directa
+                var resultado = await _facturacionService.CrearFacturaAsync(facturaDto, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new { 
+                        success = true, 
+                        data = resultado.data,
+                        message = resultado.message ?? "Factura procesada exitosamente" 
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del servicio al crear factura: {Message}", resultado.message);
+
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "Error al procesar la factura",
+                        details = resultado.details
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear factura");
-                return Json(new { success = false, message = "Error al crear factura" });
+                _logger.LogError(ex, "❌ Error crítico al crear factura");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor: " + ex.Message,
+                    details = ex.ToString()
+                });
             }
         }
 
@@ -329,12 +442,29 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaDTO> productos)
+        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaFacturacion> productos)
         {
             try
             {
-                var total = await _facturacionService.CalcularTotalVentaAsync(productos);
-                var subtotal = productos.Sum(p => p.Subtotal);
+                // Convertir a la clase esperada por el servicio
+                var productosService = productos.Select(p => new ProductoVentaService
+                {
+                    ProductoId = p.ProductoId,
+                    NombreProducto = p.NombreProducto,
+                    Descripcion = p.Descripcion,
+                    PrecioUnitario = p.Precio,
+                    Cantidad = 1, // Se necesitará enviar este dato desde el frontend
+                    CantidadEnInventario = p.CantidadEnInventario,
+                    StockMinimo = p.StockMinimo,
+                    EsLlanta = p.EsLlanta,
+                    MedidaCompleta = p.MedidaCompleta,
+                    Marca = p.Marca,
+                    Modelo = p.Modelo,
+                    ImagenesUrls = p.ImagenesUrls
+                }).ToList();
+
+                var total = await _facturacionService.CalcularTotalVentaAsync(productosService);
+                var subtotal = productosService.Sum(p => p.Subtotal);
                 var iva = subtotal * 0.13m; // 13% IVA
 
                 return Json(new { 
@@ -353,6 +483,7 @@ namespace GestionLlantera.Web.Controllers
 
         /// <summary>
         /// Método auxiliar para obtener el token JWT del usuario autenticado
+        /// Usa exactamente la misma lógica exitosa del InventarioController
         /// </summary>
         private string? ObtenerTokenJWT()
         {
@@ -362,11 +493,15 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
                     User.Identity?.Name ?? "Anónimo");
+                
+                // Listar todos los claims disponibles para debug
+                var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
+                _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
             }
             else
             {
-                _logger.LogDebug("✅ Token JWT obtenido correctamente para usuario: {Usuario}",
-                    User.Identity?.Name ?? "Anónimo");
+                _logger.LogInformation("✅ Token JWT obtenido correctamente para usuario: {Usuario}, Longitud: {Length}",
+                    User.Identity?.Name ?? "Anónimo", token.Length);
             }
 
             return token;

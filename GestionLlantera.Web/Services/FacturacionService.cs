@@ -360,6 +360,286 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Otros métodos del servicio...
+        public async Task<(bool success, object? data, string? message, string? details)> CrearFacturaAsync(object facturaDto, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🧾 Creando factura usando servicio de facturación");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                }
+
+                // Procesar el DTO para generar campos automáticos
+                var facturaData = await ProcesarFacturaParaEnvio(facturaDto, jwtToken);
+
+                var jsonContent = JsonConvert.SerializeObject(facturaData, new JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON enviado a API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // Usar el endpoint correcto de la API
+                var response = await _httpClient.PostAsync("api/Facturacion/facturas", content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta de API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject(responseContent);
+
+                    return (
+                        success: true, 
+                        data: resultado,
+                        message: "Factura creada exitosamente",
+                        details: null
+                    );
+                }
+                else
+                {
+                    _logger.LogError("❌ Error de API al crear factura: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    // Manejar específicamente error 401 (Unauthorized)
+                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        return (
+                            success: false,
+                            data: null,
+                            message: "Sesión expirada. Inicie sesión nuevamente.",
+                            details: "Token de autenticación no válido o expirado"
+                        );
+                    }
+
+                    // Intentar deserializar el error para obtener más detalles
+                    try
+                    {
+                        var errorData = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorData?.message?.ToString() ?? "Error desconocido";
+
+                        return (
+                            success: false,
+                            data: null,
+                            message: errorMessage,
+                            details: responseContent
+                        );
+                    }
+                    catch
+                    {
+                        return (
+                            success: false,
+                            data: null,
+                            message: $"Error del servidor: {response.StatusCode}",
+                            details: responseContent
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico en servicio de facturación");
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno del servicio: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
+
+        // =====================================
+        // MÉTODOS AUXILIARES PRIVADOS
+        // =====================================
+
+        private async Task<object> ProcesarFacturaParaEnvio(object facturaDto, string jwtToken = null)
+        {
+            try
+            {
+                // Convertir a dynamic para poder modificar propiedades
+                var facturaJson = JsonConvert.SerializeObject(facturaDto);
+                dynamic factura = JsonConvert.DeserializeObject(facturaJson);
+
+                _logger.LogInformation("📋 Factura recibida para procesamiento: {FacturaJson}", facturaJson);
+
+                // ✅ DIAGNÓSTICO DETALLADO DE LA FACTURA
+                _logger.LogInformation("🔍 Propiedades de la factura recibida:");
+                if (factura is Newtonsoft.Json.Linq.JObject jObject)
+                {
+                    foreach (var property in jObject.Properties())
+                    {
+                        var value = property.Value?.ToString() ?? "null";
+                        if (value.Length > 100) value = value.Substring(0, 100) + "...";
+                        _logger.LogInformation("🔍   {PropertyName}: {PropertyValue}", property.Name, value);
+                    }
+                }
+
+                // ✅ 1. GENERAR NÚMERO DE FACTURA AUTOMÁTICAMENTE
+                var tipoDocumento = factura.tipoDocumento?.ToString() ?? "Factura";
+                var numeroFactura = GenerarNumeroFactura(tipoDocumento);
+                factura.numeroFactura = numeroFactura;
+
+
+                // ✅ 2. EXTRAER INFORMACIÓN DEL USUARIO DEL TOKEN JWT
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    var nombreUsuario = ExtraerNombreUsuarioDelToken(jwtToken);
+                    if (!string.IsNullOrEmpty(nombreUsuario))
+                    {
+                        factura.usuarioCreadorNombre = nombreUsuario;
+                        _logger.LogInformation("👤 Usuario extraído del token: {Usuario}", nombreUsuario);
+                    }
+                }
+
+                // ✅ 3. ESTABLECER FECHA DE CREACIÓN
+                factura.fechaCreacion = DateTime.Now;
+
+                // ✅ 4. VALIDAR CAMPOS REQUERIDOS
+                var nombreCliente = factura.nombreCliente?.ToString() ?? 
+                                  factura.NombreCliente?.ToString() ?? 
+                                  factura.cliente?.ToString() ?? 
+                                  factura.Cliente?.ToString() ?? "";
+
+                if (string.IsNullOrEmpty(nombreCliente))
+                {
+                    _logger.LogError("❌ Validación fallida: No se encontró nombre del cliente. Propiedades disponibles: {Propiedades}", 
+                        string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p.Name)));
+                    throw new ArgumentException("El nombre del cliente es requerido");
+                }
+
+                // Asegurar que la propiedad esté correctamente asignada
+                factura.nombreCliente = nombreCliente;
+
+                // ✅ VALIDAR QUE EXISTAN PRODUCTOS - BÚSQUEDA ROBUSTA
+                var detallesFactura = factura.detallesFactura ?? 
+                                    factura.DetallesFactura ?? 
+                                    factura.productos ?? 
+                                    factura.Productos ?? 
+                                    factura.items ?? 
+                                    factura.Items;
+
+                if (detallesFactura == null)
+                {
+                    _logger.LogError("❌ No se encontraron productos en la factura. Propiedades disponibles: {Propiedades}", 
+                        string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p.Name)));
+                    throw new ArgumentException("La factura debe tener al menos un producto");
+                }
+
+                // Verificar que es enumerable y tiene elementos
+                bool tieneProductos = false;
+                try
+                {
+                    if (detallesFactura is System.Collections.IEnumerable enumerable)
+                    {
+                        tieneProductos = enumerable.Cast<object>().Any();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Error validando productos de la factura");
+                }
+
+                if (!tieneProductos)
+                {
+                    _logger.LogError("❌ La factura no contiene productos válidos");
+                    throw new ArgumentException("La factura debe tener al menos un producto");
+                }
+
+                // Asegurar que la propiedad esté correctamente asignada
+                factura.detallesFactura = detallesFactura;
+
+                _logger.LogInformation("✅ Validación de productos exitosa: se encontraron productos en la factura");
+
+                return factura;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error procesando factura para envío");
+                throw;
+            }
+        }
+
+        private string GenerarNumeroFactura(string tipoDocumento)
+        {
+            try
+            {
+                var prefijo = tipoDocumento == "Proforma" ? "PRO" : "FAC";
+                var año = DateTime.Now.Year;
+                var mes = DateTime.Now.Month;
+                var dia = DateTime.Now.Day;
+                var hora = DateTime.Now.Hour;
+                var minuto = DateTime.Now.Minute;
+                var segundo = DateTime.Now.Second;
+
+                // Generar número único basado en timestamp
+                var timestamp = DateTime.Now.Ticks.ToString().Substring(10); // Últimos dígitos del timestamp
+                var numeroConsecutivo = timestamp.Substring(0, Math.Min(6, timestamp.Length)).PadLeft(6, '0');
+
+                var numeroFactura = $"{prefijo}-{año:D4}{mes:D2}-{numeroConsecutivo}";
+
+                _logger.LogInformation("📋 Número de factura generado: {NumeroFactura}", numeroFactura);
+
+                return numeroFactura;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error generando número de factura");
+                // Fallback a un número simple
+                return $"FAC-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10, 6)}";
+            }
+        }
+
+        private string ExtraerNombreUsuarioDelToken(string jwtToken)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(jwtToken))
+                    return null;
+
+                // Decodificar el token JWT (formato: header.payload.signature)
+                var parts = jwtToken.Split('.');
+                if (parts.Length != 3)
+                    return null;
+
+                // Decodificar el payload (segunda parte)
+                var payload = parts[1];
+
+                // Agregar padding necesario para Base64
+                switch (payload.Length % 4)
+                {
+                    case 2: payload += "=="; break;
+                    case 3: payload += "="; break;
+                }
+
+                var payloadBytes = Convert.FromBase64String(payload);
+                var payloadJson = Encoding.UTF8.GetString(payloadBytes);
+
+                dynamic claims = JsonConvert.DeserializeObject(payloadJson);
+
+                // Buscar el nombre del usuario en diferentes campos posibles
+                var nombreUsuario = claims?.unique_name?.ToString() ??
+                                 claims?.name?.ToString() ??
+                                 claims?.username?.ToString() ??
+                                 claims?.sub?.ToString();
+
+
+                return nombreUsuario;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error extrayendo usuario del token JWT");
+                return null;
+            }
+        }
     }
 }

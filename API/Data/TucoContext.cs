@@ -436,6 +436,9 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.NombrePermiso)
                 .HasMaxLength(100)
                 .IsUnicode(false);
+             entity.Property(e => e.Categoria)
+                .HasMaxLength(100)
+                .IsUnicode(false);
         });
 
         modelBuilder.Entity<Producto>(entity =>
