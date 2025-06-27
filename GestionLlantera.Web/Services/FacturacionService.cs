@@ -360,6 +360,101 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<(bool success, object? data, string? message, string? details)> CrearFacturaAsync(object facturaDto, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🧾 Creando factura usando servicio de facturación");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(facturaDto, new JsonSerializerSettings
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON enviado a API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // Usar el endpoint correcto de la API
+                var response = await _httpClient.PostAsync("api/Facturacion/facturas", content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta de API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject(responseContent);
+
+                    return (
+                        success: true, 
+                        data: resultado,
+                        message: "Factura creada exitosamente",
+                        details: null
+                    );
+                }
+                else
+                {
+                    _logger.LogError("❌ Error de API al crear factura: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    // Manejar específicamente error 401 (Unauthorized)
+                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        return (
+                            success: false,
+                            data: null,
+                            message: "Sesión expirada. Inicie sesión nuevamente.",
+                            details: "Token de autenticación no válido o expirado"
+                        );
+                    }
+
+                    // Intentar deserializar el error para obtener más detalles
+                    try
+                    {
+                        var errorData = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorData?.message?.ToString() ?? "Error desconocido";
+
+                        return (
+                            success: false,
+                            data: null,
+                            message: errorMessage,
+                            details: responseContent
+                        );
+                    }
+                    catch
+                    {
+                        return (
+                            success: false,
+                            data: null,
+                            message: $"Error del servidor: {response.StatusCode}",
+                            details: responseContent
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico en servicio de facturación");
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno del servicio: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
+
         // Otros métodos del servicio...
     }
 }

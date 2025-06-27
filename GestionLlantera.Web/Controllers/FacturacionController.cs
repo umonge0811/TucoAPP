@@ -379,79 +379,30 @@ namespace GestionLlantera.Web.Controllers
                     });
                 }
 
-                _logger.LogInformation("🚀 Enviando factura a API: {Cliente}", facturaDto.NombreCliente);
+                _logger.LogInformation("🚀 Enviando factura usando servicio: {Cliente}", facturaDto.NombreCliente);
                 _logger.LogInformation("📊 Total productos: {Count}, Total: {Total}", facturaDto.DetallesFactura.Count, facturaDto.Total);
                 _logger.LogInformation("🔐 Token JWT disponible: {TokenLength} caracteres", jwtToken.Length);
 
-                // Usar HttpClientFactory en lugar de crear un nuevo HttpClient
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Clear();
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                // ✅ USAR EL SERVICIO DE FACTURACIÓN en lugar de llamada directa
+                var resultado = await _facturacionService.CrearFacturaAsync(facturaDto, jwtToken);
 
-                var jsonContent = JsonSerializer.Serialize(facturaDto, new JsonSerializerOptions
+                if (resultado.success)
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    WriteIndented = true
-                });
-
-                _logger.LogInformation("📤 JSON enviado a API: {Json}", jsonContent);
-
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                // Para desarrollo local, usar localhost
-                var apiUrlLocal = "http://localhost:5049/api/Facturacion/facturas";
-
-                var response = await httpClient.PostAsync(apiUrlLocal, content);
-
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                _logger.LogInformation("📥 Respuesta de API: {StatusCode} - {Content}", response.StatusCode, responseContent);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var resultado = JsonSerializer.Deserialize<JsonElement>(responseContent);
-
                     return Json(new { 
                         success = true, 
-                        data = resultado,
-                        message = "Factura procesada exitosamente" 
+                        data = resultado.data,
+                        message = resultado.message ?? "Factura procesada exitosamente" 
                     });
                 }
                 else
                 {
-                    _logger.LogError("❌ Error de API al crear factura: {StatusCode} - {Content}", response.StatusCode, responseContent);
+                    _logger.LogError("❌ Error del servicio al crear factura: {Message}", resultado.message);
 
-                    // Manejar específicamente error 401 (Unauthorized)
-                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    {
-                        return Json(new { 
-                            success = false, 
-                            message = "Sesión expirada. Inicie sesión nuevamente.",
-                            details = "Token de autenticación no válido o expirado" 
-                        });
-                    }
-
-                    // Intentar deserializar el error para obtener más detalles
-                    try
-                    {
-                        var errorData = JsonSerializer.Deserialize<JsonElement>(responseContent);
-                        var errorMessage = errorData.TryGetProperty("message", out var msgProp) ? msgProp.GetString() : "Error desconocido";
-
-                        return Json(new { 
-                            success = false, 
-                            message = errorMessage,
-                            details = responseContent 
-                        });
-                    }
-                    catch
-                    {
-                        return Json(new { 
-                            success = false, 
-                            message = $"Error del servidor: {response.StatusCode}",
-                            details = responseContent 
-                        });
-                    }
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "Error al procesar la factura",
+                        details = resultado.details
+                    });
                 }
             }
             catch (Exception ex)
