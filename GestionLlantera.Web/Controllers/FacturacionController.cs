@@ -331,11 +331,19 @@ namespace GestionLlantera.Web.Controllers
 
                 var jwtToken = this.ObtenerTokenJWT();
 
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogError("❌ Token JWT no disponible para crear factura");
+                    return Json(new { success = false, message = "Sesión no válida. Inicie sesión nuevamente." });
+                }
+
                 _logger.LogInformation("🚀 Enviando factura a API: {Cliente}", facturaDto.NombreCliente);
                 _logger.LogInformation("📊 Total productos: {Count}, Total: {Total}", facturaDto.DetallesFactura.Count, facturaDto.Total);
+                _logger.LogInformation("🔐 Token JWT disponible: {TokenLength} caracteres", jwtToken.Length);
 
-                // Configurar HttpClient con headers apropiados
+                // Usar HttpClientFactory en lugar de crear un nuevo HttpClient
                 using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Clear();
                 httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
 
@@ -371,6 +379,16 @@ namespace GestionLlantera.Web.Controllers
                 else
                 {
                     _logger.LogError("❌ Error de API al crear factura: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    // Manejar específicamente error 401 (Unauthorized)
+                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        return Json(new { 
+                            success = false, 
+                            message = "Sesión expirada. Inicie sesión nuevamente.",
+                            details = "Token de autenticación no válido o expirado" 
+                        });
+                    }
 
                     // Intentar deserializar el error para obtener más detalles
                     try
@@ -481,11 +499,15 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
                     User.Identity?.Name ?? "Anónimo");
+                
+                // Listar todos los claims disponibles para debug
+                var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
+                _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
             }
             else
             {
-                _logger.LogDebug("✅ Token JWT obtenido correctamente para usuario: {Usuario}",
-                    User.Identity?.Name ?? "Anónimo");
+                _logger.LogInformation("✅ Token JWT obtenido correctamente para usuario: {Usuario}, Longitud: {Length}",
+                    User.Identity?.Name ?? "Anónimo", token.Length);
             }
 
             return token;
