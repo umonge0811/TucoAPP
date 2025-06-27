@@ -1,5 +1,4 @@
 // ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
-// ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
 let productosEnVenta = [];
 let clienteSeleccionado = null;
@@ -772,8 +771,7 @@ function mostrarModalSeleccionProducto(producto) {
         } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url && url.trim() !== '');
-        }
+                .filter(url => url && url.trim() !== '');        }
 
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
@@ -1359,25 +1357,25 @@ function configurarModalSegunPermisos() {
         $btnConfirmar.removeClass('btn-warning btn-info').addClass('btn-success');
         $textoBoton.text('Confirmar Venta');
         $btnConfirmar.attr('title', 'Procesar venta completa e imprimir factura');
-        
+
         console.log('👑 Modal configurado para usuario con permisos completos');
-        
+
     } else if (permisosUsuario.puedeCrearFacturas) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
         $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
         $btnConfirmar.removeClass('btn-success btn-info').addClass('btn-warning');
         $textoBoton.text('Enviar Factura');
         $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
-        
+
         console.log('📝 Modal configurado para usuario colaborador');
-        
+
     } else {
         // ❌ SIN PERMISOS
         $tituloModal.html('<i class="bi bi-lock me-2"></i>Sin Permisos');
         $btnConfirmar.removeClass('btn-success btn-warning').addClass('btn-secondary').prop('disabled', true);
         $textoBoton.text('Sin Permisos');
         $btnConfirmar.attr('title', 'No tienes permisos para procesar ventas');
-        
+
         console.log('🔒 Modal configurado para usuario sin permisos');
     }
 }
@@ -1658,7 +1656,7 @@ async function procesarVentaFinal() {
 
             // ✅ ÉXITO PARA FACTURA PENDIENTE
             modalFinalizarVenta.hide();
-            
+
             // Mostrar mensaje específico para colaboradores
             if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
                 mostrarToast('¡Factura Enviada!', 'Factura enviada exitosamente a caja para procesamiento de pago.', 'success');
@@ -2714,13 +2712,13 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
     let tituloModal = 'Factura Procesada';
     let mensajePrincipal = 'Factura guardada como pendiente';
     let descripcionMensaje = 'La factura ha sido guardada y está pendiente de procesamiento.';
-    
+
     if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
         tituloModal = 'Factura Enviada Exitosamente';
         mensajePrincipal = '¡Factura enviada a caja!';
         descripcionMensaje = 'La factura ha sido enviada exitosamente al área de caja para procesamiento de pago.';
     }
-    
+
     const modalHtml = `
         <div class="modal fade" id="modalFacturaPendiente" tabindex="-1">
             <div class="modal-dialog modal-lg">
