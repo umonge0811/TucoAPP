@@ -1501,6 +1501,13 @@ async function procesarVentaFinal() {
         console.log('✅ Factura creada:', resultadoFactura);
 
         if (!resultadoFactura.success) {
+            // Manejar caso específico de sesión expirada
+            if (resultadoFactura.redirectToLogin) {
+                console.log('🔄 Redirigiendo a login por sesión expirada');
+                window.location.href = '/Account/Login';
+                return;
+            }
+            
             throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
         }
 

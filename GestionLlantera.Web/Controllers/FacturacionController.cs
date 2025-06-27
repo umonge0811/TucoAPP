@@ -40,10 +40,30 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("🛒 Accediendo al módulo de facturación");
+                _logger.LogInformation("🛒 === ACCESO AL MÓDULO DE FACTURACIÓN ===");
+                _logger.LogInformation("🛒 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
+                _logger.LogInformation("🛒 Nombre de usuario: {Name}", User.Identity?.Name);
+
+                // Debug: Mostrar todos los claims al cargar facturación
+                _logger.LogInformation("📋 Claims al cargar facturación:");
+                foreach (var claim in User.Claims)
+                {
+                    _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
+                }
+
+                // Verificar token JWT desde el inicio
+                var tokenJWT = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(tokenJWT))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no disponible al cargar facturación");
+                }
+                else
+                {
+                    _logger.LogInformation("✅ Token JWT disponible al cargar facturación");
+                }
 
                 // Obtener información del usuario actual
-                var usuarioId = User.FindFirst("UserId")?.Value;
+                var usuarioId = User.FindFirst("UserId")?.Value ?? User.FindFirst("userId")?.Value;
                 var nombreUsuario = User.Identity?.Name;
 
                 // ✅ Verificar permisos específicos de facturación
@@ -323,9 +343,14 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                _logger.LogInformation("🧾 === INICIO CrearFactura ===");
+                _logger.LogInformation("🧾 Usuario: {Usuario}", User.Identity?.Name);
+                _logger.LogInformation("🧾 Autenticado: {Autenticado}", User.Identity?.IsAuthenticated);
+
                 // Verificar permisos
                 if (!await this.TienePermisoAsync("CrearFacturas"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permisos para crear facturas");
                     return Json(new { success = false, message = "Sin permisos para crear facturas" });
                 }
 
@@ -334,7 +359,24 @@ namespace GestionLlantera.Web.Controllers
                 if (string.IsNullOrEmpty(jwtToken))
                 {
                     _logger.LogError("❌ Token JWT no disponible para crear factura");
-                    return Json(new { success = false, message = "Sesión no válida. Inicie sesión nuevamente." });
+                    _logger.LogError("❌ Posible causa: Sesión expirada o middleware JwtClaimsMiddleware cerró la sesión");
+                    
+                    // Verificar si el usuario sigue autenticado
+                    if (!User.Identity?.IsAuthenticated ?? true)
+                    {
+                        _logger.LogError("❌ Usuario no está autenticado - redirigir a login");
+                        return Json(new { 
+                            success = false, 
+                            message = "Sesión expirada. Inicie sesión nuevamente.",
+                            redirectToLogin = true
+                        });
+                    }
+                    
+                    return Json(new { 
+                        success = false, 
+                        message = "Token de autenticación no disponible. Intente refrescar la página.",
+                        details = "No se pudo obtener el token JWT necesario para la operación"
+                    });
                 }
 
                 _logger.LogInformation("🚀 Enviando factura a API: {Cliente}", facturaDto.NombreCliente);
@@ -490,41 +532,73 @@ namespace GestionLlantera.Web.Controllers
 
         /// <summary>
         /// Método auxiliar para obtener el token JWT del usuario autenticado
-        /// Usa la misma lógica exitosa de otros controladores
+        /// Implementa la misma lógica exitosa de otros controladores
         /// </summary>
         private string? ObtenerTokenJWT()
         {
             try
             {
-                // Buscar el token usando la misma lógica de AccountController y otros controladores exitosos
+                _logger.LogInformation("🔐 === VERIFICACIÓN DE TOKEN JWT EN FACTURACIÓN ===");
+                
+                // Mostrar información de autenticación
+                _logger.LogInformation("🔐 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
+                _logger.LogInformation("🔐 Nombre de usuario: {Name}", User.Identity?.Name);
+                
+                // Mostrar todos los claims disponibles para debug
+                _logger.LogInformation("📋 Claims disponibles:");
+                foreach (var claim in User.Claims)
+                {
+                    _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
+                }
+
+                // Buscar el token JWT en los claims (misma lógica que otros controladores exitosos)
                 var token = User.FindFirst("JwtToken")?.Value;
 
                 if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogWarning("⚠️ Token JWT no encontrado en claim 'JwtToken' para usuario: {Usuario}",
-                        User.Identity?.Name ?? "Anónimo");
+                    _logger.LogWarning("⚠️ Token JWT no encontrado en claim 'JwtToken'");
                     
-                    // Debug: Mostrar todos los claims disponibles
-                    _logger.LogInformation("📋 === CLAIMS DISPONIBLES ===");
-                    foreach (var claim in User.Claims)
+                    // Intentar desde cookies como fallback (igual que otros controladores)
+                    if (Request.Cookies.TryGetValue("JwtToken", out string? cookieToken))
                     {
-                        _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
+                        _logger.LogInformation("🍪 Token encontrado en cookie como fallback");
+                        token = cookieToken;
                     }
-                    _logger.LogInformation("📋 === FIN CLAIMS ===");
-                    
-                    return null;
+                    else
+                    {
+                        _logger.LogError("❌ No se pudo obtener token JWT desde claims ni cookies");
+                        return null;
+                    }
                 }
 
-                _logger.LogInformation("✅ Token JWT obtenido correctamente para usuario: {Usuario}, Longitud: {Length}",
-                    User.Identity?.Name ?? "Anónimo", token.Length);
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _logger.LogInformation("✅ Token JWT obtenido exitosamente - Longitud: {Length}", token.Length);
+                    
+                    // Verificar que el token no esté vacío ni corrupto
+                    if (token.Split('.').Length == 3)
+                    {
+                        _logger.LogInformation("✅ Token JWT tiene formato válido (3 partes)");
+                        return token;
+                    }
+                    else
+                    {
+                        _logger.LogError("❌ Token JWT tiene formato inválido: {Token}", token.Substring(0, Math.Min(50, token.Length)));
+                        return null;
+                    }
+                }
 
-                return token;
+                _logger.LogError("❌ Token JWT está vacío después de todas las verificaciones");
+                return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al obtener token JWT para usuario: {Usuario}", 
-                    User.Identity?.Name ?? "Anónimo");
+                _logger.LogError(ex, "❌ Error crítico obteniendo token JWT");
                 return null;
+            }
+            finally
+            {
+                _logger.LogInformation("🔐 === FIN VERIFICACIÓN TOKEN JWT ===");
             }
         }
 
