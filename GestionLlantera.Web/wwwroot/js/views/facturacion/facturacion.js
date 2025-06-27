@@ -41,9 +41,14 @@ let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 // ===== CARGA DE PERMISOS =====
 function cargarPermisosUsuario() {
     try {
+        console.log('🔍 Verificando fuentes de permisos...');
+        console.log('🔍 window.ViewBag:', window.ViewBag);
+        console.log('🔍 window.inventarioConfig:', window.inventarioConfig);
+
         // Obtener permisos desde la configuración del ViewBag
         if (window.ViewBag && window.ViewBag.ConfiguracionFacturacion && window.ViewBag.ConfiguracionFacturacion.Permisos) {
             permisosUsuario = window.ViewBag.ConfiguracionFacturacion.Permisos;
+            console.log('🔐 Permisos obtenidos desde ViewBag:', permisosUsuario);
         }
         // Fallback: intentar desde configuración global
         else if (window.inventarioConfig && window.inventarioConfig.permisos) {
@@ -54,23 +59,36 @@ function cargarPermisosUsuario() {
                 puedeAnularFacturas: window.inventarioConfig.permisos.puedeAnularFacturas || false,
                 esAdmin: window.inventarioConfig.permisos.esAdmin || false
             };
+            console.log('🔐 Permisos obtenidos desde inventarioConfig:', permisosUsuario);
+        } else {
+            console.warn('⚠️ No se encontraron permisos en ninguna fuente, usando fallback');
+            // Permisos por defecto (solo crear facturas para usuarios autenticados)
+            permisosUsuario = {
+                puedeCrearFacturas: true,
+                puedeCompletarFacturas: false,
+                puedeEditarFacturas: false,
+                puedeAnularFacturas: false,
+                esAdmin: false
+            };
         }
 
-        console.log('🔐 Permisos cargados:', permisosUsuario);
+        console.log('🔐 Permisos finales cargados:', permisosUsuario);
 
         // ✅ CONFIGURAR INTERFAZ SEGÚN PERMISOS
         configurarInterfazSegunPermisos();
 
     } catch (error) {
         console.error('❌ Error cargando permisos:', error);
-        // Permisos por defecto (solo crear facturas)
+        // Permisos por defecto seguros
         permisosUsuario = {
-            puedeCrearFacturas: true,
+            puedeCrearFacturas: false,
             puedeCompletarFacturas: false,
             puedeEditarFacturas: false,
             puedeAnularFacturas: false,
             esAdmin: false
         };
+        console.log('🔐 Permisos de emergencia aplicados:', permisosUsuario);
+        configurarInterfazSegunPermisos();
     }
 }
 

@@ -45,18 +45,26 @@ namespace GestionLlantera.Web.Controllers
                 var nombreUsuario = User.Identity?.Name;
 
                 // ✅ Verificar permisos específicos de facturación
+                var esAdmin = User.IsInRole("Administrador");
                 var permisos = new
                 {
-                    puedeCrearFacturas = await this.TienePermisoAsync("CrearFacturas"),
-                    puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas"),
-                    puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas"),
-                    puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas"),
-                    esAdmin = User.IsInRole("Administrador")
+                    puedeCrearFacturas = esAdmin || await this.TienePermisoAsync("Crear Facturas"),
+                    puedeCompletarFacturas = esAdmin || await this.TienePermisoAsync("Completar Facturas"),
+                    puedeEditarFacturas = esAdmin || await this.TienePermisoAsync("Editar Facturas"),
+                    puedeAnularFacturas = esAdmin || await this.TienePermisoAsync("Anular Facturas"),
+                    esAdmin = esAdmin
                 };
 
-                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}", 
+                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}, EsAdmin={EsAdmin}", 
                     nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
-                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas);
+                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas, permisos.esAdmin);
+
+                // Logging adicional para debugging
+                _logger.LogInformation("🔍 Claims del usuario: {Claims}", 
+                    string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
+                
+                _logger.LogInformation("🔍 Roles del usuario: {Roles}", 
+                    string.Join(", ", User.Claims.Where(c => c.Type == "role").Select(c => c.Value)));
 
                 var viewModel = new
                 {
