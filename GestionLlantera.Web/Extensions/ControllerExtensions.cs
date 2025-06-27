@@ -199,57 +199,5 @@ namespace GestionLlantera.Web.Extensions
                     .ToArray()
             };
         }
-
-        /// <summary>
-        /// Obtiene todos los permisos del usuario actual
-        /// Uso: var misPermisos = await this.ObtenerMisPermisosAsync();
-        /// </summary>
-        public static async Task<List<string>> ObtenerMisPermisosAsync(this ControllerBase controller)
-        {
-            try
-            {
-                var permisosService = controller.HttpContext.RequestServices
-                    .GetService<IPermisosGlobalService>();
-
-                if (permisosService == null)
-                    return new List<string>();
-
-                return await permisosService.ObtenerMisPermisosAsync();
-            }
-            catch (Exception ex)
-            {
-                var loggerFactory = controller.HttpContext.RequestServices
-                    .GetService<ILoggerFactory>();
-                var logger = loggerFactory?.CreateLogger("ControllerExtensions");
-                logger?.LogError(ex, "Error al obtener permisos del usuario");
-                return new List<string>();
-            }
-        }
-
-        /// <summary>
-        /// Verifica si el usuario actual es administrador
-        /// Uso: var esAdmin = await this.EsAdministradorAsync();
-        /// </summary>
-        public static async Task<bool> EsAdministradorAsync(this ControllerBase controller)
-        {
-            try
-            {
-                var permisosService = controller.HttpContext.RequestServices
-                    .GetService<IPermisosGlobalService>();
-
-                if (permisosService == null)
-                    return false;
-
-                return await permisosService.EsAdministradorAsync();
-            }
-            catch (Exception ex)
-            {
-                var loggerFactory = controller.HttpContext.RequestServices
-                    .GetService<ILoggerFactory>();
-                var logger = loggerFactory?.CreateLogger("ControllerExtensions");
-                logger?.LogError(ex, "Error al verificar si es administrador");
-                return false;
-            }
-        }
     }
 }
