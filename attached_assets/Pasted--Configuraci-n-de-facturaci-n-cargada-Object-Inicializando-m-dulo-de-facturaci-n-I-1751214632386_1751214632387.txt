@@ -1,0 +1,459 @@
+ 📋 Configuración de facturación cargada: Object
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 Iniciando carga de permisos...
+ 🔍 window.facturaConfig disponible: true
+ 🔍 Contenido facturaConfig: Object
+ 🔍 Permisos disponibles en facturaConfig.Permisos:
+ 🔍   - "puedeCrearFacturas": false
+ 🔍   - "puedeCompletarFacturas": false
+ 🔍   - "puedeEditarFacturas": false
+ 🔍   - "puedeAnularFacturas": false
+ 🔍   - "esAdmin": false
+ ❌ Permiso "Crear Factura" no encontrado en ninguna variación
+ ❌ Permiso "Completar Factura" no encontrado en ninguna variación
+ ❌ Permiso "Editar Factura" no encontrado en ninguna variación
+ ❌ Permiso "Anular Factura" no encontrado en ninguna variación
+ ❌ Permiso "Admin" no encontrado en ninguna variación
+ ❌ Permiso "Administrador" no encontrado en ninguna variación
+facturacion.js:99 ✅ Permisos obtenidos desde facturaConfig: Object
+facturacion.js:129 🔐 Permisos finales cargados: Object
+facturacion.js:150 🎯 Configurando interfaz según permisos: Object
+facturacion.js:187 🔒 Usuario sin permisos de facturación
+facturacion.js:188 🔍 Debug permisos: Object
+facturacion.js:210 🚀 Inicializando modales...
+facturacion.js:214 🚀 Configurando eventos...
+facturacion.js:218 🚀 Actualizando totales...
+facturacion.js:2832 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:225 🚀 Iniciando carga de productos iniciales...
+facturacion.js:2625 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:2626 📦 cargaInicialCompletada: false
+facturacion.js:2642 📦 Iniciando carga de productos iniciales...
+facturacion.js:402 🔍 === INICIO buscarProductos ===
+facturacion.js:403 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:404 🔍 Término recibido: ""
+facturacion.js:405 🔍 busquedaEnProceso: false
+facturacion.js:406 🔍 ultimaBusqueda: ""
+facturacion.js:421 🔍 Iniciando búsqueda válida...
+facturacion.js:228 ✅ Facturación inicializada correctamente
+facturacion.js:229 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:443 📋 Respuesta del servidor recibida
+facturacion.js:446 ✅ Se encontraron 4 productos disponibles
+facturacion.js:485 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:486 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:487 🔄 Productos recibidos: 4
+facturacion.js:522 🔄 Construyendo HTML para 4 productos
+facturacion.js:536 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:537 🖼️ Datos del producto: Object
+facturacion.js:550 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:555 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:574 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:586 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:536 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:537 🖼️ Datos del producto: Object
+facturacion.js:550 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:555 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:574 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:586 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:536 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:537 🖼️ Datos del producto: Object
+facturacion.js:550 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:555 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:574 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:586 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:536 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:537 🖼️ Datos del producto: Object
+facturacion.js:550 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:555 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:574 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:586 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:685 🔄 Actualizando DOM (longitud HTML: 18712 caracteres)
+facturacion.js:718 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:463 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:466 📦 Productos mostrados exitosamente
+facturacion.js:479 🔍 === FIN buscarProductos ===
+facturacion.js:2658 📦 Búsqueda inicial ejecutada
+facturacion.js:2660 📦 === FIN cargarProductosIniciales (exitosa) ===
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:807 🖼️ Procesando imágenes para modal de producto: Llanta Test
+facturacion.js:824 🖼️ URL original en modal: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:839 🖼️ URL final en modal: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:1031 🛒 Agregando producto a venta: Object
+facturacion.js:2084 SUCCESS: Producto agregado - Llanta Test agregado a la venta
+facturacion.js:2832 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:2084 SUCCESS: Producto agregado - 1 unidad de Llanta Test agregadas
+facturacion.js:724 👥 Buscando clientes: "ul"
+facturacion.js:724 👥 Buscando clientes: "uli"
+facturacion.js:2832 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:797 Cliente seleccionado: Object
+facturacion.js:1400 🎯 Configurando modal con permisos: Object
+facturacion.js:63 ❌ Permiso "Crear Factura" no encontrado en ninguna variación
+facturacion.js:1428 ⚠️ No se detectaron permisos específicos, habilitando como colaborador por defecto
+facturacion.js:1436 🎯 Estado final del botón: Object
+facturacion.js:63 ❌ Permiso "Crear Factura" no encontrado en ninguna variación
+facturacion.js:1542 📝 Procesando como colaborador - Factura pendiente para caja
+facturacion.js:2754 ⚠️ No se pudo obtener información del usuario, usando valores por defecto
+obtenerUsuarioActual @ facturacion.js:2754
+procesarVentaFinal @ facturacion.js:1553
+(anonymous) @ facturacion.js:395
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+facturacion.js:1556 👤 Usuario actual para factura: Object
+facturacion.js:1596 📋 Datos de factura preparados: Object
+facturacion.js:1615 ✅ Factura creada: Object
+facturacion.js:1737 📋 Factura pendiente - NO se ajusta stock automáticamente
+facturacion.js:2832 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:1626 🔍 === DEBUGGING COMPLETO EN PROCESARVENTA ===
+facturacion.js:1627 🔍 Respuesta completa de la API: {
+  "success": true,
+  "data": {
+    "success": [],
+    "data": [
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        [
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ]
+        ]
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ]
+    ],
+    "facturaId": [],
+    "numeroFactura": [],
+    "estado": [],
+    "puedeCompletar": [],
+    "message": [],
+    "timestamp": []
+  },
+  "message": "Factura creada exitosamente"
+}
+facturacion.js:1628 🔍 Tipo de resultadoFactura: object
+facturacion.js:1629 🔍 ¿Es array?: false
+facturacion.js:1632 🔍 Propiedades disponibles: Array(3)
+facturacion.js:1633 🔍 resultadoFactura.numeroFactura: undefined
+facturacion.js:1634 🔍 resultadoFactura.NumeroFactura: undefined
+facturacion.js:1635 🔍 resultadoFactura.facturaId: undefined
+facturacion.js:1636 🔍 resultadoFactura.message: Factura creada exitosamente
+facturacion.js:2842 📋 === MODAL FACTURA PENDIENTE ===
+facturacion.js:2843 📋 Datos recibidos completos: {
+  "success": true,
+  "data": {
+    "success": [],
+    "data": [
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        [
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ]
+        ]
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ]
+    ],
+    "facturaId": [],
+    "numeroFactura": [],
+    "estado": [],
+    "puedeCompletar": [],
+    "message": [],
+    "timestamp": []
+  },
+  "message": "Factura creada exitosamente"
+}
