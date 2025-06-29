@@ -76,22 +76,22 @@ function cargarPermisosUsuario() {
         if (window.facturaConfig) {
             console.log('🔍 Propiedades de facturaConfig:', Object.keys(window.facturaConfig));
             
-            if (window.facturaConfig.Usuario) {
-                console.log('👤 Usuario disponible en configuración:', window.facturaConfig.Usuario);
+            if (window.facturaConfig.usuario) {
+                console.log('👤 Usuario disponible en configuración:', window.facturaConfig.usuario);
             } else {
                 console.error('❌ Usuario NO encontrado en configuración');
             }
             
-            if (window.facturaConfig.Permisos) {
-                console.log('🔐 Permisos disponibles en facturaConfig.Permisos:');
-                Object.keys(window.facturaConfig.Permisos).forEach(key => {
-                    console.log(`🔐   - "${key}": ${window.facturaConfig.Permisos[key]}`);
+            if (window.facturaConfig.permisos) {
+                console.log('🔐 Permisos disponibles en facturaConfig.permisos:');
+                Object.keys(window.facturaConfig.permisos).forEach(key => {
+                    console.log(`🔐   - "${key}": ${window.facturaConfig.permisos[key]}`);
                 });
             } else {
                 console.error('❌ Permisos NO encontrados en configuración');
             }
             
-            console.log('🔑 Token disponible:', window.facturaConfig.TokenDisponible);
+            console.log('🔑 Token disponible:', window.facturaConfig.tokenDisponible);
         }
 
         if (window.inventarioConfig && window.inventarioConfig.permisos) {
@@ -102,14 +102,13 @@ function cargarPermisosUsuario() {
         }
 
         // ✅ OBTENER PERMISOS DESDE LA CONFIGURACIÓN CORRECTA
-        if (window.facturaConfig && window.facturaConfig.Permisos) {
+        if (window.facturaConfig && window.facturaConfig.permisos) {
             permisosUsuario = {
-                puedeCrearFacturas: buscarPermiso(window.facturaConfig.Permisos, 'Crear Factura'),
-                puedeCompletarFacturas: buscarPermiso(window.facturaConfig.Permisos, 'Completar Factura'),
-                puedeEditarFacturas: buscarPermiso(window.facturaConfig.Permisos, 'Editar Factura'),
-                puedeAnularFacturas: buscarPermiso(window.facturaConfig.Permisos, 'Anular Factura'),
-                esAdmin: buscarPermiso(window.facturaConfig.Permisos, 'Admin') || 
-                        buscarPermiso(window.facturaConfig.Permisos, 'Administrador')
+                puedeCrearFacturas: window.facturaConfig.permisos.puedeCrearFacturas || window.facturaConfig.permisos.crearFacturas || false,
+                puedeCompletarFacturas: window.facturaConfig.permisos.puedeCompletarFacturas || window.facturaConfig.permisos.completarFacturas || false,
+                puedeEditarFacturas: window.facturaConfig.permisos.puedeEditarFacturas || window.facturaConfig.permisos.editarFacturas || false,
+                puedeAnularFacturas: window.facturaConfig.permisos.puedeAnularFacturas || window.facturaConfig.permisos.anularFacturas || false,
+                esAdmin: window.facturaConfig.permisos.esAdmin || window.facturaConfig.permisos.administrador || false
             };
             console.log('✅ Permisos obtenidos desde facturaConfig:', permisosUsuario);
         }
@@ -1414,46 +1413,47 @@ function configurarModalSegunPermisos() {
 
     console.log('🎯 Configurando modal con permisos:', permisosUsuario);
 
-    // ✅ SIMPLIFICAR: Si tiene permiso crear facturas O completar facturas, habilitar botón
-    const puedeCrear = permisosUsuario.puedeCrearFacturas || buscarPermiso(window.facturaConfig?.Permisos, 'Crear Factura');
-    const puedeCompletar = permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin;
-
-    if (puedeCompletar) {
-        // ✅ USUARIO PUEDE COMPLETAR FACTURAS
+    if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+        // ✅ USUARIO PUEDE COMPLETAR FACTURAS - PROCESAR PAGO INMEDIATAMENTE
         $tituloModal.html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
         $btnConfirmar.removeClass('btn-warning btn-secondary btn-info').addClass('btn-success')
                     .prop('disabled', false);
-        $textoBoton.text('Confirmar Venta');
-        $btnConfirmar.attr('title', 'Procesar venta completa e imprimir factura');
+        $textoBoton.text('Completar Venta');
+        $btnConfirmar.attr('title', 'Procesar venta completa, marcar como pagada e imprimir factura');
 
-        console.log('👑 Modal configurado para usuario con permisos completos');
+        console.log('👑 Modal configurado para administrador/cajero - Venta completa');
 
-    } else if (puedeCrear) {
+    } else if (permisosUsuario.puedeCrearFacturas) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS - ENVIAR A CAJA
         $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
         $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
                     .prop('disabled', false);
         $textoBoton.text('Enviar a Caja');
-        $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
+        $btnConfirmar.attr('title', 'Crear factura pendiente y enviar a caja para procesamiento de pago');
 
-        console.log('📝 Modal configurado para colaborador - Envío a caja habilitado');
+        console.log('📝 Modal configurado para colaborador - Envío a caja');
 
     } else {
-        // ✅ FALLBACK: HABILITAR COMO COLABORADOR POR DEFECTO
-        console.log('⚠️ No se detectaron permisos específicos, habilitando como colaborador por defecto');
-        $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
-        $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
-                    .prop('disabled', false);
-        $textoBoton.text('Enviar a Caja');
-        $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
+        // ❌ SIN PERMISOS
+        $tituloModal.html('<i class="bi bi-lock me-2"></i>Sin Permisos');
+        $btnConfirmar.removeClass('btn-success btn-warning btn-info').addClass('btn-secondary')
+                    .prop('disabled', true);
+        $textoBoton.text('Sin Permisos');
+        $btnConfirmar.attr('title', 'No tienes permisos para procesar ventas');
+
+        console.log('🔒 Modal configurado sin permisos');
     }
 
-    console.log('🎯 Estado final del botón:', {
+    console.log('🎯 Estado final del modal:', {
+        titulo: $tituloModal.html(),
         disabled: $btnConfirmar.prop('disabled'),
         classes: $btnConfirmar.attr('class'),
-        text: $textoBoton.text(),
-        puedeCrear,
-        puedeCompletar
+        texto: $textoBoton.text(),
+        permisos: {
+            puedeCrear: permisosUsuario.puedeCrearFacturas,
+            puedeCompletar: permisosUsuario.puedeCompletarFacturas,
+            esAdmin: permisosUsuario.esAdmin
+        }
     });
 }
 
@@ -1531,37 +1531,28 @@ async function procesarVentaFinal() {
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        // ✅ DETERMINAR ESTADO SEGÚN PERMISOS - SIMPLIFICADO
+        // ✅ DETERMINAR ESTADO SEGÚN PERMISOS
         let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
 
-        // Verificar si puede completar facturas (administradores/cajeros)
-        const puedeCompletar = permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin;
-        
-        // Verificar si puede crear facturas (colaboradores)
-        const puedeCrear = permisosUsuario.puedeCrearFacturas || 
-                          buscarPermiso(window.facturaConfig?.Permisos, 'Crear Factura');
-
-        if (puedeCompletar) {
-            // Administradores y cajeros: venta completa
+        if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+            // ✅ ADMINISTRADORES Y CAJEROS: Venta completa e inmediata
             estadoFactura = 'Pagada';
-            mensajeExito = 'Venta procesada exitosamente';
+            mensajeExito = 'Venta procesada exitosamente y marcada como pagada';
             debeImprimir = true;
             debeAjustarInventario = true;
-            console.log('👑 Procesando como administrador/cajero - Factura pagada');
-        } else if (puedeCrear || true) { // ✅ PERMITIR POR DEFECTO PARA COLABORADORES
-            // Colaboradores: enviar a cajas
+            console.log('👑 Procesando como administrador/cajero - Factura pagada inmediatamente');
+            
+        } else if (permisosUsuario.puedeCrearFacturas) {
+            // ✅ COLABORADORES: Factura pendiente para caja
             estadoFactura = 'Pendiente';
-            mensajeExito = 'Factura enviada a Cajas para ser cancelada';
+            mensajeExito = 'Factura creada y enviada a Cajas para procesamiento de pago';
             debeImprimir = false;
             debeAjustarInventario = false;
             console.log('📝 Procesando como colaborador - Factura pendiente para caja');
+            
         } else {
-            // Este caso ya no debería ocurrir, pero mantenemos como fallback
-            console.warn('⚠️ Sin permisos específicos detectados, usando flujo de colaborador por defecto');
-            estadoFactura = 'Pendiente';
-            mensajeExito = 'Factura enviada a Cajas para ser cancelada';
-            debeImprimir = false;
-            debeAjustarInventario = false;
+            // ❌ SIN PERMISOS: No debería llegar aquí, pero como fallback
+            throw new Error('No tienes permisos para procesar ventas');
         }
 
         // Obtener información del usuario actual
@@ -2746,28 +2737,17 @@ function obtenerUsuarioActual() {
         console.log('👤 facturaConfig disponible:', !!window.facturaConfig);
         
         // ✅ PRIMERA OPCIÓN: Desde configuración de facturación (método principal)
-        if (window.facturaConfig && window.facturaConfig.Usuario) {
-            console.log('👤 Usuario encontrado en facturaConfig:', window.facturaConfig.Usuario);
-            console.log('👤 Tipo de usuario obtenido:', typeof window.facturaConfig.Usuario);
-            console.log('👤 Propiedades del usuario:', Object.keys(window.facturaConfig.Usuario));
-            console.log('👤 ID de usuario:', window.facturaConfig.Usuario.usuarioId || window.facturaConfig.Usuario.id);
-            console.log('👤 Nombre de usuario:', window.facturaConfig.Usuario.nombre || window.facturaConfig.Usuario.nombreUsuario);
-            return window.facturaConfig.Usuario;
+        if (window.facturaConfig && window.facturaConfig.usuario) {
+            console.log('👤 Usuario encontrado en facturaConfig:', window.facturaConfig.usuario);
+            console.log('👤 Tipo de usuario obtenido:', typeof window.facturaConfig.usuario);
+            console.log('👤 Propiedades del usuario:', Object.keys(window.facturaConfig.usuario));
+            console.log('👤 ID de usuario:', window.facturaConfig.usuario.usuarioId || window.facturaConfig.usuario.id);
+            console.log('👤 Nombre de usuario:', window.facturaConfig.usuario.nombre || window.facturaConfig.usuario.nombreUsuario);
+            return window.facturaConfig.usuario;
         } else {
-            console.error('❌ No se encontró Usuario en facturaConfig');
+            console.error('❌ No se encontró usuario en facturaConfig');
             if (window.facturaConfig) {
                 console.log('🔍 Estructura de facturaConfig:', Object.keys(window.facturaConfig));
-            }
-        }
-
-        // ✅ VERIFICAR SI HAY CONFIGURACIÓN DISPONIBLE PERO MAL ESTRUCTURADA
-        if (window.facturaConfig) {
-            console.log('👤 facturaConfig disponible pero sin Usuario:', window.facturaConfig);
-            
-            // Buscar usuario en otros lugares de la configuración
-            if (window.facturaConfig.usuario) {
-                console.log('👤 Usuario encontrado en minúscula:', window.facturaConfig.usuario);
-                return window.facturaConfig.usuario;
             }
         }
 
