@@ -713,6 +713,18 @@ namespace GestionLlantera.Web.Services
 
                 _logger.LogInformation("🔍 === DEBUGGING JWT TOKEN COMPLETO ===");
                 _logger.LogInformation("🔍 Payload JWT completo: {Payload}", payloadJson);
+                
+                // ✅ LOGGING ADICIONAL PARA DEBUGGING DE ESTRUCTURA
+                if (claims is Newtonsoft.Json.Linq.JObject debugObject)
+                {
+                    _logger.LogInformation("🔍 Propiedades disponibles en el token:");
+                    foreach (var property in debugObject.Properties())
+                    {
+                        var valorTruncado = property.Value?.ToString();
+                        if (valorTruncado?.Length > 200) valorTruncado = valorTruncado.Substring(0, 200) + "...";
+                        _logger.LogInformation("🔍   - {Propiedad}: {Valor}", property.Name, valorTruncado);
+                    }
+                }
 
                 dynamic claims = JsonConvert.DeserializeObject(payloadJson);
 
@@ -721,11 +733,52 @@ namespace GestionLlantera.Web.Services
                            claims?.roles?.ToString() ??
                            claims?["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]?.ToString() ?? "";
 
-                // Verificar si el usuario tiene el permiso "CompletarFacturas"
-                var permisos = claims?.permisos?.ToString() ?? claims?.permissions?.ToString() ?? "";
+                // ✅ EXTRAER PERMISOS CORRECTAMENTE DEL TOKEN JWT
+                // Los permisos se almacenan como claims individuales con tipo "Permission"
+                var permisosEncontrados = new List<string>();
 
-                if (permisos.Contains("CompletarFacturas", StringComparison.OrdinalIgnoreCase))
+                // Buscar en la estructura del token los claims de permisos
+                if (claims is Newtonsoft.Json.Linq.JObject jwtObject)
                 {
+                    // Buscar arrays de permisos en diferentes campos posibles
+                    var camposPermisos = new[] { "Permission", "permissions", "permisos", "Permisos" };
+                    
+                    foreach (var campo in camposPermisos)
+                    {
+                        var permisosToken = jwtObject[campo];
+                        if (permisosToken != null)
+                        {
+                            _logger.LogInformation("🔍 Permisos encontrados en campo '{Campo}': {Permisos}", campo, permisosToken.ToString());
+                            
+                            if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.Array)
+                            {
+                                // Es un array de permisos
+                                foreach (var permiso in permisosToken)
+                                {
+                                    permisosEncontrados.Add(permiso.ToString());
+                                }
+                            }
+                            else if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.String)
+                            {
+                                // Es un string único
+                                permisosEncontrados.Add(permisosToken.ToString());
+                            }
+                            break; // Si encontramos permisos, salimos del bucle
+                        }
+                    }
+                }
+
+                _logger.LogInformation("🔐 Permisos extraídos del token: {Permisos}", string.Join(", ", permisosEncontrados));
+
+                // Verificar si el usuario tiene el permiso "CompletarFacturas"
+                var tienePermisoCompletar = permisosEncontrados.Any(p => 
+                    p.Equals("CompletarFacturas", StringComparison.OrdinalIgnoreCase) ||
+                    p.Equals("Completar Facturas", StringComparison.OrdinalIgnoreCase) ||
+                    p.Equals("CompletarFactura", StringComparison.OrdinalIgnoreCase));
+
+                if (tienePermisoCompletar)
+                {
+                    _logger.LogInformation("✅ Usuario tiene permiso CompletarFacturas - Estado: Pagada");
                     return "Pagada";
                 }
 
@@ -736,6 +789,9 @@ namespace GestionLlantera.Web.Services
                 }
 
                 // Para cualquier otro rol (Colaborador, etc.), crear como pendiente
+                _logger.LogInformation("⚠️ Usuario sin permisos de CompletarFacturas - Estado: Pendiente");
+                _logger.LogInformation("🔐 Roles encontrados: {Roles}", roles);
+                _logger.LogInformation("🔐 Permisos evaluados: {Permisos}", string.Join(", ", permisosEncontrados));
                 return "Pendiente";
             }
             catch (Exception ex)
