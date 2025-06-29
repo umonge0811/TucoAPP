@@ -334,8 +334,7 @@ namespace API.Controllers
                         estado = estadoInicial,
                         puedeCompletar = puedeCompletar,
                         message = mensajeRespuesta,
-                        timestamp = DateTime.Now,
-                        data = facturaCreada
+                        timestamp = DateTime.Now
                     });
             }
             catch (Exception ex)
