@@ -967,8 +967,12 @@ function mostrarModalSeleccionProducto(producto) {
 function configurarEventosModalProducto(producto, modal) {
     const precioBase = producto.precio || 0;
 
-    // Limpiar eventos anteriores ESPECÍFICAMENTE para este modal
-    $('#modalSeleccionProducto #btnMenosCantidad, #modalSeleccionProducto #btnMasCantidad, #modalSeleccionProducto #cantidadProducto, #modalSeleccionProducto #btnConfirmarAgregarProducto').off('click.modalProducto input.modalProducto');
+    // ✅ LIMPIAR TODOS LOS EVENTOS ANTERIORES DEL MODAL ESPECÍFICO
+    $('#modalSeleccionProducto').off('.modalProducto');
+    $('#modalSeleccionProducto #btnMenosCantidad').off('.modalProducto');
+    $('#modalSeleccionProducto #btnMasCantidad').off('.modalProducto');
+    $('#modalSeleccionProducto #cantidadProducto').off('.modalProducto');
+    $('#modalSeleccionProducto #btnConfirmarAgregarProducto').off('.modalProducto');
 
     // Eventos de cantidad - CORREGIDOS con namespace específico
     $('#modalSeleccionProducto #btnMenosCantidad').on('click.modalProducto', function(e) {
@@ -1035,45 +1039,70 @@ function configurarEventosModalProducto(producto, modal) {
         }
     });
 
-    // Confirmar agregar producto - MEJORADO con selector específico
-    $('#modalSeleccionProducto #btnConfirmarAgregarProducto').on('click.modalProducto', function(e) {
+    // ✅ CONFIRMAR AGREGAR PRODUCTO - PREVENIR MÚLTIPLES EJECUCIONES
+    $('#modalSeleccionProducto #btnConfirmarAgregarProducto').one('click.modalProducto', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
+        // ✅ DESHABILITAR BOTÓN INMEDIATAMENTE PARA PREVENIR DOBLE CLICK
+        const $boton = $(this);
+        if ($boton.prop('disabled')) {
+            console.log('🛑 Botón ya está deshabilitado, evitando ejecución duplicada');
+            return;
+        }
+
+        $boton.prop('disabled', true);
+        $boton.html('<span class="spinner-border spinner-border-sm me-2"></span>Agregando...');
+
         const cantidad = parseInt($('#modalSeleccionProducto #cantidadProducto').val()) || 1;
 
-        console.log('🛒 Agregando producto a venta:', {
-            nombre: producto.nombreProducto,
-            cantidad: cantidad,
-            precio: precioBase,
-            stock: producto.cantidadEnInventario
-        });
+        console.log('🛒 === INICIO AGREGAR PRODUCTO ===');
+        console.log('🛒 Producto:', producto.nombreProducto);
+        console.log('🛒 Cantidad:', cantidad);
+        console.log('🛒 Precio base:', precioBase);
+        console.log('🛒 Stock disponible:', producto.cantidadEnInventario);
 
         // Validar cantidad antes de agregar
         if (cantidad < 1) {
             mostrarToast('Cantidad inválida', 'La cantidad debe ser mayor a 0', 'warning');
+            $boton.prop('disabled', false);
+            $boton.html('<i class="bi bi-cart-plus me-1"></i>Agregar al Carrito');
             return;
         }
 
         if (cantidad > producto.cantidadEnInventario) {
             mostrarToast('Stock insuficiente', `Solo hay ${producto.cantidadEnInventario} unidades disponibles`, 'warning');
+            $boton.prop('disabled', false);
+            $boton.html('<i class="bi bi-cart-plus me-1"></i>Agregar al Carrito');
             return;
         }
 
-        // Agregar producto con la cantidad seleccionada
-        agregarProductoAVenta(producto, cantidad, precioBase, 'efectivo');
+        // ✅ AGREGAR PRODUCTO UNA SOLA VEZ
+        try {
+            agregarProductoAVenta(producto, cantidad, precioBase, 'efectivo');
+            console.log('✅ Producto agregado exitosamente');
 
-        // Cerrar modal
-        modal.hide();
+            // Cerrar modal después de un breve delay
+            setTimeout(() => {
+                modal.hide();
+            }, 300);
 
-        // Mostrar confirmación
-       /* mostrarToast('Producto agregado', `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${producto.nombreProducto} agregadas`, 'success');*/
+        } catch (error) {
+            console.error('❌ Error agregando producto:', error);
+            mostrarToast('Error', 'No se pudo agregar el producto', 'danger');
+            $boton.prop('disabled', false);
+            $boton.html('<i class="bi bi-cart-plus me-1"></i>Agregar al Carrito');
+        }
+
+        console.log('🛒 === FIN AGREGAR PRODUCTO ===');
     });
 
     // Limpiar eventos cuando se cierre el modal
     $('#modalSeleccionProducto').on('hidden.bs.modal.modalProducto', function() {
+        console.log('🧹 Limpiando eventos del modal de producto');
         $('#modalSeleccionProducto #btnMenosCantidad, #modalSeleccionProducto #btnMasCantidad, #modalSeleccionProducto #cantidadProducto, #modalSeleccionProducto #btnConfirmarAgregarProducto').off('.modalProducto');
         $(this).off('hidden.bs.modal.modalProducto');
+        $(this).off('.modalProducto');
     });
 }
 
