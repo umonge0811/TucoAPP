@@ -68,142 +68,45 @@ function buscarPermiso(permisos, nombrePermiso) {
 function cargarPermisosUsuario() {
     try {
         console.log('🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===');
-        console.log('🔍 window.facturaConfig disponible:', !!window.facturaConfig);
-        console.log('🔍 Tipo de facturaConfig:', typeof window.facturaConfig);
-        console.log('🔍 Contenido facturaConfig completo:', JSON.stringify(window.facturaConfig, null, 2));
+        console.log('🔍 Configuración recibida:', JSON.stringify(window.facturaConfig, null, 2));
 
-        // ✅ VERIFICAR ESTRUCTURA COMPLETA DE LA CONFIGURACIÓN
-        if (window.facturaConfig) {
-            console.log('🔍 Propiedades de facturaConfig:', Object.keys(window.facturaConfig));
-            
-            if (window.facturaConfig.usuario) {
-                console.log('👤 Usuario disponible en configuración:', window.facturaConfig.usuario);
-            } else {
-                console.error('❌ Usuario NO encontrado en configuración');
-            }
-            
-            if (window.facturaConfig.permisos) {
-                console.log('🔐 Permisos disponibles en facturaConfig.permisos:');
-                Object.keys(window.facturaConfig.permisos).forEach(key => {
-                    console.log(`🔐   - "${key}": ${window.facturaConfig.permisos[key]}`);
-                });
-            } else {
-                console.error('❌ Permisos NO encontrados en configuración');
-            }
-            
-            console.log('🔑 Token disponible:', window.facturaConfig.tokenDisponible);
+        if (!window.facturaConfig || !window.facturaConfig.Permisos) {
+            throw new Error('No se encontró configuración de permisos');
         }
 
-        if (window.inventarioConfig && window.inventarioConfig.permisos) {
-            console.log('🔍 Permisos disponibles en inventarioConfig.permisos:');
-            Object.keys(window.inventarioConfig.permisos).forEach(key => {
-                console.log(`🔍   - "${key}": ${window.inventarioConfig.permisos[key]}`);
-            });
-        }
+        const permisos = window.facturaConfig.Permisos;
+        
+        // ✅ MAPEO DIRECTO DE PERMISOS (sin complicaciones)
+        permisosUsuario = {
+            puedeCrearFacturas: permisos.puedeCrearFacturas === true,
+            puedeCompletarFacturas: permisos.puedeCompletarFacturas === true,
+            puedeEditarFacturas: permisos.puedeEditarFacturas === true,
+            puedeAnularFacturas: permisos.puedeAnularFacturas === true,
+            esAdmin: permisos.esAdmin === true
+        };
 
-        // ✅ MAPEO MEJORADO DE PERMISOS CON MÚLTIPLES VARIACIONES
-        function extraerPermiso(fuente, ...variaciones) {
-            if (!fuente) return false;
-            
-            for (const variacion of variaciones) {
-                if (fuente[variacion] === true || fuente[variacion] === 'true' || fuente[variacion] === 1) {
-                    console.log(`✅ Permiso encontrado: "${variacion}" = ${fuente[variacion]}`);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // ✅ OBTENER PERMISOS DESDE LA CONFIGURACIÓN CORRECTA
-        if (window.facturaConfig && window.facturaConfig.permisos) {
-            const permisos = window.facturaConfig.permisos;
-            
-            permisosUsuario = {
-                puedeCrearFacturas: extraerPermiso(permisos, 
-                    'puedeCrearFacturas', 'crearFacturas', 'CrearFacturas', 
-                    'Crear Facturas', 'crear_facturas', 'CREAR_FACTURAS'),
-                    
-                puedeCompletarFacturas: extraerPermiso(permisos, 
-                    'puedeCompletarFacturas', 'completarFacturas', 'CompletarFacturas',
-                    'Completar Facturas', 'completar_facturas', 'COMPLETAR_FACTURAS'),
-                    
-                puedeEditarFacturas: extraerPermiso(permisos, 
-                    'puedeEditarFacturas', 'editarFacturas', 'EditarFacturas',
-                    'Editar Facturas', 'editar_facturas', 'EDITAR_FACTURAS'),
-                    
-                puedeAnularFacturas: extraerPermiso(permisos, 
-                    'puedeAnularFacturas', 'anularFacturas', 'AnularFacturas',
-                    'Anular Facturas', 'anular_facturas', 'ANULAR_FACTURAS')
-            };
-            
-            console.log('✅ Permisos extraídos desde facturaConfig:', permisosUsuario);
-        }
-        // Fallback: intentar desde configuración global de inventario
-        else if (window.inventarioConfig && window.inventarioConfig.permisos) {
-            const permisos = window.inventarioConfig.permisos;
-            
-            permisosUsuario = {
-                puedeCrearFacturas: extraerPermiso(permisos, 
-                    'puedeCrearFacturas', 'crearFacturas', 'CrearFacturas', 
-                    'Crear Facturas', 'Crear Factura', 'crear_facturas'),
-                    
-                puedeCompletarFacturas: extraerPermiso(permisos, 
-                    'puedeCompletarFacturas', 'completarFacturas', 'CompletarFacturas',
-                    'Completar Facturas', 'Completar Factura', 'completar_facturas'),
-                    
-                puedeEditarFacturas: extraerPermiso(permisos, 
-                    'puedeEditarFacturas', 'editarFacturas', 'EditarFacturas',
-                    'Editar Facturas', 'Editar Factura', 'editar_facturas'),
-                    
-                puedeAnularFacturas: extraerPermiso(permisos, 
-                    'puedeAnularFacturas', 'anularFacturas', 'AnularFacturas',
-                    'Anular Facturas', 'Anular Factura', 'anular_facturas'),
-                    
-                esAdmin: extraerPermiso(permisos, 
-                    'esAdmin', 'administrador', 'Admin', 'ADMIN', 
-                    'Administrador', 'admin', 'isAdmin')
-            };
-            
-            console.log('✅ Permisos obtenidos desde inventarioConfig (fallback):', permisosUsuario);
-        }
-        else {
-            console.error('❌ No se encontró configuración de permisos');
-            console.log('🔍 Debug - facturaConfig:', window.facturaConfig);
-            console.log('🔍 Debug - inventarioConfig:', window.inventarioConfig);
-
-            // ✅ PERMISOS POR DEFECTO PARA COLABORADORES (PUEDEN CREAR FACTURAS)
-            permisosUsuario = {
-                puedeCrearFacturas: true,  // Permitir por defecto para colaboradores
-                puedeCompletarFacturas: false,
-                puedeEditarFacturas: false,
-                puedeAnularFacturas: false,
-                esAdmin: false
-            };
-            console.log('⚠️ Usando permisos por defecto de colaborador:', permisosUsuario);
-        }
-
-        // ✅ LOG DETALLADO DE PERMISOS FINALES
-        console.log('🔐 === PERMISOS FINALES CARGADOS ===');
+        console.log('🔐 === PERMISOS CARGADOS CORRECTAMENTE ===');
         console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
         console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
         console.log('🔐 puedeEditarFacturas:', permisosUsuario.puedeEditarFacturas);
         console.log('🔐 puedeAnularFacturas:', permisosUsuario.puedeAnularFacturas);
         console.log('🔐 esAdmin:', permisosUsuario.esAdmin);
-        console.log('🔐 === FIN PERMISOS FINALES ===');
 
         // ✅ CONFIGURAR INTERFAZ SEGÚN PERMISOS
         configurarInterfazSegunPermisos();
 
     } catch (error) {
         console.error('❌ Error cargando permisos:', error);
-        // ✅ PERMISOS POR DEFECTO PARA COLABORADORES EN CASO DE ERROR
+        
+        // Permisos por defecto en caso de error
         permisosUsuario = {
-            puedeCrearFacturas: true,  // Permitir por defecto
+            puedeCrearFacturas: false,
             puedeCompletarFacturas: false,
             puedeEditarFacturas: false,
             puedeAnularFacturas: false,
             esAdmin: false
         };
+        
         console.log('🔧 Permisos de emergencia aplicados:', permisosUsuario);
         configurarInterfazSegunPermisos();
     }

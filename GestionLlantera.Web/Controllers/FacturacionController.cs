@@ -44,32 +44,42 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("🛒 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
                 _logger.LogInformation("🛒 Nombre de usuario: {Name}", User.Identity?.Name);
 
-                // Debug: Mostrar todos los claims al cargar facturación
-                _logger.LogInformation("📋 Claims al cargar facturación:");
-                foreach (var claim in User.Claims)
+                // Obtener información del usuario
+                var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
+                var tokenJWT = this.ObtenerTokenJWT();
+
+                // ✅ VERIFICACIÓN DIRECTA DE PERMISOS DESDE CLAIMS (como en InventarioController)
+                var claims = User.Claims.ToList();
+                _logger.LogInformation("📋 Claims disponibles para validación:");
+                foreach (var claim in claims)
                 {
                     _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
                 }
 
-                // Verificar token JWT desde el inicio
-                var tokenJWT = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(tokenJWT))
-                {
-                    _logger.LogWarning("⚠️ Token JWT no disponible al cargar facturación");
-                }
-                else
-                {
-                    _logger.LogInformation("✅ Token JWT disponible al cargar facturación");
-                }
+                // ✅ BUSCAR PERMISOS DIRECTAMENTE EN LOS CLAIMS
+                var puedeCrearFacturas = claims.Any(c => c.Type == "permiso" && 
+                    (c.Value == "Crear Facturas" || c.Value == "CrearFacturas" || c.Value == "Crear Factura"));
 
-                // Obtener información completa del usuario actual
-                var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
+                var puedeCompletarFacturas = claims.Any(c => c.Type == "permiso" && 
+                    (c.Value == "CompletarFacturas" || c.Value == "Completar Facturas" || c.Value == "Completar Factura"));
 
-                // ✅ Verificar permisos específicos de facturación (sin verificar admin)
-                var puedeCrearFacturas = await this.TienePermisoAsync("Crear Facturas");
-                var puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas");
-                var puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas");
-                var puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas");
+                var puedeEditarFacturas = claims.Any(c => c.Type == "permiso" && 
+                    (c.Value == "EditarFacturas" || c.Value == "Editar Facturas" || c.Value == "Editar Factura"));
+
+                var puedeAnularFacturas = claims.Any(c => c.Type == "permiso" && 
+                    (c.Value == "AnularFacturas" || c.Value == "Anular Facturas" || c.Value == "Anular Factura"));
+
+                // ✅ VERIFICAR SI ES ADMINISTRADOR DESDE CLAIMS
+                var esAdmin = User.IsInRole("Administrador") || 
+                             claims.Any(c => c.Type == "role" && c.Value == "Administrador") ||
+                             claims.Any(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" && c.Value == "Administrador");
+
+                _logger.LogInformation("🔐 === PERMISOS VALIDADOS DESDE CLAIMS ===");
+                _logger.LogInformation("🔐 puedeCrearFacturas: {Crear}", puedeCrearFacturas);
+                _logger.LogInformation("🔐 puedeCompletarFacturas: {Completar}", puedeCompletarFacturas);
+                _logger.LogInformation("🔐 puedeEditarFacturas: {Editar}", puedeEditarFacturas);
+                _logger.LogInformation("🔐 puedeAnularFacturas: {Anular}", puedeAnularFacturas);
+                _logger.LogInformation("🔐 esAdmin: {Admin}", esAdmin);
 
                 var permisos = new
                 {
@@ -77,33 +87,15 @@ namespace GestionLlantera.Web.Controllers
                     puedeCompletarFacturas = puedeCompletarFacturas,
                     puedeEditarFacturas = puedeEditarFacturas,
                     puedeAnularFacturas = puedeAnularFacturas,
-                    // ✅ AGREGAR PERMISOS ADICIONALES EXPLÍCITOS PARA EL FRONTEND
-                    CrearFacturas = puedeCrearFacturas,
-                    CompletarFacturas = puedeCompletarFacturas,
-                    EditarFacturas = puedeEditarFacturas,
-                    AnularFacturas = puedeAnularFacturas
+                    esAdmin = esAdmin
                 };
 
-                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}", 
-                    nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
-                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas);
-
-                // ✅ LOG DETALLADO DE PERMISOS ANTES DE ENVIAR AL FRONTEND
-                _logger.LogInformation("📋 === CONFIGURACIÓN COMPLETA PARA FRONTEND ===");
-                _logger.LogInformation("📋 Usuario ID: {UsuarioId}", usuarioId);
-                _logger.LogInformation("📋 Usuario Nombre: {NombreUsuario}", nombreUsuario);
-                _logger.LogInformation("📋 puedeCrearFacturas: {PuedeCrear}", permisos.puedeCrearFacturas);
-                _logger.LogInformation("📋 puedeCompletarFacturas: {PuedeCompletar}", permisos.puedeCompletarFacturas);
-                _logger.LogInformation("📋 puedeEditarFacturas: {PuedeEditar}", permisos.puedeEditarFacturas);
-                _logger.LogInformation("📋 puedeAnularFacturas: {PuedeAnular}", permisos.puedeAnularFacturas);
-
-                // ✅ CREAR CONFIGURACIÓN COMPLETA PARA EL FRONTEND
                 var configuracionCompleta = new
                 {
                     Usuario = new
                     {
                         usuarioId = usuarioId,
-                        id = usuarioId, // Alias para compatibilidad
+                        id = usuarioId,
                         nombre = nombreUsuario,
                         nombreUsuario = nombreUsuario,
                         email = emailUsuario
@@ -114,8 +106,8 @@ namespace GestionLlantera.Web.Controllers
                     TokenDisponible = !string.IsNullOrEmpty(tokenJWT)
                 };
 
-                _logger.LogInformation("📋 Configuración completa creada y lista para enviar al frontend");
-                _logger.LogInformation("📋 === FIN CONFIGURACIÓN FRONTEND ===");
+                _logger.LogInformation("📋 Configuración enviada al frontend: {Config}", 
+                    System.Text.Json.JsonSerializer.Serialize(configuracionCompleta));
 
                 ViewBag.ConfiguracionFacturacion = configuracionCompleta;
                 return View();
