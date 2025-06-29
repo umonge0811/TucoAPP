@@ -326,16 +326,15 @@ namespace API.Controllers
                     DetallesFactura = facturaDto.DetallesFactura
                 };
 
-                return CreatedAtAction(nameof(ObtenerFacturaPorId), new { id = factura.FacturaId },
-                    new { 
-                        success = true,
-                        facturaId = factura.FacturaId, 
-                        numeroFactura = factura.NumeroFactura,
-                        estado = estadoInicial,
-                        puedeCompletar = puedeCompletar,
-                        message = mensajeRespuesta,
-                        timestamp = DateTime.Now
-                    });
+                return Ok(new
+                {
+                    message = mensajeRespuesta,
+                    facturaId = factura.FacturaId,
+                    numeroFactura = factura.NumeroFactura,
+                    estado = estadoInicial,
+                    puedeCompletar = puedeCompletar,
+                    timestamp = DateTime.Now
+                });
             }
             catch (Exception ex)
             {
