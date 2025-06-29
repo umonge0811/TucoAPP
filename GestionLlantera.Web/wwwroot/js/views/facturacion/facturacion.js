@@ -1617,26 +1617,13 @@ async function procesarVentaFinal() {
         if (resultadoFactura.success) {
             // ✅ MOSTRAR MENSAJE ESPECÍFICO SEGÚN EL TIPO DE USUARIO
             if (estadoFactura === 'Pendiente') {
-                // Para colaboradores: mensaje específico de envío a cajas
-                Swal.fire({
-                    title: '📤 Factura Enviada',
-                    html: `
-                        <div class="text-center">
-                            <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-                            <h4 class="mt-3 text-success">¡Factura enviada exitosamente!</h4>
-                            <p class="mt-2 text-muted">
-                                La factura ha sido enviada a <strong>Cajas</strong> para ser cancelada.
-                            </p>
-                            <div class="alert alert-info mt-3">
-                                <i class="bi bi-info-circle me-2"></i>
-                                El cliente deberá dirigirse a caja para completar el pago.
-                            </div>
-                        </div>
-                    `,
-                    icon: 'success',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#28a745'
-                });
+                // Cerrar modal de finalizar venta primero
+                modalFinalizarVenta.hide();
+                
+                // Para colaboradores: mostrar modal específico de envío a cajas
+                setTimeout(() => {
+                    mostrarModalFacturaPendiente(resultadoFactura);
+                }, 300);
             } else {
                 // Para administradores/cajeros: mensaje de venta completa
                 mostrarToast('Éxito', mensajeExito, 'success');
@@ -1733,25 +1720,18 @@ async function procesarVentaFinal() {
             } else {
                 console.log('📋 Factura pendiente - NO se ajusta stock automáticamente');
 
-                // ✅ ÉXITO PARA FACTURA PENDIENTE
-                modalFinalizarVenta.hide();
-
-                // Mostrar mensaje específico para colaboradores
-                if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
-                    mostrarToast('¡Factura Enviada a Caja!', 'La factura ha sido enviada exitosamente al área de caja para procesamiento de pago.', 'success');
-                } else {
-                    mostrarToast('Factura Guardada', 'Factura guardada como pendiente exitosamente.', 'success');
-                }
-
-                // ✅ MOSTRAR MODAL INFORMATIVO PARA FACTURAS PENDIENTES
-                mostrarModalFacturaPendiente(resultadoFactura);
+                // ✅ ÉXITO PARA FACTURA PENDIENTE (ya se maneja arriba)
+                // No cerrar modal aquí, se hace arriba antes del setTimeout
             }
 
-            // Limpiar carrito y cerrar modal
+            // Limpiar carrito después de procesar (para ambos casos)
             productosEnVenta = [];
+            clienteSeleccionado = null;
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
             actualizarVistaCarrito();
             actualizarTotales();
-            $('#modalFinalizarVenta').modal('hide');
+            actualizarEstadoBotonFinalizar();
 
         } else {
             mostrarToast('Error', resultadoFactura.message || 'Error al procesar la venta', 'error');
@@ -2843,6 +2823,24 @@ function actualizarEstadoBotonFinalizar() {
 
 // ===== MODAL FACTURA PENDIENTE =====
 function mostrarModalFacturaPendiente(resultadoFactura) {
+    console.log('📋 Mostrando modal factura pendiente con datos:', resultadoFactura);
+    
+    // Extraer número de factura con múltiples fallbacks
+    let numeroFactura = 'N/A';
+    
+    if (resultadoFactura) {
+        // Intentar obtener el número de factura desde diferentes propiedades
+        numeroFactura = resultadoFactura.numeroFactura || 
+                       resultadoFactura.NumeroFactura ||
+                       resultadoFactura.data?.numeroFactura ||
+                       resultadoFactura.data?.NumeroFactura ||
+                       resultadoFactura.facturaId ||
+                       resultadoFactura.FacturaId ||
+                       'N/A';
+    }
+    
+    console.log('🔢 Número de factura extraído:', numeroFactura);
+
     // Determinar título y mensaje según permisos
     let tituloModal = 'Factura Procesada';
     let mensajePrincipal = 'Factura guardada como pendiente';
@@ -2878,7 +2876,7 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <strong>Número de Factura:</strong><br>
-                                <span class="text-primary fs-5">${resultadoFactura.numeroFactura || 'N/A'}</span>
+                                <span class="text-primary fs-5">${numeroFactura}</span>
                             </div>
                             <div class="col-md-6">
                                 <strong>Estado:</strong><br>
@@ -2902,7 +2900,7 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                             </h6>
                             <p class="mb-1"><strong>Presente este número de factura en caja:</strong></p>
                             <div class="bg-white p-2 rounded border">
-                                <code class="fs-4 text-primary">${resultadoFactura.numeroFactura || 'N/A'}</code>
+                                <code class="fs-4 text-primary">${numeroFactura}</code>
                             </div>
                         </div>
                     </div>
@@ -2913,7 +2911,7 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                         <button type="button" class="btn btn-primary" onclick="irAFacturasPendientes()">
                             <i class="bi bi-list-check me-1"></i>Ver Facturas Pendientes
                         </button>
-                        <button type="button" class="btn btn-success" onclick="imprimirComprobanteEnvio('${resultadoFactura.numeroFactura || 'N/A'}')">
+                        <button type="button" class="btn btn-success" onclick="imprimirComprobanteEnvio('${numeroFactura}')">
                             <i class="bi bi-printer me-1"></i>Imprimir Comprobante
                         </button>
                     </div>
