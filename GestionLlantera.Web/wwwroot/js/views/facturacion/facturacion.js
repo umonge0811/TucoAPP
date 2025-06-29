@@ -1614,7 +1614,7 @@ async function procesarVentaFinal() {
         const resultadoFactura = await responseFactura.json();
         console.log('✅ Factura creada:', resultadoFactura);
 
-        if (resultadoFactura.success && resultadoFactura.numeroFactura) {
+        if (resultadoFactura.success) {
             // ✅ MOSTRAR MENSAJE ESPECÍFICO SEGÚN EL TIPO DE USUARIO
             if (estadoFactura === 'Pendiente') {
                 // Cerrar modal de finalizar venta primero
@@ -1622,8 +1622,23 @@ async function procesarVentaFinal() {
                 
                 // Para colaboradores: mostrar modal específico de envío a cajas
                 setTimeout(() => {
-                    console.log('🔍 Enviando número de factura al modal:', resultadoFactura.numeroFactura);
-                    mostrarModalFacturaPendiente(resultadoFactura.numeroFactura);
+                    // ✅ DEBUGGING COMPLETO DE LA RESPUESTA DE LA API
+                    console.log('🔍 === DEBUGGING COMPLETO EN PROCESARVENTA ===');
+                    console.log('🔍 Respuesta completa de la API:', JSON.stringify(resultadoFactura, null, 2));
+                    console.log('🔍 Tipo de resultadoFactura:', typeof resultadoFactura);
+                    console.log('🔍 ¿Es array?:', Array.isArray(resultadoFactura));
+                    
+                    if (resultadoFactura) {
+                        console.log('🔍 Propiedades disponibles:', Object.keys(resultadoFactura));
+                        console.log('🔍 resultadoFactura.numeroFactura:', resultadoFactura.numeroFactura);
+                        console.log('🔍 resultadoFactura.NumeroFactura:', resultadoFactura.NumeroFactura);
+                        console.log('🔍 resultadoFactura.facturaId:', resultadoFactura.facturaId);
+                        console.log('🔍 resultadoFactura.message:', resultadoFactura.message);
+                    }
+
+                    // ✅ PASAR LA RESPUESTA COMPLETA SIN PROCESAMIENTO PREVIO
+                    // Dejar que mostrarModalFacturaPendiente maneje la extracción
+                    mostrarModalFacturaPendiente(resultadoFactura);
                 }, 300);
             } else {
                 // Para administradores/cajeros: mensaje de venta completa
@@ -2823,15 +2838,14 @@ function actualizarEstadoBotonFinalizar() {
 }
 
 // ===== MODAL FACTURA PENDIENTE =====
-function mostrarModalFacturaPendiente(numeroFactura) {
+function mostrarModalFacturaPendiente(resultadoFactura) {
     console.log('📋 === MODAL FACTURA PENDIENTE ===');
-    console.log('📋 Número de factura recibido:', numeroFactura);
+    console.log('📋 Datos recibidos:', resultadoFactura);
     
-    // ✅ VALIDAR QUE SE RECIBIÓ UN NÚMERO DE FACTURA VÁLIDO
-    if (!numeroFactura || numeroFactura === 'N/A') {
-        console.error('❌ Error: No se recibió un número de factura válido');
-        numeroFactura = 'ERROR-' + Date.now();
-    }
+    // ✅ EXTRACCIÓN DIRECTA Y SIMPLIFICADA DEL NÚMERO DE FACTURA
+    const numeroFactura = resultadoFactura?.numeroFactura || 'N/A';
+    
+    console.log('🔢 Número de factura extraído:', numeroFactura);
 
     // Determinar título y mensaje según permisos
     let tituloModal = 'Factura Procesada';
