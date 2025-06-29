@@ -62,9 +62,8 @@ namespace GestionLlantera.Web.Controllers
                     _logger.LogInformation("✅ Token JWT disponible al cargar facturación");
                 }
 
-                // Obtener información del usuario actual
-                var usuarioId = User.FindFirst("UserId")?.Value ?? User.FindFirst("userId")?.Value;
-                var nombreUsuario = User.Identity?.Name;
+                // Obtener información completa del usuario actual
+                var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
 
                 // ✅ VERIFICAR SI ES ADMINISTRADOR PRIMERO
                 var esAdmin = User.IsInRole("Administrador") || User.IsInRole("Admin");
@@ -95,16 +94,24 @@ namespace GestionLlantera.Web.Controllers
                     nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
                     permisos.puedeEditarFacturas, permisos.puedeAnularFacturas, permisos.esAdmin);
 
-                var viewModel = new
+                // ✅ CREAR CONFIGURACIÓN COMPLETA PARA EL FRONTEND
+                var configuracionCompleta = new
                 {
-                    UsuarioId = usuarioId,
-                    NombreUsuario = nombreUsuario,
+                    Usuario = new
+                    {
+                        usuarioId = usuarioId,
+                        id = usuarioId, // Alias para compatibilidad
+                        nombre = nombreUsuario,
+                        nombreUsuario = nombreUsuario,
+                        email = emailUsuario
+                    },
+                    Permisos = permisos,
                     FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
                     HoraActual = DateTime.Now.ToString("HH:mm"),
-                    Permisos = permisos
+                    TokenDisponible = !string.IsNullOrEmpty(tokenJWT)
                 };
 
-                ViewBag.ConfiguracionFacturacion = viewModel;
+                ViewBag.ConfiguracionFacturacion = configuracionCompleta;
                 return View();
             }
             catch (Exception ex)
@@ -520,6 +527,58 @@ namespace GestionLlantera.Web.Controllers
             }
 
             return token;
+        }
+
+        /// <summary>
+        /// Obtener información completa del usuario desde los claims (igual que InventarioController)
+        /// </summary>
+        private (int usuarioId, string nombre, string email) ObtenerInfoUsuario()
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Obteniendo información del usuario...");
+                
+                // Debug: Mostrar todos los claims
+                _logger.LogInformation("📋 Claims disponibles:");
+                foreach (var claim in User.Claims)
+                {
+                    _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
+                }
+
+                // Intentar diferentes claims para obtener el ID del usuario
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                _logger.LogInformation("NameIdentifier claim: {Value}", userIdClaim ?? "NULL");
+
+                var nameClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                _logger.LogInformation("Name claim: {Value}", nameClaim ?? "NULL");
+
+                var emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+                _logger.LogInformation("Email claim: {Value}", emailClaim ?? "NULL");
+
+                // Intentar parsear el ID
+                int userId = 1; // Fallback
+                if (int.TryParse(userIdClaim, out int parsedUserId))
+                {
+                    userId = parsedUserId;
+                    _logger.LogInformation("✅ ID parseado de NameIdentifier: {UserId}", userId);
+                }
+                else if (int.TryParse(nameClaim, out int userIdFromName))
+                {
+                    userId = userIdFromName;
+                    _logger.LogInformation("✅ ID parseado de Name: {UserId}", userId);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudo obtener el ID del usuario, usando fallback 1");
+                }
+
+                return (userId, nameClaim ?? "Usuario", emailClaim ?? "");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener información del usuario");
+                return (1, "Usuario", "");
+            }
         }
 
         [HttpGet]

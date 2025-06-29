@@ -203,5 +203,15 @@
         }
     </script>
 
+<!-- Configuración para JavaScript -->
+    <script>
+        window.facturaConfig = @Html.Raw(Json.Serialize(ViewBag.ConfiguracionFacturacion));
+        console.log('🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===');
+        console.log('🔧 Configuración completa:', window.facturaConfig);
+        console.log('🔧 Usuario disponible:', window.facturaConfig?.Usuario);
+        console.log('🔧 Permisos disponibles:', window.facturaConfig?.Permisos);
+        console.log('🔧 Token disponible:', window.facturaConfig?.TokenDisponible);
+    </script>
+
 
     }

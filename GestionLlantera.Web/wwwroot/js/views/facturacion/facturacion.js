@@ -2727,13 +2727,28 @@ function mostrarResumenDepuracion() {
 
 function obtenerUsuarioActual() {
     try {
-        // Primera opción: desde configuración de facturación
+        console.log('👤 === OBTENIENDO USUARIO ACTUAL ===');
+        
+        // ✅ PRIMERA OPCIÓN: Desde configuración de facturación (método principal)
         if (window.facturaConfig && window.facturaConfig.Usuario) {
             console.log('👤 Usuario desde facturaConfig:', window.facturaConfig.Usuario);
+            console.log('👤 Tipo de usuario obtenido:', typeof window.facturaConfig.Usuario);
+            console.log('👤 Propiedades del usuario:', Object.keys(window.facturaConfig.Usuario));
             return window.facturaConfig.Usuario;
         }
 
-        // Segunda opción: desde configuración global
+        // ✅ VERIFICAR SI HAY CONFIGURACIÓN DISPONIBLE PERO MAL ESTRUCTURADA
+        if (window.facturaConfig) {
+            console.log('👤 facturaConfig disponible pero sin Usuario:', window.facturaConfig);
+            
+            // Buscar usuario en otros lugares de la configuración
+            if (window.facturaConfig.usuario) {
+                console.log('👤 Usuario encontrado en minúscula:', window.facturaConfig.usuario);
+                return window.facturaConfig.usuario;
+            }
+        }
+
+        // Segunda opción: desde configuración global de inventario
         if (window.inventarioConfig && window.inventarioConfig.usuario) {
             console.log('👤 Usuario desde inventarioConfig:', window.inventarioConfig.usuario);
             return window.inventarioConfig.usuario;
@@ -2752,6 +2767,9 @@ function obtenerUsuarioActual() {
         }
 
         console.warn('⚠️ No se pudo obtener información del usuario, usando valores por defecto');
+        console.log('🔍 Debug completo de configuraciones disponibles:');
+        console.log('🔍 window.facturaConfig:', window.facturaConfig);
+        console.log('🔍 window.inventarioConfig:', window.inventarioConfig);
 
         // Fallback básico
         return {
