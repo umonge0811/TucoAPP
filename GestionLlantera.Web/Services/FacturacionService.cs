@@ -584,11 +584,11 @@ namespace GestionLlantera.Web.Services
 
                 // ✅ 3. ESTABLECER FECHA DE CREACIÓN Y ESTADO SEGÚN ROL
                 factura.fechaCreacion = DateTime.Now;
-                
+
                 // ✅ DETERMINAR ESTADO SEGÚN ROL DEL USUARIO
-                var estadoFactura = DeterminarEstadoFacturaSegunUsuario(jwtToken);
+                var estadoFactura = await DeterminarEstadoFacturaSegunUsuarioAsync(jwtToken);
                 factura.estado = estadoFactura;
-                
+
                 _logger.LogInformation("📋 Estado de factura asignado: {Estado}", estadoFactura);
 
                 // ✅ 4. VALIDAR CAMPOS REQUERIDOS
@@ -686,7 +686,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        private string DeterminarEstadoFacturaSegunUsuario(string jwtToken)
+        private async Task<string> DeterminarEstadoFacturaSegunUsuarioAsync(string jwtToken)
         {
             try
             {
@@ -714,10 +714,17 @@ namespace GestionLlantera.Web.Services
                 dynamic claims = JsonConvert.DeserializeObject(payloadJson);
 
                 // Buscar roles en el token
-                var roles = claims?.role?.ToString() ?? 
-                           claims?.roles?.ToString() ?? 
+                var roles = claims?.role?.ToString() ??
+                           claims?.roles?.ToString() ??
                            claims?["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]?.ToString() ?? "";
 
+                // Verificar si el usuario tiene el permiso "CompletarFacturas"
+                var permisos = claims?.permisos?.ToString() ?? claims?.permissions?.ToString() ?? "";
+
+                if (permisos.Contains("CompletarFacturas", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "Pagada";
+                }
 
                 // Si es Administrador, puede crear facturas completadas
                 if (roles.Contains("Administrador", StringComparison.OrdinalIgnoreCase))
