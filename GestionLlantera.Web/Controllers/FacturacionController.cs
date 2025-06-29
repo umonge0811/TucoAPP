@@ -66,14 +66,29 @@ namespace GestionLlantera.Web.Controllers
                 var usuarioId = User.FindFirst("UserId")?.Value ?? User.FindFirst("userId")?.Value;
                 var nombreUsuario = User.Identity?.Name;
 
+                // ✅ VERIFICAR SI ES ADMINISTRADOR PRIMERO
+                var esAdmin = User.IsInRole("Administrador") || User.IsInRole("Admin");
+                _logger.LogInformation("👑 Usuario es administrador: {EsAdmin}", esAdmin);
+
                 // ✅ Verificar permisos específicos de facturación
+                var puedeCrearFacturas = esAdmin || await this.TienePermisoAsync("CrearFacturas");
+                var puedeCompletarFacturas = esAdmin || await this.TienePermisoAsync("CompletarFacturas");
+                var puedeEditarFacturas = esAdmin || await this.TienePermisoAsync("EditarFacturas");
+                var puedeAnularFacturas = esAdmin || await this.TienePermisoAsync("AnularFacturas");
+
                 var permisos = new
                 {
-                    puedeCrearFacturas = await this.TienePermisoAsync("CrearFacturas"),
-                    puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas"),
-                    puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas"),
-                    puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas"),
-                    esAdmin = User.IsInRole("Administrador")
+                    puedeCrearFacturas = puedeCrearFacturas,
+                    puedeCompletarFacturas = puedeCompletarFacturas,
+                    puedeEditarFacturas = puedeEditarFacturas,
+                    puedeAnularFacturas = puedeAnularFacturas,
+                    esAdmin = esAdmin,
+                    // ✅ AGREGAR PERMISOS ADICIONALES EXPLÍCITOS PARA EL FRONTEND
+                    CrearFacturas = puedeCrearFacturas,
+                    CompletarFacturas = puedeCompletarFacturas,
+                    EditarFacturas = puedeEditarFacturas,
+                    AnularFacturas = puedeAnularFacturas,
+                    Administrador = esAdmin
                 };
 
                 _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}, Admin={Admin}", 
