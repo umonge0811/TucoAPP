@@ -297,7 +297,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
-                
+
                 // Convertir a la clase esperada por el servicio
                 var productosService = productos.Select(p => new ProductoVentaService
                 {
@@ -382,7 +382,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogError("❌ Token JWT no disponible para crear factura");
                     _logger.LogError("❌ Posible causa: Sesión expirada o middleware JwtClaimsMiddleware cerró la sesión");
-                    
+
                     // Verificar si el usuario sigue autenticado
                     if (!User.Identity?.IsAuthenticated ?? true)
                     {
@@ -393,7 +393,7 @@ namespace GestionLlantera.Web.Controllers
                             redirectToLogin = true
                         });
                     }
-                    
+
                     return Json(new { 
                         success = false, 
                         message = "Token de autenticación no disponible. Intente refrescar la página.",
@@ -515,7 +515,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
                     User.Identity?.Name ?? "Anónimo");
-                
+
                 // Listar todos los claims disponibles para debug
                 var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
                 _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
@@ -537,7 +537,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🔍 Obteniendo información del usuario...");
-                
+
                 // Debug: Mostrar todos los claims
                 _logger.LogInformation("📋 Claims disponibles:");
                 foreach (var claim in User.Claims)

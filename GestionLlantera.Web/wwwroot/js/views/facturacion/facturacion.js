@@ -67,16 +67,31 @@ function buscarPermiso(permisos, nombrePermiso) {
 // ===== CARGA DE PERMISOS =====
 function cargarPermisosUsuario() {
     try {
-        console.log('🔍 Iniciando carga de permisos...');
+        console.log('🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===');
         console.log('🔍 window.facturaConfig disponible:', !!window.facturaConfig);
-        console.log('🔍 Contenido facturaConfig:', window.facturaConfig);
+        console.log('🔍 Tipo de facturaConfig:', typeof window.facturaConfig);
+        console.log('🔍 Contenido facturaConfig completo:', JSON.stringify(window.facturaConfig, null, 2));
 
-        // ✅ DEPURACIÓN DETALLADA DE PERMISOS
-        if (window.facturaConfig && window.facturaConfig.Permisos) {
-            console.log('🔍 Permisos disponibles en facturaConfig.Permisos:');
-            Object.keys(window.facturaConfig.Permisos).forEach(key => {
-                console.log(`🔍   - "${key}": ${window.facturaConfig.Permisos[key]}`);
-            });
+        // ✅ VERIFICAR ESTRUCTURA COMPLETA DE LA CONFIGURACIÓN
+        if (window.facturaConfig) {
+            console.log('🔍 Propiedades de facturaConfig:', Object.keys(window.facturaConfig));
+            
+            if (window.facturaConfig.Usuario) {
+                console.log('👤 Usuario disponible en configuración:', window.facturaConfig.Usuario);
+            } else {
+                console.error('❌ Usuario NO encontrado en configuración');
+            }
+            
+            if (window.facturaConfig.Permisos) {
+                console.log('🔐 Permisos disponibles en facturaConfig.Permisos:');
+                Object.keys(window.facturaConfig.Permisos).forEach(key => {
+                    console.log(`🔐   - "${key}": ${window.facturaConfig.Permisos[key]}`);
+                });
+            } else {
+                console.error('❌ Permisos NO encontrados en configuración');
+            }
+            
+            console.log('🔑 Token disponible:', window.facturaConfig.TokenDisponible);
         }
 
         if (window.inventarioConfig && window.inventarioConfig.permisos) {
@@ -2727,14 +2742,22 @@ function mostrarResumenDepuracion() {
 
 function obtenerUsuarioActual() {
     try {
-        console.log('👤 === OBTENIENDO USUARIO ACTUAL ===');
+        console.log('👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===');
+        console.log('👤 facturaConfig disponible:', !!window.facturaConfig);
         
         // ✅ PRIMERA OPCIÓN: Desde configuración de facturación (método principal)
         if (window.facturaConfig && window.facturaConfig.Usuario) {
-            console.log('👤 Usuario desde facturaConfig:', window.facturaConfig.Usuario);
+            console.log('👤 Usuario encontrado en facturaConfig:', window.facturaConfig.Usuario);
             console.log('👤 Tipo de usuario obtenido:', typeof window.facturaConfig.Usuario);
             console.log('👤 Propiedades del usuario:', Object.keys(window.facturaConfig.Usuario));
+            console.log('👤 ID de usuario:', window.facturaConfig.Usuario.usuarioId || window.facturaConfig.Usuario.id);
+            console.log('👤 Nombre de usuario:', window.facturaConfig.Usuario.nombre || window.facturaConfig.Usuario.nombreUsuario);
             return window.facturaConfig.Usuario;
+        } else {
+            console.error('❌ No se encontró Usuario en facturaConfig');
+            if (window.facturaConfig) {
+                console.log('🔍 Estructura de facturaConfig:', Object.keys(window.facturaConfig));
+            }
         }
 
         // ✅ VERIFICAR SI HAY CONFIGURACIÓN DISPONIBLE PERO MAL ESTRUCTURADA
