@@ -2857,7 +2857,7 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
         numeroFactura = resultadoFactura.numeroFactura ||           // Primera prioridad: respuesta directa
                        resultadoFactura.NumeroFactura ||           // Variación de mayúscula
                        resultadoFactura.data?.numeroFactura ||     // Dentro de data
-                       resultadoFactura.data?.NumeroFactura ||     // Dentro de data con mayúscula
+                       resultadoFactura.data?.NumeroFactura ||     // Dentro de data con mayúscula (DTO)
                        'N/A';                                      // Fallback
         
         console.log('🔢 === EXTRACCIÓN PASO A PASO ===');

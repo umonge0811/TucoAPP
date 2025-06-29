@@ -299,8 +299,37 @@ namespace API.Controllers
                     ? $"{facturaDto.TipoDocumento} creada exitosamente en estado PENDIENTE" 
                     : $"{facturaDto.TipoDocumento} creada y COMPLETADA exitosamente";
 
+                // Crear respuesta estructurada con el DTO de la factura creada
+                var facturaCreada = new FacturaDTO
+                {
+                    FacturaId = factura.FacturaId,
+                    NumeroFactura = factura.NumeroFactura,
+                    ClienteId = factura.ClienteId,
+                    NombreCliente = factura.NombreCliente,
+                    IdentificacionCliente = factura.IdentificacionCliente,
+                    TelefonoCliente = factura.TelefonoCliente,
+                    EmailCliente = factura.EmailCliente,
+                    DireccionCliente = factura.DireccionCliente,
+                    FechaFactura = factura.FechaFactura,
+                    FechaVencimiento = factura.FechaVencimiento,
+                    Subtotal = factura.Subtotal,
+                    DescuentoGeneral = factura.DescuentoGeneral,
+                    PorcentajeImpuesto = factura.PorcentajeImpuesto,
+                    MontoImpuesto = factura.MontoImpuesto ?? 0,
+                    Total = factura.Total,
+                    Estado = factura.Estado,
+                    TipoDocumento = factura.TipoDocumento,
+                    MetodoPago = factura.MetodoPago,
+                    Observaciones = factura.Observaciones,
+                    UsuarioCreadorId = factura.UsuarioCreadorId,
+                    FechaCreacion = factura.FechaCreacion,
+                    DetallesFactura = facturaDto.DetallesFactura
+                };
+
                 return CreatedAtAction(nameof(ObtenerFacturaPorId), new { id = factura.FacturaId },
                     new { 
+                        success = true,
+                        data = facturaCreada,
                         facturaId = factura.FacturaId, 
                         numeroFactura = factura.NumeroFactura,
                         estado = estadoInicial,
