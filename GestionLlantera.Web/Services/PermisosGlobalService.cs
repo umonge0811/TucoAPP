@@ -235,6 +235,42 @@ namespace GestionLlantera.Web.Services
         }
 
         #region Métodos Auxiliares
+        /// <summary>
+        /// Verifica si el usuario actual es administrador
+        /// </summary>
+        private async Task<bool> EsAdministradorAsync()
+        {
+            try
+            {
+                var context = _httpContextAccessor.HttpContext;
+                if (context?.User?.Identity?.IsAuthenticated == true)
+                {
+                    // ✅ Verificar si tiene el rol de administrador
+                    var esAdminDirecto = context.User.IsInRole("Administrador");
+                    if (esAdminDirecto)
+                    {
+                        return true;
+                    }
+
+                    // ✅ También verificar mediante claims
+                    var roles = context.User.FindAll("role")
+                        .Select(c => c.Value)
+                        .ToList();
+
+                    return roles.Contains("Administrador", StringComparer.OrdinalIgnoreCase);
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando si es administrador");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el token JWT del usuario actual
+        /// </summary>
         private string? ObtenerTokenJWT()
         {
             try

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
 
 namespace GestionLlantera.Web.Extensions
@@ -11,7 +11,7 @@ namespace GestionLlantera.Web.Extensions
     {
         /// <summary>
         /// Verifica si el usuario actual tiene un permiso específico
-        /// Uso: var tienePermiso = await this.TienePermisoAsync("VerCostos");
+        /// Usa el servicio de permisos global inyectado
         /// </summary>
         public static async Task<bool> TienePermisoAsync(
             this ControllerBase controller,
@@ -19,27 +19,33 @@ namespace GestionLlantera.Web.Extensions
         {
             try
             {
-                var permisosService = controller.HttpContext.RequestServices
-                    .GetService<IPermisosGlobalService>();
-
-                if (permisosService == null)
+                // ✅ VERIFICAR AUTENTICACIÓN PRIMERO
+                if (controller.User == null || !controller.User.Identity.IsAuthenticated)
                 {
-                    var loggerFactory = controller.HttpContext.RequestServices
-                        .GetService<ILoggerFactory>();
-                    var logger = loggerFactory?.CreateLogger("ControllerExtensions");
-                    logger?.LogError("IPermisosGlobalService no está registrado en el contenedor de dependencias");
                     return false;
                 }
 
-                return await permisosService.TienePermisoAsync(permiso);
+                var permisosService = controller.HttpContext.RequestServices
+                    .GetService<IPermisosGlobalService>();
+
+                var tienePermiso = await permisosService.TienePermisoAsync(permiso);
+
+                // ✅ LOG PARA DEBUG
+                var loggerFactory = controller.HttpContext.RequestServices
+                    .GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("ControllerExtensions");
+                logger?.LogInformation("🔍 Usuario {Usuario} verificando permiso '{Permiso}': {Resultado}", 
+                    controller.User.Identity.Name, permiso, tienePermiso);
+
+                return tienePermiso;
             }
             catch (Exception ex)
             {
                 var loggerFactory = controller.HttpContext.RequestServices
                     .GetService<ILoggerFactory>();
                 var logger = loggerFactory?.CreateLogger("ControllerExtensions");
-                logger?.LogError(ex, "Error al verificar permiso {Permiso}", permiso);
-                return false;
+                logger?.LogError(ex, "❌ Error al verificar permiso {Permiso}", permiso);
+                return false; // Por seguridad, denegar en caso de error
             }
         }
 
