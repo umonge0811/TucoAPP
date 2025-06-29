@@ -329,13 +329,13 @@ namespace API.Controllers
                 return CreatedAtAction(nameof(ObtenerFacturaPorId), new { id = factura.FacturaId },
                     new { 
                         success = true,
-                        data = facturaCreada,
                         facturaId = factura.FacturaId, 
                         numeroFactura = factura.NumeroFactura,
                         estado = estadoInicial,
                         puedeCompletar = puedeCompletar,
                         message = mensajeRespuesta,
-                        timestamp = DateTime.Now
+                        timestamp = DateTime.Now,
+                        data = facturaCreada
                     });
             }
             catch (Exception ex)

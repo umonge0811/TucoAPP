@@ -2856,8 +2856,7 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
         // ✅ EXTRACCIÓN DIRECTA - ORDEN DE PRIORIDAD BASADO EN LA RESPUESTA DE LA API
         numeroFactura = resultadoFactura.numeroFactura ||           // Primera prioridad: respuesta directa
                        resultadoFactura.NumeroFactura ||           // Variación de mayúscula
-                       resultadoFactura.data?.numeroFactura ||     // Dentro de data
-                       resultadoFactura.data?.NumeroFactura ||     // Dentro de data con mayúscula (DTO)
+                       resultadoFactura.data?.NumeroFactura ||     // Dentro de data (DTO)
                        'N/A';                                      // Fallback
         
         console.log('🔢 === EXTRACCIÓN PASO A PASO ===');
