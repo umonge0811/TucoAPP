@@ -249,16 +249,15 @@ async function abrirModalNuevoRol() {
         }
 
         // Obtener permisos por categoría
-        const responsePermisos = await fetch(`/api/Permisos/por-categoria`);
-        if (!responsePermisos.ok) {
+        const responseCategoria = await fetch(`/api/Permisos/por-categoria`);
+        if (!responseCategoria.ok) {
             throw new Error('Error al cargar permisos disponibles');
         }
 
-        const permisosPorCategoria = await responsePermisos.json();
+        const permisosPorCategoria = await responseCategoria.json();
         console.log('Permisos por categoría:', permisosPorCategoria);
 
         // Generar HTML para lista de permisos categorizados
-        const listaPermisos = document.getElementById('listaPermisos');
         let html = '';
 
         Object.keys(permisosPorCategoria).forEach(categoria => {

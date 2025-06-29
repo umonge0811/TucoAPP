@@ -1,5 +1,4 @@
 // ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
-// ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
 let productosEnVenta = [];
 let clienteSeleccionado = null;
@@ -38,6 +37,33 @@ const CONFIGURACION_PRECIOS = {
 
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 
+// ===== FUNCIÓN AUXILIAR PARA BUSCAR PERMISOS =====
+function buscarPermiso(permisos, nombrePermiso) {
+    if (!permisos) return false;
+
+    // Lista de posibles variaciones del nombre del permiso
+    const variaciones = [
+        nombrePermiso,
+        nombrePermiso.replace(/\s+/g, ''), // Sin espacios
+        nombrePermiso.toLowerCase(),
+        nombrePermiso.toLowerCase().replace(/\s+/g, ''),
+        nombrePermiso.replace(/\s+/g, '_'), // Con guiones bajos
+        nombrePermiso.replace(/\s+/g, '-'), // Con guiones
+        `puede${nombrePermiso.replace(/\s+/g, '')}`, // Con prefijo "puede"
+        `puede${nombrePermiso.replace(/\s+/g, '').toLowerCase()}`
+    ];
+
+    for (const variacion of variaciones) {
+        if (permisos[variacion] === true || permisos[variacion] === 'true') {
+            console.log(`✅ Permiso encontrado con variación: "${variacion}" = ${permisos[variacion]}`);
+            return true;
+        }
+    }
+
+    console.log(`❌ Permiso "${nombrePermiso}" no encontrado en ninguna variación`);
+    return false;
+}
+
 // ===== CARGA DE PERMISOS =====
 function cargarPermisosUsuario() {
     try {
@@ -45,25 +71,42 @@ function cargarPermisosUsuario() {
         console.log('🔍 window.facturaConfig disponible:', !!window.facturaConfig);
         console.log('🔍 Contenido facturaConfig:', window.facturaConfig);
 
+        // ✅ DEPURACIÓN DETALLADA DE PERMISOS
+        if (window.facturaConfig && window.facturaConfig.Permisos) {
+            console.log('🔍 Permisos disponibles en facturaConfig.Permisos:');
+            Object.keys(window.facturaConfig.Permisos).forEach(key => {
+                console.log(`🔍   - "${key}": ${window.facturaConfig.Permisos[key]}`);
+            });
+        }
+
+        if (window.inventarioConfig && window.inventarioConfig.permisos) {
+            console.log('🔍 Permisos disponibles en inventarioConfig.permisos:');
+            Object.keys(window.inventarioConfig.permisos).forEach(key => {
+                console.log(`🔍   - "${key}": ${window.inventarioConfig.permisos[key]}`);
+            });
+        }
+
         // ✅ OBTENER PERMISOS DESDE LA CONFIGURACIÓN CORRECTA
         if (window.facturaConfig && window.facturaConfig.Permisos) {
             permisosUsuario = {
-                puedeCrearFacturas: window.facturaConfig.Permisos.puedeCrearFacturas || false,
-                puedeCompletarFacturas: window.facturaConfig.Permisos.puedeCompletarFacturas || false,
-                puedeEditarFacturas: window.facturaConfig.Permisos.puedeEditarFacturas || false,
-                puedeAnularFacturas: window.facturaConfig.Permisos.puedeAnularFacturas || false,
-                esAdmin: window.facturaConfig.Permisos.esAdmin || false
+                puedeCrearFacturas: buscarPermiso(window.facturaConfig.Permisos, 'Crear Factura'),
+                puedeCompletarFacturas: buscarPermiso(window.facturaConfig.Permisos, 'Completar Factura'),
+                puedeEditarFacturas: buscarPermiso(window.facturaConfig.Permisos, 'Editar Factura'),
+                puedeAnularFacturas: buscarPermiso(window.facturaConfig.Permisos, 'Anular Factura'),
+                esAdmin: buscarPermiso(window.facturaConfig.Permisos, 'Admin') || 
+                        buscarPermiso(window.facturaConfig.Permisos, 'Administrador')
             };
             console.log('✅ Permisos obtenidos desde facturaConfig:', permisosUsuario);
         }
         // Fallback: intentar desde configuración global de inventario
         else if (window.inventarioConfig && window.inventarioConfig.permisos) {
             permisosUsuario = {
-                puedeCrearFacturas: window.inventarioConfig.permisos.puedeCrearFacturas || false,
-                puedeCompletarFacturas: window.inventarioConfig.permisos.puedeCompletarFacturas || false,
-                puedeEditarFacturas: window.inventarioConfig.permisos.puedeEditarFacturas || false,
-                puedeAnularFacturas: window.inventarioConfig.permisos.puedeAnularFacturas || false,
-                esAdmin: window.inventarioConfig.permisos.esAdmin || false
+                puedeCrearFacturas: buscarPermiso(window.inventarioConfig.permisos, 'Crear Factura'),
+                puedeCompletarFacturas: buscarPermiso(window.inventarioConfig.permisos, 'Completar Factura'),
+                puedeEditarFacturas: buscarPermiso(window.inventarioConfig.permisos, 'Editar Factura'),
+                puedeAnularFacturas: buscarPermiso(window.inventarioConfig.permisos, 'Anular Factura'),
+                esAdmin: buscarPermiso(window.inventarioConfig.permisos, 'Admin') || 
+                        buscarPermiso(window.inventarioConfig.permisos, 'Administrador')
             };
             console.log('✅ Permisos obtenidos desde inventarioConfig (fallback):', permisosUsuario);
         }
@@ -72,14 +115,15 @@ function cargarPermisosUsuario() {
             console.log('🔍 Debug - facturaConfig:', window.facturaConfig);
             console.log('🔍 Debug - inventarioConfig:', window.inventarioConfig);
 
-            // Permisos por defecto muy restrictivos
+            // ✅ PERMISOS POR DEFECTO PARA COLABORADORES (PUEDEN CREAR FACTURAS)
             permisosUsuario = {
-                puedeCrearFacturas: false,
+                puedeCrearFacturas: true,  // Permitir por defecto para colaboradores
                 puedeCompletarFacturas: false,
                 puedeEditarFacturas: false,
                 puedeAnularFacturas: false,
                 esAdmin: false
             };
+            console.log('⚠️ Usando permisos por defecto de colaborador:', permisosUsuario);
         }
 
         console.log('🔐 Permisos finales cargados:', permisosUsuario);
@@ -89,14 +133,16 @@ function cargarPermisosUsuario() {
 
     } catch (error) {
         console.error('❌ Error cargando permisos:', error);
-        // Permisos por defecto (solo crear facturas)
+        // ✅ PERMISOS POR DEFECTO PARA COLABORADORES EN CASO DE ERROR
         permisosUsuario = {
-            puedeCrearFacturas: true,
+            puedeCrearFacturas: true,  // Permitir por defecto
             puedeCompletarFacturas: false,
             puedeEditarFacturas: false,
             puedeAnularFacturas: false,
             esAdmin: false
         };
+        console.log('🔧 Permisos de emergencia aplicados:', permisosUsuario);
+        configurarInterfazSegunPermisos();
     }
 }
 
@@ -111,11 +157,11 @@ function configurarInterfazSegunPermisos() {
     }
 
     // Resetear el botón
-    $btnFinalizar.prop('disabled', false).removeClass('btn-secondary btn-success btn-primary').addClass('btn-primary');
+    $btnFinalizar.prop('disabled', false).removeClass('btn-secondary btn-success btn-primary btn-warning').addClass('btn-primary');
 
     if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
         // ✅ USUARIO PUEDE COMPLETAR FACTURAS
-        $btnFinalizar.removeClass('btn-primary btn-secondary').addClass('btn-success')
+        $btnFinalizar.removeClass('btn-primary btn-secondary btn-warning').addClass('btn-success')
                     .prop('disabled', false)
                     .html(`<i class="bi bi-check-circle me-2"></i>Completar Venta`)
                     .attr('title', 'Procesar venta completa e imprimir factura');
@@ -124,16 +170,16 @@ function configurarInterfazSegunPermisos() {
 
     } else if (permisosUsuario.puedeCrearFacturas) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
-        $btnFinalizar.removeClass('btn-success btn-secondary').addClass('btn-primary')
+        $btnFinalizar.removeClass('btn-success btn-secondary btn-primary').addClass('btn-warning')
                     .prop('disabled', false)
-                    .html(`<i class="bi bi-file-earmark-plus me-2"></i>Crear Factura`)
-                    .attr('title', 'Crear factura pendiente (requiere aprobación)');
+                    .html(`<i class="bi bi-send me-2"></i>Enviar Factura`)
+                    .attr('title', 'Enviar factura a caja para procesamiento de pago');
 
         console.log('📝 Usuario solo puede crear facturas - Interfaz configurada para flujo de pendientes');
 
     } else {
         // ❌ SIN PERMISOS
-        $btnFinalizar.removeClass('btn-primary btn-success').addClass('btn-secondary')
+        $btnFinalizar.removeClass('btn-primary btn-success btn-warning').addClass('btn-secondary')
                     .prop('disabled', true)
                     .html(`<i class="bi bi-lock me-2"></i>Sin Permisos`)
                     .attr('title', 'No tienes permisos para procesar ventas');
@@ -710,8 +756,7 @@ function mostrarResultadosClientes(clientes) {
                  data-cliente='${JSON.stringify(cliente)}'>
                 <div class="d-flex justify-content-between">
                     <div>
-                        <strong>${cliente.nombre}</strong><br>
-                        <small class="text-muted">${cliente.email}</small>
+                        <strong>${cliente.nombre}</strong><br><small class="text-muted">${cliente.email}</small>
                     </div>
                     <small class="text-muted">${cliente.telefono || ''}</small>
                 </div>
@@ -772,8 +817,7 @@ function mostrarModalSeleccionProducto(producto) {
         } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url && url.trim() !== '');
-        }
+                .filter(url => url && url.trim() !== '');        }
 
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
@@ -1009,7 +1053,7 @@ function configurarEventosModalProducto(producto, modal) {
         modal.hide();
 
         // Mostrar confirmación
-        mostrarToast('Producto agregado', `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${producto.nombreProducto} agregadas`, 'success');
+       /* mostrarToast('Producto agregado', `${cantidad} ${cantidad === 1 ? 'unidad' : 'unidades'} de ${producto.nombreProducto} agregadas`, 'success');*/
     });
 
     // Limpiar eventos cuando se cierre el modal
@@ -1062,7 +1106,7 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
             imagenUrl: imagenUrl
         });
 
-        mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');
+       /* mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');*/
     }
 
     actualizarVistaCarrito();
@@ -1120,8 +1164,8 @@ function actualizarVistaCarrito() {
                                min="1" 
                                max="${producto.stockDisponible}">
                         <button type="button" 
-                                class="btn btn-outline-secondary btn-cantidad-mas"
-                                data-index="${index}">+</button>
+                               class="btn btn-outline-secondary btn-cantidad-mas"
+                               data-index="${index}">+</button>
                     </div>
                     <strong class="text-success">₡${formatearMoneda(subtotal)}</strong>
                 </div>
@@ -1240,6 +1284,9 @@ function mostrarModalFinalizarVenta() {
         return;
     }
 
+    // ===== CONFIGURAR MODAL SEGÚN PERMISOS =====
+    configurarModalSegunPermisos();
+
     // ===== LLENAR INFORMACIÓN DEL CLIENTE =====
     $('#resumenNombreCliente').text(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || 'Cliente');
     $('#resumenEmailCliente').text(clienteSeleccionado.email || 'Sin email');
@@ -1345,6 +1392,56 @@ function actualizarResumenVentaModal() {
     }
 }
 
+function configurarModalSegunPermisos() {
+    const $btnConfirmar = $('#btnConfirmarVenta');
+    const $textoBoton = $('#textoBotonConfirmar');
+    const $tituloModal = $('#modalFinalizarVentaLabel');
+
+    console.log('🎯 Configurando modal con permisos:', permisosUsuario);
+
+    // ✅ SIMPLIFICAR: Si tiene permiso crear facturas O completar facturas, habilitar botón
+    const puedeCrear = permisosUsuario.puedeCrearFacturas || buscarPermiso(window.facturaConfig?.Permisos, 'Crear Factura');
+    const puedeCompletar = permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin;
+
+    if (puedeCompletar) {
+        // ✅ USUARIO PUEDE COMPLETAR FACTURAS
+        $tituloModal.html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+        $btnConfirmar.removeClass('btn-warning btn-secondary btn-info').addClass('btn-success')
+                    .prop('disabled', false);
+        $textoBoton.text('Confirmar Venta');
+        $btnConfirmar.attr('title', 'Procesar venta completa e imprimir factura');
+
+        console.log('👑 Modal configurado para usuario con permisos completos');
+
+    } else if (puedeCrear) {
+        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS - ENVIAR A CAJA
+        $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
+        $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
+                    .prop('disabled', false);
+        $textoBoton.text('Enviar a Caja');
+        $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
+
+        console.log('📝 Modal configurado para colaborador - Envío a caja habilitado');
+
+    } else {
+        // ✅ FALLBACK: HABILITAR COMO COLABORADOR POR DEFECTO
+        console.log('⚠️ No se detectaron permisos específicos, habilitando como colaborador por defecto');
+        $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
+        $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
+                    .prop('disabled', false);
+        $textoBoton.text('Enviar a Caja');
+        $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
+    }
+
+    console.log('🎯 Estado final del botón:', {
+        disabled: $btnConfirmar.prop('disabled'),
+        classes: $btnConfirmar.attr('class'),
+        text: $textoBoton.text(),
+        puedeCrear,
+        puedeCompletar
+    });
+}
+
 function calcularCambio() {
     const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0) * 1.13;
     const montoRecibido = parseFloat($('#montoRecibido').val()) || 0;
@@ -1419,20 +1516,37 @@ async function procesarVentaFinal() {
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        // ✅ DETERMINAR ESTADO SEGÚN PERMISOS
-        let estadoFactura = 'Pendiente'; // Por defecto
-        let mensajeExito = 'Factura creada como pendiente';
-        let debeImprimir = false;
-        let debeAjustarInventario = false;
+        // ✅ DETERMINAR ESTADO SEGÚN PERMISOS - SIMPLIFICADO
+        let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
 
-        if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+        // Verificar si puede completar facturas (administradores/cajeros)
+        const puedeCompletar = permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin;
+        
+        // Verificar si puede crear facturas (colaboradores)
+        const puedeCrear = permisosUsuario.puedeCrearFacturas || 
+                          buscarPermiso(window.facturaConfig?.Permisos, 'Crear Factura');
+
+        if (puedeCompletar) {
+            // Administradores y cajeros: venta completa
             estadoFactura = 'Pagada';
             mensajeExito = 'Venta procesada exitosamente';
             debeImprimir = true;
             debeAjustarInventario = true;
-            console.log('👑 Procesando como FACTURA COMPLETA (usuario puede completar)');
+            console.log('👑 Procesando como administrador/cajero - Factura pagada');
+        } else if (puedeCrear || true) { // ✅ PERMITIR POR DEFECTO PARA COLABORADORES
+            // Colaboradores: enviar a cajas
+            estadoFactura = 'Pendiente';
+            mensajeExito = 'Factura enviada a Cajas para ser cancelada';
+            debeImprimir = false;
+            debeAjustarInventario = false;
+            console.log('📝 Procesando como colaborador - Factura pendiente para caja');
         } else {
-            console.log('📝 Procesando como FACTURA PENDIENTE (usuario solo puede crear)');
+            // Este caso ya no debería ocurrir, pero mantenemos como fallback
+            console.warn('⚠️ Sin permisos específicos detectados, usando flujo de colaborador por defecto');
+            estadoFactura = 'Pendiente';
+            mensajeExito = 'Factura enviada a Cajas para ser cancelada';
+            debeImprimir = false;
+            debeAjustarInventario = false;
         }
 
         // Obtener información del usuario actual
@@ -1500,118 +1614,144 @@ async function procesarVentaFinal() {
         const resultadoFactura = await responseFactura.json();
         console.log('✅ Factura creada:', resultadoFactura);
 
-        if (!resultadoFactura.success) {
-            // Manejar caso específico de sesión expirada
-            if (resultadoFactura.redirectToLogin) {
-                console.log('🔄 Redirigiendo a login por sesión expirada');
-                window.location.href = '/Account/Login';
-                return;
-            }
-            
-            throw new Error(resultadoFactura.message || 'Error desconocido al crear la factura');
-        }
-
-        // ✅ AJUSTAR STOCK SOLO SI EL USUARIO TIENE PERMISOS
-        if (debeAjustarInventario && estadoFactura === 'Pagada') {
-            console.log('💰 Usuario autorizado - Ajustando inventario automáticamente');
-
-            try {
-            const productosParaAjuste = productosEnVenta.map(producto => ({
-                ProductoId: producto.productoId,
-                NombreProducto: producto.nombreProducto,
-                Cantidad: producto.cantidad
-            }));
-
-            const requestData = {
-                NumeroFactura: resultadoFactura.numeroFactura || 'N/A',
-                Productos: productosParaAjuste
-            };
-
-            console.log('📦 Ajustando stock para todos los productos...');
-
-            const responseStock = await fetch('/Facturacion/AjustarStockFacturacion', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(requestData)
-            });
-
-            if (responseStock.ok) {
-                const resultadoStock = await responseStock.json();
-
-                if (resultadoStock.success) {
-                    console.log('✅ Stock ajustado exitosamente para todos los productos');
-
-                    // Mostrar resumen de ajustes exitosos
-                    const ajustesExitosos = resultadoStock.filter(r => r.success);
-                    if (ajustesExitosos.length > 0) {
-                        console.log(`📦 ${ajustesExitosos.length} productos actualizados correctamente`);
+        if (resultadoFactura.success) {
+            // ✅ MOSTRAR MENSAJE ESPECÍFICO SEGÚN EL TIPO DE USUARIO
+            if (estadoFactura === 'Pendiente') {
+                // Cerrar modal de finalizar venta primero
+                modalFinalizarVenta.hide();
+                
+                // Para colaboradores: mostrar modal específico de envío a cajas
+                setTimeout(() => {
+                    // ✅ DEBUGGING COMPLETO DE LA RESPUESTA DE LA API
+                    console.log('🔍 === DEBUGGING COMPLETO EN PROCESARVENTA ===');
+                    console.log('🔍 Respuesta completa de la API:', JSON.stringify(resultadoFactura, null, 2));
+                    console.log('🔍 Tipo de resultadoFactura:', typeof resultadoFactura);
+                    console.log('🔍 ¿Es array?:', Array.isArray(resultadoFactura));
+                    
+                    if (resultadoFactura) {
+                        console.log('🔍 Propiedades disponibles:', Object.keys(resultadoFactura));
+                        console.log('🔍 resultadoFactura.numeroFactura:', resultadoFactura.numeroFactura);
+                        console.log('🔍 resultadoFactura.NumeroFactura:', resultadoFactura.NumeroFactura);
+                        console.log('🔍 resultadoFactura.facturaId:', resultadoFactura.facturaId);
+                        console.log('🔍 resultadoFactura.message:', resultadoFactura.message);
                     }
-                } else {
-                    console.warn('⚠️ Algunos ajustes de stock fallaron:', resultadoStock.errores);
-                    mostrarToast('Advertencia Stock', `${resultadoStock.errores.length} productos no se pudieron actualizar`, 'warning');
-                }
 
-                // Mostrar detalles de cada resultado
-                if (resultadoStock.resultados) {
-                    resultadoStock.resultados.forEach(resultado => {
-                        if (resultado.success) {
-                            console.log(`✅ ${resultado.nombreProducto}: ${resultado.stockAnterior} → ${resultado.stockNuevo}`);
-                        } else {
-                            console.warn(`⚠️ ${resultado.nombreProducto}: ${resultado.error}`);
-                        }
+                    // ✅ PASAR LA RESPUESTA COMPLETA SIN PROCESAMIENTO PREVIO
+                    // Dejar que mostrarModalFacturaPendiente maneje la extracción
+                    mostrarModalFacturaPendiente(resultadoFactura);
+                }, 300);
+            } else {
+                // Para administradores/cajeros: mensaje de venta completa
+                mostrarToast('Éxito', mensajeExito, 'success');
+
+                if (debeImprimir) {
+                    generarRecibo(resultadoFactura, productosEnVenta, {
+                        subtotal: subtotal,
+                        iva: iva,
+                        total: total,
+                        metodoPago: metodoPagoSeleccionado,
+                        cliente: clienteSeleccionado,
+                        usuario: obtenerUsuarioActual()
                     });
                 }
+            }
+
+           // ✅ AJUSTAR STOCK SOLO SI EL USUARIO TIENE PERMISOS
+            if (debeAjustarInventario && estadoFactura === 'Pagada') {
+                console.log('💰 Usuario autorizado - Ajustando inventario automáticamente');
+
+                try {
+                    const productosParaAjuste = productosEnVenta.map(producto => ({
+                        ProductoId: producto.productoId,
+                        NombreProducto: producto.nombreProducto,
+                        Cantidad: producto.cantidad
+                    }));
+
+                    const requestData = {
+                        NumeroFactura: resultadoFactura.numeroFactura || 'N/A',
+                        Productos: productosParaAjuste
+                    };
+
+                    console.log('📦 Ajustando stock para todos los productos...');
+
+                    const responseStock = await fetch('/Facturacion/AjustarStockFacturacion', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    if (responseStock.ok) {
+                        const resultadoStock = await responseStock.json();
+
+                        if (resultadoStock.success){
+                            console.log('✅ Stock ajustado exitosamente para todos los productos');
+
+                            // Mostrar resumen de ajustes exitosos
+                            const ajustesExitosos = resultadoStock.filter(r => r.success);
+                            if (ajustesExitosos.length > 0) {
+                                console.log(`📦 ${ajustesExitosos.length} productos actualizados correctamente`);
+                            }
+                        } else {
+                            console.warn('⚠️ Algunos ajustes de stock fallaron:', resultadoStock.errores);
+                            mostrarToast('Advertencia Stock', `${resultadoStock.errores.length} productos no se pudieron actualizar`, 'warning');
+                        }
+
+                        // Mostrar detalles de cada resultado
+                        if (resultadoStock.resultados) {
+                            resultadoStock.resultados.forEach(resultado => {
+                                if (resultado.success) {
+                                    console.log(`✅ ${resultado.nombreProducto}: ${resultado.stockAnterior} → ${resultado.stockNuevo}`);
+                                } else {
+                                    console.warn(`⚠️ ${resultado.nombreProducto}: ${resultado.error}`);
+                                }
+                            });
+                        }
+                    } else {
+                        const errorText = await responseStock.text();
+                        console.error('❌ Error en endpoint de ajuste de stock:', errorText);
+                        mostrarToast('Error Stock', 'No se pudo conectar con el sistema de inventario', 'warning');
+                    }
+                } catch (error) {
+                    console.error('❌ Error general ajustando stock:', error);
+                    mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+                }
+
+                // ✅ GENERAR E IMPRIMIR RECIBO SOLO SI FACTURA ESTÁ COMPLETA
+                generarRecibo(resultadoFactura, productosEnVenta, {
+                    subtotal: subtotal,
+                    iva: iva,
+                    total: total,
+                    metodoPago: metodoPagoSeleccionado,
+                    cliente: clienteSeleccionado,
+                    usuario: obtenerUsuarioActual()
+                });
+
+                // Éxito para factura completa
+                modalFinalizarVenta.hide();
+                mostrarToast('¡Venta Completada!', 'La venta ha sido procesada e impresa exitosamente', 'success');
+
             } else {
-                const errorText = await responseStock.text();
-                console.error('❌ Error en endpoint de ajuste de stock:', errorText);
-                mostrarToast('Error Stock', 'No se pudo conectar con el sistema de inventario', 'warning');
-            }
-        } catch (error) {
-                console.error('❌ Error general ajustando stock:', error);
-                mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+                console.log('📋 Factura pendiente - NO se ajusta stock automáticamente');
+
+                // ✅ ÉXITO PARA FACTURA PENDIENTE (ya se maneja arriba)
+                // No cerrar modal aquí, se hace arriba antes del setTimeout
             }
 
-            // ✅ GENERAR E IMPRIMIR RECIBO SOLO SI FACTURA ESTÁ COMPLETA
-            generarRecibo(resultadoFactura, productosEnVenta, {
-                subtotal: subtotal,
-                iva: iva,
-                total: total,
-                metodoPago: metodoPagoSeleccionado,
-                cliente: clienteSeleccionado,
-                usuario: obtenerUsuarioActual()
-            });
-
-            // Éxito para factura completa
-            modalFinalizarVenta.hide();
-            mostrarToast('¡Venta Completada!', 'La venta ha sido procesada e impresa exitosamente', 'success');
+            // Limpiar carrito después de procesar (para ambos casos)
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
 
         } else {
-            console.log('📋 Factura pendiente - NO se ajusta stock automáticamente');
-
-            // ✅ ÉXITO PARA FACTURA PENDIENTE
-            modalFinalizarVenta.hide();
-            mostrarToast('Factura Creada', 'Factura creada como pendiente. Requiere aprobación para completar.', 'info');
-
-            // ✅ MOSTRAR MODAL INFORMATIVO PARA FACTURAS PENDIENTES
-            mostrarModalFacturaPendiente(resultadoFactura);
+            mostrarToast('Error', resultadoFactura.message || 'Error al procesar la venta', 'error');
         }
-
-        // Limpiar venta
-        productosEnVenta = [];
-        clienteSeleccionado = null;
-        $('#clienteBusqueda').val('');
-        $('#clienteSeleccionado').addClass('d-none');
-        actualizarVistaCarrito();
-        actualizarTotales();
-
-        // Recargar la página después de un breve delay para mostrar el toast
-        setTimeout(() => {
-            console.log('🔄 Recargando página para refrescar inventario...');
-            window.location.reload();
-        }, 2000);
 
     } catch (error) {
         console.error('❌ Error procesando venta:', error);
@@ -1621,7 +1761,6 @@ async function procesarVentaFinal() {
         $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
     }
 }
-
 /**
  * Generar e imprimir recibo de venta optimizado para mini impresoras térmicas
  */
@@ -1943,6 +2082,67 @@ function formatearMoneda(valor) {
 function mostrarToast(titulo, mensaje, tipo = 'info') {
     // Implementar toast notifications
     console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
+
+    // ✅ IMPLEMENTACIÓN DE TOAST VISUAL
+    try {
+        // Verificar si existe un contenedor de toasts
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            // Crear contenedor de toasts
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Mapear tipos de toast a clases de Bootstrap
+        const tipoClases = {
+            'success': 'text-bg-success',
+            'error': 'text-bg-danger',
+            'danger': 'text-bg-danger',
+            'warning': 'text-bg-warning',
+            'info': 'text-bg-info'
+        };
+
+        const claseColor = tipoClases[tipo] || 'text-bg-info';
+
+        // Crear toast HTML
+        const toastId = 'toast-' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast ${claseColor}" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">${titulo}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${mensaje}
+                </div>
+            </div>
+        `;
+
+        // Agregar toast al contenedor
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+        // Mostrar toast usando Bootstrap
+        const toastElement = document.getElementById(toastId);
+        if (toastElement && typeof bootstrap !== 'undefined') {
+            const toast = new bootstrap.Toast(toastElement, {
+                delay: tipo === 'success' ? 5000 : 3000 // 5 segundos para éxito, 3 para otros
+            });
+            toast.show();
+
+            // Limpiar toast después de que se oculte
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                this.remove();
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando toast:', error);
+        // Fallback a alert si falla el toast
+        alert(`${titulo}: ${mensaje}`);
+    }
 }
 
 function verDetalleProducto(producto) {
@@ -2527,13 +2727,28 @@ function mostrarResumenDepuracion() {
 
 function obtenerUsuarioActual() {
     try {
-        // Primera opción: desde configuración de facturación
+        console.log('👤 === OBTENIENDO USUARIO ACTUAL ===');
+        
+        // ✅ PRIMERA OPCIÓN: Desde configuración de facturación (método principal)
         if (window.facturaConfig && window.facturaConfig.Usuario) {
             console.log('👤 Usuario desde facturaConfig:', window.facturaConfig.Usuario);
+            console.log('👤 Tipo de usuario obtenido:', typeof window.facturaConfig.Usuario);
+            console.log('👤 Propiedades del usuario:', Object.keys(window.facturaConfig.Usuario));
             return window.facturaConfig.Usuario;
         }
 
-        // Segunda opción: desde configuración global
+        // ✅ VERIFICAR SI HAY CONFIGURACIÓN DISPONIBLE PERO MAL ESTRUCTURADA
+        if (window.facturaConfig) {
+            console.log('👤 facturaConfig disponible pero sin Usuario:', window.facturaConfig);
+            
+            // Buscar usuario en otros lugares de la configuración
+            if (window.facturaConfig.usuario) {
+                console.log('👤 Usuario encontrado en minúscula:', window.facturaConfig.usuario);
+                return window.facturaConfig.usuario;
+            }
+        }
+
+        // Segunda opción: desde configuración global de inventario
         if (window.inventarioConfig && window.inventarioConfig.usuario) {
             console.log('👤 Usuario desde inventarioConfig:', window.inventarioConfig.usuario);
             return window.inventarioConfig.usuario;
@@ -2552,6 +2767,9 @@ function obtenerUsuarioActual() {
         }
 
         console.warn('⚠️ No se pudo obtener información del usuario, usando valores por defecto');
+        console.log('🔍 Debug completo de configuraciones disponibles:');
+        console.log('🔍 window.facturaConfig:', window.facturaConfig);
+        console.log('🔍 window.inventarioConfig:', window.inventarioConfig);
 
         // Fallback básico
         return {
@@ -2639,23 +2857,42 @@ function actualizarEstadoBotonFinalizar() {
 
 // ===== MODAL FACTURA PENDIENTE =====
 function mostrarModalFacturaPendiente(resultadoFactura) {
+    console.log('📋 === MODAL FACTURA PENDIENTE ===');
+    console.log('📋 Datos recibidos:', resultadoFactura);
+    
+    // ✅ EXTRACCIÓN DIRECTA Y SIMPLIFICADA DEL NÚMERO DE FACTURA
+    const numeroFactura = resultadoFactura?.numeroFactura || 'N/A';
+    
+    console.log('🔢 Número de factura extraído:', numeroFactura);
+
+    // Determinar título y mensaje según permisos
+    let tituloModal = 'Factura Procesada';
+    let mensajePrincipal = 'Factura guardada como pendiente';
+    let descripcionMensaje = 'La factura ha sido guardada y está pendiente de procesamiento.';
+
+    if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
+        tituloModal = 'Factura Enviada Exitosamente';
+        mensajePrincipal = '¡Factura enviada a caja!';
+        descripcionMensaje = 'La factura ha sido enviada exitosamente al área de caja para procesamiento de pago.';
+    }
+
     const modalHtml = `
         <div class="modal fade" id="modalFacturaPendiente" tabindex="-1">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header bg-warning text-dark">
+                    <div class="modal-header bg-success text-white">
                         <h5 class="modal-title">
-                            <i class="bi bi-clock-history me-2"></i>Factura Creada como Pendiente
+                            <i class="bi bi-check-circle me-2"></i>${tituloModal}
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="alert alert-info">
+                        <div class="alert alert-success">
                             <div class="d-flex align-items-center">
-                                <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+                                <i class="bi bi-send-check-fill me-3 fs-4"></i>
                                 <div>
-                                    <h6 class="mb-1">Factura en estado pendiente</h6>
-                                    <p class="mb-0">La factura ha sido creada exitosamente pero requiere aprobación de un supervisor para ser completada.</p>
+                                    <h6 class="mb-1">${mensajePrincipal}</h6>
+                                    <p class="mb-0">${descripcionMensaje}</p>
                                 </div>
                             </div>
                         </div>
@@ -2663,26 +2900,32 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <strong>Número de Factura:</strong><br>
-                                <span class="text-primary">${resultadoFactura.numeroFactura || 'N/A'}</span>
+                                <span class="text-primary fs-5">${numeroFactura}</span>
                             </div>
                             <div class="col-md-6">
                                 <strong>Estado:</strong><br>
-                                <span class="badge bg-warning">Pendiente de Aprobación</span>
+                                <span class="badge bg-warning fs-6">Pendiente de Pago</span>
                             </div>
-                        </div>
+                        </div></div>
 
-                        <div class="alert alert-warning">
-                            <h6><i class="bi bi-exclamation-triangle me-2"></i>Importante:</h6>
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>Siguiente paso:</h6>
                             <ul class="mb-0">
-                                <li>El stock <strong>NO</strong> se ha ajustado automáticamente</li>
-                                <li>La factura debe ser aprobada por un supervisor</li>
-                                <li>Una vez aprobada, se ajustará el stock y se podrá imprimir</li>
-                                <li>Puedes encontrar esta factura en el módulo de facturas pendientes</li>
+                                <li>La factura está disponible en el sistema de caja</li>
+                                <li>El cajero procesará el pago cuando el cliente se presente</li>
+                                <li>Una vez pagada, se ajustará automáticamente el inventario</li>
+                                <li>Se generará el comprobante de pago final</li>
                             </ul>
                         </div>
 
-                        <div class="text-center mt-3">
-                            <p class="text-muted">Un supervisor recibirá una notificación para aprobar esta factura.</p>
+                        <div class="bg-light p-3 rounded text-center">
+                            <h6 class="text-primary mb-2">
+                                <i class="bi bi-clipboard-check me-2"></i>Instrucciones para el cliente
+                            </h6>
+                            <p class="mb-1"><strong>Presente este número de factura en caja:</strong></p>
+                            <div class="bg-white p-2 rounded border">
+                                <code class="fs-4 text-primary">${numeroFactura}</code>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -2691,6 +2934,9 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                         </button>
                         <button type="button" class="btn btn-primary" onclick="irAFacturasPendientes()">
                             <i class="bi bi-list-check me-1"></i>Ver Facturas Pendientes
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="imprimirComprobanteEnvio('${numeroFactura}')">
+                            <i class="bi bi-printer me-1"></i>Imprimir Comprobante
                         </button>
                     </div>
                 </div>
@@ -2714,6 +2960,96 @@ function irAFacturasPendientes() {
     window.location.href = '/Facturacion/Pendientes';
 }
 
+function imprimirComprobanteEnvio(numeroFactura) {
+    const fecha = new Date().toLocaleDateString('es-CR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+    });
+    const hora = new Date().toLocaleTimeString('es-CR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+
+    const comprobanteHTML = `
+        <div id="comprobante-envio" style="width: 58mm; max-width: 58mm; font-family: 'Courier New', monospace; font-size: 9px; line-height: 1.2; margin: 0; padding: 0;">
+            <!-- ENCABEZADO -->
+            <div style="text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">GESTIÓN LLANTERA</div>
+                <div style="font-size: 8px; margin-bottom: 1px;">Sistema de Facturación</div>
+                <div style="font-size: 9px; font-weight: bold;">COMPROBANTE DE ENVÍO</div>
+            </div>
+
+            <!-- INFORMACIÓN -->
+            <div style="margin-bottom: 6px; font-size: 8px;">
+                <div>Fecha: ${fecha}</div>
+                <div>Hora: ${hora}</div>
+                <div>Factura: ${numeroFactura}</div>
+                <div>Estado: ENVIADA A CAJA</div>
+            </div>
+
+            <!-- SEPARADOR -->
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <!-- INSTRUCCIONES -->
+            <div style="text-align: center; margin-bottom: 8px;">
+                <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px;">INSTRUCCIONES PARA EL CLIENTE</div>
+                <div style="font-size: 8px; margin-bottom: 2px;">Presente este número en caja:</div>
+                <div style="font-size: 12px; font-weight: bold; border: 1px solid #000; padding: 4px; margin: 4px 0;">${numeroFactura}</div>
+            </div>
+
+            <!-- PIE -->
+            <div style="text-align: center; margin-top: 8px; font-size: 7px; border-top: 1px dashed #000; padding-top: 6px;">
+                <div>Gracias por su preferencia</div>
+                <div>Comprobante generado: ${fecha} ${hora}</div>
+            </div>
+
+            <!-- ESPACIADO FINAL -->
+            <div style="height: 20px;"></div>
+        </div>
+    `;
+
+    try {
+        const ventanaImpresion = window.open('', '_blank', 'width=300,height=400,scrollbars=no,resizable=no');
+        if (!ventanaImpresion) {
+            throw new Error('No se pudo abrir ventana de impresión');
+        }
+
+        ventanaImpresion.document.write(`
+            <!DOCTYPE html>
+            <html>
+                <head>
+                    <title>Comprobante de Envío - ${numeroFactura}</title>
+                    <meta charset="utf-8">
+                    <style>
+                        @page { size: 58mm auto; margin: 0; }
+                        @media print {
+                            body { margin: 0; padding: 0; }
+                            #comprobante-envio { page-break-inside: avoid; }
+                        }
+                        body { font-family: 'Courier New', monospace; }
+                    </style>
+                </head>
+                <body>
+                    ${comprobanteHTML}
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(() => window.close(), 1000);
+                        };
+                    </script>
+                </body>
+            </html>
+        `);
+        ventanaImpresion.document.close();
+
+        mostrarToast('Impresión', 'Comprobante de envío generado', 'success');
+    } catch (error) {
+        console.error('Error al imprimir comprobante:', error);
+        mostrarToast('Error', 'No se pudo imprimir el comprobante', 'danger');
+    }
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
@@ -2732,8 +3068,10 @@ window.mostrarResumenDepuracion = mostrarResumenDepuracion;
 window.actualizarEstadoBotonFinalizar = actualizarEstadoBotonFinalizar;
 window.cargarPermisosUsuario = cargarPermisosUsuario;
 window.configurarInterfazSegunPermisos = configurarInterfazSegunPermisos;
+window.configurarModalSegunPermisos = configurarModalSegunPermisos;
 window.mostrarModalFacturaPendiente = mostrarModalFacturaPendiente;
 window.irAFacturasPendientes = irAFacturasPendientes;
+window.imprimirComprobanteEnvio = imprimirComprobanteEnvio;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `

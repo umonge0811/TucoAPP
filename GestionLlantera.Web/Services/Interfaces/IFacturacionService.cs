@@ -39,6 +39,8 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// Crea una nueva factura en la API
         /// </summary>
         Task<(bool success, object? data, string? message, string? details)> CrearFacturaAsync(object facturaDto, string jwtToken = null);
+        Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken = null);
+        Task<(bool success, object? data, string? message, string? details)> CompletarFacturaAsync(int facturaId, object datosCompletamiento, string jwtToken = null);
     }
 
     // Clase ApiResponse para manejar respuestas de la API

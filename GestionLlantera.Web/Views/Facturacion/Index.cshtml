@@ -187,9 +187,30 @@
         <script src="~/js/views/facturacion/facturacion.js"></script>
 
     <script>
-        // ✅ CONFIGURACIÓN GLOBAL DE FACTURACIÓN
-        window.facturaConfig = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ConfiguracionFacturacion ?? new {}));
-        console.log('📋 Configuración de facturación cargada:', window.facturaConfig);
+        // ===== CONFIGURACIÓN GLOBAL PARA FACTURACIÓN =====
+        window.facturaConfig = @Html.Raw(Json.Serialize(ViewBag.ConfiguracionFacturacion));
+        console.log('🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===');
+        console.log('🎯 Configuración completa:', window.facturaConfig);
+
+        // ✅ VERIFICAR PERMISOS ESPECÍFICOS
+        if (window.facturaConfig && window.facturaConfig.Permisos) {
+            console.log('🔐 Permisos detectados:');
+            console.log('🔐 - Puede crear facturas:', window.facturaConfig.Permisos.puedeCrearFacturas);
+            console.log('🔐 - Puede completar facturas:', window.facturaConfig.Permisos.puedeCompletarFacturas);
+            console.log('🔐 - Es administrador:', window.facturaConfig.Permisos.esAdmin);
+        } else {
+            console.error('❌ No se encontraron permisos en la configuración');
+        }
+    </script>
+
+<!-- Configuración para JavaScript -->
+    <script>
+        window.facturaConfig = @Html.Raw(Json.Serialize(ViewBag.ConfiguracionFacturacion));
+        console.log('🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===');
+        console.log('🔧 Configuración completa:', window.facturaConfig);
+        console.log('🔧 Usuario disponible:', window.facturaConfig?.Usuario);
+        console.log('🔧 Permisos disponibles:', window.facturaConfig?.Permisos);
+        console.log('🔧 Token disponible:', window.facturaConfig?.TokenDisponible);
     </script>
 
 

@@ -299,15 +299,38 @@ namespace API.Controllers
                     ? $"{facturaDto.TipoDocumento} creada exitosamente en estado PENDIENTE" 
                     : $"{facturaDto.TipoDocumento} creada y COMPLETADA exitosamente";
 
-                return CreatedAtAction(nameof(ObtenerFacturaPorId), new { id = factura.FacturaId },
-                    new { 
-                        facturaId = factura.FacturaId, 
-                        numeroFactura = factura.NumeroFactura,
-                        estado = estadoInicial,
-                        puedeCompletar = puedeCompletar,
-                        message = mensajeRespuesta,
-                        timestamp = DateTime.Now
-                    });
+                // Crear respuesta estructurada con el DTO de la factura creada
+                var facturaCreada = new FacturaDTO
+                {
+                    FacturaId = factura.FacturaId,
+                    NumeroFactura = factura.NumeroFactura,
+                    ClienteId = factura.ClienteId,
+                    NombreCliente = factura.NombreCliente,
+                    IdentificacionCliente = factura.IdentificacionCliente,
+                    TelefonoCliente = factura.TelefonoCliente,
+                    EmailCliente = factura.EmailCliente,
+                    DireccionCliente = factura.DireccionCliente,
+                    FechaFactura = factura.FechaFactura,
+                    FechaVencimiento = factura.FechaVencimiento,
+                    Subtotal = factura.Subtotal,
+                    DescuentoGeneral = factura.DescuentoGeneral,
+                    PorcentajeImpuesto = factura.PorcentajeImpuesto,
+                    MontoImpuesto = factura.MontoImpuesto ?? 0,
+                    Total = factura.Total,
+                    Estado = factura.Estado,
+                    TipoDocumento = factura.TipoDocumento,
+                    MetodoPago = factura.MetodoPago,
+                    Observaciones = factura.Observaciones,
+                    UsuarioCreadorId = factura.UsuarioCreadorId,
+                    FechaCreacion = factura.FechaCreacion,
+                    DetallesFactura = facturaDto.DetallesFactura
+                };
+
+                return Ok(new
+                {
+                    message = mensajeRespuesta,
+                    numeroFactura = factura.NumeroFactura
+                });
             }
             catch (Exception ex)
             {

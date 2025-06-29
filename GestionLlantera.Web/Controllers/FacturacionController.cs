@@ -62,34 +62,56 @@ namespace GestionLlantera.Web.Controllers
                     _logger.LogInformation("✅ Token JWT disponible al cargar facturación");
                 }
 
-                // Obtener información del usuario actual
-                var usuarioId = User.FindFirst("UserId")?.Value ?? User.FindFirst("userId")?.Value;
-                var nombreUsuario = User.Identity?.Name;
+                // Obtener información completa del usuario actual
+                var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
+
+                // ✅ VERIFICAR SI ES ADMINISTRADOR PRIMERO
+                var esAdmin = User.IsInRole("Administrador") || User.IsInRole("Admin");
+                _logger.LogInformation("👑 Usuario es administrador: {EsAdmin}", esAdmin);
 
                 // ✅ Verificar permisos específicos de facturación
+                var puedeCrearFacturas = esAdmin || await this.TienePermisoAsync("CrearFacturas");
+                var puedeCompletarFacturas = esAdmin || await this.TienePermisoAsync("CompletarFacturas");
+                var puedeEditarFacturas = esAdmin || await this.TienePermisoAsync("EditarFacturas");
+                var puedeAnularFacturas = esAdmin || await this.TienePermisoAsync("AnularFacturas");
+
                 var permisos = new
                 {
-                    puedeCrearFacturas = await this.TienePermisoAsync("CrearFacturas"),
-                    puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas"),
-                    puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas"),
-                    puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas"),
-                    esAdmin = User.IsInRole("Administrador")
+                    puedeCrearFacturas = puedeCrearFacturas,
+                    puedeCompletarFacturas = puedeCompletarFacturas,
+                    puedeEditarFacturas = puedeEditarFacturas,
+                    puedeAnularFacturas = puedeAnularFacturas,
+                    esAdmin = esAdmin,
+                    // ✅ AGREGAR PERMISOS ADICIONALES EXPLÍCITOS PARA EL FRONTEND
+                    CrearFacturas = puedeCrearFacturas,
+                    CompletarFacturas = puedeCompletarFacturas,
+                    EditarFacturas = puedeEditarFacturas,
+                    AnularFacturas = puedeAnularFacturas,
+                    Administrador = esAdmin
                 };
 
                 _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}, Admin={Admin}", 
                     nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
                     permisos.puedeEditarFacturas, permisos.puedeAnularFacturas, permisos.esAdmin);
 
-                var viewModel = new
+                // ✅ CREAR CONFIGURACIÓN COMPLETA PARA EL FRONTEND
+                var configuracionCompleta = new
                 {
-                    UsuarioId = usuarioId,
-                    NombreUsuario = nombreUsuario,
+                    Usuario = new
+                    {
+                        usuarioId = usuarioId,
+                        id = usuarioId, // Alias para compatibilidad
+                        nombre = nombreUsuario,
+                        nombreUsuario = nombreUsuario,
+                        email = emailUsuario
+                    },
+                    Permisos = permisos,
                     FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
                     HoraActual = DateTime.Now.ToString("HH:mm"),
-                    Permisos = permisos
+                    TokenDisponible = !string.IsNullOrEmpty(tokenJWT)
                 };
 
-                ViewBag.ConfiguracionFacturacion = viewModel;
+                ViewBag.ConfiguracionFacturacion = configuracionCompleta;
                 return View();
             }
             catch (Exception ex)
@@ -348,7 +370,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("🧾 Autenticado: {Autenticado}", User.Identity?.IsAuthenticated);
 
                 // Verificar permisos
-                if (!await this.TienePermisoAsync("CrearFacturas"))
+                if (!await this.TienePermisoAsync("Crear Facturas"))
                 {
                     _logger.LogWarning("🚫 Usuario sin permisos para crear facturas");
                     return Json(new { success = false, message = "Sin permisos para crear facturas" });
@@ -505,6 +527,147 @@ namespace GestionLlantera.Web.Controllers
             }
 
             return token;
+        }
+
+        /// <summary>
+        /// Obtener información completa del usuario desde los claims (igual que InventarioController)
+        /// </summary>
+        private (int usuarioId, string nombre, string email) ObtenerInfoUsuario()
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Obteniendo información del usuario...");
+                
+                // Debug: Mostrar todos los claims
+                _logger.LogInformation("📋 Claims disponibles:");
+                foreach (var claim in User.Claims)
+                {
+                    _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
+                }
+
+                // Intentar diferentes claims para obtener el ID del usuario
+                var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                _logger.LogInformation("NameIdentifier claim: {Value}", userIdClaim ?? "NULL");
+
+                var nameClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                _logger.LogInformation("Name claim: {Value}", nameClaim ?? "NULL");
+
+                var emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+                _logger.LogInformation("Email claim: {Value}", emailClaim ?? "NULL");
+
+                // Intentar parsear el ID
+                int userId = 1; // Fallback
+                if (int.TryParse(userIdClaim, out int parsedUserId))
+                {
+                    userId = parsedUserId;
+                    _logger.LogInformation("✅ ID parseado de NameIdentifier: {UserId}", userId);
+                }
+                else if (int.TryParse(nameClaim, out int userIdFromName))
+                {
+                    userId = userIdFromName;
+                    _logger.LogInformation("✅ ID parseado de Name: {UserId}", userId);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudo obtener el ID del usuario, usando fallback 1");
+                }
+
+                return (userId, nameClaim ?? "Usuario", emailClaim ?? "");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener información del usuario");
+                return (1, "Usuario", "");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFacturasPendientes()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo facturas pendientes");
+
+                if (!await this.TienePermisoAsync("Ver Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para ver facturas" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new { 
+                        success = true, 
+                        data = resultado.data,
+                        message = resultado.message 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut]
+        [Route("Facturacion/CompletarFactura/{facturaId}")]
+        public async Task<IActionResult> CompletarFactura(int facturaId, [FromBody] object datosCompletamiento)
+        {
+            try
+            {
+                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
+
+                if (!await this.TienePermisoAsync("CompletarFacturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para completar facturas" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.CompletarFacturaAsync(facturaId, datosCompletamiento, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new { 
+                        success = true, 
+                        data = resultado.data,
+                        message = resultado.message 
+                    });
+                }
+                else
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error completando factura");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
         }
 
         [HttpPost]
