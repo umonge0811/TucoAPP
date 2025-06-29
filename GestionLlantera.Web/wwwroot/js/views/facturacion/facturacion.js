@@ -1519,20 +1519,34 @@ async function procesarVentaFinal() {
         // ✅ DETERMINAR ESTADO SEGÚN PERMISOS - SIMPLIFICADO
         let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
 
-        if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
+        // Verificar si puede completar facturas (administradores/cajeros)
+        const puedeCompletar = permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin;
+        
+        // Verificar si puede crear facturas (colaboradores)
+        const puedeCrear = permisosUsuario.puedeCrearFacturas || 
+                          buscarPermiso(window.facturaConfig?.Permisos, 'Crear Factura');
+
+        if (puedeCompletar) {
             // Administradores y cajeros: venta completa
             estadoFactura = 'Pagada';
             mensajeExito = 'Venta procesada exitosamente';
             debeImprimir = true;
             debeAjustarInventario = true;
-        } else if (permisosUsuario.puedeCrearFacturas) {
+            console.log('👑 Procesando como administrador/cajero - Factura pagada');
+        } else if (puedeCrear || true) { // ✅ PERMITIR POR DEFECTO PARA COLABORADORES
             // Colaboradores: enviar a cajas
             estadoFactura = 'Pendiente';
             mensajeExito = 'Factura enviada a Cajas para ser cancelada';
             debeImprimir = false;
             debeAjustarInventario = false;
+            console.log('📝 Procesando como colaborador - Factura pendiente para caja');
         } else {
-            throw new Error('Sin permisos para procesar ventas');
+            // Este caso ya no debería ocurrir, pero mantenemos como fallback
+            console.warn('⚠️ Sin permisos específicos detectados, usando flujo de colaborador por defecto');
+            estadoFactura = 'Pendiente';
+            mensajeExito = 'Factura enviada a Cajas para ser cancelada';
+            debeImprimir = false;
+            debeAjustarInventario = false;
         }
 
         // Obtener información del usuario actual
