@@ -713,6 +713,8 @@ namespace GestionLlantera.Web.Services
 
                 _logger.LogInformation("🔍 === DEBUGGING JWT TOKEN COMPLETO ===");
                 _logger.LogInformation("🔍 Payload JWT completo: {Payload}", payloadJson);
+
+                dynamic claims = JsonConvert.DeserializeObject(payloadJson);
                 
                 // ✅ LOGGING ADICIONAL PARA DEBUGGING DE ESTRUCTURA
                 if (claims is Newtonsoft.Json.Linq.JObject debugObject)
@@ -726,12 +728,18 @@ namespace GestionLlantera.Web.Services
                     }
                 }
 
-                dynamic claims = JsonConvert.DeserializeObject(payloadJson);
-
                 // Buscar roles en el token
-                var roles = claims?.role?.ToString() ??
+                string roles = "";
+                try
+                {
+                    roles = claims?.role?.ToString() ??
                            claims?.roles?.ToString() ??
                            claims?["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]?.ToString() ?? "";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("⚠️ Error extrayendo roles del token: {Error}", ex.Message);
+                }
 
                 // ✅ EXTRAER PERMISOS CORRECTAMENTE DEL TOKEN JWT
                 // Los permisos se almacenan como claims individuales con tipo "Permission"
@@ -748,7 +756,8 @@ namespace GestionLlantera.Web.Services
                         var permisosToken = jwtObject[campo];
                         if (permisosToken != null)
                         {
-                            _logger.LogInformation("🔍 Permisos encontrados en campo '{Campo}': {Permisos}", campo, permisosToken.ToString());
+                            var permisosTexto = permisosToken.ToString();
+                            _logger.LogInformation("🔍 Permisos encontrados en campo '{Campo}': {Permisos}", campo, permisosTexto);
                             
                             if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.Array)
                             {
@@ -761,7 +770,7 @@ namespace GestionLlantera.Web.Services
                             else if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.String)
                             {
                                 // Es un string único
-                                permisosEncontrados.Add(permisosToken.ToString());
+                                permisosEncontrados.Add(permisosTexto);
                             }
                             break; // Si encontramos permisos, salimos del bucle
                         }
