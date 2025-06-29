@@ -2854,20 +2854,38 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
     console.log('📋 === MODAL FACTURA PENDIENTE ===');
     console.log('📋 Datos recibidos:', JSON.stringify(resultadoFactura, null, 2));
     
+    // ✅ FUNCIÓN AUXILIAR PARA EXTRAER VALOR DE ARRAY O STRING
+    function extraerValor(valor) {
+        if (Array.isArray(valor)) {
+            // Si es array, tomar el primer elemento válido
+            const primerValido = valor.find(item => item && item.toString().trim() !== '');
+            return primerValido ? primerValido.toString() : null;
+        }
+        return valor && valor.toString().trim() !== '' ? valor.toString() : null;
+    }
+    
     // Extraer número de factura con múltiples fallbacks
     let numeroFactura = 'N/A';
     
     if (resultadoFactura) {
-        // ✅ BUSCAR EN TODAS LAS PROPIEDADES POSIBLES
-        numeroFactura = resultadoFactura.numeroFactura || 
-                       resultadoFactura.NumeroFactura ||
-                       resultadoFactura.data?.numeroFactura ||
-                       resultadoFactura.data?.NumeroFactura ||
-                       resultadoFactura.facturaId ||
-                       resultadoFactura.FacturaId ||
-                       resultadoFactura.factura?.numeroFactura ||
-                       resultadoFactura.factura?.NumeroFactura ||
-                       'N/A';
+        console.log('🔍 Analizando estructura de datos...');
+        
+        // ✅ BUSCAR EN TODAS LAS PROPIEDADES POSIBLES CON MANEJO DE ARRAYS
+        const posiblesNumeros = [
+            extraerValor(resultadoFactura.numeroFactura),
+            extraerValor(resultadoFactura.NumeroFactura),
+            extraerValor(resultadoFactura.data?.numeroFactura),
+            extraerValor(resultadoFactura.data?.NumeroFactura),
+            extraerValor(resultadoFactura.facturaId),
+            extraerValor(resultadoFactura.FacturaId),
+            extraerValor(resultadoFactura.factura?.numeroFactura),
+            extraerValor(resultadoFactura.factura?.NumeroFactura)
+        ];
+        
+        console.log('🔍 Valores posibles encontrados:', posiblesNumeros);
+        
+        // Tomar el primer valor válido
+        numeroFactura = posiblesNumeros.find(valor => valor && valor !== 'N/A') || 'N/A';
         
         console.log('🔢 Primer intento de extracción:', numeroFactura);
         
@@ -2883,21 +2901,30 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
         // ✅ SI TENEMOS datosCompletos (debugging), buscar ahí también
         if (numeroFactura === 'N/A' && resultadoFactura.datosCompletos) {
             const datosCompletos = resultadoFactura.datosCompletos;
-            numeroFactura = datosCompletos.numeroFactura || 
-                           datosCompletos.NumeroFactura ||
-                           datosCompletos.data?.numeroFactura ||
-                           datosCompletos.data?.NumeroFactura ||
-                           'N/A';
+            const posiblesNumerosCompletos = [
+                extraerValor(datosCompletos.numeroFactura),
+                extraerValor(datosCompletos.NumeroFactura),
+                extraerValor(datosCompletos.data?.numeroFactura),
+                extraerValor(datosCompletos.data?.NumeroFactura)
+            ];
             
+            numeroFactura = posiblesNumerosCompletos.find(valor => valor && valor !== 'N/A') || 'N/A';
             console.log('🔢 Extraído desde datosCompletos:', numeroFactura);
+        }
+        
+        // ✅ ÚLTIMO RECURSO: GENERAR NÚMERO TEMPORAL SI TODO FALLA
+        if (numeroFactura === 'N/A') {
+            const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').substring(0, 14);
+            numeroFactura = `TEMP-${timestamp}`;
+            console.log('🔢 Generando número temporal:', numeroFactura);
         }
     }
     
     console.log('🔢 *** NÚMERO DE FACTURA FINAL:', numeroFactura, '***');
     
-    if (numeroFactura === 'N/A') {
-        console.error('❌ NO SE PUDO EXTRAER EL NÚMERO DE FACTURA');
-        console.error('❌ Estructura de datos disponible:', Object.keys(resultadoFactura || {}));
+    if (numeroFactura.startsWith('TEMP-')) {
+        console.warn('⚠️ SE GENERÓ UN NÚMERO TEMPORAL - HAY PROBLEMA EN LA RESPUESTA DEL SERVIDOR');
+        console.error('❌ Estructura de datos recibida:', Object.keys(resultadoFactura || {}));
     }
 
     // Determinar título y mensaje según permisos
@@ -2936,12 +2963,23 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                             <div class="col-md-6">
                                 <strong>Número de Factura:</strong><br>
                                 <span class="text-primary fs-5">${numeroFactura}</span>
+                                ${numeroFactura.startsWith('TEMP-') ? 
+                                    '<br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Número temporal - Consulte con administración</small>' : 
+                                    ''}
                             </div>
                             <div class="col-md-6">
                                 <strong>Estado:</strong><br>
                                 <span class="badge bg-warning fs-6">Pendiente de Pago</span>
                             </div>
                         </div>
+                        
+                        ${numeroFactura.startsWith('TEMP-') ? 
+                            `<div class="alert alert-warning">
+                                <h6><i class="bi bi-exclamation-triangle me-2"></i>Problema con número de factura</h6>
+                                <p class="mb-0">No se pudo obtener el número de factura del servidor. Se generó un número temporal. 
+                                <strong>Por favor, consulte con el administrador del sistema.</strong></p>
+                            </div>` : 
+                            ''}</div>
 
                         <div class="alert alert-info">
                             <h6><i class="bi bi-info-circle me-2"></i>Siguiente paso:</h6>
