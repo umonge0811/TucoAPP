@@ -48,33 +48,16 @@ namespace GestionLlantera.Web.Controllers
                 var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
                 var tokenJWT = this.ObtenerTokenJWT();
 
-                // ✅ VERIFICACIÓN DIRECTA DE PERMISOS DESDE CLAIMS (como en InventarioController)
-                var claims = User.Claims.ToList();
-                _logger.LogInformation("📋 Claims disponibles para validación:");
-                foreach (var claim in claims)
-                {
-                    _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
-                }
+                // ✅ VERIFICACIÓN REAL DE PERMISOS USANDO API (igual que InventarioController)
+                _logger.LogInformation("🔐 === VERIFICANDO PERMISOS REALES CONTRA API ===");
 
-                // ✅ BUSCAR PERMISOS DIRECTAMENTE EN LOS CLAIMS
-                var puedeCrearFacturas = claims.Any(c => c.Type == "permiso" && 
-                    (c.Value == "Crear Facturas" || c.Value == "CrearFacturas" || c.Value == "Crear Factura"));
+                var puedeCrearFacturas = await this.TienePermisoAsync("Crear Facturas");
+                var puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas");
+                var puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas");
+                var puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas");
+                var esAdmin = await this.EsAdministradorAsync();
 
-                var puedeCompletarFacturas = claims.Any(c => c.Type == "permiso" && 
-                    (c.Value == "CompletarFacturas" || c.Value == "Completar Facturas" || c.Value == "Completar Factura"));
-
-                var puedeEditarFacturas = claims.Any(c => c.Type == "permiso" && 
-                    (c.Value == "EditarFacturas" || c.Value == "Editar Facturas" || c.Value == "Editar Factura"));
-
-                var puedeAnularFacturas = claims.Any(c => c.Type == "permiso" && 
-                    (c.Value == "AnularFacturas" || c.Value == "Anular Facturas" || c.Value == "Anular Factura"));
-
-                // ✅ VERIFICAR SI ES ADMINISTRADOR DESDE CLAIMS
-                var esAdmin = User.IsInRole("Administrador") || 
-                             claims.Any(c => c.Type == "role" && c.Value == "Administrador") ||
-                             claims.Any(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" && c.Value == "Administrador");
-
-                _logger.LogInformation("🔐 === PERMISOS VALIDADOS DESDE CLAIMS ===");
+                _logger.LogInformation("🔐 === PERMISOS VALIDADOS CONTRA API ===");
                 _logger.LogInformation("🔐 puedeCrearFacturas: {Crear}", puedeCrearFacturas);
                 _logger.LogInformation("🔐 puedeCompletarFacturas: {Completar}", puedeCompletarFacturas);
                 _logger.LogInformation("🔐 puedeEditarFacturas: {Editar}", puedeEditarFacturas);
