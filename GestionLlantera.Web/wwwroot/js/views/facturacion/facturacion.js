@@ -1622,7 +1622,13 @@ async function procesarVentaFinal() {
                 
                 // Para colaboradores: mostrar modal específico de envío a cajas
                 setTimeout(() => {
-                    mostrarModalFacturaPendiente(resultadoFactura);
+                    // ✅ PASAR TODA LA RESPUESTA CON EL NÚMERO DE FACTURA
+                    mostrarModalFacturaPendiente({
+                        numeroFactura: resultadoFactura.numeroFactura || resultadoFactura.data?.numeroFactura || 'N/A',
+                        facturaId: resultadoFactura.facturaId || resultadoFactura.data?.facturaId,
+                        estado: resultadoFactura.estado || 'Pendiente',
+                        message: resultadoFactura.message
+                    });
                 }, 300);
             } else {
                 // Para administradores/cajeros: mensaje de venta completa
@@ -2829,17 +2835,28 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
     let numeroFactura = 'N/A';
     
     if (resultadoFactura) {
-        // Intentar obtener el número de factura desde diferentes propiedades
+        // ✅ BUSCAR EN TODAS LAS PROPIEDADES POSIBLES
         numeroFactura = resultadoFactura.numeroFactura || 
                        resultadoFactura.NumeroFactura ||
                        resultadoFactura.data?.numeroFactura ||
                        resultadoFactura.data?.NumeroFactura ||
                        resultadoFactura.facturaId ||
                        resultadoFactura.FacturaId ||
+                       resultadoFactura.factura?.numeroFactura ||
+                       resultadoFactura.factura?.NumeroFactura ||
                        'N/A';
+        
+        // ✅ SI SIGUE SIENDO N/A, INTENTAR EXTRAER DESDE MESSAGE
+        if (numeroFactura === 'N/A' && resultadoFactura.message) {
+            const match = resultadoFactura.message.match(/FAC-\d+-\d+/);
+            if (match) {
+                numeroFactura = match[0];
+            }
+        }
     }
     
     console.log('🔢 Número de factura extraído:', numeroFactura);
+    console.log('🔍 Estructura completa del resultado:', JSON.stringify(resultadoFactura, null, 2));
 
     // Determinar título y mensaje según permisos
     let tituloModal = 'Factura Procesada';
