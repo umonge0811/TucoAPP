@@ -329,11 +329,7 @@ namespace API.Controllers
                 return Ok(new
                 {
                     message = mensajeRespuesta,
-                    facturaId = factura.FacturaId,
-                    numeroFactura = factura.NumeroFactura,
-                    estado = estadoInicial,
-                    puedeCompletar = puedeCompletar,
-                    timestamp = DateTime.Now
+                    numeroFactura = factura.NumeroFactura
                 });
             }
             catch (Exception ex)

@@ -2840,57 +2840,12 @@ function actualizarEstadoBotonFinalizar() {
 // ===== MODAL FACTURA PENDIENTE =====
 function mostrarModalFacturaPendiente(resultadoFactura) {
     console.log('📋 === MODAL FACTURA PENDIENTE ===');
-    console.log('📋 Datos recibidos completos:', JSON.stringify(resultadoFactura, null, 2));
+    console.log('📋 Datos recibidos:', resultadoFactura);
     
-    // ✅ EXTRACCIÓN SIMPLIFICADA Y DIRECTA DEL NÚMERO DE FACTURA
-    let numeroFactura = 'N/A';
+    // ✅ EXTRACCIÓN DIRECTA Y SIMPLIFICADA DEL NÚMERO DE FACTURA
+    const numeroFactura = resultadoFactura?.numeroFactura || 'N/A';
     
-    if (resultadoFactura) {
-        console.log('🔍 === DEBUGGING DETALLADO DE PROPIEDADES ===');
-        
-        // Mostrar todas las propiedades del objeto para debugging
-        Object.keys(resultadoFactura).forEach(key => {
-            console.log(`🔍 Propiedad "${key}":`, resultadoFactura[key]);
-        });
-        
-        // ✅ EXTRACCIÓN DIRECTA - ORDEN DE PRIORIDAD BASADO EN LA RESPUESTA DE LA API
-        numeroFactura = resultadoFactura.numeroFactura ||           // Primera prioridad: respuesta directa
-                       resultadoFactura.NumeroFactura ||           // Variación de mayúscula
-                       resultadoFactura.data?.NumeroFactura ||     // Dentro de data (DTO)
-                       'N/A';                                      // Fallback
-        
-        console.log('🔢 === EXTRACCIÓN PASO A PASO ===');
-        console.log('🔢 resultadoFactura.numeroFactura:', resultadoFactura.numeroFactura);
-        console.log('🔢 resultadoFactura.NumeroFactura:', resultadoFactura.NumeroFactura);
-        console.log('🔢 resultadoFactura.data?.numeroFactura:', resultadoFactura.data?.numeroFactura);
-        console.log('🔢 resultadoFactura.data?.NumeroFactura:', resultadoFactura.data?.NumeroFactura);
-        
-        // ✅ SI AÚN ES N/A, BUSCAR EN MESSAGE (FALLBACK)
-        if (numeroFactura === 'N/A' && resultadoFactura.message) {
-            const match = resultadoFactura.message.match(/(FAC|PRO)-\d+-\d+/);
-            if (match) {
-                numeroFactura = match[0];
-                console.log('🔢 ✅ Extraído desde message:', numeroFactura);
-            }
-        }
-        
-        // ✅ ÚLTIMO RECURSO: USAR TIMESTAMP SI TODO FALLA
-        if (numeroFactura === 'N/A') {
-            const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').substring(0, 14);
-            numeroFactura = `TEMP-${timestamp}`;
-            console.error('❌ NO SE PUDO EXTRAER NÚMERO DE FACTURA - GENERANDO TEMPORAL');
-            console.error('❌ Estructura completa recibida:', resultadoFactura);
-        }
-    } else {
-        console.error('❌ resultadoFactura es null o undefined');
-    }
-    
-    console.log('🔢 *** NÚMERO DE FACTURA FINAL EXTRAÍDO:', numeroFactura, '***');
-    
-    if (numeroFactura.startsWith('TEMP-')) {
-        console.error('🚨 PROBLEMA CRÍTICO: Se generó número temporal');
-        console.error('🚨 Revisar respuesta de la API CrearFactura');
-    }
+    console.log('🔢 Número de factura extraído:', numeroFactura);
 
     // Determinar título y mensaje según permisos
     let tituloModal = 'Factura Procesada';
@@ -2928,23 +2883,12 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                             <div class="col-md-6">
                                 <strong>Número de Factura:</strong><br>
                                 <span class="text-primary fs-5">${numeroFactura}</span>
-                                ${numeroFactura.startsWith('TEMP-') ? 
-                                    '<br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Número temporal - Consulte con administración</small>' : 
-                                    ''}
                             </div>
                             <div class="col-md-6">
                                 <strong>Estado:</strong><br>
                                 <span class="badge bg-warning fs-6">Pendiente de Pago</span>
                             </div>
-                        </div>
-                        
-                        ${numeroFactura.startsWith('TEMP-') ? 
-                            `<div class="alert alert-warning">
-                                <h6><i class="bi bi-exclamation-triangle me-2"></i>Problema con número de factura</h6>
-                                <p class="mb-0">No se pudo obtener el número de factura del servidor. Se generó un número temporal. 
-                                <strong>Por favor, consulte con el administrador del sistema.</strong></p>
-                            </div>` : 
-                            ''}</div>
+                        </div></div>
 
                         <div class="alert alert-info">
                             <h6><i class="bi bi-info-circle me-2"></i>Siguiente paso:</h6>
