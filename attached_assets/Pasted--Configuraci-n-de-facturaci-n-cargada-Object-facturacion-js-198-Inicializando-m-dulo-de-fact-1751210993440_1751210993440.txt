@@ -1,0 +1,114 @@
+ 📋 Configuración de facturación cargada: Object
+facturacion.js:198 🚀 Inicializando módulo de facturación
+facturacion.js:203 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:206 🔐 Cargando permisos del usuario...
+facturacion.js:70 🔍 Iniciando carga de permisos...
+facturacion.js:71 🔍 window.facturaConfig disponible: true
+facturacion.js:72 🔍 Contenido facturaConfig: Object
+facturacion.js:76 🔍 Permisos disponibles en facturaConfig.Permisos:
+facturacion.js:78 🔍   - "puedeCrearFacturas": false
+facturacion.js:78 🔍   - "puedeCompletarFacturas": false
+facturacion.js:78 🔍   - "puedeEditarFacturas": false
+facturacion.js:78 🔍   - "puedeAnularFacturas": false
+facturacion.js:78 🔍   - "esAdmin": false
+facturacion.js:63 ❌ Permiso "Crear Factura" no encontrado en ninguna variación
+facturacion.js:63 ❌ Permiso "Completar Factura" no encontrado en ninguna variación
+facturacion.js:63 ❌ Permiso "Editar Factura" no encontrado en ninguna variación
+facturacion.js:63 ❌ Permiso "Anular Factura" no encontrado en ninguna variación
+facturacion.js:63 ❌ Permiso "Admin" no encontrado en ninguna variación
+facturacion.js:63 ❌ Permiso "Administrador" no encontrado en ninguna variación
+facturacion.js:99 ✅ Permisos obtenidos desde facturaConfig: Object
+facturacion.js:129 🔐 Permisos finales cargados: Object
+facturacion.js:150 🎯 Configurando interfaz según permisos: Object
+facturacion.js:187 🔒 Usuario sin permisos de facturación
+facturacion.js:188 🔍 Debug permisos: Object
+facturacion.js:210 🚀 Inicializando modales...
+facturacion.js:214 🚀 Configurando eventos...
+facturacion.js:218 🚀 Actualizando totales...
+facturacion.js:2822 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:225 🚀 Iniciando carga de productos iniciales...
+facturacion.js:2615 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:2616 📦 cargaInicialCompletada: false
+facturacion.js:2632 📦 Iniciando carga de productos iniciales...
+facturacion.js:402 🔍 === INICIO buscarProductos ===
+facturacion.js:403 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:404 🔍 Término recibido: ""
+facturacion.js:405 🔍 busquedaEnProceso: false
+facturacion.js:406 🔍 ultimaBusqueda: ""
+facturacion.js:421 🔍 Iniciando búsqueda válida...
+facturacion.js:228 ✅ Facturación inicializada correctamente
+facturacion.js:229 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:443 📋 Respuesta del servidor recibida
+facturacion.js:446 ✅ Se encontraron 4 productos disponibles
+facturacion.js:485 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:486 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:487 🔄 Productos recibidos: 4
+facturacion.js:522 🔄 Construyendo HTML para 4 productos
+facturacion.js:536 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:537 🖼️ Datos del producto: Object
+facturacion.js:550 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:555 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:574 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:586 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:536 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:537 🖼️ Datos del producto: Object
+facturacion.js:550 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:555 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:574 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:586 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:536 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:537 🖼️ Datos del producto: Object
+facturacion.js:550 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:555 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:574 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:586 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:536 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:537 🖼️ Datos del producto: Object
+facturacion.js:550 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:555 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:574 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:586 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:685 🔄 Actualizando DOM (longitud HTML: 18712 caracteres)
+facturacion.js:718 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:463 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:466 📦 Productos mostrados exitosamente
+facturacion.js:479 🔍 === FIN buscarProductos ===
+facturacion.js:2648 📦 Búsqueda inicial ejecutada
+facturacion.js:2650 📦 === FIN cargarProductosIniciales (exitosa) ===
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:807 🖼️ Procesando imágenes para modal de producto: Llanta Test
+facturacion.js:824 🖼️ URL original en modal: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:839 🖼️ URL final en modal: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:1031 🛒 Agregando producto a venta: Object
+facturacion.js:2074 SUCCESS: Producto agregado - Llanta Test agregado a la venta
+facturacion.js:2822 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:2074 SUCCESS: Producto agregado - 1 unidad de Llanta Test agregadas
+facturacion.js:724 👥 Buscando clientes: "uli"
+facturacion.js:2822 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:797 Cliente seleccionado: Object
+facturacion.js:1400 🎯 Configurando modal con permisos: Object
+facturacion.js:63 ❌ Permiso "Crear Factura" no encontrado en ninguna variación
+facturacion.js:1428 ⚠️ No se detectaron permisos específicos, habilitando como colaborador por defecto
+facturacion.js:1436 🎯 Estado final del botón: Object
+facturacion.js:1747 ❌ Error procesando venta: Error: Sin permisos para procesar ventas
+    at procesarVentaFinal (facturacion.js:1535:19)
+    at HTMLButtonElement.<anonymous> (facturacion.js:395:9)
+    at HTMLButtonElement.dispatch (jquery.min.js:2:43064)
+    at v.handle (jquery.min.js:2:41048)
+procesarVentaFinal @ facturacion.js:1747
+(anonymous) @ facturacion.js:395
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+facturacion.js:2074 ERROR: Error - Hubo un problema procesando la venta
+facturacion.js:1747 ❌ Error procesando venta: Error: Sin permisos para procesar ventas
+    at procesarVentaFinal (facturacion.js:1535:19)
+    at HTMLButtonElement.<anonymous> (facturacion.js:395:9)
+    at HTMLButtonElement.dispatch (jquery.min.js:2:43064)
+    at v.handle (jquery.min.js:2:41048)
+procesarVentaFinal @ facturacion.js:1747
+(anonymous) @ facturacion.js:395
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+facturacion.js:2074 ERROR: Error - Hubo un problema procesando la venta
