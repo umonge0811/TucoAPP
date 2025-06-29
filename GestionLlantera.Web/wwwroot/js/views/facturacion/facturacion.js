@@ -1440,33 +1440,50 @@ function configurarModalSegunPermisos() {
     const $textoBoton = $('#textoBotonConfirmar');
     const $tituloModal = $('#modalFinalizarVentaLabel');
 
-    console.log('🎯 Configurando modal con permisos:', permisosUsuario);
+    console.log('🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===');
+    console.log('🎯 Permisos del usuario:', permisosUsuario);
+    console.log('🎯 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
+    console.log('🎯 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
+    console.log('🎯 esAdmin:', permisosUsuario.esAdmin);
+
+    // Resetear el botón completamente
+    $btnConfirmar.removeClass('btn-warning btn-secondary btn-info btn-success btn-primary').prop('disabled', false);
 
     if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
         // ✅ USUARIO PUEDE COMPLETAR FACTURAS - PROCESAR PAGO INMEDIATAMENTE
-        $tituloModal.html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
-        $btnConfirmar.removeClass('btn-warning btn-secondary btn-info').addClass('btn-success')
-                    .prop('disabled', false);
-        $textoBoton.text('Completar Venta');
-        $btnConfirmar.attr('title', 'Procesar venta completa, marcar como pagada e imprimir factura');
+        $tituloModal.html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta Completa');
+        $btnConfirmar.addClass('btn-success');
+        $textoBoton.text('Completar y Pagar');
+        $btnConfirmar.attr('title', 'Procesar venta completa, marcar como pagada, ajustar stock e imprimir factura');
 
-        console.log('👑 Modal configurado para administrador/cajero - Venta completa');
+        console.log('👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock');
 
-    } else if (permisosUsuario.puedeCrearFacturas) {
-        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS - ENVIAR A CAJA
+    } else if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas) {
+        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS - ENVIAR A CAJA (SIN AJUSTE DE STOCK)
         $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
-        $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
-                    .prop('disabled', false);
+        $btnConfirmar.addClass('btn-warning');
         $textoBoton.text('Enviar a Caja');
-        $btnConfirmar.attr('title', 'Crear factura pendiente y enviar a caja para procesamiento de pago');
+        $btnConfirmar.attr('title', 'Crear factura pendiente y enviar a caja para procesamiento de pago (sin ajuste de stock)');
 
-        console.log('📝 Modal configurado para colaborador - Envío a caja');
+        console.log('📝 Modal configurado para colaborador - Envío a caja SIN ajuste de stock');
+
+        // ✅ AGREGAR MENSAJE INFORMATIVO EN EL MODAL PARA COLABORADORES
+        const $infoColaborador = $('#infoColaboradorModal');
+        if ($infoColaborador.length === 0) {
+            const alertaInfo = `
+                <div id="infoColaboradorModal" class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Modo Colaborador:</strong> Esta factura será enviada a caja para procesamiento. 
+                    El stock se ajustará cuando el cajero complete el pago.
+                </div>
+            `;
+            $('#modalFinalizarVenta .modal-body').append(alertaInfo);
+        }
 
     } else {
         // ❌ SIN PERMISOS
         $tituloModal.html('<i class="bi bi-lock me-2"></i>Sin Permisos');
-        $btnConfirmar.removeClass('btn-success btn-warning btn-info').addClass('btn-secondary')
-                    .prop('disabled', true);
+        $btnConfirmar.addClass('btn-secondary').prop('disabled', true);
         $textoBoton.text('Sin Permisos');
         $btnConfirmar.attr('title', 'No tienes permisos para procesar ventas');
 
@@ -1478,11 +1495,7 @@ function configurarModalSegunPermisos() {
         disabled: $btnConfirmar.prop('disabled'),
         classes: $btnConfirmar.attr('class'),
         texto: $textoBoton.text(),
-        permisos: {
-            puedeCrear: permisosUsuario.puedeCrearFacturas,
-            puedeCompletar: permisosUsuario.puedeCompletarFacturas,
-            esAdmin: permisosUsuario.esAdmin
-        }
+        permisos: permisosUsuario
     });
 }
 
@@ -1560,8 +1573,13 @@ async function procesarVentaFinal() {
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        // ✅ DETERMINAR ESTADO SEGÚN PERMISOS
+        // ✅ DETERMINAR ESTADO Y PERMISOS SEGÚN LA LÓGICA CORRECTA
         let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
+
+        console.log('🔐 === VERIFICACIÓN DE PERMISOS ===');
+        console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
+        console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
+        console.log('🔐 esAdmin:', permisosUsuario.esAdmin);
 
         if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
             // ✅ ADMINISTRADORES Y CAJEROS: Venta completa e inmediata
@@ -1569,20 +1587,27 @@ async function procesarVentaFinal() {
             mensajeExito = 'Venta procesada exitosamente y marcada como pagada';
             debeImprimir = true;
             debeAjustarInventario = true;
-            console.log('👑 Procesando como administrador/cajero - Factura pagada inmediatamente');
+            console.log('👑 Procesando como administrador/cajero - Factura pagada inmediatamente con ajuste de stock');
             
         } else if (permisosUsuario.puedeCrearFacturas) {
-            // ✅ COLABORADORES: Factura pendiente para caja
+            // ✅ COLABORADORES: Factura pendiente para caja SIN AJUSTE DE STOCK
             estadoFactura = 'Pendiente';
             mensajeExito = 'Factura creada y enviada a Cajas para procesamiento de pago';
             debeImprimir = false;
-            debeAjustarInventario = false;
-            console.log('📝 Procesando como colaborador - Factura pendiente para caja');
+            debeAjustarInventario = false; // ✅ CRUCIAL: NO ajustar stock para colaboradores
+            console.log('📝 Procesando como colaborador - Factura pendiente para caja SIN ajuste de stock');
             
         } else {
             // ❌ SIN PERMISOS: No debería llegar aquí, pero como fallback
             throw new Error('No tienes permisos para procesar ventas');
         }
+
+        console.log('📋 Estado determinado:', {
+            estadoFactura,
+            debeImprimir,
+            debeAjustarInventario,
+            permisos: permisosUsuario
+        });
 
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
@@ -1650,35 +1675,80 @@ async function procesarVentaFinal() {
         console.log('✅ Factura creada:', resultadoFactura);
 
         if (resultadoFactura.success) {
-            // ✅ MOSTRAR MENSAJE ESPECÍFICO SEGÚN EL TIPO DE USUARIO
+            // ✅ PROCESAR SEGÚN EL TIPO DE USUARIO Y PERMISOS
             if (estadoFactura === 'Pendiente') {
+                // ✅ COLABORADORES: Modal específico de envío a cajas
+                console.log('📋 Factura pendiente - Mostrando modal de envío a cajas');
+                
                 // Cerrar modal de finalizar venta primero
                 modalFinalizarVenta.hide();
                 
                 // Para colaboradores: mostrar modal específico de envío a cajas
                 setTimeout(() => {
-                    // ✅ DEBUGGING COMPLETO DE LA RESPUESTA DE LA API
-                    console.log('🔍 === DEBUGGING COMPLETO EN PROCESARVENTA ===');
-                    console.log('🔍 Respuesta completa de la API:', JSON.stringify(resultadoFactura, null, 2));
-                    console.log('🔍 Tipo de resultadoFactura:', typeof resultadoFactura);
-                    console.log('🔍 ¿Es array?:', Array.isArray(resultadoFactura));
-                    
-                    if (resultadoFactura) {
-                        console.log('🔍 Propiedades disponibles:', Object.keys(resultadoFactura));
-                        console.log('🔍 resultadoFactura.numeroFactura:', resultadoFactura.numeroFactura);
-                        console.log('🔍 resultadoFactura.NumeroFactura:', resultadoFactura.NumeroFactura);
-                        console.log('🔍 resultadoFactura.facturaId:', resultadoFactura.facturaId);
-                        console.log('🔍 resultadoFactura.message:', resultadoFactura.message);
-                    }
-
-                    // ✅ PASAR LA RESPUESTA COMPLETA SIN PROCESAMIENTO PREVIO
-                    // Dejar que mostrarModalFacturaPendiente maneje la extracción
                     mostrarModalFacturaPendiente(resultadoFactura);
                 }, 300);
-            } else {
-                // Para administradores/cajeros: mensaje de venta completa
-                mostrarToast('Éxito', mensajeExito, 'success');
 
+            } else if (estadoFactura === 'Pagada') {
+                // ✅ ADMINISTRADORES/CAJEROS: Venta completa con ajuste de stock
+                console.log('💰 Factura pagada - Procesando venta completa');
+
+                // ✅ AJUSTAR STOCK SOLO PARA FACTURAS PAGADAS
+                if (debeAjustarInventario) {
+                    console.log('💰 === INICIO AJUSTE INVENTARIO FRONTEND ===');
+                    console.log('💰 Usuario autorizado - Ajustando inventario automáticamente');
+
+                    // ✅ PROTECCIÓN CONTRA DOBLE EJECUCIÓN
+                    const facturaNumero = resultadoFactura.numeroFactura || 'N/A';
+                    const cacheKey = `stock_ajustado_${facturaNumero}`;
+                    
+                    if (window[cacheKey]) {
+                        console.log('⚠️ Stock ya fue ajustado para esta factura, saltando ajuste');
+                    } else {
+                        // Marcar como en proceso
+                        window[cacheKey] = true;
+
+                        try {
+                            const productosParaAjuste = productosEnVenta.map(producto => ({
+                                ProductoId: producto.productoId,
+                                NombreProducto: producto.nombreProducto,
+                                Cantidad: producto.cantidad
+                            }));
+
+                            const requestData = {
+                                NumeroFactura: facturaNumero,
+                                Productos: productosParaAjuste
+                            };
+
+                            console.log('📦 Ajustando stock para productos:', productosParaAjuste);
+
+                            const responseStock = await fetch('/Facturacion/AjustarStockFacturacion', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify(requestData)
+                            });
+
+                            if (responseStock.ok) {
+                                const resultadoStock = await responseStock.json();
+                                console.log('✅ Stock ajustado exitosamente');
+                            } else {
+                                console.error('❌ Error ajustando stock');
+                                mostrarToast('Advertencia', 'Error al ajustar stock', 'warning');
+                            }
+
+                        } catch (error) {
+                            console.error('❌ Error general ajustando stock:', error);
+                            mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+                            delete window[cacheKey];
+                        }
+                    }
+
+                    console.log('💰 === FIN AJUSTE INVENTARIO FRONTEND ===');
+                }
+
+                // ✅ GENERAR E IMPRIMIR RECIBO PARA FACTURAS PAGADAS
                 if (debeImprimir) {
                     generarRecibo(resultadoFactura, productosEnVenta, {
                         subtotal: subtotal,
@@ -1689,113 +1759,13 @@ async function procesarVentaFinal() {
                         usuario: obtenerUsuarioActual()
                     });
                 }
-            }
 
-           // ✅ AJUSTAR STOCK SOLO SI EL USUARIO TIENE PERMISOS Y NO SE HA AJUSTADO YA
-            if (debeAjustarInventario && estadoFactura === 'Pagada') {
-                console.log('💰 === INICIO AJUSTE INVENTARIO FRONTEND ===');
-                console.log('💰 Usuario autorizado - Ajustando inventario automáticamente');
-                console.log('💰 Timestamp:', new Date().toISOString());
-
-                // ✅ PROTECCIÓN CONTRA DOBLE EJECUCIÓN
-                const facturaNumero = resultadoFactura.numeroFactura || 'N/A';
-                const cacheKey = `stock_ajustado_${facturaNumero}`;
-                
-                if (window[cacheKey]) {
-                    console.log('⚠️ ADVERTENCIA: Stock ya fue ajustado para esta factura, saltando ajuste');
-                    return;
-                }
-
-                // Marcar como en proceso
-                window[cacheKey] = true;
-
-                try {
-                    const productosParaAjuste = productosEnVenta.map(producto => ({
-                        ProductoId: producto.productoId,
-                        NombreProducto: producto.nombreProducto,
-                        Cantidad: producto.cantidad
-                    }));
-
-                    console.log('💰 Productos a ajustar:', productosParaAjuste);
-
-                    const requestData = {
-                        NumeroFactura: facturaNumero,
-                        Productos: productosParaAjuste
-                    };
-
-                    console.log('📦 Ajustando stock para todos los productos...');
-
-                    const responseStock = await fetch('/Facturacion/AjustarStockFacturacion', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify(requestData)
-                    });
-
-                    if (responseStock.ok) {
-                        const resultadoStock = await responseStock.json();
-
-                        if (resultadoStock.success){
-                            console.log('✅ Stock ajustado exitosamente para todos los productos');
-
-                            // Mostrar resumen de ajustes exitosos
-                            const ajustesExitosos = resultadoStock.filter(r => r.success);
-                            if (ajustesExitosos.length > 0) {
-                                console.log(`📦 ${ajustesExitosos.length} productos actualizados correctamente`);
-                            }
-                        } else {
-                            console.warn('⚠️ Algunos ajustes de stock fallaron:', resultadoStock.errores);
-                            mostrarToast('Advertencia Stock', `${resultadoStock.errores.length} productos no se pudieron actualizar`, 'warning');
-                        }
-
-                        // Mostrar detalles de cada resultado
-                        if (resultadoStock.resultados) {
-                            resultadoStock.resultados.forEach(resultado => {
-                                if (resultado.success) {
-                                    console.log(`✅ ${resultado.nombreProducto}: ${resultado.stockAnterior} → ${resultado.stockNuevo}`);
-                                } else {
-                                    console.warn(`⚠️ ${resultado.nombreProducto}: ${resultado.error}`);
-                                }
-                            });
-                        }
-                    } else {
-                        const errorText = await responseStock.text();
-                        console.error('❌ Error en endpoint de ajuste de stock:', errorText);
-                        mostrarToast('Error Stock', 'No se pudo conectar con el sistema de inventario', 'warning');
-                    }
-                console.log('💰 === FIN AJUSTE INVENTARIO FRONTEND ===');
-                } catch (error) {
-                    console.error('❌ Error general ajustando stock:', error);
-                    mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
-                    
-                    // Limpiar caché en caso de error para permitir reintentos
-                    delete window[cacheKey];
-                }
-
-                // ✅ GENERAR E IMPRIMIR RECIBO SOLO SI FACTURA ESTÁ COMPLETA
-                generarRecibo(resultadoFactura, productosEnVenta, {
-                    subtotal: subtotal,
-                    iva: iva,
-                    total: total,
-                    metodoPago: metodoPagoSeleccionado,
-                    cliente: clienteSeleccionado,
-                    usuario: obtenerUsuarioActual()
-                });
-
-                // Éxito para factura completa
+                // Cerrar modal y mostrar éxito
                 modalFinalizarVenta.hide();
                 mostrarToast('¡Venta Completada!', 'La venta ha sido procesada e impresa exitosamente', 'success');
-
-            } else {
-                console.log('📋 Factura pendiente - NO se ajusta stock automáticamente');
-
-                // ✅ ÉXITO PARA FACTURA PENDIENTE (ya se maneja arriba)
-                // No cerrar modal aquí, se hace arriba antes del setTimeout
             }
 
-            // Limpiar carrito después de procesar (para ambos casos)
+            // ✅ LIMPIAR CARRITO DESPUÉS DE PROCESAR (PARA AMBOS CASOS)
             productosEnVenta = [];
             clienteSeleccionado = null;
             $('#clienteBusqueda').val('');
