@@ -65,9 +65,16 @@ namespace GestionLlantera.Web.Controllers
                 // Obtener información completa del usuario actual
                 var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
 
-                // ✅ VERIFICAR SI ES ADMINISTRADOR PRIMERO
-                var esAdmin = User.IsInRole("Administrador") || User.IsInRole("Admin");
+                // ✅ VERIFICAR SI ES ADMINISTRADOR DE FORMA MÁS ESTRICTA
+                var esAdmin = await VerificarEsAdministradorAsync();
                 _logger.LogInformation("👑 Usuario es administrador: {EsAdmin}", esAdmin);
+                
+                // ✅ DEBUG: Mostrar todos los roles del usuario
+                var rolesUsuario = User.Claims
+                    .Where(c => c.Type == "role" || c.Type == System.Security.Claims.ClaimTypes.Role)
+                    .Select(c => c.Value)
+                    .ToList();
+                _logger.LogInformation("📋 Roles del usuario: {Roles}", string.Join(", ", rolesUsuario));
 
                 // ✅ Verificar permisos específicos de facturación
                 var puedeCrearFacturas = esAdmin || await this.TienePermisoAsync("Crear Facturas");
@@ -540,6 +547,50 @@ namespace GestionLlantera.Web.Controllers
             }
 
             return token;
+        }
+
+        /// <summary>
+        /// Verificar si el usuario actual es realmente administrador
+        /// </summary>
+        private async Task<bool> VerificarEsAdministradorAsync()
+        {
+            try
+            {
+                // ✅ 1. Verificar claims de rol
+                var rolesEnClaims = User.Claims
+                    .Where(c => c.Type == "role" || c.Type == System.Security.Claims.ClaimTypes.Role)
+                    .Select(c => c.Value.ToLower())
+                    .ToList();
+
+                _logger.LogInformation("🔍 Roles en claims: {Roles}", string.Join(", ", rolesEnClaims));
+
+                // ✅ 2. Verificar si tiene rol de administrador específicamente
+                var esAdminPorRol = rolesEnClaims.Contains("administrador") || 
+                                   rolesEnClaims.Contains("admin") ||
+                                   User.IsInRole("Administrador") ||
+                                   User.IsInRole("Admin");
+
+                // ✅ 3. Si parece ser admin por claims, verificar también con el servicio
+                if (esAdminPorRol)
+                {
+                    // Verificar a través del servicio de permisos también
+                    var tienePermisoAdmin = await this.TienePermisoAsync("Gestión Completa") ||
+                                          await this.TienePermisoAsync("Administrar Sistema");
+                    
+                    _logger.LogInformation("✅ Verificación admin - Rol: {EsAdminPorRol}, Permiso: {TienePermisoAdmin}", 
+                        esAdminPorRol, tienePermisoAdmin);
+                    
+                    return esAdminPorRol && tienePermisoAdmin;
+                }
+
+                _logger.LogInformation("❌ Usuario NO es administrador");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando si es administrador");
+                return false; // En caso de error, asumir que NO es admin
+            }
         }
 
         /// <summary>

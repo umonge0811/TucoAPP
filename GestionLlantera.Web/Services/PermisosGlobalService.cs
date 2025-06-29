@@ -147,27 +147,49 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
+                var context = _httpContextAccessor.HttpContext;
+                if (context?.User?.Identity?.IsAuthenticated != true)
+                {
+                    _logger.LogDebug("Usuario no autenticado");
                     return false;
+                }
 
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                // ✅ VERIFICACIÓN MÁS ESTRICTA DE ROLES
+                var rolesClaims = context.User.Claims
+                    .Where(c => c.Type == "role" || c.Type == System.Security.Claims.ClaimTypes.Role)
+                    .Select(c => c.Value.ToLower().Trim())
+                    .ToList();
 
-                var response = await _httpClient.GetAsync("api/Permisos/es-administrador");
+                _logger.LogInformation("🔍 EsAdministradorAsync - Claims de rol encontrados: {Roles}", 
+                    string.Join(", ", rolesClaims));
 
-                if (!response.IsSuccessStatusCode)
-                    return false;
+                // ✅ Verificar si específicamente tiene rol de administrador
+                var esAdmin = rolesClaims.Contains("administrador") || 
+                             rolesClaims.Contains("admin");
 
-                var content = await response.Content.ReadAsStringAsync();
-                var resultado = JsonConvert.DeserializeObject<dynamic>(content);
+                _logger.LogInformation("👑 EsAdministradorAsync resultado: {EsAdmin} para usuario: {Usuario}", 
+                    esAdmin, context.User.Identity?.Name);
 
-                return resultado?.esAdministrador ?? false;
+                // ✅ VERIFICACIÓN ADICIONAL: Si dice ser admin, verificar que tenga permisos de admin
+                if (esAdmin)
+                {
+                    // Verificar que tenga al menos un permiso típico de administrador
+                    var tienePermisosAdmin = await TienePermisoAsync("Gestión Completa") ||
+                                           await TienePermisoAsync("Administrar Sistema") ||
+                                           await TienePermisoAsync("Crear Facturas"); // Al menos debe poder crear facturas
+
+                    if (!tienePermisosAdmin)
+                    {
+                        _logger.LogWarning("⚠️ Usuario tiene rol de admin pero NO tiene permisos de administrador");
+                        return false;
+                    }
+                }
+
+                return esAdmin;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al verificar si es administrador");
+                _logger.LogError(ex, "❌ Error verificando si es administrador");
                 return false;
             }
         }
