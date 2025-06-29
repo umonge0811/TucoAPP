@@ -82,13 +82,12 @@ namespace GestionLlantera.Web.Controllers
                     puedeEditarFacturas = puedeEditarFacturas,
                     puedeAnularFacturas = puedeAnularFacturas,
                     esAdmin = esAdmin,
-                    // ✅ AGREGAR PERMISOS ADICIONALES EXPLÍCITOS PARA EL FRONTEND CON NOMBRES EXACTOS
+                    // ✅ AGREGAR PERMISOS ADICIONALES EXPLÍCITOS PARA EL FRONTEND
                     CrearFacturas = puedeCrearFacturas,
                     CompletarFacturas = puedeCompletarFacturas,
                     EditarFacturas = puedeEditarFacturas,
                     AnularFacturas = puedeAnularFacturas,
-                    Administrador = esAdmin,
-                    administrador = esAdmin
+                    Administrador = esAdmin
                 };
 
                 _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}, Admin={Admin}", 
