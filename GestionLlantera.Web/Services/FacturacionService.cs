@@ -722,7 +722,7 @@ namespace GestionLlantera.Web.Services
                 // Si es Administrador, puede crear facturas completadas
                 if (roles.Contains("Administrador", StringComparison.OrdinalIgnoreCase))
                 {
-                    return "Completada";
+                    return "Pagada";
                 }
 
                 // Para cualquier otro rol (Colaborador, etc.), crear como pendiente
