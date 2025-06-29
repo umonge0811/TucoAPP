@@ -231,8 +231,11 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📦 Ajustando stock para factura: {NumeroFactura} con {Cantidad} productos", 
-                    request.NumeroFactura, request.Productos?.Count ?? 0);
+                _logger.LogInformation("📦 === INICIO AJUSTE STOCK FACTURACIÓN ===");
+                _logger.LogInformation("📦 Factura: {NumeroFactura}", request.NumeroFactura);
+                _logger.LogInformation("📦 Cantidad de productos: {Cantidad}", request.Productos?.Count ?? 0);
+                _logger.LogInformation("📦 Thread ID: {ThreadId}", Thread.CurrentThread.ManagedThreadId);
+                _logger.LogInformation("📦 Timestamp: {Timestamp}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 if (request.Productos == null || !request.Productos.Any())
                 {
@@ -345,8 +348,11 @@ namespace GestionLlantera.Web.Services
                     errores = errores.Any() ? errores : null
                 };
 
-                _logger.LogInformation("📦 Ajuste completado: {Exitosos}/{Total} productos actualizados", 
+                _logger.LogInformation("📦 === FIN AJUSTE STOCK FACTURACIÓN ===");
+                _logger.LogInformation("📦 Resultados: {Exitosos}/{Total} productos actualizados", 
                     ajustesExitosos, request.Productos.Count);
+                _logger.LogInformation("📦 Thread ID: {ThreadId}", Thread.CurrentThread.ManagedThreadId);
+                _logger.LogInformation("📦 Timestamp: {Timestamp}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 return response;
             }

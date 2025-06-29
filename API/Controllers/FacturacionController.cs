@@ -283,20 +283,9 @@ namespace API.Controllers
 
                     _context.DetallesFactura.Add(detalleFactura);
 
-                    // ✅ Actualizar inventario solo si es factura pagada (no proforma ni pendiente)
-                    if (facturaDto.TipoDocumento == "Factura" && estadoInicial == "Pagada")
-                    {
-                        var producto = await _context.Productos.FindAsync(detalle.ProductoId);
-                        if (producto != null)
-                        {
-                            producto.CantidadEnInventario = Math.Max(0, 
-                                (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
-                            producto.FechaUltimaActualizacion = DateTime.Now;
-                            
-                            _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
-                                producto.NombreProducto, detalle.Cantidad);
-                        }
-                    }
+                    // ✅ NO ACTUALIZAR INVENTARIO AQUÍ - Se maneja desde el frontend
+                    // El ajuste de stock se realiza desde el JavaScript usando el endpoint específico
+                    // para evitar duplicación de descuentos de inventario
                 }
 
                 await _context.SaveChangesAsync();

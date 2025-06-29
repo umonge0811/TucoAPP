@@ -1691,9 +1691,23 @@ async function procesarVentaFinal() {
                 }
             }
 
-           // ✅ AJUSTAR STOCK SOLO SI EL USUARIO TIENE PERMISOS
+           // ✅ AJUSTAR STOCK SOLO SI EL USUARIO TIENE PERMISOS Y NO SE HA AJUSTADO YA
             if (debeAjustarInventario && estadoFactura === 'Pagada') {
+                console.log('💰 === INICIO AJUSTE INVENTARIO FRONTEND ===');
                 console.log('💰 Usuario autorizado - Ajustando inventario automáticamente');
+                console.log('💰 Timestamp:', new Date().toISOString());
+
+                // ✅ PROTECCIÓN CONTRA DOBLE EJECUCIÓN
+                const facturaNumero = resultadoFactura.numeroFactura || 'N/A';
+                const cacheKey = `stock_ajustado_${facturaNumero}`;
+                
+                if (window[cacheKey]) {
+                    console.log('⚠️ ADVERTENCIA: Stock ya fue ajustado para esta factura, saltando ajuste');
+                    return;
+                }
+
+                // Marcar como en proceso
+                window[cacheKey] = true;
 
                 try {
                     const productosParaAjuste = productosEnVenta.map(producto => ({
@@ -1702,8 +1716,10 @@ async function procesarVentaFinal() {
                         Cantidad: producto.cantidad
                     }));
 
+                    console.log('💰 Productos a ajustar:', productosParaAjuste);
+
                     const requestData = {
-                        NumeroFactura: resultadoFactura.numeroFactura || 'N/A',
+                        NumeroFactura: facturaNumero,
                         Productos: productosParaAjuste
                     };
 
@@ -1749,9 +1765,13 @@ async function procesarVentaFinal() {
                         console.error('❌ Error en endpoint de ajuste de stock:', errorText);
                         mostrarToast('Error Stock', 'No se pudo conectar con el sistema de inventario', 'warning');
                     }
+                console.log('💰 === FIN AJUSTE INVENTARIO FRONTEND ===');
                 } catch (error) {
                     console.error('❌ Error general ajustando stock:', error);
                     mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+                    
+                    // Limpiar caché en caso de error para permitir reintentos
+                    delete window[cacheKey];
                 }
 
                 // ✅ GENERAR E IMPRIMIR RECIBO SOLO SI FACTURA ESTÁ COMPLETA
