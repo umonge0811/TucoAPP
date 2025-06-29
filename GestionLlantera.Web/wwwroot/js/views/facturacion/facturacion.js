@@ -1622,35 +1622,23 @@ async function procesarVentaFinal() {
                 
                 // Para colaboradores: mostrar modal específico de envío a cajas
                 setTimeout(() => {
-                    // ✅ DEBUGGING DETALLADO DE LA RESPUESTA
-                    console.log('🔍 DEBUGGING - Estructura completa de resultadoFactura:', JSON.stringify(resultadoFactura, null, 2));
-                    console.log('🔍 DEBUGGING - resultadoFactura.numeroFactura:', resultadoFactura.numeroFactura);
-                    console.log('🔍 DEBUGGING - resultadoFactura.data:', resultadoFactura.data);
+                    // ✅ DEBUGGING COMPLETO DE LA RESPUESTA DE LA API
+                    console.log('🔍 === DEBUGGING COMPLETO EN PROCESARVENTA ===');
+                    console.log('🔍 Respuesta completa de la API:', JSON.stringify(resultadoFactura, null, 2));
+                    console.log('🔍 Tipo de resultadoFactura:', typeof resultadoFactura);
+                    console.log('🔍 ¿Es array?:', Array.isArray(resultadoFactura));
                     
-                    // ✅ EXTRACCIÓN ROBUSTA DEL NÚMERO DE FACTURA
-                    let numeroFactura = 'N/A';
-                    
-                    // Buscar en todas las propiedades posibles desde la respuesta de la API
                     if (resultadoFactura) {
-                        numeroFactura = resultadoFactura.numeroFactura ||
-                                       resultadoFactura.NumeroFactura ||
-                                       resultadoFactura.data?.numeroFactura ||
-                                       resultadoFactura.data?.NumeroFactura ||
-                                       resultadoFactura.facturaId ||
-                                       resultadoFactura.data?.facturaId ||
-                                       'N/A';
-                        
-                        console.log('🔢 Número de factura extraído:', numeroFactura);
+                        console.log('🔍 Propiedades disponibles:', Object.keys(resultadoFactura));
+                        console.log('🔍 resultadoFactura.numeroFactura:', resultadoFactura.numeroFactura);
+                        console.log('🔍 resultadoFactura.NumeroFactura:', resultadoFactura.NumeroFactura);
+                        console.log('🔍 resultadoFactura.facturaId:', resultadoFactura.facturaId);
+                        console.log('🔍 resultadoFactura.message:', resultadoFactura.message);
                     }
 
-                    // ✅ PASAR DATOS LIMPIOS AL MODAL
-                    mostrarModalFacturaPendiente({
-                        numeroFactura: numeroFactura,
-                        facturaId: resultadoFactura.facturaId || resultadoFactura.data?.facturaId,
-                        estado: resultadoFactura.estado || resultadoFactura.data?.estado || 'Pendiente',
-                        message: resultadoFactura.message,
-                        datosCompletos: resultadoFactura // Para debugging adicional
-                    });
+                    // ✅ PASAR LA RESPUESTA COMPLETA SIN PROCESAMIENTO PREVIO
+                    // Dejar que mostrarModalFacturaPendiente maneje la extracción
+                    mostrarModalFacturaPendiente(resultadoFactura);
                 }, 300);
             } else {
                 // Para administradores/cajeros: mensaje de venta completa
@@ -2852,79 +2840,57 @@ function actualizarEstadoBotonFinalizar() {
 // ===== MODAL FACTURA PENDIENTE =====
 function mostrarModalFacturaPendiente(resultadoFactura) {
     console.log('📋 === MODAL FACTURA PENDIENTE ===');
-    console.log('📋 Datos recibidos:', JSON.stringify(resultadoFactura, null, 2));
+    console.log('📋 Datos recibidos completos:', JSON.stringify(resultadoFactura, null, 2));
     
-    // ✅ FUNCIÓN AUXILIAR PARA EXTRAER VALOR DE ARRAY O STRING
-    function extraerValor(valor) {
-        if (Array.isArray(valor)) {
-            // Si es array, tomar el primer elemento válido
-            const primerValido = valor.find(item => item && item.toString().trim() !== '');
-            return primerValido ? primerValido.toString() : null;
-        }
-        return valor && valor.toString().trim() !== '' ? valor.toString() : null;
-    }
-    
-    // Extraer número de factura con múltiples fallbacks
+    // ✅ EXTRACCIÓN SIMPLIFICADA Y DIRECTA DEL NÚMERO DE FACTURA
     let numeroFactura = 'N/A';
     
     if (resultadoFactura) {
-        console.log('🔍 Analizando estructura de datos...');
+        console.log('🔍 === DEBUGGING DETALLADO DE PROPIEDADES ===');
         
-        // ✅ BUSCAR EN TODAS LAS PROPIEDADES POSIBLES CON MANEJO DE ARRAYS
-        const posiblesNumeros = [
-            extraerValor(resultadoFactura.numeroFactura),
-            extraerValor(resultadoFactura.NumeroFactura),
-            extraerValor(resultadoFactura.data?.numeroFactura),
-            extraerValor(resultadoFactura.data?.NumeroFactura),
-            extraerValor(resultadoFactura.facturaId),
-            extraerValor(resultadoFactura.FacturaId),
-            extraerValor(resultadoFactura.factura?.numeroFactura),
-            extraerValor(resultadoFactura.factura?.NumeroFactura)
-        ];
+        // Mostrar todas las propiedades del objeto para debugging
+        Object.keys(resultadoFactura).forEach(key => {
+            console.log(`🔍 Propiedad "${key}":`, resultadoFactura[key]);
+        });
         
-        console.log('🔍 Valores posibles encontrados:', posiblesNumeros);
+        // ✅ EXTRACCIÓN DIRECTA - ORDEN DE PRIORIDAD BASADO EN LA RESPUESTA DE LA API
+        numeroFactura = resultadoFactura.numeroFactura ||           // Primera prioridad: respuesta directa
+                       resultadoFactura.NumeroFactura ||           // Variación de mayúscula
+                       resultadoFactura.data?.numeroFactura ||     // Dentro de data
+                       resultadoFactura.data?.NumeroFactura ||     // Dentro de data con mayúscula
+                       'N/A';                                      // Fallback
         
-        // Tomar el primer valor válido
-        numeroFactura = posiblesNumeros.find(valor => valor && valor !== 'N/A') || 'N/A';
+        console.log('🔢 === EXTRACCIÓN PASO A PASO ===');
+        console.log('🔢 resultadoFactura.numeroFactura:', resultadoFactura.numeroFactura);
+        console.log('🔢 resultadoFactura.NumeroFactura:', resultadoFactura.NumeroFactura);
+        console.log('🔢 resultadoFactura.data?.numeroFactura:', resultadoFactura.data?.numeroFactura);
+        console.log('🔢 resultadoFactura.data?.NumeroFactura:', resultadoFactura.data?.NumeroFactura);
         
-        console.log('🔢 Primer intento de extracción:', numeroFactura);
-        
-        // ✅ SI SIGUE SIENDO N/A, INTENTAR EXTRAER DESDE MESSAGE
+        // ✅ SI AÚN ES N/A, BUSCAR EN MESSAGE (FALLBACK)
         if (numeroFactura === 'N/A' && resultadoFactura.message) {
-            const match = resultadoFactura.message.match(/FAC-\d+-\d+/);
+            const match = resultadoFactura.message.match(/(FAC|PRO)-\d+-\d+/);
             if (match) {
                 numeroFactura = match[0];
-                console.log('🔢 Extraído desde message:', numeroFactura);
+                console.log('🔢 ✅ Extraído desde message:', numeroFactura);
             }
         }
         
-        // ✅ SI TENEMOS datosCompletos (debugging), buscar ahí también
-        if (numeroFactura === 'N/A' && resultadoFactura.datosCompletos) {
-            const datosCompletos = resultadoFactura.datosCompletos;
-            const posiblesNumerosCompletos = [
-                extraerValor(datosCompletos.numeroFactura),
-                extraerValor(datosCompletos.NumeroFactura),
-                extraerValor(datosCompletos.data?.numeroFactura),
-                extraerValor(datosCompletos.data?.NumeroFactura)
-            ];
-            
-            numeroFactura = posiblesNumerosCompletos.find(valor => valor && valor !== 'N/A') || 'N/A';
-            console.log('🔢 Extraído desde datosCompletos:', numeroFactura);
-        }
-        
-        // ✅ ÚLTIMO RECURSO: GENERAR NÚMERO TEMPORAL SI TODO FALLA
+        // ✅ ÚLTIMO RECURSO: USAR TIMESTAMP SI TODO FALLA
         if (numeroFactura === 'N/A') {
             const timestamp = new Date().toISOString().replace(/[-:T.]/g, '').substring(0, 14);
             numeroFactura = `TEMP-${timestamp}`;
-            console.log('🔢 Generando número temporal:', numeroFactura);
+            console.error('❌ NO SE PUDO EXTRAER NÚMERO DE FACTURA - GENERANDO TEMPORAL');
+            console.error('❌ Estructura completa recibida:', resultadoFactura);
         }
+    } else {
+        console.error('❌ resultadoFactura es null o undefined');
     }
     
-    console.log('🔢 *** NÚMERO DE FACTURA FINAL:', numeroFactura, '***');
+    console.log('🔢 *** NÚMERO DE FACTURA FINAL EXTRAÍDO:', numeroFactura, '***');
     
     if (numeroFactura.startsWith('TEMP-')) {
-        console.warn('⚠️ SE GENERÓ UN NÚMERO TEMPORAL - HAY PROBLEMA EN LA RESPUESTA DEL SERVIDOR');
-        console.error('❌ Estructura de datos recibida:', Object.keys(resultadoFactura || {}));
+        console.error('🚨 PROBLEMA CRÍTICO: Se generó número temporal');
+        console.error('🚨 Revisar respuesta de la API CrearFactura');
     }
 
     // Determinar título y mensaje según permisos
