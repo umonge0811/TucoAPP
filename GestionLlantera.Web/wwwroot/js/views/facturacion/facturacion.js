@@ -2079,71 +2079,71 @@ function formatearMoneda(valor) {
     }).format(valor || 0);
 }
 
-//function mostrarToast(titulo, mensaje, tipo = 'info') {
-//    // Implementar toast notifications
-//    console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
+function mostrarToast(titulo, mensaje, tipo = 'info') {
+    // Implementar toast notifications
+    console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
 
-//    // ✅ IMPLEMENTACIÓN DE TOAST VISUAL
-//    try {
-//        // Verificar si existe un contenedor de toasts
-//        let toastContainer = document.getElementById('toast-container');
-//        if (!toastContainer) {
-//            // Crear contenedor de toasts
-//            toastContainer = document.createElement('div');
-//            toastContainer.id = 'toast-container';
-//            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-//            toastContainer.style.zIndex = '9999';
-//            document.body.appendChild(toastContainer);
-//        }
+    // ✅ IMPLEMENTACIÓN DE TOAST VISUAL
+    try {
+        // Verificar si existe un contenedor de toasts
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            // Crear contenedor de toasts
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
 
-//        // Mapear tipos de toast a clases de Bootstrap
-//        const tipoClases = {
-//            'success': 'text-bg-success',
-//            'error': 'text-bg-danger',
-//            'danger': 'text-bg-danger',
-//            'warning': 'text-bg-warning',
-//            'info': 'text-bg-info'
-//        };
+        // Mapear tipos de toast a clases de Bootstrap
+        const tipoClases = {
+            'success': 'text-bg-success',
+            'error': 'text-bg-danger',
+            'danger': 'text-bg-danger',
+            'warning': 'text-bg-warning',
+            'info': 'text-bg-info'
+        };
 
-//        const claseColor = tipoClases[tipo] || 'text-bg-info';
+        const claseColor = tipoClases[tipo] || 'text-bg-info';
 
-//        // Crear toast HTML
-//        const toastId = 'toast-' + Date.now();
-//        const toastHtml = `
-//            <div id="${toastId}" class="toast ${claseColor}" role="alert" aria-live="assertive" aria-atomic="true">
-//                <div class="toast-header">
-//                    <strong class="me-auto">${titulo}</strong>
-//                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-//                </div>
-//                <div class="toast-body">
-//                    ${mensaje}
-//                </div>
-//            </div>
-//        `;
+        // Crear toast HTML
+        const toastId = 'toast-' + Date.now();
+        const toastHtml = `
+            <div id="${toastId}" class="toast ${claseColor}" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <strong class="me-auto">${titulo}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${mensaje}
+                </div>
+            </div>
+        `;
 
-//        // Agregar toast al contenedor
-//        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        // Agregar toast al contenedor
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
 
-//        // Mostrar toast usando Bootstrap
-//        const toastElement = document.getElementById(toastId);
-//        if (toastElement && typeof bootstrap !== 'undefined') {
-//            const toast = new bootstrap.Toast(toastElement, {
-//                delay: tipo === 'success' ? 5000 : 3000 // 5 segundos para éxito, 3 para otros
-//            });
-//            toast.show();
+        // Mostrar toast usando Bootstrap
+        const toastElement = document.getElementById(toastId);
+        if (toastElement && typeof bootstrap !== 'undefined') {
+            const toast = new bootstrap.Toast(toastElement, {
+                delay: tipo === 'success' ? 5000 : 3000 // 5 segundos para éxito, 3 para otros
+            });
+            toast.show();
 
-//            // Limpiar toast después de que se oculte
-//            toastElement.addEventListener('hidden.bs.toast', function() {
-//                this.remove();
-//            });
-//        }
+            // Limpiar toast después de que se oculte
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                this.remove();
+            });
+        }
 
-//    } catch (error) {
-//        console.error('❌ Error mostrando toast:', error);
-//        // Fallback a alert si falla el toast
-//        alert(`${titulo}: ${mensaje}`);
-//    }
-//}
+    } catch (error) {
+        console.error('❌ Error mostrando toast:', error);
+        // Fallback a alert si falla el toast
+        alert(`${titulo}: ${mensaje}`);
+    }
+}
 
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
