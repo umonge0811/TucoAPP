@@ -711,6 +711,9 @@ namespace GestionLlantera.Web.Services
                 var payloadBytes = Convert.FromBase64String(payload);
                 var payloadJson = Encoding.UTF8.GetString(payloadBytes);
 
+                _logger.LogInformation("🔍 === DEBUGGING JWT TOKEN COMPLETO ===");
+                _logger.LogInformation("🔍 Payload JWT completo: {Payload}", payloadJson);
+
                 dynamic claims = JsonConvert.DeserializeObject(payloadJson);
 
                 // Buscar roles en el token
