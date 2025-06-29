@@ -101,27 +101,73 @@ function cargarPermisosUsuario() {
             });
         }
 
+        // ✅ MAPEO MEJORADO DE PERMISOS CON MÚLTIPLES VARIACIONES
+        function extraerPermiso(fuente, ...variaciones) {
+            if (!fuente) return false;
+            
+            for (const variacion of variaciones) {
+                if (fuente[variacion] === true || fuente[variacion] === 'true' || fuente[variacion] === 1) {
+                    console.log(`✅ Permiso encontrado: "${variacion}" = ${fuente[variacion]}`);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         // ✅ OBTENER PERMISOS DESDE LA CONFIGURACIÓN CORRECTA
         if (window.facturaConfig && window.facturaConfig.permisos) {
+            const permisos = window.facturaConfig.permisos;
+            
             permisosUsuario = {
-                puedeCrearFacturas: window.facturaConfig.permisos.puedeCrearFacturas || window.facturaConfig.permisos.crearFacturas || false,
-                puedeCompletarFacturas: window.facturaConfig.permisos.puedeCompletarFacturas || window.facturaConfig.permisos.completarFacturas || false,
-                puedeEditarFacturas: window.facturaConfig.permisos.puedeEditarFacturas || window.facturaConfig.permisos.editarFacturas || false,
-                puedeAnularFacturas: window.facturaConfig.permisos.puedeAnularFacturas || window.facturaConfig.permisos.anularFacturas || false,
-                esAdmin: window.facturaConfig.permisos.esAdmin || window.facturaConfig.permisos.administrador || false
+                puedeCrearFacturas: extraerPermiso(permisos, 
+                    'puedeCrearFacturas', 'crearFacturas', 'CrearFacturas', 
+                    'Crear Facturas', 'crear_facturas', 'CREAR_FACTURAS'),
+                    
+                puedeCompletarFacturas: extraerPermiso(permisos, 
+                    'puedeCompletarFacturas', 'completarFacturas', 'CompletarFacturas',
+                    'Completar Facturas', 'completar_facturas', 'COMPLETAR_FACTURAS'),
+                    
+                puedeEditarFacturas: extraerPermiso(permisos, 
+                    'puedeEditarFacturas', 'editarFacturas', 'EditarFacturas',
+                    'Editar Facturas', 'editar_facturas', 'EDITAR_FACTURAS'),
+                    
+                puedeAnularFacturas: extraerPermiso(permisos, 
+                    'puedeAnularFacturas', 'anularFacturas', 'AnularFacturas',
+                    'Anular Facturas', 'anular_facturas', 'ANULAR_FACTURAS'),
+                    
+                esAdmin: extraerPermiso(permisos, 
+                    'esAdmin', 'administrador', 'Admin', 'ADMIN', 
+                    'Administrador', 'admin', 'isAdmin')
             };
-            console.log('✅ Permisos obtenidos desde facturaConfig:', permisosUsuario);
+            
+            console.log('✅ Permisos extraídos desde facturaConfig:', permisosUsuario);
         }
         // Fallback: intentar desde configuración global de inventario
         else if (window.inventarioConfig && window.inventarioConfig.permisos) {
+            const permisos = window.inventarioConfig.permisos;
+            
             permisosUsuario = {
-                puedeCrearFacturas: buscarPermiso(window.inventarioConfig.permisos, 'Crear Factura'),
-                puedeCompletarFacturas: buscarPermiso(window.inventarioConfig.permisos, 'Completar Factura'),
-                puedeEditarFacturas: buscarPermiso(window.inventarioConfig.permisos, 'Editar Factura'),
-                puedeAnularFacturas: buscarPermiso(window.inventarioConfig.permisos, 'Anular Factura'),
-                esAdmin: buscarPermiso(window.inventarioConfig.permisos, 'Admin') || 
-                        buscarPermiso(window.inventarioConfig.permisos, 'Administrador')
+                puedeCrearFacturas: extraerPermiso(permisos, 
+                    'puedeCrearFacturas', 'crearFacturas', 'CrearFacturas', 
+                    'Crear Facturas', 'Crear Factura', 'crear_facturas'),
+                    
+                puedeCompletarFacturas: extraerPermiso(permisos, 
+                    'puedeCompletarFacturas', 'completarFacturas', 'CompletarFacturas',
+                    'Completar Facturas', 'Completar Factura', 'completar_facturas'),
+                    
+                puedeEditarFacturas: extraerPermiso(permisos, 
+                    'puedeEditarFacturas', 'editarFacturas', 'EditarFacturas',
+                    'Editar Facturas', 'Editar Factura', 'editar_facturas'),
+                    
+                puedeAnularFacturas: extraerPermiso(permisos, 
+                    'puedeAnularFacturas', 'anularFacturas', 'AnularFacturas',
+                    'Anular Facturas', 'Anular Factura', 'anular_facturas'),
+                    
+                esAdmin: extraerPermiso(permisos, 
+                    'esAdmin', 'administrador', 'Admin', 'ADMIN', 
+                    'Administrador', 'admin', 'isAdmin')
             };
+            
             console.log('✅ Permisos obtenidos desde inventarioConfig (fallback):', permisosUsuario);
         }
         else {
@@ -140,7 +186,14 @@ function cargarPermisosUsuario() {
             console.log('⚠️ Usando permisos por defecto de colaborador:', permisosUsuario);
         }
 
-        console.log('🔐 Permisos finales cargados:', permisosUsuario);
+        // ✅ LOG DETALLADO DE PERMISOS FINALES
+        console.log('🔐 === PERMISOS FINALES CARGADOS ===');
+        console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
+        console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
+        console.log('🔐 puedeEditarFacturas:', permisosUsuario.puedeEditarFacturas);
+        console.log('🔐 puedeAnularFacturas:', permisosUsuario.puedeAnularFacturas);
+        console.log('🔐 esAdmin:', permisosUsuario.esAdmin);
+        console.log('🔐 === FIN PERMISOS FINALES ===');
 
         // ✅ CONFIGURAR INTERFAZ SEGÚN PERMISOS
         configurarInterfazSegunPermisos();
@@ -161,7 +214,11 @@ function cargarPermisosUsuario() {
 }
 
 function configurarInterfazSegunPermisos() {
-    console.log('🎯 Configurando interfaz según permisos:', permisosUsuario);
+    console.log('🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===');
+    console.log('🎯 Permisos actuales del usuario:', permisosUsuario);
+    console.log('🎯 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas, '(tipo:', typeof permisosUsuario.puedeCompletarFacturas, ')');
+    console.log('🎯 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas, '(tipo:', typeof permisosUsuario.puedeCrearFacturas, ')');
+    console.log('🎯 esAdmin:', permisosUsuario.esAdmin, '(tipo:', typeof permisosUsuario.esAdmin, ')');
 
     const $btnFinalizar = $('#btnFinalizarVenta');
 
@@ -170,41 +227,78 @@ function configurarInterfazSegunPermisos() {
         return;
     }
 
-    // Resetear el botón
-    $btnFinalizar.prop('disabled', false).removeClass('btn-secondary btn-success btn-primary btn-warning').addClass('btn-primary');
+    // Resetear completamente el botón
+    $btnFinalizar.prop('disabled', false)
+                 .removeClass('btn-secondary btn-success btn-primary btn-warning btn-outline-secondary')
+                 .addClass('btn-primary')
+                 .removeAttr('title');
 
-    if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
-        // ✅ USUARIO PUEDE COMPLETAR FACTURAS
-        $btnFinalizar.removeClass('btn-primary btn-secondary btn-warning').addClass('btn-success')
+    // ✅ VERIFICACIÓN EXPLÍCITA DE PERMISOS CON LOGGING DETALLADO
+    const puedeCompletar = permisosUsuario.puedeCompletarFacturas === true || permisosUsuario.esAdmin === true;
+    const puedeCrear = permisosUsuario.puedeCrearFacturas === true;
+
+    console.log('🎯 Evaluación de permisos:');
+    console.log('🎯   - puedeCompletar (CompletarFacturas O esAdmin):', puedeCompletar);
+    console.log('🎯   - puedeCrear (CrearFacturas):', puedeCrear);
+
+    if (puedeCompletar) {
+        // ✅ USUARIO PUEDE COMPLETAR FACTURAS (ADMINISTRADOR O CAJERO)
+        $btnFinalizar.removeClass('btn-primary btn-secondary btn-warning')
+                    .addClass('btn-success')
                     .prop('disabled', false)
                     .html(`<i class="bi bi-check-circle me-2"></i>Completar Venta`)
-                    .attr('title', 'Procesar venta completa e imprimir factura');
+                    .attr('title', 'Procesar venta completa, ajustar stock e imprimir factura');
 
-        console.log('👑 Usuario puede completar facturas - Interfaz configurada para flujo completo');
+        console.log('👑 === INTERFAZ CONFIGURADA: ADMINISTRADOR/CAJERO ===');
+        console.log('👑 Botón: Verde - "Completar Venta"');
+        console.log('👑 Flujo: Factura pagada inmediatamente con ajuste de stock');
 
-    } else if (permisosUsuario.puedeCrearFacturas) {
-        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS
-        $btnFinalizar.removeClass('btn-success btn-secondary btn-primary').addClass('btn-warning')
+    } else if (puedeCrear && !puedeCompletar) {
+        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS (COLABORADOR)
+        $btnFinalizar.removeClass('btn-success btn-secondary btn-primary')
+                    .addClass('btn-warning')
                     .prop('disabled', false)
                     .html(`<i class="bi bi-send me-2"></i>Enviar Factura`)
-                    .attr('title', 'Enviar factura a caja para procesamiento de pago');
+                    .attr('title', 'Crear factura pendiente y enviar a caja (sin ajuste de stock)');
 
-        console.log('📝 Usuario solo puede crear facturas - Interfaz configurada para flujo de pendientes');
+        console.log('📝 === INTERFAZ CONFIGURADA: COLABORADOR ===');
+        console.log('📝 Botón: Amarillo - "Enviar Factura"');
+        console.log('📝 Flujo: Factura pendiente SIN ajuste de stock');
 
     } else {
         // ❌ SIN PERMISOS
-        $btnFinalizar.removeClass('btn-primary btn-success btn-warning').addClass('btn-secondary')
+        $btnFinalizar.removeClass('btn-primary btn-success btn-warning')
+                    .addClass('btn-secondary')
                     .prop('disabled', true)
                     .html(`<i class="bi bi-lock me-2"></i>Sin Permisos`)
                     .attr('title', 'No tienes permisos para procesar ventas');
 
-        console.log('🔒 Usuario sin permisos de facturación');
-        console.log('🔍 Debug permisos:', {
+        console.log('🔒 === INTERFAZ CONFIGURADA: SIN PERMISOS ===');
+        console.log('🔒 Botón: Gris - Deshabilitado');
+        console.log('🔒 Debug completo de permisos:', {
             puedeCrear: permisosUsuario.puedeCrearFacturas,
             puedeCompletar: permisosUsuario.puedeCompletarFacturas,
-            esAdmin: permisosUsuario.esAdmin
+            esAdmin: permisosUsuario.esAdmin,
+            evaluacionCompletar: puedeCompletar,
+            evaluacionCrear: puedeCrear
         });
     }
+
+    // ✅ VERIFICACIÓN FINAL DEL ESTADO DEL BOTÓN
+    setTimeout(() => {
+        const estadoFinal = {
+            classes: $btnFinalizar.attr('class'),
+            disabled: $btnFinalizar.prop('disabled'),
+            text: $btnFinalizar.text(),
+            title: $btnFinalizar.attr('title')
+        };
+        console.log('🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===');
+        console.log('🎯 Clases CSS:', estadoFinal.classes);
+        console.log('🎯 Deshabilitado:', estadoFinal.disabled);
+        console.log('🎯 Texto:', estadoFinal.text);
+        console.log('🎯 Título:', estadoFinal.title);
+        console.log('🎯 === FIN CONFIGURACIÓN INTERFAZ ===');
+    }, 100);
 }
 
 // ===== INICIALIZACIÓN =====
@@ -3072,7 +3166,28 @@ function imprimirComprobanteEnvio(numeroFactura) {
     }
 }
 
+// ===== FUNCIÓN PARA RECARGAR PERMISOS DINÁMICAMENTE =====
+function recargarPermisosUsuario() {
+    console.log('🔄 === RECARGANDO PERMISOS DE USUARIO ===');
+    
+    // Limpiar permisos actuales
+    permisosUsuario = {
+        puedeCrearFacturas: false,
+        puedeCompletarFacturas: false,
+        puedeEditarFacturas: false,
+        puedeAnularFacturas: false,
+        esAdmin: false
+    };
+    
+    // Recargar configuración desde el servidor si es necesario
+    // O simplemente recargar desde las variables globales existentes
+    cargarPermisosUsuario();
+    
+    console.log('🔄 Permisos recargados y aplicados');
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
+window.recargarPermisosUsuario = recargarPermisosUsuario;
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
 window.limpiarVenta = limpiarVenta;

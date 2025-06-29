@@ -94,6 +94,16 @@ namespace GestionLlantera.Web.Controllers
                     nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
                     permisos.puedeEditarFacturas, permisos.puedeAnularFacturas, permisos.esAdmin);
 
+                // ✅ LOG DETALLADO DE PERMISOS ANTES DE ENVIAR AL FRONTEND
+                _logger.LogInformation("📋 === CONFIGURACIÓN COMPLETA PARA FRONTEND ===");
+                _logger.LogInformation("📋 Usuario ID: {UsuarioId}", usuarioId);
+                _logger.LogInformation("📋 Usuario Nombre: {NombreUsuario}", nombreUsuario);
+                _logger.LogInformation("📋 puedeCrearFacturas: {PuedeCrear}", permisos.puedeCrearFacturas);
+                _logger.LogInformation("📋 puedeCompletarFacturas: {PuedeCompletar}", permisos.puedeCompletarFacturas);
+                _logger.LogInformation("📋 puedeEditarFacturas: {PuedeEditar}", permisos.puedeEditarFacturas);
+                _logger.LogInformation("📋 puedeAnularFacturas: {PuedeAnular}", permisos.puedeAnularFacturas);
+                _logger.LogInformation("📋 esAdmin: {EsAdmin}", permisos.esAdmin);
+
                 // ✅ CREAR CONFIGURACIÓN COMPLETA PARA EL FRONTEND
                 var configuracionCompleta = new
                 {
@@ -110,6 +120,9 @@ namespace GestionLlantera.Web.Controllers
                     HoraActual = DateTime.Now.ToString("HH:mm"),
                     TokenDisponible = !string.IsNullOrEmpty(tokenJWT)
                 };
+
+                _logger.LogInformation("📋 Configuración completa creada y lista para enviar al frontend");
+                _logger.LogInformation("📋 === FIN CONFIGURACIÓN FRONTEND ===");
 
                 ViewBag.ConfiguracionFacturacion = configuracionCompleta;
                 return View();
