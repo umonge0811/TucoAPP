@@ -65,15 +65,11 @@ namespace GestionLlantera.Web.Controllers
                 // Obtener información completa del usuario actual
                 var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
 
-                // ✅ VERIFICAR SI ES ADMINISTRADOR PRIMERO
-                var esAdmin = User.IsInRole("Administrador") || User.IsInRole("Admin");
-                _logger.LogInformation("👑 Usuario es administrador: {EsAdmin}", esAdmin);
-
-                // ✅ Verificar permisos específicos de facturación
-                var puedeCrearFacturas = esAdmin || await this.TienePermisoAsync("Crear Facturas");
-                var puedeCompletarFacturas = esAdmin || await this.TienePermisoAsync("CompletarFacturas");
-                var puedeEditarFacturas = esAdmin || await this.TienePermisoAsync("EditarFacturas");
-                var puedeAnularFacturas = esAdmin || await this.TienePermisoAsync("AnularFacturas");
+                // ✅ Verificar permisos específicos de facturación (sin verificar admin)
+                var puedeCrearFacturas = await this.TienePermisoAsync("Crear Facturas");
+                var puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas");
+                var puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas");
+                var puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas");
 
                 var permisos = new
                 {
@@ -81,18 +77,16 @@ namespace GestionLlantera.Web.Controllers
                     puedeCompletarFacturas = puedeCompletarFacturas,
                     puedeEditarFacturas = puedeEditarFacturas,
                     puedeAnularFacturas = puedeAnularFacturas,
-                    esAdmin = esAdmin,
                     // ✅ AGREGAR PERMISOS ADICIONALES EXPLÍCITOS PARA EL FRONTEND
                     CrearFacturas = puedeCrearFacturas,
                     CompletarFacturas = puedeCompletarFacturas,
                     EditarFacturas = puedeEditarFacturas,
-                    AnularFacturas = puedeAnularFacturas,
-                    Administrador = esAdmin
+                    AnularFacturas = puedeAnularFacturas
                 };
 
-                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}, Admin={Admin}", 
+                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}", 
                     nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
-                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas, permisos.esAdmin);
+                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas);
 
                 // ✅ LOG DETALLADO DE PERMISOS ANTES DE ENVIAR AL FRONTEND
                 _logger.LogInformation("📋 === CONFIGURACIÓN COMPLETA PARA FRONTEND ===");
@@ -102,7 +96,6 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("📋 puedeCompletarFacturas: {PuedeCompletar}", permisos.puedeCompletarFacturas);
                 _logger.LogInformation("📋 puedeEditarFacturas: {PuedeEditar}", permisos.puedeEditarFacturas);
                 _logger.LogInformation("📋 puedeAnularFacturas: {PuedeAnular}", permisos.puedeAnularFacturas);
-                _logger.LogInformation("📋 esAdmin: {EsAdmin}", permisos.esAdmin);
 
                 // ✅ CREAR CONFIGURACIÓN COMPLETA PARA EL FRONTEND
                 var configuracionCompleta = new

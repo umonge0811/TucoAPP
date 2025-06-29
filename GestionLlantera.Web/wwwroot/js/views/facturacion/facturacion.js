@@ -133,11 +133,7 @@ function cargarPermisosUsuario() {
                     
                 puedeAnularFacturas: extraerPermiso(permisos, 
                     'puedeAnularFacturas', 'anularFacturas', 'AnularFacturas',
-                    'Anular Facturas', 'anular_facturas', 'ANULAR_FACTURAS'),
-                    
-                esAdmin: extraerPermiso(permisos, 
-                    'esAdmin', 'administrador', 'Admin', 'ADMIN', 
-                    'Administrador', 'admin', 'isAdmin')
+                    'Anular Facturas', 'anular_facturas', 'ANULAR_FACTURAS')
             };
             
             console.log('✅ Permisos extraídos desde facturaConfig:', permisosUsuario);
@@ -218,7 +214,6 @@ function configurarInterfazSegunPermisos() {
     console.log('🎯 Permisos actuales del usuario:', permisosUsuario);
     console.log('🎯 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas, '(tipo:', typeof permisosUsuario.puedeCompletarFacturas, ')');
     console.log('🎯 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas, '(tipo:', typeof permisosUsuario.puedeCrearFacturas, ')');
-    console.log('🎯 esAdmin:', permisosUsuario.esAdmin, '(tipo:', typeof permisosUsuario.esAdmin, ')');
 
     const $btnFinalizar = $('#btnFinalizarVenta');
 
@@ -234,22 +229,22 @@ function configurarInterfazSegunPermisos() {
                  .removeAttr('title');
 
     // ✅ VERIFICACIÓN EXPLÍCITA DE PERMISOS CON LOGGING DETALLADO
-    const puedeCompletar = permisosUsuario.puedeCompletarFacturas === true || permisosUsuario.esAdmin === true;
+    const puedeCompletar = permisosUsuario.puedeCompletarFacturas === true;
     const puedeCrear = permisosUsuario.puedeCrearFacturas === true;
 
     console.log('🎯 Evaluación de permisos:');
-    console.log('🎯   - puedeCompletar (CompletarFacturas O esAdmin):', puedeCompletar);
+    console.log('🎯   - puedeCompletar (CompletarFacturas):', puedeCompletar);
     console.log('🎯   - puedeCrear (CrearFacturas):', puedeCrear);
 
     if (puedeCompletar) {
-        // ✅ USUARIO PUEDE COMPLETAR FACTURAS (ADMINISTRADOR O CAJERO)
+        // ✅ USUARIO PUEDE COMPLETAR FACTURAS (CON PERMISO ESPECÍFICO)
         $btnFinalizar.removeClass('btn-primary btn-secondary btn-warning')
                     .addClass('btn-success')
                     .prop('disabled', false)
                     .html(`<i class="bi bi-check-circle me-2"></i>Completar Venta`)
                     .attr('title', 'Procesar venta completa, ajustar stock e imprimir factura');
 
-        console.log('👑 === INTERFAZ CONFIGURADA: ADMINISTRADOR/CAJERO ===');
+        console.log('👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===');
         console.log('👑 Botón: Verde - "Completar Venta"');
         console.log('👑 Flujo: Factura pagada inmediatamente con ajuste de stock');
 
@@ -1673,15 +1668,14 @@ async function procesarVentaFinal() {
         console.log('🔐 === VERIFICACIÓN DE PERMISOS ===');
         console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
         console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
-        console.log('🔐 esAdmin:', permisosUsuario.esAdmin);
 
-        if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
-            // ✅ ADMINISTRADORES Y CAJEROS: Venta completa e inmediata
+        if (permisosUsuario.puedeCompletarFacturas) {
+            // ✅ USUARIOS CON PERMISO COMPLETAR: Venta completa e inmediata
             estadoFactura = 'Pagada';
             mensajeExito = 'Venta procesada exitosamente y marcada como pagada';
             debeImprimir = true;
             debeAjustarInventario = true;
-            console.log('👑 Procesando como administrador/cajero - Factura pagada inmediatamente con ajuste de stock');
+            console.log('👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock');
             
         } else if (permisosUsuario.puedeCrearFacturas) {
             // ✅ COLABORADORES: Factura pendiente para caja SIN AJUSTE DE STOCK
