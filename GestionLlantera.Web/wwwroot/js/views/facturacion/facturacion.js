@@ -1622,12 +1622,34 @@ async function procesarVentaFinal() {
                 
                 // Para colaboradores: mostrar modal específico de envío a cajas
                 setTimeout(() => {
-                    // ✅ PASAR TODA LA RESPUESTA CON EL NÚMERO DE FACTURA
+                    // ✅ DEBUGGING DETALLADO DE LA RESPUESTA
+                    console.log('🔍 DEBUGGING - Estructura completa de resultadoFactura:', JSON.stringify(resultadoFactura, null, 2));
+                    console.log('🔍 DEBUGGING - resultadoFactura.numeroFactura:', resultadoFactura.numeroFactura);
+                    console.log('🔍 DEBUGGING - resultadoFactura.data:', resultadoFactura.data);
+                    
+                    // ✅ EXTRACCIÓN ROBUSTA DEL NÚMERO DE FACTURA
+                    let numeroFactura = 'N/A';
+                    
+                    // Buscar en todas las propiedades posibles desde la respuesta de la API
+                    if (resultadoFactura) {
+                        numeroFactura = resultadoFactura.numeroFactura ||
+                                       resultadoFactura.NumeroFactura ||
+                                       resultadoFactura.data?.numeroFactura ||
+                                       resultadoFactura.data?.NumeroFactura ||
+                                       resultadoFactura.facturaId ||
+                                       resultadoFactura.data?.facturaId ||
+                                       'N/A';
+                        
+                        console.log('🔢 Número de factura extraído:', numeroFactura);
+                    }
+
+                    // ✅ PASAR DATOS LIMPIOS AL MODAL
                     mostrarModalFacturaPendiente({
-                        numeroFactura: resultadoFactura.numeroFactura || resultadoFactura.data?.numeroFactura || 'N/A',
+                        numeroFactura: numeroFactura,
                         facturaId: resultadoFactura.facturaId || resultadoFactura.data?.facturaId,
-                        estado: resultadoFactura.estado || 'Pendiente',
-                        message: resultadoFactura.message
+                        estado: resultadoFactura.estado || resultadoFactura.data?.estado || 'Pendiente',
+                        message: resultadoFactura.message,
+                        datosCompletos: resultadoFactura // Para debugging adicional
                     });
                 }, 300);
             } else {
@@ -2829,7 +2851,8 @@ function actualizarEstadoBotonFinalizar() {
 
 // ===== MODAL FACTURA PENDIENTE =====
 function mostrarModalFacturaPendiente(resultadoFactura) {
-    console.log('📋 Mostrando modal factura pendiente con datos:', resultadoFactura);
+    console.log('📋 === MODAL FACTURA PENDIENTE ===');
+    console.log('📋 Datos recibidos:', JSON.stringify(resultadoFactura, null, 2));
     
     // Extraer número de factura con múltiples fallbacks
     let numeroFactura = 'N/A';
@@ -2846,17 +2869,36 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                        resultadoFactura.factura?.NumeroFactura ||
                        'N/A';
         
+        console.log('🔢 Primer intento de extracción:', numeroFactura);
+        
         // ✅ SI SIGUE SIENDO N/A, INTENTAR EXTRAER DESDE MESSAGE
         if (numeroFactura === 'N/A' && resultadoFactura.message) {
             const match = resultadoFactura.message.match(/FAC-\d+-\d+/);
             if (match) {
                 numeroFactura = match[0];
+                console.log('🔢 Extraído desde message:', numeroFactura);
             }
+        }
+        
+        // ✅ SI TENEMOS datosCompletos (debugging), buscar ahí también
+        if (numeroFactura === 'N/A' && resultadoFactura.datosCompletos) {
+            const datosCompletos = resultadoFactura.datosCompletos;
+            numeroFactura = datosCompletos.numeroFactura || 
+                           datosCompletos.NumeroFactura ||
+                           datosCompletos.data?.numeroFactura ||
+                           datosCompletos.data?.NumeroFactura ||
+                           'N/A';
+            
+            console.log('🔢 Extraído desde datosCompletos:', numeroFactura);
         }
     }
     
-    console.log('🔢 Número de factura extraído:', numeroFactura);
-    console.log('🔍 Estructura completa del resultado:', JSON.stringify(resultadoFactura, null, 2));
+    console.log('🔢 *** NÚMERO DE FACTURA FINAL:', numeroFactura, '***');
+    
+    if (numeroFactura === 'N/A') {
+        console.error('❌ NO SE PUDO EXTRAER EL NÚMERO DE FACTURA');
+        console.error('❌ Estructura de datos disponible:', Object.keys(resultadoFactura || {}));
+    }
 
     // Determinar título y mensaje según permisos
     let tituloModal = 'Factura Procesada';
