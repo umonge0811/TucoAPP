@@ -1,4 +1,4 @@
-﻿// Variable global para almacenar la URL base de la API
+// Variable global para almacenar la URL base de la API
 const API_URL = 'https://localhost:7273';
 
 // Configuración de Toastr
@@ -15,6 +15,7 @@ let modalRoles = null;
 // Un solo event listener para la inicialización
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM Cargado');
+    console.log('Función editarRoles disponible:', typeof editarRoles);
 
     // Inicializar modal usando getElementById
     const modalElement = document.getElementById('modalRoles');
