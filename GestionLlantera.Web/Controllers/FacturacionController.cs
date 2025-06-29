@@ -70,7 +70,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("👑 Usuario es administrador: {EsAdmin}", esAdmin);
 
                 // ✅ Verificar permisos específicos de facturación
-                var puedeCrearFacturas = esAdmin || await this.TienePermisoAsync("CrearFacturas");
+                var puedeCrearFacturas = esAdmin || await this.TienePermisoAsync("Crear Facturas");
                 var puedeCompletarFacturas = esAdmin || await this.TienePermisoAsync("CompletarFacturas");
                 var puedeEditarFacturas = esAdmin || await this.TienePermisoAsync("EditarFacturas");
                 var puedeAnularFacturas = esAdmin || await this.TienePermisoAsync("AnularFacturas");
