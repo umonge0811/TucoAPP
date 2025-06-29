@@ -70,11 +70,11 @@ function cargarPermisosUsuario() {
         console.log('🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===');
         console.log('🔍 Configuración recibida:', JSON.stringify(window.facturaConfig, null, 2));
 
-        if (!window.facturaConfig || !window.facturaConfig.Permisos) {
+        if (!window.facturaConfig || !window.facturaConfig.permisos) {
             throw new Error('No se encontró configuración de permisos');
         }
 
-        const permisos = window.facturaConfig.Permisos;
+        const permisos = window.facturaConfig.permisos;
         
         // ✅ MAPEO DIRECTO DE PERMISOS (sin complicaciones)
         permisosUsuario = {
