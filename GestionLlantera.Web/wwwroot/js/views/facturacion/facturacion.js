@@ -126,6 +126,12 @@ function cargarPermisosUsuario() {
             console.log('⚠️ Usando permisos por defecto de colaborador:', permisosUsuario);
         }
 
+        // ✅ VERIFICACIÓN ADICIONAL: Si no se detectaron permisos, asegurar al menos crear facturas
+        if (!permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
+            console.log('🔧 No se detectaron permisos de facturación, habilitando crear facturas por defecto');
+            permisosUsuario.puedeCrearFacturas = true;
+        }
+
         console.log('🔐 Permisos finales cargados:', permisosUsuario);
 
         // ✅ CONFIGURAR INTERFAZ SEGÚN PERMISOS
@@ -242,7 +248,21 @@ function inicializarModales() {
 
     const modalFinalizarVentaElement = document.getElementById('modalFinalizarVenta');
     if (modalFinalizarVentaElement) {
-        modalFinalizarVenta = new bootstrap.Modal(modalFinalizarVentaElement);
+        // ✅ FIX: Configurar modal para evitar conflictos con aria-hidden
+        modalFinalizarVenta = new bootstrap.Modal(modalFinalizarVentaElement, {
+            focus: true,
+            keyboard: true,
+            backdrop: true
+        });
+
+        // ✅ Configurar eventos del modal para manejar aria-hidden correctamente
+        modalFinalizarVentaElement.addEventListener('show.bs.modal', function() {
+            $(this).removeAttr('aria-hidden');
+        });
+
+        modalFinalizarVentaElement.addEventListener('hide.bs.modal', function() {
+            // No agregar aria-hidden automáticamente para evitar conflictos
+        });
     }
 
     const modalDetalleProductoElement = document.getElementById('modalDetalleProducto');
@@ -1265,12 +1285,12 @@ function limpiarVenta() {
 // ===== FINALIZACIÓN DE VENTA =====
 function mostrarModalFinalizarVenta() {
     if (productosEnVenta.length === 0) {
-        mostrarToast('Venta vacía', 'Agrega productos antes de finalizar la venta', 'warning');
+        console.log('⚠️ No hay productos en la venta');
         return;
     }
 
     if (!clienteSeleccionado) {
-        mostrarToast('Cliente requerido', 'Debes seleccionar un cliente antes de finalizar la venta', 'warning');
+        console.log('⚠️ No se ha seleccionado cliente');
 
         // ✅ ENFOCAR EL CAMPO DE BÚSQUEDA DE CLIENTE
         $('#clienteBusqueda').focus();
@@ -1309,6 +1329,9 @@ function mostrarModalFinalizarVenta() {
 
     // Limpiar observaciones
     $('#observacionesVenta').val('');
+
+    // ✅ FIX ARIA-HIDDEN ISSUE: Remover aria-hidden antes de mostrar modal
+    $('#modalFinalizarVenta').removeAttr('aria-hidden');
 
     // Mostrar modal
     modalFinalizarVenta.show();
@@ -1399,10 +1422,26 @@ function configurarModalSegunPermisos() {
 
     console.log('🎯 Configurando modal con permisos:', permisosUsuario);
 
-    // ✅ SIMPLIFICAR: Si tiene permiso crear facturas O completar facturas, habilitar botón
-    const puedeCrear = permisosUsuario.puedeCrearFacturas || buscarPermiso(window.facturaConfig?.Permisos, 'Crear Factura');
-    const puedeCompletar = permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin;
+    // ✅ VERIFICAR PERMISOS DE MANERA MÁS ROBUSTA
+    let puedeCrear = false;
+    let puedeCompletar = false;
 
+    // Verificar si puede crear facturas
+    if (permisosUsuario.puedeCrearFacturas || 
+        buscarPermiso(window.facturaConfig?.Permisos, 'Crear Factura') ||
+        buscarPermiso(window.inventarioConfig?.permisos, 'Crear Factura')) {
+        puedeCrear = true;
+    }
+
+    // Verificar si puede completar facturas (administradores/cajeros)
+    if (permisosUsuario.puedeCompletarFacturas || 
+        permisosUsuario.esAdmin ||
+        buscarPermiso(window.facturaConfig?.Permisos, 'Completar Factura') ||
+        buscarPermiso(window.inventarioConfig?.permisos, 'Completar Factura')) {
+        puedeCompletar = true;
+    }
+
+    // ✅ CONFIGURAR MODAL SEGÚN PERMISOS DETECTADOS
     if (puedeCompletar) {
         // ✅ USUARIO PUEDE COMPLETAR FACTURAS
         $tituloModal.html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
@@ -1413,8 +1452,8 @@ function configurarModalSegunPermisos() {
 
         console.log('👑 Modal configurado para usuario con permisos completos');
 
-    } else if (puedeCrear) {
-        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS - ENVIAR A CAJA
+    } else {
+        // ✅ USUARIO SOLO PUEDE CREAR FACTURAS O SIN PERMISOS ESPECÍFICOS (COLABORADOR)
         $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
         $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
                     .prop('disabled', false);
@@ -1422,15 +1461,6 @@ function configurarModalSegunPermisos() {
         $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
 
         console.log('📝 Modal configurado para colaborador - Envío a caja habilitado');
-
-    } else {
-        // ✅ FALLBACK: HABILITAR COMO COLABORADOR POR DEFECTO
-        console.log('⚠️ No se detectaron permisos específicos, habilitando como colaborador por defecto');
-        $tituloModal.html('<i class="bi bi-send me-2"></i>Enviar Factura a Caja');
-        $btnConfirmar.removeClass('btn-success btn-secondary btn-info').addClass('btn-warning')
-                    .prop('disabled', false);
-        $textoBoton.text('Enviar a Caja');
-        $btnConfirmar.attr('title', 'Enviar factura a caja para procesamiento de pago');
     }
 
     console.log('🎯 Estado final del botón:', {
@@ -2065,69 +2095,8 @@ function formatearMoneda(valor) {
 }
 
 function mostrarToast(titulo, mensaje, tipo = 'info') {
-    // Implementar toast notifications
+    // Solo mostrar en console, sin toasts visuales
     console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
-
-    // ✅ IMPLEMENTACIÓN DE TOAST VISUAL
-    try {
-        // Verificar si existe un contenedor de toasts
-        let toastContainer = document.getElementById('toast-container');
-        if (!toastContainer) {
-            // Crear contenedor de toasts
-            toastContainer = document.createElement('div');
-            toastContainer.id = 'toast-container';
-            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-            toastContainer.style.zIndex = '9999';
-            document.body.appendChild(toastContainer);
-        }
-
-        // Mapear tipos de toast a clases de Bootstrap
-        const tipoClases = {
-            'success': 'text-bg-success',
-            'error': 'text-bg-danger',
-            'danger': 'text-bg-danger',
-            'warning': 'text-bg-warning',
-            'info': 'text-bg-info'
-        };
-
-        const claseColor = tipoClases[tipo] || 'text-bg-info';
-
-        // Crear toast HTML
-        const toastId = 'toast-' + Date.now();
-        const toastHtml = `
-            <div id="${toastId}" class="toast ${claseColor}" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <strong class="me-auto">${titulo}</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    ${mensaje}
-                </div>
-            </div>
-        `;
-
-        // Agregar toast al contenedor
-        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-
-        // Mostrar toast usando Bootstrap
-        const toastElement = document.getElementById(toastId);
-        if (toastElement && typeof bootstrap !== 'undefined') {
-            const toast = new bootstrap.Toast(toastElement, {
-                delay: tipo === 'success' ? 5000 : 3000 // 5 segundos para éxito, 3 para otros
-            });
-            toast.show();
-
-            // Limpiar toast después de que se oculte
-            toastElement.addEventListener('hidden.bs.toast', function() {
-                this.remove();
-            });
-        }
-
-    } catch (error) {
-        console.error('❌ Error mostrando toast:', error);
-        // Fallback a alert si falla el toast
-        alert(`${titulo}: ${mensaje}`);
-    }
 }
 
 function verDetalleProducto(producto) {
