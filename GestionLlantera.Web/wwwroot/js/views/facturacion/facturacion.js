@@ -105,6 +105,16 @@ function cargarPermisosUsuario() {
         function extraerPermiso(fuente, ...variaciones) {
             if (!fuente) return false;
             
+            // Primero buscar nombres exactos (prioridad alta)
+            const nombresExactos = variaciones.filter(v => v === 'Crear Facturas' || v === 'CompletarFacturas');
+            for (const nombreExacto of nombresExactos) {
+                if (fuente[nombreExacto] === true || fuente[nombreExacto] === 'true' || fuente[nombreExacto] === 1) {
+                    console.log(`✅ Permiso encontrado (nombre exacto): "${nombreExacto}" = ${fuente[nombreExacto]}`);
+                    return true;
+                }
+            }
+            
+            // Luego buscar variaciones alternativas
             for (const variacion of variaciones) {
                 if (fuente[variacion] === true || fuente[variacion] === 'true' || fuente[variacion] === 1) {
                     console.log(`✅ Permiso encontrado: "${variacion}" = ${fuente[variacion]}`);
@@ -120,12 +130,12 @@ function cargarPermisosUsuario() {
             
             permisosUsuario = {
                 puedeCrearFacturas: extraerPermiso(permisos, 
-                    'puedeCrearFacturas', 'crearFacturas', 'CrearFacturas', 
-                    'Crear Facturas', 'crear_facturas', 'CREAR_FACTURAS'),
+                    'Crear Facturas', 'CrearFacturas', 'puedeCrearFacturas', 
+                    'crearFacturas', 'crear_facturas', 'CREAR_FACTURAS'),
                     
                 puedeCompletarFacturas: extraerPermiso(permisos, 
-                    'puedeCompletarFacturas', 'completarFacturas', 'CompletarFacturas',
-                    'Completar Facturas', 'completar_facturas', 'COMPLETAR_FACTURAS'),
+                    'CompletarFacturas', 'Completar Facturas', 'puedeCompletarFacturas',
+                    'completarFacturas', 'completar_facturas', 'COMPLETAR_FACTURAS'),
                     
                 puedeEditarFacturas: extraerPermiso(permisos, 
                     'puedeEditarFacturas', 'editarFacturas', 'EditarFacturas',
