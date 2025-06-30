@@ -545,20 +545,20 @@ namespace GestionLlantera.Web.Controllers
                 foreach (var claim in permissionClaims)
                 {
                     var valor = claim.Value;
-                    
+
                     // Verificar si el valor es JSON válido
                     if (valor.StartsWith("[") && valor.EndsWith("]"))
                     {
                         try
                         {
                             // Es un array JSON, deserializar
-                            var permisosArray = JsonSerializer.Deserialize<List<string>>(valor);
+                            var permisosArray = System.Text.Json.JsonSerializer.Deserialize<List<string>>(valor);
                             if (permisosArray != null)
                             {
                                 permisos.AddRange(permisosArray);
                             }
                         }
-                        catch (JsonException)
+                        catch (System.Text.Json.JsonException)
                         {
                             // Si falla la deserialización, tratar como string simple
                             permisos.Add(valor);
@@ -581,7 +581,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        
+
 
         /// <summary>
         /// Obtener información completa del usuario desde los claims (igual que InventarioController)
@@ -640,54 +640,58 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo facturas pendientes");
+                _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
 
-                if (!await this.TienePermisoAsync("Ver Facturas"))
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
                 {
-                    return Json(new { success = false, message = "Sin permisos para ver facturas" });
+                    return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                var jwtToken = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return Json(new { success = false, message = "Token de autenticación no disponible" });
-                }
+                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
 
-                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(jwtToken);
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}", 
+                    resultado.success, resultado.message);
 
-                if (resultado.success)
+                if (resultado.success && resultado.data != null)
                 {
-                    return Json(new { 
-                        success = true, 
-                        data = resultado.data,
-                        message = resultado.message 
-                    });
+                    _logger.LogInformation("📋 Procesando respuesta del API de facturas pendientes");
+                    
+                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
+                    // Solo necesitamos devolverla tal como viene
+                    return Json(resultado.data);
                 }
                 else
                 {
+                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
                     return Json(new { 
                         success = false, 
-                        message = resultado.message,
-                        details = resultado.details
+                        message = resultado.message ?? "No se pudieron obtener las facturas pendientes",
+                        facturas = new List<object>(),
+                        totalFacturas = 0
                     });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
-                return Json(new { success = false, message = "Error interno del servidor" });
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    facturas = new List<object>(),
+                    totalFacturas = 0
+                });
             }
         }
 
-        [HttpPut]
-        [Route("Facturacion/CompletarFactura/{facturaId}")]
-        public async Task<IActionResult> CompletarFactura(int facturaId, [FromBody] object datosCompletamiento)
+        [HttpPost]
+        public async Task<IActionResult> CompletarFactura(int id)
         {
             try
             {
-                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
+                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", id);
 
-                if (!this.TienePermisoEnToken("Completar Facturas"))
+                if (!await this.TienePermisoAsync("CompletarFacturas"))
                 {
                     return Json(new { success = false, message = "Sin permisos para completar facturas" });
                 }
@@ -698,7 +702,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                var resultado = await _facturacionService.CompletarFacturaAsync(facturaId, datosCompletamiento, jwtToken);
+                var resultado = await _facturacionService.CompletarFacturaAsync(id, new { }, jwtToken);
 
                 if (resultado.success)
                 {
@@ -719,8 +723,26 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error completando factura");
-                return Json(new { success = false, message = "Error interno del servidor" });
+                _logger.LogError(ex, "❌ Error completando factura: {FacturaId}", id);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno al completar factura" 
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CompletarFacturaPendiente([FromBody] CompletarFacturaRequest request)
+        {
+            try
+            {
+                var response = await _facturacionService.CompletarFacturaAsync(request.FacturaId, new { }, this.ObtenerTokenJWT());
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completando factura pendiente");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
 
@@ -741,9 +763,21 @@ namespace GestionLlantera.Web.Controllers
                     });
                 }
 
+                // Convertir el request del controller al tipo esperado por el servicio
+                var serviceRequest = new Services.Interfaces.AjusteStockFacturacionRequest
+                {
+                    NumeroFactura = request.NumeroFactura,
+                    Productos = request.Productos.Select(p => new Services.Interfaces.ProductoAjusteStock
+                    {
+                        ProductoId = p.ProductoId,
+                        NombreProducto = p.NombreProducto,
+                        Cantidad = p.Cantidad
+                    }).ToList()
+                };
+
                 // Usar el servicio de facturación para ajustar el stock
                 var jwtToken = this.ObtenerTokenJWT();
-                var resultado = await _facturacionService.AjustarStockFacturacionAsync(request, jwtToken);
+                var resultado = await _facturacionService.AjustarStockFacturacionAsync(serviceRequest, jwtToken);
 
                 return Json(resultado);
             }
@@ -757,5 +791,24 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+    }
+
+    public class AjusteStockFacturacionRequest
+    {
+        public string NumeroFactura { get; set; }
+        public List<ProductoAjusteStock> Productos { get; set; }
+    }
+
+    public class ProductoAjusteStock
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; }
+        public int Cantidad { get; set; }
+    }
+
+    public class CompletarFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public string NumeroFactura { get; set; }
     }
 }
