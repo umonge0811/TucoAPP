@@ -533,18 +533,46 @@ namespace GestionLlantera.Web.Controllers
                 var handler = new JwtSecurityTokenHandler();
                 var jwtSecurityToken = handler.ReadJwtToken(token);
 
-                // Obtener los permisos del claim "Permission"
-                var permisosClaim = jwtSecurityToken.Claims.FirstOrDefault(c => c.Type == "Permission")?.Value;
+                var permisos = new List<string>();
 
-                if (string.IsNullOrEmpty(permisosClaim))
+                // Buscar claims de permisos en diferentes formatos
+                var permissionClaims = jwtSecurityToken.Claims.Where(c => 
+                    c.Type == "Permission" || 
+                    c.Type == "permissions" || 
+                    c.Type == "permisos"
+                );
+
+                foreach (var claim in permissionClaims)
                 {
-                    _logger.LogWarning("⚠️ No se encontró el claim 'Permission' en el token JWT.");
-                    return new List<string>();
+                    var valor = claim.Value;
+                    
+                    // Verificar si el valor es JSON válido
+                    if (valor.StartsWith("[") && valor.EndsWith("]"))
+                    {
+                        try
+                        {
+                            // Es un array JSON, deserializar
+                            var permisosArray = JsonSerializer.Deserialize<List<string>>(valor);
+                            if (permisosArray != null)
+                            {
+                                permisos.AddRange(permisosArray);
+                            }
+                        }
+                        catch (JsonException)
+                        {
+                            // Si falla la deserialización, tratar como string simple
+                            permisos.Add(valor);
+                        }
+                    }
+                    else
+                    {
+                        // Es un permiso individual, agregarlo directamente
+                        permisos.Add(valor);
+                    }
                 }
 
-                // Deserializar el string de permisos a una lista
-                var permisos = JsonSerializer.Deserialize<List<string>>(permisosClaim);
-                return permisos ?? new List<string>();
+                _logger.LogInformation("🔐 Permisos extraídos del token: {Permisos}", string.Join(", ", permisos));
+                return permisos;
             }
             catch (Exception ex)
             {
@@ -553,14 +581,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        /// <summary>
-        /// Verifica si el usuario tiene el permiso especificado en el token JWT
-        /// </summary>
-        private bool TienePermisoEnToken(string permiso)
-        {
-            var permisos = ObtenerPermisosDesdeToken();
-            return permisos.Contains(permiso);
-        }
+        
 
         /// <summary>
         /// Obtener información completa del usuario desde los claims (igual que InventarioController)
