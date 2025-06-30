@@ -1,3 +1,4 @@
+
 using GestionLlantera.Web.Models.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Services.Interfaces
@@ -32,32 +33,14 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Ajusta el stock de productos después de una facturación
         /// </summary>
-        Task<byte[]> GenerarFacturaPDFAsync(int ventaId, string jwtToken = null);
+        Task<object> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null);
 
-        // =====================================
-        // MÉTODOS PARA FACTURAS PENDIENTES
-        // =====================================
+        /// <summary>
+        /// Crea una nueva factura en la API
+        /// </summary>
+        Task<(bool success, object? data, string? message, string? details)> CrearFacturaAsync(object facturaDto, string jwtToken = null);
         Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken = null);
         Task<(bool success, object? data, string? message, string? details)> CompletarFacturaAsync(int facturaId, object datosCompletamiento, string jwtToken = null);
-        Task<object> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null);
-        Task<(bool success, object? data, string? message, string? details)> CrearFacturaAsync(object facturaDto, string jwtToken = null);
-    }
-
-    // =====================================
-    // CLASES AUXILIARES PARA INTERFACE
-    // =====================================
-
-    public class AjusteStockFacturacionRequest
-    {
-        public string? NumeroFactura { get; set; }
-        public List<ProductoAjusteStock>? Productos { get; set; }
-    }
-
-    public class ProductoAjusteStock
-    {
-        public int ProductoId { get; set; }
-        public string? NombreProducto { get; set; }
-        public int Cantidad { get; set; }
     }
 
     // Clase ApiResponse para manejar respuestas de la API
@@ -85,6 +68,19 @@ namespace GestionLlantera.Web.Services.Interfaces
         public List<string>? ImagenesUrls { get; set; }
         public decimal Subtotal => PrecioUnitario * Cantidad;
         public string? ImagenUrl { get; set; }
+    }
+
+    public class AjusteStockFacturacionRequest
+    {
+        public string NumeroFactura { get; set; } = string.Empty;
+        public List<ProductoAjusteStock> Productos { get; set; } = new();
+    }
+
+    public class ProductoAjusteStock
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int Cantidad { get; set; }
     }
 
     public class VentaDTO
