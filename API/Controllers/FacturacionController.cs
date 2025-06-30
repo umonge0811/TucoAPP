@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Facturacion;
+using System.Linq;
 
 namespace API.Controllers
 {
