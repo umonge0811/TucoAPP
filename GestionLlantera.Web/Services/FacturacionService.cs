@@ -692,15 +692,128 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        /// <summary>
-        /// ✅ MÉTODO SIMPLIFICADO: El estado se determina ahora únicamente en la API
-        /// Este método se mantiene para compatibilidad pero ya no se usa
-        /// </summary>
-        [Obsolete("El estado de factura se determina ahora únicamente en la API")]
-        public async Task<string> DeterminarEstadoFacturaSegunUsuarioAsync()
+        private async Task<string> DeterminarEstadoFacturaSegunUsuarioAsync(string jwtToken)
         {
-            _logger.LogInformation("⚠️ Método obsoleto - El estado se determina en la API");
-            return "Pendiente"; // Fallback seguro
+            try
+            {
+                if (string.IsNullOrEmpty(jwtToken))
+                    return "Pendiente"; // Estado por defecto si no hay token
+
+                // Decodificar el token JWT para obtener roles
+                var parts = jwtToken.Split('.');
+                if (parts.Length != 3)
+                    return "Pendiente";
+
+                // Decodificar el payload (segunda parte)
+                var payload = parts[1];
+
+                // Agregar padding necesario para Base64
+                switch (payload.Length % 4)
+                {
+                    case 2: payload += "=="; break;
+                    case 3: payload += "="; break;
+                }
+
+                var payloadBytes = Convert.FromBase64String(payload);
+                var payloadJson = Encoding.UTF8.GetString(payloadBytes);
+
+                _logger.LogInformation("🔍 === DEBUGGING JWT TOKEN COMPLETO ===");
+                _logger.LogInformation("🔍 Payload JWT completo: {Payload}", payloadJson);
+
+                dynamic claims = JsonConvert.DeserializeObject(payloadJson);
+                
+                // ✅ LOGGING ADICIONAL PARA DEBUGGING DE ESTRUCTURA
+                if (claims is Newtonsoft.Json.Linq.JObject debugObject)
+                {
+                    _logger.LogInformation("🔍 Propiedades disponibles en el token:");
+                    foreach (var property in debugObject.Properties())
+                    {
+                        var valorTruncado = property.Value?.ToString();
+                        if (valorTruncado?.Length > 200) valorTruncado = valorTruncado.Substring(0, 200) + "...";
+                        _logger.LogInformation("🔍   - {Propiedad}: {Valor}", property.Name, valorTruncado);
+                    }
+                }
+
+                // Buscar roles en el token
+                string roles = "";
+                try
+                {
+                    roles = claims?.role?.ToString() ??
+                           claims?.roles?.ToString() ??
+                           claims?["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]?.ToString() ?? "";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("⚠️ Error extrayendo roles del token: {Error}", ex.Message);
+                }
+
+                // ✅ EXTRAER PERMISOS CORRECTAMENTE DEL TOKEN JWT
+                // Los permisos se almacenan como claims individuales con tipo "Permission"
+                var permisosEncontrados = new List<string>();
+
+                // Buscar en la estructura del token los claims de permisos
+                if (claims is Newtonsoft.Json.Linq.JObject jwtObject)
+                {
+                    // Buscar arrays de permisos en diferentes campos posibles
+                    var camposPermisos = new[] { "Permission", "permissions", "permisos", "Permisos" };
+                    
+                    foreach (var campo in camposPermisos)
+                    {
+                        var permisosToken = jwtObject[campo];
+                        if (permisosToken != null)
+                        {
+                            var permisosTexto = permisosToken.ToString();
+                            _logger.LogInformation("🔍 Permisos encontrados en campo '{Campo}': {Permisos}", campo, permisosTexto);
+                            
+                            if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.Array)
+                            {
+                                // Es un array de permisos
+                                foreach (var permiso in permisosToken)
+                                {
+                                    permisosEncontrados.Add(permiso.ToString());
+                                }
+                            }
+                            else if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.String)
+                            {
+                                // Es un string único
+                                permisosEncontrados.Add(permisosTexto);
+                            }
+                            break; // Si encontramos permisos, salimos del bucle
+                        }
+                    }
+                }
+
+                _logger.LogInformation("🔐 Permisos extraídos del token: {Permisos}", string.Join(", ", permisosEncontrados));
+
+                // Verificar si el usuario tiene el permiso "CompletarFacturas"
+                var tienePermisoCompletar = permisosEncontrados.Any(p => 
+                    p.Equals("CompletarFacturas", StringComparison.OrdinalIgnoreCase) ||
+                    p.Equals("Completar Facturas", StringComparison.OrdinalIgnoreCase) ||
+                    p.Equals("CompletarFactura", StringComparison.OrdinalIgnoreCase));
+
+                if (tienePermisoCompletar)
+                {
+                    _logger.LogInformation("✅ Usuario tiene permiso CompletarFacturas - Estado: Pagada");
+                    return "Pagada";
+                }
+
+                // Si es Administrador, puede crear facturas completadas
+                if (roles.Contains("Administrador", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "Pagada";
+                }
+
+                // Para cualquier otro rol (Colaborador, etc.), crear como pendiente
+                _logger.LogInformation("⚠️ Usuario sin permisos de CompletarFacturas - Estado: Pendiente");
+                _logger.LogInformation("🔐 Roles encontrados: {Roles}", roles);
+                _logger.LogInformation("🔐 Permisos evaluados: {Permisos}", string.Join(", ", permisosEncontrados));
+                return "Pendiente";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error determinando estado de factura según usuario");
+                return "Pendiente"; // Estado seguro por defecto
+            }
         }
 
         private string ExtraerNombreUsuarioDelToken(string jwtToken)
