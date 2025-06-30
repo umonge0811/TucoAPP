@@ -290,10 +290,9 @@ namespace GestionLlantera.Web.Extensions
             catch (Exception ex)
             {
                 // Log del error si hay un logger disponible
-                if (controller.HttpContext.RequestServices.GetService<ILogger<ControllerExtensions>>() is ILogger<ControllerExtensions> logger)
-                {
-                    logger.LogError(ex, "Error al verificar permiso {Permiso}", nombrePermiso);
-                }
+                var loggerFactory = controller.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("ControllerExtensions");
+                logger?.LogError(ex, "Error al verificar permiso {Permiso}", nombrePermiso);
                 return false;
             }
         }
