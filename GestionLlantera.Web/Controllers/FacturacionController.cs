@@ -742,7 +742,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
+        public async Task<IActionResult> AjustarStockFacturacion([FromBody] Services.Interfaces.AjusteStockFacturacionRequest request)
         {
             try
             {
@@ -773,6 +773,7 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+    }
 
     public class CompletarFacturaRequest
     {
