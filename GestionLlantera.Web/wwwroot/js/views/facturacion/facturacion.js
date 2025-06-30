@@ -3389,12 +3389,16 @@ function mostrarFacturasPendientes(facturas) {
         const total = factura.total || 0;
         const cantidadItems = factura.cantidadItems || factura.detallesFactura?.length || 0;
         
-        // Escapar datos para JavaScript
+        // Escapar datos para JavaScript con TODA la información del cliente
         const facturaEscapada = JSON.stringify({
             facturaId: factura.facturaId,
             numeroFactura: factura.numeroFactura,
-            nombreCliente: factura.nombreCliente,
-            emailCliente: factura.emailCliente,
+            clienteId: factura.clienteId || factura.ClienteId,
+            nombreCliente: factura.nombreCliente || factura.NombreCliente,
+            emailCliente: factura.emailCliente || factura.EmailCliente,
+            identificacionCliente: factura.identificacionCliente || factura.IdentificacionCliente,
+            telefonoCliente: factura.telefonoCliente || factura.TelefonoCliente,
+            direccionCliente: factura.direccionCliente || factura.DireccionCliente,
             total: factura.total,
             metodoPago: factura.metodoPago,
             detallesFactura: factura.detallesFactura
