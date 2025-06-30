@@ -2041,8 +2041,7 @@ function generarRecibo(factura, productos, totales) {
 
         ventanaImpresion.document.close();
 
-        // Mostrar mensaje de éxito
-        mostrarToast('Impresión', 'Recibo enviado a impresora', 'success');
+        
 
     } catch (error) {
         console.error('❌ Error al imprimir recibo:', error);
