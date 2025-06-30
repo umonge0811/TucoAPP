@@ -196,10 +196,9 @@ namespace API.Controllers
                 if (!facturaDto.DetallesFactura.Any())
                     return BadRequest(new { message = "La factura debe tener al menos un producto" });
 
-                // ✅ VERIFICAR PERMISOS PARA DETERMINAR ESTADO INICIAL
+                // ✅ VALIDACIÓN ÚNICA DE ESTADO SEGÚN PERMISOS
                 var puedeCompletar = await this.TienePermisoAsync(_permisosService, "CompletarFacturas");
                 
-                // Determinar estado inicial según permisos y el estado enviado
                 string estadoInicial;
                 if (facturaDto.TipoDocumento == "Proforma")
                 {
@@ -208,26 +207,18 @@ namespace API.Controllers
                 else if (facturaDto.Estado == "Pagada" && puedeCompletar)
                 {
                     estadoInicial = "Pagada"; // Solo si tiene permisos y está marcada como pagada
-                    _logger.LogInformation("✅ Usuario autorizado envió factura como PAGADA");
-                }
-                else if (facturaDto.Estado == "Pendiente")
-                {
-                    estadoInicial = "Pendiente"; // Estado explícitamente enviado como pendiente
-                    _logger.LogInformation("📋 Usuario envió factura como PENDIENTE");
+                    _logger.LogInformation("✅ Usuario autorizado creó factura como PAGADA - Se ajustará stock automáticamente");
                 }
                 else
                 {
-                    estadoInicial = "Pendiente"; // Por defecto pendiente si no tiene permisos
-                    _logger.LogInformation("⚠️ Fallback a estado PENDIENTE");
+                    estadoInicial = "Pendiente"; // Por defecto pendiente
+                    _logger.LogInformation("📋 Factura creada como PENDIENTE");
                 }
-
-                _logger.LogInformation("🔐 Estado inicial determinado: {Estado} (Usuario puede completar: {PuedeCompletar}, Estado enviado: {EstadoEnviado})", 
-                    estadoInicial, puedeCompletar, facturaDto.Estado);
 
                 // Generar número de factura automáticamente
                 var numeroFactura = await GenerarNumeroFactura(facturaDto.TipoDocumento);
 
-                // Verificar stock de productos solo para facturas pagadas
+                // ✅ VALIDAR STOCK SOLO PARA FACTURAS PAGADAS
                 if (estadoInicial == "Pagada")
                 {
                     var erroresStock = await ValidarStockProductos(facturaDto.DetallesFactura, facturaDto.TipoDocumento);
@@ -283,17 +274,39 @@ namespace API.Controllers
 
                     _context.DetallesFactura.Add(detalleFactura);
 
-                    // ✅ NO ACTUALIZAR INVENTARIO AQUÍ - Se maneja desde el frontend
-                    // El ajuste de stock se realiza desde el JavaScript usando el endpoint específico
-                    // para evitar duplicación de descuentos de inventario
+                    // ✅ El ajuste de stock se realiza automáticamente después de crear la factura
+                    // si el estado es "Pagada"
                 }
 
                 await _context.SaveChangesAsync();
+
+                // ✅ AJUSTE AUTOMÁTICO DE STOCK PARA FACTURAS PAGADAS
+                if (estadoInicial == "Pagada")
+                {
+                    _logger.LogInformation("📦 Ajustando stock automáticamente para factura pagada: {NumeroFactura}", numeroFactura);
+                    
+                    foreach (var detalle in factura.DetallesFactura)
+                    {
+                        var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                        if (producto != null)
+                        {
+                            var stockAnterior = producto.CantidadEnInventario ?? 0;
+                            producto.CantidadEnInventario = Math.Max(0, stockAnterior - detalle.Cantidad);
+                            producto.FechaUltimaActualizacion = DateTime.Now;
+                            
+                            _logger.LogInformation("📦 Stock ajustado para {Producto}: {StockAnterior} → {StockNuevo} (-{Cantidad})", 
+                                producto.NombreProducto, stockAnterior, producto.CantidadEnInventario, detalle.Cantidad);
+                        }
+                    }
+                    
+                    await _context.SaveChangesAsync();
+                }
+
                 await transaction.CommitAsync();
 
                 var mensajeRespuesta = estadoInicial == "Pendiente" 
                     ? $"{facturaDto.TipoDocumento} creada exitosamente en estado PENDIENTE" 
-                    : $"{facturaDto.TipoDocumento} creada y COMPLETADA exitosamente";
+                    : $"{facturaDto.TipoDocumento} creada y COMPLETADA exitosamente con stock ajustado";
 
                 // Crear respuesta estructurada con el DTO de la factura creada
                 var facturaCreada = new FacturaDTO
