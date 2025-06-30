@@ -1334,19 +1334,68 @@ function mostrarModalFinalizarVenta() {
         return;
     }
 
+    console.log('📋 === DEPURACIÓN CLIENTE SELECCIONADO ===');
+    console.log('📋 Cliente completo:', clienteSeleccionado);
+    console.log('📋 Propiedades disponibles:', Object.keys(clienteSeleccionado || {}));
+
     // ===== CONFIGURAR MODAL SEGÚN PERMISOS =====
     configurarModalSegunPermisos();
 
-    // ===== LLENAR INFORMACIÓN DEL CLIENTE =====
-    $('#resumenNombreCliente').text(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || 'Cliente');
-    $('#resumenEmailCliente').text(clienteSeleccionado.email || 'Sin email');
+    // ===== LLENAR INFORMACIÓN DEL CLIENTE EN EL RESUMEN =====
+    const nombreCliente = clienteSeleccionado.nombre || 
+                          clienteSeleccionado.nombreCliente || 
+                          'Cliente';
+    const emailCliente = clienteSeleccionado.email || 
+                        clienteSeleccionado.emailCliente || 
+                        'Sin email';
 
-    // Llenar campos de cliente en el formulario con mapeo completo
-    $('#clienteNombre').val(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || '');
-    $('#clienteCedula').val(clienteSeleccionado.identificacion || clienteSeleccionado.cedula || clienteSeleccionado.contacto || '');
-    $('#clienteTelefono').val(clienteSeleccionado.telefono || clienteSeleccionado.telefonoCliente || '');
-    $('#clienteEmail').val(clienteSeleccionado.email || clienteSeleccionado.emailCliente || '');
-    $('#clienteDireccion').val(clienteSeleccionado.direccion || clienteSeleccionado.direccionCliente || '');
+    $('#resumenNombreCliente').text(nombreCliente);
+    $('#resumenEmailCliente').text(emailCliente);
+
+    // ===== LLENAR CAMPOS DEL FORMULARIO CON MAPEO EXHAUSTIVO =====
+    const datosCliente = {
+        nombre: clienteSeleccionado.nombre || 
+               clienteSeleccionado.nombreCliente || 
+               clienteSeleccionado.NombreCliente || '',
+        
+        cedula: clienteSeleccionado.identificacion || 
+               clienteSeleccionado.identificacionCliente || 
+               clienteSeleccionado.cedula || 
+               clienteSeleccionado.contacto || 
+               clienteSeleccionado.Contacto || '',
+        
+        telefono: clienteSeleccionado.telefono || 
+                 clienteSeleccionado.telefonoCliente || 
+                 clienteSeleccionado.TelefonoCliente || 
+                 clienteSeleccionado.Telefono || '',
+        
+        email: clienteSeleccionado.email || 
+              clienteSeleccionado.emailCliente || 
+              clienteSeleccionado.EmailCliente || 
+              clienteSeleccionado.Email || '',
+        
+        direccion: clienteSeleccionado.direccion || 
+                  clienteSeleccionado.direccionCliente || 
+                  clienteSeleccionado.DireccionCliente || 
+                  clienteSeleccionado.Direccion || ''
+    };
+
+    console.log('📋 Datos mapeados para formulario:', datosCliente);
+
+    // Llenar campos del formulario
+    $('#clienteNombre').val(datosCliente.nombre);
+    $('#clienteCedula').val(datosCliente.cedula);
+    $('#clienteTelefono').val(datosCliente.telefono);
+    $('#clienteEmail').val(datosCliente.email);
+    $('#clienteDireccion').val(datosCliente.direccion);
+
+    // ===== DEPURACIÓN: VERIFICAR QUE LOS CAMPOS SE LLENARON =====
+    console.log('📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===');
+    console.log('📋 Nombre:', $('#clienteNombre').val());
+    console.log('📋 Cédula:', $('#clienteCedula').val());
+    console.log('📋 Teléfono:', $('#clienteTelefono').val());
+    console.log('📋 Email:', $('#clienteEmail').val());
+    console.log('📋 Dirección:', $('#clienteDireccion').val());
 
     // ===== CONFIGURAR MÉTODO DE PAGO INICIAL =====
     $('input[name="metodoPago"][value="efectivo"]').prop('checked', true);
@@ -3467,28 +3516,87 @@ function procesarFacturaPendiente(facturaEscapada) {
 function cargarFacturaPendienteEnCarrito(factura) {
     console.log('📦 === CARGANDO FACTURA EN CARRITO ===');
     console.log('📦 Datos completos de la factura recibida:', factura);
-    console.log('📦 Datos del cliente en la factura:', {
+    console.log('📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===');
+    console.log('📦 Factura completa recibida:', JSON.stringify(factura, null, 2));
+    console.log('📦 Datos del cliente extraídos:', {
         clienteId: factura.clienteId,
+        ClienteId: factura.ClienteId,
         nombreCliente: factura.nombreCliente,
+        NombreCliente: factura.NombreCliente,
         emailCliente: factura.emailCliente,
+        EmailCliente: factura.EmailCliente,
         telefonoCliente: factura.telefonoCliente,
+        TelefonoCliente: factura.TelefonoCliente,
         identificacionCliente: factura.identificacionCliente,
-        direccionCliente: factura.direccionCliente
+        IdentificacionCliente: factura.IdentificacionCliente,
+        direccionCliente: factura.direccionCliente,
+        DireccionCliente: factura.DireccionCliente,
+        Cliente: factura.Cliente
     });
+    console.log('📦 Todas las propiedades de factura:', Object.keys(factura));
     
     // Limpiar carrito actual
     productosEnVenta = [];
     
-    // Cargar datos del cliente con mapeo completo
+    // Cargar datos del cliente con mapeo completo y exhaustivo
     clienteSeleccionado = {
-        id: factura.clienteId || 1,
-        clienteId: factura.clienteId || 1,
-        nombre: factura.nombreCliente || 'Cliente General',
-        nombreCliente: factura.nombreCliente || 'Cliente General',
-        email: factura.emailCliente || '',
-        telefono: factura.telefonoCliente || factura.telefono || '',
-        identificacion: factura.identificacionCliente || factura.cedula || factura.contacto || '',
-        direccion: factura.direccionCliente || factura.direccion || ''
+        id: factura.clienteId || factura.ClienteId || 1,
+        clienteId: factura.clienteId || factura.ClienteId || 1,
+        
+        // Mapeo para nombre
+        nombre: factura.nombreCliente || 
+               factura.NombreCliente || 
+               factura.Cliente?.Nombre || 
+               'Cliente General',
+        nombreCliente: factura.nombreCliente || 
+                      factura.NombreCliente || 
+                      factura.Cliente?.Nombre || 
+                      'Cliente General',
+        
+        // Mapeo para email
+        email: factura.emailCliente || 
+              factura.EmailCliente || 
+              factura.Cliente?.Email || 
+              factura.email || 
+              '',
+        emailCliente: factura.emailCliente || 
+                     factura.EmailCliente || 
+                     factura.Cliente?.Email || 
+                     '',
+        
+        // Mapeo para teléfono
+        telefono: factura.telefonoCliente || 
+                 factura.TelefonoCliente || 
+                 factura.Cliente?.Telefono || 
+                 factura.telefono || 
+                 '',
+        telefonoCliente: factura.telefonoCliente || 
+                        factura.TelefonoCliente || 
+                        factura.Cliente?.Telefono || 
+                        '',
+        
+        // Mapeo para identificación
+        identificacion: factura.identificacionCliente || 
+                       factura.IdentificacionCliente || 
+                       factura.Cliente?.Contacto || 
+                       factura.cedula || 
+                       factura.contacto || 
+                       '',
+        identificacionCliente: factura.identificacionCliente || 
+                              factura.IdentificacionCliente || 
+                              factura.Cliente?.Contacto || 
+                              '',
+        
+        // Mapeo para dirección
+        direccion: factura.direccionCliente || 
+                  factura.DireccionCliente || 
+                  factura.Cliente?.Direccion || 
+                  factura.direccion || 
+                  '',
+        direccionCliente: factura.direccionCliente || 
+                         factura.DireccionCliente || 
+                         factura.Cliente?.Direccion || 
+                         ''
     };
     
     console.log('👤 Cliente seleccionado creado:', clienteSeleccionado);
