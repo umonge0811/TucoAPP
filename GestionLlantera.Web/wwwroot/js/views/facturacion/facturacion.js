@@ -182,6 +182,16 @@ function configurarInterfazSegunPermisos() {
         });
     }
 
+    // ✅ CONFIGURAR BOTÓN DE FACTURAS PENDIENTES
+    const $btnFacturasPendientes = $('#btnFacturasPendientes');
+    if (puedeCompletar) {
+        $btnFacturasPendientes.show();
+        console.log('📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar');
+    } else {
+        $btnFacturasPendientes.hide();
+        console.log('📋 Botón Facturas Pendientes oculto - usuario sin permisos de completar');
+    }
+
     // ✅ VERIFICACIÓN FINAL DEL ESTADO DEL BOTÓN
     setTimeout(() => {
         const estadoFinal = {
@@ -379,6 +389,11 @@ function configurarEventos() {
 
     $('#btnNuevoCliente').on('click', function() {
         abrirModalNuevoCliente();
+    });
+
+    // ===== BOTÓN FACTURAS PENDIENTES =====
+    $('#btnFacturasPendientes').on('click', function() {
+        abrirFacturasPendientes();
     });
 
     // ===== MODAL FINALIZAR VENTA =====
@@ -3187,6 +3202,194 @@ async function actualizarVistaProductosPostAjuste() {
     }
 }
 
+// ===== FACTURAS PENDIENTES =====
+async function abrirFacturasPendientes() {
+    console.log('📋 === ABRIENDO FACTURAS PENDIENTES ===');
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('facturasPendientesModal'));
+    modal.show();
+    
+    // Mostrar loading y ocultar contenido
+    $('#facturasPendientesLoading').show();
+    $('#facturasPendientesContent').hide();
+    $('#facturasPendientesEmpty').hide();
+    
+    try {
+        // Cargar facturas pendientes desde el servidor
+        const response = await fetch('/Facturacion/ObtenerFacturasPendientes', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 Facturas pendientes obtenidas:', resultado);
+
+        if (resultado.success && resultado.facturas && resultado.facturas.length > 0) {
+            mostrarFacturasPendientes(resultado.facturas);
+        } else {
+            mostrarSinFacturasPendientes();
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando facturas pendientes:', error);
+        $('#facturasPendientesLoading').hide();
+        $('#facturasPendientesContent').html(`
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error al cargar las facturas pendientes: ${error.message}
+            </div>
+        `).show();
+    }
+}
+
+function mostrarFacturasPendientes(facturas) {
+    console.log('📋 Mostrando', facturas.length, 'facturas pendientes');
+    
+    let html = '';
+    facturas.forEach(factura => {
+        const fecha = new Date(factura.fechaFactura).toLocaleDateString('es-CR');
+        const total = factura.total || 0;
+        
+        html += `
+            <tr>
+                <td>
+                    <strong>${factura.numeroFactura || 'N/A'}</strong>
+                    <br><small class="text-muted">ID: ${factura.facturaId}</small>
+                </td>
+                <td>
+                    <strong>${factura.nombreCliente || 'Cliente General'}</strong>
+                    ${factura.emailCliente ? `<br><small class="text-muted">${factura.emailCliente}</small>` : ''}
+                </td>
+                <td>
+                    ${fecha}
+                    <br><small class="text-muted">${factura.fechaCreacion ? new Date(factura.fechaCreacion).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : ''}</small>
+                </td>
+                <td>
+                    <strong class="text-success">₡${formatearMoneda(total)}</strong>
+                    <br><small class="text-muted">${factura.metodoPago || 'No especificado'}</small>
+                </td>
+                <td>
+                    <span class="badge bg-warning">Pendiente</span>
+                    <br><small class="text-muted">${factura.tipoDocumento || 'Factura'}</small>
+                </td>
+                <td>
+                    <div class="btn-group-vertical btn-group-sm">
+                        <button type="button" 
+                                class="btn btn-success btn-sm mb-1" 
+                                onclick="completarFacturaPendiente(${factura.facturaId}, '${factura.numeroFactura}', ${total})"
+                                title="Marcar como pagada">
+                            <i class="bi bi-check-circle me-1"></i>Completar
+                        </button>
+                        <button type="button" 
+                                class="btn btn-outline-info btn-sm" 
+                                onclick="verDetalleFacturaPendiente(${factura.facturaId})"
+                                title="Ver detalles">
+                            <i class="bi bi-eye me-1"></i>Detalle
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#facturasPendientesTableBody').html(html);
+    $('#facturasPendientesLoading').hide();
+    $('#facturasPendientesContent').show();
+}
+
+function mostrarSinFacturasPendientes() {
+    $('#facturasPendientesLoading').hide();
+    $('#facturasPendientesEmpty').show();
+}
+
+async function completarFacturaPendiente(facturaId, numeroFactura, total) {
+    console.log('💰 === COMPLETANDO FACTURA PENDIENTE ===');
+    console.log('💰 ID:', facturaId, 'Número:', numeroFactura, 'Total:', total);
+    
+    const confirmacion = await Swal.fire({
+        title: '¿Completar Factura?',
+        text: `¿Confirma que desea marcar como pagada la factura ${numeroFactura} por ₡${formatearMoneda(total)}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, Completar',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (!confirmacion.isConfirmed) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/Facturacion/CompletarFacturaPendiente', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                facturaId: facturaId,
+                numeroFactura: numeroFactura
+            }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        
+        if (resultado.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Factura Completada',
+                text: `La factura ${numeroFactura} ha sido marcada como pagada exitosamente`,
+                confirmButtonColor: '#28a745'
+            });
+            
+            // Recargar lista de facturas pendientes
+            abrirFacturasPendientes();
+            
+            // Actualizar vista de productos si es necesario
+            await actualizarVistaProductosPostAjuste();
+            
+        } else {
+            throw new Error(resultado.message || 'Error al completar la factura');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error completando factura:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo completar la factura: ' + error.message,
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+function verDetalleFacturaPendiente(facturaId) {
+    console.log('👀 Ver detalle de factura:', facturaId);
+    // Aquí puedes implementar la vista de detalles si es necesaria
+    Swal.fire({
+        icon: 'info',
+        title: 'Funcionalidad en desarrollo',
+        text: 'La vista de detalles estará disponible próximamente',
+        confirmButtonColor: '#17a2b8'
+    });
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
 window.recargarPermisosUsuario = recargarPermisosUsuario;
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
@@ -3211,6 +3414,9 @@ window.mostrarModalFacturaPendiente = mostrarModalFacturaPendiente;
 window.irAFacturasPendientes = irAFacturasPendientes;
 window.imprimirComprobanteEnvio = imprimirComprobanteEnvio;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
+window.abrirFacturasPendientes = abrirFacturasPendientes;
+window.completarFacturaPendiente = completarFacturaPendiente;
+window.verDetalleFacturaPendiente = verDetalleFacturaPendiente;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `

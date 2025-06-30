@@ -729,6 +729,36 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFacturasPendientes()
+        {
+            try
+            {
+                var response = await _facturacionService.ObtenerFacturasPendientesAsync();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo facturas pendientes");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CompletarFacturaPendiente([FromBody] CompletarFacturaRequest request)
+        {
+            try
+            {
+                var response = await _facturacionService.CompletarFacturaPendienteAsync(request.FacturaId, request.NumeroFactura);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completando factura pendiente");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
         [HttpPost]
         [Route("Facturacion/AjustarStockFacturacion")]
         public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
@@ -762,5 +792,17 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+    }
+
+    public class AjusteStockFacturacionRequest
+    {
+        public string NumeroFactura { get; set; }
+        public List<ProductoAjusteStock> Productos { get; set; }
+    }
+
+    public class CompletarFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public string NumeroFactura { get; set; }
     }
 }
