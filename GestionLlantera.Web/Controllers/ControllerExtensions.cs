@@ -299,6 +299,25 @@ namespace GestionLlantera.Web.Extensions
         }
 
         /// <summary>
+        /// ✅ NUEVO: Obtiene el token JWT del usuario autenticado
+        /// </summary>
+        public static string? ObtenerTokenJWT(this Controller controller)
+        {
+            try
+            {
+                var token = controller.User.FindFirst("JwtToken")?.Value;
+                return token;
+            }
+            catch (Exception ex)
+            {
+                var loggerFactory = controller.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("ControllerExtensions");
+                logger?.LogError(ex, "Error al obtener token JWT");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// ✅ NUEVO: Extrae permisos directamente del token JWT sin usar API
         /// </summary>
         public static List<string> ObtenerPermisosDesdeToken(this Controller controller)
@@ -337,10 +356,9 @@ namespace GestionLlantera.Web.Extensions
             }
             catch (Exception ex)
             {
-                if (controller.HttpContext.RequestServices.GetService<ILogger<ControllerExtensions>>() is ILogger<ControllerExtensions> logger)
-                {
-                    logger.LogError(ex, "Error al extraer permisos del token JWT");
-                }
+                var loggerFactory = controller.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("ControllerExtensions");
+                logger?.LogError(ex, "Error al extraer permisos del token JWT");
                 return new List<string>();
             }
         }
@@ -379,10 +397,9 @@ namespace GestionLlantera.Web.Extensions
             }
             catch (Exception ex)
             {
-                if (controller.HttpContext.RequestServices.GetService<ILogger<ControllerExtensions>>() is ILogger<ControllerExtensions> logger)
-                {
-                    logger.LogError(ex, "Error al verificar permiso {Permiso} en token", nombrePermiso);
-                }
+                var loggerFactory = controller.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("ControllerExtensions");
+                logger?.LogError(ex, "Error al verificar permiso {Permiso} en token", nombrePermiso);
                 return false;
             }
         }
