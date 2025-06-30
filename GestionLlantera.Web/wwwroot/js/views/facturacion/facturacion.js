@@ -1341,12 +1341,12 @@ function mostrarModalFinalizarVenta() {
     $('#resumenNombreCliente').text(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || 'Cliente');
     $('#resumenEmailCliente').text(clienteSeleccionado.email || 'Sin email');
 
-    // Llenar campos de cliente en el formulario
+    // Llenar campos de cliente en el formulario con mapeo completo
     $('#clienteNombre').val(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || '');
-    $('#clienteCedula').val(clienteSeleccionado.identificacion || clienteSeleccionado.contacto || '');
-    $('#clienteTelefono').val(clienteSeleccionado.telefono || '');
-    $('#clienteEmail').val(clienteSeleccionado.email || '');
-    $('#clienteDireccion').val(clienteSeleccionado.direccion || '');
+    $('#clienteCedula').val(clienteSeleccionado.identificacion || clienteSeleccionado.cedula || clienteSeleccionado.contacto || '');
+    $('#clienteTelefono').val(clienteSeleccionado.telefono || clienteSeleccionado.telefonoCliente || '');
+    $('#clienteEmail').val(clienteSeleccionado.email || clienteSeleccionado.emailCliente || '');
+    $('#clienteDireccion').val(clienteSeleccionado.direccion || clienteSeleccionado.direccionCliente || '');
 
     // ===== CONFIGURAR MÉTODO DE PAGO INICIAL =====
     $('input[name="metodoPago"][value="efectivo"]').prop('checked', true);
@@ -3466,21 +3466,32 @@ function procesarFacturaPendiente(facturaEscapada) {
  */
 function cargarFacturaPendienteEnCarrito(factura) {
     console.log('📦 === CARGANDO FACTURA EN CARRITO ===');
+    console.log('📦 Datos completos de la factura recibida:', factura);
+    console.log('📦 Datos del cliente en la factura:', {
+        clienteId: factura.clienteId,
+        nombreCliente: factura.nombreCliente,
+        emailCliente: factura.emailCliente,
+        telefonoCliente: factura.telefonoCliente,
+        identificacionCliente: factura.identificacionCliente,
+        direccionCliente: factura.direccionCliente
+    });
     
     // Limpiar carrito actual
     productosEnVenta = [];
     
-    // Cargar datos del cliente
+    // Cargar datos del cliente con mapeo completo
     clienteSeleccionado = {
         id: factura.clienteId || 1,
         clienteId: factura.clienteId || 1,
-        nombre: factura.nombreCliente,
-        nombreCliente: factura.nombreCliente,
-        email: factura.emailCliente,
-        telefono: factura.telefonoCliente,
-        identificacion: factura.identificacionCliente,
-        direccion: factura.direccionCliente
+        nombre: factura.nombreCliente || 'Cliente General',
+        nombreCliente: factura.nombreCliente || 'Cliente General',
+        email: factura.emailCliente || '',
+        telefono: factura.telefonoCliente || factura.telefono || '',
+        identificacion: factura.identificacionCliente || factura.cedula || factura.contacto || '',
+        direccion: factura.direccionCliente || factura.direccion || ''
     };
+    
+    console.log('👤 Cliente seleccionado creado:', clienteSeleccionado);
     
     // Mostrar cliente seleccionado
     $('#clienteBusqueda').val(factura.nombreCliente);
