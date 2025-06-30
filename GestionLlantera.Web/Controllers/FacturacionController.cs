@@ -640,23 +640,32 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo facturas pendientes");
+                _logger.LogInformation("📋 === INICIO ObtenerFacturasPendientes ===");
+                _logger.LogInformation("📋 Usuario: {Usuario}", User.Identity?.Name);
 
                 if (!await this.TienePermisoAsync("Ver Facturas"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permisos para ver facturas");
                     return Json(new { success = false, message = "Sin permisos para ver facturas" });
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
+                    _logger.LogError("❌ Token JWT no disponible");
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
+                _logger.LogInformation("📋 Llamando al servicio de facturación...");
                 var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(jwtToken);
+
+                _logger.LogInformation("📋 Resultado del servicio: success={Success}", resultado.success);
 
                 if (resultado.success)
                 {
+                    _logger.LogInformation("📋 Enviando respuesta exitosa al frontend");
+                    _logger.LogInformation("📋 Estructura de datos: {Data}", JsonConvert.SerializeObject(resultado.data, Formatting.Indented));
+                    
                     return Json(new { 
                         success = true, 
                         data = resultado.data,
@@ -665,6 +674,7 @@ namespace GestionLlantera.Web.Controllers
                 }
                 else
                 {
+                    _logger.LogError("❌ Error del servicio: {Message}", resultado.message);
                     return Json(new { 
                         success = false, 
                         message = resultado.message,
@@ -674,11 +684,16 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
                 return Json(new { 
                     success = false, 
-                    message = "Error interno al obtener facturas pendientes" 
+                    message = "Error interno al obtener facturas pendientes",
+                    details = ex.Message
                 });
+            }
+            finally
+            {
+                _logger.LogInformation("📋 === FIN ObtenerFacturasPendientes ===");
             }
         }
 

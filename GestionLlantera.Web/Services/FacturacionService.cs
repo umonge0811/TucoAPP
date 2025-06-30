@@ -370,7 +370,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo facturas pendientes");
+                _logger.LogInformation("📋 Obteniendo facturas pendientes desde la API");
 
                 // Configurar token JWT si se proporciona
                 if (!string.IsNullOrEmpty(jwtToken))
@@ -383,14 +383,31 @@ namespace GestionLlantera.Web.Services
                 var response = await _httpClient.GetAsync("api/Facturacion/facturas/pendientes");
                 var responseContent = await response.Content.ReadAsStringAsync();
 
+                _logger.LogInformation("📋 Respuesta de la API: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📋 Contenido de respuesta: {Content}", responseContent);
+
                 if (response.IsSuccessStatusCode)
                 {
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
                     
-                    // Extraer las facturas de la respuesta
+                    _logger.LogInformation("📋 Resultado deserializado exitosamente");
+                    
+                    // La API ya devuelve la estructura correcta { success: true, facturas: [...] }
+                    // Solo necesitamos extraer y pasar los datos tal como vienen
                     var facturas = resultado?.facturas;
                     
-                    return (success: true, data: new { facturas = facturas }, message: "Facturas pendientes obtenidas", details: null);
+                    if (facturas != null)
+                    {
+                        _logger.LogInformation("📋 Se encontraron facturas en la respuesta");
+                        
+                        // Retornar directamente la estructura que espera el frontend
+                        return (success: true, data: resultado, message: "Facturas pendientes obtenidas", details: null);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("⚠️ No se encontraron facturas en la respuesta de la API");
+                        return (success: true, data: new { facturas = new object[0] }, message: "No hay facturas pendientes", details: null);
+                    }
                 }
                 else
                 {

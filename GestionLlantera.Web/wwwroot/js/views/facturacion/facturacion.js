@@ -3216,6 +3216,8 @@ async function abrirFacturasPendientes() {
     $('#facturasPendientesEmpty').hide();
     
     try {
+        console.log('📋 Enviando petición al servidor...');
+        
         // Cargar facturas pendientes desde el servidor
         const response = await fetch('/Facturacion/ObtenerFacturasPendientes', {
             method: 'GET',
@@ -3226,16 +3228,56 @@ async function abrirFacturasPendientes() {
             credentials: 'include'
         });
 
+        console.log('📋 Respuesta recibida:', response.status, response.statusText);
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
         const resultado = await response.json();
-        console.log('📋 Facturas pendientes obtenidas:', resultado);
+        console.log('📋 === DEBUGGING RESPUESTA COMPLETA ===');
+        console.log('📋 Resultado completo:', resultado);
+        console.log('📋 resultado.success:', resultado.success);
+        console.log('📋 resultado.data:', resultado.data);
+        
+        if (resultado.data) {
+            console.log('📋 Tipo de resultado.data:', typeof resultado.data);
+            console.log('📋 Propiedades de resultado.data:', Object.keys(resultado.data));
+            
+            if (resultado.data.facturas) {
+                console.log('📋 resultado.data.facturas:', resultado.data.facturas);
+                console.log('📋 Tipo de facturas:', typeof resultado.data.facturas);
+                console.log('📋 Es array:', Array.isArray(resultado.data.facturas));
+                console.log('📋 Longitud de facturas:', resultado.data.facturas.length);
+            }
+        }
 
-        if (resultado.success && resultado.data && resultado.data.facturas && resultado.data.facturas.length > 0) {
-            mostrarFacturasPendientes(resultado.data.facturas);
+        // Verificar múltiples estructuras posibles de respuesta
+        let facturas = null;
+        
+        if (resultado.success && resultado.data) {
+            // Opción 1: resultado.data.facturas (estructura esperada)
+            if (resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
+                facturas = resultado.data.facturas;
+                console.log('✅ Facturas encontradas en resultado.data.facturas');
+            }
+            // Opción 2: resultado.data es directamente el array de facturas
+            else if (Array.isArray(resultado.data)) {
+                facturas = resultado.data;
+                console.log('✅ Facturas encontradas directamente en resultado.data');
+            }
+            // Opción 3: La respuesta completa contiene las facturas
+            else if (resultado.facturas && Array.isArray(resultado.facturas)) {
+                facturas = resultado.facturas;
+                console.log('✅ Facturas encontradas en resultado.facturas');
+            }
+        }
+
+        if (facturas && facturas.length > 0) {
+            console.log('📋 Mostrando', facturas.length, 'facturas pendientes');
+            mostrarFacturasPendientes(facturas);
         } else {
+            console.log('📋 No se encontraron facturas pendientes');
             mostrarSinFacturasPendientes();
         }
 
@@ -3246,6 +3288,7 @@ async function abrirFacturasPendientes() {
             <div class="alert alert-danger">
                 <i class="bi bi-exclamation-triangle me-2"></i>
                 Error al cargar las facturas pendientes: ${error.message}
+                <br><small class="text-muted">Revisa la consola para más detalles</small>
             </div>
         `).show();
     }
