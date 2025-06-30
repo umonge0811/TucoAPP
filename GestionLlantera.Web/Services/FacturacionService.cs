@@ -1,5 +1,6 @@
 using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Text;
 using System.Text.Json;
 
@@ -389,17 +390,17 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                    
+
                     _logger.LogInformation("📋 Resultado deserializado exitosamente");
-                    
+
                     // La API ya devuelve la estructura correcta { success: true, facturas: [...] }
                     // Solo necesitamos extraer y pasar los datos tal como vienen
                     var facturas = resultado?.facturas;
-                    
+
                     if (facturas != null)
                     {
                         _logger.LogInformation("📋 Se encontraron facturas en la respuesta");
-                        
+
                         // Retornar directamente la estructura que espera el frontend
                         return (success: true, data: resultado, message: "Facturas pendientes obtenidas", details: null);
                     }
@@ -742,7 +743,7 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("🔍 Payload JWT completo: {Payload}", payloadJson);
 
                 dynamic claims = JsonConvert.DeserializeObject(payloadJson);
-                
+
                 // ✅ LOGGING ADICIONAL PARA DEBUGGING DE ESTRUCTURA
                 if (claims is Newtonsoft.Json.Linq.JObject debugObject)
                 {
@@ -777,7 +778,7 @@ namespace GestionLlantera.Web.Services
                 {
                     // Buscar arrays de permisos en diferentes campos posibles
                     var camposPermisos = new[] { "Permission", "permissions", "permisos", "Permisos" };
-                    
+
                     foreach (var campo in camposPermisos)
                     {
                         var permisosToken = jwtObject[campo];
@@ -785,7 +786,7 @@ namespace GestionLlantera.Web.Services
                         {
                             var permisosTexto = permisosToken.ToString();
                             _logger.LogInformation("🔍 Permisos encontrados en campo '{Campo}': {Permisos}", campo, permisosTexto);
-                            
+
                             if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.Array)
                             {
                                 // Es un array de permisos
