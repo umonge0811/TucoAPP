@@ -545,7 +545,7 @@ namespace GestionLlantera.Web.Controllers
                 foreach (var claim in permissionClaims)
                 {
                     var valor = claim.Value;
-                    
+
                     // Verificar si el valor es JSON válido
                     if (valor.StartsWith("[") && valor.EndsWith("]"))
                     {
@@ -581,7 +581,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        
+
 
         /// <summary>
         /// Obtener información completa del usuario desde los claims (igual que InventarioController)
@@ -675,19 +675,21 @@ namespace GestionLlantera.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
-                return Json(new { success = false, message = "Error interno del servidor" });
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno al obtener facturas pendientes" 
+                });
             }
         }
 
-        [HttpPut]
-        [Route("Facturacion/CompletarFactura/{facturaId}")]
-        public async Task<IActionResult> CompletarFactura(int facturaId, [FromBody] object datosCompletamiento)
+        [HttpPost]
+        public async Task<IActionResult> CompletarFactura(int id)
         {
             try
             {
-                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
+                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", id);
 
-                if (!this.TienePermisoEnToken("Completar Facturas"))
+                if (!await this.TienePermisoAsync("CompletarFacturas"))
                 {
                     return Json(new { success = false, message = "Sin permisos para completar facturas" });
                 }
@@ -698,7 +700,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                var resultado = await _facturacionService.CompletarFacturaAsync(facturaId, datosCompletamiento, jwtToken);
+                var resultado = await _facturacionService.CompletarFacturaAsync(id, new { }, jwtToken);
 
                 if (resultado.success)
                 {
@@ -719,8 +721,11 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error completando factura");
-                return Json(new { success = false, message = "Error interno del servidor" });
+                _logger.LogError(ex, "❌ Error completando factura: {FacturaId}", id);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno al completar factura" 
+                });
             }
         }
 
