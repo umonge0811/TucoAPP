@@ -863,4 +863,52 @@ namespace GestionLlantera.Web.Services
             }
         }
     }
+
+    // =====================================
+    // CLASES AUXILIARES PARA REQUESTS
+    // =====================================
+
+    public class AjusteStockFacturacionRequest
+    {
+        public string? NumeroFactura { get; set; }
+        public List<ProductoAjusteStock>? Productos { get; set; }
+    }
+
+    public class ProductoAjusteStock
+    {
+        public int ProductoId { get; set; }
+        public string? NombreProducto { get; set; }
+        public int Cantidad { get; set; }
+    }
+
+    public class ApiResponse<T>
+    {
+        public bool IsSuccess { get; set; }
+        public T? Data { get; set; }
+        public string? Message { get; set; }
+        public string? Details { get; set; }
+    }
+
+    public class ProductoVentaDTO
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public string? Descripcion { get; set; }
+        public decimal Precio { get; set; }
+        public int Cantidad { get; set; }
+        public decimal Subtotal => Precio * Cantidad;
+        public int StockDisponible { get; set; }
+        public List<string>? ImagenesUrls { get; set; }
+    }
+
+    public class VentaDTO
+    {
+        public string NombreCliente { get; set; } = string.Empty;
+        public string? EmailCliente { get; set; }
+        public string? TelefonoCliente { get; set; }
+        public List<ProductoVentaDTO> Productos { get; set; } = new();
+        public decimal Total { get; set; }
+        public string MetodoPago { get; set; } = "efectivo";
+        public string? Observaciones { get; set; }
+    }
 }

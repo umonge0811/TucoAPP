@@ -640,91 +640,49 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo facturas pendientes");
+                _logger.LogInformation("📋 Solicitando facturas pendientes");
 
-                if (!await this.TienePermisoAsync("Ver Facturas"))
+                var token = HttpContext.Request.Cookies["jwt_token"] ?? 
+                       HttpContext.Session.GetString("jwt_token");
+
+                if (string.IsNullOrEmpty(token))
                 {
-                    return Json(new { success = false, message = "Sin permisos para ver facturas" });
+                    _logger.LogWarning("⚠️ Token JWT no encontrado para facturas pendientes");
+                    return Json(new { 
+                        success = false, 
+                        message = "Sesión no válida" 
+                    });
                 }
 
-                var jwtToken = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return Json(new { success = false, message = "Token de autenticación no disponible" });
-                }
-
-                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(jwtToken);
+                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
 
                 if (resultado.success)
                 {
-                    return Json(new { 
-                        success = true, 
+                    _logger.LogInformation("✅ Facturas pendientes obtenidas exitosamente");
+                    return Json(new
+                    {
+                        success = true,
                         data = resultado.data,
-                        message = resultado.message 
+                        message = resultado.message
                     });
                 }
                 else
                 {
-                    return Json(new { 
-                        success = false, 
-                        message = resultado.message,
-                        details = resultado.details
+                    _logger.LogError("❌ Error obteniendo facturas pendientes: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message ?? "Error al obtener facturas pendientes"
                     });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
-                return Json(new { 
-                    success = false, 
-                    message = "Error interno al obtener facturas pendientes" 
-                });
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CompletarFactura(int id)
-        {
-            try
-            {
-                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", id);
-
-                if (!await this.TienePermisoAsync("CompletarFacturas"))
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
+                return Json(new
                 {
-                    return Json(new { success = false, message = "Sin permisos para completar facturas" });
-                }
-
-                var jwtToken = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return Json(new { success = false, message = "Token de autenticación no disponible" });
-                }
-
-                var resultado = await _facturacionService.CompletarFacturaAsync(id, new { }, jwtToken);
-
-                if (resultado.success)
-                {
-                    return Json(new { 
-                        success = true, 
-                        data = resultado.data,
-                        message = resultado.message 
-                    });
-                }
-                else
-                {
-                    return Json(new { 
-                        success = false, 
-                        message = resultado.message,
-                        details = resultado.details
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error completando factura: {FacturaId}", id);
-                return Json(new { 
-                    success = false, 
-                    message = "Error interno al completar factura" 
+                    success = false,
+                    message = "Error interno del servidor"
                 });
             }
         }
@@ -734,79 +692,104 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var response = await _facturacionService.CompletarFacturaAsync(request.FacturaId, new { }, this.ObtenerTokenJWT());
-                return Ok(response);
+                _logger.LogInformation("💰 Completando factura pendiente ID: {FacturaId}", request.FacturaId);
+
+                var token = HttpContext.Request.Cookies["jwt_token"] ?? 
+                       HttpContext.Session.GetString("jwt_token");
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Sesión no válida" 
+                    });
+                }
+
+                var resultado = await _facturacionService.CompletarFacturaAsync(
+                    request.FacturaId, 
+                    new { /* datos adicionales si son necesarios */ }, 
+                    token);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Factura {NumeroFactura} completada exitosamente", request.NumeroFactura);
+                    return Json(new
+                    {
+                        success = true,
+                        message = $"Factura {request.NumeroFactura} completada exitosamente",
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error completando factura: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message ?? "Error al completar factura"
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error completando factura pendiente");
-                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+                _logger.LogError(ex, "❌ Error crítico completando factura pendiente");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor"
+                });
             }
         }
 
         [HttpPost]
-        [Route("Facturacion/AjustarStockFacturacion")]
         public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
         {
             try
             {
-                _logger.LogInformation("📦 Ajustando stock para factura: {NumeroFactura} con {Cantidad} productos", 
-                    request.NumeroFactura, request.Productos?.Count ?? 0);
+                _logger.LogInformation("📦 Ajustando stock para facturación: {NumeroFactura}", request.NumeroFactura);
 
-                if (request.Productos == null || !request.Productos.Any())
+                var token = HttpContext.Request.Cookies["jwt_token"] ?? 
+                       HttpContext.Session.GetString("jwt_token");
+
+                if (string.IsNullOrEmpty(token))
                 {
                     return Json(new { 
                         success = false, 
-                        message = "No se proporcionaron productos para ajustar" 
+                        message = "Sesión no válida" 
                     });
                 }
 
-                // Convertir el request del controller al tipo esperado por el servicio
-                var serviceRequest = new Services.Interfaces.AjusteStockFacturacionRequest
-                {
-                    NumeroFactura = request.NumeroFactura,
-                    Productos = request.Productos.Select(p => new Services.Interfaces.ProductoAjusteStock
-                    {
-                        ProductoId = p.ProductoId,
-                        NombreProducto = p.NombreProducto,
-                        Cantidad = p.Cantidad
-                    }).ToList()
-                };
-
-                // Usar el servicio de facturación para ajustar el stock
-                var jwtToken = this.ObtenerTokenJWT();
-                var resultado = await _facturacionService.AjustarStockFacturacionAsync(serviceRequest, jwtToken);
+                var resultado = await _facturacionService.AjustarStockFacturacionAsync(request, token);
 
                 return Json(resultado);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error general al ajustar stock para factura {NumeroFactura}", 
-                    request?.NumeroFactura);
-                return Json(new { 
-                    success = false, 
-                    message = "Error interno al ajustar stock: " + ex.Message 
+                _logger.LogError(ex, "❌ Error ajustando stock para facturación");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno ajustando stock: " + ex.Message
                 });
             }
         }
+
+    public class CompletarFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public string? NumeroFactura { get; set; }
     }
 
     public class AjusteStockFacturacionRequest
     {
-        public string NumeroFactura { get; set; }
-        public List<ProductoAjusteStock> Productos { get; set; }
+        public string? NumeroFactura { get; set; }
+        public List<ProductoAjusteStock>? Productos { get; set; }
     }
 
     public class ProductoAjusteStock
     {
         public int ProductoId { get; set; }
-        public string NombreProducto { get; set; }
+        public string? NombreProducto { get; set; }
         public int Cantidad { get; set; }
-    }
-
-    public class CompletarFacturaRequest
-    {
-        public int FacturaId { get; set; }
-        public string NumeroFactura { get; set; }
     }
 }
