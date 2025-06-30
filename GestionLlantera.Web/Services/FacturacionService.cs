@@ -385,8 +385,12 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var resultado = JsonConvert.DeserializeObject(responseContent);
-                    return (success: true, data: resultado, message: "Facturas pendientes obtenidas", details: null);
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    
+                    // Extraer las facturas de la respuesta
+                    var facturas = resultado?.facturas;
+                    
+                    return (success: true, data: new { facturas = facturas }, message: "Facturas pendientes obtenidas", details: null);
                 }
                 else
                 {

@@ -603,6 +603,80 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("facturas/pendientes")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<FacturaDTO>>> ObtenerFacturasPendientes()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo facturas pendientes");
+
+                var facturasPendientes = await _context.Facturas
+                    .Include(f => f.UsuarioCreador)
+                    .Include(f => f.DetallesFactura)
+                    .Where(f => f.Estado == "Pendiente")
+                    .OrderByDescending(f => f.FechaCreacion)
+                    .Select(f => new FacturaDTO
+                    {
+                        FacturaId = f.FacturaId,
+                        NumeroFactura = f.NumeroFactura,
+                        ClienteId = f.ClienteId,
+                        NombreCliente = f.NombreCliente,
+                        IdentificacionCliente = f.IdentificacionCliente,
+                        TelefonoCliente = f.TelefonoCliente,
+                        EmailCliente = f.EmailCliente,
+                        DireccionCliente = f.DireccionCliente,
+                        FechaFactura = f.FechaFactura,
+                        FechaVencimiento = f.FechaVencimiento,
+                        Subtotal = f.Subtotal,
+                        DescuentoGeneral = f.DescuentoGeneral,
+                        PorcentajeImpuesto = f.PorcentajeImpuesto,
+                        MontoImpuesto = f.MontoImpuesto ?? 0,
+                        Total = f.Total,
+                        Estado = f.Estado,
+                        TipoDocumento = f.TipoDocumento,
+                        MetodoPago = f.MetodoPago,
+                        Observaciones = f.Observaciones,
+                        UsuarioCreadorId = f.UsuarioCreadorId,
+                        UsuarioCreadorNombre = f.UsuarioCreador.NombreUsuario,
+                        FechaCreacion = f.FechaCreacion,
+                        FechaActualizacion = f.FechaActualizacion,
+                        DetallesFactura = f.DetallesFactura.Select(d => new DetalleFacturaDTO
+                        {
+                            DetalleFacturaId = d.DetalleFacturaId,
+                            ProductoId = d.ProductoId,
+                            NombreProducto = d.NombreProducto,
+                            DescripcionProducto = d.DescripcionProducto,
+                            Cantidad = d.Cantidad,
+                            PrecioUnitario = d.PrecioUnitario,
+                            PorcentajeDescuento = d.PorcentajeDescuento,
+                            MontoDescuento = d.MontoDescuento,
+                            Subtotal = d.Subtotal
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} facturas pendientes", facturasPendientes.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    facturas = facturasPendientes,
+                    totalFacturas = facturasPendientes.Count,
+                    message = $"Se encontraron {facturasPendientes.Count} facturas pendientes"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener facturas pendientes");
+                return StatusCode(500, new { 
+                    success = false,
+                    message = "Error al obtener facturas pendientes",
+                    timestamp = DateTime.Now 
+                });
+            }
+        }
+
         [HttpPut("facturas/{id}/estado")]
         [Authorize]
         public async Task<IActionResult> ActualizarEstadoFactura(int id, [FromBody] string nuevoEstado)

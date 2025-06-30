@@ -3233,8 +3233,8 @@ async function abrirFacturasPendientes() {
         const resultado = await response.json();
         console.log('📋 Facturas pendientes obtenidas:', resultado);
 
-        if (resultado.success && resultado.facturas && resultado.facturas.length > 0) {
-            mostrarFacturasPendientes(resultado.facturas);
+        if (resultado.success && resultado.data && resultado.data.facturas && resultado.data.facturas.length > 0) {
+            mostrarFacturasPendientes(resultado.data.facturas);
         } else {
             mostrarSinFacturasPendientes();
         }
