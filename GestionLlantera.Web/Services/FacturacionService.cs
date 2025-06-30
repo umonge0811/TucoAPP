@@ -390,24 +390,24 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("📋 Respuesta exitosa de la API");
-                    
+
                     // Deserializar como JObject para mejor control
                     var jObject = JObject.Parse(responseContent);
-                    
+
                     _logger.LogInformation("📋 Estructura de respuesta de API: {Estructura}", 
                         string.Join(", ", jObject.Properties().Select(p => p.Name)));
-                    
+
                     // Extraer datos según la estructura de la API
                     var success = jObject["success"]?.Value<bool>() ?? false;
                     var facturas = jObject["facturas"]?.ToObject<List<object>>() ?? new List<object>();
                     var message = jObject["message"]?.Value<string>() ?? "";
-                    
+
                     _logger.LogInformation("📋 Facturas extraídas: {Count} elementos", facturas.Count);
-                    
+
                     if (facturas.Any())
                     {
                         _logger.LogInformation("📋 Se encontraron {Count} facturas pendientes", facturas.Count);
-                        
+
                         return (success: true, data: new { 
                             success = true,
                             facturas = facturas,
@@ -768,7 +768,7 @@ namespace GestionLlantera.Web.Services
                     {
                         var valorTruncado = property.Value?.ToString();
                         if (valorTruncado?.Length > 200) valorTruncado = valorTruncado.Substring(0, 200) + "...";
-                        _logger.LogInformation("🔍   - {Propiedad}: {Valor}", property.Name, valorTruncado);
+                        _logger.LogInformation("🔍   {PropertyName}: {PropertyValue}", property.Name, valorTruncado);
                     }
                 }
 
