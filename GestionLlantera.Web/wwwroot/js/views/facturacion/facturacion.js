@@ -1771,6 +1771,15 @@ async function procesarVentaFinal() {
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
 
+            // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DE COMPLETAR LA VENTA
+            setTimeout(async () => {
+                try {
+                    await actualizarVistaProductosPostAjuste();
+                } catch (error) {
+                    console.error('❌ Error actualizando vista después de venta:', error);
+                }
+            }, 500);
+
         } else {
             mostrarToast('Error', resultadoFactura.message || 'Error al procesar la venta', 'error');
         }
@@ -3094,15 +3103,33 @@ async function actualizarVistaProductosPostAjuste() {
     try {
         console.log('🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===');
         
-        // ✅ LIMPIAR HASH PARA FORZAR ACTUALIZACIÓN
+        // ✅ LIMPIAR COMPLETAMENTE EL ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
         window.lastProductsHash = null;
+        ultimaBusqueda = '';
+        busquedaEnProceso = false;
+        cargaInicialCompletada = false;
+        
+        // ✅ LIMPIAR TIMEOUT SI EXISTE
+        if (timeoutBusquedaActivo) {
+            clearTimeout(timeoutBusquedaActivo);
+            timeoutBusquedaActivo = null;
+        }
         
         // ✅ OBTENER TÉRMINO DE BÚSQUEDA ACTUAL
         const terminoActual = $('#busquedaProducto').val().trim();
         
-        // ✅ FORZAR NUEVA BÚSQUEDA PARA ACTUALIZAR STOCK
-        ultimaBusqueda = ''; // Reset para permitir la misma búsqueda
-        busquedaEnProceso = false; // Reset estado
+        // ✅ MOSTRAR INDICADOR DE CARGA MIENTRAS SE ACTUALIZA
+        $('#resultadosBusqueda').html(`
+            <div class="col-12 text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Actualizando productos...</span>
+                </div>
+                <p class="mt-2 text-muted">Actualizando información de productos...</p>
+            </div>
+        `);
+        
+        // ✅ ESPERAR UN MOMENTO PARA QUE SE VEAN LOS CAMBIOS EN LA UI
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         // ✅ BUSCAR PRODUCTOS NUEVAMENTE
         if (terminoActual.length >= 2) {
@@ -3116,11 +3143,20 @@ async function actualizarVistaProductosPostAjuste() {
         console.log('✅ Vista de productos actualizada exitosamente');
         
         // ✅ MOSTRAR NOTIFICACIÓN DE ACTUALIZACIÓN
-        mostrarToast('Stock Actualizado', 'La información de productos se ha actualizado', 'info');
+        setTimeout(() => {
+            mostrarToast('Stock Actualizado', 'La información de productos se ha actualizado', 'info');
+        }, 300);
         
     } catch (error) {
         console.error('❌ Error al actualizar vista de productos:', error);
         mostrarToast('Advertencia', 'No se pudo actualizar la vista de productos', 'warning');
+        
+        // ✅ INTENTAR RECARGAR PRODUCTOS INICIALES COMO FALLBACK
+        try {
+            await cargarProductosIniciales();
+        } catch (fallbackError) {
+            console.error('❌ Error en fallback de productos:', fallbackError);
+        }
     }
 }
 
