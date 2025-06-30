@@ -1,0 +1,67 @@
+[HttpPost]
+[AllowAnonymous]
+public async Task<IActionResult> Login(LoginViewModel model)
+{
+    if (!ModelState.IsValid)
+        return View(model);
+
+    try
+    {
+        var (success, token, errorMessage) = await _authService.LoginAsync(model);
+
+        if (success && !string.IsNullOrEmpty(token))
+        {
+            // Guardar el token en una cookie segura
+            Response.Cookies.Append("JwtToken", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.Now.AddHours(1)
+            });
+
+            // ✅ MEJORAR: Decodificar el token y transferir TODOS los claims
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            var claims = new List<Claim>
+    {
+        new Claim("JwtToken", token) // Mantener referencia al token
+    };
+
+            // ✅ TRANSFERIR TODOS LOS CLAIMS DEL JWT A LA COOKIE DE AUTENTICACIÓN
+            if (jwtToken != null)
+            {
+                foreach (var claim in jwtToken.Claims)
+                {
+                    // Agregar todos los claims del JWT
+                    claims.Add(new Claim(claim.Type, claim.Value));
+                }
+            }
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                new AuthenticationProperties
+                {
+                    IsPersistent = model.RecordarMe,
+                    ExpiresUtc = DateTime.UtcNow.AddHours(1)
+                });
+
+            _logger.LogInformation("Login exitoso para usuario: {Email}", model.Email);
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        ModelState.AddModelError(string.Empty, errorMessage ?? "Credenciales inválidas");
+        return View(model);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error en login: {Message}", ex.Message);
+        ModelState.AddModelError(string.Empty, "Error al procesar el login");
+        return View(model);
+    }
+}

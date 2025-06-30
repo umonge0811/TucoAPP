@@ -12,6 +12,8 @@ using System.Text;
 using GestionLlantera.Web.Services.Interfaces;
 using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -44,36 +46,29 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("🛒 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
                 _logger.LogInformation("🛒 Nombre de usuario: {Name}", User.Identity?.Name);
 
-                // Debug: Mostrar todos los claims al cargar facturación
-                _logger.LogInformation("📋 Claims al cargar facturación:");
-                foreach (var claim in User.Claims)
-                {
-                    _logger.LogInformation("   - {Type}: {Value}", claim.Type, claim.Value);
-                }
-
-                // Verificar token JWT desde el inicio
-                var tokenJWT = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(tokenJWT))
-                {
-                    _logger.LogWarning("⚠️ Token JWT no disponible al cargar facturación");
-                }
-                else
-                {
-                    _logger.LogInformation("✅ Token JWT disponible al cargar facturación");
-                }
-
-                // Obtener información completa del usuario actual
+                // Obtener información del usuario
                 var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
+                var tokenJWT = this.ObtenerTokenJWT();
 
-                // ✅ VERIFICAR SI ES ADMINISTRADOR PRIMERO
-                var esAdmin = User.IsInRole("Administrador") || User.IsInRole("Admin");
-                _logger.LogInformation("👑 Usuario es administrador: {EsAdmin}", esAdmin);
+                // ✅ VERIFICACIÓN DIRECTA DE PERMISOS DESDE TOKEN JWT
+                _logger.LogInformation("🔐 === VERIFICANDO PERMISOS DIRECTAMENTE DESDE TOKEN JWT ===");
 
-                // ✅ Verificar permisos específicos de facturación
-                var puedeCrearFacturas = esAdmin || await this.TienePermisoAsync("CrearFacturas");
-                var puedeCompletarFacturas = esAdmin || await this.TienePermisoAsync("CompletarFacturas");
-                var puedeEditarFacturas = esAdmin || await this.TienePermisoAsync("EditarFacturas");
-                var puedeAnularFacturas = esAdmin || await this.TienePermisoAsync("AnularFacturas");
+                var permisosEnToken = this.ObtenerPermisosDesdeToken();
+                _logger.LogInformation("🔐 Permisos encontrados en token: {Permisos}", string.Join(", ", permisosEnToken));
+
+                var puedeCrearFacturas = this.TienePermisoEnToken("Crear Facturas");
+                var puedeCompletarFacturas = this.TienePermisoEnToken("Completar Facturas");
+                var puedeEditarFacturas = this.TienePermisoEnToken("Editar Facturas");
+                var puedeAnularFacturas = this.TienePermisoEnToken("Anular Facturas");
+                var esAdmin = await this.EsAdministradorAsync();
+
+                _logger.LogInformation("🔐 === PERMISOS VALIDADOS DESDE TOKEN JWT ===");
+
+                _logger.LogInformation("🔐 puedeCrearFacturas: {Crear}", puedeCrearFacturas);
+                _logger.LogInformation("🔐 puedeCompletarFacturas: {Completar}", puedeCompletarFacturas);
+                _logger.LogInformation("🔐 puedeEditarFacturas: {Editar}", puedeEditarFacturas);
+                _logger.LogInformation("🔐 puedeAnularFacturas: {Anular}", puedeAnularFacturas);
+                _logger.LogInformation("🔐 esAdmin: {Admin}", esAdmin);
 
                 var permisos = new
                 {
@@ -81,26 +76,15 @@ namespace GestionLlantera.Web.Controllers
                     puedeCompletarFacturas = puedeCompletarFacturas,
                     puedeEditarFacturas = puedeEditarFacturas,
                     puedeAnularFacturas = puedeAnularFacturas,
-                    esAdmin = esAdmin,
-                    // ✅ AGREGAR PERMISOS ADICIONALES EXPLÍCITOS PARA EL FRONTEND
-                    CrearFacturas = puedeCrearFacturas,
-                    CompletarFacturas = puedeCompletarFacturas,
-                    EditarFacturas = puedeEditarFacturas,
-                    AnularFacturas = puedeAnularFacturas,
-                    Administrador = esAdmin
+                    esAdmin = esAdmin
                 };
 
-                _logger.LogInformation("🔐 Permisos de facturación para usuario {Usuario}: Crear={Crear}, Completar={Completar}, Editar={Editar}, Anular={Anular}, Admin={Admin}", 
-                    nombreUsuario, permisos.puedeCrearFacturas, permisos.puedeCompletarFacturas, 
-                    permisos.puedeEditarFacturas, permisos.puedeAnularFacturas, permisos.esAdmin);
-
-                // ✅ CREAR CONFIGURACIÓN COMPLETA PARA EL FRONTEND
                 var configuracionCompleta = new
                 {
                     Usuario = new
                     {
                         usuarioId = usuarioId,
-                        id = usuarioId, // Alias para compatibilidad
+                        id = usuarioId,
                         nombre = nombreUsuario,
                         nombreUsuario = nombreUsuario,
                         email = emailUsuario
@@ -110,6 +94,9 @@ namespace GestionLlantera.Web.Controllers
                     HoraActual = DateTime.Now.ToString("HH:mm"),
                     TokenDisponible = !string.IsNullOrEmpty(tokenJWT)
                 };
+
+                _logger.LogInformation("📋 Configuración enviada al frontend: {Config}", 
+                    System.Text.Json.JsonSerializer.Serialize(configuracionCompleta));
 
                 ViewBag.ConfiguracionFacturacion = configuracionCompleta;
                 return View();
@@ -297,7 +284,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
-                
+
                 // Convertir a la clase esperada por el servicio
                 var productosService = productos.Select(p => new ProductoVentaService
                 {
@@ -370,7 +357,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("🧾 Autenticado: {Autenticado}", User.Identity?.IsAuthenticated);
 
                 // Verificar permisos
-                if (!await this.TienePermisoAsync("Crear Facturas"))
+                if (!this.TienePermisoEnToken("Crear Facturas"))
                 {
                     _logger.LogWarning("🚫 Usuario sin permisos para crear facturas");
                     return Json(new { success = false, message = "Sin permisos para crear facturas" });
@@ -382,7 +369,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogError("❌ Token JWT no disponible para crear factura");
                     _logger.LogError("❌ Posible causa: Sesión expirada o middleware JwtClaimsMiddleware cerró la sesión");
-                    
+
                     // Verificar si el usuario sigue autenticado
                     if (!User.Identity?.IsAuthenticated ?? true)
                     {
@@ -393,7 +380,7 @@ namespace GestionLlantera.Web.Controllers
                             redirectToLogin = true
                         });
                     }
-                    
+
                     return Json(new { 
                         success = false, 
                         message = "Token de autenticación no disponible. Intente refrescar la página.",
@@ -515,7 +502,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
                     User.Identity?.Name ?? "Anónimo");
-                
+
                 // Listar todos los claims disponibles para debug
                 var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
                 _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
@@ -530,6 +517,73 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
+        /// Extrae los permisos del token JWT
+        /// </summary>
+        private List<string> ObtenerPermisosDesdeToken()
+        {
+            var token = ObtenerTokenJWT();
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ No se pudo obtener el token JWT para extraer permisos.");
+                return new List<string>();
+            }
+
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwtSecurityToken = handler.ReadJwtToken(token);
+
+                var permisos = new List<string>();
+
+                // Buscar claims de permisos en diferentes formatos
+                var permissionClaims = jwtSecurityToken.Claims.Where(c => 
+                    c.Type == "Permission" || 
+                    c.Type == "permissions" || 
+                    c.Type == "permisos"
+                );
+
+                foreach (var claim in permissionClaims)
+                {
+                    var valor = claim.Value;
+                    
+                    // Verificar si el valor es JSON válido
+                    if (valor.StartsWith("[") && valor.EndsWith("]"))
+                    {
+                        try
+                        {
+                            // Es un array JSON, deserializar
+                            var permisosArray = JsonSerializer.Deserialize<List<string>>(valor);
+                            if (permisosArray != null)
+                            {
+                                permisos.AddRange(permisosArray);
+                            }
+                        }
+                        catch (JsonException)
+                        {
+                            // Si falla la deserialización, tratar como string simple
+                            permisos.Add(valor);
+                        }
+                    }
+                    else
+                    {
+                        // Es un permiso individual, agregarlo directamente
+                        permisos.Add(valor);
+                    }
+                }
+
+                _logger.LogInformation("🔐 Permisos extraídos del token: {Permisos}", string.Join(", ", permisos));
+                return permisos;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al extraer permisos del token JWT.");
+                return new List<string>();
+            }
+        }
+
+        
+
+        /// <summary>
         /// Obtener información completa del usuario desde los claims (igual que InventarioController)
         /// </summary>
         private (int usuarioId, string nombre, string email) ObtenerInfoUsuario()
@@ -537,7 +591,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🔍 Obteniendo información del usuario...");
-                
+
                 // Debug: Mostrar todos los claims
                 _logger.LogInformation("📋 Claims disponibles:");
                 foreach (var claim in User.Claims)
@@ -633,7 +687,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
 
-                if (!await this.TienePermisoAsync("CompletarFacturas"))
+                if (!this.TienePermisoEnToken("Completar Facturas"))
                 {
                     return Json(new { success = false, message = "Sin permisos para completar facturas" });
                 }

@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.Extensions;
 using API.ServicesAPI;
 using API.ServicesAPI.Interfaces;
@@ -649,49 +649,68 @@ namespace API.Controllers
         /// </summary>
         private async Task<IActionResult> ProcesarAjusteIndividual(int id, AjusteStockRapidoDTO ajusteDto)
         {
-            if (ajusteDto.Cantidad <= 0)
-                return BadRequest(new { message = "La cantidad debe ser mayor a cero" });
-
-            var producto = await _context.Productos.FindAsync(id);
-            if (producto == null)
-                return NotFound(new { message = "Producto no encontrado" });
-
-            int stockAnterior = (int)producto.CantidadEnInventario;
-            int nuevoStock = stockAnterior;
-
-            switch (ajusteDto.TipoAjuste.ToLower())
+           try
             {
-                case "entrada":
-                    nuevoStock = stockAnterior + ajusteDto.Cantidad;
-                    break;
-                case "salida":
-                    nuevoStock = Math.Max(0, stockAnterior - ajusteDto.Cantidad);
-                    break;
-                case "ajuste":
-                    nuevoStock = ajusteDto.Cantidad;
-                    break;
-                default:
-                    return BadRequest(new { message = "Tipo de ajuste no válido. Use: entrada, salida, o ajuste" });
+                _logger.LogInformation("🔧 === AJUSTE STOCK API ===");
+                _logger.LogInformation("🔧 Producto ID: {ProductoId}", id);
+                _logger.LogInformation("🔧 Tipo Ajuste: {TipoAjuste}", ajusteDto.TipoAjuste);
+                _logger.LogInformation("🔧 Cantidad: {Cantidad}", ajusteDto.Cantidad);
+                _logger.LogInformation("🔧 Usuario: {Usuario}", User.Identity?.Name);
+                _logger.LogInformation("🔧 Timestamp: {Timestamp}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
+                var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Ajustar Stock",
+                    "Solo usuarios con permiso 'Ajustar Stock' pueden ajustar el inventario");
+                if (validacionPermiso != null) return validacionPermiso;
+
+                if (ajusteDto.Cantidad <= 0)
+                    return BadRequest(new { message = "La cantidad debe ser mayor a cero" });
+
+                var producto = await _context.Productos.FindAsync(id);
+                if (producto == null)
+                    return NotFound(new { message = "Producto no encontrado" });
+
+                int stockAnterior = (int)producto.CantidadEnInventario;
+                int nuevoStock = stockAnterior;
+
+                switch (ajusteDto.TipoAjuste.ToLower())
+                {
+                    case "entrada":
+                        nuevoStock = stockAnterior + ajusteDto.Cantidad;
+                        break;
+                    case "salida":
+                        nuevoStock = Math.Max(0, stockAnterior - ajusteDto.Cantidad);
+                        break;
+                    case "ajuste":
+                        nuevoStock = ajusteDto.Cantidad;
+                        break;
+                    default:
+                        return BadRequest(new { message = "Tipo de ajuste no válido. Use: entrada, salida, o ajuste" });
+                }
+
+                producto.CantidadEnInventario = nuevoStock;
+                producto.FechaUltimaActualizacion = DateTime.Now;
+                await _context.SaveChangesAsync();
+
+                return Ok(new AjusteStockRapidoResponseDTO
+                {
+                    Success = true,
+                    Message = $"Stock ajustado exitosamente. {stockAnterior} → {nuevoStock} unidades",
+                    ProductoId = id,
+                    NombreProducto = producto.NombreProducto,
+                    StockAnterior = stockAnterior,
+                    StockNuevo = nuevoStock,
+                    Diferencia = nuevoStock - stockAnterior,
+                    TipoAjuste = ajusteDto.TipoAjuste,
+                    StockBajo = nuevoStock <= producto.StockMinimo,
+                    StockMinimo = (int)producto.StockMinimo,
+                    Timestamp = DateTime.Now
+                });
             }
-
-            producto.CantidadEnInventario = nuevoStock;
-            producto.FechaUltimaActualizacion = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            return Ok(new AjusteStockRapidoResponseDTO
+            catch (Exception ex)
             {
-                Success = true,
-                Message = $"Stock ajustado exitosamente. {stockAnterior} → {nuevoStock} unidades",
-                ProductoId = id,
-                NombreProducto = producto.NombreProducto,
-                StockAnterior = stockAnterior,
-                StockNuevo = nuevoStock,
-                Diferencia = nuevoStock - stockAnterior,
-                TipoAjuste = ajusteDto.TipoAjuste,
-                StockBajo = nuevoStock <= producto.StockMinimo,
-                StockMinimo = (int)producto.StockMinimo,
-                Timestamp = DateTime.Now
-            });
+                _logger.LogError(ex, "Error al ajustar stock del producto {Id}", id);
+                return StatusCode(500, new { message = "Error interno al ajustar stock" });
+            }
         }
 
         // =====================================

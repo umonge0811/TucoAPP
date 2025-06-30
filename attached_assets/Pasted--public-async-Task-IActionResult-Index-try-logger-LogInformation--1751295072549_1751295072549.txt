@@ -1,0 +1,66 @@
+ public async Task<IActionResult> Index()
+ {
+     try
+     {
+         _logger.LogInformation("🛒 === ACCESO AL MÓDULO DE FACTURACIÓN ===");
+         _logger.LogInformation("🛒 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
+         _logger.LogInformation("🛒 Nombre de usuario: {Name}", User.Identity?.Name);
+
+         // Obtener información del usuario
+         var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
+         var tokenJWT = this.ObtenerTokenJWT();
+
+         // ✅ VERIFICACIÓN REAL DE PERMISOS USANDO API (igual que InventarioController)
+         _logger.LogInformation("🔐 === VERIFICANDO PERMISOS REALES CONTRA API ===");
+
+         var puedeCrearFacturas = await this.TienePermisoAsync("Crear Facturas");
+         var puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas");
+         var puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas");
+         var puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas");
+         var esAdmin = await this.EsAdministradorAsync();
+
+         _logger.LogInformation("🔐 === PERMISOS VALIDADOS CONTRA API ===");
+         _logger.LogInformation("🔐 puedeCrearFacturas: {Crear}", puedeCrearFacturas);
+         _logger.LogInformation("🔐 puedeCompletarFacturas: {Completar}", puedeCompletarFacturas);
+         _logger.LogInformation("🔐 puedeEditarFacturas: {Editar}", puedeEditarFacturas);
+         _logger.LogInformation("🔐 puedeAnularFacturas: {Anular}", puedeAnularFacturas);
+         _logger.LogInformation("🔐 esAdmin: {Admin}", esAdmin);
+
+         var permisos = new
+         {
+             puedeCrearFacturas = puedeCrearFacturas,
+             puedeCompletarFacturas = puedeCompletarFacturas,
+             puedeEditarFacturas = puedeEditarFacturas,
+             puedeAnularFacturas = puedeAnularFacturas,
+             esAdmin = esAdmin
+         };
+
+         var configuracionCompleta = new
+         {
+             Usuario = new
+             {
+                 usuarioId = usuarioId,
+                 id = usuarioId,
+                 nombre = nombreUsuario,
+                 nombreUsuario = nombreUsuario,
+                 email = emailUsuario
+             },
+             Permisos = permisos,
+             FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
+             HoraActual = DateTime.Now.ToString("HH:mm"),
+             TokenDisponible = !string.IsNullOrEmpty(tokenJWT)
+         };
+
+         _logger.LogInformation("📋 Configuración enviada al frontend: {Config}", 
+             System.Text.Json.JsonSerializer.Serialize(configuracionCompleta));
+
+         ViewBag.ConfiguracionFacturacion = configuracionCompleta;
+         return View();
+     }
+     catch (Exception ex)
+     {
+         _logger.LogError(ex, "❌ Error al cargar módulo de facturación");
+         TempData["Error"] = "Error al cargar el módulo de facturación";
+         return RedirectToAction("Index", "Dashboard");
+     }
+ }

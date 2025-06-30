@@ -231,8 +231,11 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📦 Ajustando stock para factura: {NumeroFactura} con {Cantidad} productos", 
-                    request.NumeroFactura, request.Productos?.Count ?? 0);
+                _logger.LogInformation("📦 === INICIO AJUSTE STOCK FACTURACIÓN ===");
+                _logger.LogInformation("📦 Factura: {NumeroFactura}", request.NumeroFactura);
+                _logger.LogInformation("📦 Cantidad de productos: {Cantidad}", request.Productos?.Count ?? 0);
+                _logger.LogInformation("📦 Thread ID: {ThreadId}", Thread.CurrentThread.ManagedThreadId);
+                _logger.LogInformation("📦 Timestamp: {Timestamp}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 if (request.Productos == null || !request.Productos.Any())
                 {
@@ -345,8 +348,11 @@ namespace GestionLlantera.Web.Services
                     errores = errores.Any() ? errores : null
                 };
 
-                _logger.LogInformation("📦 Ajuste completado: {Exitosos}/{Total} productos actualizados", 
+                _logger.LogInformation("📦 === FIN AJUSTE STOCK FACTURACIÓN ===");
+                _logger.LogInformation("📦 Resultados: {Exitosos}/{Total} productos actualizados", 
                     ajustesExitosos, request.Productos.Count);
+                _logger.LogInformation("📦 Thread ID: {ThreadId}", Thread.CurrentThread.ManagedThreadId);
+                _logger.LogInformation("📦 Timestamp: {Timestamp}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
 
                 return response;
             }
@@ -584,11 +590,11 @@ namespace GestionLlantera.Web.Services
 
                 // ✅ 3. ESTABLECER FECHA DE CREACIÓN Y ESTADO SEGÚN ROL
                 factura.fechaCreacion = DateTime.Now;
-                
+
                 // ✅ DETERMINAR ESTADO SEGÚN ROL DEL USUARIO
-                var estadoFactura = DeterminarEstadoFacturaSegunUsuario(jwtToken);
+                var estadoFactura = await DeterminarEstadoFacturaSegunUsuarioAsync(jwtToken);
                 factura.estado = estadoFactura;
-                
+
                 _logger.LogInformation("📋 Estado de factura asignado: {Estado}", estadoFactura);
 
                 // ✅ 4. VALIDAR CAMPOS REQUERIDOS
@@ -686,7 +692,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        private string DeterminarEstadoFacturaSegunUsuario(string jwtToken)
+        private async Task<string> DeterminarEstadoFacturaSegunUsuarioAsync(string jwtToken)
         {
             try
             {
@@ -711,21 +717,96 @@ namespace GestionLlantera.Web.Services
                 var payloadBytes = Convert.FromBase64String(payload);
                 var payloadJson = Encoding.UTF8.GetString(payloadBytes);
 
+                _logger.LogInformation("🔍 === DEBUGGING JWT TOKEN COMPLETO ===");
+                _logger.LogInformation("🔍 Payload JWT completo: {Payload}", payloadJson);
+
                 dynamic claims = JsonConvert.DeserializeObject(payloadJson);
+                
+                // ✅ LOGGING ADICIONAL PARA DEBUGGING DE ESTRUCTURA
+                if (claims is Newtonsoft.Json.Linq.JObject debugObject)
+                {
+                    _logger.LogInformation("🔍 Propiedades disponibles en el token:");
+                    foreach (var property in debugObject.Properties())
+                    {
+                        var valorTruncado = property.Value?.ToString();
+                        if (valorTruncado?.Length > 200) valorTruncado = valorTruncado.Substring(0, 200) + "...";
+                        _logger.LogInformation("🔍   - {Propiedad}: {Valor}", property.Name, valorTruncado);
+                    }
+                }
 
                 // Buscar roles en el token
-                var roles = claims?.role?.ToString() ?? 
-                           claims?.roles?.ToString() ?? 
+                string roles = "";
+                try
+                {
+                    roles = claims?.role?.ToString() ??
+                           claims?.roles?.ToString() ??
                            claims?["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]?.ToString() ?? "";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("⚠️ Error extrayendo roles del token: {Error}", ex.Message);
+                }
 
+                // ✅ EXTRAER PERMISOS CORRECTAMENTE DEL TOKEN JWT
+                // Los permisos se almacenan como claims individuales con tipo "Permission"
+                var permisosEncontrados = new List<string>();
+
+                // Buscar en la estructura del token los claims de permisos
+                if (claims is Newtonsoft.Json.Linq.JObject jwtObject)
+                {
+                    // Buscar arrays de permisos en diferentes campos posibles
+                    var camposPermisos = new[] { "Permission", "permissions", "permisos", "Permisos" };
+                    
+                    foreach (var campo in camposPermisos)
+                    {
+                        var permisosToken = jwtObject[campo];
+                        if (permisosToken != null)
+                        {
+                            var permisosTexto = permisosToken.ToString();
+                            _logger.LogInformation("🔍 Permisos encontrados en campo '{Campo}': {Permisos}", campo, permisosTexto);
+                            
+                            if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.Array)
+                            {
+                                // Es un array de permisos
+                                foreach (var permiso in permisosToken)
+                                {
+                                    permisosEncontrados.Add(permiso.ToString());
+                                }
+                            }
+                            else if (permisosToken.Type == Newtonsoft.Json.Linq.JTokenType.String)
+                            {
+                                // Es un string único
+                                permisosEncontrados.Add(permisosTexto);
+                            }
+                            break; // Si encontramos permisos, salimos del bucle
+                        }
+                    }
+                }
+
+                _logger.LogInformation("🔐 Permisos extraídos del token: {Permisos}", string.Join(", ", permisosEncontrados));
+
+                // Verificar si el usuario tiene el permiso "CompletarFacturas"
+                var tienePermisoCompletar = permisosEncontrados.Any(p => 
+                    p.Equals("CompletarFacturas", StringComparison.OrdinalIgnoreCase) ||
+                    p.Equals("Completar Facturas", StringComparison.OrdinalIgnoreCase) ||
+                    p.Equals("CompletarFactura", StringComparison.OrdinalIgnoreCase));
+
+                if (tienePermisoCompletar)
+                {
+                    _logger.LogInformation("✅ Usuario tiene permiso CompletarFacturas - Estado: Pagada");
+                    return "Pagada";
+                }
 
                 // Si es Administrador, puede crear facturas completadas
                 if (roles.Contains("Administrador", StringComparison.OrdinalIgnoreCase))
                 {
-                    return "Completada";
+                    return "Pagada";
                 }
 
                 // Para cualquier otro rol (Colaborador, etc.), crear como pendiente
+                _logger.LogInformation("⚠️ Usuario sin permisos de CompletarFacturas - Estado: Pendiente");
+                _logger.LogInformation("🔐 Roles encontrados: {Roles}", roles);
+                _logger.LogInformation("🔐 Permisos evaluados: {Permisos}", string.Join(", ", permisosEncontrados));
                 return "Pendiente";
             }
             catch (Exception ex)

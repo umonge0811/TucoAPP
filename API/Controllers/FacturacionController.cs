@@ -199,7 +199,7 @@ namespace API.Controllers
                 // ✅ VERIFICAR PERMISOS PARA DETERMINAR ESTADO INICIAL
                 var puedeCompletar = await this.TienePermisoAsync(_permisosService, "CompletarFacturas");
                 
-                // Determinar estado inicial según permisos
+                // Determinar estado inicial según permisos y el estado enviado
                 string estadoInicial;
                 if (facturaDto.TipoDocumento == "Proforma")
                 {
@@ -208,14 +208,21 @@ namespace API.Controllers
                 else if (facturaDto.Estado == "Pagada" && puedeCompletar)
                 {
                     estadoInicial = "Pagada"; // Solo si tiene permisos y está marcada como pagada
+                    _logger.LogInformation("✅ Usuario autorizado envió factura como PAGADA");
+                }
+                else if (facturaDto.Estado == "Pendiente")
+                {
+                    estadoInicial = "Pendiente"; // Estado explícitamente enviado como pendiente
+                    _logger.LogInformation("📋 Usuario envió factura como PENDIENTE");
                 }
                 else
                 {
                     estadoInicial = "Pendiente"; // Por defecto pendiente si no tiene permisos
+                    _logger.LogInformation("⚠️ Fallback a estado PENDIENTE");
                 }
 
-                _logger.LogInformation("🔐 Estado inicial determinado: {Estado} (Usuario puede completar: {PuedeCompletar})", 
-                    estadoInicial, puedeCompletar);
+                _logger.LogInformation("🔐 Estado inicial determinado: {Estado} (Usuario puede completar: {PuedeCompletar}, Estado enviado: {EstadoEnviado})", 
+                    estadoInicial, puedeCompletar, facturaDto.Estado);
 
                 // Generar número de factura automáticamente
                 var numeroFactura = await GenerarNumeroFactura(facturaDto.TipoDocumento);
@@ -276,20 +283,9 @@ namespace API.Controllers
 
                     _context.DetallesFactura.Add(detalleFactura);
 
-                    // ✅ Actualizar inventario solo si es factura pagada (no proforma ni pendiente)
-                    if (facturaDto.TipoDocumento == "Factura" && estadoInicial == "Pagada")
-                    {
-                        var producto = await _context.Productos.FindAsync(detalle.ProductoId);
-                        if (producto != null)
-                        {
-                            producto.CantidadEnInventario = Math.Max(0, 
-                                (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
-                            producto.FechaUltimaActualizacion = DateTime.Now;
-                            
-                            _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
-                                producto.NombreProducto, detalle.Cantidad);
-                        }
-                    }
+                    // ✅ NO ACTUALIZAR INVENTARIO AQUÍ - Se maneja desde el frontend
+                    // El ajuste de stock se realiza desde el JavaScript usando el endpoint específico
+                    // para evitar duplicación de descuentos de inventario
                 }
 
                 await _context.SaveChangesAsync();
