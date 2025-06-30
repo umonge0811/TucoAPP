@@ -3255,21 +3255,21 @@ async function abrirFacturasPendientes() {
         // Verificar múltiples estructuras posibles de respuesta
         let facturas = null;
         
-        if (resultado.success && resultado.data) {
-            // Opción 1: resultado.data.facturas (estructura esperada)
-            if (resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
+        if (resultado.success) {
+            // Opción 1: resultado.data.facturas (desde el servicio Web)
+            if (resultado.data && resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
                 facturas = resultado.data.facturas;
-                console.log('✅ Facturas encontradas en resultado.data.facturas');
+                console.log('✅ Facturas encontradas en resultado.data.facturas:', facturas.length);
             }
-            // Opción 2: resultado.data es directamente el array de facturas
-            else if (Array.isArray(resultado.data)) {
-                facturas = resultado.data;
-                console.log('✅ Facturas encontradas directamente en resultado.data');
-            }
-            // Opción 3: La respuesta completa contiene las facturas
+            // Opción 2: resultado.facturas (directo desde la API)
             else if (resultado.facturas && Array.isArray(resultado.facturas)) {
                 facturas = resultado.facturas;
-                console.log('✅ Facturas encontradas en resultado.facturas');
+                console.log('✅ Facturas encontradas en resultado.facturas:', facturas.length);
+            }
+            // Opción 3: resultado.data es directamente el array de facturas
+            else if (resultado.data && Array.isArray(resultado.data)) {
+                facturas = resultado.data;
+                console.log('✅ Facturas encontradas directamente en resultado.data:', facturas.length);
             }
         }
 
