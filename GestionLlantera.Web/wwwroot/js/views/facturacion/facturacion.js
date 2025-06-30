@@ -1671,8 +1671,11 @@ async function procesarVentaFinal() {
                 // ✅ COLABORADORES: Modal específico de envío a cajas
                 console.log('📋 Factura pendiente - Mostrando modal de envío a cajas');
                 
-                // Cerrar modal de finalizar venta primero
+                // ✅ CERRAR MODAL DE FINALIZAR VENTA INMEDIATAMENTE
                 modalFinalizarVenta.hide();
+                
+                // ✅ ACTUALIZAR VISTA DE PRODUCTOS (sin ajuste de stock)
+                await actualizarVistaProductosPostAjuste();
                 
                 // Para colaboradores: mostrar modal específico de envío a cajas
                 setTimeout(() => {
@@ -1724,14 +1727,17 @@ async function procesarVentaFinal() {
                             if (responseStock.ok) {
                                 const resultadoStock = await responseStock.json();
                                 console.log('✅ Stock ajustado exitosamente');
+                                
+                                // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DEL AJUSTE
+                                await actualizarVistaProductosPostAjuste();
                             } else {
                                 console.error('❌ Error ajustando stock');
-                                mostrarToast('Advertencia', 'Error al ajustar stock', 'warning');
+                                console.warn('❌ Error ajustando stock - sin toast');
                             }
 
                         } catch (error) {
                             console.error('❌ Error general ajustando stock:', error);
-                            mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+                            console.warn('❌ Error inesperado ajustando inventario - sin toast');
                             delete window[cacheKey];
                         }
                     }
@@ -1751,9 +1757,19 @@ async function procesarVentaFinal() {
                     });
                 }
 
-                // Cerrar modal y mostrar éxito
+                // ✅ CERRAR MODAL INMEDIATAMENTE DESPUÉS DE PROCESAR
                 modalFinalizarVenta.hide();
-                mostrarToast('¡Venta Completada!', 'La venta ha sido procesada e impresa exitosamente', 'success');
+                
+                // ✅ MOSTRAR SWEETALERT EN LUGAR DE TOAST
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Venta Completada!',
+                    text: `Factura ${resultadoFactura.numeroFactura || 'N/A'} procesada exitosamente`,
+                    confirmButtonText: 'Continuar',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
             }
 
             // ✅ LIMPIAR CARRITO DESPUÉS DE PROCESAR (PARA AMBOS CASOS)
@@ -1765,13 +1781,45 @@ async function procesarVentaFinal() {
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
 
+            // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DE COMPLETAR LA VENTA
+            setTimeout(async () => {
+                try {
+                    await actualizarVistaProductosPostAjuste();
+                } catch (error) {
+                    console.error('❌ Error actualizando vista después de venta:', error);
+                }
+            }, 500);
+
         } else {
-            mostrarToast('Error', resultadoFactura.message || 'Error al procesar la venta', 'error');
+            // ✅ MOSTRAR ERROR CON SWEETALERT
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al procesar la venta',
+                    text: resultadoFactura.message || 'Error desconocido',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc3545'
+                });
+            } else {
+                alert('Error: ' + (resultadoFactura.message || 'Error al procesar la venta'));
+            }
         }
 
     } catch (error) {
         console.error('❌ Error procesando venta:', error);
-        mostrarToast('Error', 'Hubo un problema procesando la venta', 'error');
+        
+        // ✅ MOSTRAR ERROR CON SWEETALERT
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error procesando la venta',
+                text: 'Hubo un problema inesperado al procesar la venta',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc3545'
+            });
+        } else {
+            alert('Error: Hubo un problema procesando la venta');
+        }
     } finally {
         // Restaurar botón
         $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
@@ -1993,8 +2041,7 @@ function generarRecibo(factura, productos, totales) {
 
         ventanaImpresion.document.close();
 
-        // Mostrar mensaje de éxito
-        mostrarToast('Impresión', 'Recibo enviado a impresora', 'success');
+        
 
     } catch (error) {
         console.error('❌ Error al imprimir recibo:', error);
@@ -3083,6 +3130,63 @@ function recargarPermisosUsuario() {
     console.log('🔄 Permisos recargados y aplicados');
 }
 
+// ===== FUNCIÓN PARA ACTUALIZAR VISTA DE PRODUCTOS POST-AJUSTE =====
+async function actualizarVistaProductosPostAjuste() {
+    try {
+        console.log('🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===');
+        
+        // ✅ LIMPIAR COMPLETAMENTE EL ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
+        window.lastProductsHash = null;
+        ultimaBusqueda = '';
+        busquedaEnProceso = false;
+        cargaInicialCompletada = false;
+        
+        // ✅ LIMPIAR TIMEOUT SI EXISTE
+        if (timeoutBusquedaActivo) {
+            clearTimeout(timeoutBusquedaActivo);
+            timeoutBusquedaActivo = null;
+        }
+        
+        // ✅ OBTENER TÉRMINO DE BÚSQUEDA ACTUAL
+        const terminoActual = $('#busquedaProducto').val().trim();
+        
+        // ✅ MOSTRAR INDICADOR DE CARGA MIENTRAS SE ACTUALIZA
+        $('#resultadosBusqueda').html(`
+            <div class="col-12 text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Actualizando productos...</span>
+                </div>
+                <p class="mt-2 text-muted">Actualizando información de productos...</p>
+            </div>
+        `);
+        
+        // ✅ ESPERAR UN MOMENTO PARA QUE SE VEAN LOS CAMBIOS EN LA UI
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // ✅ BUSCAR PRODUCTOS NUEVAMENTE
+        if (terminoActual.length >= 2) {
+            console.log('🔄 Actualizando con término de búsqueda:', terminoActual);
+            await buscarProductos(terminoActual);
+        } else {
+            console.log('🔄 Actualizando productos iniciales');
+            await buscarProductos('');
+        }
+        
+        console.log('✅ Vista de productos actualizada exitosamente');
+        
+    } catch (error) {
+        console.error('❌ Error al actualizar vista de productos:', error);
+        console.warn('❌ No se pudo actualizar la vista de productos - sin toast');
+        
+        // ✅ INTENTAR RECARGAR PRODUCTOS INICIALES COMO FALLBACK
+        try {
+            await cargarProductosIniciales();
+        } catch (fallbackError) {
+            console.error('❌ Error en fallback de productos:', fallbackError);
+        }
+    }
+}
+
 // ===== HACER FUNCIONES GLOBALES =====
 window.recargarPermisosUsuario = recargarPermisosUsuario;
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
@@ -3106,6 +3210,7 @@ window.configurarModalSegunPermisos = configurarModalSegunPermisos;
 window.mostrarModalFacturaPendiente = mostrarModalFacturaPendiente;
 window.irAFacturasPendientes = irAFacturasPendientes;
 window.imprimirComprobanteEnvio = imprimirComprobanteEnvio;
+window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `
