@@ -662,16 +662,49 @@ namespace GestionLlantera.Web.Controllers
                     if (resultado.data is System.Text.Json.JsonElement jsonElement)
                     {
                         _logger.LogInformation("📋 JsonElement Kind: {Kind}", jsonElement.ValueKind);
+                        
+                        // Si es un objeto, verificar si tiene propiedades de facturas
                         if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Object)
                         {
+                            var hasFacturas = false;
+                            var hasFacturasArray = false;
+                            
                             foreach (var prop in jsonElement.EnumerateObject())
                             {
-                                _logger.LogInformation("📋 Property: {Name} = {Value}", prop.Name, prop.Value);
+                                _logger.LogInformation("📋 Property: {Name} = {ValueKind}", prop.Name, prop.Value.ValueKind);
+                                
+                                if (prop.Name.Equals("facturas", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    hasFacturas = true;
+                                    if (prop.Value.ValueKind == System.Text.Json.JsonValueKind.Array)
+                                    {
+                                        hasFacturasArray = true;
+                                        _logger.LogInformation("📋 Array de facturas encontrado con {Count} elementos", 
+                                            prop.Value.GetArrayLength());
+                                    }
+                                }
                             }
+                            
+                            _logger.LogInformation("📋 Análisis: hasFacturas={HasFacturas}, hasFacturasArray={HasArray}", 
+                                hasFacturas, hasFacturasArray);
+                            
+                            // Si tiene la estructura esperada { facturas: [...] }, devolverla directamente
+                            if (hasFacturas && hasFacturasArray)
+                            {
+                                _logger.LogInformation("📋 Retornando estructura completa con facturas");
+                                return Json(resultado.data);
+                            }
+                        }
+                        // Si es un array directo, también devolverlo
+                        else if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                        {
+                            _logger.LogInformation("📋 Array directo de facturas con {Count} elementos", 
+                                jsonElement.GetArrayLength());
+                            return Json(resultado.data);
                         }
                     }
                     
-                    _logger.LogInformation("📋 Retornando datos exitosos al frontend");
+                    _logger.LogInformation("📋 Retornando datos como están del servicio");
                     return Json(resultado.data);
                 }
                 else
