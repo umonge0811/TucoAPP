@@ -14,6 +14,7 @@ using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Newtonsoft.Json;
 
 namespace GestionLlantera.Web.Controllers
 {
