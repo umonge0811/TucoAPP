@@ -1732,12 +1732,12 @@ async function procesarVentaFinal() {
                                 await actualizarVistaProductosPostAjuste();
                             } else {
                                 console.error('❌ Error ajustando stock');
-                                mostrarToast('Advertencia', 'Error al ajustar stock', 'warning');
+                                console.warn('❌ Error ajustando stock - sin toast');
                             }
 
                         } catch (error) {
                             console.error('❌ Error general ajustando stock:', error);
-                            mostrarToast('Error Stock', 'Error inesperado ajustando inventario', 'warning');
+                            console.warn('❌ Error inesperado ajustando inventario - sin toast');
                             delete window[cacheKey];
                         }
                     }
@@ -1759,7 +1759,17 @@ async function procesarVentaFinal() {
 
                 // ✅ CERRAR MODAL INMEDIATAMENTE DESPUÉS DE PROCESAR
                 modalFinalizarVenta.hide();
-                mostrarToast('¡Venta Completada!', 'La venta ha sido procesada e impresa exitosamente', 'success');
+                
+                // ✅ MOSTRAR SWEETALERT EN LUGAR DE TOAST
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Venta Completada!',
+                    text: `Factura ${resultadoFactura.numeroFactura || 'N/A'} procesada exitosamente`,
+                    confirmButtonText: 'Continuar',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
             }
 
             // ✅ LIMPIAR CARRITO DESPUÉS DE PROCESAR (PARA AMBOS CASOS)
@@ -1781,12 +1791,35 @@ async function procesarVentaFinal() {
             }, 500);
 
         } else {
-            mostrarToast('Error', resultadoFactura.message || 'Error al procesar la venta', 'error');
+            // ✅ MOSTRAR ERROR CON SWEETALERT
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al procesar la venta',
+                    text: resultadoFactura.message || 'Error desconocido',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc3545'
+                });
+            } else {
+                alert('Error: ' + (resultadoFactura.message || 'Error al procesar la venta'));
+            }
         }
 
     } catch (error) {
         console.error('❌ Error procesando venta:', error);
-        mostrarToast('Error', 'Hubo un problema procesando la venta', 'error');
+        
+        // ✅ MOSTRAR ERROR CON SWEETALERT
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error procesando la venta',
+                text: 'Hubo un problema inesperado al procesar la venta',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc3545'
+            });
+        } else {
+            alert('Error: Hubo un problema procesando la venta');
+        }
     } finally {
         // Restaurar botón
         $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
@@ -3142,14 +3175,9 @@ async function actualizarVistaProductosPostAjuste() {
         
         console.log('✅ Vista de productos actualizada exitosamente');
         
-        // ✅ MOSTRAR NOTIFICACIÓN DE ACTUALIZACIÓN
-        setTimeout(() => {
-            mostrarToast('Stock Actualizado', 'La información de productos se ha actualizado', 'info');
-        }, 300);
-        
     } catch (error) {
         console.error('❌ Error al actualizar vista de productos:', error);
-        mostrarToast('Advertencia', 'No se pudo actualizar la vista de productos', 'warning');
+        console.warn('❌ No se pudo actualizar la vista de productos - sin toast');
         
         // ✅ INTENTAR RECARGAR PRODUCTOS INICIALES COMO FALLBACK
         try {
