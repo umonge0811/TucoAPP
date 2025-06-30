@@ -367,63 +367,89 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken = null)
+        public async Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken)
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo facturas pendientes desde la API");
+                _logger.LogInformation("📋 === OBTENIENDO FACTURAS PENDIENTES DEL API ===");
 
-                // Configurar token JWT si se proporciona
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
                 var response = await _httpClient.GetAsync("api/Facturacion/facturas/pendientes");
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📋 Respuesta de la API: {StatusCode}", response.StatusCode);
-                _logger.LogInformation("📋 Contenido de respuesta: {Content}", responseContent);
+                _logger.LogInformation("📋 Contenido de respuesta: {Content}", responseContent.Substring(0, Math.Min(500, responseContent.Length)));
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("📋 Respuesta exitosa de la API");
-                    
-                    // Deserializar como JObject para mejor control
-                    var jObject = JObject.Parse(responseContent);
-                    
-                    _logger.LogInformation("📋 Estructura de respuesta de API: {Estructura}", 
-                        string.Join(", ", jObject.Properties().Select(p => p.Name)));
-                    
-                    // Extraer datos según la estructura de la API
-                    var success = jObject["success"]?.Value<bool>() ?? false;
-                    var facturas = jObject["facturas"]?.ToObject<List<object>>() ?? new List<object>();
-                    var message = jObject["message"]?.Value<string>() ?? "";
-                    
-                    _logger.LogInformation("📋 Facturas extraídas: {Count} elementos", facturas.Count);
-                    
-                    if (facturas.Any())
+                    if (string.IsNullOrWhiteSpace(responseContent))
                     {
-                        _logger.LogInformation("📋 Se encontraron {Count} facturas pendientes", facturas.Count);
-                        
-                        return (success: true, data: new { 
-                            success = true,
-                            facturas = facturas,
-                            totalFacturas = facturas.Count,
-                            message = $"Se encontraron {facturas.Count} facturas pendientes"
-                        }, message: "Facturas pendientes obtenidas", details: null);
+                        _logger.LogWarning("📋 Respuesta vacía del API");
+                        return (success: false, data: null, message: "Respuesta vacía del servidor", details: null);
+                    }
+
+                    // Deserializar la respuesta JSON completa
+                    var apiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions 
+                    { 
+                        PropertyNameCaseInsensitive = true 
+                    });
+
+                    _logger.LogInformation("📋 Respuesta del API deserializada. Kind: {Kind}", apiResponse.ValueKind);
+
+                    // Verificar si la respuesta tiene la estructura esperada del API
+                    if (apiResponse.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                    {
+                        // El API devuelve: { success: true, facturas: [...], totalFacturas: X, message: "..." }
+                        if (apiResponse.TryGetProperty("facturas", out var facturasElement))
+                        {
+                            var facturasArray = JsonSerializer.Deserialize<FacturaDTO[]>(facturasElement.GetRawText(), new JsonSerializerOptions 
+                            { 
+                                PropertyNameCaseInsensitive = true 
+                            });
+
+                            _logger.LogInformation("📋 Facturas deserializadas: {Count}", facturasArray?.Length ?? 0);
+
+                            // Devolver la estructura exacta que espera el frontend
+                            return (success: true, 
+                                   data: facturasArray ?? new FacturaDTO[0], 
+                                   message: "Facturas pendientes obtenidas", 
+                                   details: null);
+                        }
+                        else
+                        {
+                            _logger.LogInformation("📋 No se encontró propiedad 'facturas' en la respuesta");
+                            return (success: true, 
+                                   data: new FacturaDTO[0], 
+                                   message: "No hay facturas pendientes", 
+                                   details: null);
+                        }
                     }
                     else
                     {
-                        _logger.LogInformation("📋 No se encontraron facturas pendientes");
-                        return (success: true, data: new { 
-                            success = true,
-                            facturas = new List<object>(),
-                            totalFacturas = 0,
-                            message = "No hay facturas pendientes"
-                        }, message: "No hay facturas pendientes", details: null);
+                        // Si no tiene success=true, verificar si es directamente un array de facturas
+                        if (apiResponse.ValueKind == JsonValueKind.Array)
+                        {
+                            var facturasArray = JsonSerializer.Deserialize<FacturaDTO[]>(responseContent, new JsonSerializerOptions 
+                            { 
+                                PropertyNameCaseInsensitive = true 
+                            });
+
+                            _logger.LogInformation("📋 Array directo de facturas deserializado: {Count}", facturasArray?.Length ?? 0);
+
+                            return (success: true, 
+                                   data: facturasArray ?? new FacturaDTO[0], 
+                                   message: "Facturas pendientes obtenidas", 
+                                   details: null);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("📋 Estructura de respuesta no reconocida");
+                            return (success: false, data: null, message: "Estructura de respuesta no válida", details: responseContent);
+                        }
                     }
                 }
                 else
@@ -436,7 +462,7 @@ namespace GestionLlantera.Web.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
-                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+                return (success: false, data: null, message: "Error interno al obtener facturas pendientes", details: ex.ToString());
             }
         }
 
@@ -768,7 +794,7 @@ namespace GestionLlantera.Web.Services
                     {
                         var valorTruncado = property.Value?.ToString();
                         if (valorTruncado?.Length > 200) valorTruncado = valorTruncado.Substring(0, 200) + "...";
-                        _logger.LogInformation("🔍   - {Propiedad}: {Valor}", property.Name, valorTruncado);
+                        _logger.LogInformation("🔍   {PropertyName}: {PropertyValue}", property.Name, valorTruncado);
                     }
                 }
 
@@ -896,5 +922,15 @@ namespace GestionLlantera.Web.Services
                 return null;
             }
         }
+    }
+
+    public class FacturaDTO
+    {
+        public int Id { get; set; }
+        public string NumeroFactura { get; set; }
+        public DateTime FechaCreacion { get; set; }
+        public string NombreCliente { get; set; }
+        public decimal Total { get; set; }
+        public string Estado { get; set; }
     }
 }

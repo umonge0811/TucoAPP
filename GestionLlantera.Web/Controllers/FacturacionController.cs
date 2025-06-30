@@ -642,7 +642,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
 
-                var token = HttpContext.Request.Cookies["jwtToken"];
+                var token = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
                     return Json(new { success = false, message = "Sesión expirada" });
@@ -650,61 +650,15 @@ namespace GestionLlantera.Web.Controllers
 
                 var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
 
-                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Data={DataType}", 
-                    resultado.success, resultado.data?.GetType().Name ?? "null");
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}", 
+                    resultado.success, resultado.message);
 
                 if (resultado.success && resultado.data != null)
                 {
-                    // Log detallado de la estructura de datos
-                    _logger.LogInformation("📋 Estructura de datos recibida del servicio:");
-                    _logger.LogInformation("📋 Data Type: {Type}", resultado.data.GetType().FullName);
+                    _logger.LogInformation("📋 Procesando respuesta del API de facturas pendientes");
                     
-                    if (resultado.data is System.Text.Json.JsonElement jsonElement)
-                    {
-                        _logger.LogInformation("📋 JsonElement Kind: {Kind}", jsonElement.ValueKind);
-                        
-                        // Si es un objeto, verificar si tiene propiedades de facturas
-                        if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Object)
-                        {
-                            var hasFacturas = false;
-                            var hasFacturasArray = false;
-                            
-                            foreach (var prop in jsonElement.EnumerateObject())
-                            {
-                                _logger.LogInformation("📋 Property: {Name} = {ValueKind}", prop.Name, prop.Value.ValueKind);
-                                
-                                if (prop.Name.Equals("facturas", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    hasFacturas = true;
-                                    if (prop.Value.ValueKind == System.Text.Json.JsonValueKind.Array)
-                                    {
-                                        hasFacturasArray = true;
-                                        _logger.LogInformation("📋 Array de facturas encontrado con {Count} elementos", 
-                                            prop.Value.GetArrayLength());
-                                    }
-                                }
-                            }
-                            
-                            _logger.LogInformation("📋 Análisis: hasFacturas={HasFacturas}, hasFacturasArray={HasArray}", 
-                                hasFacturas, hasFacturasArray);
-                            
-                            // Si tiene la estructura esperada { facturas: [...] }, devolverla directamente
-                            if (hasFacturas && hasFacturasArray)
-                            {
-                                _logger.LogInformation("📋 Retornando estructura completa con facturas");
-                                return Json(resultado.data);
-                            }
-                        }
-                        // Si es un array directo, también devolverlo
-                        else if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
-                        {
-                            _logger.LogInformation("📋 Array directo de facturas con {Count} elementos", 
-                                jsonElement.GetArrayLength());
-                            return Json(resultado.data);
-                        }
-                    }
-                    
-                    _logger.LogInformation("📋 Retornando datos como están del servicio");
+                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
+                    // Solo necesitamos devolverla tal como viene
                     return Json(resultado.data);
                 }
                 else
