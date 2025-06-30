@@ -655,6 +655,22 @@ namespace GestionLlantera.Web.Controllers
 
                 if (resultado.success && resultado.data != null)
                 {
+                    // Log detallado de la estructura de datos
+                    _logger.LogInformation("📋 Estructura de datos recibida del servicio:");
+                    _logger.LogInformation("📋 Data Type: {Type}", resultado.data.GetType().FullName);
+                    
+                    if (resultado.data is System.Text.Json.JsonElement jsonElement)
+                    {
+                        _logger.LogInformation("📋 JsonElement Kind: {Kind}", jsonElement.ValueKind);
+                        if (jsonElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+                        {
+                            foreach (var prop in jsonElement.EnumerateObject())
+                            {
+                                _logger.LogInformation("📋 Property: {Name} = {Value}", prop.Name, prop.Value);
+                            }
+                        }
+                    }
+                    
                     _logger.LogInformation("📋 Retornando datos exitosos al frontend");
                     return Json(resultado.data);
                 }

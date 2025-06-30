@@ -3236,42 +3236,45 @@ async function abrirFacturasPendientes() {
 
         const resultado = await response.json();
         console.log('📋 === DEBUGGING RESPUESTA COMPLETA ===');
-        console.log('📋 === DEBUGGING RESPUESTA COMPLETA ===');
         console.log('📋 Resultado completo:', resultado);
         console.log('📋 Tipo de resultado:', typeof resultado);
         console.log('📋 Propiedades del resultado:', Object.keys(resultado || {}));
 
-        // La respuesta viene directamente del controlador Web como un objeto JSON
+        // El controlador Web retorna directamente el objeto con facturas
         let facturas = null;
         
-        // Verificar la estructura de la respuesta
         if (resultado) {
-            console.log('📋 Analizando estructura de respuesta...');
-            
-            // Opción 1: resultado.facturas (estructura principal esperada)
-            if (resultado.facturas && Array.isArray(resultado.facturas)) {
+            // El controller retorna: Json(resultado.data) donde resultado.data viene del API
+            // que puede ser { facturas: [...], totalFacturas: X } o directamente [...]
+            if (Array.isArray(resultado)) {
+                // Si es directamente un array de facturas
+                facturas = resultado;
+                console.log('✅ Facturas encontradas como array directo:', facturas.length);
+            }
+            else if (resultado.facturas && Array.isArray(resultado.facturas)) {
+                // Si viene con la estructura { facturas: [...] }
                 facturas = resultado.facturas;
                 console.log('✅ Facturas encontradas en resultado.facturas:', facturas.length);
             }
-            // Opción 2: resultado.success = true y verificar datos anidados
-            else if (resultado.success === true || resultado.success === undefined) {
-                if (resultado.data && resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
+            else if (resultado.success !== false && resultado.facturas === undefined && resultado.data) {
+                // Si hay un data anidado
+                if (Array.isArray(resultado.data)) {
+                    facturas = resultado.data;
+                    console.log('✅ Facturas encontradas en resultado.data como array:', facturas.length);
+                }
+                else if (resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
                     facturas = resultado.data.facturas;
                     console.log('✅ Facturas encontradas en resultado.data.facturas:', facturas.length);
-                }
-                else if (Array.isArray(resultado.data)) {
-                    facturas = resultado.data;
-                    console.log('✅ Facturas encontradas directamente en resultado.data:', facturas.length);
                 }
             }
             
             // Logging adicional para debugging
             if (!facturas) {
-                console.log('⚠️ No se encontraron facturas. Estructura actual:');
+                console.log('⚠️ No se encontraron facturas. Estructura recibida:');
+                console.log('📋 Es array?:', Array.isArray(resultado));
                 console.log('📋 resultado.facturas:', resultado.facturas);
                 console.log('📋 resultado.data:', resultado.data);
                 console.log('📋 resultado.success:', resultado.success);
-                console.log('📋 Es resultado un array?:', Array.isArray(resultado));
             }
         }
 
