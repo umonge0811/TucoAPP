@@ -367,7 +367,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken = null)
+        public async Task<List<FacturaDTO>> ObtenerFacturasPendientesAsync(string jwtToken = null)
         {
             try
             {
@@ -382,61 +382,84 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var response = await _httpClient.GetAsync("api/Facturacion/facturas/pendientes");
-                var responseContent = await response.Content.ReadAsStringAsync();
 
-                _logger.LogInformation("📋 Respuesta de la API: {StatusCode}", response.StatusCode);
-                _logger.LogInformation("📋 Contenido de respuesta: {Content}", responseContent);
-
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("📋 Respuesta exitosa de la API");
-                    
-                    // Deserializar como JObject para mejor control
-                    var jObject = JObject.Parse(responseContent);
-                    
-                    _logger.LogInformation("📋 Estructura de respuesta de API: {Estructura}", 
-                        string.Join(", ", jObject.Properties().Select(p => p.Name)));
-                    
-                    // Extraer datos según la estructura de la API
-                    var success = jObject["success"]?.Value<bool>() ?? false;
-                    var facturas = jObject["facturas"]?.ToObject<List<object>>() ?? new List<object>();
-                    var message = jObject["message"]?.Value<string>() ?? "";
-                    
-                    _logger.LogInformation("📋 Facturas extraídas: {Count} elementos", facturas.Count);
-                    
-                    if (facturas.Any())
-                    {
-                        _logger.LogInformation("📋 Se encontraron {Count} facturas pendientes", facturas.Count);
-                        
-                        return (success: true, data: new { 
-                            success = true,
-                            facturas = facturas,
-                            totalFacturas = facturas.Count,
-                            message = $"Se encontraron {facturas.Count} facturas pendientes"
-                        }, message: "Facturas pendientes obtenidas", details: null);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("📋 No se encontraron facturas pendientes");
-                        return (success: true, data: new { 
-                            success = true,
-                            facturas = new List<object>(),
-                            totalFacturas = 0,
-                            message = "No hay facturas pendientes"
-                        }, message: "No hay facturas pendientes", details: null);
-                    }
-                }
-                else
-                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogError("❌ Error obteniendo facturas pendientes: {StatusCode} - {Content}", 
-                        response.StatusCode, responseContent);
-                    return (success: false, data: null, message: "Error al obtener facturas pendientes", details: responseContent);
+                        response.StatusCode, errorContent);
+                    return new List<FacturaDTO>();
                 }
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📋 Contenido recibido de la API para facturas pendientes");
+
+                // Deserializar la respuesta JSON directamente
+                var rawData = JsonConvert.DeserializeObject<dynamic>(content);
+                var facturas = new List<FacturaDTO>();
+
+                if (rawData == null)
+                {
+                    _logger.LogWarning("La respuesta de la API es null");
+                    return new List<FacturaDTO>();
+                }
+
+                // Verificar si la respuesta tiene estructura de éxito con facturas
+                JArray facturasArray = null;
+                if (rawData is JObject jObject && jObject["facturas"] != null)
+                {
+                    facturasArray = jObject["facturas"] as JArray;
+                }
+                else if (rawData is JArray)
+                {
+                    facturasArray = rawData as JArray;
+                }
+
+                if (facturasArray != null)
+                {
+                    foreach (var item in facturasArray)
+                    {
+                        try
+                        {
+                            var factura = new FacturaDTO
+                            {
+                                FacturaId = (int)(item["facturaId"] ?? item["id"] ?? 0),
+                                NumeroFactura = (string)(item["numeroFactura"] ?? ""),
+                                NombreCliente = (string)(item["nombreCliente"] ?? ""),
+                                IdentificacionCliente = (string)(item["identificacionCliente"] ?? ""),
+                                TelefonoCliente = (string)(item["telefonoCliente"] ?? ""),
+                                EmailCliente = (string)(item["emailCliente"] ?? ""),
+                                FechaFactura = item["fechaFactura"] != null ? 
+                                    DateTime.Parse(item["fechaFactura"].ToString()) : DateTime.Now,
+                                FechaCreacion = item["fechaCreacion"] != null ? 
+                                    DateTime.Parse(item["fechaCreacion"].ToString()) : DateTime.Now,
+                                Total = (decimal)(item["total"] ?? 0),
+                                Estado = (string)(item["estado"] ?? "Pendiente"),
+                                TipoDocumento = (string)(item["tipoDocumento"] ?? "Factura"),
+                                UsuarioCreadorNombre = (string)(item["usuarioCreadorNombre"] ?? ""),
+                                DetallesFactura = new List<DetalleFacturaDTO>() // Se puede cargar por separado si es necesario
+                            };
+
+                            facturas.Add(factura);
+
+                            _logger.LogInformation("✅ Factura procesada: {NumeroFactura} - Cliente: {Cliente}",
+                                factura.NumeroFactura, factura.NombreCliente);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "❌ Error procesando factura individual: {Message}", ex.Message);
+                            // Continuar con la siguiente factura sin fallar todo el proceso
+                        }
+                    }
+                }
+
+                _logger.LogInformation("🎉 PROCESO COMPLETADO: {Count} facturas procesadas exitosamente", facturas.Count);
+                return facturas;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
-                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+                return new List<FacturaDTO>();
             }
         }
 
@@ -768,7 +791,7 @@ namespace GestionLlantera.Web.Services
                     {
                         var valorTruncado = property.Value?.ToString();
                         if (valorTruncado?.Length > 200) valorTruncado = valorTruncado.Substring(0, 200) + "...";
-                        _logger.LogInformation("🔍   - {Propiedad}: {Valor}", property.Name, valorTruncado);
+                        _logger.LogInformation("🔍   {PropertyName}: {PropertyValue}", property.Name, valorTruncado);
                     }
                 }
 
