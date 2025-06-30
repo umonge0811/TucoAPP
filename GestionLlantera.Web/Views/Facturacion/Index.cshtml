@@ -203,6 +203,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-info-circle me-2"></i>Instrucciones:</h6>
+                    <ul class="mb-0">
+                        <li><strong>Completar:</strong> Marca la factura como pagada directamente</li>
+                        <li><strong>Procesar:</strong> Abre el modal de finalización para configurar el pago</li>
+                        <li><strong>Click en fila:</strong> Selecciona la factura (visual)</li>
+                    </ul>
+                </div>
                 <div id="facturasPendientesLoading" class="text-center py-4">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Cargando facturas pendientes...</span>
@@ -210,15 +218,15 @@
                 </div>
                 <div id="facturasPendientesContent" style="display: none;">
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-primary">
                                 <tr>
-                                    <th>Número</th>
+                                    <th>Número de Factura</th>
                                     <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th>Total</th>
-                                    <th>Tipo</th>
-                                    <th>Acciones</th>
+                                    <th>Fecha y Cajero</th>
+                                    <th>Total y Método</th>
+                                    <th>Estado</th>
+                                    <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="facturasPendientesTableBody">

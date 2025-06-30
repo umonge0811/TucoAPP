@@ -3257,41 +3257,66 @@ function mostrarFacturasPendientes(facturas) {
     let html = '';
     facturas.forEach(factura => {
         const fecha = new Date(factura.fechaFactura).toLocaleDateString('es-CR');
+        const hora = factura.fechaCreacion ? new Date(factura.fechaCreacion).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '';
         const total = factura.total || 0;
+        const cantidadItems = factura.cantidadItems || factura.detallesFactura?.length || 0;
+        
+        // Escapar datos para JavaScript
+        const facturaEscapada = JSON.stringify({
+            facturaId: factura.facturaId,
+            numeroFactura: factura.numeroFactura,
+            nombreCliente: factura.nombreCliente,
+            emailCliente: factura.emailCliente,
+            total: factura.total,
+            metodoPago: factura.metodoPago,
+            detallesFactura: factura.detallesFactura
+        }).replace(/"/g, '&quot;');
         
         html += `
-            <tr>
+            <tr class="factura-pendiente-row" style="cursor: pointer;" 
+                data-factura="${facturaEscapada}"
+                onclick="seleccionarFacturaPendiente(this)"
+                title="Click para seleccionar esta factura">
                 <td>
-                    <strong>${factura.numeroFactura || 'N/A'}</strong>
+                    <strong class="text-primary">${factura.numeroFactura || 'N/A'}</strong>
                     <br><small class="text-muted">ID: ${factura.facturaId}</small>
                 </td>
                 <td>
                     <strong>${factura.nombreCliente || 'Cliente General'}</strong>
                     ${factura.emailCliente ? `<br><small class="text-muted">${factura.emailCliente}</small>` : ''}
+                    ${factura.identificacionCliente ? `<br><small class="text-muted">ID: ${factura.identificacionCliente}</small>` : ''}
                 </td>
                 <td>
-                    ${fecha}
-                    <br><small class="text-muted">${factura.fechaCreacion ? new Date(factura.fechaCreacion).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : ''}</small>
+                    <strong>${fecha}</strong>
+                    ${hora ? `<br><small class="text-muted">${hora}</small>` : ''}
+                    <br><small class="badge bg-info">${factura.usuarioCreadorNombre || 'Sistema'}</small>
                 </td>
                 <td>
-                    <strong class="text-success">₡${formatearMoneda(total)}</strong>
-                    <br><small class="text-muted">${factura.metodoPago || 'No especificado'}</small>
+                    <strong class="text-success fs-6">₡${formatearMoneda(total)}</strong>
+                    <br><small class="text-muted">${factura.metodoPago || 'Efectivo'}</small>
+                    <br><small class="text-info">${cantidadItems} item(s)</small>
                 </td>
-                <td>
-                    <span class="badge bg-warning">Pendiente</span>
+                <td class="text-center">
+                    <span class="badge bg-warning text-dark">Pendiente</span>
                     <br><small class="text-muted">${factura.tipoDocumento || 'Factura'}</small>
                 </td>
                 <td>
                     <div class="btn-group-vertical btn-group-sm">
                         <button type="button" 
                                 class="btn btn-success btn-sm mb-1" 
-                                onclick="completarFacturaPendiente(${factura.facturaId}, '${factura.numeroFactura}', ${total})"
-                                title="Marcar como pagada">
+                                onclick="event.stopPropagation(); completarFacturaPendienteDirecto(${factura.facturaId}, '${factura.numeroFactura}', ${total})"
+                                title="Marcar como pagada directamente">
                             <i class="bi bi-check-circle me-1"></i>Completar
                         </button>
                         <button type="button" 
+                                class="btn btn-outline-primary btn-sm mb-1" 
+                                onclick="event.stopPropagation(); procesarFacturaPendiente('${facturaEscapada}')"
+                                title="Procesar con modal de finalización">
+                            <i class="bi bi-credit-card me-1"></i>Procesar
+                        </button>
+                        <button type="button" 
                                 class="btn btn-outline-info btn-sm" 
-                                onclick="verDetalleFacturaPendiente(${factura.facturaId})"
+                                onclick="event.stopPropagation(); verDetalleFacturaPendiente(${factura.facturaId})"
                                 title="Ver detalles">
                             <i class="bi bi-eye me-1"></i>Detalle
                         </button>
@@ -3311,8 +3336,122 @@ function mostrarSinFacturasPendientes() {
     $('#facturasPendientesEmpty').show();
 }
 
-async function completarFacturaPendiente(facturaId, numeroFactura, total) {
-    console.log('💰 === COMPLETANDO FACTURA PENDIENTE ===');
+// ===== FUNCIONES PARA FACTURAS PENDIENTES =====
+
+/**
+ * Seleccionar una factura pendiente haciendo click en la fila
+ */
+function seleccionarFacturaPendiente(row) {
+    // Remover selección anterior
+    $('.factura-pendiente-row').removeClass('table-primary');
+    
+    // Agregar selección a la fila actual
+    $(row).addClass('table-primary');
+    
+    console.log('📋 Factura pendiente seleccionada');
+}
+
+/**
+ * Procesar factura pendiente usando el modal de finalización
+ */
+function procesarFacturaPendiente(facturaEscapada) {
+    try {
+        const factura = JSON.parse(facturaEscapada.replace(/&quot;/g, '"'));
+        console.log('🔄 === PROCESANDO FACTURA PENDIENTE ===');
+        console.log('🔄 Factura:', factura);
+        
+        // Cerrar modal de facturas pendientes
+        $('#facturasPendientesModal').modal('hide');
+        
+        // Cargar los datos de la factura en el carrito
+        cargarFacturaPendienteEnCarrito(factura);
+        
+        // Mostrar modal de finalización después de cargar los datos
+        setTimeout(() => {
+            mostrarModalFinalizarVenta();
+        }, 500);
+        
+    } catch (error) {
+        console.error('❌ Error procesando factura pendiente:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo procesar la factura seleccionada',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+/**
+ * Cargar datos de factura pendiente en el carrito
+ */
+function cargarFacturaPendienteEnCarrito(factura) {
+    console.log('📦 === CARGANDO FACTURA EN CARRITO ===');
+    
+    // Limpiar carrito actual
+    productosEnVenta = [];
+    
+    // Cargar datos del cliente
+    clienteSeleccionado = {
+        id: factura.clienteId || 1,
+        clienteId: factura.clienteId || 1,
+        nombre: factura.nombreCliente,
+        nombreCliente: factura.nombreCliente,
+        email: factura.emailCliente,
+        telefono: factura.telefonoCliente,
+        identificacion: factura.identificacionCliente,
+        direccion: factura.direccionCliente
+    };
+    
+    // Mostrar cliente seleccionado
+    $('#clienteBusqueda').val(factura.nombreCliente);
+    $('#nombreClienteSeleccionado').text(factura.nombreCliente);
+    $('#emailClienteSeleccionado').text(factura.emailCliente || 'Sin email');
+    $('#clienteSeleccionado').removeClass('d-none');
+    
+    // Cargar productos de la factura
+    if (factura.detallesFactura && factura.detallesFactura.length > 0) {
+        factura.detallesFactura.forEach(detalle => {
+            productosEnVenta.push({
+                productoId: detalle.productoId,
+                nombreProducto: detalle.nombreProducto,
+                precioUnitario: detalle.precioUnitario,
+                cantidad: detalle.cantidad,
+                stockDisponible: 999, // Asumir stock suficiente para facturas pendientes
+                metodoPago: factura.metodoPago || 'efectivo',
+                imagenUrl: null,
+                facturaId: factura.facturaId // Marcar como factura existente
+            });
+        });
+    }
+    
+    // Actualizar vista del carrito
+    actualizarVistaCarrito();
+    actualizarTotales();
+    actualizarEstadoBotonFinalizar();
+    
+    console.log('✅ Factura cargada en carrito:', {
+        cliente: clienteSeleccionado,
+        productos: productosEnVenta.length
+    });
+    
+    // Mostrar notificación
+    Swal.fire({
+        icon: 'info',
+        title: 'Factura Cargada',
+        text: `Factura ${factura.numeroFactura} cargada para completar el pago`,
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+    });
+}
+
+/**
+ * Completar factura pendiente directamente (sin modal)
+ */
+async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total) {
+    console.log('💰 === COMPLETANDO FACTURA PENDIENTE DIRECTAMENTE ===');
     console.log('💰 ID:', facturaId, 'Número:', numeroFactura, 'Total:', total);
     
     const confirmacion = await Swal.fire({
@@ -3415,7 +3554,10 @@ window.irAFacturasPendientes = irAFacturasPendientes;
 window.imprimirComprobanteEnvio = imprimirComprobanteEnvio;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
 window.abrirFacturasPendientes = abrirFacturasPendientes;
-window.completarFacturaPendiente = completarFacturaPendiente;
+window.completarFacturaPendienteDirecto = completarFacturaPendienteDirecto;
+window.procesarFacturaPendiente = procesarFacturaPendiente;
+window.seleccionarFacturaPendiente = seleccionarFacturaPendiente;
+window.cargarFacturaPendienteEnCarrito = cargarFacturaPendienteEnCarrito;
 window.verDetalleFacturaPendiente = verDetalleFacturaPendiente;
 
 // Estilos CSS para cards de productos
