@@ -640,45 +640,32 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 === INICIO ObtenerFacturasPendientes ===");
-                _logger.LogInformation("📋 Usuario: {Usuario}", User.Identity?.Name);
+                _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
 
-                if (!await this.TienePermisoAsync("Ver Facturas"))
+                var token = HttpContext.Request.Cookies["jwtToken"];
+                if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogWarning("🚫 Usuario sin permisos para ver facturas");
-                    return Json(new { success = false, message = "Sin permisos para ver facturas" });
+                    return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                var jwtToken = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
+                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
+
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Data={DataType}", 
+                    resultado.success, resultado.data?.GetType().Name ?? "null");
+
+                if (resultado.success && resultado.data != null)
                 {
-                    _logger.LogError("❌ Token JWT no disponible");
-                    return Json(new { success = false, message = "Token de autenticación no disponible" });
-                }
-
-                _logger.LogInformation("📋 Llamando al servicio de facturación...");
-                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(jwtToken);
-
-                _logger.LogInformation("📋 Resultado del servicio: success={Success}", resultado.success);
-
-                if (resultado.success)
-                {
-                    _logger.LogInformation("📋 Enviando respuesta exitosa al frontend");
-                    _logger.LogInformation("📋 Estructura de datos: {Data}", System.Text.Json.JsonSerializer.Serialize(resultado.data));
-
-                    return Json(new { 
-                        success = true, 
-                        data = resultado.data,
-                        message = resultado.message 
-                    });
+                    _logger.LogInformation("📋 Retornando datos exitosos al frontend");
+                    return Json(resultado.data);
                 }
                 else
                 {
-                    _logger.LogError("❌ Error del servicio: {Message}", resultado.message);
+                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
                     return Json(new { 
                         success = false, 
-                        message = resultado.message,
-                        details = resultado.details
+                        message = resultado.message ?? "No se pudieron obtener las facturas pendientes",
+                        facturas = new List<object>(),
+                        totalFacturas = 0
                     });
                 }
             }
@@ -687,13 +674,10 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
                 return Json(new { 
                     success = false, 
-                    message = "Error interno al obtener facturas pendientes",
-                    details = ex.Message
+                    message = "Error interno del servidor",
+                    facturas = new List<object>(),
+                    totalFacturas = 0
                 });
-            }
-            finally
-            {
-                _logger.LogInformation("📋 === FIN ObtenerFacturasPendientes ===");
             }
         }
 

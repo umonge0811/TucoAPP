@@ -3236,40 +3236,42 @@ async function abrirFacturasPendientes() {
 
         const resultado = await response.json();
         console.log('📋 === DEBUGGING RESPUESTA COMPLETA ===');
+        console.log('📋 === DEBUGGING RESPUESTA COMPLETA ===');
         console.log('📋 Resultado completo:', resultado);
-        console.log('📋 resultado.success:', resultado.success);
-        console.log('📋 resultado.data:', resultado.data);
-        
-        if (resultado.data) {
-            console.log('📋 Tipo de resultado.data:', typeof resultado.data);
-            console.log('📋 Propiedades de resultado.data:', Object.keys(resultado.data));
-            
-            if (resultado.data.facturas) {
-                console.log('📋 resultado.data.facturas:', resultado.data.facturas);
-                console.log('📋 Tipo de facturas:', typeof resultado.data.facturas);
-                console.log('📋 Es array:', Array.isArray(resultado.data.facturas));
-                console.log('📋 Longitud de facturas:', resultado.data.facturas.length);
-            }
-        }
+        console.log('📋 Tipo de resultado:', typeof resultado);
+        console.log('📋 Propiedades del resultado:', Object.keys(resultado || {}));
 
-        // Verificar múltiples estructuras posibles de respuesta
+        // La respuesta viene directamente del controlador Web como un objeto JSON
         let facturas = null;
         
-        if (resultado.success) {
-            // Opción 1: resultado.data.facturas (desde el servicio Web)
-            if (resultado.data && resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
-                facturas = resultado.data.facturas;
-                console.log('✅ Facturas encontradas en resultado.data.facturas:', facturas.length);
-            }
-            // Opción 2: resultado.facturas (directo desde la API)
-            else if (resultado.facturas && Array.isArray(resultado.facturas)) {
+        // Verificar la estructura de la respuesta
+        if (resultado) {
+            console.log('📋 Analizando estructura de respuesta...');
+            
+            // Opción 1: resultado.facturas (estructura principal esperada)
+            if (resultado.facturas && Array.isArray(resultado.facturas)) {
                 facturas = resultado.facturas;
                 console.log('✅ Facturas encontradas en resultado.facturas:', facturas.length);
             }
-            // Opción 3: resultado.data es directamente el array de facturas
-            else if (resultado.data && Array.isArray(resultado.data)) {
-                facturas = resultado.data;
-                console.log('✅ Facturas encontradas directamente en resultado.data:', facturas.length);
+            // Opción 2: resultado.success = true y verificar datos anidados
+            else if (resultado.success === true || resultado.success === undefined) {
+                if (resultado.data && resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
+                    facturas = resultado.data.facturas;
+                    console.log('✅ Facturas encontradas en resultado.data.facturas:', facturas.length);
+                }
+                else if (Array.isArray(resultado.data)) {
+                    facturas = resultado.data;
+                    console.log('✅ Facturas encontradas directamente en resultado.data:', facturas.length);
+                }
+            }
+            
+            // Logging adicional para debugging
+            if (!facturas) {
+                console.log('⚠️ No se encontraron facturas. Estructura actual:');
+                console.log('📋 resultado.facturas:', resultado.facturas);
+                console.log('📋 resultado.data:', resultado.data);
+                console.log('📋 resultado.success:', resultado.success);
+                console.log('📋 Es resultado un array?:', Array.isArray(resultado));
             }
         }
 
