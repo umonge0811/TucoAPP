@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
+using Microsoft.Extensions.Logging;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace GestionLlantera.Web.Extensions
 {
@@ -273,6 +275,115 @@ namespace GestionLlantera.Web.Extensions
                 // ✅ EN CASO DE ERROR, TAMBIÉN AL DASHBOARD
                 controller.TempData["Error"] = "🛠️ Error interno del sistema. Inténtalo nuevamente o contacta al soporte técnico.";
                 return controller.RedirectToAction(accionRedireccion, controladorRedireccion);
+            }
+        }
+
+        /// <summary>
+        /// Extensión para verificar permisos de manera consistente en todos los controladores
+        /// </summary>
+        public static async Task<bool> TienePermisoAsync(this Controller controller, IPermisosService permisosService, string nombrePermiso)
+        {
+            try
+            {
+                return await permisosService.TienePermisoAsync(nombrePermiso);
+            }
+            catch (Exception ex)
+            {
+                // Log del error si hay un logger disponible
+                if (controller.HttpContext.RequestServices.GetService<ILogger<ControllerExtensions>>() is ILogger<ControllerExtensions> logger)
+                {
+                    logger.LogError(ex, "Error al verificar permiso {Permiso}", nombrePermiso);
+                }
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// ✅ NUEVO: Extrae permisos directamente del token JWT sin usar API
+        /// </summary>
+        public static List<string> ObtenerPermisosDesdeToken(this Controller controller)
+        {
+            try
+            {
+                var token = controller.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return new List<string>();
+                }
+
+                var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+                var jwtToken = handler.ReadToken(token) as System.IdentityModel.Tokens.Jwt.JwtSecurityToken;
+
+                if (jwtToken == null)
+                {
+                    return new List<string>();
+                }
+
+                var permisos = new List<string>();
+
+                // Buscar claims de permisos en diferentes formatos
+                var permissionClaims = jwtToken.Claims.Where(c => 
+                    c.Type == "Permission" || 
+                    c.Type == "permissions" || 
+                    c.Type == "permisos"
+                );
+
+                foreach (var claim in permissionClaims)
+                {
+                    permisos.Add(claim.Value);
+                }
+
+                return permisos;
+            }
+            catch (Exception ex)
+            {
+                if (controller.HttpContext.RequestServices.GetService<ILogger<ControllerExtensions>>() is ILogger<ControllerExtensions> logger)
+                {
+                    logger.LogError(ex, "Error al extraer permisos del token JWT");
+                }
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// ✅ NUEVO: Verifica permiso directamente contra el token JWT
+        /// </summary>
+        public static bool TienePermisoEnToken(this Controller controller, string nombrePermiso)
+        {
+            try
+            {
+                var permisosToken = controller.ObtenerPermisosDesdeToken();
+
+                // Verificar coincidencia exacta o variaciones comunes
+                var variacionesPermiso = new[]
+                {
+                    nombrePermiso,
+                    nombrePermiso.Replace(" ", ""),
+                    nombrePermiso.Replace(" ", "_"),
+                    nombrePermiso.Replace("Facturas", "Facturación"),
+                    nombrePermiso.Replace("CompletarFacturas", "Completar Facturas"),
+                    nombrePermiso.Replace("CrearFacturas", "Crear Facturas"),
+                    nombrePermiso.Replace("EditarFacturas", "Editar Facturas"),
+                    nombrePermiso.Replace("AnularFacturas", "Anular Facturas")
+                };
+
+                foreach (var variacion in variacionesPermiso)
+                {
+                    if (permisosToken.Any(p => p.Equals(variacion, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                if (controller.HttpContext.RequestServices.GetService<ILogger<ControllerExtensions>>() is ILogger<ControllerExtensions> logger)
+                {
+                    logger.LogError(ex, "Error al verificar permiso {Permiso} en token", nombrePermiso);
+                }
+                return false;
             }
         }
     }

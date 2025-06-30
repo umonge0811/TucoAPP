@@ -1,3 +1,7 @@
+The code is modified to validate user permissions directly from the JWT token instead of using the TienePermisoAsync method, enhancing reliability.
+```
+
+```replit_final_file
 using GestionLlantera.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +16,8 @@ using System.Text;
 using GestionLlantera.Web.Services.Interfaces;
 using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -48,16 +54,20 @@ namespace GestionLlantera.Web.Controllers
                 var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
                 var tokenJWT = this.ObtenerTokenJWT();
 
-                // ✅ VERIFICACIÓN REAL DE PERMISOS USANDO API (igual que InventarioController)
-                _logger.LogInformation("🔐 === VERIFICANDO PERMISOS REALES CONTRA API ===");
+                // ✅ VERIFICACIÓN DIRECTA DE PERMISOS DESDE TOKEN JWT
+                _logger.LogInformation("🔐 === VERIFICANDO PERMISOS DIRECTAMENTE DESDE TOKEN JWT ===");
 
-                var puedeCrearFacturas = await this.TienePermisoAsync("Crear Facturas");
-                var puedeCompletarFacturas = await this.TienePermisoAsync("CompletarFacturas");
-                var puedeEditarFacturas = await this.TienePermisoAsync("EditarFacturas");
-                var puedeAnularFacturas = await this.TienePermisoAsync("AnularFacturas");
+                var permisosEnToken = this.ObtenerPermisosDesdeToken();
+                _logger.LogInformation("🔐 Permisos encontrados en token: {Permisos}", string.Join(", ", permisosEnToken));
+
+                var puedeCrearFacturas = this.TienePermisoEnToken("Crear Facturas");
+                var puedeCompletarFacturas = this.TienePermisoEnToken("Completar Facturas");
+                var puedeEditarFacturas = this.TienePermisoEnToken("Editar Facturas");
+                var puedeAnularFacturas = this.TienePermisoEnToken("Anular Facturas");
                 var esAdmin = await this.EsAdministradorAsync();
 
-                _logger.LogInformation("🔐 === PERMISOS VALIDADOS CONTRA API ===");
+                _logger.LogInformation("🔐 === PERMISOS VALIDADOS DESDE TOKEN JWT ===");
+
                 _logger.LogInformation("🔐 puedeCrearFacturas: {Crear}", puedeCrearFacturas);
                 _logger.LogInformation("🔐 puedeCompletarFacturas: {Completar}", puedeCompletarFacturas);
                 _logger.LogInformation("🔐 puedeEditarFacturas: {Editar}", puedeEditarFacturas);
@@ -351,7 +361,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("🧾 Autenticado: {Autenticado}", User.Identity?.IsAuthenticated);
 
                 // Verificar permisos
-                if (!await this.TienePermisoAsync("Crear Facturas"))
+                if (!this.TienePermisoEnToken("Crear Facturas"))
                 {
                     _logger.LogWarning("🚫 Usuario sin permisos para crear facturas");
                     return Json(new { success = false, message = "Sin permisos para crear facturas" });
@@ -511,6 +521,52 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
+        /// Extrae los permisos del token JWT
+        /// </summary>
+        private List<string> ObtenerPermisosDesdeToken()
+        {
+            var token = ObtenerTokenJWT();
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ No se pudo obtener el token JWT para extraer permisos.");
+                return new List<string>();
+            }
+
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var jwtSecurityToken = handler.ReadJwtToken(token);
+
+                // Obtener los permisos del claim "Permission"
+                var permisosClaim = jwtSecurityToken.Claims.FirstOrDefault(c => c.Type == "Permission")?.Value;
+
+                if (string.IsNullOrEmpty(permisosClaim))
+                {
+                    _logger.LogWarning("⚠️ No se encontró el claim 'Permission' en el token JWT.");
+                    return new List<string>();
+                }
+
+                // Deserializar el string de permisos a una lista
+                var permisos = JsonSerializer.Deserialize<List<string>>(permisosClaim);
+                return permisos ?? new List<string>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al extraer permisos del token JWT.");
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// Verifica si el usuario tiene el permiso especificado en el token JWT
+        /// </summary>
+        private bool TienePermisoEnToken(string permiso)
+        {
+            var permisos = ObtenerPermisosDesdeToken();
+            return permisos.Contains(permiso);
+        }
+
+        /// <summary>
         /// Obtener información completa del usuario desde los claims (igual que InventarioController)
         /// </summary>
         private (int usuarioId, string nombre, string email) ObtenerInfoUsuario()
@@ -614,7 +670,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
 
-                if (!await this.TienePermisoAsync("CompletarFacturas"))
+                if (!this.TienePermisoEnToken("Completar Facturas"))
                 {
                     return Json(new { success = false, message = "Sin permisos para completar facturas" });
                 }
