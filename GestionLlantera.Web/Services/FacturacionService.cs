@@ -393,7 +393,7 @@ namespace GestionLlantera.Web.Services
                     }
 
                     // Deserializar la respuesta JSON completa
-                    var apiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions 
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions 
                     { 
                         PropertyNameCaseInsensitive = true 
                     });
@@ -406,7 +406,7 @@ namespace GestionLlantera.Web.Services
                         // El API devuelve: { success: true, facturas: [...], totalFacturas: X, message: "..." }
                         if (apiResponse.TryGetProperty("facturas", out var facturasElement))
                         {
-                            var facturasArray = JsonSerializer.Deserialize<FacturaDTO[]>(facturasElement.GetRawText(), new JsonSerializerOptions 
+                            var facturasArray = System.Text.Json.JsonSerializer.Deserialize<FacturaDTO[]>(facturasElement.GetRawText(), new JsonSerializerOptions 
                             { 
                                 PropertyNameCaseInsensitive = true 
                             });
@@ -433,7 +433,7 @@ namespace GestionLlantera.Web.Services
                         // Si no tiene success=true, verificar si es directamente un array de facturas
                         if (apiResponse.ValueKind == JsonValueKind.Array)
                         {
-                            var facturasArray = JsonSerializer.Deserialize<FacturaDTO[]>(responseContent, new JsonSerializerOptions 
+                            var facturasArray = System.Text.Json.JsonSerializer.Deserialize<FacturaDTO[]>(responseContent, new JsonSerializerOptions 
                             { 
                                 PropertyNameCaseInsensitive = true 
                             });
