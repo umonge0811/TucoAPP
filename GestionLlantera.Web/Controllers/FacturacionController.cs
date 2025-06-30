@@ -1,7 +1,3 @@
-The code is modified to validate user permissions directly from the JWT token instead of using the TienePermisoAsync method, enhancing reliability.
-```
-
-```replit_final_file
 using GestionLlantera.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
