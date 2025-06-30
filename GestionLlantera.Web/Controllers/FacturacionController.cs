@@ -729,27 +729,12 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ObtenerFacturasPendientes()
-        {
-            try
-            {
-                var response = await _facturacionService.ObtenerFacturasPendientesAsync();
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error obteniendo facturas pendientes");
-                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
-            }
-        }
-
         [HttpPost]
         public async Task<IActionResult> CompletarFacturaPendiente([FromBody] CompletarFacturaRequest request)
         {
             try
             {
-                var response = await _facturacionService.CompletarFacturaPendienteAsync(request.FacturaId, request.NumeroFactura);
+                var response = await _facturacionService.CompletarFacturaAsync(request.FacturaId, new { }, this.ObtenerTokenJWT());
                 return Ok(response);
             }
             catch (Exception ex)
@@ -776,9 +761,21 @@ namespace GestionLlantera.Web.Controllers
                     });
                 }
 
+                // Convertir el request del controller al tipo esperado por el servicio
+                var serviceRequest = new Services.Interfaces.AjusteStockFacturacionRequest
+                {
+                    NumeroFactura = request.NumeroFactura,
+                    Productos = request.Productos.Select(p => new Services.Interfaces.ProductoAjusteStock
+                    {
+                        ProductoId = p.ProductoId,
+                        NombreProducto = p.NombreProducto,
+                        Cantidad = p.Cantidad
+                    }).ToList()
+                };
+
                 // Usar el servicio de facturación para ajustar el stock
                 var jwtToken = this.ObtenerTokenJWT();
-                var resultado = await _facturacionService.AjustarStockFacturacionAsync(request, jwtToken);
+                var resultado = await _facturacionService.AjustarStockFacturacionAsync(serviceRequest, jwtToken);
 
                 return Json(resultado);
             }
@@ -798,6 +795,13 @@ namespace GestionLlantera.Web.Controllers
     {
         public string NumeroFactura { get; set; }
         public List<ProductoAjusteStock> Productos { get; set; }
+    }
+
+    public class ProductoAjusteStock
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; }
+        public int Cantidad { get; set; }
     }
 
     public class CompletarFacturaRequest
