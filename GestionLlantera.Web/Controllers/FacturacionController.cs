@@ -635,7 +635,51 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFacturasPendientes()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
+
+                var token = HttpContext.Request.Cookies["jwtToken"];
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
+
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Data={DataType}", 
+                    resultado.success, resultado.data?.GetType().Name ?? "null");
+
+                if (resultado.success && resultado.data != null)
+                {
+                    _logger.LogInformation("📋 Retornando datos exitosos al frontend");
+                    return Json(resultado.data);
+                }
+                else
+                {
+                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "No se pudieron obtener las facturas pendientes",
+                        facturas = new List<object>(),
+                        totalFacturas = 0
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    facturas = new List<object>(),
+                    totalFacturas = 0
+                });
+            }
+        }
 
         [HttpPost]
         public async Task<IActionResult> CompletarFactura(int id)
@@ -741,77 +785,6 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { 
                     success = false, 
                     message = "Error interno al ajustar stock: " + ex.Message 
-                });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ObtenerFacturasPendientes()
-        {
-            try
-            {
-                _logger.LogInformation("📋 === OBTENIENDO FACTURAS PENDIENTES PARA FRONTEND ===");
-
-                // Obtener token JWT del usuario autenticado
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    _logger.LogError("❌ Token JWT no encontrado");
-                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
-                }
-
-                _logger.LogInformation("🔐 Token JWT obtenido correctamente");
-
-                // Obtener facturas del servicio (igual que en InventarioController)
-                var facturas = await _facturacionService.ObtenerFacturasPendientesAsync(token);
-
-                if (facturas == null)
-                {
-                    _logger.LogError("❌ El servicio retornó null para facturas");
-                    return Json(new { success = false, message = "No se pudieron obtener las facturas" });
-                }
-
-                _logger.LogInformation("📋 Se obtuvieron {Count} facturas del servicio", facturas.Count);
-
-                // Transformar para el frontend (igual que en inventario)
-                var facturasFrontend = facturas.Select(f => new
-                {
-                    id = f.FacturaId,
-                    numero = f.NumeroFactura,
-                    cliente = f.NombreCliente,
-                    identificacion = f.IdentificacionCliente,
-                    telefono = f.TelefonoCliente,
-                    email = f.EmailCliente,
-                    fecha = f.FechaFactura.ToString("dd/MM/yyyy"),
-                    total = f.Total,
-                    estado = f.Estado,
-                    tipo = f.TipoDocumento,
-                    usuario = f.UsuarioCreadorNombre,
-                    fechaCreacion = f.FechaCreacion.ToString("dd/MM/yyyy HH:mm"),
-                    // Indicadores adicionales
-                    esPendiente = f.Estado == "Pendiente",
-                    totalFormateado = f.Total.ToString("C")
-                }).ToList();
-
-                _logger.LogInformation("✅ Facturas transformadas para frontend: {Count}", facturasFrontend.Count);
-
-                return Json(new
-                {
-                    success = true,
-                    data = facturasFrontend,
-                    count = facturasFrontend.Count,
-                    timestamp = DateTime.Now
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "💥 Error crítico al obtener facturas pendientes: {Message}", ex.Message);
-                return Json(new
-                {
-                    success = false,
-                    message = "Error interno del servidor",
-                    error = ex.Message,
-                    timestamp = DateTime.Now
                 });
             }
         }

@@ -79,25 +79,3 @@ namespace Tuco.Clases.DTOs.Facturacion
         public bool EsProforma => TipoDocumento == "Proforma";
     }
 }
-using System;
-using System.Collections.Generic;
-
-namespace Tuco.Clases.DTOs.Facturacion
-{
-    public class FacturaDTO
-    {
-        public int FacturaId { get; set; }
-        public string NumeroFactura { get; set; } = string.Empty;
-        public string NombreCliente { get; set; } = string.Empty;
-        public string? IdentificacionCliente { get; set; }
-        public string? TelefonoCliente { get; set; }
-        public string? EmailCliente { get; set; }
-        public DateTime FechaFactura { get; set; }
-        public DateTime FechaCreacion { get; set; }
-        public decimal Total { get; set; }
-        public string Estado { get; set; } = "Pendiente";
-        public string TipoDocumento { get; set; } = "Factura";
-        public string? UsuarioCreadorNombre { get; set; }
-        public List<DetalleFacturaDTO> DetallesFactura { get; set; } = new List<DetalleFacturaDTO>();
-    }
-}
