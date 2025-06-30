@@ -14,7 +14,6 @@ using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Newtonsoft.Json;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -553,13 +552,13 @@ namespace GestionLlantera.Web.Controllers
                         try
                         {
                             // Es un array JSON, deserializar
-                            var permisosArray = JsonSerializer.Deserialize<List<string>>(valor);
+                            var permisosArray = System.Text.Json.JsonSerializer.Deserialize<List<string>>(valor);
                             if (permisosArray != null)
                             {
                                 permisos.AddRange(permisosArray);
                             }
                         }
-                        catch (JsonException)
+                        catch (System.Text.Json.JsonException)
                         {
                             // Si falla la deserialización, tratar como string simple
                             permisos.Add(valor);
@@ -665,8 +664,8 @@ namespace GestionLlantera.Web.Controllers
                 if (resultado.success)
                 {
                     _logger.LogInformation("📋 Enviando respuesta exitosa al frontend");
-                    _logger.LogInformation("📋 Estructura de datos: {Data}", JsonConvert.SerializeObject(resultado.data, Formatting.Indented));
-                    
+                    _logger.LogInformation("📋 Estructura de datos: {Data}", System.Text.Json.JsonSerializer.Serialize(resultado.data));
+
                     return Json(new { 
                         success = true, 
                         data = resultado.data,
