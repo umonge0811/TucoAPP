@@ -1671,15 +1671,12 @@ async function completarFacturaExistente(facturaId) {
             fechaCompletamiento: new Date().toISOString()
         };
 
-        const response = await fetch('/Facturacion/CompletarFacturaPendiente', {
+        const response = await fetch(`/Facturacion/CompletarFactura/${facturaId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                facturaId: facturaId
-            }),
             credentials: 'include'
         });
 
@@ -1696,7 +1693,7 @@ async function completarFacturaExistente(facturaId) {
             // ✅ CERRAR MODAL INMEDIATAMENTE
             modalFinalizarVenta.hide();
             
-            // ✅ LIMPIAR CARRITO
+            // ✅ LIMPIAR CARRITO COMPLETAMENTE
             productosEnVenta = [];
             clienteSeleccionado = null;
             $('#clienteBusqueda').val('');
@@ -1705,18 +1702,25 @@ async function completarFacturaExistente(facturaId) {
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
 
+            // ✅ LIMPIAR ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
+            window.lastProductsHash = null;
+            ultimaBusqueda = '';
+            busquedaEnProceso = false;
+            cargaInicialCompletada = false;
+
             // ✅ ACTUALIZAR VISTA DE PRODUCTOS
             await actualizarVistaProductosPostAjuste();
 
-            // ✅ MOSTRAR ÉXITO
+            // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
             Swal.fire({
                 icon: 'success',
                 title: '¡Factura Completada!',
-                text: `Factura completada exitosamente y marcada como pagada`,
+                text: `La factura ha sido completada exitosamente y marcada como pagada`,
                 confirmButtonText: 'Continuar',
                 confirmButtonColor: '#28a745',
-                timer: 3000,
-                timerProgressBar: true
+                timer: 4000,
+                timerProgressBar: true,
+                showConfirmButton: true
             });
 
         } else {
