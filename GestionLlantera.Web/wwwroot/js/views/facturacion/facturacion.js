@@ -1941,7 +1941,6 @@ async function completarFacturaExistente(facturaId) {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify(datosCompletamiento),
             credentials: 'include'
         });
 

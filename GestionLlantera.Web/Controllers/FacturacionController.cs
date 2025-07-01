@@ -1,7 +1,5 @@
 using GestionLlantera.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using GestionLlantera.Web.Services.Interfaces;
-using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +9,7 @@ using Tuco.Clases.DTOs.Facturacion;
 using Tuco.Clases.Models;
 using System.Text.Json;
 using System.Text;
+using GestionLlantera.Web.Services.Interfaces;
 using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
 using System.IdentityModel.Tokens.Jwt;
