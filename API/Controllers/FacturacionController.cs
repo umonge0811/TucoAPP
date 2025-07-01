@@ -566,7 +566,7 @@ namespace API.Controllers
 
         [HttpPut("facturas/{id}/completar")]
         [Authorize]
-        public async Task<IActionResult> CompletarFactura(int id)
+        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaRequest? request = null)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
                 "Solo usuarios con permiso 'CompletarFacturas' pueden completar facturas");
@@ -577,6 +577,7 @@ namespace API.Controllers
             {
                 var factura = await _context.Facturas
                     .Include(f => f.DetallesFactura)
+                    .Include(f => f.DetallesPago)
                     .FirstOrDefaultAsync(f => f.FacturaId == id);
 
                 if (factura == null)
@@ -628,6 +629,58 @@ namespace API.Controllers
                     }
                 }
 
+                // ✅ NUEVO: Actualizar método de pago si se proporciona
+                if (request != null && !string.IsNullOrEmpty(request.MetodoPago))
+                {
+                    factura.MetodoPago = request.MetodoPago;
+                    _logger.LogInformation("💳 Método de pago actualizado a: {MetodoPago}", request.MetodoPago);
+
+                    // ✅ NUEVO: Gestionar detalles de pago múltiples
+                    if (request.DetallesPago != null && request.DetallesPago.Any())
+                    {
+                        // Eliminar detalles de pago existentes
+                        _context.DetallesPago.RemoveRange(factura.DetallesPago);
+
+                        // Agregar nuevos detalles de pago
+                        foreach (var detallePago in request.DetallesPago)
+                        {
+                            var nuevoDetallePago = new DetallePago
+                            {
+                                FacturaId = factura.FacturaId,
+                                MetodoPago = detallePago.MetodoPago,
+                                Monto = detallePago.Monto,
+                                Referencia = detallePago.Referencia,
+                                Observaciones = detallePago.Observaciones,
+                                FechaPago = detallePago.FechaPago ?? DateTime.Now
+                            };
+                            _context.DetallesPago.Add(nuevoDetallePago);
+                        }
+
+                        // Si hay múltiples métodos de pago, actualizar el método principal
+                        if (request.DetallesPago.Count > 1)
+                        {
+                            factura.MetodoPago = "Multiple";
+                            _logger.LogInformation("💳 Factura configurada con pago múltiple: {CantidadMetodos} métodos", 
+                                request.DetallesPago.Count);
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(request.MetodoPago) && request.MetodoPago != "Multiple")
+                    {
+                        // Si solo hay un método de pago, crear un detalle único
+                        if (!factura.DetallesPago.Any())
+                        {
+                            var pagoUnico = new DetallePago
+                            {
+                                FacturaId = factura.FacturaId,
+                                MetodoPago = request.MetodoPago,
+                                Monto = factura.Total,
+                                FechaPago = DateTime.Now
+                            };
+                            _context.DetallesPago.Add(pagoUnico);
+                        }
+                    }
+                }
+
                 // ✅ Completar factura
                 factura.Estado = "Pagada";
                 factura.FechaActualizacion = DateTime.Now;
@@ -642,6 +695,7 @@ namespace API.Controllers
                     message = "Factura completada exitosamente", 
                     numeroFactura = factura.NumeroFactura,
                     estado = factura.Estado,
+                    metodoPago = factura.MetodoPago,
                     timestamp = DateTime.Now
                 });
             }
@@ -838,6 +892,27 @@ namespace API.Controllers
         // =====================================
 
         [HttpPost("imprimir-recibo")]
+
+
+    // =====================================
+    // DTOs PARA COMPLETAR FACTURAS
+    // =====================================
+    
+    public class CompletarFacturaRequest
+    {
+        public string? MetodoPago { get; set; }
+        public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
+    }
+
+    public class DetallePagoCompletarDTO
+    {
+        public string MetodoPago { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+        public DateTime? FechaPago { get; set; }
+    }
+
         [Authorize]
         public async Task<IActionResult> ImprimirRecibo([FromBody] object reciboData)
         {
