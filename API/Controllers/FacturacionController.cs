@@ -564,6 +564,98 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("verificar-stock-factura")]
+        [Authorize]
+        public async Task<IActionResult> VerificarStockFactura([FromBody] List<ProductoVerificacionStockDTO> productos)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 === VERIFICANDO STOCK DE PRODUCTOS PARA FACTURA ===");
+                _logger.LogInformation("🔍 Productos a verificar: {Count}", productos.Count);
+
+                var productosConProblemas = new List<ProductoStockProblemaDTO>();
+                bool stockSuficiente = true;
+
+                foreach (var producto in productos)
+                {
+                    var productoBD = await _context.Productos.FindAsync(producto.ProductoId);
+                    
+                    if (productoBD == null)
+                    {
+                        productosConProblemas.Add(new ProductoStockProblemaDTO
+                        {
+                            ProductoId = producto.ProductoId,
+                            NombreProducto = producto.NombreProducto,
+                            CantidadRequerida = producto.CantidadRequerida,
+                            StockDisponible = 0,
+                            TieneError = true,
+                            MensajeError = "Producto no encontrado en sistema"
+                        });
+                        stockSuficiente = false;
+                        continue;
+                    }
+
+                    var stockActual = (int)(productoBD.CantidadEnInventario ?? 0);
+                    
+                    if (stockActual <= 0)
+                    {
+                        // Stock en cero - PROBLEMA CRÍTICO
+                        productosConProblemas.Add(new ProductoStockProblemaDTO
+                        {
+                            ProductoId = producto.ProductoId,
+                            NombreProducto = producto.NombreProducto,
+                            CantidadRequerida = producto.CantidadRequerida,
+                            StockDisponible = stockActual,
+                            TieneError = false,
+                            EsAdvertencia = true,
+                            MensajeAdvertencia = "Sin stock disponible"
+                        });
+                        stockSuficiente = false;
+                        
+                        _logger.LogWarning("⚠️ Producto sin stock: {Producto} - Stock: {Stock}", 
+                            producto.NombreProducto, stockActual);
+                    }
+                    else if (stockActual < producto.CantidadRequerida)
+                    {
+                        // Stock parcial - ADVERTENCIA
+                        productosConProblemas.Add(new ProductoStockProblemaDTO
+                        {
+                            ProductoId = producto.ProductoId,
+                            NombreProducto = producto.NombreProducto,
+                            CantidadRequerida = producto.CantidadRequerida,
+                            StockDisponible = stockActual,
+                            TieneError = false,
+                            EsAdvertencia = true,
+                            MensajeAdvertencia = $"Stock parcial disponible"
+                        });
+                        stockSuficiente = false;
+                        
+                        _logger.LogWarning("⚠️ Stock parcial: {Producto} - Solicitado: {Solicitado}, Disponible: {Disponible}", 
+                            producto.NombreProducto, producto.CantidadRequerida, stockActual);
+                    }
+                }
+
+                _logger.LogInformation("✅ Verificación completada - Stock suficiente: {StockSuficiente}, Problemas: {Count}", 
+                    stockSuficiente, productosConProblemas.Count);
+
+                return Ok(new { 
+                    success = true,
+                    data = new {
+                        stockSuficiente,
+                        productosConProblemas
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando stock de productos");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al verificar stock" 
+                });
+            }
+        }
+
         [HttpPut("facturas/{id}/completar")]
         [Authorize]
         public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaRequest? request = null)
@@ -592,22 +684,21 @@ namespace API.Controllers
                 if (factura.TipoDocumento == "Proforma")
                     return BadRequest(new { message = "No se puede completar una proforma. Debe convertirse a factura primero" });
 
-                // ✅ VERIFICAR STOCK CON ANÁLISIS DETALLADO
+                // ✅ VERIFICAR STOCK CON ANÁLISIS DETALLADO ANTES DE COMPLETAR
                 var resultadoValidacion = await ValidarYAnalizarStockFactura(factura.DetallesFactura);
                 
-                if (!resultadoValidacion.PuedeCompletarse)
+                // ✅ NUEVA LÓGICA: Informar sobre problemas de stock pero permitir completar
+                if (resultadoValidacion.ErroresCriticos.Any())
                 {
-                    // Si hay productos críticos sin stock, no se puede completar
+                    // Solo bloquear si hay errores críticos (productos no encontrados)
                     return BadRequest(new { 
-                        message = "No se puede completar la factura", 
+                        message = "No se puede completar la factura por errores críticos", 
                         errores = resultadoValidacion.ErroresCriticos,
-                        advertencias = resultadoValidacion.Advertencias,
-                        tipoError = "STOCK_INSUFICIENTE",
-                        detalleStock = resultadoValidacion.DetalleProductos
+                        tipoError = "ERRORES_CRITICOS"
                     });
                 }
 
-                // Si hay advertencias pero se puede completar, continuar con log de advertencias
+                // Si hay advertencias de stock, log pero continuar
                 if (resultadoValidacion.Advertencias.Any())
                 {
                     _logger.LogWarning("⚠️ Completando factura con advertencias de stock: {Advertencias}", 
@@ -1022,6 +1113,25 @@ namespace API.Controllers
         public int CantidadSolicitada { get; set; }
         public int StockDisponible { get; set; }
         public int DiferenciaStock { get; set; }
+        public bool TieneError { get; set; }
+        public bool EsAdvertencia { get; set; }
+        public string? MensajeError { get; set; }
+        public string? MensajeAdvertencia { get; set; }
+    }
+
+    public class ProductoVerificacionStockDTO
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadRequerida { get; set; }
+    }
+
+    public class ProductoStockProblemaDTO
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadRequerida { get; set; }
+        public int StockDisponible { get; set; }
         public bool TieneError { get; set; }
         public bool EsAdvertencia { get; set; }
         public string? MensajeError { get; set; }
