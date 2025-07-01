@@ -63,5 +63,6 @@ namespace tuco.Clases.Models
         public virtual Cliente? Cliente { get; set; }
         public virtual Usuario UsuarioCreador { get; set; } = null!;
         public virtual ICollection<DetalleFactura> DetallesFactura { get; set; } = new List<DetalleFactura>();
+        public virtual ICollection<DetallePago> DetallesPago { get; set; } = new List<DetallePago>();
     }
 }
