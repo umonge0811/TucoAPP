@@ -923,8 +923,9 @@ namespace API.Controllers
         // =====================================
         // DTOs PARA COMPLETAR FACTURAS
         // =====================================
+    }
 
-        public class CompletarFacturaRequest
+    public class CompletarFacturaRequest
         {
             public string? MetodoPago { get; set; }
             public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }

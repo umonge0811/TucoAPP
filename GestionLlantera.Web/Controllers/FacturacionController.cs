@@ -685,11 +685,11 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CompletarFactura(int id)
+        public async Task<IActionResult> CompletarFactura([FromBody] CompletarFacturaWebRequest request)
         {
             try
             {
-                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", id);
+                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", request.FacturaId);
 
                 if (!await this.TienePermisoAsync("CompletarFacturas"))
                 {
@@ -702,7 +702,18 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                var resultado = await _facturacionService.CompletarFacturaAsync(id, new { }, jwtToken);
+                // Estructurar datos para el API
+                var datosCompletamiento = new
+                {
+                    metodoPago = request.MetodoPago,
+                    detallesPago = request.DetallesPago,
+                    observaciones = request.Observaciones
+                };
+
+                _logger.LogInformation("📋 Enviando datos de completamiento: {Datos}", 
+                    System.Text.Json.JsonSerializer.Serialize(datosCompletamiento));
+
+                var resultado = await _facturacionService.CompletarFacturaAsync(request.FacturaId, datosCompletamiento, jwtToken);
 
                 if (resultado.success)
                 {
@@ -723,7 +734,7 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error completando factura: {FacturaId}", id);
+                _logger.LogError(ex, "❌ Error completando factura: {FacturaId}", request?.FacturaId);
                 return Json(new { 
                     success = false, 
                     message = "Error interno al completar factura" 
@@ -809,5 +820,22 @@ namespace GestionLlantera.Web.Controllers
     public class CompletarFacturaRequest
     {
         public int FacturaId { get; set; }
+    }
+
+    public class CompletarFacturaWebRequest
+    {
+        public int FacturaId { get; set; }
+        public string? MetodoPago { get; set; }
+        public List<DetallePagoWebDTO>? DetallesPago { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class DetallePagoWebDTO
+    {
+        public string MetodoPago { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+        public DateTime? FechaPago { get; set; }
     }
 }

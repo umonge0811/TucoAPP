@@ -1930,8 +1930,28 @@ async function completarFacturaExistente(facturaId) {
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
         
         const datosCompletamiento = {
+            facturaId: facturaId,
             metodoPago: metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
+            detallesPago: null // Por ahora simple, después se puede expandir para pagos múltiples
+        };
+
+        console.log('📋 Datos de completamiento:', datosCompletamiento);
+
+        const response = await fetch('/Facturacion/CompletarFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(datosCompletamiento),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('✅ Factura completada exitosamente:', result);bservacionesVenta').val() || '',
             fechaCompletamiento: new Date().toISOString()
         };
 
