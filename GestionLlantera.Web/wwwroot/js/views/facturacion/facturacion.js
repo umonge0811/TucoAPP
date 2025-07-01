@@ -4024,6 +4024,129 @@ function irAFacturasPendientes() {
     window.location.href = '/Facturacion/Pendientes';
 }
 
+/**
+ * Verificar stock de productos de una factura pendiente
+ */
+async function verificarStockFacturaPendiente(facturaId) {
+    try {
+        console.log('📦 Verificando stock para factura:', facturaId);
+        
+        const response = await fetch('/Facturacion/VerificarStockFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ facturaId: facturaId }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📦 Resultado verificación:', resultado);
+        return resultado;
+        
+    } catch (error) {
+        console.error('❌ Error verificando stock:', error);
+        return { success: false, tieneProblemas: true, productosConProblemas: [] };
+    }
+}
+
+/**
+ * Mostrar modal con problemas de stock
+ */
+async function mostrarModalProblemasStock(productosConProblemas, factura) {
+    let htmlProblemas = '<div class="alert alert-warning mb-3">';
+    htmlProblemas += '<h6><i class="bi bi-exclamation-triangle me-2"></i>⚠️ PRODUCTOS SIN STOCK SUFICIENTE</h6>';
+    htmlProblemas += '<p>Los siguientes productos no tienen stock disponible:</p>';
+    htmlProblemas += '<div class="table-responsive">';
+    htmlProblemas += '<table class="table table-sm">';
+    htmlProblemas += '<thead><tr><th>Producto</th><th>Requerido</th><th>Disponible</th><th>Faltante</th><th>Acción</th></tr></thead>';
+    htmlProblemas += '<tbody>';
+    
+    productosConProblemas.forEach((problema, index) => {
+        const faltante = problema.cantidadRequerida - problema.stockDisponible;
+        htmlProblemas += `
+            <tr id="problema-row-${index}">
+                <td><strong>${problema.nombreProducto}</strong></td>
+                <td>${problema.cantidadRequerida}</td>
+                <td>${problema.stockDisponible}</td>
+                <td class="text-danger">${faltante}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="eliminarProductoProblema(${problema.productoId}, ${index})">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    htmlProblemas += '</tbody></table></div>';
+    htmlProblemas += '<div class="alert alert-info mt-2">';
+    htmlProblemas += '<strong>Opciones:</strong> Puede eliminar los productos sin stock o continuar de todos modos.';
+    htmlProblemas += '</div>';
+    htmlProblemas += '</div>';
+
+    const resultado = await Swal.fire({
+        title: '⚠️ Problemas de Stock',
+        html: htmlProblemas,
+        icon: 'warning',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: '<i class="bi bi-check-circle me-1"></i>Continuar de Todos Modos',
+        denyButtonText: '<i class="bi bi-arrow-left me-1"></i>Volver a Facturas',
+        cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+        confirmButtonColor: '#dc3545',
+        denyButtonColor: '#6c757d',
+        cancelButtonColor: '#6c757d',
+        width: '800px',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        customClass: {
+            htmlContainer: 'text-start'
+        }
+    });
+
+    if (resultado.isConfirmed) {
+        // Continuar con la factura a pesar de los problemas
+        console.log('⚠️ Usuario decidió continuar a pesar de problemas de stock');
+        setTimeout(() => {
+            mostrarModalFinalizarVenta();
+        }, 300);
+    } else if (resultado.isDenied) {
+        // Volver a facturas pendientes
+        console.log('📋 Usuario decidió volver a facturas pendientes');
+        setTimeout(() => {
+            abrirFacturasPendientes();
+        }, 300);
+    } else {
+        // Cancelar - limpiar carrito
+        console.log('❌ Usuario canceló el proceso');
+        limpiarVenta();
+    }
+}
+
+/**
+ * Eliminar producto con problema de stock
+ */
+function eliminarProductoProblema(productoId, rowIndex) {
+    // Eliminar producto del carrito
+    const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
+    if (indiceEnCarrito !== -1) {
+        productosEnVenta.splice(indiceEnCarrito, 1);
+        actualizarVistaCarrito();
+        actualizarTotales();
+    }
+    
+    // Ocultar fila en la tabla
+    $(`#problema-row-${rowIndex}`).fadeOut();
+    
+    mostrarToast('Producto eliminado', 'Producto removido de la factura', 'info');
+}
+
 function imprimirComprobanteEnvio(numeroFactura) {
     const fecha = new Date().toLocaleDateString('es-CR', { 
         day: '2-digit', 
@@ -4426,11 +4549,24 @@ function seleccionarFacturaPendiente(row) {
 /**
  * Procesar factura pendiente usando el modal de finalización
  */
-function procesarFacturaPendiente(facturaEscapada) {
+async function procesarFacturaPendiente(facturaEscapada) {
     try {
         const factura = JSON.parse(facturaEscapada.replace(/&quot;/g, '"'));
         console.log('🔄 === PROCESANDO FACTURA PENDIENTE ===');
         console.log('🔄 Factura:', factura);
+        
+        // Verificar stock antes de proceder
+        const verificacionStock = await verificarStockFacturaPendiente(factura.facturaId);
+        
+        if (!verificacionStock.success) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de verificación',
+                text: 'No se pudo verificar el stock de los productos',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
         
         // Cerrar modal de facturas pendientes
         $('#facturasPendientesModal').modal('hide');
@@ -4438,10 +4574,15 @@ function procesarFacturaPendiente(facturaEscapada) {
         // Cargar los datos de la factura en el carrito
         cargarFacturaPendienteEnCarrito(factura);
         
-        // Mostrar modal de finalización después de cargar los datos
-        setTimeout(() => {
-            mostrarModalFinalizarVenta();
-        }, 500);
+        // Si hay problemas de stock, mostrar modal de problemas
+        if (verificacionStock.tieneProblemas) {
+            await mostrarModalProblemasStock(verificacionStock.productosConProblemas, factura);
+        } else {
+            // Si no hay problemas, mostrar modal de finalización normal
+            setTimeout(() => {
+                mostrarModalFinalizarVenta();
+            }, 500);
+        }
         
     } catch (error) {
         console.error('❌ Error procesando factura pendiente:', error);

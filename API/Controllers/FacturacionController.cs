@@ -918,6 +918,77 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("verificar-stock-factura")]
+        [Authorize]
+        public async Task<IActionResult> VerificarStockFactura([FromBody] VerificarStockFacturaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📦 Verificando stock para factura: {FacturaId}", request.FacturaId);
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
+
+                if (factura == null)
+                    return NotFound(new { message = "Factura no encontrada" });
+
+                var productosConProblemas = new List<object>();
+
+                foreach (var detalle in factura.DetallesFactura)
+                {
+                    var producto = await _context.Productos
+                        .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);
+
+                    if (producto == null)
+                    {
+                        productosConProblemas.Add(new
+                        {
+                            productoId = detalle.ProductoId,
+                            nombreProducto = detalle.NombreProducto,
+                            cantidadRequerida = detalle.Cantidad,
+                            stockDisponible = 0,
+                            problema = "Producto no encontrado"
+                        });
+                        continue;
+                    }
+
+                    var stockDisponible = (int)(producto.CantidadEnInventario ?? 0);
+                    if (stockDisponible < detalle.Cantidad)
+                    {
+                        productosConProblemas.Add(new
+                        {
+                            productoId = detalle.ProductoId,
+                            nombreProducto = detalle.NombreProducto,
+                            cantidadRequerida = detalle.Cantidad,
+                            stockDisponible = stockDisponible,
+                            problema = "Stock insuficiente"
+                        });
+                    }
+                }
+
+                var tieneProblemas = productosConProblemas.Any();
+
+                return Ok(new
+                {
+                    success = true,
+                    tieneProblemas = tieneProblemas,
+                    productosConProblemas = productosConProblemas,
+                    message = tieneProblemas ? 
+                        $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" : 
+                        "Todos los productos tienen stock suficiente"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando stock de factura: {FacturaId}", request.FacturaId);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al verificar stock" 
+                });
+            }
+        }
+
 
 
         // =====================================
@@ -938,5 +1009,10 @@ namespace API.Controllers
         public string? Referencia { get; set; }
         public string? Observaciones { get; set; }
         public DateTime? FechaPago { get; set; }
+    }
+
+    public class VerificarStockFacturaRequest
+    {
+        public int FacturaId { get; set; }
     }
 }

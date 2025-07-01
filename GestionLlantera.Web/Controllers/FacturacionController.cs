@@ -14,6 +14,7 @@ using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Newtonsoft.Json;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -758,63 +759,112 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        [Route("Facturacion/AjustarStockFacturacion")]
-        public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
+        public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjustarStockFacturacionRequest request)
         {
             try
             {
-                _logger.LogInformation("📦 Ajustando stock para factura: {NumeroFactura} con {Cantidad} productos", 
-                    request.NumeroFactura, request.Productos?.Count ?? 0);
+                _logger.LogInformation("📦 === AJUSTANDO STOCK POST-FACTURACIÓN ===");
+                _logger.LogInformation("📦 Factura: {NumeroFactura}", request.NumeroFactura);
+                _logger.LogInformation("📦 Productos a ajustar: {Cantidad}", request.Productos?.Count ?? 0);
 
                 if (request.Productos == null || !request.Productos.Any())
                 {
-                    return Json(new { 
-                        success = false, 
-                        message = "No se proporcionaron productos para ajustar" 
-                    });
+                    return Json(new { success = false, message = "No se proporcionaron productos para ajustar" });
                 }
 
-                // Convertir el request del controller al tipo esperado por el servicio
-                var serviceRequest = new Services.Interfaces.AjusteStockFacturacionRequest
-                {
-                    NumeroFactura = request.NumeroFactura,
-                    Productos = request.Productos.Select(p => new Services.Interfaces.ProductoAjusteStock
-                    {
-                        ProductoId = p.ProductoId,
-                        NombreProducto = p.NombreProducto,
-                        Cantidad = p.Cantidad
-                    }).ToList()
-                };
-
-                // Usar el servicio de facturación para ajustar el stock
                 var jwtToken = this.ObtenerTokenJWT();
-                var resultado = await _facturacionService.AjustarStockFacturacionAsync(serviceRequest, jwtToken);
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogError("❌ No se pudo obtener token JWT para ajuste de stock");
+                    return Json(new { success = false, message = "Error de autenticación" });
+                }
 
-                return Json(resultado);
+                var resultado = await _facturacionService.AjustarStockFacturacionAsync(request, jwtToken);
+
+                if (resultado.Success)
+                {
+                    _logger.LogInformation("✅ Stock ajustado exitosamente para factura {NumeroFactura}", request.NumeroFactura);
+                    return Json(new { 
+                        success = true, 
+                        message = resultado.Message,
+                        ajustesExitosos = resultado.AjustesExitosos,
+                        totalProductos = resultado.TotalProductos
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Ajuste de stock parcial o fallido para factura {NumeroFactura}: {Message}", 
+                        request.NumeroFactura, resultado.Message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.Message,
+                        errores = resultado.Errores
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error general al ajustar stock para factura {NumeroFactura}", 
-                    request?.NumeroFactura);
-                return Json(new { 
-                    success = false, 
-                    message = "Error interno al ajustar stock: " + ex.Message 
-                });
+                _logger.LogError(ex, "❌ Error general ajustando stock para facturación");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerificarStockFactura([FromBody] VerificarStockFacturaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📦 Verificando stock para factura: {FacturaId}", request.FacturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Error de autenticación" });
+                }
+
+                // Llamar al API para verificar stock
+                using var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+
+                var response = await httpClient.PostAsJsonAsync($"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/verificar-stock-factura", request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(content);
+
+                    return Json(resultado);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API verificando stock: {StatusCode}", response.StatusCode);
+                    return Json(new { success = false, message = "Error verificando stock" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando stock de factura: {FacturaId}", request.FacturaId);
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
     }
 
-    public class AjusteStockFacturacionRequest
+    public class AjustarStockFacturacionRequest
     {
-        public string NumeroFactura { get; set; }
-        public List<ProductoAjusteStock> Productos { get; set; }
+        public string NumeroFactura { get; set; } = string.Empty;
+        public List<ProductoAjusteStock> Productos { get; set; } = new List<ProductoAjusteStock>();
     }
 
     public class ProductoAjusteStock
     {
         public int ProductoId { get; set; }
-        public string NombreProducto { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
         public int Cantidad { get; set; }
+    }
+
+    public class VerificarStockFacturaRequest
+    {
+        public int FacturaId { get; set; }
     }
 
     public class CompletarFacturaRequest
