@@ -747,54 +747,6 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        [Route("CompletarFactura/{id}")]
-        public async Task<IActionResult> CompletarFactura(int id)
-        {
-            try
-            {
-                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", id);
-
-                if (!this.TienePermisoEnToken("Completar Facturas"))
-                {
-                    return Json(new { success = false, message = "Sin permisos para completar facturas" });
-                }
-
-                var jwtToken = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return Json(new { success = false, message = "Token de autenticación no disponible" });
-                }
-
-                var resultado = await _facturacionService.CompletarFacturaAsync(id, new { }, jwtToken);
-
-                if (resultado.success)
-                {
-                    return Json(new { 
-                        success = true, 
-                        data = resultado.data,
-                        message = resultado.message 
-                    });
-                }
-                else
-                {
-                    return Json(new { 
-                        success = false, 
-                        message = resultado.message,
-                        details = resultado.details
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error completando factura: {FacturaId}", id);
-                return Json(new { 
-                    success = false, 
-                    message = "Error interno al completar factura" 
-                });
-            }
-        }
-
-        [HttpPost]
         [Route("Facturacion/AjustarStockFacturacion")]
         public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
         {
