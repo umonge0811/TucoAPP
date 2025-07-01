@@ -1300,6 +1300,7 @@ function limpiarVenta() {
     if (confirm('¿Estás seguro de que deseas limpiar toda la venta?')) {
         productosEnVenta = [];
         clienteSeleccionado = null;
+        facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
         $('#clienteBusqueda').val('');
         $('#clienteSeleccionado').addClass('d-none');
         actualizarVistaCarrito();
@@ -1337,6 +1338,18 @@ function mostrarModalFinalizarVenta() {
     console.log('📋 === DEPURACIÓN CLIENTE SELECCIONADO ===');
     console.log('📋 Cliente completo:', clienteSeleccionado);
     console.log('📋 Propiedades disponibles:', Object.keys(clienteSeleccionado || {}));
+    console.log('📋 Factura pendiente actual:', facturaPendienteActual);
+
+    // ===== MOSTRAR/OCULTAR INFORMACIÓN DE FACTURA PENDIENTE =====
+    if (facturaPendienteActual && facturaPendienteActual.esFacturaPendiente) {
+        console.log('📋 Mostrando información de factura pendiente');
+        $('#infoFacturaPendiente').show();
+        $('#numeroFacturaPendiente').text(facturaPendienteActual.numeroFactura || 'N/A');
+    } else {
+        console.log('📋 Ocultando información de factura pendiente');
+        $('#infoFacturaPendiente').hide();
+        $('#numeroFacturaPendiente').text('');
+    }
 
     // ===== CONFIGURAR MODAL SEGÚN PERMISOS =====
     configurarModalSegunPermisos();
@@ -1690,12 +1703,19 @@ async function completarFacturaExistente(facturaId) {
         console.log('✅ Factura completada:', resultado);
 
         if (resultado.success) {
+            // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
+            const productosParaRecibo = [...productosEnVenta];
+            
             // ✅ CERRAR MODAL INMEDIATAMENTE
             modalFinalizarVenta.hide();
+            
+            // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR
+            generarReciboFacturaCompletada(resultado, productosParaRecibo, metodoPagoSeleccionado);
             
             // ✅ LIMPIAR CARRITO COMPLETAMENTE
             productosEnVenta = [];
             clienteSeleccionado = null;
+            facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
             $('#clienteBusqueda').val('');
             $('#clienteSeleccionado').addClass('d-none');
             actualizarVistaCarrito();
@@ -1710,9 +1730,6 @@ async function completarFacturaExistente(facturaId) {
 
             // ✅ ACTUALIZAR VISTA DE PRODUCTOS
             await actualizarVistaProductosPostAjuste();
-
-            // ✅ GENERAR E IMPRIMIR RECIBO PARA FACTURA COMPLETADA
-            generarReciboFacturaCompletada(resultado, productosEnVenta, metodoPagoSeleccionado);
 
             // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
             Swal.fire({
@@ -2015,6 +2032,30 @@ function generarRecibo(factura, productos, totales) {
         minute: '2-digit' 
     });
 
+    // ✅ DETERMINAR NÚMERO DE FACTURA CORRECTAMENTE
+    let numeroFactura = 'N/A';
+    
+    // Prioridad 1: Desde la factura pasada como parámetro
+    if (factura && factura.numeroFactura) {
+        numeroFactura = factura.numeroFactura;
+    }
+    // Prioridad 2: Desde factura pendiente global si existe
+    else if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
+        numeroFactura = facturaPendienteActual.numeroFactura;
+    }
+    // Prioridad 3: Verificar si los productos tienen facturaId (factura existente)
+    else if (productos && productos.length > 0 && productos[0].facturaId) {
+        numeroFactura = `FAC-${productos[0].facturaId}`;
+    }
+
+    console.log('🖨️ === GENERANDO RECIBO ===');
+    console.log('🖨️ Número de factura determinado:', numeroFactura);
+    console.log('🖨️ Fuente del número:', {
+        desdeParametro: factura?.numeroFactura,
+        desdePendiente: facturaPendienteActual?.numeroFactura,
+        desdeProductos: productos?.[0]?.facturaId
+    });
+
     // Función para truncar texto según el ancho de la impresora
     function truncarTexto(texto, maxCaracteres) {
         if (!texto) return '';
@@ -2037,7 +2078,7 @@ function generarRecibo(factura, productos, totales) {
                 <div style="font-size: 8px; margin-bottom: 1px;">Sistema de Facturación</div>
                 <div style="font-size: 8px; margin-bottom: 2px;">Tel: (506) 0000-0000</div>
                 <div style="font-size: 9px; font-weight: bold;">FACTURA DE VENTA</div>
-                <div style="font-size: 8px;">No. ${factura.numeroFactura || 'N/A'}</div>
+                <div style="font-size: 8px;">No. ${numeroFactura}</div>
             </div>
 
             <!-- INFORMACIÓN DE TRANSACCIÓN -->
@@ -2237,6 +2278,7 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('🖨️ Resultado factura:', resultadoFactura);
         console.log('🖨️ Productos:', productos);
         console.log('🖨️ Método de pago:', metodoPago);
+        console.log('🖨️ Factura pendiente actual:', facturaPendienteActual);
 
         // Calcular totales basándose en los productos del carrito
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
@@ -2250,10 +2292,14 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        // Crear objeto de datos completo para el recibo
+        // ✅ CREAR OBJETO DE DATOS COMPLETO USANDO MÚLTIPLES FUENTES
         const datosRecibo = {
-            numeroFactura: resultadoFactura.numeroFactura || 'N/A',
-            usuarioCreadorNombre: resultadoFactura.usuarioCreadorNombre || 'Sistema'
+            numeroFactura: resultadoFactura.numeroFactura || 
+                          facturaPendienteActual?.numeroFactura || 
+                          'N/A',
+            usuarioCreadorNombre: resultadoFactura.usuarioCreadorNombre || 
+                                 facturaPendienteActual?.usuarioCreadorNombre || 
+                                 'Sistema'
         };
 
         const totalesRecibo = {
@@ -2264,6 +2310,12 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             cliente: clienteSeleccionado,
             usuario: obtenerUsuarioActual()
         };
+
+        console.log('🖨️ Datos del recibo preparados:', {
+            datosRecibo,
+            cantidadProductos: productos.length,
+            totalCalculado: total
+        });
 
         // Usar la función existente de generación de recibos
         generarRecibo(datosRecibo, productos, totalesRecibo);
@@ -3678,6 +3730,9 @@ function procesarFacturaPendiente(facturaEscapada) {
 /**
  * Cargar datos de factura pendiente en el carrito
  */
+// Variable global para almacenar datos de factura pendiente
+let facturaPendienteActual = null;
+
 function cargarFacturaPendienteEnCarrito(factura) {
     console.log('📦 === CARGANDO FACTURA EN CARRITO ===');
     console.log('📦 Datos completos de la factura recibida:', factura);
@@ -3699,6 +3754,17 @@ function cargarFacturaPendienteEnCarrito(factura) {
         Cliente: factura.Cliente
     });
     console.log('📦 Todas las propiedades de factura:', Object.keys(factura));
+    
+    // ✅ GUARDAR DATOS DE FACTURA PENDIENTE GLOBALMENTE
+    facturaPendienteActual = {
+        facturaId: factura.facturaId,
+        numeroFactura: factura.numeroFactura,
+        esFacturaPendiente: true,
+        fechaCreacion: factura.fechaCreacion || new Date().toISOString(),
+        usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema'
+    };
+    
+    console.log('💾 Factura pendiente guardada globalmente:', facturaPendienteActual);
     
     // Limpiar carrito actual
     productosEnVenta = [];
@@ -3795,7 +3861,8 @@ function cargarFacturaPendienteEnCarrito(factura) {
     
     console.log('✅ Factura cargada en carrito:', {
         cliente: clienteSeleccionado,
-        productos: productosEnVenta.length
+        productos: productosEnVenta.length,
+        facturaPendiente: facturaPendienteActual
     });
     
     // Mostrar notificación
@@ -3892,7 +3959,8 @@ function verDetalleFacturaPendiente(facturaId) {
     });
 }
 
-// ===== HACER FUNCIONES GLOBALES =====
+// ===== HACER FUNCIONES Y VARIABLES GLOBALES =====
+window.facturaPendienteActual = facturaPendienteActual;
 window.recargarPermisosUsuario = recargarPermisosUsuario;
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
