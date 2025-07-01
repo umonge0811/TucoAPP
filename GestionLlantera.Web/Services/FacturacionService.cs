@@ -482,6 +482,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
+                _logger.LogInformation("📋 Datos de completamiento: {Datos}", JsonConvert.SerializeObject(datosCompletamiento));
 
                 // Configurar token JWT si se proporciona
                 if (!string.IsNullOrEmpty(jwtToken))
@@ -498,10 +499,14 @@ namespace GestionLlantera.Web.Services
                     NullValueHandling = NullValueHandling.Include
                 });
 
+                _logger.LogInformation("📤 JSON enviado al API: {Json}", jsonContent);
+
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PutAsync($"api/Facturacion/facturas/{facturaId}/completar", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
 
                 if (response.IsSuccessStatusCode)
                 {

@@ -29,13 +29,15 @@ let contadorEventosInput = 0;
 
 // ===== CONFIGURACIÓN DE PRECIOS POR MÉTODO DE PAGO =====
 const CONFIGURACION_PRECIOS = {
-    efectivo: { multiplicador: 1.0, nombre: 'Efectivo' },
-    transferencia: { multiplicador: 1.0, nombre: 'Transferencia' },
-    sinpe: { multiplicador: 1.0, nombre: 'SINPE Móvil' },
-    tarjeta: { multiplicador: 1.05, nombre: 'Tarjeta' } // 5% adicional para tarjeta
+    efectivo: { multiplicador: 1.0, nombre: 'Efectivo', icono: 'bi-cash' },
+    transferencia: { multiplicador: 1.0, nombre: 'Transferencia', icono: 'bi-bank' },
+    sinpe: { multiplicador: 1.0, nombre: 'SINPE Móvil', icono: 'bi-phone' },
+    tarjeta: { multiplicador: 1.05, nombre: 'Tarjeta', icono: 'bi-credit-card' } // 5% adicional para tarjeta
 };
 
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
+let detallesPagoActuales = []; // Array para manejar múltiples pagos
+let esPagoMultiple = false; // Flag para determinar si es pago múltiple
 
 // ===== FUNCIÓN AUXILIAR PARA BUSCAR PERMISOS =====
 function buscarPermiso(permisos, nombrePermiso) {
@@ -1412,6 +1414,12 @@ function mostrarModalFinalizarVenta() {
 
     // ===== CONFIGURAR MÉTODO DE PAGO INICIAL =====
     $('input[name="metodoPago"][value="efectivo"]').prop('checked', true);
+    
+    // ===== INICIALIZAR PAGOS MÚLTIPLES =====
+    detallesPagoActuales = [];
+    esPagoMultiple = false;
+    $('#pagoMultipleContainer').hide();
+    $('#pagoSimpleContainer').show();
 
     // ===== ACTUALIZAR RESUMEN CON MÉTODO DE PAGO INICIAL =====
     actualizarResumenVentaModal();
@@ -1609,17 +1617,260 @@ function configurarEventosModalFinalizar() {
     // Remover eventos anteriores para evitar duplicados
     $('input[name="metodoPago"]').off('change.modalFinalizar');
     $('#efectivoRecibido').off('input.modalFinalizar');
+    $('#btnPagoMultiple').off('click.modalFinalizar');
+    $('#btnPagoSimple').off('click.modalFinalizar');
 
     // Configurar eventos de método de pago
     $('input[name="metodoPago"]').on('change.modalFinalizar', function() {
-        // Actualizar todo el resumen cuando cambie el método de pago
-        actualizarResumenVentaModal();
+        if (!esPagoMultiple) {
+            actualizarResumenVentaModal();
+        }
     });
 
     // Configurar evento de cambio en efectivo recibido
     $('#efectivoRecibido').on('input.modalFinalizar', function() {
         calcularCambioModal();
     });
+    
+    // Configurar botones de pago múltiple/simple
+    $('#btnPagoMultiple').on('click.modalFinalizar', function() {
+        activarPagoMultiple();
+    });
+    
+    $('#btnPagoSimple').on('click.modalFinalizar', function() {
+        activarPagoSimple();
+    });
+}
+
+// ===== FUNCIONES PARA PAGOS MÚLTIPLES =====
+function activarPagoMultiple() {
+    esPagoMultiple = true;
+    $('#pagoSimpleContainer').hide();
+    $('#pagoMultipleContainer').show();
+    $('#btnPagoMultiple').addClass('active');
+    $('#btnPagoSimple').removeClass('active');
+    
+    // Inicializar con el total completo si no hay pagos
+    if (detallesPagoActuales.length === 0) {
+        const total = calcularTotalFactura();
+        inicializarPagoMultiple(total);
+    }
+    
+    actualizarVistaPagosMultiples();
+}
+
+function activarPagoSimple() {
+    esPagoMultiple = false;
+    detallesPagoActuales = [];
+    $('#pagoMultipleContainer').hide();
+    $('#pagoSimpleContainer').show();
+    $('#btnPagoSimple').addClass('active');
+    $('#btnPagoMultiple').removeClass('active');
+    
+    actualizarResumenVentaModal();
+}
+
+function inicializarPagoMultiple(totalFactura) {
+    detallesPagoActuales = [{
+        metodoPago: 'efectivo',
+        monto: totalFactura,
+        referencia: '',
+        observaciones: ''
+    }];
+}
+
+function agregarNuevoPago() {
+    const montoRestante = calcularMontoRestante();
+    if (montoRestante <= 0) {
+        mostrarToast('Pago completo', 'El total de la factura ya está cubierto', 'warning');
+        return;
+    }
+    
+    detallesPagoActuales.push({
+        metodoPago: 'efectivo',
+        monto: montoRestante,
+        referencia: '',
+        observaciones: ''
+    });
+    
+    actualizarVistaPagosMultiples();
+}
+
+function eliminarPago(index) {
+    if (detallesPagoActuales.length <= 1) {
+        mostrarToast('Error', 'Debe haber al menos un método de pago', 'warning');
+        return;
+    }
+    
+    detallesPagoActuales.splice(index, 1);
+    actualizarVistaPagosMultiples();
+}
+
+function actualizarVistaPagosMultiples() {
+    const container = $('#pagoMultiplesList');
+    const totalFactura = calcularTotalFactura();
+    
+    let html = '';
+    detallesPagoActuales.forEach((pago, index) => {
+        const config = CONFIGURACION_PRECIOS[pago.metodoPago] || CONFIGURACION_PRECIOS.efectivo;
+        html += `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-title mb-0">
+                            <i class="${config.icono} me-2"></i>Pago ${index + 1}
+                        </h6>
+                        ${detallesPagoActuales.length > 1 ? 
+                            `<button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarPago(${index})">
+                                <i class="bi bi-trash"></i>
+                            </button>` : ''}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Método de Pago</label>
+                            <select class="form-select metodo-pago-multiple" data-index="${index}">
+                                ${Object.entries(CONFIGURACION_PRECIOS).map(([key, value]) => 
+                                    `<option value="${key}" ${pago.metodoPago === key ? 'selected' : ''}>
+                                        ${value.nombre}
+                                    </option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Monto</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₡</span>
+                                <input type="number" 
+                                       class="form-control monto-pago-multiple" 
+                                       data-index="${index}"
+                                       value="${pago.monto.toFixed(2)}" 
+                                       min="0.01" 
+                                       max="${totalFactura}" 
+                                       step="0.01">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Referencia</label>
+                            <input type="text" 
+                                   class="form-control referencia-pago-multiple" 
+                                   data-index="${index}"
+                                   value="${pago.referencia || ''}" 
+                                   placeholder="Ej: Voucher, Transferencia #123">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Observaciones</label>
+                            <input type="text" 
+                                   class="form-control observaciones-pago-multiple" 
+                                   data-index="${index}"
+                                   value="${pago.observaciones || ''}" 
+                                   placeholder="Opcional">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.html(html);
+    
+    // Configurar eventos para los nuevos elementos
+    $('.metodo-pago-multiple').on('change', function() {
+        const index = $(this).data('index');
+        detallesPagoActuales[index].metodoPago = $(this).val();
+        actualizarResumenPagosMultiples();
+    });
+    
+    $('.monto-pago-multiple').on('input', function() {
+        const index = $(this).data('index');
+        detallesPagoActuales[index].monto = parseFloat($(this).val()) || 0;
+        actualizarResumenPagosMultiples();
+    });
+    
+    $('.referencia-pago-multiple').on('input', function() {
+        const index = $(this).data('index');
+        detallesPagoActuales[index].referencia = $(this).val();
+    });
+    
+    $('.observaciones-pago-multiple').on('input', function() {
+        const index = $(this).data('index');
+        detallesPagoActuales[index].observaciones = $(this).val();
+    });
+    
+    actualizarResumenPagosMultiples();
+}
+
+function actualizarResumenPagosMultiples() {
+    const totalFactura = calcularTotalFactura();
+    const totalPagado = detallesPagoActuales.reduce((sum, pago) => sum + pago.monto, 0);
+    const montoRestante = totalFactura - totalPagado;
+    
+    $('#totalFacturaMultiple').text(`₡${formatearMoneda(totalFactura)}`);
+    $('#totalPagadoMultiple').text(`₡${formatearMoneda(totalPagado)}`);
+    $('#montoRestanteMultiple').text(`₡${formatearMoneda(montoRestante)}`);
+    
+    // Cambiar color según si está completo o no
+    if (montoRestante < 0) {
+        $('#montoRestanteMultiple').removeClass('text-success text-warning').addClass('text-danger');
+        $('#estadoPagoMultiple').html('<span class="badge bg-danger">Excede el total</span>');
+    } else if (montoRestante === 0) {
+        $('#montoRestanteMultiple').removeClass('text-danger text-warning').addClass('text-success');
+        $('#estadoPagoMultiple').html('<span class="badge bg-success">Pago completo</span>');
+    } else {
+        $('#montoRestanteMultiple').removeClass('text-danger text-success').addClass('text-warning');
+        $('#estadoPagoMultiple').html('<span class="badge bg-warning">Pago pendiente</span>');
+    }
+    
+    // Habilitar/deshabilitar botón de agregar pago
+    $('#btnAgregarPago').prop('disabled', montoRestante <= 0);
+    
+    // Habilitar/deshabilitar botón de confirmar
+    $('#btnConfirmarVenta').prop('disabled', montoRestante !== 0);
+}
+
+function calcularTotalFactura() {
+    const metodoBase = esPagoMultiple ? 'efectivo' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
+    const configMetodo = CONFIGURACION_PRECIOS[metodoBase];
+    
+    let subtotal = 0;
+    productosEnVenta.forEach(producto => {
+        const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+        subtotal += precioAjustado * producto.cantidad;
+    });
+    
+    const iva = subtotal * 0.13;
+    return subtotal + iva;
+}
+
+function calcularMontoRestante() {
+    const totalFactura = calcularTotalFactura();
+    const totalPagado = detallesPagoActuales.reduce((sum, pago) => sum + pago.monto, 0);
+    return Math.max(0, totalFactura - totalPagado);
+}
+
+function validarPagosMultiples() {
+    if (!esPagoMultiple) return true;
+    
+    const totalFactura = calcularTotalFactura();
+    const totalPagado = detallesPagoActuales.reduce((sum, pago) => sum + pago.monto, 0);
+    
+    if (Math.abs(totalFactura - totalPagado) > 0.01) {
+        mostrarToast('Error de pago', 'El total de los pagos no coincide con el total de la factura', 'danger');
+        return false;
+    }
+    
+    for (let i = 0; i < detallesPagoActuales.length; i++) {
+        const pago = detallesPagoActuales[i];
+        if (pago.monto <= 0) {
+            mostrarToast('Error de pago', `El monto del pago ${i + 1} debe ser mayor a 0`, 'danger');
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 async function procesarVentaFinal() {
@@ -1679,12 +1930,194 @@ async function completarFacturaExistente(facturaId) {
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
         
         const datosCompletamiento = {
-            metodoPago: metodoPagoSeleccionado,
+            facturaId: facturaId,
+            metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
-            fechaCompletamiento: new Date().toISOString()
+            detallesPago: esPagoMultiple ? detallesPagoActuales : null
         };
 
-        const response = await fetch(`/Facturacion/CompletarFactura/${facturaId}`, {
+        console.log('📋 Datos de completamiento:', datosCompletamiento);
+
+        const response = await fetch('/Facturacion/CompletarFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(datosCompletamiento),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('✅ Factura completada exitosamente:', result);
+            
+            // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
+            const productosParaRecibo = [...productosEnVenta];
+            
+            // ✅ CERRAR MODAL INMEDIATAMENTE
+            modalFinalizarVenta.hide();
+            
+            // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR
+            generarReciboFacturaCompletada(result, productosParaRecibo, metodoPagoSeleccionado);
+            
+            // ✅ LIMPIAR CARRITO COMPLETAMENTE
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+            facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+
+            // ✅ LIMPIAR ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
+            window.lastProductsHash = null;
+            ultimaBusqueda = '';
+            busquedaEnProceso = false;
+            cargaInicialCompletada = false;
+
+            // ✅ ACTUALIZAR VISTA DE PRODUCTOS
+            await actualizarVistaProductosPostAjuste();
+
+            // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
+            Swal.fire({
+                icon: 'success',
+                title: '¡Factura Completada!',
+                text: `La factura ha sido completada exitosamente y marcada como pagada`,
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#28a745',
+                timer: 4000,
+                timerProgressBar: true,
+                showConfirmButton: true
+            });
+
+        } else {
+            throw new Error(result.message || 'Error al completar la factura');
+        }
+
+    } catch (error) {
+        console.error('❌ Error completando factura existente:', error);
+        throw error;
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear nueva factura
+ */
+async function crearNuevaFactura() {
+    try {
+        console.log('🆕 === CREANDO NUEVA FACTURA ===');
+
+        // Preparar datos de la venta con método de pago seleccionado
+        const metodoPagoSeleccionado = esPagoMultiple ? 'multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
+        const configMetodo = esPagoMultiple ? CONFIGURACION_PRECIOS.efectivo : CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
+        
+        // Validar pagos múltiples si es necesario
+        if (esPagoMultiple && !validarPagosMultiples()) {
+            return;
+        }
+
+        let subtotal = 0;
+        productosEnVenta.forEach(producto => {
+            const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+            subtotal += precioAjustado * producto.cantidad;
+        });
+
+        const iva = subtotal * 0.13;
+        const total = subtotal + iva;
+
+        // ✅ DETERMINAR ESTADO Y PERMISOS SEGÚN LA LÓGICA CORRECTA
+        let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
+
+        console.log('🔐 === VERIFICACIÓN DE PERMISOS ===');
+        console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
+        console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
+
+        if (permisosUsuario.puedeCompletarFacturas) {
+            // ✅ USUARIOS CON PERMISO COMPLETAR: Venta completa e inmediata
+            estadoFactura = 'Pagada';
+            mensajeExito = 'Venta procesada exitosamente y marcada como pagada';
+            debeImprimir = true;
+            debeAjustarInventario = true;
+            console.log('👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock');
+            
+        } else if (permisosUsuario.puedeCrearFacturas) {
+            // ✅ COLABORADORES: Factura pendiente para caja SIN AJUSTE DE STOCK
+            estadoFactura = 'Pendiente';
+            mensajeExito = 'Factura creada y enviada a Cajas para procesamiento de pago';
+            debeImprimir = false;
+            debeAjustarInventario = false; // ✅ CRUCIAL: NO ajustar stock para colaboradores
+            console.log('📝 Procesando como colaborador - Factura pendiente para caja SIN ajuste de stock');
+            
+        } else {
+            // ❌ SIN PERMISOS: No debería llegar aquí, pero como fallback
+            throw new Error('No tienes permisos para procesar ventas');
+        }
+
+        console.log('📋 Estado determinado:', {
+            estadoFactura,
+            debeImprimir,
+            debeAjustarInventario,
+            permisos: permisosUsuario
+        });
+
+        // Obtener información del usuario actual
+        const usuarioActual = obtenerUsuarioActual();
+        const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
+
+        console.log('👤 Usuario actual para factura:', {
+            usuario: usuarioActual,
+            usuarioId: usuarioId
+        });
+
+        // Crear objeto de factura para enviar a la API
+        const facturaData = {
+            clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
+            nombreCliente: clienteSeleccionado?.nombre || 'Cliente General',
+            identificacionCliente: clienteSeleccionado?.identificacion || '',
+            telefonoCliente: clienteSeleccionado?.telefono || '',
+            emailCliente: clienteSeleccionado?.email || '',
+            direccionCliente: clienteSeleccionado?.direccion || '',
+            fechaFactura: new Date().toISOString(),
+            fechaVencimiento: null,
+            subtotal: subtotal,
+            descuentoGeneral: 0,
+            porcentajeImpuesto: 13,
+            montoImpuesto: iva,
+            total: total,
+            estado: estadoFactura, // ✅ Estado dinámico según permisos
+            tipoDocumento: 'Factura',
+            metodoPago: metodoPagoSeleccionado,
+            observaciones: $('#observacionesVenta').val() || '',
+            usuarioCreadorId: usuarioId, // ✅ ID del usuario actual
+            detallesPago: esPagoMultiple ? detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || '',
+                fechaPago: new Date().toISOString()
+            })) : [],
+            detallesFactura: productosEnVenta.map(producto => {
+                const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+                return {
+                    productoId: producto.productoId,
+                    nombreProducto: producto.nombreProducto,
+                    descripcionProducto: producto.descripcion || '',
+                    cantidad: producto.cantidad,
+                    precioUnitario: precioAjustado,
+                    porcentajeDescuento: 0,
+                    montoDescuento: 0,
+                    subtotal: precioAjustado * producto.cantidad
+                };
+            })
+        };
+
+        console.log('📋 Datos de factura preparados:', facturaData);
+
+        // Crear la factura
+        const responseFactura = await fetch('/Facturacion/CrearFactura', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1761,8 +2194,13 @@ async function crearNuevaFactura() {
         console.log('🆕 === CREANDO NUEVA FACTURA ===');
 
         // Preparar datos de la venta con método de pago seleccionado
-        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
-        const configMetodo = CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
+        const metodoPagoSeleccionado = esPagoMultiple ? 'multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
+        const configMetodo = esPagoMultiple ? CONFIGURACION_PRECIOS.efectivo : CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
+        
+        // Validar pagos múltiples si es necesario
+        if (esPagoMultiple && !validarPagosMultiples()) {
+            return;
+        }
 
         let subtotal = 0;
         productosEnVenta.forEach(producto => {
@@ -1837,6 +2275,13 @@ async function crearNuevaFactura() {
             metodoPago: metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
             usuarioCreadorId: usuarioId, // ✅ ID del usuario actual
+            detallesPago: esPagoMultiple ? detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || '',
+                fechaPago: new Date().toISOString()
+            })) : [],
             detallesFactura: productosEnVenta.map(producto => {
                 const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
                 return {
@@ -3993,6 +4438,11 @@ window.verDetalleFacturaPendiente = verDetalleFacturaPendiente;
 window.completarFacturaExistente = completarFacturaExistente;
 window.crearNuevaFactura = crearNuevaFactura;
 window.generarReciboFacturaCompletada = generarReciboFacturaCompletada;
+window.activarPagoMultiple = activarPagoMultiple;
+window.activarPagoSimple = activarPagoSimple;
+window.agregarNuevoPago = agregarNuevoPago;
+window.eliminarPago = eliminarPago;
+window.validarPagosMultiples = validarPagosMultiples;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `

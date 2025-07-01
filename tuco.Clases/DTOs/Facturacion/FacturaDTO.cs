@@ -56,6 +56,10 @@ namespace Tuco.Clases.DTOs.Facturacion
         
         public string? MetodoPago { get; set; }
         
+        // Nuevas propiedades para pagos múltiples
+        public List<DetallePagoDTO> DetallesPago { get; set; } = new List<DetallePagoDTO>();
+        public bool EsPagoMultiple => DetallesPago.Any();
+        
         [StringLength(500, ErrorMessage = "Las observaciones no pueden tener más de 500 caracteres")]
         public string? Observaciones { get; set; }
         

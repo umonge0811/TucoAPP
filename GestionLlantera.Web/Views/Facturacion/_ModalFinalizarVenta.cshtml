@@ -67,56 +67,104 @@
                         </div>
                     </div>
 
-                    <!-- Método de pago -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <h6 class="text-primary border-bottom pb-2 mb-3">
-                                <i class="bi bi-credit-card me-1"></i>
-                                Método de Pago
-                            </h6>
+                    <!-- Selector de Tipo de Pago -->
+                    <div class="mb-4">
+                        <h6 class="mb-3">💳 Tipo de Pago:</h6>
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-primary active" id="btnPagoSimple">
+                                <i class="bi bi-credit-card me-2"></i>Pago Simple
+                            </button>
+                            <button type="button" class="btn btn-outline-success" id="btnPagoMultiple">
+                                <i class="bi bi-cash-stack me-2"></i>Pago Múltiple
+                            </button>
                         </div>
-                        <div class="col-12 mb-3">
+                    </div>
+
+                    <!-- Pago Simple -->
+                    <div id="pagoSimpleContainer">
+                        <div class="mb-4">
+                            <h6 class="mb-3">💳 Método de Pago:</h6>
                             <div class="row">
-                                <div class="col-md-3 mb-2">
+                                <div class="col-md-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodoPago" id="pagoEfectivo" value="efectivo" checked>
                                         <label class="form-check-label" for="pagoEfectivo">
-                                            <i class="bi bi-cash me-1"></i>
-                                            Efectivo
+                                            <i class="bi bi-cash me-1"></i>Efectivo
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-3 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="metodoPago" id="pagoSinpe" value="sinpe">
-                                        <label class="form-check-label" for="pagoSinpe">
-                                            <i class="bi bi-phone me-1"></i>
-                                            SINPE Móvil
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="metodoPago" id="pagoTarjeta" value="tarjeta">
-                                        <label class="form-check-label" for="pagoTarjeta">
-                                            <i class="bi bi-credit-card me-1"></i>
-                                            Tarjeta (+5%)
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 mb-2">
+                                <div class="col-md-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="metodoPago" id="pagoTransferencia" value="transferencia">
                                         <label class="form-check-label" for="pagoTransferencia">
-                                            <i class="bi bi-bank me-1"></i>
-                                            Transferencia
+                                            <i class="bi bi-bank me-1"></i>Transferencia
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="pagoSinpe" value="sinpe">
+                                        <label class="form-check-label" for="pagoSinpe">
+                                            <i class="bi bi-phone me-1"></i>SINPE Móvil
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="metodoPago" id="pagoTarjeta" value="tarjeta">
+                                        <label class="form-check-label" for="pagoTarjeta">
+                                            <i class="bi bi-credit-card me-1"></i>Tarjeta (+5%)
                                         </label>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Campo para efectivo recibido -->
+                    <!-- Pago Múltiple -->
+                    <div id="pagoMultipleContainer" style="display: none;">
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0">💰 Detalles de Pago:</h6>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="btnAgregarPago" onclick="agregarNuevoPago()">
+                                    <i class="bi bi-plus-circle me-1"></i>Agregar Pago
+                                </button>
+                            </div>
+
+                            <div id="pagoMultiplesList">
+                                <!-- Los pagos se cargarán dinámicamente aquí -->
+                            </div>
+
+                            <!-- Resumen de Pagos Múltiples -->
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <small class="text-muted">Total Factura:</small>
+                                            <div class="fw-bold" id="totalFacturaMultiple">₡0.00</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted">Total Pagado:</small>
+                                            <div class="fw-bold" id="totalPagadoMultiple">₡0.00</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted">Monto Restante:</small>
+                                            <div class="fw-bold" id="montoRestanteMultiple">₡0.00</div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <small class="text-muted">Estado:</small>
+                                            <div id="estadoPagoMultiple">
+                                                <span class="badge bg-warning">Pendiente</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campo para efectivo recibido -->
+                    <div class="row mb-4">
                         <div class="col-md-6 mb-3" id="campoEfectivoRecibido" style="display: none;">
                             <label class="form-label">Efectivo Recibido</label>
                             <div class="input-group">
@@ -187,4 +235,3 @@
         </div>
     </div>
 </div>
-```
