@@ -2637,22 +2637,25 @@ function generarRecibo(factura, productos, totales) {
         console.log('🖨️ Iniciando impresión de recibo térmico...');
 
         // Crear ventana de impresión con configuración optimizada
-        const ventanaImpresion = window.open('', '_blank', 'width=300,height=600,scrollbars=no,resizable=no');
+        const ventanaImpresion = window.open('', '_blank', 'width=300,height=600,scrollbars=no,resizable=no,menubar=no,toolbar=no,location=no,status=no');
 
         if (!ventanaImpresion) {
-            throw new Error('No se pudo abrir la ventana de impresión. Verifique que los pop-ups estén habilitados.');
+            console.warn('⚠️ No se pudo abrir ventana emergente para impresión automática');
+            // En lugar de mostrar error, intentar impresión directa
+            imprimirReciboDirecto(reciboHTML, numeroFactura);
+            return;
         }
 
         ventanaImpresion.document.write(`
             <!DOCTYPE html>
             <html>
                 <head>
-                    <title>Recibo Térmico - ${factura.numeroFactura}</title>
+                    <title>Recibo Térmico - ${numeroFactura}</title>
                     <meta charset="utf-8">
                     <style>
                         /* CONFIGURACIÓN ESPECÍFICA PARA IMPRESORAS TÉRMICAS */
                         @page {
-                            size: 58mm auto; /* Ancho estándar para mini impresoras */
+                            size: 58mm auto;
                             margin: 0;
                             padding: 0;
                         }
@@ -2687,14 +2690,12 @@ function generarRecibo(factura, productos, totales) {
                                 page-break-inside: avoid;
                             }
 
-                            /* Optimizar para impresión térmica */
                             * {
                                 -webkit-print-color-adjust: exact !important;
                                 color-adjust: exact !important;
                             }
                         }
 
-                        /* Fuente monoespaciada para alineación perfecta */
                         body, * {
                             font-family: 'Courier New', 'Consolas', 'Monaco', monospace !important;
                         }
@@ -2704,55 +2705,67 @@ function generarRecibo(factura, productos, totales) {
                     ${reciboHTML}
 
                     <script>
-                        // Función para imprimir automáticamente
+                        let impresionIntentada = false;
+                        
                         function imprimirRecibo() {
-                            console.log('🖨️ Iniciando impresión...');
+                            if (impresionIntentada) return;
+                            impresionIntentada = true;
+                            
+                            console.log('🖨️ Iniciando impresión automática...');
 
-                            // Configurar para impresoras térmicas
-                            if (window.chrome) {
-                                // Para navegadores basados en Chrome
-                                window.print();
-                            } else {
-                                // Para otros navegadores
-                                setTimeout(() => window.print(), 500);
-                            }
+                            // Asegurar que la página esté completamente cargada
+                            setTimeout(() => {
+                                try {
+                                    window.print();
+                                } catch (e) {
+                                    console.error('Error en window.print():', e);
+                                }
+                            }, 100);
                         }
 
-                        // Imprimir cuando la página esté completamente cargada
+                        // Múltiples eventos para asegurar la impresión
                         if (document.readyState === 'complete') {
                             imprimirRecibo();
                         } else {
                             window.addEventListener('load', imprimirRecibo);
+                            document.addEventListener('DOMContentLoaded', imprimirRecibo);
                         }
 
-                        // Cerrar ventana después de intentar imprimir
+                        // Cerrar ventana después de imprimir
                         window.addEventListener('afterprint', function() {
-                            console.log('🖨️ Impresión completada, cerrando ventana...');
-                            setTimeout(() => window.close(), 1000);
+                            console.log('🖨️ Cerrando ventana después de imprimir...');
+                            setTimeout(() => {
+                                try {
+                                    window.close();
+                                } catch (e) {
+                                    console.log('No se pudo cerrar automáticamente');
+                                }
+                            }, 500);
                         });
 
-                        // Fallback para cerrar si no se detecta evento afterprint
+                        // Fallback para cerrar ventana
                         setTimeout(() => {
                             if (!window.closed) {
                                 console.log('🖨️ Cerrando ventana por timeout...');
-                                window.close();
+                                try {
+                                    window.close();
+                                } catch (e) {
+                                    console.log('No se pudo cerrar por timeout');
+                                }
                             }
-                        }, 5000);
+                        }, 8000);
                     </script>
                 </body>
             </html>
         `);
 
         ventanaImpresion.document.close();
-
-        
+        console.log('✅ Ventana de impresión creada exitosamente');
 
     } catch (error) {
-        console.error('❌ Error al imprimir recibo:', error);
-        mostrarToast('Error de Impresión', 'No se pudo imprimir el recibo: ' + error.message, 'danger');
-
-        // Fallback: mostrar el recibo en pantalla para copiar/imprimir manualmente
-        mostrarReciboEnPantalla(reciboHTML, factura.numeroFactura);
+        console.error('❌ Error al crear ventana de impresión:', error);
+        // Intentar impresión directa como fallback
+        imprimirReciboDirecto(reciboHTML, numeroFactura);
     }
 }
 
@@ -2817,45 +2830,83 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
 }
 
 /**
- * Función fallback para mostrar recibo en pantalla si falla la impresión
+ * Función de impresión directa cuando falla la ventana emergente
  */
-function mostrarReciboEnPantalla(reciboHTML, numeroFactura) {
-    const modalHtml = `
-        <div class="modal fade" id="modalReciboFallback" tabindex="-1">
-            <div class="modal-dialog modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header bg-warning text-dark">
-                        <h5 class="modal-title">
-                            <i class="bi bi-printer me-2"></i>Recibo de Venta
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-0">
-                        <div class="alert alert-warning m-2">
-                            <small><i class="bi bi-exclamation-triangle me-1"></i>
-                            La impresión automática falló. Use los botones de abajo para imprimir.</small>
-                        </div>
-                        ${reciboHTML}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i>Cerrar
-                        </button>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
-                            <i class="bi bi-printer me-1"></i>Imprimir
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Remover modal anterior si existe
-    $('#modalReciboFallback').remove();
-    $('body').append(modalHtml);
-
-    const modal = new bootstrap.Modal(document.getElementById('modalReciboFallback'));
-    modal.show();
+function imprimirReciboDirecto(reciboHTML, numeroFactura) {
+    console.log('🖨️ === IMPRESIÓN DIRECTA DE RECIBO ===');
+    
+    try {
+        // Crear un div temporal invisible para la impresión
+        const printDiv = document.createElement('div');
+        printDiv.id = 'recibo-impresion-temporal';
+        printDiv.style.position = 'fixed';
+        printDiv.style.left = '-9999px';
+        printDiv.style.top = '-9999px';
+        printDiv.style.visibility = 'hidden';
+        printDiv.innerHTML = reciboHTML;
+        
+        // Agregar al DOM temporalmente
+        document.body.appendChild(printDiv);
+        
+        // Crear estilos específicos para impresión
+        const printStyles = document.createElement('style');
+        printStyles.id = 'recibo-print-styles';
+        printStyles.innerHTML = `
+            @media print {
+                * {
+                    visibility: hidden;
+                }
+                #recibo-impresion-temporal,
+                #recibo-impresion-temporal * {
+                    visibility: visible;
+                }
+                #recibo-impresion-temporal {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 58mm;
+                    font-family: 'Courier New', monospace;
+                    font-size: 9px;
+                    line-height: 1.2;
+                }
+                @page {
+                    size: 58mm auto;
+                    margin: 0;
+                }
+            }
+        `;
+        
+        document.head.appendChild(printStyles);
+        
+        // Imprimir
+        window.print();
+        
+        // Limpiar después de imprimir
+        setTimeout(() => {
+            if (printDiv.parentNode) {
+                printDiv.parentNode.removeChild(printDiv);
+            }
+            if (printStyles.parentNode) {
+                printStyles.parentNode.removeChild(printStyles);
+            }
+        }, 1000);
+        
+        console.log('✅ Impresión directa iniciada');
+        mostrarToast('Impresión', 'Recibo enviado a impresión', 'success');
+        
+    } catch (error) {
+        console.error('❌ Error en impresión directa:', error);
+        
+        // Último recurso: mostrar notificación simple
+        Swal.fire({
+            icon: 'info',
+            title: 'Recibo Generado',
+            text: `Factura ${numeroFactura} completada. Active las ventanas emergentes para impresión automática.`,
+            confirmButtonText: 'Entendido',
+            timer: 5000,
+            timerProgressBar: true
+        });
+    }
 }
 
 // ===== FUNCIONES AUXILIARES =====
