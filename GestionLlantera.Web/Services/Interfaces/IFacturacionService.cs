@@ -33,7 +33,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Ajusta el stock de productos después de una facturación
         /// </summary>
-        Task<object> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null);
+        Task<AjusteStockResultado> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null);
 
         /// <summary>
         /// Crea una nueva factura en la API
@@ -95,5 +95,15 @@ namespace GestionLlantera.Web.Services.Interfaces
         public DateTime FechaVenta { get; set; } = DateTime.Now;
         public string MetodoPago { get; set; } = "Efectivo";
         public string? Observaciones { get; set; }
+    }
+
+    public class AjusteStockResultado
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int AjustesExitosos { get; set; }
+        public int TotalProductos { get; set; }
+        public List<string>? Errores { get; set; }
+        public List<object>? Resultados { get; set; }
     }
 }

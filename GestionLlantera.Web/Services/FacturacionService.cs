@@ -228,7 +228,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<object> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null)
+        public async Task<AjusteStockResultado> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null)
         {
             try
             {
@@ -240,9 +240,9 @@ namespace GestionLlantera.Web.Services
 
                 if (request.Productos == null || !request.Productos.Any())
                 {
-                    return new { 
-                        success = false, 
-                        message = "No se proporcionaron productos para ajustar" 
+                    return new AjusteStockResultado { 
+                        Success = false, 
+                        Message = "No se proporcionaron productos para ajustar" 
                     };
                 }
 
@@ -338,15 +338,15 @@ namespace GestionLlantera.Web.Services
                 }
 
                 // Preparar respuesta
-                var response = new {
-                    success = ajustesExitosos > 0,
-                    message = ajustesExitosos > 0 ? 
+                var response = new AjusteStockResultado {
+                    Success = ajustesExitosos > 0,
+                    Message = ajustesExitosos > 0 ? 
                         $"Stock ajustado para {ajustesExitosos} productos" : 
                         "No se pudo ajustar el stock de ningún producto",
-                    ajustesExitosos = ajustesExitosos,
-                    totalProductos = request.Productos.Count,
-                    resultados = resultados,
-                    errores = errores.Any() ? errores : null
+                    AjustesExitosos = ajustesExitosos,
+                    TotalProductos = request.Productos.Count,
+                    Resultados = resultados,
+                    Errores = errores.Any() ? errores : null
                 };
 
                 _logger.LogInformation("📦 === FIN AJUSTE STOCK FACTURACIÓN ===");
@@ -360,9 +360,9 @@ namespace GestionLlantera.Web.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error general ajustando stock para facturación");
-                return new { 
-                    success = false, 
-                    message = "Error interno al ajustar stock: " + ex.Message 
+                return new AjusteStockResultado { 
+                    Success = false, 
+                    Message = "Error interno al ajustar stock: " + ex.Message 
                 };
             }
         }
