@@ -1951,11 +1951,173 @@ async function completarFacturaExistente(facturaId) {
         const result = await response.json();
 
         if (result.success) {
-            console.log('✅ Factura completada exitosamente:', result);bservacionesVenta').val() || '',
-            fechaCompletamiento: new Date().toISOString()
+            console.log('✅ Factura completada exitosamente:', result);
+            
+            // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
+            const productosParaRecibo = [...productosEnVenta];
+            
+            // ✅ CERRAR MODAL INMEDIATAMENTE
+            modalFinalizarVenta.hide();
+            
+            // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR
+            generarReciboFacturaCompletada(result, productosParaRecibo, metodoPagoSeleccionado);
+            
+            // ✅ LIMPIAR CARRITO COMPLETAMENTE
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+            facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+
+            // ✅ LIMPIAR ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
+            window.lastProductsHash = null;
+            ultimaBusqueda = '';
+            busquedaEnProceso = false;
+            cargaInicialCompletada = false;
+
+            // ✅ ACTUALIZAR VISTA DE PRODUCTOS
+            await actualizarVistaProductosPostAjuste();
+
+            // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
+            Swal.fire({
+                icon: 'success',
+                title: '¡Factura Completada!',
+                text: `La factura ha sido completada exitosamente y marcada como pagada`,
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#28a745',
+                timer: 4000,
+                timerProgressBar: true,
+                showConfirmButton: true
+            });
+
+        } else {
+            throw new Error(result.message || 'Error al completar la factura');
+        }
+
+    } catch (error) {
+        console.error('❌ Error completando factura existente:', error);
+        throw error;
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear nueva factura
+ */
+async function crearNuevaFactura() {
+    try {
+        console.log('🆕 === CREANDO NUEVA FACTURA ===');
+
+        // Preparar datos de la venta con método de pago seleccionado
+        const metodoPagoSeleccionado = esPagoMultiple ? 'multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
+        const configMetodo = esPagoMultiple ? CONFIGURACION_PRECIOS.efectivo : CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
+        
+        // Validar pagos múltiples si es necesario
+        if (esPagoMultiple && !validarPagosMultiples()) {
+            return;
+        }
+
+        let subtotal = 0;
+        productosEnVenta.forEach(producto => {
+            const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+            subtotal += precioAjustado * producto.cantidad;
+        });
+
+        const iva = subtotal * 0.13;
+        const total = subtotal + iva;
+
+        // ✅ DETERMINAR ESTADO Y PERMISOS SEGÚN LA LÓGICA CORRECTA
+        let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
+
+        console.log('🔐 === VERIFICACIÓN DE PERMISOS ===');
+        console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
+        console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
+
+        if (permisosUsuario.puedeCompletarFacturas) {
+            // ✅ USUARIOS CON PERMISO COMPLETAR: Venta completa e inmediata
+            estadoFactura = 'Pagada';
+            mensajeExito = 'Venta procesada exitosamente y marcada como pagada';
+            debeImprimir = true;
+            debeAjustarInventario = true;
+            console.log('👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock');
+            
+        } else if (permisosUsuario.puedeCrearFacturas) {
+            // ✅ COLABORADORES: Factura pendiente para caja SIN AJUSTE DE STOCK
+            estadoFactura = 'Pendiente';
+            mensajeExito = 'Factura creada y enviada a Cajas para procesamiento de pago';
+            debeImprimir = false;
+            debeAjustarInventario = false; // ✅ CRUCIAL: NO ajustar stock para colaboradores
+            console.log('📝 Procesando como colaborador - Factura pendiente para caja SIN ajuste de stock');
+            
+        } else {
+            // ❌ SIN PERMISOS: No debería llegar aquí, pero como fallback
+            throw new Error('No tienes permisos para procesar ventas');
+        }
+
+        console.log('📋 Estado determinado:', {
+            estadoFactura,
+            debeImprimir,
+            debeAjustarInventario,
+            permisos: permisosUsuario
+        });
+
+        // Obtener información del usuario actual
+        const usuarioActual = obtenerUsuarioActual();
+        const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
+
+        console.log('👤 Usuario actual para factura:', {
+            usuario: usuarioActual,
+            usuarioId: usuarioId
+        });
+
+        // Crear objeto de factura para enviar a la API
+        const facturaData = {
+            clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
+            nombreCliente: clienteSeleccionado?.nombre || 'Cliente General',
+            identificacionCliente: clienteSeleccionado?.identificacion || '',
+            telefonoCliente: clienteSeleccionado?.telefono || '',
+            emailCliente: clienteSeleccionado?.email || '',
+            direccionCliente: clienteSeleccionado?.direccion || '',
+            fechaFactura: new Date().toISOString(),
+            fechaVencimiento: null,
+            subtotal: subtotal,
+            descuentoGeneral: 0,
+            porcentajeImpuesto: 13,
+            montoImpuesto: iva,
+            total: total,
+            estado: estadoFactura, // ✅ Estado dinámico según permisos
+            tipoDocumento: 'Factura',
+            metodoPago: metodoPagoSeleccionado,
+            observaciones: $('#observacionesVenta').val() || '',
+            usuarioCreadorId: usuarioId, // ✅ ID del usuario actual
+            detallesPago: esPagoMultiple ? detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || '',
+                fechaPago: new Date().toISOString()
+            })) : [],
+            detallesFactura: productosEnVenta.map(producto => {
+                const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+                return {
+                    productoId: producto.productoId,
+                    nombreProducto: producto.nombreProducto,
+                    descripcionProducto: producto.descripcion || '',
+                    cantidad: producto.cantidad,
+                    precioUnitario: precioAjustado,
+                    porcentajeDescuento: 0,
+                    montoDescuento: 0,
+                    subtotal: precioAjustado * producto.cantidad
+                };
+            })
         };
 
-        const response = await fetch(`/Facturacion/CompletarFactura/${facturaId}`, {
+        console.log('📋 Datos de factura preparados:', facturaData);
+
+        // Crear la factura
+        const responseFactura = await fetch('/Facturacion/CrearFactura', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

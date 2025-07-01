@@ -926,18 +926,17 @@ namespace API.Controllers
     }
 
     public class CompletarFacturaRequest
-        {
-            public string? MetodoPago { get; set; }
-            public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
-        }
+    {
+        public string? MetodoPago { get; set; }
+        public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
+    }
 
-        public class DetallePagoCompletarDTO
-        {
-            public string MetodoPago { get; set; } = string.Empty;
-            public decimal Monto { get; set; }
-            public string? Referencia { get; set; }
-            public string? Observaciones { get; set; }
-            public DateTime? FechaPago { get; set; }
-        }
+    public class DetallePagoCompletarDTO
+    {
+        public string MetodoPago { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+        public DateTime? FechaPago { get; set; }
     }
 }
