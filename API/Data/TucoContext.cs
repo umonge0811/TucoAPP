@@ -758,7 +758,7 @@ public partial class TucoContext : DbContext
         // Configuración para DetalleFactura
         modelBuilder.Entity<DetalleFactura>(entity =>
         {
-            entity.HasKey(e => e.DetalleFacturaId).HasName("PK_DetallesFactura");
+            entity.HasKey(e => e.DetalleFacturaId);
 
             entity.ToTable("DetallesFactura");
 
@@ -791,32 +791,31 @@ public partial class TucoContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Configuración para DetallePago
-        modelBuilder.Entity<DetallePago>(entity =>
-        {
-            entity.HasKey(e => e.DetallePagoId).HasName("PK_DetallesPago");
+            modelBuilder.Entity<DetallePago>(entity =>
+            {
+                entity.HasKey(e => e.DetallePagoId);
 
-            entity.ToTable("DetallesPago");
+                entity.ToTable("DetallesPago");
 
-            entity.Property(e => e.FacturaId)
-                .IsRequired();
+                entity.Property(e => e.MetodoPago)
+                    .IsRequired()
+                    .HasMaxLength(50);
 
-            entity.Property(e => e.MetodoPago)
-                .HasMaxLength(50)
-                .IsRequired();
+                entity.Property(e => e.Monto).HasColumnType("decimal(18, 2)");
 
-            entity.Property(e => e.Monto)
-                .HasColumnType("decimal(18,2)")
-                .IsRequired();
+                entity.Property(e => e.Referencia).HasMaxLength(200);
 
-            entity.Property(e => e.Referencia)
-                .HasMaxLength(200);
+                entity.Property(e => e.Observaciones).HasMaxLength(300);
 
-            entity.HasOne(d => d.Factura)
-                .WithMany(p => p.DetallesPago)
-                .HasForeignKey(d => d.FacturaId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
+                entity.Property(e => e.FechaPago)
+                    .IsRequired()
+                    .HasDefaultValueSql("GETDATE()");
+
+                entity.HasOne(d => d.Factura).WithMany(p => p.DetallesPago)
+                    .HasForeignKey(d => d.FacturaId)
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_DetallesPago_Facturas");
+            });
 
         OnModelCreatingPartial(modelBuilder);
     }
