@@ -592,40 +592,57 @@ namespace API.Controllers
                 if (factura.TipoDocumento == "Proforma")
                     return BadRequest(new { message = "No se puede completar una proforma. Debe convertirse a factura primero" });
 
-                // ✅ Verificar stock antes de completar
-                var erroresStock = new List<string>();
-                foreach (var detalle in factura.DetallesFactura)
+                // ✅ VERIFICAR STOCK CON ANÁLISIS DETALLADO
+                var resultadoValidacion = await ValidarYAnalizarStockFactura(factura.DetallesFactura);
+                
+                if (!resultadoValidacion.PuedeCompletarse)
                 {
-                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
-                    if (producto == null)
-                    {
-                        erroresStock.Add($"Producto {detalle.NombreProducto} no encontrado");
-                        continue;
-                    }
-
-                    if ((producto.CantidadEnInventario ?? 0) < detalle.Cantidad)
-                    {
-                        erroresStock.Add($"Stock insuficiente para {detalle.NombreProducto}. Disponible: {producto.CantidadEnInventario}, Requerido: {detalle.Cantidad}");
-                    }
+                    // Si hay productos críticos sin stock, no se puede completar
+                    return BadRequest(new { 
+                        message = "No se puede completar la factura", 
+                        errores = resultadoValidacion.ErroresCriticos,
+                        advertencias = resultadoValidacion.Advertencias,
+                        tipoError = "STOCK_INSUFICIENTE",
+                        detalleStock = resultadoValidacion.DetalleProductos
+                    });
                 }
 
-                if (erroresStock.Any())
+                // Si hay advertencias pero se puede completar, continuar con log de advertencias
+                if (resultadoValidacion.Advertencias.Any())
                 {
-                    return BadRequest(new { message = "Error de stock", errores = erroresStock });
+                    _logger.LogWarning("⚠️ Completando factura con advertencias de stock: {Advertencias}", 
+                        string.Join(", ", resultadoValidacion.Advertencias));
                 }
 
-                // ✅ Actualizar inventario
+                // ✅ ACTUALIZAR INVENTARIO CON MANEJO INTELIGENTE
+                var reporteAjustes = new List<string>();
                 foreach (var detalle in factura.DetallesFactura)
                 {
                     var producto = await _context.Productos.FindAsync(detalle.ProductoId);
                     if (producto != null)
                     {
-                        producto.CantidadEnInventario = Math.Max(0, 
-                            (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
-                        producto.FechaUltimaActualizacion = DateTime.Now;
+                        var stockAnterior = producto.CantidadEnInventario ?? 0;
+                        var nuevoStock = Math.Max(0, stockAnterior - detalle.Cantidad);
+                        var cantidadAjustada = Math.Min(detalle.Cantidad, stockAnterior);
                         
-                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
-                            producto.NombreProducto, detalle.Cantidad);
+                        producto.CantidadEnInventario = nuevoStock;
+                        producto.FechaUltimaActualizacion = DateTime.Now;
+
+                        if (cantidadAjustada < detalle.Cantidad)
+                        {
+                            // Stock parcial - registrar el ajuste que realmente se pudo hacer
+                            var diferencia = detalle.Cantidad - cantidadAjustada;
+                            reporteAjustes.Add($"{producto.NombreProducto}: Se ajustó {cantidadAjustada} de {detalle.Cantidad} solicitadas (faltante: {diferencia})");
+                            
+                            _logger.LogWarning("⚠️ Ajuste parcial - {Producto}: {Ajustado}/{Solicitado} (Stock anterior: {StockAnterior})", 
+                                producto.NombreProducto, cantidadAjustada, detalle.Cantidad, stockAnterior);
+                        }
+                        else
+                        {
+                            reporteAjustes.Add($"{producto.NombreProducto}: Stock ajustado correctamente ({stockAnterior} → {nuevoStock})");
+                            _logger.LogInformation("✅ Stock actualizado - {Producto}: {StockAnterior} → {StockNuevo}", 
+                                producto.NombreProducto, stockAnterior, nuevoStock);
+                        }
                     }
                 }
 
@@ -696,6 +713,8 @@ namespace API.Controllers
                     numeroFactura = factura.NumeroFactura,
                     estado = factura.Estado,
                     metodoPago = factura.MetodoPago,
+                    reporteAjustes = reporteAjustes,
+                    advertencias = resultadoValidacion.Advertencias,
                     timestamp = DateTime.Now
                 });
             }
@@ -887,6 +906,54 @@ namespace API.Controllers
             return errores;
         }
 
+        private async Task<ResultadoValidacionStock> ValidarYAnalizarStockFactura(ICollection<DetalleFactura> detalles)
+        {
+            var resultado = new ResultadoValidacionStock();
+            
+            foreach (var detalle in detalles)
+            {
+                var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                var stockActual = producto?.CantidadEnInventario ?? 0;
+                
+                var detalleStock = new DetalleStockProducto
+                {
+                    ProductoId = detalle.ProductoId,
+                    NombreProducto = detalle.NombreProducto,
+                    CantidadSolicitada = detalle.Cantidad,
+                    StockDisponible = stockActual,
+                    DiferenciaStock = stockActual - detalle.Cantidad
+                };
+
+                if (producto == null)
+                {
+                    resultado.ErroresCriticos.Add($"Producto {detalle.NombreProducto} no encontrado en sistema");
+                    detalleStock.TieneError = true;
+                    detalleStock.MensajeError = "Producto no encontrado";
+                }
+                else if (stockActual <= 0)
+                {
+                    // Stock en cero - ADVERTENCIA pero se puede completar
+                    resultado.Advertencias.Add($"{detalle.NombreProducto}: Sin stock disponible (se ajustará a 0)");
+                    detalleStock.EsAdvertencia = true;
+                    detalleStock.MensajeAdvertencia = "Stock en cero - se registrará venta pero no se ajustará inventario";
+                }
+                else if (stockActual < detalle.Cantidad)
+                {
+                    // Stock parcial - ADVERTENCIA pero se puede completar
+                    resultado.Advertencias.Add($"{detalle.NombreProducto}: Stock parcial ({stockActual} de {detalle.Cantidad} solicitadas)");
+                    detalleStock.EsAdvertencia = true;
+                    detalleStock.MensajeAdvertencia = $"Stock parcial - se ajustará solo {stockActual} unidades";
+                }
+
+                resultado.DetalleProductos.Add(detalleStock);
+            }
+
+            // Se puede completar si no hay errores críticos
+            resultado.PuedeCompletarse = !resultado.ErroresCriticos.Any();
+
+            return resultado;
+        }
+
         // =====================================
         // IMPRESIÓN DE RECIBOS
         // =====================================
@@ -938,5 +1005,26 @@ namespace API.Controllers
         public string? Referencia { get; set; }
         public string? Observaciones { get; set; }
         public DateTime? FechaPago { get; set; }
+    }
+
+    public class ResultadoValidacionStock
+    {
+        public bool PuedeCompletarse { get; set; } = true;
+        public List<string> ErroresCriticos { get; set; } = new List<string>();
+        public List<string> Advertencias { get; set; } = new List<string>();
+        public List<DetalleStockProducto> DetalleProductos { get; set; } = new List<DetalleStockProducto>();
+    }
+
+    public class DetalleStockProducto
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadSolicitada { get; set; }
+        public int StockDisponible { get; set; }
+        public int DiferenciaStock { get; set; }
+        public bool TieneError { get; set; }
+        public bool EsAdvertencia { get; set; }
+        public string? MensajeError { get; set; }
+        public string? MensajeAdvertencia { get; set; }
     }
 }

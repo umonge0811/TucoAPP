@@ -517,6 +517,21 @@ namespace GestionLlantera.Web.Services
                 {
                     _logger.LogError("❌ Error completando factura: {StatusCode} - {Content}", 
                         response.StatusCode, responseContent);
+
+                    // Intentar deserializar el error para obtener detalles de stock
+                    try
+                    {
+                        var errorDetallado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        if (errorDetallado?.tipoError?.ToString() == "STOCK_INSUFICIENTE")
+                        {
+                            return (success: false, data: errorDetallado, message: "Problemas de stock detectados", details: responseContent);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("⚠️ No se pudo deserializar error detallado: {Error}", ex.Message);
+                    }
+
                     return (success: false, data: null, message: "Error al completar factura", details: responseContent);
                 }
             }
