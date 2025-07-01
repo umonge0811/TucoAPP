@@ -2495,11 +2495,9 @@ function generarRecibo(factura, productos, totales) {
 
     console.log('🖨️ === GENERANDO RECIBO ===');
     console.log('🖨️ Número de factura determinado:', numeroFactura);
-    console.log('🖨️ Fuente del número:', {
-        desdeParametro: factura?.numeroFactura,
-        desdePendiente: facturaPendienteActual?.numeroFactura,
-        desdeProductos: productos?.[0]?.facturaId
-    });
+    console.log('🖨️ Método de pago:', totales.metodoPago);
+    console.log('🖨️ Es pago múltiple:', esPagoMultiple);
+    console.log('🖨️ Detalles de pago actuales:', detallesPagoActuales);
 
     // Función para truncar texto según el ancho de la impresora
     function truncarTexto(texto, maxCaracteres) {
@@ -2507,10 +2505,49 @@ function generarRecibo(factura, productos, totales) {
         return texto.length > maxCaracteres ? texto.substring(0, maxCaracteres - 3) + '...' : texto;
     }
 
-    // Función para formatear línea con espacios
-    function formatearLineaEspacios(izquierda, derecha, anchoTotal = 32) {
-        const espacios = anchoTotal - izquierda.length - derecha.length;
-        return izquierda + ' '.repeat(Math.max(0, espacios)) + derecha;
+    // ===== SECCIÓN MÉTODO DE PAGO =====
+    let seccionMetodoPago = '';
+    
+    // Verificar si es pago múltiple
+    if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 1) {
+        seccionMetodoPago = `
+            <div style="margin-bottom: 6px; font-size: 8px;">
+                <div style="font-weight: bold; text-align: center; margin-bottom: 3px;">DETALLE DE PAGOS MÚLTIPLES</div>
+                ${detallesPagoActuales.map((pago, index) => {
+                    const metodoPagoNombre = CONFIGURACION_PRECIOS[pago.metodoPago]?.nombre || pago.metodoPago;
+                    return `
+                        <div style="margin-bottom: 2px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>${metodoPagoNombre}:</span>
+                                <span>₡${pago.monto.toFixed(0)}</span>
+                            </div>
+                            ${pago.referencia ? `<div style="font-size: 7px; color: #666;">Ref: ${truncarTexto(pago.referencia, 25)}</div>` : ''}
+                        </div>
+                    `;
+                }).join('')}
+                <div style="border-top: 1px dashed #000; margin: 3px 0; padding-top: 3px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                        <span>Total Pagado:</span>
+                        <span>₡${detallesPagoActuales.reduce((sum, p) => sum + p.monto, 0).toFixed(0)}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else if (totales.metodoPago && totales.metodoPago.toLowerCase() === 'multiple') {
+        // Fallback para pagos múltiples sin detalles
+        seccionMetodoPago = `
+            <div style="text-align: center; margin-bottom: 6px; font-size: 8px;">
+                <strong>Método de Pago: PAGO MÚLTIPLE</strong>
+            </div>
+        `;
+    } else {
+        // Pago simple
+        const metodoPagoTexto = totales.metodoPago || 'Efectivo';
+        seccionMetodoPago = `
+            <div style="text-align: center; margin-bottom: 6px; font-size: 8px;">
+                <strong>Método de Pago: ${metodoPagoTexto.toUpperCase()}</strong>
+            </div>
+        `;
     }
 
     // ✅ RECIBO OPTIMIZADO PARA MINI IMPRESORAS TÉRMICAS (58mm/80mm)
@@ -2531,7 +2568,6 @@ function generarRecibo(factura, productos, totales) {
                 <div>Fecha: ${fecha}</div>
                 <div>Hora: ${hora}</div>
                 <div>Cliente: ${truncarTexto(totales.cliente?.nombre || totales.cliente?.nombreCliente || factura.nombreCliente || 'Cliente General', 25)}</div>
-                <div>Método: ${totales.metodoPago || 'Efectivo'}</div>
                 <div>Cajero: ${totales.usuario?.nombre || totales.usuario?.nombreUsuario || factura.usuarioCreadorNombre || 'Sistema'}</div>
             </div>
 
@@ -2577,10 +2613,16 @@ function generarRecibo(factura, productos, totales) {
                 </div>
             </div>
 
+            <!-- SEPARADOR -->
+            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+
+            <!-- SECCIÓN MÉTODO DE PAGO -->
+            ${seccionMetodoPago}
+
             <!-- PIE DE PÁGINA -->
             <div style="text-align: center; margin-top: 8px; font-size: 8px; border-top: 1px dashed #000; padding-top: 6px;">
                 <div style="margin-bottom: 2px;">¡Gracias por su compra!</div>
-                <div style="margin-bottom: 2px.">Vuelva pronto</div>
+                <div style="margin-bottom: 2px;">Vuelva pronto</div>
                 <div style="margin-bottom: 4px;">www.gestionllantera.com</div>
                 <div style="font-size: 7px;">Recibo generado: ${new Date().toLocaleString('es-CR')}</div>
             </div>
