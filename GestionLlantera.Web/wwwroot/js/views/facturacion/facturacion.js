@@ -1928,10 +1928,81 @@ async function completarFacturaExistente(facturaId) {
         console.log('💰 Factura ID:', facturaId);
 
         // ✅ VERIFICAR STOCK ANTES DE COMPLETAR LA FACTURA
+        console.log('🔍 Verificando stock de productos antes de completar factura...');
         const verificacionStock = await verificarStockProductosFactura();
+        
         if (!verificacionStock.stockSuficiente) {
-            await mostrarErrorStockInsuficiente(verificacionStock.productosConProblemas);
-            return;
+            console.log('⚠️ Stock insuficiente detectado, mostrando alerta al cajero');
+            
+            // ✅ MOSTRAR ALERTA DETALLADA AL CAJERO
+            const productosConProblemas = verificacionStock.productosConProblemas;
+            let mensajeStock = '<div class="alert alert-warning mb-3">';
+            mensajeStock += '<h6><i class="bi bi-exclamation-triangle me-2"></i>⚠️ ATENCIÓN: Productos sin stock suficiente</h6>';
+            mensajeStock += '<p><strong>Los siguientes productos no tienen stock disponible:</strong></p>';
+            mensajeStock += '<ul>';
+            
+            productosConProblemas.forEach(problema => {
+                mensajeStock += `
+                    <li>
+                        <strong>${problema.nombreProducto}</strong><br>
+                        <small class="text-muted">
+                            Cantidad en factura: ${problema.cantidadRequerida} | 
+                            Stock actual: ${problema.stockDisponible} | 
+                            <span class="text-danger">Faltante: ${problema.cantidadRequerida - problema.stockDisponible}</span>
+                        </small>
+                    </li>
+                `;
+            });
+            
+            mensajeStock += '</ul>';
+            mensajeStock += '<div class="alert alert-info mt-2">';
+            mensajeStock += '<strong>Recomendación:</strong> Hable con el cliente y el administrador sobre las opciones disponibles.';
+            mensajeStock += '</div>';
+            mensajeStock += '</div>';
+
+            const resultadoConfirmacion = await Swal.fire({
+                title: '⚠️ Stock Insuficiente',
+                html: mensajeStock,
+                icon: 'warning',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: '<i class="bi bi-check-circle me-1"></i>Completar de Todos Modos',
+                denyButtonText: '<i class="bi bi-pencil me-1"></i>Ajustar Cantidades',
+                cancelButtonText: '<i class="bi bi-x-circle me-1"></i>Cancelar',
+                confirmButtonColor: '#dc3545',
+                denyButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d',
+                width: '700px',
+                customClass: {
+                    htmlContainer: 'text-start'
+                }
+            });
+
+            if (resultadoConfirmacion.isDenied) {
+                // El cajero quiere ajustar las cantidades
+                console.log('📝 Cajero decidió ajustar cantidades');
+                ajustarCantidadesProductosAutomaticamente(productosConProblemas);
+                
+                // Mostrar mensaje informativo y cancelar el completamiento
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Cantidades Ajustadas',
+                    text: 'Las cantidades han sido ajustadas al stock disponible. Puede proceder a completar la factura nuevamente.',
+                    confirmButtonText: 'Entendido',
+                    timer: 4000,
+                    timerProgressBar: true
+                });
+                return;
+            } else if (resultadoConfirmacion.dismiss === Swal.DismissReason.cancel) {
+                // El cajero canceló la operación
+                console.log('❌ Cajero canceló el completamiento de factura');
+                return;
+            }
+            
+            // Si llegamos aquí, el cajero decidió completar de todos modos
+            console.log('⚠️ Cajero decidió completar factura a pesar del stock insuficiente');
+        } else {
+            console.log('✅ Stock verificado correctamente, procediendo con el completamiento');
         }
 
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
