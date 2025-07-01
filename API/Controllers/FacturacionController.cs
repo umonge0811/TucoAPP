@@ -892,27 +892,6 @@ namespace API.Controllers
         // =====================================
 
         [HttpPost("imprimir-recibo")]
-
-
-    // =====================================
-    // DTOs PARA COMPLETAR FACTURAS
-    // =====================================
-    
-    public class CompletarFacturaRequest
-    {
-        public string? MetodoPago { get; set; }
-        public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
-    }
-
-    public class DetallePagoCompletarDTO
-    {
-        public string MetodoPago { get; set; } = string.Empty;
-        public decimal Monto { get; set; }
-        public string? Referencia { get; set; }
-        public string? Observaciones { get; set; }
-        public DateTime? FechaPago { get; set; }
-    }
-
         [Authorize]
         public async Task<IActionResult> ImprimirRecibo([FromBody] object reciboData)
         {
@@ -937,6 +916,27 @@ namespace API.Controllers
                     message = "Error al procesar impresión" 
                 });
             }
+        }
+
+
+
+        // =====================================
+        // DTOs PARA COMPLETAR FACTURAS
+        // =====================================
+
+        public class CompletarFacturaRequest
+        {
+            public string? MetodoPago { get; set; }
+            public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
+        }
+
+        public class DetallePagoCompletarDTO
+        {
+            public string MetodoPago { get; set; } = string.Empty;
+            public decimal Monto { get; set; }
+            public string? Referencia { get; set; }
+            public string? Observaciones { get; set; }
+            public DateTime? FechaPago { get; set; }
         }
     }
 }
