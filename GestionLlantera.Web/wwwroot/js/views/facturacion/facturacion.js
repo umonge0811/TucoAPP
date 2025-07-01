@@ -1663,23 +1663,12 @@ async function completarFacturaExistente(facturaId) {
         console.log('💰 === COMPLETANDO FACTURA EXISTENTE ===');
         console.log('💰 Factura ID:', facturaId);
 
-        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
-        
-        const datosCompletamiento = {
-            metodoPago: metodoPagoSeleccionado,
-            observaciones: $('#observacionesVenta').val() || '',
-            fechaCompletamiento: new Date().toISOString()
-        };
-
-        const response = await fetch('/Facturacion/CompletarFacturaPendiente', {
+        const response = await fetch(`/Facturacion/CompletarFactura/${facturaId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                facturaId: facturaId
-            }),
             credentials: 'include'
         });
 
