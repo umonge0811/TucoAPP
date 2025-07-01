@@ -1711,6 +1711,9 @@ async function completarFacturaExistente(facturaId) {
             // ✅ ACTUALIZAR VISTA DE PRODUCTOS
             await actualizarVistaProductosPostAjuste();
 
+            // ✅ GENERAR E IMPRIMIR RECIBO PARA FACTURA COMPLETADA
+            generarReciboFacturaCompletada(resultado, productosEnVenta, metodoPagoSeleccionado);
+
             // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
             Swal.fire({
                 icon: 'success',
@@ -2222,6 +2225,55 @@ function generarRecibo(factura, productos, totales) {
 
         // Fallback: mostrar el recibo en pantalla para copiar/imprimir manualmente
         mostrarReciboEnPantalla(reciboHTML, factura.numeroFactura);
+    }
+}
+
+/**
+ * Generar e imprimir recibo para factura completada (reutilizando lógica existente)
+ */
+function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago) {
+    try {
+        console.log('🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===');
+        console.log('🖨️ Resultado factura:', resultadoFactura);
+        console.log('🖨️ Productos:', productos);
+        console.log('🖨️ Método de pago:', metodoPago);
+
+        // Calcular totales basándose en los productos del carrito
+        const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
+        
+        let subtotal = 0;
+        productos.forEach(producto => {
+            const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+            subtotal += precioAjustado * producto.cantidad;
+        });
+
+        const iva = subtotal * 0.13;
+        const total = subtotal + iva;
+
+        // Crear objeto de datos completo para el recibo
+        const datosRecibo = {
+            numeroFactura: resultadoFactura.numeroFactura || 'N/A',
+            usuarioCreadorNombre: resultadoFactura.usuarioCreadorNombre || 'Sistema'
+        };
+
+        const totalesRecibo = {
+            subtotal: subtotal,
+            iva: iva,
+            total: total,
+            metodoPago: metodoPago,
+            cliente: clienteSeleccionado,
+            usuario: obtenerUsuarioActual()
+        };
+
+        // Usar la función existente de generación de recibos
+        generarRecibo(datosRecibo, productos, totalesRecibo);
+
+        console.log('✅ Recibo de factura completada generado exitosamente');
+
+    } catch (error) {
+        console.error('❌ Error generando recibo para factura completada:', error);
+        // No mostrar error al usuario para no interrumpir el flujo exitoso
+        console.warn('⚠️ La factura se completó correctamente pero no se pudo imprimir el recibo');
     }
 }
 
@@ -3872,6 +3924,7 @@ window.cargarFacturaPendienteEnCarrito = cargarFacturaPendienteEnCarrito;
 window.verDetalleFacturaPendiente = verDetalleFacturaPendiente;
 window.completarFacturaExistente = completarFacturaExistente;
 window.crearNuevaFactura = crearNuevaFactura;
+window.generarReciboFacturaCompletada = generarReciboFacturaCompletada;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `
