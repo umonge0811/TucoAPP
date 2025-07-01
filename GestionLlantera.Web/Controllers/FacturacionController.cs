@@ -656,7 +656,7 @@ namespace GestionLlantera.Web.Controllers
                 if (resultado.success && resultado.data != null)
                 {
                     _logger.LogInformation("📋 Procesando respuesta del API de facturas pendientes");
-                    
+
                     // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
                     // Solo necesitamos devolverla tal como viene
                     return Json(resultado.data);
@@ -809,6 +809,5 @@ namespace GestionLlantera.Web.Controllers
     public class CompletarFacturaRequest
     {
         public int FacturaId { get; set; }
-        public string NumeroFactura { get; set; }
     }
 }

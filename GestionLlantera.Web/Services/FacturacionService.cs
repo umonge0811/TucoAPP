@@ -371,18 +371,19 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 === OBTENIENDO FACTURAS PENDIENTES DEL API ===");
+                _logger.LogInformation("📋 === OBTENIENDO FACTURAS PENDIENTES CON DETALLES DEL API ===");
 
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync("api/Facturacion/facturas/pendientes");
+                // Cambiar el endpoint para incluir detalles
+                var response = await _httpClient.GetAsync("api/Facturacion/facturas/pendientes?incluirDetalles=true");
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📋 Respuesta de la API: {StatusCode}", response.StatusCode);
-                _logger.LogInformation("📋 Contenido de respuesta: {Content}", responseContent.Substring(0, Math.Min(500, responseContent.Length)));
+                _logger.LogInformation("📋 Contenido de respuesta: {Content}", responseContent.Substring(0, Math.Min(1000, responseContent.Length)));
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -406,24 +407,34 @@ namespace GestionLlantera.Web.Services
                         // El API devuelve: { success: true, facturas: [...], totalFacturas: X, message: "..." }
                         if (apiResponse.TryGetProperty("facturas", out var facturasElement))
                         {
-                            var facturasArray = System.Text.Json.JsonSerializer.Deserialize<FacturaDTO[]>(facturasElement.GetRawText(), new JsonSerializerOptions 
+                            var facturasArray = System.Text.Json.JsonSerializer.Deserialize<FacturaCompletaDTO[]>(facturasElement.GetRawText(), new JsonSerializerOptions 
                             { 
                                 PropertyNameCaseInsensitive = true 
                             });
 
-                            _logger.LogInformation("📋 Facturas deserializadas: {Count}", facturasArray?.Length ?? 0);
+                            _logger.LogInformation("📋 Facturas con detalles deserializadas: {Count}", facturasArray?.Length ?? 0);
+
+                            // Log detalles de cada factura para verificar
+                            if (facturasArray != null)
+                            {
+                                foreach (var factura in facturasArray)
+                                {
+                                    _logger.LogInformation("📋 Factura {NumeroFactura}: {DetallesCount} detalles", 
+                                        factura.NumeroFactura, factura.DetallesFactura?.Count ?? 0);
+                                }
+                            }
 
                             // Devolver la estructura exacta que espera el frontend
                             return (success: true, 
-                                   data: facturasArray ?? new FacturaDTO[0], 
-                                   message: "Facturas pendientes obtenidas", 
+                                   data: facturasArray ?? new FacturaCompletaDTO[0], 
+                                   message: "Facturas pendientes con detalles obtenidas", 
                                    details: null);
                         }
                         else
                         {
                             _logger.LogInformation("📋 No se encontró propiedad 'facturas' en la respuesta");
                             return (success: true, 
-                                   data: new FacturaDTO[0], 
+                                   data: new FacturaCompletaDTO[0], 
                                    message: "No hay facturas pendientes", 
                                    details: null);
                         }
@@ -433,15 +444,15 @@ namespace GestionLlantera.Web.Services
                         // Si no tiene success=true, verificar si es directamente un array de facturas
                         if (apiResponse.ValueKind == JsonValueKind.Array)
                         {
-                            var facturasArray = System.Text.Json.JsonSerializer.Deserialize<FacturaDTO[]>(responseContent, new JsonSerializerOptions 
+                            var facturasArray = System.Text.Json.JsonSerializer.Deserialize<FacturaCompletaDTO[]>(responseContent, new JsonSerializerOptions 
                             { 
                                 PropertyNameCaseInsensitive = true 
                             });
 
-                            _logger.LogInformation("📋 Array directo de facturas deserializado: {Count}", facturasArray?.Length ?? 0);
+                            _logger.LogInformation("📋 Array directo de facturas con detalles deserializado: {Count}", facturasArray?.Length ?? 0);
 
                             return (success: true, 
-                                   data: facturasArray ?? new FacturaDTO[0], 
+                                   data: facturasArray ?? new FacturaCompletaDTO[0], 
                                    message: "Facturas pendientes obtenidas", 
                                    details: null);
                         }
@@ -932,5 +943,46 @@ namespace GestionLlantera.Web.Services
         public string NombreCliente { get; set; }
         public decimal Total { get; set; }
         public string Estado { get; set; }
+    }
+
+    public class FacturaCompletaDTO
+    {
+        public int FacturaId { get; set; }
+        public string NumeroFactura { get; set; }
+        public DateTime FechaCreacion { get; set; }
+        public DateTime FechaFactura { get; set; }
+        public string NombreCliente { get; set; }
+        public string? IdentificacionCliente { get; set; }
+        public string? TelefonoCliente { get; set; }
+        public string? EmailCliente { get; set; }
+        public string? DireccionCliente { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal? MontoImpuesto { get; set; }
+        public decimal Total { get; set; }
+        public string Estado { get; set; }
+        public string TipoDocumento { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? Observaciones { get; set; }
+        public string? UsuarioCreadorNombre { get; set; }
+        public List<DetalleFacturaCompletaDTO> DetallesFactura { get; set; } = new List<DetalleFacturaCompletaDTO>();
+        public int CantidadItems => DetallesFactura?.Sum(d => d.Cantidad) ?? 0;
+    }
+
+    public class DetalleFacturaCompletaDTO
+    {
+        public int DetalleFacturaId { get; set; }
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; }
+        public string? DescripcionProducto { get; set; }
+        public int Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal? PorcentajeDescuento { get; set; }
+        public decimal? MontoDescuento { get; set; }
+        public decimal Subtotal { get; set; }
+        public bool EsLlanta { get; set; }
+        public string? MedidaLlanta { get; set; }
+        public string? MarcaLlanta { get; set; }
+        public string? ModeloLlanta { get; set; }
+        public int StockDisponible { get; set; }
     }
 }

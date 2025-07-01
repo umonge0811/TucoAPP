@@ -1,0 +1,127 @@
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: {usuario: {…}, permisos: {…}, fechaActual: '2025-06-30', horaActual: '18:22', tokenDisponible: true}
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1505
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: {usuario: {…}, permisos: {…}, fechaActual: '2025-06-30', horaActual: '18:22', tokenDisponible: true}
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+facturacion.js:214 🚀 Inicializando módulo de facturación
+facturacion.js:219 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:222 🔐 Cargando permisos del usuario...
+facturacion.js:70 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+facturacion.js:71 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-06-30",
+  "horaActual": "18:22",
+  "tokenDisponible": true
+}
+facturacion.js:88 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+facturacion.js:89 🔐 puedeCrearFacturas: true
+facturacion.js:90 🔐 puedeCompletarFacturas: true
+facturacion.js:91 🔐 puedeEditarFacturas: true
+facturacion.js:92 🔐 puedeAnularFacturas: true
+facturacion.js:93 🔐 esAdmin: true
+facturacion.js:116 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+facturacion.js:117 🎯 Permisos actuales del usuario: {puedeCrearFacturas: true, puedeCompletarFacturas: true, puedeEditarFacturas: true, puedeAnularFacturas: true, esAdmin: true}
+facturacion.js:118 🎯 puedeCompletarFacturas: true (tipo: boolean )
+facturacion.js:119 🎯 puedeCrearFacturas: true (tipo: boolean )
+facturacion.js:138 🎯 Evaluación de permisos:
+facturacion.js:139 🎯   - puedeCompletar (CompletarFacturas): true
+facturacion.js:140 🎯   - puedeCrear (CrearFacturas): true
+facturacion.js:150 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+facturacion.js:151 👑 Botón: Verde - "Completar Venta"
+facturacion.js:152 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+facturacion.js:189 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+facturacion.js:226 🚀 Inicializando modales...
+facturacion.js:230 🚀 Configurando eventos...
+facturacion.js:234 🚀 Actualizando totales...
+facturacion.js:3079 🔄 Estado botón finalizar actualizado: {tieneProductos: false, tieneCliente: false, puedeFinalizarVenta: false, disabled: true}
+facturacion.js:241 🚀 Iniciando carga de productos iniciales...
+facturacion.js:2857 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:2858 📦 cargaInicialCompletada: false
+facturacion.js:2874 📦 Iniciando carga de productos iniciales...
+facturacion.js:423 🔍 === INICIO buscarProductos ===
+facturacion.js:424 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:425 🔍 Término recibido: ""
+facturacion.js:426 🔍 busquedaEnProceso: false
+facturacion.js:427 🔍 ultimaBusqueda: ""
+facturacion.js:442 🔍 Iniciando búsqueda válida...
+facturacion.js:244 ✅ Facturación inicializada correctamente
+facturacion.js:245 🚀 === FIN inicializarFacturacion ===
+permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:20  GET https://localhost:7038/api/permisos/funciones net::ERR_ABORTED 404 (Not Found)
+cargarFunciones @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:20
+init @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:13
+PermisosInfoService @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:8
+(anonymous) @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:164
+permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:32  GET https://localhost:7038/DiagnosticoPermisos/mis-permisos net::ERR_ABORTED 404 (Not Found)
+cargarPermisosUsuario @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:32
+init @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:14
+await in init
+PermisosInfoService @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:8
+(anonymous) @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:164
+facturacion.js:464 📋 Respuesta del servidor recibida
+facturacion.js:467 ✅ Se encontraron 5 productos disponibles
+facturacion.js:506 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:507 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:508 🔄 Productos recibidos: 5
+facturacion.js:543 🔄 Construyendo HTML para 5 productos
+facturacion.js:557 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:558 🖼️ Datos del producto: {imagenesProductos: Array(1), imagenesUrls: Array(1), imagenes: undefined}
+facturacion.js:571 🖼️ Imágenes desde imagenesProductos: ['https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png']
+facturacion.js:576 🖼️ Imágenes desde imagenesUrls: ['https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png']
+facturacion.js:595 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:607 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:557 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:558 🖼️ Datos del producto: {imagenesProductos: Array(1), imagenesUrls: Array(1), imagenes: undefined}
+facturacion.js:571 🖼️ Imágenes desde imagenesProductos: ['https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png']
+facturacion.js:576 🖼️ Imágenes desde imagenesUrls: ['https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png']
+facturacion.js:595 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:607 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:557 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:558 🖼️ Datos del producto: {imagenesProductos: Array(1), imagenesUrls: Array(1), imagenes: undefined}
+facturacion.js:571 🖼️ Imágenes desde imagenesProductos: ['https://localhost:7273/uploads/productos/2e87b201-…7f09e52d3cd99927720-free__1_-removebg-preview.png']
+facturacion.js:576 🖼️ Imágenes desde imagenesUrls: ['https://localhost:7273/uploads/productos/2e87b201-…7f09e52d3cd99927720-free__1_-removebg-preview.png']
+facturacion.js:595 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:607 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:557 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:558 🖼️ Datos del producto: {imagenesProductos: Array(1), imagenesUrls: Array(1), imagenes: undefined}
+facturacion.js:571 🖼️ Imágenes desde imagenesProductos: ['https://localhost:7273/uploads/productos/abef5f29-…43b-5454e4b374ef_Slam_R100_3-removebg-preview.png']
+facturacion.js:576 🖼️ Imágenes desde imagenesUrls: ['https://localhost:7273/uploads/productos/abef5f29-…43b-5454e4b374ef_Slam_R100_3-removebg-preview.png']
+facturacion.js:595 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:607 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:557 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:558 🖼️ Datos del producto: {imagenesProductos: Array(3), imagenesUrls: Array(3), imagenes: undefined}
+facturacion.js:571 🖼️ Imágenes desde imagenesProductos: (3) ['https://localhost:7273/uploads/productos/19020e25-…e-4914-a654-8f9b50b61128_ss1-removebg-preview.png', 'https://localhost:7273/uploads/productos/0bd3761e-6d04-47ee-9114-df9040fb3004_sun2.png', 'https://localhost:7273/uploads/productos/47bada1a-…ab2cb4f73_hoyoun-lee-wFUjcFocCv4-unsplash (1).jpg']
+facturacion.js:576 🖼️ Imágenes desde imagenesUrls: (3) ['https://localhost:7273/uploads/productos/19020e25-…e-4914-a654-8f9b50b61128_ss1-removebg-preview.png', 'https://localhost:7273/uploads/productos/0bd3761e-6d04-47ee-9114-df9040fb3004_sun2.png', 'https://localhost:7273/uploads/productos/47bada1a-…ab2cb4f73_hoyoun-lee-wFUjcFocCv4-unsplash (1).jpg']
+facturacion.js:595 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:607 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:706 🔄 Actualizando DOM (longitud HTML: 23113 caracteres)
+facturacion.js:739 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:484 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:487 📦 Productos mostrados exitosamente
+facturacion.js:500 🔍 === FIN buscarProductos ===
+facturacion.js:2890 📦 Búsqueda inicial ejecutada
+facturacion.js:2892 📦 === FIN cargarProductosIniciales (exitosa) ===
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  GET https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png 404 (Not Found)
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  GET https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png 404 (Not Found)
+facturacion.js:203 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:204 🎯 Clases CSS: btn w-100 btn-outline-secondary
+facturacion.js:205 🎯 Deshabilitado: true
+facturacion.js:206 🎯 Texto: Completar Venta
+facturacion.js:207 🎯 Título: Agrega productos y selecciona un cliente
+facturacion.js:208 🎯 === FIN CONFIGURACIÓN INTERFAZ ===

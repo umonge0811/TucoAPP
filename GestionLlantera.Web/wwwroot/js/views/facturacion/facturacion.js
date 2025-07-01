@@ -1334,19 +1334,68 @@ function mostrarModalFinalizarVenta() {
         return;
     }
 
+    console.log('📋 === DEPURACIÓN CLIENTE SELECCIONADO ===');
+    console.log('📋 Cliente completo:', clienteSeleccionado);
+    console.log('📋 Propiedades disponibles:', Object.keys(clienteSeleccionado || {}));
+
     // ===== CONFIGURAR MODAL SEGÚN PERMISOS =====
     configurarModalSegunPermisos();
 
-    // ===== LLENAR INFORMACIÓN DEL CLIENTE =====
-    $('#resumenNombreCliente').text(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || 'Cliente');
-    $('#resumenEmailCliente').text(clienteSeleccionado.email || 'Sin email');
+    // ===== LLENAR INFORMACIÓN DEL CLIENTE EN EL RESUMEN =====
+    const nombreCliente = clienteSeleccionado.nombre || 
+                          clienteSeleccionado.nombreCliente || 
+                          'Cliente';
+    const emailCliente = clienteSeleccionado.email || 
+                        clienteSeleccionado.emailCliente || 
+                        'Sin email';
 
-    // Llenar campos de cliente en el formulario
-    $('#clienteNombre').val(clienteSeleccionado.nombre || clienteSeleccionado.nombreCliente || '');
-    $('#clienteCedula').val(clienteSeleccionado.identificacion || clienteSeleccionado.contacto || '');
-    $('#clienteTelefono').val(clienteSeleccionado.telefono || '');
-    $('#clienteEmail').val(clienteSeleccionado.email || '');
-    $('#clienteDireccion').val(clienteSeleccionado.direccion || '');
+    $('#resumenNombreCliente').text(nombreCliente);
+    $('#resumenEmailCliente').text(emailCliente);
+
+    // ===== LLENAR CAMPOS DEL FORMULARIO CON MAPEO EXHAUSTIVO =====
+    const datosCliente = {
+        nombre: clienteSeleccionado.nombre || 
+               clienteSeleccionado.nombreCliente || 
+               clienteSeleccionado.NombreCliente || '',
+        
+        cedula: clienteSeleccionado.identificacion || 
+               clienteSeleccionado.identificacionCliente || 
+               clienteSeleccionado.cedula || 
+               clienteSeleccionado.contacto || 
+               clienteSeleccionado.Contacto || '',
+        
+        telefono: clienteSeleccionado.telefono || 
+                 clienteSeleccionado.telefonoCliente || 
+                 clienteSeleccionado.TelefonoCliente || 
+                 clienteSeleccionado.Telefono || '',
+        
+        email: clienteSeleccionado.email || 
+              clienteSeleccionado.emailCliente || 
+              clienteSeleccionado.EmailCliente || 
+              clienteSeleccionado.Email || '',
+        
+        direccion: clienteSeleccionado.direccion || 
+                  clienteSeleccionado.direccionCliente || 
+                  clienteSeleccionado.DireccionCliente || 
+                  clienteSeleccionado.Direccion || ''
+    };
+
+    console.log('📋 Datos mapeados para formulario:', datosCliente);
+
+    // Llenar campos del formulario
+    $('#clienteNombre').val(datosCliente.nombre);
+    $('#clienteCedula').val(datosCliente.cedula);
+    $('#clienteTelefono').val(datosCliente.telefono);
+    $('#clienteEmail').val(datosCliente.email);
+    $('#clienteDireccion').val(datosCliente.direccion);
+
+    // ===== DEPURACIÓN: VERIFICAR QUE LOS CAMPOS SE LLENARON =====
+    console.log('📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===');
+    console.log('📋 Nombre:', $('#clienteNombre').val());
+    console.log('📋 Cédula:', $('#clienteCedula').val());
+    console.log('📋 Teléfono:', $('#clienteTelefono').val());
+    console.log('📋 Email:', $('#clienteEmail').val());
+    console.log('📋 Dirección:', $('#clienteDireccion').val());
 
     // ===== CONFIGURAR MÉTODO DE PAGO INICIAL =====
     $('input[name="metodoPago"][value="efectivo"]').prop('checked', true);
@@ -1566,6 +1615,133 @@ async function procesarVentaFinal() {
     try {
         // Deshabilitar el botón y mostrar el estado de carga
         $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
+
+        // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE (tiene facturaId en algún producto)
+        const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
+        const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
+
+        console.log('🔍 === DETERMINANDO TIPO DE OPERACIÓN ===');
+        console.log('🔍 Es factura pendiente:', esFacturaPendiente);
+        console.log('🔍 Factura ID:', facturaId);
+
+        if (esFacturaPendiente && facturaId) {
+            // ✅ COMPLETAR FACTURA EXISTENTE
+            console.log('✅ Completando factura pendiente ID:', facturaId);
+            await completarFacturaExistente(facturaId);
+        } else {
+            // ✅ CREAR NUEVA FACTURA
+            console.log('🆕 Creando nueva factura');
+            await crearNuevaFactura();
+        }
+
+    } catch (error) {
+        console.error('❌ Error procesando venta:', error);
+        
+        // ✅ MOSTRAR ERROR CON SWEETALERT
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error procesando la venta',
+                text: 'Hubo un problema inesperado al procesar la venta',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc3545'
+            });
+        } else {
+            alert('Error: Hubo un problema procesando la venta');
+        }
+    } finally {
+        // Restaurar botón
+        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Completar factura existente
+ */
+async function completarFacturaExistente(facturaId) {
+    try {
+        console.log('💰 === COMPLETANDO FACTURA EXISTENTE ===');
+        console.log('💰 Factura ID:', facturaId);
+
+        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+        
+        const datosCompletamiento = {
+            metodoPago: metodoPagoSeleccionado,
+            observaciones: $('#observacionesVenta').val() || '',
+            fechaCompletamiento: new Date().toISOString()
+        };
+
+        const response = await fetch(`/Facturacion/CompletarFactura/${facturaId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor al completar factura:', errorText);
+            throw new Error(`Error al completar la factura: ${response.status} - ${errorText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('✅ Factura completada:', resultado);
+
+        if (resultado.success) {
+            // ✅ CERRAR MODAL INMEDIATAMENTE
+            modalFinalizarVenta.hide();
+            
+            // ✅ LIMPIAR CARRITO COMPLETAMENTE
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+
+            // ✅ LIMPIAR ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
+            window.lastProductsHash = null;
+            ultimaBusqueda = '';
+            busquedaEnProceso = false;
+            cargaInicialCompletada = false;
+
+            // ✅ ACTUALIZAR VISTA DE PRODUCTOS
+            await actualizarVistaProductosPostAjuste();
+
+            // ✅ GENERAR E IMPRIMIR RECIBO PARA FACTURA COMPLETADA
+            generarReciboFacturaCompletada(resultado, productosEnVenta, metodoPagoSeleccionado);
+
+            // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
+            Swal.fire({
+                icon: 'success',
+                title: '¡Factura Completada!',
+                text: `La factura ha sido completada exitosamente y marcada como pagada`,
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#28a745',
+                timer: 4000,
+                timerProgressBar: true,
+                showConfirmButton: true
+            });
+
+        } else {
+            throw new Error(resultado.message || 'Error al completar la factura');
+        }
+
+    } catch (error) {
+        console.error('❌ Error completando factura existente:', error);
+        throw error;
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear nueva factura
+ */
+async function crearNuevaFactura() {
+    try {
+        console.log('🆕 === CREANDO NUEVA FACTURA ===');
 
         // Preparar datos de la venta con método de pago seleccionado
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
@@ -1821,23 +1997,8 @@ async function procesarVentaFinal() {
         }
 
     } catch (error) {
-        console.error('❌ Error procesando venta:', error);
-        
-        // ✅ MOSTRAR ERROR CON SWEETALERT
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error procesando la venta',
-                text: 'Hubo un problema inesperado al procesar la venta',
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: '#dc3545'
-            });
-        } else {
-            alert('Error: Hubo un problema procesando la venta');
-        }
-    } finally {
-        // Restaurar botón
-        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+        console.error('❌ Error creando nueva factura:', error);
+        throw error;
     }
 }
 /**
@@ -2064,6 +2225,55 @@ function generarRecibo(factura, productos, totales) {
 
         // Fallback: mostrar el recibo en pantalla para copiar/imprimir manualmente
         mostrarReciboEnPantalla(reciboHTML, factura.numeroFactura);
+    }
+}
+
+/**
+ * Generar e imprimir recibo para factura completada (reutilizando lógica existente)
+ */
+function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago) {
+    try {
+        console.log('🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===');
+        console.log('🖨️ Resultado factura:', resultadoFactura);
+        console.log('🖨️ Productos:', productos);
+        console.log('🖨️ Método de pago:', metodoPago);
+
+        // Calcular totales basándose en los productos del carrito
+        const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
+        
+        let subtotal = 0;
+        productos.forEach(producto => {
+            const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+            subtotal += precioAjustado * producto.cantidad;
+        });
+
+        const iva = subtotal * 0.13;
+        const total = subtotal + iva;
+
+        // Crear objeto de datos completo para el recibo
+        const datosRecibo = {
+            numeroFactura: resultadoFactura.numeroFactura || 'N/A',
+            usuarioCreadorNombre: resultadoFactura.usuarioCreadorNombre || 'Sistema'
+        };
+
+        const totalesRecibo = {
+            subtotal: subtotal,
+            iva: iva,
+            total: total,
+            metodoPago: metodoPago,
+            cliente: clienteSeleccionado,
+            usuario: obtenerUsuarioActual()
+        };
+
+        // Usar la función existente de generación de recibos
+        generarRecibo(datosRecibo, productos, totalesRecibo);
+
+        console.log('✅ Recibo de factura completada generado exitosamente');
+
+    } catch (error) {
+        console.error('❌ Error generando recibo para factura completada:', error);
+        // No mostrar error al usuario para no interrumpir el flujo exitoso
+        console.warn('⚠️ La factura se completó correctamente pero no se pudo imprimir el recibo');
     }
 }
 
@@ -3340,12 +3550,16 @@ function mostrarFacturasPendientes(facturas) {
         const total = factura.total || 0;
         const cantidadItems = factura.cantidadItems || factura.detallesFactura?.length || 0;
         
-        // Escapar datos para JavaScript
+        // Escapar datos para JavaScript con TODA la información del cliente
         const facturaEscapada = JSON.stringify({
             facturaId: factura.facturaId,
             numeroFactura: factura.numeroFactura,
-            nombreCliente: factura.nombreCliente,
-            emailCliente: factura.emailCliente,
+            clienteId: factura.clienteId || factura.ClienteId,
+            nombreCliente: factura.nombreCliente || factura.NombreCliente,
+            emailCliente: factura.emailCliente || factura.EmailCliente,
+            identificacionCliente: factura.identificacionCliente || factura.IdentificacionCliente,
+            telefonoCliente: factura.telefonoCliente || factura.TelefonoCliente,
+            direccionCliente: factura.direccionCliente || factura.DireccionCliente,
             total: factura.total,
             metodoPago: factura.metodoPago,
             detallesFactura: factura.detallesFactura
@@ -3466,21 +3680,91 @@ function procesarFacturaPendiente(facturaEscapada) {
  */
 function cargarFacturaPendienteEnCarrito(factura) {
     console.log('📦 === CARGANDO FACTURA EN CARRITO ===');
+    console.log('📦 Datos completos de la factura recibida:', factura);
+    console.log('📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===');
+    console.log('📦 Factura completa recibida:', JSON.stringify(factura, null, 2));
+    console.log('📦 Datos del cliente extraídos:', {
+        clienteId: factura.clienteId,
+        ClienteId: factura.ClienteId,
+        nombreCliente: factura.nombreCliente,
+        NombreCliente: factura.NombreCliente,
+        emailCliente: factura.emailCliente,
+        EmailCliente: factura.EmailCliente,
+        telefonoCliente: factura.telefonoCliente,
+        TelefonoCliente: factura.TelefonoCliente,
+        identificacionCliente: factura.identificacionCliente,
+        IdentificacionCliente: factura.IdentificacionCliente,
+        direccionCliente: factura.direccionCliente,
+        DireccionCliente: factura.DireccionCliente,
+        Cliente: factura.Cliente
+    });
+    console.log('📦 Todas las propiedades de factura:', Object.keys(factura));
     
     // Limpiar carrito actual
     productosEnVenta = [];
     
-    // Cargar datos del cliente
+    // Cargar datos del cliente con mapeo completo y exhaustivo
     clienteSeleccionado = {
-        id: factura.clienteId || 1,
-        clienteId: factura.clienteId || 1,
-        nombre: factura.nombreCliente,
-        nombreCliente: factura.nombreCliente,
-        email: factura.emailCliente,
-        telefono: factura.telefonoCliente,
-        identificacion: factura.identificacionCliente,
-        direccion: factura.direccionCliente
+        id: factura.clienteId || factura.ClienteId || 1,
+        clienteId: factura.clienteId || factura.ClienteId || 1,
+        
+        // Mapeo para nombre
+        nombre: factura.nombreCliente || 
+               factura.NombreCliente || 
+               factura.Cliente?.Nombre || 
+               'Cliente General',
+        nombreCliente: factura.nombreCliente || 
+                      factura.NombreCliente || 
+                      factura.Cliente?.Nombre || 
+                      'Cliente General',
+        
+        // Mapeo para email
+        email: factura.emailCliente || 
+              factura.EmailCliente || 
+              factura.Cliente?.Email || 
+              factura.email || 
+              '',
+        emailCliente: factura.emailCliente || 
+                     factura.EmailCliente || 
+                     factura.Cliente?.Email || 
+                     '',
+        
+        // Mapeo para teléfono
+        telefono: factura.telefonoCliente || 
+                 factura.TelefonoCliente || 
+                 factura.Cliente?.Telefono || 
+                 factura.telefono || 
+                 '',
+        telefonoCliente: factura.telefonoCliente || 
+                        factura.TelefonoCliente || 
+                        factura.Cliente?.Telefono || 
+                        '',
+        
+        // Mapeo para identificación
+        identificacion: factura.identificacionCliente || 
+                       factura.IdentificacionCliente || 
+                       factura.Cliente?.Contacto || 
+                       factura.cedula || 
+                       factura.contacto || 
+                       '',
+        identificacionCliente: factura.identificacionCliente || 
+                              factura.IdentificacionCliente || 
+                              factura.Cliente?.Contacto || 
+                              '',
+        
+        // Mapeo para dirección
+        direccion: factura.direccionCliente || 
+                  factura.DireccionCliente || 
+                  factura.Cliente?.Direccion || 
+                  factura.direccion || 
+                  '',
+        direccionCliente: factura.direccionCliente || 
+                         factura.DireccionCliente || 
+                         factura.Cliente?.Direccion || 
+                         ''
     };
+    
+    console.log('👤 Cliente seleccionado creado:', clienteSeleccionado);
     
     // Mostrar cliente seleccionado
     $('#clienteBusqueda').val(factura.nombreCliente);
@@ -3638,6 +3922,9 @@ window.procesarFacturaPendiente = procesarFacturaPendiente;
 window.seleccionarFacturaPendiente = seleccionarFacturaPendiente;
 window.cargarFacturaPendienteEnCarrito = cargarFacturaPendienteEnCarrito;
 window.verDetalleFacturaPendiente = verDetalleFacturaPendiente;
+window.completarFacturaExistente = completarFacturaExistente;
+window.crearNuevaFactura = crearNuevaFactura;
+window.generarReciboFacturaCompletada = generarReciboFacturaCompletada;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `
