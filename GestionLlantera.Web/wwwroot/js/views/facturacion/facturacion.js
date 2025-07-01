@@ -1935,18 +1935,12 @@ async function completarFacturaExistente(facturaId) {
             fechaCompletamiento: new Date().toISOString()
         };
 
-        const datosCompletamiento = {
-            facturaId: facturaId,
-            metodoPago: metodoPagoSeleccionado
-        };
-
         const response = await fetch(`/Facturacion/CompletarFactura/${facturaId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify(datosCompletamiento),
             credentials: 'include'
         });
 

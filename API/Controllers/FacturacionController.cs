@@ -566,7 +566,7 @@ namespace API.Controllers
 
         [HttpPut("facturas/{id}/completar")]
         [Authorize]
-        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaRequest request)
+        public async Task<IActionResult> CompletarFactura(int id)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
                 "Solo usuarios con permiso 'CompletarFacturas' pueden completar facturas");
@@ -577,7 +577,6 @@ namespace API.Controllers
             {
                 var factura = await _context.Facturas
                     .Include(f => f.DetallesFactura)
-                    .Include(f => f.DetallesPago)
                     .FirstOrDefaultAsync(f => f.FacturaId == id);
 
                 if (factura == null)
@@ -626,38 +625,6 @@ namespace API.Controllers
                         
                         _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
                             producto.NombreProducto, detalle.Cantidad);
-                    }
-                }
-
-                // ✅ Actualizar método de pago si se proporciona
-                if (!string.IsNullOrWhiteSpace(request?.MetodoPago))
-                {
-                    factura.MetodoPago = request.MetodoPago;
-                    
-                    // ✅ Actualizar o crear detalle de pago
-                    if (!factura.DetallesPago.Any())
-                    {
-                        var detallePago = new DetallePago
-                        {
-                            FacturaId = factura.FacturaId,
-                            MetodoPago = request.MetodoPago,
-                            Monto = factura.Total,
-                            FechaPago = DateTime.Now
-                        };
-                        _context.DetallesPago.Add(detallePago);
-                        
-                        _logger.LogInformation("💳 Detalle de pago creado al completar factura: {MetodoPago} - ₡{Monto}", 
-                            request.MetodoPago, factura.Total);
-                    }
-                    else
-                    {
-                        // Si ya existe un detalle de pago, actualizar el método
-                        var primerDetalle = factura.DetallesPago.First();
-                        primerDetalle.MetodoPago = request.MetodoPago;
-                        primerDetalle.FechaPago = DateTime.Now;
-                        
-                        _logger.LogInformation("💳 Método de pago actualizado al completar factura: {MetodoPago}", 
-                            request.MetodoPago);
                     }
                 }
 
