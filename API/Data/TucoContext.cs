@@ -51,9 +51,9 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<Documento> Documentos { get; set; }
 
-    public virtual DbSet<Factura> Facturas { get; set; }
-
-    public virtual DbSet<DetalleFactura> DetallesFactura { get; set; }
+    public DbSet<Factura> Facturas { get; set; }
+    public DbSet<DetalleFactura> DetallesFactura { get; set; }
+    public DbSet<DetallePago> DetallesPago { get; set; }
 
     public virtual DbSet<HistorialAcciones> HistorialAcciones { get; set; }
 
@@ -766,8 +766,7 @@ public partial class TucoContext : DbContext
                 .HasMaxLength(200)
                 .IsRequired();
 
-            entity.Property(e => e.DescripcionProducto)
-                .HasMaxLength(500);
+            entity.Property(e => e.DescripcionProducto)                .HasMaxLength(500);
 
             entity.Property(e => e.PrecioUnitario)
                 .HasColumnType("decimal(18,2)");
@@ -790,6 +789,33 @@ public partial class TucoContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configuración para DetallePago
+        modelBuilder.Entity<DetallePago>(entity =>
+        {
+            entity.HasKey(e => e.DetallePagoId).HasName("PK_DetallesPago");
+
+            entity.ToTable("DetallesPago");
+
+            entity.Property(e => e.FacturaId)
+                .IsRequired();
+
+            entity.Property(e => e.MetodoPago)
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(e => e.Monto)
+                .HasColumnType("decimal(18,2)")
+                .IsRequired();
+
+            entity.Property(e => e.Referencia)
+                .HasMaxLength(200);
+
+            entity.HasOne(d => d.Factura)
+                .WithMany(p => p.DetallesPago)
+                .HasForeignKey(d => d.FacturaId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);

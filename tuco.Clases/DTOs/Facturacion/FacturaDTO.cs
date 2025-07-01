@@ -72,6 +72,9 @@ namespace Tuco.Clases.DTOs.Facturacion
         // Lista de productos en la factura
         public List<DetalleFacturaDTO> DetallesFactura { get; set; } = new List<DetalleFacturaDTO>();
         
+        // Detalles de pago múltiple
+        public List<DetallePagoDTO>? DetallesPago { get; set; }
+        
         // Propiedades calculadas
         public decimal SubtotalSinDescuento => DetallesFactura.Sum(d => d.Subtotal);
         public decimal MontoDescuentoTotal => (SubtotalSinDescuento * (DescuentoGeneral ?? 0)) / 100;

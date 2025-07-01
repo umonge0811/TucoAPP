@@ -238,6 +238,15 @@ namespace API.Controllers
                     }
                 }
 
+                // Determinar método de pago para la factura
+                string metodoPagoFactura = facturaDto.MetodoPago;
+                if (facturaDto.DetallesPago != null && facturaDto.DetallesPago.Count > 1)
+                {
+                    metodoPagoFactura = "Múltiple";
+                    _logger.LogInformation("💳 Factura con pagos múltiples detectada: {CantidadPagos} métodos de pago", 
+                        facturaDto.DetallesPago.Count);
+                }
+
                 // Crear factura
                 var factura = new Factura
                 {
@@ -257,7 +266,7 @@ namespace API.Controllers
                     Total = facturaDto.TotalCalculado,
                     Estado = estadoInicial, // ✅ Usar estado determinado por permisos
                     TipoDocumento = facturaDto.TipoDocumento,
-                    MetodoPago = facturaDto.MetodoPago,
+                    MetodoPago = metodoPagoFactura,
                     Observaciones = facturaDto.Observaciones,
                     UsuarioCreadorId = facturaDto.UsuarioCreadorId,
                     FechaCreacion = DateTime.Now
@@ -265,6 +274,46 @@ namespace API.Controllers
 
                 _context.Facturas.Add(factura);
                 await _context.SaveChangesAsync();
+
+                // ✅ CREAR DETALLES DE PAGO SI EXISTEN
+                if (facturaDto.DetallesPago != null && facturaDto.DetallesPago.Any())
+                {
+                    foreach (var detallePago in facturaDto.DetallesPago)
+                    {
+                        var pagoBD = new DetallePago
+                        {
+                            FacturaId = factura.FacturaId,
+                            MetodoPago = detallePago.MetodoPago,
+                            Monto = detallePago.Monto,
+                            Referencia = detallePago.Referencia,
+                            Observaciones = detallePago.Observaciones,
+                            FechaPago = detallePago.FechaPago
+                        };
+
+                        _context.DetallesPago.Add(pagoBD);
+                        
+                        _logger.LogInformation("💳 Detalle de pago agregado: {MetodoPago} - ₡{Monto}", 
+                            detallePago.MetodoPago, detallePago.Monto);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(facturaDto.MetodoPago) && facturaDto.MetodoPago != "Múltiple")
+                {
+                    // Si no hay detalles de pago pero sí método de pago simple, crear un detalle único
+                    var pagoUnico = new DetallePago
+                    {
+                        FacturaId = factura.FacturaId,
+                        MetodoPago = facturaDto.MetodoPago,
+                        Monto = facturaDto.TotalCalculado,
+                        Referencia = null,
+                        Observaciones = null,
+                        FechaPago = DateTime.Now
+                    };
+
+                    _context.DetallesPago.Add(pagoUnico);
+                    
+                    _logger.LogInformation("💳 Detalle de pago único creado: {MetodoPago} - ₡{Monto}", 
+                        facturaDto.MetodoPago, facturaDto.TotalCalculado);
+                }
 
                 // Crear detalles de factura
                 foreach (var detalle in facturaDto.DetallesFactura)
