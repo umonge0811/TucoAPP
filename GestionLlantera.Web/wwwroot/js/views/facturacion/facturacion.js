@@ -1616,6 +1616,126 @@ async function procesarVentaFinal() {
         // Deshabilitar el botón y mostrar el estado de carga
         $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
 
+        // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE (tiene facturaId en algún producto)
+        const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
+        const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
+
+        console.log('🔍 === DETERMINANDO TIPO DE OPERACIÓN ===');
+        console.log('🔍 Es factura pendiente:', esFacturaPendiente);
+        console.log('🔍 Factura ID:', facturaId);
+
+        if (esFacturaPendiente && facturaId) {
+            // ✅ COMPLETAR FACTURA EXISTENTE
+            console.log('✅ Completando factura pendiente ID:', facturaId);
+            await completarFacturaExistente(facturaId);
+        } else {
+            // ✅ CREAR NUEVA FACTURA
+            console.log('🆕 Creando nueva factura');
+            await crearNuevaFactura();
+        }
+
+    } catch (error) {
+        console.error('❌ Error procesando venta:', error);
+        
+        // ✅ MOSTRAR ERROR CON SWEETALERT
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error procesando la venta',
+                text: 'Hubo un problema inesperado al procesar la venta',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc3545'
+            });
+        } else {
+            alert('Error: Hubo un problema procesando la venta');
+        }
+    } finally {
+        // Restaurar botón
+        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Completar factura existente
+ */
+async function completarFacturaExistente(facturaId) {
+    try {
+        console.log('💰 === COMPLETANDO FACTURA EXISTENTE ===');
+        console.log('💰 Factura ID:', facturaId);
+
+        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+        
+        const datosCompletamiento = {
+            metodoPago: metodoPagoSeleccionado,
+            observaciones: $('#observacionesVenta').val() || '',
+            fechaCompletamiento: new Date().toISOString()
+        };
+
+        const response = await fetch('/Facturacion/CompletarFacturaPendiente', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                facturaId: facturaId
+            }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor al completar factura:', errorText);
+            throw new Error(`Error al completar la factura: ${response.status} - ${errorText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('✅ Factura completada:', resultado);
+
+        if (resultado.success) {
+            // ✅ CERRAR MODAL INMEDIATAMENTE
+            modalFinalizarVenta.hide();
+            
+            // ✅ LIMPIAR CARRITO
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+
+            // ✅ ACTUALIZAR VISTA DE PRODUCTOS
+            await actualizarVistaProductosPostAjuste();
+
+            // ✅ MOSTRAR ÉXITO
+            Swal.fire({
+                icon: 'success',
+                title: '¡Factura Completada!',
+                text: `Factura completada exitosamente y marcada como pagada`,
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#28a745',
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+        } else {
+            throw new Error(resultado.message || 'Error al completar la factura');
+        }
+
+    } catch (error) {
+        console.error('❌ Error completando factura existente:', error);
+        throw error;
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear nueva factura
+ */
+async function crearNuevaFactura() {
+    try {
+        console.log('🆕 === CREANDO NUEVA FACTURA ===');
+
         // Preparar datos de la venta con método de pago seleccionado
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
         const configMetodo = CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
@@ -1870,23 +1990,8 @@ async function procesarVentaFinal() {
         }
 
     } catch (error) {
-        console.error('❌ Error procesando venta:', error);
-        
-        // ✅ MOSTRAR ERROR CON SWEETALERT
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error procesando la venta',
-                text: 'Hubo un problema inesperado al procesar la venta',
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: '#dc3545'
-            });
-        } else {
-            alert('Error: Hubo un problema procesando la venta');
-        }
-    } finally {
-        // Restaurar botón
-        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+        console.error('❌ Error creando nueva factura:', error);
+        throw error;
     }
 }
 /**
@@ -3761,6 +3866,8 @@ window.procesarFacturaPendiente = procesarFacturaPendiente;
 window.seleccionarFacturaPendiente = seleccionarFacturaPendiente;
 window.cargarFacturaPendienteEnCarrito = cargarFacturaPendienteEnCarrito;
 window.verDetalleFacturaPendiente = verDetalleFacturaPendiente;
+window.completarFacturaExistente = completarFacturaExistente;
+window.crearNuevaFactura = crearNuevaFactura;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `
