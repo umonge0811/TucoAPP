@@ -1931,9 +1931,9 @@ async function completarFacturaExistente(facturaId) {
         
         const datosCompletamiento = {
             facturaId: facturaId,
-            metodoPago: metodoPagoSeleccionado,
+            metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
-            detallesPago: null // Por ahora simple, después se puede expandir para pagos múltiples
+            detallesPago: esPagoMultiple ? detallesPagoActuales : null
         };
 
         console.log('📋 Datos de completamiento:', datosCompletamiento);
