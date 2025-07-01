@@ -12,6 +12,8 @@ using System.Text;
 using GestionLlantera.Web.Services.Interfaces;
 using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
+using AjusteStockFacturacionRequest = GestionLlantera.Web.Services.Interfaces.AjusteStockFacturacionRequest;
+using ProductoAjusteStock = GestionLlantera.Web.Services.Interfaces.ProductoAjusteStock;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Newtonsoft.Json;
@@ -759,7 +761,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjustarStockFacturacionRequest request)
+        public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
         {
             try
             {
@@ -847,19 +849,6 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
-    }
-
-    public class AjustarStockFacturacionRequest
-    {
-        public string NumeroFactura { get; set; } = string.Empty;
-        public List<ProductoAjusteStock> Productos { get; set; } = new List<ProductoAjusteStock>();
-    }
-
-    public class ProductoAjusteStock
-    {
-        public int ProductoId { get; set; }
-        public string NombreProducto { get; set; } = string.Empty;
-        public int Cantidad { get; set; }
     }
 
     public class VerificarStockFacturaRequest
