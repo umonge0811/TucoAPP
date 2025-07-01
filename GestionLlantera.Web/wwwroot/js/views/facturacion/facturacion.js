@@ -4059,24 +4059,76 @@ async function verificarStockFacturaPendiente(facturaId) {
  * Mostrar modal con problemas de stock
  */
 async function mostrarModalProblemasStock(productosConProblemas, factura) {
+    console.log('⚠️ === GENERANDO MODAL DE PROBLEMAS DE STOCK ===');
+    console.log('⚠️ Productos con problemas recibidos:', productosConProblemas);
+    
+    // Obtener información completa de los productos con problemas
+    const productosConInfoCompleta = await obtenerInformacionCompletaProductos(productosConProblemas);
+    
     let htmlProblemas = '<div class="alert alert-warning mb-3">';
     htmlProblemas += '<h6><i class="bi bi-exclamation-triangle me-2"></i>⚠️ PRODUCTOS SIN STOCK SUFICIENTE</h6>';
     htmlProblemas += '<p>Los siguientes productos no tienen stock disponible:</p>';
     htmlProblemas += '<div class="table-responsive">';
-    htmlProblemas += '<table class="table table-sm">';
-    htmlProblemas += '<thead><tr><th>Producto</th><th>Requerido</th><th>Disponible</th><th>Faltante</th><th>Acción</th></tr></thead>';
+    htmlProblemas += '<table class="table table-sm table-striped">';
+    htmlProblemas += '<thead class="table-warning">';
+    htmlProblemas += '<tr>';
+    htmlProblemas += '<th style="width: 35%;">Producto</th>';
+    htmlProblemas += '<th class="text-center" style="width: 15%;">Precio Unit.</th>';
+    htmlProblemas += '<th class="text-center" style="width: 12%;">Requerido</th>';
+    htmlProblemas += '<th class="text-center" style="width: 12%;">Disponible</th>';
+    htmlProblemas += '<th class="text-center" style="width: 12%;">Faltante</th>';
+    htmlProblemas += '<th class="text-center" style="width: 14%;">Acción</th>';
+    htmlProblemas += '</tr>';
+    htmlProblemas += '</thead>';
     htmlProblemas += '<tbody>';
     
-    productosConProblemas.forEach((problema, index) => {
-        const faltante = problema.cantidadRequerida - problema.stockDisponible;
+    productosConInfoCompleta.forEach((producto, index) => {
+        const faltante = producto.cantidadRequerida - producto.stockDisponible;
+        const subtotalPerdido = (producto.precio || 0) * faltante;
+        
+        // Determinar imagen del producto
+        let imagenUrl = '/images/no-image.png';
+        if (producto.imagenesUrls && producto.imagenesUrls.length > 0) {
+            imagenUrl = producto.imagenesUrls[0];
+        }
+        
         htmlProblemas += `
-            <tr id="problema-row-${index}">
-                <td><strong>${problema.nombreProducto}</strong></td>
-                <td>${problema.cantidadRequerida}</td>
-                <td>${problema.stockDisponible}</td>
-                <td class="text-danger">${faltante}</td>
+            <tr id="problema-row-${index}" class="align-middle">
                 <td>
-                    <button type="button" class="btn btn-sm btn-danger" onclick="eliminarProductoProblema(${problema.productoId}, ${index})">
+                    <div class="d-flex align-items-center">
+                        <img src="${imagenUrl}" 
+                             alt="${producto.nombreProducto}" 
+                             class="me-2 rounded" 
+                             style="width: 40px; height: 40px; object-fit: cover;"
+                             onerror="this.src='/images/no-image.png';">
+                        <div>
+                            <strong class="d-block" style="font-size: 0.9rem;">${producto.nombreProducto}</strong>
+                            <small class="text-muted">ID: ${producto.productoId}</small>
+                            ${producto.descripcion ? 
+                                `<br><small class="text-muted" style="font-size: 0.75rem;">${producto.descripcion.substring(0, 50)}${producto.descripcion.length > 50 ? '...' : ''}</small>` 
+                                : ''
+                            }
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center">
+                    <strong class="text-success">₡${formatearMoneda(producto.precio || 0)}</strong>
+                    <br><small class="text-danger">Pérdida: ₡${formatearMoneda(subtotalPerdido)}</small>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-primary">${producto.cantidadRequerida}</span>
+                </td>
+                <td class="text-center">
+                    <span class="badge ${producto.stockDisponible > 0 ? 'bg-warning' : 'bg-danger'}">${producto.stockDisponible}</span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-danger">${faltante}</span>
+                </td>
+                <td class="text-center">
+                    <button type="button" 
+                            class="btn btn-sm btn-outline-danger" 
+                            onclick="eliminarProductoProblema(${producto.productoId}, ${index})"
+                            title="Eliminar este producto de la factura">
                         <i class="bi bi-trash"></i> Eliminar
                     </button>
                 </td>
@@ -4085,8 +4137,32 @@ async function mostrarModalProblemasStock(productosConProblemas, factura) {
     });
     
     htmlProblemas += '</tbody></table></div>';
-    htmlProblemas += '<div class="alert alert-info mt-2">';
-    htmlProblemas += '<strong>Opciones:</strong> Puede eliminar los productos sin stock o continuar de todos modos.';
+    
+    // Calcular totales de impacto
+    const totalProductosAfectados = productosConInfoCompleta.length;
+    const totalPerdidaEstimada = productosConInfoCompleta.reduce((total, producto) => {
+        const faltante = producto.cantidadRequerida - producto.stockDisponible;
+        return total + ((producto.precio || 0) * faltante);
+    }, 0);
+    
+    htmlProblemas += '<div class="row mb-3">';
+    htmlProblemas += '<div class="col-md-6">';
+    htmlProblemas += '<div class="alert alert-info mb-0">';
+    htmlProblemas += '<h6><i class="bi bi-info-circle me-2"></i>Resumen del Impacto</h6>';
+    htmlProblemas += `<p class="mb-1"><strong>Productos afectados:</strong> ${totalProductosAfectados}</p>`;
+    htmlProblemas += `<p class="mb-0"><strong>Pérdida estimada:</strong> <span class="text-danger">₡${formatearMoneda(totalPerdidaEstimada)}</span></p>`;
+    htmlProblemas += '</div>';
+    htmlProblemas += '</div>';
+    htmlProblemas += '<div class="col-md-6">';
+    htmlProblemas += '<div class="alert alert-warning mb-0">';
+    htmlProblemas += '<h6><i class="bi bi-gear me-2"></i>Opciones Disponibles</h6>';
+    htmlProblemas += '<ul class="mb-0 small">';
+    htmlProblemas += '<li><strong>Eliminar:</strong> Quitar productos sin stock de la factura</li>';
+    htmlProblemas += '<li><strong>Continuar:</strong> Procesar factura con productos sin stock (no recomendado)</li>';
+    htmlProblemas += '<li><strong>Volver:</strong> Regresar a facturas pendientes</li>';
+    htmlProblemas += '</ul>';
+    htmlProblemas += '</div>';
+    htmlProblemas += '</div>';
     htmlProblemas += '</div>';
     htmlProblemas += '</div>';
 
@@ -4126,6 +4202,83 @@ async function mostrarModalProblemasStock(productosConProblemas, factura) {
         // Cancelar - limpiar carrito
         console.log('❌ Usuario canceló el proceso');
         limpiarVenta();
+    }
+}
+
+/**
+ * Obtener información completa de productos para el modal de problemas
+ */
+async function obtenerInformacionCompletaProductos(productosConProblemas) {
+    console.log('📦 === OBTENIENDO INFORMACIÓN COMPLETA DE PRODUCTOS ===');
+    console.log('📦 Productos a enriquecer:', productosConProblemas);
+    
+    try {
+        // Obtener productos completos desde el servidor
+        const response = await fetch('/Facturacion/ObtenerProductosParaFacturacion', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (data && data.productos) {
+            console.log('📦 Productos obtenidos del servidor:', data.productos.length);
+            
+            // Enriquecer los productos con problemas con información completa
+            const productosEnriquecidos = productosConProblemas.map(problemaProducto => {
+                const productoCompleto = data.productos.find(p => 
+                    (p.productoId || p.id) === problemaProducto.productoId
+                );
+                
+                if (productoCompleto) {
+                    console.log('📦 Producto encontrado y enriquecido:', productoCompleto.nombreProducto);
+                    return {
+                        ...problemaProducto,
+                        nombreProducto: productoCompleto.nombreProducto || productoCompleto.nombre,
+                        descripcion: productoCompleto.descripcion,
+                        precio: productoCompleto.precio,
+                        imagenesUrls: productoCompleto.imagenesUrls || [],
+                        imagenesProductos: productoCompleto.imagenesProductos || [],
+                        categoria: productoCompleto.categoria,
+                        marca: productoCompleto.marca,
+                        modelo: productoCompleto.modelo
+                    };
+                } else {
+                    console.warn('⚠️ No se encontró información completa para producto:', problemaProducto.productoId);
+                    return {
+                        ...problemaProducto,
+                        precio: 0,
+                        descripcion: 'Sin descripción disponible',
+                        imagenesUrls: []
+                    };
+                }
+            });
+            
+            console.log('✅ Productos enriquecidos:', productosEnriquecidos);
+            return productosEnriquecidos;
+            
+        } else {
+            throw new Error('No se pudieron obtener los productos del servidor');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error obteniendo información completa de productos:', error);
+        
+        // Fallback: devolver productos con información básica
+        return productosConProblemas.map(producto => ({
+            ...producto,
+            precio: 0,
+            descripcion: 'Sin información disponible',
+            imagenesUrls: []
+        }));
     }
 }
 
