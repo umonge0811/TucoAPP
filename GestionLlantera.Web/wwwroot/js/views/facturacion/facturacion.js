@@ -2505,130 +2505,112 @@ function generarRecibo(factura, productos, totales) {
         return texto.length > maxCaracteres ? texto.substring(0, maxCaracteres - 3) + '...' : texto;
     }
 
+    // Función para formatear línea con espacios para mini impresora
+    function formatearLinea(izquierda, derecha, anchoTotal = 32) {
+        const espacios = anchoTotal - izquierda.length - derecha.length;
+        return izquierda + ' '.repeat(Math.max(0, espacios)) + derecha;
+    }
+
     // ===== SECCIÓN MÉTODO DE PAGO =====
     let seccionMetodoPago = '';
     
     // Verificar si es pago múltiple
     if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 1) {
         seccionMetodoPago = `
-            <div style="margin-bottom: 6px; font-size: 8px;">
-                <div style="font-weight: bold; text-align: center; margin-bottom: 3px;">DETALLE DE PAGOS MÚLTIPLES</div>
+            <div class="seccion-pago">
+                <div class="titulo-seccion">DETALLE DE PAGOS MÚLTIPLES</div>
                 ${detallesPagoActuales.map((pago, index) => {
                     const metodoPagoNombre = CONFIGURACION_PRECIOS[pago.metodoPago]?.nombre || pago.metodoPago;
                     return `
-                        <div style="margin-bottom: 2px;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>${metodoPagoNombre}:</span>
-                                <span>₡${pago.monto.toFixed(0)}</span>
-                            </div>
-                            ${pago.referencia ? `<div style="font-size: 7px; color: #666;">Ref: ${truncarTexto(pago.referencia, 25)}</div>` : ''}
+                        <div class="linea-pago">
+                            <div class="metodo-monto">${formatearLinea(metodoPagoNombre + ':', '₡' + pago.monto.toFixed(0))}</div>
+                            ${pago.referencia ? `<div class="referencia">Ref: ${truncarTexto(pago.referencia, 28)}</div>` : ''}
                         </div>
                     `;
                 }).join('')}
-                <div style="border-top: 1px dashed #000; margin: 3px 0; padding-top: 3px;">
-                    <div style="display: flex; justify-content: space-between; font-weight: bold;">
-                        <span>Total Pagado:</span>
-                        <span>₡${detallesPagoActuales.reduce((sum, p) => sum + p.monto, 0).toFixed(0)}</span>
-                    </div>
-                </div>
+                <div class="separador-pago"></div>
+                <div class="total-pagado">${formatearLinea('Total Pagado:', '₡' + detallesPagoActuales.reduce((sum, p) => sum + p.monto, 0).toFixed(0))}</div>
             </div>
         `;
     } else if (totales.metodoPago && totales.metodoPago.toLowerCase() === 'multiple') {
         // Fallback para pagos múltiples sin detalles
         seccionMetodoPago = `
-            <div style="text-align: center; margin-bottom: 6px; font-size: 8px;">
-                <strong>Método de Pago: PAGO MÚLTIPLE</strong>
+            <div class="seccion-pago">
+                <div class="titulo-seccion">MÉTODO DE PAGO: MÚLTIPLE</div>
             </div>
         `;
     } else {
         // Pago simple
         const metodoPagoTexto = totales.metodoPago || 'Efectivo';
         seccionMetodoPago = `
-            <div style="text-align: center; margin-bottom: 6px; font-size: 8px;">
-                <strong>Método de Pago: ${metodoPagoTexto.toUpperCase()}</strong>
+            <div class="seccion-pago">
+                <div class="titulo-seccion">MÉTODO DE PAGO: ${metodoPagoTexto.toUpperCase()}</div>
             </div>
         `;
     }
 
-    // ✅ RECIBO OPTIMIZADO PARA MINI IMPRESORAS TÉRMICAS (58mm/80mm)
+    // ✅ RECIBO OPTIMIZADO PARA MINI IMPRESORAS TÉRMICAS
     const reciboHTML = `
-        <div id="recibo-termica" style="width: 58mm; max-width: 58mm; font-family: 'Courier New', 'Consolas', monospace; font-size: 9px; line-height: 1.2; margin: 0; padding: 0; color: #000;">
-
+        <div class="recibo-container">
             <!-- ENCABEZADO -->
-            <div style="text-align: center; margin-bottom: 8px; border-bottom: 1px dashed #000; padding-bottom: 8px;">
-                <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">GESTIÓN LLANTERA</div>
-                <div style="font-size: 8px; margin-bottom: 1px;">Sistema de Facturación</div>
-                <div style="font-size: 8px; margin-bottom: 2px;">Tel: (506) 0000-0000</div>
-                <div style="font-size: 9px; font-weight: bold;">FACTURA DE VENTA</div>
-                <div style="font-size: 8px;">No. ${numeroFactura}</div>
+            <div class="encabezado">
+                <div class="nombre-empresa">GESTIÓN LLANTERA</div>
+                <div class="info-empresa">Sistema de Facturación</div>
+                <div class="telefono">Tel: (506) 0000-0000</div>
+                <div class="tipo-documento">FACTURA DE VENTA</div>
+                <div class="numero-factura">No. ${numeroFactura}</div>
             </div>
 
             <!-- INFORMACIÓN DE TRANSACCIÓN -->
-            <div style="margin-bottom: 6px; font-size: 8px;">
+            <div class="info-transaccion">
                 <div>Fecha: ${fecha}</div>
                 <div>Hora: ${hora}</div>
-                <div>Cliente: ${truncarTexto(totales.cliente?.nombre || totales.cliente?.nombreCliente || factura.nombreCliente || 'Cliente General', 25)}</div>
-                <div>Cajero: ${totales.usuario?.nombre || totales.usuario?.nombreUsuario || factura.usuarioCreadorNombre || 'Sistema'}</div>
+                <div>Cliente: ${truncarTexto(totales.cliente?.nombre || totales.cliente?.nombreCliente || factura?.nombreCliente || 'Cliente General', 25)}</div>
+                <div>Cajero: ${totales.usuario?.nombre || totales.usuario?.nombreUsuario || factura?.usuarioCreadorNombre || 'Sistema'}</div>
             </div>
 
-            <!-- SEPARADOR -->
-            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+            <div class="separador"></div>
 
             <!-- PRODUCTOS -->
-            <div style="margin-bottom: 6px;">
-                <div style="font-size: 8px; font-weight: bold; text-align: center; margin-bottom: 3px;">DETALLE DE PRODUCTOS</div>
+            <div class="seccion-productos">
+                <div class="titulo-seccion">DETALLE DE PRODUCTOS</div>
                 ${productos.map(p => {
-                    const nombreTruncado = truncarTexto(p.nombreProducto, 20);
+                    const nombreTruncado = truncarTexto(p.nombreProducto, 28);
                     const subtotalProducto = p.precioUnitario * p.cantidad;
                     return `
-                        <div style="margin-bottom: 2px;">
-                            <div style="font-size: 8px;">${nombreTruncado}</div>
-                            <div style="font-size: 8px; display: flex; justify-content: space-between;">
-                                <span>${p.cantidad} x ₡${p.precioUnitario.toFixed(0)}</span>
-                                <span>₡${subtotalProducto.toFixed(0)}</span>
-                            </div>
+                        <div class="producto-item">
+                            <div class="producto-nombre">${nombreTruncado}</div>
+                            <div class="producto-detalle">${formatearLinea(p.cantidad + ' x ₡' + p.precioUnitario.toFixed(0), '₡' + subtotalProducto.toFixed(0))}</div>
                         </div>
                     `;
                 }).join('')}
             </div>
 
-            <!-- SEPARADOR -->
-            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+            <div class="separador"></div>
 
             <!-- TOTALES -->
-            <div style="margin-bottom: 8px; font-size: 8px;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Subtotal:</span>
-                    <span>₡${totales.subtotal.toFixed(0)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>IVA (13%):</span>
-                    <span>₡${totales.iva.toFixed(0)}</span>
-                </div>
-                <div style="border-top: 1px solid #000; margin: 3px 0; padding-top: 3px;">
-                    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 9px;">
-                        <span>TOTAL:</span>
-                        <span>₡${totales.total.toFixed(0)}</span>
-                    </div>
-                </div>
+            <div class="seccion-totales">
+                <div class="linea-total">${formatearLinea('Subtotal:', '₡' + totales.subtotal.toFixed(0))}</div>
+                <div class="linea-total">${formatearLinea('IVA (13%):', '₡' + totales.iva.toFixed(0))}</div>
+                <div class="separador-total"></div>
+                <div class="total-final">${formatearLinea('TOTAL:', '₡' + totales.total.toFixed(0))}</div>
             </div>
 
-            <!-- SEPARADOR -->
-            <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+            <div class="separador"></div>
 
-            <!-- SECCIÓN MÉTODO DE PAGO -->
+            <!-- MÉTODO DE PAGO -->
             ${seccionMetodoPago}
 
             <!-- PIE DE PÁGINA -->
-            <div style="text-align: center; margin-top: 8px; font-size: 8px; border-top: 1px dashed #000; padding-top: 6px;">
-                <div style="margin-bottom: 2px;">¡Gracias por su compra!</div>
-                <div style="margin-bottom: 2px;">Vuelva pronto</div>
-                <div style="margin-bottom: 4px;">www.gestionllantera.com</div>
-                <div style="font-size: 7px;">Recibo generado: ${new Date().toLocaleString('es-CR')}</div>
+            <div class="pie-pagina">
+                <div>¡Gracias por su compra!</div>
+                <div>Vuelva pronto</div>
+                <div>www.gestionllantera.com</div>
+                <div class="fecha-generacion">Recibo: ${fecha} ${hora}</div>
             </div>
 
-            <!-- ESPACIADO FINAL PARA CORTE -->
-            <div style="height: 20px;"></div>
+            <!-- ESPACIADO FINAL -->
+            <div class="espaciado-final"></div>
         </div>
     `;
 
@@ -2637,67 +2619,248 @@ function generarRecibo(factura, productos, totales) {
         console.log('🖨️ Iniciando impresión de recibo térmico...');
 
         // Crear ventana de impresión con configuración optimizada
-        const ventanaImpresion = window.open('', '_blank', 'width=300,height=600,scrollbars=no,resizable=no,menubar=no,toolbar=no,location=no,status=no');
+        const ventanaImpresion = window.open('', '_blank', 'width=320,height=600,scrollbars=yes,resizable=yes');
 
         if (!ventanaImpresion) {
             console.warn('⚠️ No se pudo abrir ventana emergente para impresión automática');
-            // En lugar de mostrar error, intentar impresión directa
             imprimirReciboDirecto(reciboHTML, numeroFactura);
             return;
         }
 
-        ventanaImpresion.document.write(`
+        const documentoCompleto = `
             <!DOCTYPE html>
-            <html>
+            <html lang="es">
                 <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Recibo Térmico - ${numeroFactura}</title>
-                    <meta charset="utf-8">
                     <style>
-                        /* CONFIGURACIÓN ESPECÍFICA PARA IMPRESORAS TÉRMICAS */
+                        /* ===== ESTILOS PARA MINI IMPRESORAS TÉRMICAS ===== */
+                        
+                        /* Configuración de página para impresión */
                         @page {
                             size: 58mm auto;
-                            margin: 0;
+                            margin: 2mm;
                             padding: 0;
                         }
 
+                        /* Estilos generales */
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+
+                        body {
+                            font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
+                            font-size: 8px;
+                            line-height: 1.2;
+                            color: #000;
+                            background: #fff;
+                            width: 100%;
+                            max-width: 58mm;
+                        }
+
+                        .recibo-container {
+                            width: 100%;
+                            max-width: 58mm;
+                            padding: 2mm;
+                        }
+
+                        /* Encabezado */
+                        .encabezado {
+                            text-align: center;
+                            margin-bottom: 4mm;
+                            border-bottom: 1px dashed #000;
+                            padding-bottom: 3mm;
+                        }
+
+                        .nombre-empresa {
+                            font-size: 10px;
+                            font-weight: bold;
+                            margin-bottom: 1mm;
+                        }
+
+                        .info-empresa, .telefono {
+                            font-size: 7px;
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .tipo-documento {
+                            font-size: 9px;
+                            font-weight: bold;
+                            margin: 1mm 0;
+                        }
+
+                        .numero-factura {
+                            font-size: 8px;
+                            font-weight: bold;
+                        }
+
+                        /* Información de transacción */
+                        .info-transaccion {
+                            font-size: 7px;
+                            margin-bottom: 3mm;
+                        }
+
+                        .info-transaccion div {
+                            margin-bottom: 0.5mm;
+                        }
+
+                        /* Separadores */
+                        .separador {
+                            border-top: 1px dashed #000;
+                            margin: 3mm 0;
+                            height: 0;
+                        }
+
+                        .separador-pago {
+                            border-top: 1px dashed #000;
+                            margin: 1mm 0;
+                            padding-top: 1mm;
+                        }
+
+                        .separador-total {
+                            border-top: 1px solid #000;
+                            margin: 1mm 0;
+                        }
+
+                        /* Secciones */
+                        .titulo-seccion {
+                            font-weight: bold;
+                            text-align: center;
+                            margin-bottom: 2mm;
+                            font-size: 8px;
+                        }
+
+                        .seccion-productos {
+                            margin-bottom: 3mm;
+                        }
+
+                        .producto-item {
+                            margin-bottom: 1mm;
+                        }
+
+                        .producto-nombre {
+                            font-size: 7px;
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .producto-detalle {
+                            font-size: 7px;
+                            font-family: 'Courier New', monospace;
+                        }
+
+                        /* Totales */
+                        .seccion-totales {
+                            margin-bottom: 3mm;
+                        }
+
+                        .linea-total {
+                            font-size: 7px;
+                            font-family: 'Courier New', monospace;
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .total-final {
+                            font-size: 8px;
+                            font-weight: bold;
+                            font-family: 'Courier New', monospace;
+                            padding-top: 1mm;
+                        }
+
+                        /* Método de pago */
+                        .seccion-pago {
+                            margin-bottom: 3mm;
+                        }
+
+                        .linea-pago {
+                            margin-bottom: 1mm;
+                        }
+
+                        .metodo-monto {
+                            font-size: 7px;
+                            font-family: 'Courier New', monospace;
+                        }
+
+                        .referencia {
+                            font-size: 6px;
+                            color: #666;
+                            margin-top: 0.5mm;
+                        }
+
+                        .total-pagado {
+                            font-size: 7px;
+                            font-weight: bold;
+                            font-family: 'Courier New', monospace;
+                        }
+
+                        /* Pie de página */
+                        .pie-pagina {
+                            text-align: center;
+                            font-size: 7px;
+                            border-top: 1px dashed #000;
+                            padding-top: 3mm;
+                            margin-top: 3mm;
+                        }
+
+                        .pie-pagina div {
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .fecha-generacion {
+                            font-size: 6px;
+                            color: #666;
+                            margin-top: 2mm;
+                        }
+
+                        .espaciado-final {
+                            height: 5mm;
+                        }
+
+                        /* Estilos específicos para vista previa en pantalla */
                         @media screen {
                             body {
                                 background: #f5f5f5;
                                 padding: 10px;
-                                font-family: 'Courier New', 'Consolas', monospace;
+                                display: flex;
+                                justify-content: center;
+                                min-height: 100vh;
                             }
-                            #recibo-termica {
+
+                            .recibo-container {
                                 background: white;
-                                box-shadow: 0 0 10px rgba(0,0,0,0.1);
-                                padding: 8px;
-                                margin: 0 auto;
+                                box-shadow: 0 0 15px rgba(0,0,0,0.2);
+                                border: 1px solid #ddd;
+                                border-radius: 3px;
+                                max-width: 300px;
+                                padding: 15px;
                             }
                         }
 
+                        /* Estilos para impresión */
                         @media print {
                             body {
-                                margin: 0;
-                                padding: 0;
-                                background: none;
-                                -webkit-print-color-adjust: exact;
-                                color-adjust: exact;
+                                background: none !important;
+                                padding: 0 !important;
+                                margin: 0 !important;
                             }
 
-                            #recibo-termica {
-                                box-shadow: none;
-                                padding: 0;
-                                margin: 0;
-                                page-break-inside: avoid;
+                            .recibo-container {
+                                box-shadow: none !important;
+                                border: none !important;
+                                border-radius: 0 !important;
+                                padding: 2mm !important;
+                                margin: 0 !important;
+                                background: none !important;
                             }
 
+                            /* Asegurar que todo se imprima en negro */
                             * {
                                 -webkit-print-color-adjust: exact !important;
                                 color-adjust: exact !important;
+                                print-color-adjust: exact !important;
                             }
-                        }
-
-                        body, * {
-                            font-family: 'Courier New', 'Consolas', 'Monaco', monospace !important;
                         }
                     </style>
                 </head>
@@ -2705,66 +2868,92 @@ function generarRecibo(factura, productos, totales) {
                     ${reciboHTML}
 
                     <script>
-                        let impresionIntentada = false;
+                        console.log('📄 Documento de recibo cargado');
                         
-                        function imprimirRecibo() {
-                            if (impresionIntentada) return;
-                            impresionIntentada = true;
+                        let impresionRealizada = false;
+                        
+                        function ejecutarImpresion() {
+                            if (impresionRealizada) {
+                                console.log('🖨️ Impresión ya ejecutada');
+                                return;
+                            }
                             
-                            console.log('🖨️ Iniciando impresión automática...');
-
-                            // Asegurar que la página esté completamente cargada
+                            impresionRealizada = true;
+                            console.log('🖨️ Ejecutando impresión automática...');
+                            
+                            // Esperar un momento para asegurar que todo esté renderizado
                             setTimeout(() => {
                                 try {
                                     window.print();
-                                } catch (e) {
-                                    console.error('Error en window.print():', e);
+                                    console.log('✅ Comando de impresión enviado');
+                                } catch (error) {
+                                    console.error('❌ Error al imprimir:', error);
                                 }
-                            }, 100);
+                            }, 500);
                         }
 
-                        // Múltiples eventos para asegurar la impresión
+                        // Detectar cuando el documento esté completamente cargado
                         if (document.readyState === 'complete') {
-                            imprimirRecibo();
+                            ejecutarImpresion();
                         } else {
-                            window.addEventListener('load', imprimirRecibo);
-                            document.addEventListener('DOMContentLoaded', imprimirRecibo);
+                            window.addEventListener('load', ejecutarImpresion);
+                            document.addEventListener('DOMContentLoaded', ejecutarImpresion);
                         }
 
                         // Cerrar ventana después de imprimir
                         window.addEventListener('afterprint', function() {
-                            console.log('🖨️ Cerrando ventana después de imprimir...');
+                            console.log('🖨️ Evento afterprint detectado');
                             setTimeout(() => {
                                 try {
                                     window.close();
                                 } catch (e) {
-                                    console.log('No se pudo cerrar automáticamente');
+                                    console.log('⚠️ No se pudo cerrar la ventana automáticamente');
                                 }
-                            }, 500);
+                            }, 1000);
                         });
 
-                        // Fallback para cerrar ventana
+                        // Cerrar ventana por timeout (fallback)
                         setTimeout(() => {
                             if (!window.closed) {
-                                console.log('🖨️ Cerrando ventana por timeout...');
+                                console.log('🖨️ Cerrando ventana por timeout');
                                 try {
                                     window.close();
                                 } catch (e) {
-                                    console.log('No se pudo cerrar por timeout');
+                                    console.log('⚠️ No se pudo cerrar por timeout');
                                 }
                             }
-                        }, 8000);
+                        }, 15000);
+
+                        // Agregar información de debug al documento
+                        console.log('🔍 Información del recibo:', {
+                            numeroFactura: '${numeroFactura}',
+                            productos: ${productos.length},
+                            total: '${totales.total}',
+                            metodoPago: '${totales.metodoPago}'
+                        });
                     </script>
                 </body>
             </html>
-        `);
+        `;
 
+        // Escribir el documento completo
+        ventanaImpresion.document.open();
+        ventanaImpresion.document.write(documentoCompleto);
         ventanaImpresion.document.close();
+        
         console.log('✅ Ventana de impresión creada exitosamente');
+
+        // Enfocar la ventana para asegurar que sea visible
+        setTimeout(() => {
+            try {
+                ventanaImpresion.focus();
+            } catch (e) {
+                console.log('⚠️ No se pudo enfocar la ventana');
+            }
+        }, 100);
 
     } catch (error) {
         console.error('❌ Error al crear ventana de impresión:', error);
-        // Intentar impresión directa como fallback
         imprimirReciboDirecto(reciboHTML, numeroFactura);
     }
 }
