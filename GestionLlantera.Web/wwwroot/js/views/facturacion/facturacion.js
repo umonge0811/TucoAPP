@@ -4046,12 +4046,49 @@ async function verificarStockFacturaPendiente(facturaId) {
         }
 
         const resultado = await response.json();
-        console.log('📦 Resultado verificación:', resultado);
-        return resultado;
+        console.log('📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===');
+        console.log('📦 Resultado completo:', resultado);
+        console.log('📦 Tipo de resultado:', typeof resultado);
+        console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
+        
+        // ✅ PROCESAR LA RESPUESTA SIMILAR AL PATRÓN DE FACTURAS PENDIENTES
+        if (resultado && typeof resultado === 'object') {
+            
+            // CASO 1: Respuesta con éxito pero con estructura anidada
+            if (resultado.success !== false) {
+                console.log('📦 Respuesta exitosa, verificando estructura...');
+                
+                // Buscar las propiedades de verificación de stock
+                const tieneProblemas = resultado.tieneProblemas || 
+                                     resultado.hayProblemasStock || 
+                                     (resultado.productosConProblemas && resultado.productosConProblemas.length > 0) ||
+                                     false;
+                
+                const productosConProblemas = resultado.productosConProblemas || [];
+                
+                console.log('📦 Tiene problemas:', tieneProblemas);
+                console.log('📦 Productos con problemas:', productosConProblemas);
+                
+                return {
+                    success: true,
+                    tieneProblemas: tieneProblemas,
+                    productosConProblemas: productosConProblemas
+                };
+            }
+            // CASO 2: Respuesta de error explícita
+            else if (resultado.success === false) {
+                console.log('❌ Respuesta de error del servidor:', resultado.message);
+                return { success: false, tieneProblemas: false, productosConProblemas: [] };
+            }
+        }
+        
+        // CASO 3: Respuesta inesperada
+        console.log('⚠️ Estructura de respuesta inesperada, asumiendo sin problemas');
+        return { success: true, tieneProblemas: false, productosConProblemas: [] };
         
     } catch (error) {
         console.error('❌ Error verificando stock:', error);
-        return { success: false, tieneProblemas: true, productosConProblemas: [] };
+        return { success: false, tieneProblemas: false, productosConProblemas: [] };
     }
 }
 
@@ -4728,9 +4765,11 @@ async function procesarFacturaPendiente(facturaEscapada) {
         cargarFacturaPendienteEnCarrito(factura);
         
         // Si hay problemas de stock, mostrar modal de problemas
-        if (verificacionStock.tieneProblemas) {
+        if (verificacionStock.tieneProblemas && verificacionStock.productosConProblemas && verificacionStock.productosConProblemas.length > 0) {
+            console.log('⚠️ Se encontraron problemas de stock, mostrando modal');
             await mostrarModalProblemasStock(verificacionStock.productosConProblemas, factura);
         } else {
+            console.log('✅ No hay problemas de stock, continuando con modal de finalización');
             // Si no hay problemas, mostrar modal de finalización normal
             setTimeout(() => {
                 mostrarModalFinalizarVenta();

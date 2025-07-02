@@ -838,16 +838,11 @@ namespace GestionLlantera.Web.Controllers
                 if (resultado.success)
                 {
                     _logger.LogInformation("✅ Verificación de stock exitosa para factura {FacturaId}", request.FacturaId);
+                    _logger.LogInformation("📋 Datos completos del resultado: {Data}", System.Text.Json.JsonSerializer.Serialize(resultado.data));
                     
-                    // Extraer los datos del resultado para enviar la estructura correcta al frontend
-                    var datosRespuesta = resultado.data as dynamic;
-                    
-                    return Json(new { 
-                        success = true,
-                        hayProblemasStock = datosRespuesta?.hayProblemasStock ?? false,
-                        productosConProblemas = datosRespuesta?.productosConProblemas ?? new List<object>(),
-                        message = datosRespuesta?.message ?? "Verificación completada"
-                    });
+                    // ✅ DEVOLVER LA ESTRUCTURA COMPLETA TAL COMO VIENE DEL SERVICIO
+                    // Similar al patrón exitoso de ObtenerFacturasPendientes
+                    return Json(resultado.data);
                 }
                 else
                 {
@@ -855,8 +850,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { 
                         success = false, 
                         message = resultado.message,
-                        details = resultado.details,
-                        hayProblemasStock = false,
+                        tieneProblemas = false,
                         productosConProblemas = new List<object>()
                     });
                 }
@@ -867,7 +861,8 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { 
                     success = false, 
                     message = "Error interno del servidor",
-                    details = ex.Message
+                    tieneProblemas = false,
+                    productosConProblemas = new List<object>()
                 });
             }
         }
