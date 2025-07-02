@@ -625,6 +625,113 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<(bool success, object? data, string? message, string? details)> VerificarStockFacturaAsync(int facturaId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === VERIFICANDO STOCK DE FACTURA PENDIENTE ===");
+                _logger.LogInformation("📦 Factura ID: {FacturaId}", facturaId);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Crear el request para enviar al API
+                var request = new { FacturaId = facturaId };
+                var jsonContent = JsonConvert.SerializeObject(request);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
+
+                // Llamar al endpoint del API para verificar stock
+                var response = await _httpClient.PostAsync("api/Facturacion/verificar-stock-factura", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                    // Verificar si hay problemas de stock
+                    bool hayProblemas = false;
+                    var productosConProblemas = new List<object>();
+
+                    if (resultado?.success == true)
+                    {
+                        // Verificar si hay productos con problemas de stock
+                        if (resultado.productosConProblemas != null)
+                        {
+                            hayProblemas = ((Newtonsoft.Json.Linq.JArray)resultado.productosConProblemas).Count > 0;
+
+                            foreach (var producto in resultado.productosConProblemas)
+                            {
+                                productosConProblemas.Add(new
+                                {
+                                    productoId = producto?.productoId,
+                                    nombreProducto = producto?.nombreProducto,
+                                    cantidadSolicitada = producto?.cantidadSolicitada,
+                                    stockDisponible = producto?.stockDisponible,
+                                    diferencia = producto?.diferencia
+                                });
+                            }
+                        }
+
+                        _logger.LogInformation("📦 Verificación completada - Hay problemas: {HayProblemas}, Productos afectados: {Count}", 
+                            hayProblemas, productosConProblemas.Count);
+
+                        return (
+                            success: true,
+                            data: new
+                            {
+                                hayProblemasStock = hayProblemas,
+                                productosConProblemas = productosConProblemas,
+                                message = hayProblemas ? 
+                                    $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" : 
+                                    "Todos los productos tienen stock suficiente"
+                            },
+                            message: "Verificación de stock completada",
+                            details: null
+                        );
+                    }
+                    else
+                    {
+                        return (
+                            success: false,
+                            data: null,
+                            message: resultado?.message?.ToString() ?? "Error verificando stock",
+                            details: responseContent
+                        );
+                    }
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API verificando stock: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (
+                        success: false,
+                        data: null,
+                        message: "Error al verificar stock con el servidor",
+                        details: responseContent
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando stock de factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno al verificar stock: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
+
         // =====================================
         // MÉTODOS AUXILIARES PRIVADOS
         // =====================================

@@ -816,37 +816,48 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📦 Verificando stock para factura: {FacturaId}", request.FacturaId);
+                _logger.LogInformation("📦 === VERIFICANDO STOCK DE FACTURA DESDE CONTROLADOR WEB ===");
+                _logger.LogInformation("📦 Factura ID: {FacturaId}", request.FacturaId);
+
+                // Verificar permisos
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para verificar stock" });
+                }
 
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
+                    _logger.LogError("❌ No se pudo obtener token JWT para verificación de stock");
                     return Json(new { success = false, message = "Error de autenticación" });
                 }
 
-                // Llamar al API para verificar stock
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                // Usar el servicio de facturación para verificar stock
+                var resultado = await _facturacionService.VerificarStockFacturaAsync(request.FacturaId, jwtToken);
 
-                var response = await httpClient.PostAsJsonAsync($"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/verificar-stock-factura", request);
-
-                if (response.IsSuccessStatusCode)
+                if (resultado.success)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var resultado = JsonConvert.DeserializeObject<dynamic>(content);
-
-                    return Json(resultado);
+                    _logger.LogInformation("✅ Verificación de stock exitosa para factura {FacturaId}", request.FacturaId);
+                    return Json(resultado.data);
                 }
                 else
                 {
-                    _logger.LogError("❌ Error del API verificando stock: {StatusCode}", response.StatusCode);
-                    return Json(new { success = false, message = "Error verificando stock" });
+                    _logger.LogWarning("⚠️ Error verificando stock: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message,
+                        details = resultado.details
+                    });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error verificando stock de factura: {FacturaId}", request.FacturaId);
-                return Json(new { success = false, message = "Error interno del servidor" });
+                _logger.LogError(ex, "❌ Error crítico verificando stock de factura: {FacturaId}", request?.FacturaId);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    details = ex.Message
+                });
             }
         }
     }
