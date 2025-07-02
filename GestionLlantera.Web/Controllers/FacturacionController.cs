@@ -838,7 +838,16 @@ namespace GestionLlantera.Web.Controllers
                 if (resultado.success)
                 {
                     _logger.LogInformation("✅ Verificación de stock exitosa para factura {FacturaId}", request.FacturaId);
-                    return Json(resultado.data);
+                    
+                    // Extraer los datos del resultado para enviar la estructura correcta al frontend
+                    var datosRespuesta = resultado.data as dynamic;
+                    
+                    return Json(new { 
+                        success = true,
+                        hayProblemasStock = datosRespuesta?.hayProblemasStock ?? false,
+                        productosConProblemas = datosRespuesta?.productosConProblemas ?? new List<object>(),
+                        message = datosRespuesta?.message ?? "Verificación completada"
+                    });
                 }
                 else
                 {
@@ -846,7 +855,9 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { 
                         success = false, 
                         message = resultado.message,
-                        details = resultado.details
+                        details = resultado.details,
+                        hayProblemasStock = false,
+                        productosConProblemas = new List<object>()
                     });
                 }
             }
