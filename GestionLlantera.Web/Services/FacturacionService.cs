@@ -655,12 +655,27 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Deserializar directamente como object para mantener la estructura original
-                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
 
-                    _logger.LogInformation("✅ Verificación de stock procesada correctamente");
+                    // Verificar si hay problemas de stock
+                    bool hayProblemas = false;
+                    var productosConProblemas = new List<object>();
 
-                    return (true, resultado, "Verificación completada", null);isponible,
+                    if (resultado?.success == true)
+                    {
+                        // Verificar si hay productos con problemas de stock
+                        if (resultado.productosConProblemas != null)
+                        {
+                            hayProblemas = ((Newtonsoft.Json.Linq.JArray)resultado.productosConProblemas).Count > 0;
+
+                            foreach (var producto in resultado.productosConProblemas)
+                            {
+                                productosConProblemas.Add(new
+                                {
+                                    productoId = producto?.productoId,
+                                    nombreProducto = producto?.nombreProducto,
+                                    cantidadSolicitada = producto?.cantidadSolicitada,
+                                    stockDisponible = producto?.stockDisponible,
                                     diferencia = producto?.diferencia
                                 });
                             }
