@@ -853,13 +853,21 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogInformation("✅ Verificación de stock exitosa para factura {FacturaId}", request.FacturaId);
                     
-                    // ✅ DEVOLVER LA ESTRUCTURA EXACTA DEL SERVICIO CON LOGGING DETALLADO
+                    // ✅ MAPEAR CORRECTAMENTE LAS PROPIEDADES DE LA RESPUESTA DEL API
+                    var hayProblemasStock = GetProperty<bool>(resultado.data, "hayProblemasStock", false);
+                    var tieneProblemas = GetProperty<bool>(resultado.data, "tieneProblemas", hayProblemasStock);
+                    var productosConProblemas = GetProperty<List<object>>(resultado.data, "productosConProblemas", new List<object>());
+                    
                     var respuestaFinal = new {
                         success = true,
-                        tieneProblemas = GetProperty<bool>(resultado.data, "hayProblemasStock", false),
-                        productosConProblemas = GetProperty<List<object>>(resultado.data, "productosConProblemas", new List<object>()),
+                        hayProblemasStock = hayProblemasStock,
+                        tieneProblemas = tieneProblemas,
+                        productosConProblemas = productosConProblemas,
                         message = GetProperty<string>(resultado.data, "message", "Verificación completada")
                     };
+                    
+                    _logger.LogInformation("📤 Propiedades mapeadas: hayProblemasStock={HayProblemas}, tieneProblemas={TieneProblemas}, productos={Count}", 
+                        hayProblemasStock, tieneProblemas, productosConProblemas.Count);
 
                     _logger.LogInformation("📤 Respuesta final enviada al frontend: {Respuesta}", 
                         System.Text.Json.JsonSerializer.Serialize(respuestaFinal));

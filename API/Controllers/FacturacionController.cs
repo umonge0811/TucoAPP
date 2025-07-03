@@ -985,8 +985,12 @@ namespace API.Controllers
                 return Ok(new
                 {
                     success = true,
+                    hayProblemasStock = tieneProblemas,
                     tieneProblemas = tieneProblemas,
-                    productosConProblemas = productosConProblemas
+                    productosConProblemas = productosConProblemas,
+                    message = tieneProblemas ? 
+                        $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" : 
+                        "Todos los productos tienen stock suficiente"
                 });
             }
             catch (Exception ex)

@@ -4087,13 +4087,19 @@ async function verificarStockFacturaPendiente(facturaId) {
                 };
             }
             // CASO 3: Respuesta del controlador Web con estructura directa (hayProblemasStock)
-            else if (resultado.hasOwnProperty('hayProblemasStock') && resultado.hasOwnProperty('productosConProblemas')) {
-                console.log('📦 Respuesta del controlador Web con hayProblemasStock');
+            else if (resultado.hasOwnProperty('hayProblemasStock') || resultado.hasOwnProperty('tieneProblemas')) {
+                console.log('📦 Respuesta del controlador Web con hayProblemasStock o tieneProblemas');
                 
-                const tieneProblemas = resultado.hayProblemasStock === true || resultado.hayProblemasStock === 'true';
+                // Usar hayProblemasStock como prioridad, luego tieneProblemas como fallback
+                const tieneProblemas = resultado.hayProblemasStock === true || 
+                                     resultado.hayProblemasStock === 'true' ||
+                                     resultado.tieneProblemas === true || 
+                                     resultado.tieneProblemas === 'true';
                 const productosConProblemas = resultado.productosConProblemas || [];
                 
-                console.log('📦 Tiene problemas (hayProblemasStock):', tieneProblemas);
+                console.log('📦 Tiene problemas (hayProblemasStock/tieneProblemas):', tieneProblemas);
+                console.log('📦 resultado.hayProblemasStock:', resultado.hayProblemasStock);
+                console.log('📦 resultado.tieneProblemas:', resultado.tieneProblemas);
                 console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
                 console.log('📦 Productos con problemas detallados:', productosConProblemas);
                 
