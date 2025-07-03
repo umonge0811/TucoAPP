@@ -32,7 +32,9 @@ const CONFIGURACION_PRECIOS = {
     efectivo: { multiplicador: 1.0, nombre: 'Efectivo', icono: 'bi-cash' },
     transferencia: { multiplicador: 1.0, nombre: 'Transferencia', icono: 'bi-bank' },
     sinpe: { multiplicador: 1.0, nombre: 'SINPE Móvil', icono: 'bi-phone' },
-    tarjeta: { multiplicador: 1.05, nombre: 'Tarjeta', icono: 'bi-credit-card' } // 5% adicional para tarjeta
+    tarjeta: { multiplicador: 1.05, nombre: 'Tarjeta', icono: 'bi-credit-card' }, // 5% adicional para tarjeta
+    multiple: { multiplicador: 1.0, nombre: 'Múltiple', icono: 'bi-credit-card-2-front' },
+    'Múltiple': { multiplicador: 1.0, nombre: 'Múltiple', icono: 'bi-credit-card-2-front' } // Soporte para mayúscula desde servidor
 };
 
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
@@ -1185,7 +1187,7 @@ function actualizarVistaCarrito() {
     productosEnVenta.forEach((producto, index) => {
         const subtotal = producto.precioUnitario * producto.cantidad;
         const metodoPago = producto.metodoPago || 'efectivo';
-        const configMetodo = CONFIGURACION_PRECIOS[metodoPago];
+        const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
 
         html += `
             <div class="producto-venta-item border rounded p-2 mb-2">
