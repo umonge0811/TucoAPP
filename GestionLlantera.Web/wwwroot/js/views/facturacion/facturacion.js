@@ -4125,29 +4125,16 @@ async function mostrarModalProblemasStock(productosConProblemas, factura) {
         const faltante = producto.cantidadRequerida - producto.stockDisponible;
         const subtotalPerdido = (producto.precio || 0) * faltante;
         
-        // Determinar imagen del producto
-        let imagenUrl = '/images/no-image.png';
-        if (producto.imagenesUrls && producto.imagenesUrls.length > 0) {
-            imagenUrl = producto.imagenesUrls[0];
-        }
-        
         htmlProblemas += `
             <tr id="problema-row-${index}" class="align-middle">
                 <td>
-                    <div class="d-flex align-items-center">
-                        <img src="${imagenUrl}" 
-                             alt="${producto.nombreProducto}" 
-                             class="me-2 rounded" 
-                             style="width: 40px; height: 40px; object-fit: cover;"
-                             onerror="this.src='/images/no-image.png';">
-                        <div>
-                            <strong class="d-block" style="font-size: 0.9rem;">${producto.nombreProducto}</strong>
-                            <small class="text-muted">ID: ${producto.productoId}</small>
-                            ${producto.descripcion ? 
-                                `<br><small class="text-muted" style="font-size: 0.75rem;">${producto.descripcion.substring(0, 50)}${producto.descripcion.length > 50 ? '...' : ''}</small>` 
-                                : ''
-                            }
-                        </div>
+                    <div>
+                        <strong class="d-block" style="font-size: 0.9rem;">${producto.nombreProducto}</strong>
+                        <small class="text-muted">ID: ${producto.productoId}</small>
+                        ${producto.descripcion ? 
+                            `<br><small class="text-muted" style="font-size: 0.75rem;">${producto.descripcion.substring(0, 80)}${producto.descripcion.length > 80 ? '...' : ''}</small>` 
+                            : ''
+                        }
                     </div>
                 </td>
                 <td class="text-center">
