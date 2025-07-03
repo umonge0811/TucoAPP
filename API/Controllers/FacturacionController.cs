@@ -931,7 +931,12 @@ namespace API.Controllers
                     .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
 
                 if (factura == null)
-                    return NotFound(new { message = "Factura no encontrada" });
+                    return NotFound(new { 
+                        success = false, 
+                        message = "Factura no encontrada",
+                        tieneProblemas = false,
+                        productosConProblemas = new List<object>()
+                    });
 
                 var productosConProblemas = new List<object>();
 
@@ -969,14 +974,12 @@ namespace API.Controllers
 
                 var tieneProblemas = productosConProblemas.Any();
 
+                // ✅ ESTRUCTURA EXACTA ESPERADA POR EL FRONTEND
                 return Ok(new
                 {
                     success = true,
                     tieneProblemas = tieneProblemas,
-                    productosConProblemas = productosConProblemas,
-                    message = tieneProblemas ? 
-                        $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" : 
-                        "Todos los productos tienen stock suficiente"
+                    productosConProblemas = productosConProblemas
                 });
             }
             catch (Exception ex)
@@ -984,7 +987,9 @@ namespace API.Controllers
                 _logger.LogError(ex, "❌ Error verificando stock de factura: {FacturaId}", request.FacturaId);
                 return StatusCode(500, new { 
                     success = false, 
-                    message = "Error al verificar stock" 
+                    message = "Error al verificar stock",
+                    tieneProblemas = false,
+                    productosConProblemas = new List<object>()
                 });
             }
         }
