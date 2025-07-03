@@ -943,6 +943,7 @@ namespace API.Controllers
                 foreach (var detalle in factura.DetallesFactura)
                 {
                     var producto = await _context.Productos
+                        .Include(p => p.ImagenesProductos)
                         .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);
 
                     if (producto == null)
@@ -951,9 +952,12 @@ namespace API.Controllers
                         {
                             productoId = detalle.ProductoId,
                             nombreProducto = detalle.NombreProducto,
+                            descripcion = "Producto no encontrado en el sistema",
+                            precio = 0,
                             cantidadRequerida = detalle.Cantidad,
                             stockDisponible = 0,
-                            problema = "Producto no encontrado"
+                            problema = "Producto no encontrado",
+                            imagenesUrls = new List<string>()
                         });
                         continue;
                     }
@@ -965,9 +969,12 @@ namespace API.Controllers
                         {
                             productoId = detalle.ProductoId,
                             nombreProducto = detalle.NombreProducto,
+                            descripcion = producto.Descripcion ?? "",
+                            precio = detalle.PrecioUnitario,
                             cantidadRequerida = detalle.Cantidad,
                             stockDisponible = stockDisponible,
-                            problema = "Stock insuficiente"
+                            problema = "Stock insuficiente",
+                            imagenesUrls = producto.ImagenesProductos?.Select(img => img.Urlimagen).ToList() ?? new List<string>()
                         });
                     }
                 }

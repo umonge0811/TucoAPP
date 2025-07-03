@@ -4053,40 +4053,35 @@ async function verificarStockFacturaPendiente(facturaId) {
         console.log('📦 Tipo de resultado:', typeof resultado);
         console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
         
-        // ✅ PROCESAR LA RESPUESTA SIMILAR AL PATRÓN DE FACTURAS PENDIENTES
-        if (resultado && typeof resultado === 'object') {
+        // ✅ PROCESAR LA RESPUESTA CON LA ESTRUCTURA EXACTA DEL API
+        if (resultado && resultado.success === true) {
+            console.log('📦 Respuesta exitosa del API');
             
-            // CASO 1: Respuesta con éxito pero con estructura anidada
-            if (resultado.success !== false) {
-                console.log('📦 Respuesta exitosa, verificando estructura...');
-                
-                // Buscar las propiedades de verificación de stock
-                const tieneProblemas = resultado.tieneProblemas || 
-                                     resultado.hayProblemasStock || 
-                                     (resultado.productosConProblemas && resultado.productosConProblemas.length > 0) ||
-                                     false;
-                
-                const productosConProblemas = resultado.productosConProblemas || [];
-                
-                console.log('📦 Tiene problemas:', tieneProblemas);
-                console.log('📦 Productos con problemas:', productosConProblemas);
-                
-                return {
-                    success: true,
-                    tieneProblemas: tieneProblemas,
-                    productosConProblemas: productosConProblemas
-                };
-            }
-            // CASO 2: Respuesta de error explícita
-            else if (resultado.success === false) {
-                console.log('❌ Respuesta de error del servidor:', resultado.message);
-                return { success: false, tieneProblemas: false, productosConProblemas: [] };
-            }
+            const tieneProblemas = resultado.tieneProblemas || false;
+            const productosConProblemas = resultado.productosConProblemas || [];
+            
+            console.log('📦 Tiene problemas:', tieneProblemas);
+            console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
+            console.log('📦 Productos con problemas detallados:', productosConProblemas);
+            
+            return {
+                success: true,
+                tieneProblemas: tieneProblemas,
+                productosConProblemas: productosConProblemas
+            };
+        } else if (resultado && resultado.success === false) {
+            console.log('❌ Respuesta de error del servidor:', resultado.message);
+            return { 
+                success: false, 
+                tieneProblemas: false, 
+                productosConProblemas: [],
+                message: resultado.message 
+            };
         }
         
         // CASO 3: Respuesta inesperada
-        console.log('⚠️ Estructura de respuesta inesperada, asumiendo sin problemas');
-        return { success: true, tieneProblemas: false, productosConProblemas: [] };
+        console.log('⚠️ Estructura de respuesta inesperada:', resultado);
+        return { success: false, tieneProblemas: false, productosConProblemas: [] };
         
     } catch (error) {
         console.error('❌ Error verificando stock:', error);
@@ -4101,7 +4096,7 @@ async function mostrarModalProblemasStock(productosConProblemas, factura) {
     console.log('⚠️ === GENERANDO MODAL DE PROBLEMAS DE STOCK ===');
     console.log('⚠️ Productos con problemas recibidos:', productosConProblemas);
     
-    // Obtener información completa de los productos con problemas
+    // Procesar información de productos (ya viene completa del API)
     const productosConInfoCompleta = await obtenerInformacionCompletaProductos(productosConProblemas);
     
     let htmlProblemas = '<div class="alert alert-warning mb-3">';
@@ -4233,79 +4228,30 @@ async function mostrarModalProblemasStock(productosConProblemas, factura) {
 
 /**
  * Obtener información completa de productos para el modal de problemas
+ * Ahora simplificado porque el API ya devuelve la información completa
  */
 async function obtenerInformacionCompletaProductos(productosConProblemas) {
-    console.log('📦 === OBTENIENDO INFORMACIÓN COMPLETA DE PRODUCTOS ===');
-    console.log('📦 Productos a enriquecer:', productosConProblemas);
+    console.log('📦 === PROCESANDO INFORMACIÓN DE PRODUCTOS ===');
+    console.log('📦 Productos recibidos del API:', productosConProblemas);
     
-    try {
-        // Obtener productos completos desde el servidor
-        const response = await fetch('/Facturacion/ObtenerProductosParaFacturacion', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
+    // El API ya devuelve la información completa, solo necesitamos validar y formatear
+    const productosFormateados = productosConProblemas.map(producto => {
+        console.log('📦 Procesando producto:', producto.nombreProducto);
         
-        if (data && data.productos) {
-            console.log('📦 Productos obtenidos del servidor:', data.productos.length);
-            
-            // Enriquecer los productos con problemas con información completa
-            const productosEnriquecidos = productosConProblemas.map(problemaProducto => {
-                const productoCompleto = data.productos.find(p => 
-                    (p.productoId || p.id) === problemaProducto.productoId
-                );
-                
-                if (productoCompleto) {
-                    console.log('📦 Producto encontrado y enriquecido:', productoCompleto.nombreProducto);
-                    return {
-                        ...problemaProducto,
-                        nombreProducto: productoCompleto.nombreProducto || productoCompleto.nombre,
-                        descripcion: productoCompleto.descripcion,
-                        precio: productoCompleto.precio,
-                        imagenesUrls: productoCompleto.imagenesUrls || [],
-                        imagenesProductos: productoCompleto.imagenesProductos || [],
-                        categoria: productoCompleto.categoria,
-                        marca: productoCompleto.marca,
-                        modelo: productoCompleto.modelo
-                    };
-                } else {
-                    console.warn('⚠️ No se encontró información completa para producto:', problemaProducto.productoId);
-                    return {
-                        ...problemaProducto,
-                        precio: 0,
-                        descripcion: 'Sin descripción disponible',
-                        imagenesUrls: []
-                    };
-                }
-            });
-            
-            console.log('✅ Productos enriquecidos:', productosEnriquecidos);
-            return productosEnriquecidos;
-            
-        } else {
-            throw new Error('No se pudieron obtener los productos del servidor');
-        }
-        
-    } catch (error) {
-        console.error('❌ Error obteniendo información completa de productos:', error);
-        
-        // Fallback: devolver productos con información básica
-        return productosConProblemas.map(producto => ({
-            ...producto,
-            precio: 0,
-            descripcion: 'Sin información disponible',
-            imagenesUrls: []
-        }));
-    }
+        return {
+            productoId: producto.productoId,
+            nombreProducto: producto.nombreProducto || 'Producto sin nombre',
+            descripcion: producto.descripcion || 'Sin descripción disponible',
+            precio: producto.precio || 0,
+            cantidadRequerida: producto.cantidadRequerida,
+            stockDisponible: producto.stockDisponible,
+            problema: producto.problema,
+            imagenesUrls: producto.imagenesUrls || []
+        };
+    });
+    
+    console.log('✅ Productos formateados para el modal:', productosFormateados);
+    return productosFormateados;
 }
 
 /**
@@ -4735,13 +4681,17 @@ async function procesarFacturaPendiente(facturaEscapada) {
         console.log('🔄 Factura:', factura);
         
         // Verificar stock antes de proceder
+        console.log('🔍 Iniciando verificación de stock para factura:', factura.facturaId);
         const verificacionStock = await verificarStockFacturaPendiente(factura.facturaId);
         
+        console.log('🔍 Resultado de verificación de stock:', verificacionStock);
+        
         if (!verificacionStock.success) {
+            console.error('❌ Error en verificación de stock:', verificacionStock);
             Swal.fire({
                 icon: 'error',
                 title: 'Error de verificación',
-                text: 'No se pudo verificar el stock de los productos',
+                text: verificacionStock.message || 'No se pudo verificar el stock de los productos',
                 confirmButtonColor: '#dc3545'
             });
             return;
@@ -4755,10 +4705,14 @@ async function procesarFacturaPendiente(facturaEscapada) {
         
         // Si hay problemas de stock, mostrar modal de problemas
         if (verificacionStock.tieneProblemas && verificacionStock.productosConProblemas && verificacionStock.productosConProblemas.length > 0) {
-            console.log('⚠️ Se encontraron problemas de stock, mostrando modal');
+            console.log('⚠️ Se encontraron problemas de stock');
+            console.log('⚠️ Cantidad de productos con problemas:', verificacionStock.productosConProblemas.length);
+            console.log('⚠️ Detalles de productos con problemas:', verificacionStock.productosConProblemas);
             await mostrarModalProblemasStock(verificacionStock.productosConProblemas, factura);
         } else {
             console.log('✅ No hay problemas de stock, continuando con modal de finalización');
+            console.log('✅ tieneProblemas:', verificacionStock.tieneProblemas);
+            console.log('✅ productosConProblemas.length:', verificacionStock.productosConProblemas?.length || 0);
             // Si no hay problemas, mostrar modal de finalización normal
             setTimeout(() => {
                 mostrarModalFinalizarVenta();
