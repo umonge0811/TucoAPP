@@ -4053,34 +4053,56 @@ async function verificarStockFacturaPendiente(facturaId) {
         console.log('📦 Tipo de resultado:', typeof resultado);
         console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
         
-        // ✅ PROCESAR LA RESPUESTA CON LA ESTRUCTURA EXACTA DEL API
-        if (resultado && resultado.success === true) {
-            console.log('📦 Respuesta exitosa del API');
+        // ✅ PROCESAR LA RESPUESTA CON VALIDACIÓN MEJORADA
+        console.log('📦 Propiedades disponibles en resultado:', Object.keys(resultado || {}));
+        
+        if (resultado) {
+            // Verificar si es una respuesta exitosa
+            const esExitosa = resultado.success === true || resultado.success === 'true';
             
-            const tieneProblemas = resultado.tieneProblemas || false;
-            const productosConProblemas = resultado.productosConProblemas || [];
-            
-            console.log('📦 Tiene problemas:', tieneProblemas);
-            console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
-            console.log('📦 Productos con problemas detallados:', productosConProblemas);
-            
-            return {
-                success: true,
-                tieneProblemas: tieneProblemas,
-                productosConProblemas: productosConProblemas
-            };
-        } else if (resultado && resultado.success === false) {
-            console.log('❌ Respuesta de error del servidor:', resultado.message);
-            return { 
-                success: false, 
-                tieneProblemas: false, 
-                productosConProblemas: [],
-                message: resultado.message 
-            };
+            if (esExitosa) {
+                console.log('📦 Respuesta exitosa del API');
+                
+                const tieneProblemas = resultado.tieneProblemas === true || resultado.tieneProblemas === 'true';
+                const productosConProblemas = resultado.productosConProblemas || [];
+                
+                console.log('📦 Tiene problemas:', tieneProblemas);
+                console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
+                console.log('📦 Productos con problemas detallados:', productosConProblemas);
+                
+                return {
+                    success: true,
+                    tieneProblemas: tieneProblemas,
+                    productosConProblemas: productosConProblemas
+                };
+            } else if (resultado.success === false) {
+                console.log('❌ Respuesta de error del servidor:', resultado.message);
+                return { 
+                    success: false, 
+                    tieneProblemas: false, 
+                    productosConProblemas: [],
+                    message: resultado.message 
+                };
+            } else {
+                // Si no tiene propiedad success, verificar si tiene las propiedades esperadas directamente
+                if (resultado.hasOwnProperty('tieneProblemas') && resultado.hasOwnProperty('productosConProblemas')) {
+                    console.log('📦 Respuesta sin success pero con propiedades válidas');
+                    
+                    const tieneProblemas = resultado.tieneProblemas === true || resultado.tieneProblemas === 'true';
+                    const productosConProblemas = resultado.productosConProblemas || [];
+                    
+                    return {
+                        success: true,
+                        tieneProblemas: tieneProblemas,
+                        productosConProblemas: productosConProblemas
+                    };
+                }
+            }
         }
         
-        // CASO 3: Respuesta inesperada
+        // CASO: Respuesta inesperada
         console.log('⚠️ Estructura de respuesta inesperada:', resultado);
+        console.log('⚠️ Usando valores por defecto');
         return { success: false, tieneProblemas: false, productosConProblemas: [] };
         
     } catch (error) {

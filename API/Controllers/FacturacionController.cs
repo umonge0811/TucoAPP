@@ -953,7 +953,7 @@ namespace API.Controllers
                             productoId = detalle.ProductoId,
                             nombreProducto = detalle.NombreProducto,
                             descripcion = "Producto no encontrado en el sistema",
-                            precio = 0,
+                            precio = (decimal)0,
                             cantidadRequerida = detalle.Cantidad,
                             stockDisponible = 0,
                             problema = "Producto no encontrado",
