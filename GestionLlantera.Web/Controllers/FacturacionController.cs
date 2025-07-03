@@ -822,34 +822,56 @@ namespace GestionLlantera.Web.Controllers
                 // Verificar permisos
                 if (!await this.TienePermisoAsync("Ver Productos"))
                 {
-                    return Json(new { success = false, message = "Sin permisos para verificar stock" });
+                    _logger.LogWarning("🚫 Usuario sin permisos para verificar stock");
+                    return Json(new { 
+                        success = false, 
+                        message = "Sin permisos para verificar stock",
+                        tieneProblemas = false,
+                        productosConProblemas = new List<object>()
+                    });
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
                     _logger.LogError("❌ No se pudo obtener token JWT para verificación de stock");
-                    return Json(new { success = false, message = "Error de autenticación" });
+                    return Json(new { 
+                        success = false, 
+                        message = "Error de autenticación",
+                        tieneProblemas = false,
+                        productosConProblemas = new List<object>()
+                    });
                 }
 
                 // Usar el servicio de facturación para verificar stock
                 var resultado = await _facturacionService.VerificarStockFacturaAsync(request.FacturaId, jwtToken);
 
-                if (resultado.success)
+                _logger.LogInformation("📋 Resultado del servicio de verificación: Success={Success}, Data={Data}", 
+                    resultado.success, System.Text.Json.JsonSerializer.Serialize(resultado.data));
+
+                if (resultado.success && resultado.data != null)
                 {
                     _logger.LogInformation("✅ Verificación de stock exitosa para factura {FacturaId}", request.FacturaId);
-                    _logger.LogInformation("📋 Datos completos del resultado: {Data}", System.Text.Json.JsonSerializer.Serialize(resultado.data));
                     
-                    // ✅ DEVOLVER LA ESTRUCTURA COMPLETA TAL COMO VIENE DEL SERVICIO
-                    // Similar al patrón exitoso de ObtenerFacturasPendientes
-                    return Json(resultado.data);
+                    // ✅ DEVOLVER LA ESTRUCTURA EXACTA DEL SERVICIO CON LOGGING DETALLADO
+                    var respuestaFinal = new {
+                        success = true,
+                        tieneProblemas = GetProperty<bool>(resultado.data, "hayProblemasStock", false),
+                        productosConProblemas = GetProperty<List<object>>(resultado.data, "productosConProblemas", new List<object>()),
+                        message = GetProperty<string>(resultado.data, "message", "Verificación completada")
+                    };
+
+                    _logger.LogInformation("📤 Respuesta final enviada al frontend: {Respuesta}", 
+                        System.Text.Json.JsonSerializer.Serialize(respuestaFinal));
+
+                    return Json(respuestaFinal);
                 }
                 else
                 {
                     _logger.LogWarning("⚠️ Error verificando stock: {Message}", resultado.message);
                     return Json(new { 
                         success = false, 
-                        message = resultado.message,
+                        message = resultado.message ?? "Error desconocido verificando stock",
                         tieneProblemas = false,
                         productosConProblemas = new List<object>()
                     });
@@ -860,11 +882,33 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogError(ex, "❌ Error crítico verificando stock de factura: {FacturaId}", request?.FacturaId);
                 return Json(new { 
                     success = false, 
-                    message = "Error interno del servidor",
+                    message = "Error interno del servidor: " + ex.Message,
                     tieneProblemas = false,
                     productosConProblemas = new List<object>()
                 });
             }
+        }
+
+        private T GetProperty<T>(object data, string propertyName, T defaultValue)
+        {
+            try
+            {
+                if (data == null) return defaultValue;
+
+                var json = System.Text.Json.JsonSerializer.Serialize(data);
+                var jsonElement = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+                
+                if (jsonElement.TryGetProperty(propertyName, out var property))
+                {
+                    return System.Text.Json.JsonSerializer.Deserialize<T>(property.GetRawText());
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("⚠️ Error extrayendo propiedad {PropertyName}: {Error}", propertyName, ex.Message);
+            }
+
+            return defaultValue;
         }
     }
 
