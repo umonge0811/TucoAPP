@@ -4053,15 +4053,15 @@ async function verificarStockFacturaPendiente(facturaId) {
         console.log('📦 Tipo de resultado:', typeof resultado);
         console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
         
-        // ✅ PROCESAR LA RESPUESTA CON VALIDACIÓN MEJORADA
+        // ✅ PROCESAR LA RESPUESTA REAL DEL API
         console.log('📦 Propiedades disponibles en resultado:', Object.keys(resultado || {}));
         
         if (resultado) {
-            // Verificar si es una respuesta exitosa
+            // CASO 1: Respuesta exitosa estándar con 'success'
             const esExitosa = resultado.success === true || resultado.success === 'true';
             
             if (esExitosa) {
-                console.log('📦 Respuesta exitosa del API');
+                console.log('📦 Respuesta exitosa del API con success=true');
                 
                 const tieneProblemas = resultado.tieneProblemas === true || resultado.tieneProblemas === 'true';
                 const productosConProblemas = resultado.productosConProblemas || [];
@@ -4075,7 +4075,9 @@ async function verificarStockFacturaPendiente(facturaId) {
                     tieneProblemas: tieneProblemas,
                     productosConProblemas: productosConProblemas
                 };
-            } else if (resultado.success === false) {
+            } 
+            // CASO 2: Respuesta de error explícita
+            else if (resultado.success === false) {
                 console.log('❌ Respuesta de error del servidor:', resultado.message);
                 return { 
                     success: false, 
@@ -4083,20 +4085,36 @@ async function verificarStockFacturaPendiente(facturaId) {
                     productosConProblemas: [],
                     message: resultado.message 
                 };
-            } else {
-                // Si no tiene propiedad success, verificar si tiene las propiedades esperadas directamente
-                if (resultado.hasOwnProperty('tieneProblemas') && resultado.hasOwnProperty('productosConProblemas')) {
-                    console.log('📦 Respuesta sin success pero con propiedades válidas');
-                    
-                    const tieneProblemas = resultado.tieneProblemas === true || resultado.tieneProblemas === 'true';
-                    const productosConProblemas = resultado.productosConProblemas || [];
-                    
-                    return {
-                        success: true,
-                        tieneProblemas: tieneProblemas,
-                        productosConProblemas: productosConProblemas
-                    };
-                }
+            }
+            // CASO 3: Respuesta del controlador Web con estructura directa (hayProblemasStock)
+            else if (resultado.hasOwnProperty('hayProblemasStock') && resultado.hasOwnProperty('productosConProblemas')) {
+                console.log('📦 Respuesta del controlador Web con hayProblemasStock');
+                
+                const tieneProblemas = resultado.hayProblemasStock === true || resultado.hayProblemasStock === 'true';
+                const productosConProblemas = resultado.productosConProblemas || [];
+                
+                console.log('📦 Tiene problemas (hayProblemasStock):', tieneProblemas);
+                console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
+                console.log('📦 Productos con problemas detallados:', productosConProblemas);
+                
+                return {
+                    success: true,
+                    tieneProblemas: tieneProblemas,
+                    productosConProblemas: productosConProblemas
+                };
+            }
+            // CASO 4: Respuesta con tieneProblemas (estructura alternativa)
+            else if (resultado.hasOwnProperty('tieneProblemas') && resultado.hasOwnProperty('productosConProblemas')) {
+                console.log('📦 Respuesta con tieneProblemas');
+                
+                const tieneProblemas = resultado.tieneProblemas === true || resultado.tieneProblemas === 'true';
+                const productosConProblemas = resultado.productosConProblemas || [];
+                
+                return {
+                    success: true,
+                    tieneProblemas: tieneProblemas,
+                    productosConProblemas: productosConProblemas
+                };
             }
         }
         
