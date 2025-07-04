@@ -655,74 +655,127 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    // Configurar las opciones de deserialización
+                    var settings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        MissingMemberHandling = MissingMemberHandling.Ignore
+                    };
 
-                    // Verificar si hay problemas de stock
-                    bool hayProblemas = false;
-                    var productosConProblemas = new List<object>();
+                    // Deserializar con modelo fuertemente tipado
+                    var resultado = JsonConvert.DeserializeObject<StockVerificationResponse>(responseContent, settings);
 
                     if (resultado?.success == true)
                     {
-                        // Verificar si hay productos con problemas de stock
-                        if (resultado.productosConProblemas != null)
-                        {
-                            hayProblemas = ((Newtonsoft.Json.Linq.JArray)resultado.productosConProblemas).Count > 0;
+                        // Procesar productos con problemas
+                        var productosConProblemas = new List<ProductoConProblemaInfo>();
 
+                        if (resultado.productosConProblemas != null && resultado.productosConProblemas.Any())
+                        {
                             foreach (var producto in resultado.productosConProblemas)
                             {
-                                productosConProblemas.Add(new
+                                productosConProblemas.Add(new ProductoConProblemaInfo
                                 {
-                                    productoId = producto?.productoId,
-                                    nombreProducto = producto?.nombreProducto,
-                                    cantidadSolicitada = producto?.cantidadSolicitada,
-                                    stockDisponible = producto?.stockDisponible,
-                                    diferencia = producto?.diferencia
+                                    productoId = producto.productoId,
+                                    nombreProducto = producto.nombreProducto ?? "Sin nombre",
+                                    descripcion = producto.descripcion ?? "",
+                                    precio = producto.precio,
+                                    cantidadRequerida = producto.cantidadRequerida,
+                                    stockDisponible = producto.stockDisponible,
+                                    problema = producto.problema ?? "Stock insuficiente",
+                                    diferencia = producto.cantidadRequerida - producto.stockDisponible
                                 });
                             }
                         }
 
-                        _logger.LogInformation("📦 Verificación completada - Hay problemas: {HayProblemas}, Productos afectados: {Count}", 
+                        bool hayProblemas = productosConProblemas.Any();
+
+                        _logger.LogInformation("📦 Verificación completada - Hay problemas: {HayProblemas}, Productos afectados: {Count}",
                             hayProblemas, productosConProblemas.Count);
+
+                        // Crear respuesta estructurada
+                        var dataResult = new StockVerificationResult
+                        {
+                            hayProblemasStock = hayProblemas,
+                            productosConProblemas = productosConProblemas,
+                            message = hayProblemas ?
+                                $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" :
+                                "Todos los productos tienen stock suficiente"
+                        };
 
                         return (
                             success: true,
-                            data: new
-                            {
-                                hayProblemasStock = hayProblemas,
-                                productosConProblemas = productosConProblemas,
-                                message = hayProblemas ? 
-                                    $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" : 
-                                    "Todos los productos tienen stock suficiente"
-                            },
-                            message: "Verificación de stock completada",
+                            data: dataResult,
+                            message: "Verificación de stock completada exitosamente",
                             details: null
                         );
                     }
                     else
                     {
+                        _logger.LogWarning("⚠️ API devolvió success=false: {Message}", resultado?.message);
                         return (
                             success: false,
                             data: null,
-                            message: resultado?.message?.ToString() ?? "Error verificando stock",
+                            message: resultado?.message ?? "Error verificando stock",
                             details: responseContent
                         );
                     }
                 }
                 else
                 {
-                    _logger.LogError("❌ Error del API verificando stock: {StatusCode} - {Content}", 
+                    _logger.LogError("❌ Error del API verificando stock: {StatusCode} - {Content}",
                         response.StatusCode, responseContent);
+
+                    string errorMessage = response.StatusCode switch
+                    {
+                        System.Net.HttpStatusCode.Unauthorized => "Token de autenticación inválido o expirado",
+                        System.Net.HttpStatusCode.NotFound => "Factura no encontrada",
+                        System.Net.HttpStatusCode.BadRequest => "Datos de la solicitud inválidos",
+                        System.Net.HttpStatusCode.InternalServerError => "Error interno del servidor",
+                        _ => $"Error del servidor: {response.StatusCode}"
+                    };
+
                     return (
                         success: false,
                         data: null,
-                        message: "Error al verificar stock con el servidor",
+                        message: errorMessage,
                         details: responseContent
                     );
                 }
             }
+            catch (System.Text.Json.JsonException jsonEx)
+            {
+                _logger.LogError(jsonEx, "❌ Error deserializando respuesta JSON para factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error procesando respuesta del servidor: formato JSON inválido",
+                    details: jsonEx.Message
+                );
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "❌ Error de conexión verificando stock de factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error de conexión con el servidor de stock",
+                    details: httpEx.Message
+                );
+            }
+            catch (TaskCanceledException timeoutEx)
+            {
+                _logger.LogError(timeoutEx, "❌ Timeout verificando stock de factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Tiempo de espera agotado al verificar stock",
+                    details: timeoutEx.Message
+                );
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error verificando stock de factura: {FacturaId}", facturaId);
+                _logger.LogError(ex, "❌ Error inesperado verificando stock de factura: {FacturaId}", facturaId);
                 return (
                     success: false,
                     data: null,
@@ -1045,6 +1098,46 @@ namespace GestionLlantera.Web.Services
                 return null;
             }
         }
+    }
+    // Modelos para la deserialización
+    public class StockVerificationResponse
+    {
+        public bool success { get; set; }
+        public bool hayProblemasStock { get; set; }
+        public bool tieneProblemas { get; set; }
+        public List<ProductoConProblema> productosConProblemas { get; set; } = new List<ProductoConProblema>();
+        public string message { get; set; }
+    }
+
+    public class ProductoConProblema
+    {
+        public int productoId { get; set; }
+        public string nombreProducto { get; set; }
+        public string descripcion { get; set; }
+        public decimal precio { get; set; }
+        public int cantidadRequerida { get; set; }
+        public int stockDisponible { get; set; }
+        public string problema { get; set; }
+    }
+
+    // Modelo para la respuesta del método
+    public class StockVerificationResult
+    {
+        public bool hayProblemasStock { get; set; }
+        public List<ProductoConProblemaInfo> productosConProblemas { get; set; } = new List<ProductoConProblemaInfo>();
+        public string message { get; set; }
+    }
+
+    public class ProductoConProblemaInfo
+    {
+        public int productoId { get; set; }
+        public string nombreProducto { get; set; }
+        public string descripcion { get; set; }
+        public decimal precio { get; set; }
+        public int cantidadRequerida { get; set; }
+        public int stockDisponible { get; set; }
+        public string problema { get; set; }
+        public int diferencia { get; set; } // Calculada: cantidadRequerida - stockDisponible
     }
 
     public class FacturaDTO
