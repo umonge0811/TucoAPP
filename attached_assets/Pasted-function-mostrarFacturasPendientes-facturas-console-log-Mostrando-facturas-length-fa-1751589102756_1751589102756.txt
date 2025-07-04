@@ -1,0 +1,83 @@
+function mostrarFacturasPendientes(facturas) {
+    console.log('📋 Mostrando', facturas.length, 'facturas pendientes');
+    
+    let html = '';
+    facturas.forEach(factura => {
+        const fecha = new Date(factura.fechaFactura).toLocaleDateString('es-CR');
+        const hora = factura.fechaCreacion ? new Date(factura.fechaCreacion).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '';
+        const total = factura.total || 0;
+        const cantidadItems = factura.cantidadItems || factura.detallesFactura?.length || 0;
+        
+        // Escapar datos para JavaScript con TODA la información del cliente
+        const facturaEscapada = JSON.stringify({
+            facturaId: factura.facturaId,
+            numeroFactura: factura.numeroFactura,
+            clienteId: factura.clienteId || factura.ClienteId,
+            nombreCliente: factura.nombreCliente || factura.NombreCliente,
+            emailCliente: factura.emailCliente || factura.EmailCliente,
+            identificacionCliente: factura.identificacionCliente || factura.IdentificacionCliente,
+            telefonoCliente: factura.telefonoCliente || factura.TelefonoCliente,
+            direccionCliente: factura.direccionCliente || factura.DireccionCliente,
+            total: factura.total,
+            metodoPago: factura.metodoPago,
+            detallesFactura: factura.detallesFactura
+        }).replace(/"/g, '&quot;');
+        
+        html += `
+            <tr class="factura-pendiente-row" style="cursor: pointer;" 
+                data-factura="${facturaEscapada}"
+                onclick="seleccionarFacturaPendiente(this)"
+                title="Click para seleccionar esta factura">
+                <td>
+                    <strong class="text-primary">${factura.numeroFactura || 'N/A'}</strong>
+                    <br><small class="text-muted">ID: ${factura.facturaId}</small>
+                </td>
+                <td>
+                    <strong>${factura.nombreCliente || 'Cliente General'}</strong>
+                    ${factura.emailCliente ? `<br><small class="text-muted">${factura.emailCliente}</small>` : ''}
+                    ${factura.identificacionCliente ? `<br><small class="text-muted">ID: ${factura.identificacionCliente}</small>` : ''}
+                </td>
+                <td>
+                    <strong>${fecha}</strong>
+                    ${hora ? `<br><small class="text-muted">${hora}</small>` : ''}
+                    <br><small class="badge bg-info">${factura.usuarioCreadorNombre || 'Sistema'}</small>
+                </td>
+                <td>
+                    <strong class="text-success fs-6">₡${formatearMoneda(total)}</strong>
+                    <br><small class="text-muted">${factura.metodoPago || 'Efectivo'}</small>
+                    <br><small class="text-info">${cantidadItems} item(s)</small>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-warning text-dark">Pendiente</span>
+                    <br><small class="text-muted">${factura.tipoDocumento || 'Factura'}</small>
+                </td>
+                <td>
+                    <div class="btn-group-vertical btn-group-sm">
+                        <button type="button" 
+                                class="btn btn-success btn-sm mb-1" 
+                                onclick="event.stopPropagation(); completarFacturaPendienteDirecto(${factura.facturaId}, '${factura.numeroFactura}', ${total})"
+                                title="Marcar como pagada directamente">
+                            <i class="bi bi-check-circle me-1"></i>Completar
+                        </button>
+                        <button type="button" 
+                                class="btn btn-outline-primary btn-sm mb-1" 
+                                onclick="event.stopPropagation(); procesarFacturaPendiente('${facturaEscapada}')"
+                                title="Procesar con modal de finalización">
+                            <i class="bi bi-credit-card me-1"></i>Procesar
+                        </button>
+                        <button type="button" 
+                                class="btn btn-outline-info btn-sm" 
+                                onclick="event.stopPropagation(); verDetalleFacturaPendiente(${factura.facturaId})"
+                                title="Ver detalles">
+                            <i class="bi bi-eye me-1"></i>Detalle
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    $('#facturasPendientesTableBody').html(html);
+    $('#facturasPendientesLoading').hide();
+    $('#facturasPendientesContent').show();
+}
