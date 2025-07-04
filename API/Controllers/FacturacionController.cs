@@ -974,7 +974,6 @@ namespace API.Controllers
                             cantidadRequerida = detalle.Cantidad,
                             stockDisponible = stockDisponible,
                             problema = "Stock insuficiente",
-                            imagenesUrls = producto.ImagenesProductos?.Select(img => img.Urlimagen).ToList() ?? new List<string>()
                         });
                     }
                 }
