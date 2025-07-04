@@ -4055,6 +4055,7 @@ async function verificarStockFacturaPendiente(facturaId) {
         
         // ✅ PROCESAR LA RESPUESTA REAL DEL API
         console.log('📦 Propiedades disponibles en resultado:', Object.keys(resultado || {}));
+        console.log('📦 Estructura completa del resultado:', JSON.stringify(resultado, null, 2));
         
         if (resultado) {
             // CASO 1: Respuesta exitosa estándar con 'success'
@@ -4069,6 +4070,31 @@ async function verificarStockFacturaPendiente(facturaId) {
                 console.log('📦 Tiene problemas:', tieneProblemas);
                 console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
                 console.log('📦 Productos con problemas detallados:', productosConProblemas);
+                
+                // Validar que productosConProblemas es un array válido
+                if (tieneProblemas && !Array.isArray(productosConProblemas)) {
+                    console.error('❌ productosConProblemas no es un array válido:', productosConProblemas);
+                    console.log('❌ Tipo de productosConProblemas:', typeof productosConProblemas);
+                    
+                    // Intentar convertir o extraer datos si es necesario
+                    let productosArray = [];
+                    if (productosConProblemas && typeof productosConProblemas === 'object') {
+                        // Si es un objeto, buscar propiedades que podrían contener el array
+                        for (const [key, value] of Object.entries(productosConProblemas)) {
+                            if (Array.isArray(value)) {
+                                console.log(`📦 Encontrado array en propiedad '${key}':`, value);
+                                productosArray = value;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    return {
+                        success: true,
+                        tieneProblemas: tieneProblemas,
+                        productosConProblemas: productosArray
+                    };
+                }
                 
                 return {
                     success: true,
@@ -4141,13 +4167,31 @@ async function verificarStockFacturaPendiente(facturaId) {
 async function mostrarModalProblemasStock(productosConProblemas, factura) {
     console.log('⚠️ === GENERANDO MODAL DE PROBLEMAS DE STOCK ===');
     console.log('⚠️ Productos con problemas recibidos:', productosConProblemas);
+    console.log('⚠️ Información de factura recibida:', factura);
+    
+    // Validar que tenemos datos válidos
+    if (!Array.isArray(productosConProblemas) || productosConProblemas.length === 0) {
+        console.error('❌ No se recibieron productos con problemas válidos');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de datos',
+            text: 'No se pudieron cargar los productos con problemas de stock',
+            confirmButtonColor: '#dc3545'
+        });
+        return;
+    }
     
     // Procesar información de productos (ya viene completa del API)
     const productosConInfoCompleta = await obtenerInformacionCompletaProductos(productosConProblemas);
     
+    // Información de la factura para el encabezado
+    const numeroFactura = factura?.numeroFactura || 'N/A';
+    const nombreCliente = factura?.nombreCliente || 'Cliente General';
+    
     let htmlProblemas = '<div class="alert alert-warning mb-3">';
-    htmlProblemas += '<h6><i class="bi bi-exclamation-triangle me-2"></i>⚠️ PRODUCTOS SIN STOCK SUFICIENTE</h6>';
-    htmlProblemas += '<p>Los siguientes productos no tienen stock disponible:</p>';
+    htmlProblemas += '<h6><i class="bi bi-exclamation-triangle me-2"></i>⚠️ PROBLEMAS DE STOCK EN FACTURA</h6>';
+    htmlProblemas += `<p><strong>Factura:</strong> ${numeroFactura} | <strong>Cliente:</strong> ${nombreCliente}</p>`;
+    htmlProblemas += '<p>Los siguientes productos no tienen stock suficiente para completar esta factura:</p>';
     htmlProblemas += '<div class="table-responsive">';
     htmlProblemas += '<table class="table table-sm table-striped">';
     htmlProblemas += '<thead class="table-warning">';
@@ -4293,19 +4337,35 @@ async function obtenerInformacionCompletaProductos(productosConProblemas) {
         console.log(`📦 Procesando producto ${index + 1}:`, producto);
         console.log(`📦 Propiedades del producto ${index + 1}:`, Object.keys(producto || {}));
         
-        return {
-            productoId: producto.productoId || producto.ProductoId || 0,
-            nombreProducto: producto.nombreProducto || producto.NombreProducto || 'Producto sin nombre',
-            descripcion: producto.descripcion || producto.Descripcion || 'Sin descripción disponible',
-            precio: producto.precio || producto.Precio || 0,
-            cantidadRequerida: producto.cantidadRequerida || producto.CantidadRequerida || 0,
-            stockDisponible: producto.stockDisponible || producto.StockDisponible || 0,
+        // Mapeo exhaustivo de propiedades con múltiples variaciones
+        const productoFormateado = {
+            productoId: producto.productoId || producto.ProductoId || producto.id || producto.Id || 0,
+            nombreProducto: producto.nombreProducto || producto.NombreProducto || producto.nombre || producto.Nombre || 'Producto sin nombre',
+            descripcion: producto.descripcion || producto.Descripcion || producto.desc || 'Sin descripción disponible',
+            precio: producto.precio || producto.Precio || producto.precioUnitario || producto.PrecioUnitario || 0,
+            cantidadRequerida: producto.cantidadRequerida || producto.CantidadRequerida || producto.cantidad || producto.Cantidad || 0,
+            stockDisponible: producto.stockDisponible || producto.StockDisponible || producto.cantidadEnInventario || producto.CantidadEnInventario || 0,
             problema: producto.problema || producto.Problema || 'Stock insuficiente',
-            imagenesUrls: producto.imagenesUrls || producto.ImagenesUrls || []
+            imagenesUrls: producto.imagenesUrls || producto.ImagenesUrls || producto.imagenes || []
         };
+        
+        console.log(`📦 Producto ${index + 1} formateado:`, productoFormateado);
+        
+        // Validación adicional de datos críticos
+        if (!productoFormateado.productoId || productoFormateado.productoId === 0) {
+            console.warn(`⚠️ Producto ${index + 1} sin ID válido:`, producto);
+        }
+        
+        if (!productoFormateado.nombreProducto || productoFormateado.nombreProducto === 'Producto sin nombre') {
+            console.warn(`⚠️ Producto ${index + 1} sin nombre válido:`, producto);
+        }
+        
+        return productoFormateado;
     });
     
     console.log('✅ Productos formateados para el modal:', productosFormateados);
+    console.log('✅ Total de productos procesados:', productosFormateados.length);
+    
     return productosFormateados;
 }
 

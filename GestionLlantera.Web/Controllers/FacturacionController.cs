@@ -17,6 +17,7 @@ using ProductoAjusteStock = GestionLlantera.Web.Services.Interfaces.ProductoAjus
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -852,12 +853,12 @@ namespace GestionLlantera.Web.Controllers
                 if (resultado.success && resultado.data != null)
                 {
                     _logger.LogInformation("✅ Verificación de stock exitosa para factura {FacturaId}", request.FacturaId);
-                    
+
                     // ✅ MAPEAR CORRECTAMENTE LAS PROPIEDADES DE LA RESPUESTA DEL API
                     var hayProblemasStock = GetProperty<bool>(resultado.data, "hayProblemasStock", false);
                     var tieneProblemas = GetProperty<bool>(resultado.data, "tieneProblemas", hayProblemasStock);
                     var productosConProblemas = GetProperty<List<object>>(resultado.data, "productosConProblemas", new List<object>());
-                    
+
                     var respuestaFinal = new {
                         success = true,
                         hayProblemasStock = hayProblemasStock,
@@ -865,7 +866,7 @@ namespace GestionLlantera.Web.Controllers
                         productosConProblemas = productosConProblemas,
                         message = GetProperty<string>(resultado.data, "message", "Verificación completada")
                     };
-                    
+
                     _logger.LogInformation("📤 Propiedades mapeadas: hayProblemasStock={HayProblemas}, tieneProblemas={TieneProblemas}, productos={Count}", 
                         hayProblemasStock, tieneProblemas, productosConProblemas.Count);
 
@@ -905,7 +906,7 @@ namespace GestionLlantera.Web.Controllers
 
                 var json = System.Text.Json.JsonSerializer.Serialize(data);
                 var jsonElement = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
-                
+
                 if (jsonElement.TryGetProperty(propertyName, out var property))
                 {
                     return System.Text.Json.JsonSerializer.Deserialize<T>(property.GetRawText());
