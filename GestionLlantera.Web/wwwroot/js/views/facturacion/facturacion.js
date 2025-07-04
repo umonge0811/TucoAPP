@@ -4053,26 +4053,31 @@ async function verificarStockFacturaPendiente(facturaId) {
         console.log('📦 Tipo de resultado:', typeof resultado);
         console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
         
-        if (resultado) {
-            // ✅ PROCESAMIENTO UNIFICADO DE RESPUESTA
-            let tieneProblemas = false;
-            let productosConProblemas = [];
+        if (resultado && resultado.success) {
+            // ✅ PROCESAMIENTO DIRECTO DE LA RESPUESTA ESTRUCTURADA
+            let tieneProblemas = resultado.hayProblemasStock || resultado.tieneProblemas || false;
+            let productosConProblemas = resultado.productosConProblemas || [];
             
-            // Detectar si hay problemas usando múltiples propiedades posibles
-            if (resultado.hayProblemasStock === true || resultado.hayProblemasStock === 'true') {
-                tieneProblemas = true;
-            } else if (resultado.tieneProblemas === true || resultado.tieneProblemas === 'true') {
-                tieneProblemas = true;
+            console.log('📦 Tiene problemas:', tieneProblemas);
+            console.log('📦 Productos con problemas:', productosConProblemas);
+            
+            // Validar que productosConProblemas sea un array
+            if (!Array.isArray(productosConProblemas)) {
+                console.warn('⚠️ productosConProblemas no es un array, convirtiendo...');
+                productosConProblemas = [];
             }
             
-            // Obtener array de productos con problemas
-            if (resultado.productosConProblemas && Array.isArray(resultado.productosConProblemas)) {
-                productosConProblemas = resultado.productosConProblemas;
-            } else if (resultado.productosConProblemas && typeof resultado.productosConProblemas === 'object') {
-                // Si no es array, intentar extraer datos del objeto
-                for (const [key, value] of Object.entries(resultado.productosConProblemas)) {
-                    if (Array.isArray(value)) {
-                        console.log(`📦 Encontrado array en propiedad '${key}':`, value);
+            console.log('📦 Productos con problemas procesados:', productosConProblemas.length);
+            
+            return {
+                success: true,
+                tieneProblemas: tieneProblemas,
+                hayProblemasStock: tieneProblemas,
+                productosConProblemas: productosConProblemas,
+                message: resultado.message || (tieneProblemas ? 
+                    `Se encontraron ${productosConProblemas.length} productos con problemas` : 
+                    'Stock verificado correctamente')
+            };`📦 Encontrado array en propiedad '${key}':`, value);
                         productosConProblemas = value;
                         break;
                     }
