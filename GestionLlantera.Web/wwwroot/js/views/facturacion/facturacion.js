@@ -4279,20 +4279,29 @@ async function mostrarModalProblemasStock(productosConProblemas, factura) {
 async function obtenerInformacionCompletaProductos(productosConProblemas) {
     console.log('📦 === PROCESANDO INFORMACIÓN DE PRODUCTOS ===');
     console.log('📦 Productos recibidos del API:', productosConProblemas);
+    console.log('📦 Tipo de datos recibidos:', typeof productosConProblemas);
+    console.log('📦 Es array:', Array.isArray(productosConProblemas));
+    
+    // ✅ VERIFICAR QUE TENEMOS UN ARRAY VÁLIDO
+    if (!Array.isArray(productosConProblemas)) {
+        console.error('❌ productosConProblemas no es un array:', productosConProblemas);
+        return [];
+    }
     
     // El API ya devuelve la información completa, solo necesitamos validar y formatear
-    const productosFormateados = productosConProblemas.map(producto => {
-        console.log('📦 Procesando producto:', producto.nombreProducto);
+    const productosFormateados = productosConProblemas.map((producto, index) => {
+        console.log(`📦 Procesando producto ${index + 1}:`, producto);
+        console.log(`📦 Propiedades del producto ${index + 1}:`, Object.keys(producto || {}));
         
         return {
-            productoId: producto.productoId,
-            nombreProducto: producto.nombreProducto || 'Producto sin nombre',
-            descripcion: producto.descripcion || 'Sin descripción disponible',
-            precio: producto.precio || 0,
-            cantidadRequerida: producto.cantidadRequerida,
-            stockDisponible: producto.stockDisponible,
-            problema: producto.problema,
-            imagenesUrls: producto.imagenesUrls || []
+            productoId: producto.productoId || producto.ProductoId || 0,
+            nombreProducto: producto.nombreProducto || producto.NombreProducto || 'Producto sin nombre',
+            descripcion: producto.descripcion || producto.Descripcion || 'Sin descripción disponible',
+            precio: producto.precio || producto.Precio || 0,
+            cantidadRequerida: producto.cantidadRequerida || producto.CantidadRequerida || 0,
+            stockDisponible: producto.stockDisponible || producto.StockDisponible || 0,
+            problema: producto.problema || producto.Problema || 'Stock insuficiente',
+            imagenesUrls: producto.imagenesUrls || producto.ImagenesUrls || []
         };
     });
     
@@ -4754,6 +4763,8 @@ async function procesarFacturaPendiente(facturaEscapada) {
             console.log('⚠️ Se encontraron problemas de stock');
             console.log('⚠️ Cantidad de productos con problemas:', verificacionStock.productosConProblemas.length);
             console.log('⚠️ Detalles de productos con problemas:', verificacionStock.productosConProblemas);
+            
+            // ✅ PASAR DIRECTAMENTE EL ARRAY DE PRODUCTOS CON PROBLEMAS
             await mostrarModalProblemasStock(verificacionStock.productosConProblemas, factura);
         } else {
             console.log('✅ No hay problemas de stock, continuando con modal de finalización');
