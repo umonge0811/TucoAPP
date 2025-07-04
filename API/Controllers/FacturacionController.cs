@@ -374,8 +374,10 @@ namespace API.Controllers
 
                 return Ok(new
                 {
+                    success = true,
                     message = mensajeRespuesta,
-                    numeroFactura = factura.NumeroFactura
+                    numeroFactura = factura.NumeroFactura,
+                    facturaId = factura.FacturaId
                 });
             }
             catch (Exception ex)
