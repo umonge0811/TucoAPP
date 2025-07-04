@@ -4053,111 +4053,69 @@ async function verificarStockFacturaPendiente(facturaId) {
         console.log('📦 Tipo de resultado:', typeof resultado);
         console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
         
-        // ✅ PROCESAR LA RESPUESTA REAL DEL API
-        console.log('📦 Propiedades disponibles en resultado:', Object.keys(resultado || {}));
-        console.log('📦 Estructura completa del resultado:', JSON.stringify(resultado, null, 2));
-        
         if (resultado) {
-            // CASO 1: Respuesta exitosa estándar con 'success'
-            const esExitosa = resultado.success === true || resultado.success === 'true';
+            // ✅ PROCESAMIENTO UNIFICADO DE RESPUESTA
+            let tieneProblemas = false;
+            let productosConProblemas = [];
             
-            if (esExitosa) {
-                console.log('📦 Respuesta exitosa del API con success=true');
-                
-                const tieneProblemas = resultado.tieneProblemas === true || resultado.tieneProblemas === 'true';
-                const productosConProblemas = resultado.productosConProblemas || [];
-                
-                console.log('📦 Tiene problemas:', tieneProblemas);
-                console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
-                console.log('📦 Productos con problemas detallados:', productosConProblemas);
-                
-                // Validar que productosConProblemas es un array válido
-                if (tieneProblemas && !Array.isArray(productosConProblemas)) {
-                    console.error('❌ productosConProblemas no es un array válido:', productosConProblemas);
-                    console.log('❌ Tipo de productosConProblemas:', typeof productosConProblemas);
-                    
-                    // Intentar convertir o extraer datos si es necesario
-                    let productosArray = [];
-                    if (productosConProblemas && typeof productosConProblemas === 'object') {
-                        // Si es un objeto, buscar propiedades que podrían contener el array
-                        for (const [key, value] of Object.entries(productosConProblemas)) {
-                            if (Array.isArray(value)) {
-                                console.log(`📦 Encontrado array en propiedad '${key}':`, value);
-                                productosArray = value;
-                                break;
-                            }
-                        }
+            // Detectar si hay problemas usando múltiples propiedades posibles
+            if (resultado.hayProblemasStock === true || resultado.hayProblemasStock === 'true') {
+                tieneProblemas = true;
+            } else if (resultado.tieneProblemas === true || resultado.tieneProblemas === 'true') {
+                tieneProblemas = true;
+            }
+            
+            // Obtener array de productos con problemas
+            if (resultado.productosConProblemas && Array.isArray(resultado.productosConProblemas)) {
+                productosConProblemas = resultado.productosConProblemas;
+            } else if (resultado.productosConProblemas && typeof resultado.productosConProblemas === 'object') {
+                // Si no es array, intentar extraer datos del objeto
+                for (const [key, value] of Object.entries(resultado.productosConProblemas)) {
+                    if (Array.isArray(value)) {
+                        console.log(`📦 Encontrado array en propiedad '${key}':`, value);
+                        productosConProblemas = value;
+                        break;
                     }
-                    
-                    return {
-                        success: true,
-                        tieneProblemas: tieneProblemas,
-                        productosConProblemas: productosArray
-                    };
                 }
-                
-                return {
-                    success: true,
-                    tieneProblemas: tieneProblemas,
-                    productosConProblemas: productosConProblemas
-                };
-            } 
-            // CASO 2: Respuesta de error explícita
-            else if (resultado.success === false) {
-                console.log('❌ Respuesta de error del servidor:', resultado.message);
-                return { 
-                    success: false, 
-                    tieneProblemas: false, 
-                    productosConProblemas: [],
-                    message: resultado.message 
-                };
             }
-            // CASO 3: Respuesta del controlador Web con estructura directa (hayProblemasStock)
-            else if (resultado.hasOwnProperty('hayProblemasStock') || resultado.hasOwnProperty('tieneProblemas')) {
-                console.log('📦 Respuesta del controlador Web con hayProblemasStock o tieneProblemas');
-                
-                // Usar hayProblemasStock como prioridad, luego tieneProblemas como fallback
-                const tieneProblemas = resultado.hayProblemasStock === true || 
-                                     resultado.hayProblemasStock === 'true' ||
-                                     resultado.tieneProblemas === true || 
-                                     resultado.tieneProblemas === 'true';
-                const productosConProblemas = resultado.productosConProblemas || [];
-                
-                console.log('📦 Tiene problemas (hayProblemasStock/tieneProblemas):', tieneProblemas);
-                console.log('📦 resultado.hayProblemasStock:', resultado.hayProblemasStock);
-                console.log('📦 resultado.tieneProblemas:', resultado.tieneProblemas);
-                console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
-                console.log('📦 Productos con problemas detallados:', productosConProblemas);
-                
-                return {
-                    success: true,
-                    tieneProblemas: tieneProblemas,
-                    productosConProblemas: productosConProblemas
-                };
-            }
-            // CASO 4: Respuesta con tieneProblemas (estructura alternativa)
-            else if (resultado.hasOwnProperty('tieneProblemas') && resultado.hasOwnProperty('productosConProblemas')) {
-                console.log('📦 Respuesta con tieneProblemas');
-                
-                const tieneProblemas = resultado.tieneProblemas === true || resultado.tieneProblemas === 'true';
-                const productosConProblemas = resultado.productosConProblemas || [];
-                
-                return {
-                    success: true,
-                    tieneProblemas: tieneProblemas,
-                    productosConProblemas: productosConProblemas
-                };
-            }
+            
+            console.log('📦 === RESULTADO PROCESADO ===');
+            console.log('📦 Tiene problemas:', tieneProblemas);
+            console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
+            console.log('📦 Productos procesados:', productosConProblemas);
+            
+            // ✅ VALIDAR ÉXITO DE LA OPERACIÓN
+            const operacionExitosa = resultado.success !== false && 
+                                   resultado.success !== 'false' && 
+                                   !resultado.error;
+            
+            return {
+                success: operacionExitosa,
+                tieneProblemas: tieneProblemas,
+                productosConProblemas: productosConProblemas,
+                message: resultado.message || (tieneProblemas ? 
+                    `Se encontraron ${productosConProblemas.length} productos con problemas de stock` : 
+                    'Verificación completada')
+            };
         }
         
-        // CASO: Respuesta inesperada
-        console.log('⚠️ Estructura de respuesta inesperada:', resultado);
-        console.log('⚠️ Usando valores por defecto');
-        return { success: false, tieneProblemas: false, productosConProblemas: [] };
+        // CASO: Respuesta vacía o inválida
+        console.log('⚠️ Respuesta vacía o inválida');
+        return { 
+            success: false, 
+            tieneProblemas: false, 
+            productosConProblemas: [],
+            message: 'Respuesta inválida del servidor'
+        };
         
     } catch (error) {
         console.error('❌ Error verificando stock:', error);
-        return { success: false, tieneProblemas: false, productosConProblemas: [] };
+        return { 
+            success: false, 
+            tieneProblemas: false, 
+            productosConProblemas: [],
+            message: error.message || 'Error de conexión'
+        };
     }
 }
 
@@ -4318,7 +4276,7 @@ async function mostrarModalProblemasStock(productosConProblemas, factura) {
 
 /**
  * Obtener información completa de productos para el modal de problemas
- * Ahora simplificado porque el API ya devuelve la información completa
+ * Mapea las propiedades de manera consistente según la estructura del API
  */
 async function obtenerInformacionCompletaProductos(productosConProblemas) {
     console.log('📦 === PROCESANDO INFORMACIÓN DE PRODUCTOS ===');
@@ -4332,39 +4290,93 @@ async function obtenerInformacionCompletaProductos(productosConProblemas) {
         return [];
     }
     
-    // El API ya devuelve la información completa, solo necesitamos validar y formatear
+    // ✅ PROCESAR CADA PRODUCTO CON MAPEO CONSISTENTE
     const productosFormateados = productosConProblemas.map((producto, index) => {
         console.log(`📦 Procesando producto ${index + 1}:`, producto);
-        console.log(`📦 Propiedades del producto ${index + 1}:`, Object.keys(producto || {}));
+        console.log(`📦 Propiedades disponibles:`, Object.keys(producto || {}));
         
-        // Mapeo exhaustivo de propiedades con múltiples variaciones
+        // ✅ MAPEO CONSISTENTE BASADO EN LA ESTRUCTURA DEL API
         const productoFormateado = {
+            // IDs - Priorizar la estructura del API
             productoId: producto.productoId || producto.ProductoId || producto.id || producto.Id || 0,
-            nombreProducto: producto.nombreProducto || producto.NombreProducto || producto.nombre || producto.Nombre || 'Producto sin nombre',
-            descripcion: producto.descripcion || producto.Descripcion || producto.desc || 'Sin descripción disponible',
-            precio: producto.precio || producto.Precio || producto.precioUnitario || producto.PrecioUnitario || 0,
-            cantidadRequerida: producto.cantidadRequerida || producto.CantidadRequerida || producto.cantidad || producto.Cantidad || 0,
-            stockDisponible: producto.stockDisponible || producto.StockDisponible || producto.cantidadEnInventario || producto.CantidadEnInventario || 0,
-            problema: producto.problema || producto.Problema || 'Stock insuficiente',
-            imagenesUrls: producto.imagenesUrls || producto.ImagenesUrls || producto.imagenes || []
+            
+            // Nombres - Mapear todas las variaciones posibles
+            nombreProducto: producto.nombreProducto || 
+                           producto.NombreProducto || 
+                           producto.nombre || 
+                           producto.Nombre || 
+                           'Producto sin nombre',
+            
+            // Descripción - Con fallback
+            descripcion: producto.descripcion || 
+                        producto.Descripcion || 
+                        producto.desc || 
+                        '',
+            
+            // Precio - Múltiples variaciones
+            precio: parseFloat(producto.precio || 
+                              producto.Precio || 
+                              producto.precioUnitario || 
+                              producto.PrecioUnitario || 
+                              0),
+            
+            // Cantidades - Crítico para el cálculo de problemas
+            cantidadRequerida: parseInt(producto.cantidadRequerida || 
+                                      producto.CantidadRequerida || 
+                                      producto.cantidad || 
+                                      producto.Cantidad || 
+                                      0),
+            
+            stockDisponible: parseInt(producto.stockDisponible || 
+                                    producto.StockDisponible || 
+                                    producto.cantidadEnInventario || 
+                                    producto.CantidadEnInventario || 
+                                    producto.stock || 
+                                    0),
+            
+            // Información adicional
+            problema: producto.problema || 
+                     producto.Problema || 
+                     'Stock insuficiente',
+            
+            imagenesUrls: producto.imagenesUrls || 
+                         producto.ImagenesUrls || 
+                         producto.imagenes || 
+                         []
         };
         
-        console.log(`📦 Producto ${index + 1} formateado:`, productoFormateado);
-        
-        // Validación adicional de datos críticos
-        if (!productoFormateado.productoId || productoFormateado.productoId === 0) {
-            console.warn(`⚠️ Producto ${index + 1} sin ID válido:`, producto);
+        // ✅ VALIDACIONES CRÍTICAS
+        if (productoFormateado.productoId === 0) {
+            console.warn(`⚠️ Producto ${index + 1} sin ID válido`);
         }
         
-        if (!productoFormateado.nombreProducto || productoFormateado.nombreProducto === 'Producto sin nombre') {
-            console.warn(`⚠️ Producto ${index + 1} sin nombre válido:`, producto);
+        if (productoFormateado.cantidadRequerida === 0) {
+            console.warn(`⚠️ Producto ${index + 1} sin cantidad requerida`);
         }
+        
+        if (productoFormateado.precio === 0) {
+            console.warn(`⚠️ Producto ${index + 1} sin precio válido`);
+        }
+        
+        // ✅ CALCULAR FALTANTE PARA VERIFICACIÓN
+        const faltante = productoFormateado.cantidadRequerida - productoFormateado.stockDisponible;
+        
+        console.log(`📦 Producto ${index + 1} procesado:`, {
+            id: productoFormateado.productoId,
+            nombre: productoFormateado.nombreProducto,
+            requerido: productoFormateado.cantidadRequerida,
+            disponible: productoFormateado.stockDisponible,
+            faltante: faltante,
+            precio: productoFormateado.precio
+        });
         
         return productoFormateado;
     });
     
-    console.log('✅ Productos formateados para el modal:', productosFormateados);
-    console.log('✅ Total de productos procesados:', productosFormateados.length);
+    console.log('✅ === RESUMEN DE PROCESAMIENTO ===');
+    console.log('✅ Total productos procesados:', productosFormateados.length);
+    console.log('✅ Productos válidos:', productosFormateados.filter(p => p.productoId > 0).length);
+    console.log('✅ Productos con faltante:', productosFormateados.filter(p => p.cantidadRequerida > p.stockDisponible).length);
     
     return productosFormateados;
 }
