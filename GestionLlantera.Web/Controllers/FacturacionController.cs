@@ -854,68 +854,15 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogInformation("✅ Verificación de stock exitosa para factura {FacturaId}", request.FacturaId);
 
-                    // ✅ DESERIALIZAR CORRECTAMENTE LA RESPUESTA DEL API
-                    var dataJson = System.Text.Json.JsonSerializer.Serialize(resultado.data);
-                    var dataObject = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(dataJson);
-
-                    bool hayProblemasStock = false;
-                    bool tieneProblemas = false;
-                    var productosConProblemas = new List<object>();
-
-                    // Extraer hayProblemasStock
-                    if (dataObject.TryGetProperty("hayProblemasStock", out var hayProblemasElement))
-                    {
-                        hayProblemasStock = hayProblemasElement.GetBoolean();
-                    }
-
-                    // Extraer tieneProblemas
-                    if (dataObject.TryGetProperty("tieneProblemas", out var tieneProblemasElement))
-                    {
-                        tieneProblemas = tieneProblemasElement.GetBoolean();
-                    }
-                    else
-                    {
-                        tieneProblemas = hayProblemasStock; // fallback
-                    }
-
-                    // Extraer productosConProblemas
-                    if (dataObject.TryGetProperty("productosConProblemas", out var productosElement) && 
-                        productosElement.ValueKind == System.Text.Json.JsonValueKind.Array)
-                    {
-                        foreach (var producto in productosElement.EnumerateArray())
-                        {
-                            var productoObj = new {
-                                productoId = producto.TryGetProperty("productoId", out var idProp) ? idProp.GetInt32() : 0,
-                                nombreProducto = producto.TryGetProperty("nombreProducto", out var nombreProp) ? nombreProp.GetString() : "",
-                                descripcion = producto.TryGetProperty("descripcion", out var descProp) ? descProp.GetString() : "",
-                                precio = producto.TryGetProperty("precio", out var precioProp) ? precioProp.GetDecimal() : 0m,
-                                cantidadRequerida = producto.TryGetProperty("cantidadRequerida", out var cantReqProp) ? cantReqProp.GetInt32() : 0,
-                                stockDisponible = producto.TryGetProperty("stockDisponible", out var stockProp) ? stockProp.GetInt32() : 0,
-                                problema = producto.TryGetProperty("problema", out var problemaProp) ? problemaProp.GetString() : "",
-                                imagenesUrls = producto.TryGetProperty("imagenesUrls", out var imgProp) && imgProp.ValueKind == System.Text.Json.JsonValueKind.Array
-                                    ? imgProp.EnumerateArray().Select(img => img.GetString()).ToList()
-                                    : new List<string>()
-                            };
-                            productosConProblemas.Add(productoObj);
-                        }
-                    }
-
-                    _logger.LogInformation("📦 Productos con problemas extraídos: {Count}", productosConProblemas.Count);
+                    // ✅ MAPEAR CORRECTAMENTE LAS PROPIEDADES DE LA RESPUESTA DEL API
+                    var hayProblemasStock = GetProperty<bool>(resultado.data, "hayProblemasStock", false);
+                    var tieneProblemas = GetProperty<bool>(resultado.data, "tieneProblemas", hayProblemasStock);
+                    var productosConProblemas = GetProperty<List<object>>(resultado.data, "productosConProblemas", new List<object>());
 
                     var respuestaFinal = new {
                         success = true,
                         hayProblemasStock = hayProblemasStock,
                         tieneProblemas = tieneProblemas,
-                        productosConProblemas = productosConProblemas,
-                        message = tieneProblemas ? 
-                            $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" : 
-                            "Todos los productos tienen stock suficiente"
-                    };
-
-                    _logger.LogInformation("📦 Respuesta final construida: {Respuesta}", 
-                        System.Text.Json.JsonSerializer.Serialize(respuestaFinal));
-
-                    return Json(respuestaFinal); = tieneProblemas,
                         productosConProblemas = productosConProblemas,
                         message = GetProperty<string>(resultado.data, "message", "Verificación completada")
                     };
