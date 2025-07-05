@@ -4334,6 +4334,30 @@ function eliminarProductoProblema(productoId) {
     }
 }
 
+function procesarConProblemas() {
+    console.log('⚠️ Usuario decidió procesar con problemas de stock');
+    
+    // Cerrar modal de problemas
+    $('#problemasStockModal').modal('hide');
+    
+    // Continuar con el modal de finalización después de un breve delay
+    setTimeout(() => {
+        mostrarModalFinalizarVenta();
+    }, 500);
+}
+
+function continuarSinProblemas() {
+    console.log('✅ Usuario decidió continuar solo con productos válidos');
+    
+    // Aquí podrías filtrar los productos con problemas del carrito
+    // Por ahora, simplemente cerramos el modal y continuamos
+    $('#problemasStockModal').modal('hide');
+    
+    setTimeout(() => {
+        mostrarModalFinalizarVenta();
+    }, 500);
+}
+
 function imprimirComprobanteEnvio(numeroFactura) {
     const fecha = new Date().toLocaleDateString('es-CR', { 
         day: '2-digit', 
@@ -5066,6 +5090,9 @@ window.activarPagoSimple = activarPagoSimple;
 window.agregarNuevoPago = agregarNuevoPago;
 window.eliminarPago = eliminarPago;
 window.validarPagosMultiples = validarPagosMultiples;
+window.eliminarProductoProblema = eliminarProductoProblema;
+window.procesarConProblemas = procesarConProblemas;
+window.continuarSinProblemas = continuarSinProblemas;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `
