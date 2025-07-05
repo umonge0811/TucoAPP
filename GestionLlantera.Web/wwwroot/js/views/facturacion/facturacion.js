@@ -4349,13 +4349,67 @@ function procesarConProblemas() {
 function continuarSinProblemas() {
     console.log('✅ Usuario decidió continuar solo con productos válidos');
     
-    // Aquí podrías filtrar los productos con problemas del carrito
-    // Por ahora, simplemente cerramos el modal y continuamos
-    $('#problemasStockModal').modal('hide');
-    
-    setTimeout(() => {
-        mostrarModalFinalizarVenta();
-    }, 500);
+    try {
+        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM
+        const productosConProblemasIds = [];
+        $('.problema-stock-row').each(function() {
+            const productoId = $(this).data('producto-id');
+            if (productoId) {
+                productosConProblemasIds.push(parseInt(productoId));
+            }
+        });
+        
+        console.log('🔍 Productos con problemas identificados:', productosConProblemasIds);
+        
+        if (productosConProblemasIds.length > 0) {
+            // ✅ FILTRAR PRODUCTOS DEL CARRITO (remover los que tienen problemas)
+            const productosOriginales = [...productosEnVenta];
+            productosEnVenta = productosEnVenta.filter(producto => 
+                !productosConProblemasIds.includes(parseInt(producto.productoId))
+            );
+            
+            const productosEliminados = productosOriginales.length - productosEnVenta.length;
+            
+            console.log('🗑️ Productos eliminados del carrito:', productosEliminados);
+            console.log('✅ Productos restantes en carrito:', productosEnVenta.length);
+            
+            // ✅ ACTUALIZAR VISTA DEL CARRITO
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+            
+            // ✅ MOSTRAR NOTIFICACIÓN AL USUARIO
+            if (productosEliminados > 0) {
+                mostrarToast(
+                    'Productos filtrados', 
+                    `Se eliminaron ${productosEliminados} producto(s) con problemas de stock`, 
+                    'warning'
+                );
+            }
+        }
+        
+        // ✅ CERRAR MODAL DE PROBLEMAS
+        $('#problemasStockModal').modal('hide');
+        
+        // ✅ VALIDAR QUE AÚN HAYA PRODUCTOS EN EL CARRITO
+        if (productosEnVenta.length === 0) {
+            mostrarToast(
+                'Carrito vacío', 
+                'No quedan productos válidos para procesar la venta', 
+                'warning'
+            );
+            return;
+        }
+        
+        // ✅ CONTINUAR CON MODAL DE FINALIZACIÓN
+        setTimeout(() => {
+            mostrarModalFinalizarVenta();
+        }, 500);
+        
+    } catch (error) {
+        console.error('❌ Error filtrando productos:', error);
+        mostrarToast('Error', 'No se pudieron filtrar los productos con problemas', 'danger');
+    }
 }
 
 function imprimirComprobanteEnvio(numeroFactura) {
