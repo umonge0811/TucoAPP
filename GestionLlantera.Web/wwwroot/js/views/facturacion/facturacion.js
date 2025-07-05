@@ -4031,7 +4031,8 @@ function irAFacturasPendientes() {
  */
 async function verificarStockFacturaPendiente(facturaId) {
     try {
-        console.log('📦 Verificando stock para factura:', facturaId);
+        console.log('📦 === VERIFICANDO STOCK PARA FACTURA ===');
+        console.log('📦 Factura ID:', facturaId);
         
         const response = await fetch('/Facturacion/VerificarStockFactura', {
             method: 'POST',
@@ -4044,68 +4045,79 @@ async function verificarStockFacturaPendiente(facturaId) {
         });
 
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', response.status, errorText);
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
         const resultado = await response.json();
-        console.log('📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===');
-        console.log('📦 Resultado completo:', resultado);
-        console.log('📦 Tipo de resultado:', typeof resultado);
-        console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
+        console.log('📦 === RESPUESTA DEL SERVIDOR ===');
+        console.log('📦 Resultado completo:', JSON.stringify(resultado, null, 2));
+        console.log('📦 Tipo:', typeof resultado);
+        console.log('📦 Propiedades:', Object.keys(resultado || {}));
         
+        // ✅ PROCESAMIENTO SIMPLIFICADO Y ROBUSTO
+        let tieneProblemas = false;
+        let productosConProblemas = [];
+        let success = true;
+        let message = 'Verificación completada';
+
         if (resultado) {
-            // ✅ PROCESAMIENTO UNIFICADO DE RESPUESTA
-            let tieneProblemas = false;
-            let productosConProblemas = [];
-            
-            // Detectar si hay problemas usando múltiples propiedades posibles
-            if (resultado.hayProblemasStock === true || resultado.hayProblemasStock === 'true') {
-                tieneProblemas = true;
-            } else if (resultado.tieneProblemas === true || resultado.tieneProblemas === 'true') {
-                tieneProblemas = true;
+            // 1. Verificar si la operación fue exitosa
+            if (resultado.success === false || resultado.error) {
+                success = false;
+                message = resultado.message || resultado.error || 'Error en la verificación';
             }
-            
-            // Obtener array de productos con problemas
-            if (resultado.productosConProblemas && Array.isArray(resultado.productosConProblemas)) {
-                productosConProblemas = resultado.productosConProblemas;
-            } else if (resultado.productosConProblemas && typeof resultado.productosConProblemas === 'object') {
-                // Si no es array, intentar extraer datos del objeto
-                for (const [key, value] of Object.entries(resultado.productosConProblemas)) {
-                    if (Array.isArray(value)) {
-                        console.log(`📦 Encontrado array en propiedad '${key}':`, value);
-                        productosConProblemas = value;
-                        break;
+
+            // 2. Detectar problemas de stock
+            tieneProblemas = resultado.hayProblemasStock === true || 
+                           resultado.tieneProblemas === true ||
+                           (resultado.productosConProblemas && Array.isArray(resultado.productosConProblemas) && resultado.productosConProblemas.length > 0);
+
+            // 3. Extraer productos con problemas
+            if (resultado.productosConProblemas) {
+                if (Array.isArray(resultado.productosConProblemas)) {
+                    productosConProblemas = resultado.productosConProblemas;
+                } else if (typeof resultado.productosConProblemas === 'object') {
+                    // Si es un objeto, buscar arrays dentro
+                    for (const [key, value] of Object.entries(resultado.productosConProblemas)) {
+                        if (Array.isArray(value)) {
+                            productosConProblemas = value;
+                            console.log(`📦 Productos encontrados en '${key}':`, value.length);
+                            break;
+                        }
                     }
                 }
             }
-            
-            console.log('📦 === RESULTADO PROCESADO ===');
-            console.log('📦 Tiene problemas:', tieneProblemas);
-            console.log('📦 Cantidad de productos con problemas:', productosConProblemas.length);
-            console.log('📦 Productos procesados:', productosConProblemas);
-            
-            // ✅ VALIDAR ÉXITO DE LA OPERACIÓN
-            const operacionExitosa = resultado.success !== false && 
-                                   resultado.success !== 'false' && 
-                                   !resultado.error;
-            
-            return {
-                success: operacionExitosa,
-                tieneProblemas: tieneProblemas,
-                productosConProblemas: productosConProblemas,
-                message: resultado.message || (tieneProblemas ? 
-                    `Se encontraron ${productosConProblemas.length} productos con problemas de stock` : 
-                    'Verificación completada')
-            };
+
+            // 4. Normalizar productos con problemas
+            productosConProblemas = productosConProblemas.map(producto => ({
+                productoId: producto.productoId || producto.ProductoId || 0,
+                nombreProducto: producto.nombreProducto || producto.NombreProducto || 'Producto sin nombre',
+                descripcion: producto.descripcion || producto.Descripcion || '',
+                precio: producto.precio || producto.Precio || 0,
+                cantidadRequerida: producto.cantidadRequerida || producto.CantidadRequerida || 0,
+                stockDisponible: producto.stockDisponible || producto.StockDisponible || 0,
+                problema: producto.problema || 'Stock insuficiente'
+            }));
+
+            // 5. Actualizar mensaje
+            if (tieneProblemas) {
+                message = `Se encontraron ${productosConProblemas.length} productos con problemas de stock`;
+            }
         }
         
-        // CASO: Respuesta vacía o inválida
-        console.log('⚠️ Respuesta vacía o inválida');
-        return { 
-            success: false, 
-            tieneProblemas: false, 
-            productosConProblemas: [],
-            message: 'Respuesta inválida del servidor'
+        console.log('📦 === RESULTADO FINAL ===');
+        console.log('📦 Success:', success);
+        console.log('📦 Tiene problemas:', tieneProblemas);
+        console.log('📦 Productos con problemas:', productosConProblemas.length);
+        console.log('📦 Productos normalizados:', productosConProblemas);
+        
+        return {
+            success: success,
+            tieneProblemas: tieneProblemas,
+            productosConProblemas: productosConProblemas,
+            message: message
         };
         
     } catch (error) {
@@ -4120,100 +4132,186 @@ async function verificarStockFacturaPendiente(facturaId) {
 }
 
 /**
- * Mostrar modal con problemas de stock - SIMPLIFICADO
+ * Mostrar modal con problemas de stock
  */
-async function mostrarModalProblemasStock(productosConProblemas, factura) {
+function mostrarModalProblemasStock(productosConProblemas, factura) {
     console.log('⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===');
-    console.log('⚠️ Productos con problemas:', productosConProblemas);
+    console.log('⚠️ Productos recibidos:', productosConProblemas);
     console.log('⚠️ Factura:', factura);
     
-    // Validar datos básicos
+    // Validar entrada
     if (!Array.isArray(productosConProblemas) || productosConProblemas.length === 0) {
-        console.error('❌ No hay productos con problemas válidos');
+        console.error('❌ Array de productos inválido o vacío');
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No se encontraron productos con problemas de stock',
-            confirmButtonColor: '#dc3545'
+            icon: 'warning',
+            title: 'Sin problemas de stock',
+            text: 'No se encontraron productos con problemas de stock para mostrar',
+            confirmButtonColor: '#ffc107'
         });
         return;
     }
     
-    // Mostrar modal bootstrap
-    const modal = new bootstrap.Modal(document.getElementById('problemasStockModal'));
-    modal.show();
-    
-    // Mostrar loading
-    $('#problemasStockLoading').show();
-    $('#problemasStockContent').hide();
-    
     try {
-        // Procesar productos directamente
-        const productosFormateados = productosConProblemas.map(producto => ({
-            productoId: producto.productoId || producto.ProductoId || 0,
-            nombreProducto: producto.nombreProducto || producto.NombreProducto || 'Producto',
-            cantidadRequerida: producto.cantidadRequerida || producto.CantidadRequerida || 0,
-            stockDisponible: producto.stockDisponible || producto.StockDisponible || 0,
-            precio: producto.precio || producto.Precio || 0
-        }));
+        console.log('⚠️ Inicializando modal de problemas de stock...');
         
-        // Mostrar productos con problemas
-        mostrarProductosConProblemas(productosFormateados, factura);
+        // Verificar que el modal existe en el DOM
+        const modalElement = document.getElementById('problemasStockModal');
+        if (!modalElement) {
+            console.error('❌ Modal problemasStockModal no encontrado en el DOM');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error del sistema',
+                text: 'El modal de problemas de stock no está disponible',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        
+        // Estado inicial: mostrar loading
+        $('#problemasStockLoading').show();
+        $('#problemasStockContent').hide();
+        
+        // Procesar y mostrar productos después de un breve delay
+        setTimeout(() => {
+            mostrarProductosConProblemas(productosConProblemas, factura);
+        }, 300);
         
     } catch (error) {
-        console.error('❌ Error procesando problemas de stock:', error);
-        $('#problemasStockLoading').hide();
-        $('#problemasStockContent').html(`
-            <div class="alert alert-danger">
-                <i class="bi bi-exclamation-triangle me-2"></i>
-                Error al cargar los problemas de stock
-            </div>
-        `).show();
+        console.error('❌ Error mostrando modal de problemas:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo mostrar el modal de problemas de stock',
+            confirmButtonColor: '#dc3545'
+        });
     }
 }
 
 function mostrarProductosConProblemas(productos, factura) {
-    console.log('⚠️ Mostrando', productos.length, 'productos con problemas');
+    console.log('⚠️ === MOSTRANDO PRODUCTOS CON PROBLEMAS ===');
+    console.log('⚠️ Cantidad de productos:', productos?.length || 0);
+    console.log('⚠️ Productos detallados:', productos);
+    console.log('⚠️ Factura:', factura);
     
-    const numeroFactura = factura?.numeroFactura || 'N/A';
-    const nombreCliente = factura?.nombreCliente || 'Cliente General';
-    
-    let html = '';
-    productos.forEach(producto => {
-        const faltante = producto.cantidadRequerida - producto.stockDisponible;
+    try {
+        // Validar productos
+        if (!Array.isArray(productos) || productos.length === 0) {
+            console.error('❌ No hay productos válidos para mostrar');
+            $('#problemasStockLoading').hide();
+            $('#problemasStockContent').html(`
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle me-2"></i>
+                    No se encontraron productos con problemas de stock específicos.
+                </div>
+            `).show();
+            return;
+        }
         
-        html += `
-            <tr class="problema-stock-row">
-                <td>
-                    <strong>${producto.nombreProducto}</strong>
-                    <br><small class="text-muted">ID: ${producto.productoId}</small>
-                </td>
-                <td class="text-center">
-                    <span class="badge bg-primary">${producto.cantidadRequerida}</span>
-                </td>
-                <td class="text-center">
-                    <span class="badge ${producto.stockDisponible > 0 ? 'bg-warning' : 'bg-danger'}">${producto.stockDisponible}</span>
-                </td>
-                <td class="text-center">
-                    <span class="badge bg-danger">${faltante}</span>
-                </td>
-                <td class="text-center">
-                    <button type="button" 
-                            class="btn btn-sm btn-outline-danger" 
-                            onclick="eliminarProductoProblema(${producto.productoId})"
-                            title="Eliminar producto">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    $('#problemasStockTableBody').html(html);
-    $('#problemasStockFactura').text(numeroFactura);
-    $('#problemasStockCliente').text(nombreCliente);
-    $('#problemasStockLoading').hide();
-    $('#problemasStockContent').show();
+        // Extraer información de la factura
+        const numeroFactura = factura?.numeroFactura || facturaPendienteActual?.numeroFactura || 'N/A';
+        const nombreCliente = factura?.nombreCliente || clienteSeleccionado?.nombre || 'Cliente General';
+        
+        console.log('⚠️ Información de la factura extraída:', {
+            numeroFactura,
+            nombreCliente
+        });
+        
+        // Generar HTML de la tabla
+        let html = '';
+        let productosValidos = 0;
+        
+        productos.forEach((producto, index) => {
+            try {
+                // Validar estructura del producto
+                const productoId = producto.productoId || producto.ProductoId || index;
+                const nombreProducto = producto.nombreProducto || producto.NombreProducto || `Producto ${index + 1}`;
+                const cantidadRequerida = parseInt(producto.cantidadRequerida || producto.CantidadRequerida || 0);
+                const stockDisponible = parseInt(producto.stockDisponible || producto.StockDisponible || 0);
+                const faltante = Math.max(0, cantidadRequerida - stockDisponible);
+                
+                console.log(`⚠️ Procesando producto ${index + 1}:`, {
+                    productoId,
+                    nombreProducto,
+                    cantidadRequerida,
+                    stockDisponible,
+                    faltante
+                });
+                
+                // Solo mostrar si realmente hay problema
+                if (cantidadRequerida > stockDisponible) {
+                    html += `
+                        <tr class="problema-stock-row" data-producto-id="${productoId}">
+                            <td>
+                                <strong>${nombreProducto}</strong>
+                                <br><small class="text-muted">ID: ${productoId}</small>
+                                ${producto.descripcion ? `<br><small class="text-muted">${producto.descripcion}</small>` : ''}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">${cantidadRequerida}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge ${stockDisponible > 0 ? 'bg-warning' : 'bg-danger'}">${stockDisponible}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">${faltante}</span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger" 
+                                        onclick="eliminarProductoProblema(${productoId})"
+                                        title="Eliminar este producto de la factura">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    productosValidos++;
+                }
+            } catch (error) {
+                console.error(`❌ Error procesando producto ${index}:`, error, producto);
+            }
+        });
+        
+        console.log('⚠️ Productos válidos con problemas:', productosValidos);
+        
+        if (productosValidos === 0) {
+            $('#problemasStockLoading').hide();
+            $('#problemasStockContent').html(`
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Todos los productos tienen stock suficiente.
+                </div>
+            `).show();
+            return;
+        }
+        
+        // Actualizar información de la factura
+        $('#problemasStockFactura').text(numeroFactura);
+        $('#problemasStockCliente').text(nombreCliente);
+        
+        // Actualizar tabla
+        $('#problemasStockTableBody').html(html);
+        
+        // Mostrar contenido y ocultar loading
+        $('#problemasStockLoading').hide();
+        $('#problemasStockContent').show();
+        
+        console.log('✅ Modal de problemas de stock mostrado correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error en mostrarProductosConProblemas:', error);
+        $('#problemasStockLoading').hide();
+        $('#problemasStockContent').html(`
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error al procesar los problemas de stock: ${error.message}
+            </div>
+        `).show();
+    }
 }
 
 /**
@@ -4667,19 +4765,20 @@ async function procesarFacturaPendiente(facturaEscapada) {
         // Cargar los datos de la factura en el carrito
         cargarFacturaPendienteEnCarrito(factura);
         
-        // Si hay problemas de stock, mostrar modal de problemas
+        // Procesar resultado de verificación de stock
         if (verificacionStock.tieneProblemas && verificacionStock.productosConProblemas && verificacionStock.productosConProblemas.length > 0) {
-            console.log('⚠️ Se encontraron problemas de stock');
-            console.log('⚠️ Cantidad de productos con problemas:', verificacionStock.productosConProblemas.length);
-            console.log('⚠️ Detalles de productos con problemas:', verificacionStock.productosConProblemas);
+            console.log('⚠️ === PROBLEMAS DE STOCK DETECTADOS ===');
+            console.log('⚠️ Cantidad:', verificacionStock.productosConProblemas.length);
+            console.log('⚠️ Productos:', verificacionStock.productosConProblemas);
             
-            // ✅ PASAR DIRECTAMENTE EL ARRAY DE PRODUCTOS CON PROBLEMAS
-            await mostrarModalProblemasStock(verificacionStock.productosConProblemas, factura);
+            // Mostrar modal de problemas de stock
+            mostrarModalProblemasStock(verificacionStock.productosConProblemas, factura);
         } else {
-            console.log('✅ No hay problemas de stock, continuando con modal de finalización');
+            console.log('✅ === SIN PROBLEMAS DE STOCK ===');
             console.log('✅ tieneProblemas:', verificacionStock.tieneProblemas);
-            console.log('✅ productosConProblemas.length:', verificacionStock.productosConProblemas?.length || 0);
-            // Si no hay problemas, mostrar modal de finalización normal
+            console.log('✅ cantidad productos:', verificacionStock.productosConProblemas?.length || 0);
+            
+            // Si no hay problemas, continuar con modal de finalización
             setTimeout(() => {
                 mostrarModalFinalizarVenta();
             }, 500);
