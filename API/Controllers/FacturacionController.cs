@@ -951,6 +951,7 @@ namespace API.Controllers
 
                 var productosEliminados = new List<object>();
 
+                // Guardar información antes de eliminar
                 foreach (var productoId in request.ProductosAEliminar)
                 {
                     var detalleAEliminar = factura.DetallesFactura
@@ -964,20 +965,31 @@ namespace API.Controllers
                             cantidad = detalleAEliminar.Cantidad,
                             subtotal = detalleAEliminar.Subtotal
                         });
-
-                        _context.DetallesFactura.Remove(detalleAEliminar);
-
-                        _logger.LogInformation("🗑️ Producto eliminado: {Producto} (Cantidad: {Cantidad})", 
-                            detalleAEliminar.NombreProducto, detalleAEliminar.Cantidad);
                     }
                 }
 
+                // Verificar si hay productos para eliminar ANTES de eliminarlos
                 if (!productosEliminados.Any())
                 {
                     return BadRequest(new { 
                         success = false, 
                         message = "No se encontraron productos para eliminar" 
                     });
+                }
+
+                // Ahora eliminar los productos
+                foreach (var productoId in request.ProductosAEliminar)
+                {
+                    var detalleAEliminar = factura.DetallesFactura
+                        .FirstOrDefault(d => d.ProductoId == productoId);
+
+                    if (detalleAEliminar != null)
+                    {
+                        _context.DetallesFactura.Remove(detalleAEliminar);
+
+                        _logger.LogInformation("🗑️ Producto eliminado: {Producto} (Cantidad: {Cantidad})", 
+                            detalleAEliminar.NombreProducto, detalleAEliminar.Cantidad);
+                    }
                 }
 
                 // Recalcular totales de la factura
