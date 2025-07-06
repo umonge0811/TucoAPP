@@ -1961,7 +1961,14 @@ async function completarFacturaExistente(facturaId) {
             // ✅ CERRAR MODAL INMEDIATAMENTE
             modalFinalizarVenta.hide();
             
-            // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR
+            // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR CON DATOS COMPLETOS
+            console.log('🖨️ Llamando a generarReciboFacturaCompletada con:', {
+                result: result,
+                productos: productosParaRecibo.length,
+                metodoPago: metodoPagoSeleccionado,
+                facturaPendiente: facturaPendienteActual
+            });
+            
             generarReciboFacturaCompletada(result, productosParaRecibo, metodoPagoSeleccionado);
             
             // ✅ LIMPIAR CARRITO COMPLETAMENTE
@@ -2400,14 +2407,10 @@ async function crearNuevaFactura() {
 
                 // ✅ GENERAR E IMPRIMIR RECIBO PARA FACTURAS PAGADAS
                 if (debeImprimir) {
-                    generarRecibo(resultadoFactura, productosEnVenta, {
-                        subtotal: subtotal,
-                        iva: iva,
-                        total: total,
-                        metodoPago: metodoPagoSeleccionado,
-                        cliente: clienteSeleccionado,
-                        usuario: obtenerUsuarioActual()
-                    });
+                    console.log('🖨️ Generando recibo para nueva factura pagada:', resultadoFactura);
+                    
+                    // ✅ USAR LA FUNCIÓN ESPECÍFICA PARA FACTURAS COMPLETADAS
+                    generarReciboFacturaCompletada(resultadoFactura, productosEnVenta, metodoPagoSeleccionado);
                 }
 
                 // ✅ CERRAR MODAL INMEDIATAMENTE DESPUÉS DE PROCESAR
@@ -2477,24 +2480,39 @@ function generarRecibo(factura, productos, totales) {
         minute: '2-digit' 
     });
 
-    // ✅ DETERMINAR NÚMERO DE FACTURA CORRECTAMENTE
+    console.log('🖨️ === GENERANDO RECIBO ===');
+    console.log('🖨️ Factura recibida:', factura);
+    console.log('🖨️ Productos recibidos:', productos);
+    console.log('🖨️ Totales recibidos:', totales);
+
+    // ✅ DETERMINAR NÚMERO DE FACTURA CORRECTAMENTE CON LOGS DETALLADOS
     let numeroFactura = 'N/A';
     
     // Prioridad 1: Desde la factura pasada como parámetro
     if (factura && factura.numeroFactura) {
         numeroFactura = factura.numeroFactura;
+        console.log('🖨️ Número desde factura.numeroFactura:', numeroFactura);
     }
     // Prioridad 2: Desde factura pendiente global si existe
     else if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
         numeroFactura = facturaPendienteActual.numeroFactura;
+        console.log('🖨️ Número desde facturaPendienteActual:', numeroFactura);
     }
     // Prioridad 3: Verificar si los productos tienen facturaId (factura existente)
     else if (productos && productos.length > 0 && productos[0].facturaId) {
         numeroFactura = `FAC-${productos[0].facturaId}`;
+        console.log('🖨️ Número generado desde facturaId:', numeroFactura);
+    }
+    // Prioridad 4: Buscar en otras propiedades de factura
+    else if (factura) {
+        console.log('🖨️ Buscando número en otras propiedades de factura:', Object.keys(factura));
+        if (factura.data && factura.data.numeroFactura) {
+            numeroFactura = factura.data.numeroFactura;
+            console.log('🖨️ Número desde factura.data.numeroFactura:', numeroFactura);
+        }
     }
 
-    console.log('🖨️ === GENERANDO RECIBO ===');
-    console.log('🖨️ Número de factura determinado:', numeroFactura);
+    console.log('🖨️ Número de factura final determinado:', numeroFactura);
     console.log('🖨️ Método de pago:', totales.metodoPago);
     console.log('🖨️ Es pago múltiple:', esPagoMultiple);
     console.log('🖨️ Detalles de pago actuales:', detallesPagoActuales);
@@ -2969,6 +2987,32 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('🖨️ Método de pago:', metodoPago);
         console.log('🖨️ Factura pendiente actual:', facturaPendienteActual);
 
+        // ✅ EXTRACCIÓN MEJORADA DEL NÚMERO DE FACTURA
+        let numeroFactura = 'N/A';
+        
+        // Prioridad 1: Desde resultadoFactura (respuesta del servidor)
+        if (resultadoFactura && resultadoFactura.numeroFactura) {
+            numeroFactura = resultadoFactura.numeroFactura;
+            console.log('🖨️ Número de factura desde resultadoFactura:', numeroFactura);
+        }
+        // Prioridad 2: Desde resultadoFactura.data
+        else if (resultadoFactura && resultadoFactura.data && resultadoFactura.data.numeroFactura) {
+            numeroFactura = resultadoFactura.data.numeroFactura;
+            console.log('🖨️ Número de factura desde resultadoFactura.data:', numeroFactura);
+        }
+        // Prioridad 3: Desde facturaPendienteActual
+        else if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
+            numeroFactura = facturaPendienteActual.numeroFactura;
+            console.log('🖨️ Número de factura desde facturaPendienteActual:', numeroFactura);
+        }
+        // Prioridad 4: Desde los productos si tienen facturaId
+        else if (productos && productos.length > 0 && productos[0].facturaId) {
+            numeroFactura = `FAC-${productos[0].facturaId}`;
+            console.log('🖨️ Número de factura generado desde facturaId:', numeroFactura);
+        }
+
+        console.log('🖨️ Número de factura final determinado:', numeroFactura);
+
         // Calcular totales basándose en los productos del carrito
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
         
@@ -2981,13 +3025,16 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        // ✅ CREAR OBJETO DE DATOS COMPLETO USANDO MÚLTIPLES FUENTES
+        // ✅ CREAR OBJETO DE DATOS COMPLETO CON INFORMACIÓN EXTRAÍDA
         const datosRecibo = {
-            numeroFactura: resultadoFactura.numeroFactura || 
-                          facturaPendienteActual?.numeroFactura || 
-                          'N/A',
-            usuarioCreadorNombre: resultadoFactura.usuarioCreadorNombre || 
+            numeroFactura: numeroFactura,
+            nombreCliente: clienteSeleccionado?.nombre || 
+                          clienteSeleccionado?.nombreCliente || 
+                          resultadoFactura?.nombreCliente || 
+                          'Cliente General',
+            usuarioCreadorNombre: resultadoFactura?.usuarioCreadorNombre || 
                                  facturaPendienteActual?.usuarioCreadorNombre || 
+                                 obtenerUsuarioActual()?.nombre || 
                                  'Sistema'
         };
 
@@ -3003,18 +3050,26 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('🖨️ Datos del recibo preparados:', {
             datosRecibo,
             cantidadProductos: productos.length,
-            totalCalculado: total
+            totalCalculado: total,
+            numeroFactura: numeroFactura
         });
 
         // Usar la función existente de generación de recibos
         generarRecibo(datosRecibo, productos, totalesRecibo);
 
-        console.log('✅ Recibo de factura completada generado exitosamente');
+        console.log('✅ Recibo de factura completada generado exitosamente con número:', numeroFactura);
 
     } catch (error) {
         console.error('❌ Error generando recibo para factura completada:', error);
-        // No mostrar error al usuario para no interrumpir el flujo exitoso
-        console.warn('⚠️ La factura se completó correctamente pero no se pudo imprimir el recibo');
+        // Mostrar error específico al usuario
+        Swal.fire({
+            icon: 'warning',
+            title: 'Recibo no impreso',
+            text: 'La factura se completó correctamente pero no se pudo imprimir el recibo automáticamente',
+            confirmButtonText: 'Entendido',
+            timer: 4000,
+            timerProgressBar: true
+        });
     }
 }
 
@@ -4165,6 +4220,29 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
             return;
         }
         
+        // ✅ CONFIGURAR EVENTO PARA LIMPIAR CARRITO AL CANCELAR
+        $(modalElement).off('hidden.bs.modal.problemasStock').on('hidden.bs.modal.problemasStock', function() {
+            console.log('❌ === MODAL PROBLEMAS STOCK CANCELADO ===');
+            console.log('❌ Limpiando carrito por cancelación del usuario');
+            
+            // Limpiar carrito completamente
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+            facturaPendienteActual = null;
+            
+            // Limpiar interfaz
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+            
+            // Mostrar notificación
+            mostrarToast('Operación cancelada', 'El carrito ha sido limpiado', 'info');
+            
+            console.log('✅ Carrito limpiado por cancelación');
+        });
+        
         // Mostrar modal
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
@@ -4408,6 +4486,16 @@ function continuarSinProblemas() {
         console.error('❌ Error filtrando productos:', error);
         mostrarToast('Error', 'No se pudieron filtrar los productos con problemas', 'danger');
     }
+}
+
+function cancelarProblemasStock() {
+    console.log('❌ === CANCELANDO MODAL PROBLEMAS DE STOCK ===');
+    console.log('❌ Usuario canceló modal de problemas de stock');
+    
+    // Cerrar modal
+    $('#problemasStockModal').modal('hide');
+    
+    // El evento hidden.bs.modal se encargará de limpiar el carrito
 }
 
 function imprimirComprobanteEnvio(numeroFactura) {
@@ -5145,6 +5233,7 @@ window.validarPagosMultiples = validarPagosMultiples;
 window.eliminarProductoProblema = eliminarProductoProblema;
 window.procesarConProblemas = procesarConProblemas;
 window.continuarSinProblemas = continuarSinProblemas;
+window.cancelarProblemasStock = cancelarProblemasStock;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `

@@ -565,7 +565,10 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var resultado = JsonConvert.DeserializeObject(responseContent);
+                    // ✅ DESERIALIZAR CORRECTAMENTE LA RESPUESTA DEL API
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                        JsonConvert.SerializeObject(resultado, Formatting.Indented);
 
                     return (
                         success: true, 

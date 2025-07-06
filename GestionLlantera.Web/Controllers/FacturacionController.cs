@@ -17,6 +17,7 @@ using ProductoAjusteStock = GestionLlantera.Web.Services.Interfaces.ProductoAjus
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 
 namespace GestionLlantera.Web.Controllers
@@ -401,9 +402,35 @@ namespace GestionLlantera.Web.Controllers
 
                 if (resultado.success)
                 {
+                    // ✅ EXTRAER NÚMERO DE FACTURA DE LA RESPUESTA DEL API
+                    string numeroFactura = "N/A";
+                    int? facturaId = null;
+
+                    try
+                    {
+                        if (resultado.data != null)
+                        {
+                            // Serializar y deserializar para acceder a las propiedades
+                            var dataJson = JsonConvert.SerializeObject(resultado.data);
+                            dynamic dataObject = JsonConvert.DeserializeObject(dataJson);
+
+                            numeroFactura = dataObject?.numeroFactura?.ToString() ?? "N/A";
+                            facturaId = dataObject?.facturaId != null ? (int?)dataObject.facturaId : null;
+
+                            _logger.LogInformation("📋 Número de factura extraído: {NumeroFactura}, ID: {FacturaId}", 
+                                numeroFactura, facturaId);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("⚠️ Error extrayendo datos de la factura: {Error}", ex.Message);
+                    }
+
                     return Json(new { 
                         success = true, 
                         data = resultado.data,
+                        numeroFactura = numeroFactura,
+                        facturaId = facturaId,
                         message = resultado.message ?? "Factura procesada exitosamente" 
                     });
                 }
