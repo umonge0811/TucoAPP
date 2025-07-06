@@ -2331,13 +2331,17 @@ async function crearNuevaFactura() {
             modalFinalizarVenta.hide();
 
             // ✅ PROCESAR SEGÚN EL TIPO DE USUARIO Y PERMISOS
-            if (resultadoFactura.esFacturaPendiente || resultadoFactura.estado === 'Pendiente') {
+            if (resultadoFactura.esFacturaPendiente || resultadoFactura.estado === 'Pendiente' || estadoFactura === 'Pendiente') {
                 // ✅ COLABORADORES: Modal específico de envío a cajas
                 console.log('📋 Factura pendiente - Mostrando modal de envío a cajas');
+                
+                // ✅ GUARDAR PRODUCTOS PARA EL RECIBO ANTES DE LIMPIAR
+                const productosParaRecibo = [...productosEnVenta];
                 
                 // ✅ LIMPIAR CARRITO INMEDIATAMENTE PARA COLABORADORES
                 productosEnVenta = [];
                 clienteSeleccionado = null;
+                facturaPendienteActual = null;
                 $('#clienteBusqueda').val('');
                 $('#clienteSeleccionado').addClass('d-none');
                 actualizarVistaCarrito();
@@ -2347,10 +2351,10 @@ async function crearNuevaFactura() {
                 // ✅ ACTUALIZAR VISTA DE PRODUCTOS (sin ajuste de stock)
                 await actualizarVistaProductosPostAjuste();
                 
-                // ✅ MOSTRAR MODAL DE CONFIRMACIÓN PARA COLABORADORES
+                // ✅ MOSTRAR MODAL DE CONFIRMACIÓN PARA COLABORADORES CON DELAY ADECUADO
                 setTimeout(() => {
                     mostrarModalFacturaPendiente(resultadoFactura);
-                }, 300);
+                }, 500);
 
             } else if (estadoFactura === 'Pagada') {
                 // ✅ ADMINISTRADORES/CAJEROS: Venta completa con ajuste de stock
