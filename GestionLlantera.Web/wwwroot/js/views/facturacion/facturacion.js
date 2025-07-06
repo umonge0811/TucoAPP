@@ -1298,10 +1298,21 @@ function actualizarTotales() {
     $('#totalVenta').text(formatearMoneda(total));
 }
 
-function limpiarVenta() {
+async function limpiarVenta() {
     if (productosEnVenta.length === 0) return;
 
-    if (confirm('¿Estás seguro de que deseas limpiar toda la venta?')) {
+    const confirmacion = await Swal.fire({
+        title: '¿Limpiar carrito?',
+        text: '¿Estás seguro de que deseas limpiar toda la venta?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, limpiar',
+        cancelButtonText: 'Cancelar'
+    });
+
+    if (confirmacion.isConfirmed) {
         productosEnVenta = [];
         clienteSeleccionado = null;
         facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
