@@ -2302,33 +2302,27 @@ async function crearNuevaFactura() {
         console.log('📋 Datos de factura preparados:', facturaData);
 
         // Crear la factura
-        const response = await fetch('/Facturacion/CrearFactura', {
+        const responseFactura = await (await fetch('/Facturacion/CrearFactura', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify(facturaData)
-        });
+        })).json();
 
-        if (!response.ok) {
-            const errorText = await response.text();
+        if (!responseFactura.ok) {
+            const errorText = await responseFactura.text();
             console.error('❌ Error del servidor al crear factura:', errorText);
-            throw new Error(`Error al crear la factura: ${response.status} - ${errorText}`);
+            throw new Error(`Error al crear la factura: ${responseFactura.status} - ${errorText}`);
         }
 
-        const resultadoFactura = await response.json();
+        const resultadoFactura = await responseFactura.json();
         console.log('✅ Factura creada:', resultadoFactura);
 
         if (resultadoFactura.success) {
-            console.log('✅ === PROCESANDO RESPUESTA DE CREACIÓN DE FACTURA ===');
-            console.log('✅ Resultado completo:', resultadoFactura);
-            console.log('✅ Estado factura:', resultadoFactura.estado);
-            console.log('✅ Es factura pendiente:', resultadoFactura.esFacturaPendiente);
-            console.log('✅ Es colaborador:', resultadoFactura.esColaborador);
-
             // ✅ PROCESAR SEGÚN EL TIPO DE USUARIO Y PERMISOS
-            if (resultadoFactura.esFacturaPendiente || resultadoFactura.estado === 'Pendiente') {
+            if (estadoFactura === 'Pendiente') {
                 // ✅ COLABORADORES: Modal específico de envío a cajas
                 console.log('📋 Factura pendiente - Mostrando modal de envío a cajas');
                 
@@ -2338,7 +2332,7 @@ async function crearNuevaFactura() {
                 // ✅ ACTUALIZAR VISTA DE PRODUCTOS (sin ajuste de stock)
                 await actualizarVistaProductosPostAjuste();
                 
-                // Para colaboradores: mostrar modal específico de envío a cajas con todos los datos
+                // Para colaboradores: mostrar modal específico de envío a cajas
                 setTimeout(() => {
                     mostrarModalFacturaPendiente(resultadoFactura);
                 }, 300);
@@ -3932,31 +3926,17 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
     console.log('📋 === MODAL FACTURA PENDIENTE ===');
     console.log('📋 Datos recibidos:', resultadoFactura);
     
-    // ✅ EXTRACCIÓN COMPLETA DE DATOS DE LA RESPUESTA
+    // ✅ EXTRACCIÓN DIRECTA Y SIMPLIFICADA DEL NÚMERO DE FACTURA
     const numeroFactura = resultadoFactura?.numeroFactura || 'N/A';
-    const cliente = resultadoFactura?.cliente || {};
-    const total = resultadoFactura?.total || 0;
-    const metodoPago = resultadoFactura?.metodoPago || 'Efectivo';
-    const tipoDocumento = resultadoFactura?.tipoDocumento || 'Factura';
-    const esColaborador = resultadoFactura?.esColaborador || false;
-    const fechaCreacion = resultadoFactura?.fechaCreacion ? 
-        new Date(resultadoFactura.fechaCreacion).toLocaleString('es-CR') : 
-        new Date().toLocaleString('es-CR');
     
-    console.log('🔢 Datos extraídos:', {
-        numeroFactura,
-        cliente: cliente.nombre,
-        total,
-        metodoPago,
-        esColaborador
-    });
+    console.log('🔢 Número de factura extraído:', numeroFactura);
 
-    // Determinar título y mensaje según permisos y tipo de usuario
+    // Determinar título y mensaje según permisos
     let tituloModal = 'Factura Procesada';
     let mensajePrincipal = 'Factura guardada como pendiente';
     let descripcionMensaje = 'La factura ha sido guardada y está pendiente de procesamiento.';
 
-    if (esColaborador || (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin)) {
+    if (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin) {
         tituloModal = 'Factura Enviada Exitosamente';
         mensajePrincipal = '¡Factura enviada a caja!';
         descripcionMensaje = 'La factura ha sido enviada exitosamente al área de caja para procesamiento de pago.';
@@ -3991,30 +3971,6 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                             <div class="col-md-6">
                                 <strong>Estado:</strong><br>
                                 <span class="badge bg-warning fs-6">Pendiente de Pago</span>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <strong>Cliente:</strong><br>
-                                <span class="text-dark">${cliente.nombre || 'Cliente General'}</span>
-                                ${cliente.email ? `<br><small class="text-muted">${cliente.email}</small>` : ''}
-                            </div>
-                            <div class="col-md-6">
-                                <strong>Total:</strong><br>
-                                <span class="text-success fs-5">₡${formatearMoneda(total)}</span>
-                                <br><small class="text-muted">${metodoPago}</small>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <strong>Tipo de Documento:</strong><br>
-                                <span class="badge bg-info">${tipoDocumento}</span>
-                            </div>
-                            <div class="col-md-6">
-                                <strong>Fecha de Creación:</strong><br>
-                                <small class="text-muted">${fechaCreacion}</small>
                             </div>
                         </div></div>
 
