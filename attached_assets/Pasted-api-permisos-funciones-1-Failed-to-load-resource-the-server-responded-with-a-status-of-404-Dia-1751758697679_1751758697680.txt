@@ -1,0 +1,1363 @@
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 18658 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(20)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(20)
+ ✅ Facturas encontradas como array directo: 20
+ 📋 Mostrando 20 facturas pendientes
+ 📋 Mostrando 20 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 82
+ 📦 Verificando stock para factura: 82
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: false
+ 📦 Cantidad de productos con problemas: 0
+ 📦 Productos procesados: Array(0)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 82,
+  "numeroFactura": "FAC-202507-000013",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 82,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ✅ No hay problemas de stock, continuando con modal de finalización
+ ✅ tieneProblemas: false
+ ✅ productosConProblemas.length: 0
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(12)
+ 📋 Factura pendiente actual: Object
+ 📋 Mostrando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Ulises Monge
+ 📋 Cédula: 304350539
+ 📋 Teléfono: 62828588
+ 📋 Email: umongegds@gmail.com
+ 📋 Dirección: Pococi
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: true
+ 🔍 Factura ID: 82
+ ✅ Completando factura pendiente ID: 82
+ 💰 === COMPLETANDO FACTURA EXISTENTE ===
+ 💰 Factura ID: 82
+ 📋 Datos de completamiento: Object
+ ✅ Factura completada exitosamente: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(1)
+ 🖨️ Método de pago: efectivo
+ 🖨️ Factura pendiente actual: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO ===
+ 🖨️ Número de factura determinado: FAC-202507-000013
+ 🖨️ Método de pago: efectivo
+ 🖨️ Es pago múltiple: false
+ 🖨️ Detalles de pago actuales: Array(0)
+ 🖨️ Iniciando impresión de recibo térmico...
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo de factura completada generado exitosamente
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 7
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 4 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 7
+ 🔄 Productos recibidos: 4
+ 🔄 Construyendo HTML para 4 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 18658 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(19)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(19)
+ ✅ Facturas encontradas como array directo: 19
+ 📋 Mostrando 19 facturas pendientes
+ 📋 Mostrando 19 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 81
+ 📦 Verificando stock para factura: 81
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: false
+ 📦 Cantidad de productos con problemas: 0
+ 📦 Productos procesados: Array(0)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 81,
+  "numeroFactura": "FAC-202507-000012",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 81,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ✅ No hay problemas de stock, continuando con modal de finalización
+ ✅ tieneProblemas: false
+ ✅ productosConProblemas.length: 0
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(12)
+ 📋 Factura pendiente actual: Object
+ 📋 Mostrando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Ulises Monge
+ 📋 Cédula: 304350539
+ 📋 Teléfono: 62828588
+ 📋 Email: umongegds@gmail.com
+ 📋 Dirección: Pococi
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: true
+ 🔍 Factura ID: 81
+ ✅ Completando factura pendiente ID: 81
+ 💰 === COMPLETANDO FACTURA EXISTENTE ===
+ 💰 Factura ID: 81
+ 📋 Datos de completamiento: Object
+ ✅ Factura completada exitosamente: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(1)
+ 🖨️ Método de pago: efectivo
+ 🖨️ Factura pendiente actual: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO ===
+ 🖨️ Número de factura determinado: FAC-202507-000012
+ 🖨️ Método de pago: efectivo
+ 🖨️ Es pago múltiple: false
+ 🖨️ Detalles de pago actuales: Array(0)
+ 🖨️ Iniciando impresión de recibo térmico...
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo de factura completada generado exitosamente
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 8
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 4 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 8
+ 🔄 Productos recibidos: 4
+ 🔄 Construyendo HTML para 4 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 18658 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(18)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(18)
+ ✅ Facturas encontradas como array directo: 18
+ 📋 Mostrando 18 facturas pendientes
+ 📋 Mostrando 18 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 80
+ 📦 Verificando stock para factura: 80
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: false
+ 📦 Cantidad de productos con problemas: 0
+ 📦 Productos procesados: Array(0)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 80,
+  "numeroFactura": "FAC-202507-000011",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 80,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ✅ No hay problemas de stock, continuando con modal de finalización
+ ✅ tieneProblemas: false
+ ✅ productosConProblemas.length: 0
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(12)
+ 📋 Factura pendiente actual: Object
+ 📋 Mostrando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Ulises Monge
+ 📋 Cédula: 304350539
+ 📋 Teléfono: 62828588
+ 📋 Email: umongegds@gmail.com
+ 📋 Dirección: Pococi
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: true
+ 🔍 Factura ID: 80
+ ✅ Completando factura pendiente ID: 80
+ 💰 === COMPLETANDO FACTURA EXISTENTE ===
+ 💰 Factura ID: 80
+ 📋 Datos de completamiento: Object
+ ✅ Factura completada exitosamente: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(1)
+ 🖨️ Método de pago: efectivo
+ 🖨️ Factura pendiente actual: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO ===
+ 🖨️ Número de factura determinado: FAC-202507-000011
+ 🖨️ Método de pago: efectivo
+ 🖨️ Es pago múltiple: false
+ 🖨️ Detalles de pago actuales: Array(0)
+ 🖨️ Iniciando impresión de recibo térmico...
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo de factura completada generado exitosamente
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 9
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 4 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 9
+ 🔄 Productos recibidos: 4
+ 🔄 Construyendo HTML para 4 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 18658 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(17)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(17)
+ ✅ Facturas encontradas como array directo: 17
+ 📋 Mostrando 17 facturas pendientes
+ 📋 Mostrando 17 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 79
+ 📦 Verificando stock para factura: 79
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: false
+ 📦 Cantidad de productos con problemas: 0
+ 📦 Productos procesados: Array(0)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 79,
+  "numeroFactura": "FAC-202507-000010",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 79,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ✅ No hay problemas de stock, continuando con modal de finalización
+ ✅ tieneProblemas: false
+ ✅ productosConProblemas.length: 0
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(12)
+ 📋 Factura pendiente actual: Object
+ 📋 Mostrando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Ulises Monge
+ 📋 Cédula: 304350539
+ 📋 Teléfono: 62828588
+ 📋 Email: umongegds@gmail.com
+ 📋 Dirección: Pococi
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: true
+ 🔍 Factura ID: 79
+ ✅ Completando factura pendiente ID: 79
+ 💰 === COMPLETANDO FACTURA EXISTENTE ===
+ 💰 Factura ID: 79
+ 📋 Datos de completamiento: Object
+ ✅ Factura completada exitosamente: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(1)
+ 🖨️ Método de pago: efectivo
+ 🖨️ Factura pendiente actual: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO ===
+ 🖨️ Número de factura determinado: FAC-202507-000010
+ 🖨️ Método de pago: efectivo
+ 🖨️ Es pago múltiple: false
+ 🖨️ Detalles de pago actuales: Array(0)
+ 🖨️ Iniciando impresión de recibo térmico...
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo de factura completada generado exitosamente
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 10
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 4 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 10
+ 🔄 Productos recibidos: 4
+ 🔄 Construyendo HTML para 4 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 18658 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(16)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(16)
+ ✅ Facturas encontradas como array directo: 16
+ 📋 Mostrando 16 facturas pendientes
+ 📋 Mostrando 16 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 78
+ 📦 Verificando stock para factura: 78
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: false
+ 📦 Cantidad de productos con problemas: 0
+ 📦 Productos procesados: Array(0)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 78,
+  "numeroFactura": "FAC-202507-000009",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 78,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ✅ No hay problemas de stock, continuando con modal de finalización
+ ✅ tieneProblemas: false
+ ✅ productosConProblemas.length: 0
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(12)
+ 📋 Factura pendiente actual: Object
+ 📋 Mostrando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Ulises Monge
+ 📋 Cédula: 304350539
+ 📋 Teléfono: 62828588
+ 📋 Email: umongegds@gmail.com
+ 📋 Dirección: Pococi
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: true
+ 🔍 Factura ID: 78
+ ✅ Completando factura pendiente ID: 78
+ 💰 === COMPLETANDO FACTURA EXISTENTE ===
+ 💰 Factura ID: 78
+ 📋 Datos de completamiento: Object
+ ✅ Factura completada exitosamente: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(1)
+ 🖨️ Método de pago: efectivo
+ 🖨️ Factura pendiente actual: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO ===
+ 🖨️ Número de factura determinado: FAC-202507-000009
+ 🖨️ Método de pago: efectivo
+ 🖨️ Es pago múltiple: false
+ 🖨️ Detalles de pago actuales: Array(0)
+ 🖨️ Iniciando impresión de recibo térmico...
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo de factura completada generado exitosamente
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 11
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 4 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 11
+ 🔄 Productos recibidos: 4
+ 🔄 Construyendo HTML para 4 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 18722 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(15)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(15)
+ ✅ Facturas encontradas como array directo: 15
+ 📋 Mostrando 15 facturas pendientes
+ 📋 Mostrando 15 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 77
+ 📦 Verificando stock para factura: 77
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: false
+ 📦 Cantidad de productos con problemas: 0
+ 📦 Productos procesados: Array(0)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 77,
+  "numeroFactura": "FAC-202507-000008",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 77,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ✅ No hay problemas de stock, continuando con modal de finalización
+ ✅ tieneProblemas: false
+ ✅ productosConProblemas.length: 0
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(12)
+ 📋 Factura pendiente actual: Object
+ 📋 Mostrando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Ulises Monge
+ 📋 Cédula: 304350539
+ 📋 Teléfono: 62828588
+ 📋 Email: umongegds@gmail.com
+ 📋 Dirección: Pococi
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: true
+ 🔍 Factura ID: 77
+ ✅ Completando factura pendiente ID: 77
+ 💰 === COMPLETANDO FACTURA EXISTENTE ===
+ 💰 Factura ID: 77
+ 📋 Datos de completamiento: Object
+ ✅ Factura completada exitosamente: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(1)
+ 🖨️ Método de pago: efectivo
+ 🖨️ Factura pendiente actual: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO ===
+ 🖨️ Número de factura determinado: FAC-202507-000008
+ 🖨️ Método de pago: efectivo
+ 🖨️ Es pago múltiple: false
+ 🖨️ Detalles de pago actuales: Array(0)
+ 🖨️ Iniciando impresión de recibo térmico...
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo de factura completada generado exitosamente
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 12
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 3 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 12
+ 🔄 Productos recibidos: 3
+ 🔄 Construyendo HTML para 3 productos
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 14071 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(14)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(14)
+ ✅ Facturas encontradas como array directo: 14
+ 📋 Mostrando 14 facturas pendientes
+ 📋 Mostrando 14 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 76
+ 📦 Verificando stock para factura: 76
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: true
+ 📦 Cantidad de productos con problemas: 1
+ 📦 Productos procesados: Array(1)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 76,
+  "numeroFactura": "FAC-202507-000007",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 76,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ⚠️ Se encontraron problemas de stock
+ ⚠️ Cantidad de productos con problemas: 1
+ ⚠️ Detalles de productos con problemas: Array(1)
+ ⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===
+ ⚠️ Productos con problemas: Array(1)
+ ⚠️ Factura: Object
+ ❌ Error procesando factura pendiente: 
+procesarFacturaPendiente @ facturacion.js:4689
+await in procesarFacturaPendiente
+onclick @ Facturacion:1
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(14)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(14)
+ ✅ Facturas encontradas como array directo: 14
+ 📋 Mostrando 14 facturas pendientes
+ 📋 Mostrando 14 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 75
+ 📦 Verificando stock para factura: 75
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: true
+ 📦 Cantidad de productos con problemas: 1
+ 📦 Productos procesados: Array(1)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 75,
+  "numeroFactura": "FAC-202507-000006",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 75,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ⚠️ Se encontraron problemas de stock
+ ⚠️ Cantidad de productos con problemas: 1
+ ⚠️ Detalles de productos con problemas: Array(1)
+ ⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===
+ ⚠️ Productos con problemas: Array(1)
+ ⚠️ Factura: Object
+ ❌ Error procesando factura pendiente: 
+procesarFacturaPendiente @ facturacion.js:4689
+await in procesarFacturaPendiente
+onclick @ Facturacion:1
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(14)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(14)
+ ✅ Facturas encontradas como array directo: 14
+ 📋 Mostrando 14 facturas pendientes
+ 📋 Mostrando 14 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 74
+ 📦 Verificando stock para factura: 74
+ 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+ 📦 Resultado completo: Object
+ 📦 Tipo de resultado: object
+ 📦 Propiedades del resultado: Array(5)
+ 📦 === RESULTADO PROCESADO ===
+ 📦 Tiene problemas: true
+ 📦 Cantidad de productos con problemas: 1
+ 📦 Productos procesados: Array(1)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 74,
+  "numeroFactura": "FAC-202507-000005",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 74,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+facturacion.js:4802 👤 Cliente seleccionado creado: Object
+facturacion.js:3916 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:3916 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:4831 ✅ Factura cargada en carrito: Object
+facturacion.js:4672 ⚠️ Se encontraron problemas de stock
+facturacion.js:4673 ⚠️ Cantidad de productos con problemas: 1
+facturacion.js:4674 ⚠️ Detalles de productos con problemas: Array(1)
+facturacion.js:4126 ⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===
+facturacion.js:4127 ⚠️ Productos con problemas: Array(1)
+facturacion.js:4128 ⚠️ Factura: Object
+facturacion.js:4689 ❌ Error procesando factura pendiente: TypeError: Cannot read properties of undefined (reading 'classList')
+    at Pe._isAnimated (modal.js:312:26)
+    at Pe._initializeBackDrop (modal.js:194:24)
+    at new Pe (modal.js:82:27)
+    at mostrarModalProblemasStock (facturacion.js:4143:19)
+    at procesarFacturaPendiente (facturacion.js:4677:19)
+procesarFacturaPendiente @ facturacion.js:4689
+await in procesarFacturaPendiente
+onclick @ Facturacion:1
+facturacion.js:4408 📋 === ABRIENDO FACTURAS PENDIENTES ===
+facturacion.js:4420 📋 Enviando petición al servidor...
+facturacion.js:4432 📋 Respuesta recibida: 200 
+facturacion.js:4439 📋 === DEBUGGING RESPUESTA COMPLETA ===
+facturacion.js:4440 📋 Resultado completo: Array(14)
+facturacion.js:4441 📋 Tipo de resultado: object
+facturacion.js:4442 📋 Propiedades del resultado: Array(14)
+facturacion.js:4451 ✅ Facturas encontradas como array directo: 14
+facturacion.js:4514 📋 Mostrando 14 facturas pendientes
+facturacion.js:4535 📋 Mostrando 14 facturas pendientes
+facturacion.js:4644 🔄 === PROCESANDO FACTURA PENDIENTE ===
+facturacion.js:4645 🔄 Factura: Object
+facturacion.js:4648 🔍 Iniciando verificación de stock para factura: 11
+facturacion.js:4034 📦 Verificando stock para factura: 11
+facturacion.js:4051 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+facturacion.js:4052 📦 Resultado completo: Object
+facturacion.js:4053 📦 Tipo de resultado: object
+facturacion.js:4054 📦 Propiedades del resultado: Array(5)
+facturacion.js:4082 📦 === RESULTADO PROCESADO ===
+facturacion.js:4083 📦 Tiene problemas: true
+facturacion.js:4084 📦 Cantidad de productos con problemas: 1
+facturacion.js:4085 📦 Productos procesados: Array(1)
+facturacion.js:4651 🔍 Resultado de verificación de stock: Object
+facturacion.js:4706 📦 === CARGANDO FACTURA EN CARRITO ===
+facturacion.js:4707 📦 Datos completos de la factura recibida: Object
+facturacion.js:4708 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+facturacion.js:4709 📦 Factura completa recibida: {
+  "facturaId": 11,
+  "numeroFactura": "FAC-202506-000011",
+  "nombreCliente": "Julissa Mejias",
+  "emailCliente": "jmejias@ticodevcr.com",
+  "identificacionCliente": "123",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "moin",
+  "total": 72546,
+  "metodoPago": "sinpe",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 11,
+      "productoId": 1017,
+      "nombreProducto": "Llanta Test",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 64200,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 64200,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+facturacion.js:4710 📦 Datos del cliente extraídos: Object
+facturacion.js:4725 📦 Todas las propiedades de factura: Array(10)
+facturacion.js:4736 💾 Factura pendiente guardada globalmente: Object
+facturacion.js:4802 👤 Cliente seleccionado creado: Object
+facturacion.js:3916 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:3916 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:4831 ✅ Factura cargada en carrito: Object
+facturacion.js:4672 ⚠️ Se encontraron problemas de stock
+facturacion.js:4673 ⚠️ Cantidad de productos con problemas: 1
+facturacion.js:4674 ⚠️ Detalles de productos con problemas: Array(1)
+facturacion.js:4126 ⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===
+facturacion.js:4127 ⚠️ Productos con problemas: Array(1)
+facturacion.js:4128 ⚠️ Factura: Object
+facturacion.js:4689 ❌ Error procesando factura pendiente: TypeError: Cannot read properties of undefined (reading 'classList')
+    at Pe._isAnimated (modal.js:312:26)
+    at Pe._initializeBackDrop (modal.js:194:24)
+    at new Pe (modal.js:82:27)
+    at mostrarModalProblemasStock (facturacion.js:4143:19)
+    at procesarFacturaPendiente (facturacion.js:4677:19)
+procesarFacturaPendiente @ facturacion.js:4689
+await in procesarFacturaPendiente
+onclick @ Facturacion:1
+facturacion.js:4408 📋 === ABRIENDO FACTURAS PENDIENTES ===
+facturacion.js:4420 📋 Enviando petición al servidor...
+facturacion.js:4432 📋 Respuesta recibida: 200 
+facturacion.js:4439 📋 === DEBUGGING RESPUESTA COMPLETA ===
+facturacion.js:4440 📋 Resultado completo: Array(14)
+facturacion.js:4441 📋 Tipo de resultado: object
+facturacion.js:4442 📋 Propiedades del resultado: Array(14)
+facturacion.js:4451 ✅ Facturas encontradas como array directo: 14
+facturacion.js:4514 📋 Mostrando 14 facturas pendientes
+facturacion.js:4535 📋 Mostrando 14 facturas pendientes
+facturacion.js:4644 🔄 === PROCESANDO FACTURA PENDIENTE ===
+facturacion.js:4645 🔄 Factura: Object
+facturacion.js:4648 🔍 Iniciando verificación de stock para factura: 76
+facturacion.js:4034 📦 Verificando stock para factura: 76
+facturacion.js:4051 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+facturacion.js:4052 📦 Resultado completo: Object
+facturacion.js:4053 📦 Tipo de resultado: object
+facturacion.js:4054 📦 Propiedades del resultado: Array(5)
+facturacion.js:4082 📦 === RESULTADO PROCESADO ===
+facturacion.js:4083 📦 Tiene problemas: true
+facturacion.js:4084 📦 Cantidad de productos con problemas: 1
+facturacion.js:4085 📦 Productos procesados: Array(1)
+facturacion.js:4651 🔍 Resultado de verificación de stock: Object
+facturacion.js:4706 📦 === CARGANDO FACTURA EN CARRITO ===
+facturacion.js:4707 📦 Datos completos de la factura recibida: Object
+facturacion.js:4708 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+facturacion.js:4709 📦 Factura completa recibida: {
+  "facturaId": 76,
+  "numeroFactura": "FAC-202507-000007",
+  "nombreCliente": "Ulises Monge",
+  "emailCliente": "umongegds@gmail.com",
+  "identificacionCliente": "304350539",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "Pococi",
+  "total": 135600,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 76,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+facturacion.js:4710 📦 Datos del cliente extraídos: Object
+facturacion.js:4725 📦 Todas las propiedades de factura: Array(10)
+facturacion.js:4736 💾 Factura pendiente guardada globalmente: Object
+facturacion.js:4802 👤 Cliente seleccionado creado: Object
+facturacion.js:3916 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:3916 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:4831 ✅ Factura cargada en carrito: Object
+facturacion.js:4672 ⚠️ Se encontraron problemas de stock
+facturacion.js:4673 ⚠️ Cantidad de productos con problemas: 1
+facturacion.js:4674 ⚠️ Detalles de productos con problemas: Array(1)
+facturacion.js:4126 ⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===
+facturacion.js:4127 ⚠️ Productos con problemas: Array(1)
+facturacion.js:4128 ⚠️ Factura: Object
+facturacion.js:4689 ❌ Error procesando factura pendiente: TypeError: Cannot read properties of undefined (reading 'classList')
+    at Pe._isAnimated (modal.js:312:26)
+    at Pe._initializeBackDrop (modal.js:194:24)
+    at new Pe (modal.js:82:27)
+    at mostrarModalProblemasStock (facturacion.js:4143:19)
+    at procesarFacturaPendiente (facturacion.js:4677:19)
+procesarFacturaPendiente @ facturacion.js:4689
+await in procesarFacturaPendiente
+onclick @ Facturacion:1

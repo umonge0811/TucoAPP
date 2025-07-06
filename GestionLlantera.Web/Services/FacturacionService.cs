@@ -228,7 +228,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<object> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null)
+        public async Task<AjusteStockResultado> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null)
         {
             try
             {
@@ -240,9 +240,9 @@ namespace GestionLlantera.Web.Services
 
                 if (request.Productos == null || !request.Productos.Any())
                 {
-                    return new { 
-                        success = false, 
-                        message = "No se proporcionaron productos para ajustar" 
+                    return new AjusteStockResultado { 
+                        Success = false, 
+                        Message = "No se proporcionaron productos para ajustar" 
                     };
                 }
 
@@ -338,15 +338,15 @@ namespace GestionLlantera.Web.Services
                 }
 
                 // Preparar respuesta
-                var response = new {
-                    success = ajustesExitosos > 0,
-                    message = ajustesExitosos > 0 ? 
+                var response = new AjusteStockResultado {
+                    Success = ajustesExitosos > 0,
+                    Message = ajustesExitosos > 0 ? 
                         $"Stock ajustado para {ajustesExitosos} productos" : 
                         "No se pudo ajustar el stock de ningún producto",
-                    ajustesExitosos = ajustesExitosos,
-                    totalProductos = request.Productos.Count,
-                    resultados = resultados,
-                    errores = errores.Any() ? errores : null
+                    AjustesExitosos = ajustesExitosos,
+                    TotalProductos = request.Productos.Count,
+                    Resultados = resultados,
+                    Errores = errores.Any() ? errores : null
                 };
 
                 _logger.LogInformation("📦 === FIN AJUSTE STOCK FACTURACIÓN ===");
@@ -360,9 +360,9 @@ namespace GestionLlantera.Web.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error general ajustando stock para facturación");
-                return new { 
-                    success = false, 
-                    message = "Error interno al ajustar stock: " + ex.Message 
+                return new AjusteStockResultado { 
+                    Success = false, 
+                    Message = "Error interno al ajustar stock: " + ex.Message 
                 };
             }
         }
@@ -620,6 +620,166 @@ namespace GestionLlantera.Web.Services
                     success: false,
                     data: null,
                     message: "Error interno del servicio: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
+
+        public async Task<(bool success, object? data, string? message, string? details)> VerificarStockFacturaAsync(int facturaId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === VERIFICANDO STOCK DE FACTURA PENDIENTE ===");
+                _logger.LogInformation("📦 Factura ID: {FacturaId}", facturaId);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Crear el request para enviar al API
+                var request = new { FacturaId = facturaId };
+                var jsonContent = JsonConvert.SerializeObject(request);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
+
+                // Llamar al endpoint del API para verificar stock
+                var response = await _httpClient.PostAsync("api/Facturacion/verificar-stock-factura", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Configurar las opciones de deserialización
+                    var settings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        MissingMemberHandling = MissingMemberHandling.Ignore
+                    };
+
+                    // Deserializar con modelo fuertemente tipado
+                    var resultado = JsonConvert.DeserializeObject<StockVerificationResponse>(responseContent, settings);
+
+                    if (resultado?.success == true)
+                    {
+                        // Procesar productos con problemas
+                        var productosConProblemas = new List<ProductoConProblemaInfo>();
+
+                        if (resultado.productosConProblemas != null && resultado.productosConProblemas.Any())
+                        {
+                            foreach (var producto in resultado.productosConProblemas)
+                            {
+                                productosConProblemas.Add(new ProductoConProblemaInfo
+                                {
+                                    productoId = producto.productoId,
+                                    nombreProducto = producto.nombreProducto ?? "Sin nombre",
+                                    descripcion = producto.descripcion ?? "",
+                                    precio = producto.precio,
+                                    cantidadRequerida = producto.cantidadRequerida,
+                                    stockDisponible = producto.stockDisponible,
+                                    problema = producto.problema ?? "Stock insuficiente",
+                                    diferencia = producto.cantidadRequerida - producto.stockDisponible
+                                });
+                            }
+                        }
+
+                        bool hayProblemas = productosConProblemas.Any();
+
+                        _logger.LogInformation("📦 Verificación completada - Hay problemas: {HayProblemas}, Productos afectados: {Count}",
+                            hayProblemas, productosConProblemas.Count);
+
+                        // Crear respuesta estructurada
+                        var dataResult = new StockVerificationResult
+                        {
+                            hayProblemasStock = hayProblemas,
+                            productosConProblemas = productosConProblemas,
+                            message = hayProblemas ?
+                                $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" :
+                                "Todos los productos tienen stock suficiente"
+                        };
+
+                        return (
+                            success: true,
+                            data: dataResult,
+                            message: "Verificación de stock completada exitosamente",
+                            details: null
+                        );
+                    }
+                    else
+                    {
+                        _logger.LogWarning("⚠️ API devolvió success=false: {Message}", resultado?.message);
+                        return (
+                            success: false,
+                            data: null,
+                            message: resultado?.message ?? "Error verificando stock",
+                            details: responseContent
+                        );
+                    }
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API verificando stock: {StatusCode} - {Content}",
+                        response.StatusCode, responseContent);
+
+                    string errorMessage = response.StatusCode switch
+                    {
+                        System.Net.HttpStatusCode.Unauthorized => "Token de autenticación inválido o expirado",
+                        System.Net.HttpStatusCode.NotFound => "Factura no encontrada",
+                        System.Net.HttpStatusCode.BadRequest => "Datos de la solicitud inválidos",
+                        System.Net.HttpStatusCode.InternalServerError => "Error interno del servidor",
+                        _ => $"Error del servidor: {response.StatusCode}"
+                    };
+
+                    return (
+                        success: false,
+                        data: null,
+                        message: errorMessage,
+                        details: responseContent
+                    );
+                }
+            }
+            catch (System.Text.Json.JsonException jsonEx)
+            {
+                _logger.LogError(jsonEx, "❌ Error deserializando respuesta JSON para factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error procesando respuesta del servidor: formato JSON inválido",
+                    details: jsonEx.Message
+                );
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "❌ Error de conexión verificando stock de factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error de conexión con el servidor de stock",
+                    details: httpEx.Message
+                );
+            }
+            catch (TaskCanceledException timeoutEx)
+            {
+                _logger.LogError(timeoutEx, "❌ Timeout verificando stock de factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Tiempo de espera agotado al verificar stock",
+                    details: timeoutEx.Message
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error inesperado verificando stock de factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno al verificar stock: " + ex.Message,
                     details: ex.ToString()
                 );
             }
@@ -938,6 +1098,46 @@ namespace GestionLlantera.Web.Services
                 return null;
             }
         }
+    }
+    // Modelos para la deserialización
+    public class StockVerificationResponse
+    {
+        public bool success { get; set; }
+        public bool hayProblemasStock { get; set; }
+        public bool tieneProblemas { get; set; }
+        public List<ProductoConProblema> productosConProblemas { get; set; } = new List<ProductoConProblema>();
+        public string message { get; set; }
+    }
+
+    public class ProductoConProblema
+    {
+        public int productoId { get; set; }
+        public string nombreProducto { get; set; }
+        public string descripcion { get; set; }
+        public decimal precio { get; set; }
+        public int cantidadRequerida { get; set; }
+        public int stockDisponible { get; set; }
+        public string problema { get; set; }
+    }
+
+    // Modelo para la respuesta del método
+    public class StockVerificationResult
+    {
+        public bool hayProblemasStock { get; set; }
+        public List<ProductoConProblemaInfo> productosConProblemas { get; set; } = new List<ProductoConProblemaInfo>();
+        public string message { get; set; }
+    }
+
+    public class ProductoConProblemaInfo
+    {
+        public int productoId { get; set; }
+        public string nombreProducto { get; set; }
+        public string descripcion { get; set; }
+        public decimal precio { get; set; }
+        public int cantidadRequerida { get; set; }
+        public int stockDisponible { get; set; }
+        public string problema { get; set; }
+        public int diferencia { get; set; } // Calculada: cantidadRequerida - stockDisponible
     }
 
     public class FacturaDTO

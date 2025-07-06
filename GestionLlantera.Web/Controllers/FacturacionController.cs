@@ -12,8 +12,12 @@ using System.Text;
 using GestionLlantera.Web.Services.Interfaces;
 using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
+using AjusteStockFacturacionRequest = GestionLlantera.Web.Services.Interfaces.AjusteStockFacturacionRequest;
+using ProductoAjusteStock = GestionLlantera.Web.Services.Interfaces.ProductoAjusteStock;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -758,63 +762,168 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        [Route("Facturacion/AjustarStockFacturacion")]
         public async Task<IActionResult> AjustarStockFacturacion([FromBody] AjusteStockFacturacionRequest request)
         {
             try
             {
-                _logger.LogInformation("📦 Ajustando stock para factura: {NumeroFactura} con {Cantidad} productos", 
-                    request.NumeroFactura, request.Productos?.Count ?? 0);
+                _logger.LogInformation("📦 === AJUSTANDO STOCK POST-FACTURACIÓN ===");
+                _logger.LogInformation("📦 Factura: {NumeroFactura}", request.NumeroFactura);
+                _logger.LogInformation("📦 Productos a ajustar: {Cantidad}", request.Productos?.Count ?? 0);
 
                 if (request.Productos == null || !request.Productos.Any())
                 {
-                    return Json(new { 
-                        success = false, 
-                        message = "No se proporcionaron productos para ajustar" 
-                    });
+                    return Json(new { success = false, message = "No se proporcionaron productos para ajustar" });
                 }
 
-                // Convertir el request del controller al tipo esperado por el servicio
-                var serviceRequest = new Services.Interfaces.AjusteStockFacturacionRequest
-                {
-                    NumeroFactura = request.NumeroFactura,
-                    Productos = request.Productos.Select(p => new Services.Interfaces.ProductoAjusteStock
-                    {
-                        ProductoId = p.ProductoId,
-                        NombreProducto = p.NombreProducto,
-                        Cantidad = p.Cantidad
-                    }).ToList()
-                };
-
-                // Usar el servicio de facturación para ajustar el stock
                 var jwtToken = this.ObtenerTokenJWT();
-                var resultado = await _facturacionService.AjustarStockFacturacionAsync(serviceRequest, jwtToken);
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogError("❌ No se pudo obtener token JWT para ajuste de stock");
+                    return Json(new { success = false, message = "Error de autenticación" });
+                }
 
-                return Json(resultado);
+                var resultado = await _facturacionService.AjustarStockFacturacionAsync(request, jwtToken);
+
+                if (resultado.Success)
+                {
+                    _logger.LogInformation("✅ Stock ajustado exitosamente para factura {NumeroFactura}", request.NumeroFactura);
+                    return Json(new { 
+                        success = true, 
+                        message = resultado.Message,
+                        ajustesExitosos = resultado.AjustesExitosos,
+                        totalProductos = resultado.TotalProductos
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Ajuste de stock parcial o fallido para factura {NumeroFactura}: {Message}", 
+                        request.NumeroFactura, resultado.Message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.Message,
+                        errores = resultado.Errores
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error general al ajustar stock para factura {NumeroFactura}", 
-                    request?.NumeroFactura);
+                _logger.LogError(ex, "❌ Error general ajustando stock para facturación");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerificarStockFactura([FromBody] VerificarStockFacturaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === VERIFICANDO STOCK DE FACTURA DESDE CONTROLADOR WEB ===");
+                _logger.LogInformation("📦 Factura ID: {FacturaId}", request.FacturaId);
+
+                // Verificar permisos
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permisos para verificar stock");
+                    return Json(new { 
+                        success = false, 
+                        message = "Sin permisos para verificar stock",
+                        tieneProblemas = false,
+                        productosConProblemas = new List<object>()
+                    });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogError("❌ No se pudo obtener token JWT para verificación de stock");
+                    return Json(new { 
+                        success = false, 
+                        message = "Error de autenticación",
+                        tieneProblemas = false,
+                        productosConProblemas = new List<object>()
+                    });
+                }
+
+                // Usar el servicio de facturación para verificar stock
+                var resultado = await _facturacionService.VerificarStockFacturaAsync(request.FacturaId, jwtToken);
+
+                _logger.LogInformation("📋 Resultado del servicio de verificación: Success={Success}, Data={Data}", 
+                    resultado.success, System.Text.Json.JsonSerializer.Serialize(resultado.data));
+
+                if (resultado.success && resultado.data != null)
+                {
+                    _logger.LogInformation("✅ Verificación de stock exitosa para factura {FacturaId}", request.FacturaId);
+
+                    // ✅ MAPEAR CORRECTAMENTE LAS PROPIEDADES DE LA RESPUESTA DEL API
+                    var hayProblemasStock = GetProperty<bool>(resultado.data, "hayProblemasStock", false);
+                    var tieneProblemas = GetProperty<bool>(resultado.data, "tieneProblemas", hayProblemasStock);
+                    var productosConProblemas = GetProperty<List<object>>(resultado.data, "productosConProblemas", new List<object>());
+
+                    var respuestaFinal = new {
+                        success = true,
+                        hayProblemasStock = hayProblemasStock,
+                        tieneProblemas = tieneProblemas,
+                        productosConProblemas = productosConProblemas,
+                        message = GetProperty<string>(resultado.data, "message", "Verificación completada")
+                    };
+
+                    _logger.LogInformation("📤 Propiedades mapeadas: hayProblemasStock={HayProblemas}, tieneProblemas={TieneProblemas}, productos={Count}", 
+                        hayProblemasStock, tieneProblemas, productosConProblemas.Count);
+
+                    _logger.LogInformation("📤 Respuesta final enviada al frontend: {Respuesta}", 
+                        System.Text.Json.JsonSerializer.Serialize(respuestaFinal));
+
+                    return Json(respuestaFinal);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error verificando stock: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "Error desconocido verificando stock",
+                        tieneProblemas = false,
+                        productosConProblemas = new List<object>()
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico verificando stock de factura: {FacturaId}", request?.FacturaId);
                 return Json(new { 
                     success = false, 
-                    message = "Error interno al ajustar stock: " + ex.Message 
+                    message = "Error interno del servidor: " + ex.Message,
+                    tieneProblemas = false,
+                    productosConProblemas = new List<object>()
                 });
             }
         }
+
+        private T GetProperty<T>(object data, string propertyName, T defaultValue)
+        {
+            try
+            {
+                if (data == null) return defaultValue;
+
+                var json = System.Text.Json.JsonSerializer.Serialize(data);
+                var jsonElement = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(json);
+
+                if (jsonElement.TryGetProperty(propertyName, out var property))
+                {
+                    return System.Text.Json.JsonSerializer.Deserialize<T>(property.GetRawText());
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("⚠️ Error extrayendo propiedad {PropertyName}: {Error}", propertyName, ex.Message);
+            }
+
+            return defaultValue;
+        }
     }
 
-    public class AjusteStockFacturacionRequest
+    public class VerificarStockFacturaRequest
     {
-        public string NumeroFactura { get; set; }
-        public List<ProductoAjusteStock> Productos { get; set; }
-    }
-
-    public class ProductoAjusteStock
-    {
-        public int ProductoId { get; set; }
-        public string NombreProducto { get; set; }
-        public int Cantidad { get; set; }
+        public int FacturaId { get; set; }
     }
 
     public class CompletarFacturaRequest

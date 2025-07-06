@@ -192,6 +192,73 @@
     @await Html.PartialAsync("_ModalDetalleProducto")
     @await Html.PartialAsync("_ModalFinalizarVenta")
 
+<!-- Modal de Problemas de Stock -->
+<div class="modal fade" id="problemasStockModal" tabindex="-1" aria-labelledby="problemasStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="problemasStockModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Problemas de Stock Detectados
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <h6><i class="bi bi-info-circle me-2"></i>Información:</h6>
+                    <p class="mb-0">Se han detectado productos con stock insuficiente en esta factura. Revisa los detalles y decide cómo proceder.</p>
+                </div>
+                
+                <div id="problemasStockLoading" class="text-center py-4">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Verificando stock...</span>
+                    </div>
+                </div>
+                
+                <div id="problemasStockContent" style="display: none;">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Número de Factura:</strong><br>
+                            <span class="text-primary fs-6" id="problemasStockFactura">-</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Cliente:</strong><br>
+                            <span id="problemasStockCliente">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead class="table-warning">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Requerido</th>
+                                    <th class="text-center">Disponible</th>
+                                    <th class="text-center">Faltante</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="problemasStockTableBody">
+                                <!-- Productos con problemas se cargan dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" onclick="procesarConProblemas()">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Procesar de Todas Formas
+                </button>
+                <button type="button" class="btn btn-success" onclick="continuarSinProblemas()">
+                    <i class="bi bi-check-circle me-1"></i>Continuar (Productos Válidos)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal de Facturas Pendientes -->
 <div class="modal fade" id="facturasPendientesModal" tabindex="-1" aria-labelledby="facturasPendientesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">

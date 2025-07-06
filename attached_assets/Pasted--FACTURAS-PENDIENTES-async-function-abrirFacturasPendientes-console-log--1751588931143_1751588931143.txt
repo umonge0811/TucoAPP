@@ -1,0 +1,127 @@
+// ===== FACTURAS PENDIENTES =====
+async function abrirFacturasPendientes() {
+    console.log('📋 === ABRIENDO FACTURAS PENDIENTES ===');
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('facturasPendientesModal'));
+    modal.show();
+    
+    // Mostrar loading y ocultar contenido
+    $('#facturasPendientesLoading').show();
+    $('#facturasPendientesContent').hide();
+    $('#facturasPendientesEmpty').hide();
+    
+    try {
+        console.log('📋 Enviando petición al servidor...');
+        
+        // Cargar facturas pendientes desde el servidor
+        const response = await fetch('/Facturacion/ObtenerFacturasPendientes', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        console.log('📋 Respuesta recibida:', response.status, response.statusText);
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 === DEBUGGING RESPUESTA COMPLETA ===');
+        console.log('📋 Resultado completo:', resultado);
+        console.log('📋 Tipo de resultado:', typeof resultado);
+        console.log('📋 Propiedades del resultado:', Object.keys(resultado || {}));
+
+        // Procesar la estructura de respuesta del controlador Web
+        let facturas = null;
+        
+        if (resultado) {
+            // CASO 1: Respuesta directa como array de facturas
+            if (Array.isArray(resultado)) {
+                facturas = resultado;
+                console.log('✅ Facturas encontradas como array directo:', facturas.length);
+            }
+            // CASO 2: Objeto con propiedad 'facturas'
+            else if (resultado.facturas && Array.isArray(resultado.facturas)) {
+                facturas = resultado.facturas;
+                console.log('✅ Facturas encontradas en resultado.facturas:', facturas.length);
+            }
+            // CASO 3: Objeto con estructura anidada desde el API
+            else if (typeof resultado === 'object' && !resultado.success) {
+                // Si el objeto no tiene 'success: false', podría ser la estructura del API
+                // Buscar cualquier propiedad que contenga un array
+                for (const [key, value] of Object.entries(resultado)) {
+                    if (Array.isArray(value) && value.length > 0) {
+                        // Verificar si parece ser un array de facturas
+                        const firstItem = value[0];
+                        if (firstItem && typeof firstItem === 'object' && 
+                            (firstItem.facturaId || firstItem.numeroFactura)) {
+                            facturas = value;
+                            console.log(`✅ Facturas encontradas en resultado.${key}:`, facturas.length);
+                            break;
+                        }
+                    }
+                }
+                
+                // Si no encontramos facturas en propiedades directas, buscar en 'data'
+                if (!facturas && resultado.data) {
+                    if (Array.isArray(resultado.data)) {
+                        facturas = resultado.data;
+                        console.log('✅ Facturas encontradas en resultado.data como array:', facturas.length);
+                    }
+                    else if (resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
+                        facturas = resultado.data.facturas;
+                        console.log('✅ Facturas encontradas en resultado.data.facturas:', facturas.length);
+                    }
+                }
+            }
+            // CASO 4: Respuesta de error explícita
+            else if (resultado.success === false) {
+                console.log('❌ Respuesta de error del servidor:', resultado.message);
+                facturas = [];
+            }
+            
+            // Debug detallado si no encontramos facturas
+            if (!facturas) {
+                console.log('⚠️ No se encontraron facturas. Análisis detallado:');
+                console.log('📋 Es array directo?:', Array.isArray(resultado));
+                console.log('📋 Tiene propiedad facturas?:', 'facturas' in resultado);
+                console.log('📋 Tiene propiedad data?:', 'data' in resultado);
+                console.log('📋 Tiene propiedad success?:', 'success' in resultado);
+                console.log('📋 Todas las propiedades:', Object.keys(resultado));
+                
+                // Intentar encontrar cualquier array en la respuesta
+                const arrayProperties = Object.entries(resultado)
+                    .filter(([key, value]) => Array.isArray(value))
+                    .map(([key, value]) => ({ key, length: value.length }));
+                console.log('📋 Propiedades tipo array encontradas:', arrayProperties);
+                
+                // Establecer array vacío como fallback
+                facturas = [];
+            }
+        }
+
+        if (facturas && facturas.length > 0) {
+            console.log('📋 Mostrando', facturas.length, 'facturas pendientes');
+            mostrarFacturasPendientes(facturas);
+        } else {
+            console.log('📋 No se encontraron facturas pendientes');
+            mostrarSinFacturasPendientes();
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando facturas pendientes:', error);
+        $('#facturasPendientesLoading').hide();
+        $('#facturasPendientesContent').html(`
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error al cargar las facturas pendientes: ${error.message}
+                <br><small class="text-muted">Revisa la consola para más detalles</small>
+            </div>
+        `).show();
+    }
+}

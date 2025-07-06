@@ -374,8 +374,10 @@ namespace API.Controllers
 
                 return Ok(new
                 {
+                    success = true,
                     message = mensajeRespuesta,
-                    numeroFactura = factura.NumeroFactura
+                    numeroFactura = factura.NumeroFactura,
+                    facturaId = factura.FacturaId
                 });
             }
             catch (Exception ex)
@@ -918,6 +920,92 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("verificar-stock-factura")]
+        [Authorize]
+        public async Task<IActionResult> VerificarStockFactura([FromBody] VerificarStockFacturaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📦 Verificando stock para factura: {FacturaId}", request.FacturaId);
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
+
+                if (factura == null)
+                    return NotFound(new { 
+                        success = false, 
+                        message = "Factura no encontrada",
+                        tieneProblemas = false,
+                        productosConProblemas = new List<object>()
+                    });
+
+                var productosConProblemas = new List<object>();
+
+                foreach (var detalle in factura.DetallesFactura)
+                {
+                    var producto = await _context.Productos
+                        .Include(p => p.ImagenesProductos)
+                        .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);
+
+                    if (producto == null)
+                    {
+                        productosConProblemas.Add(new
+                        {
+                            productoId = detalle.ProductoId,
+                            nombreProducto = detalle.NombreProducto,
+                            descripcion = "Producto no encontrado en el sistema",
+                            precio = (decimal)0,
+                            cantidadRequerida = detalle.Cantidad,
+                            stockDisponible = 0,
+                            problema = "Producto no encontrado",
+                            imagenesUrls = new List<string>()
+                        });
+                        continue;
+                    }
+
+                    var stockDisponible = (int)(producto.CantidadEnInventario ?? 0);
+                    if (stockDisponible < detalle.Cantidad)
+                    {
+                        productosConProblemas.Add(new
+                        {
+                            productoId = detalle.ProductoId,
+                            nombreProducto = detalle.NombreProducto,
+                            descripcion = producto.Descripcion ?? "",
+                            precio = detalle.PrecioUnitario,
+                            cantidadRequerida = detalle.Cantidad,
+                            stockDisponible = stockDisponible,
+                            problema = "Stock insuficiente",
+                        });
+                    }
+                }
+
+                var tieneProblemas = productosConProblemas.Any();
+
+                // ✅ ESTRUCTURA EXACTA ESPERADA POR EL FRONTEND
+                return Ok(new
+                {
+                    success = true,
+                    hayProblemasStock = tieneProblemas,
+                    tieneProblemas = tieneProblemas,
+                    productosConProblemas = productosConProblemas,
+                    message = tieneProblemas ? 
+                        $"Se encontraron {productosConProblemas.Count} productos con problemas de stock" : 
+                        "Todos los productos tienen stock suficiente"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando stock de factura: {FacturaId}", request.FacturaId);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al verificar stock",
+                    tieneProblemas = false,
+                    productosConProblemas = new List<object>()
+                });
+            }
+        }
+
 
 
         // =====================================
@@ -938,5 +1026,10 @@ namespace API.Controllers
         public string? Referencia { get; set; }
         public string? Observaciones { get; set; }
         public DateTime? FechaPago { get; set; }
+    }
+
+    public class VerificarStockFacturaRequest
+    {
+        public int FacturaId { get; set; }
     }
 }

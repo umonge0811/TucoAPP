@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Models.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Services.Interfaces
@@ -33,14 +32,15 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Ajusta el stock de productos después de una facturación
         /// </summary>
-        Task<object> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null);
+        Task<AjusteStockResultado> AjustarStockFacturacionAsync(AjusteStockFacturacionRequest request, string jwtToken = null);
 
         /// <summary>
         /// Crea una nueva factura en la API
         /// </summary>
         Task<(bool success, object? data, string? message, string? details)> CrearFacturaAsync(object facturaDto, string jwtToken = null);
-        Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken = null);
+        Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken);
         Task<(bool success, object? data, string? message, string? details)> CompletarFacturaAsync(int facturaId, object datosCompletamiento, string jwtToken = null);
+        Task<(bool success, object? data, string? message, string? details)> VerificarStockFacturaAsync(int facturaId, string jwtToken = null);
     }
 
     // Clase ApiResponse para manejar respuestas de la API
@@ -95,5 +95,15 @@ namespace GestionLlantera.Web.Services.Interfaces
         public DateTime FechaVenta { get; set; } = DateTime.Now;
         public string MetodoPago { get; set; } = "Efectivo";
         public string? Observaciones { get; set; }
+    }
+
+    public class AjusteStockResultado
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int AjustesExitosos { get; set; }
+        public int TotalProductos { get; set; }
+        public List<string>? Errores { get; set; }
+        public List<object>? Resultados { get; set; }
     }
 }

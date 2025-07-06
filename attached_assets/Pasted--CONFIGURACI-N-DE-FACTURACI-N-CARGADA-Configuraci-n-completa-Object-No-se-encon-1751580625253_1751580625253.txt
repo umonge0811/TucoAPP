@@ -1,0 +1,136 @@
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1566
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-03",
+  "horaActual": "16:09",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+facturacion.js:122 🎯 puedeCompletarFacturas: true (tipo: boolean )
+facturacion.js:123 🎯 puedeCrearFacturas: true (tipo: boolean )
+facturacion.js:142 🎯 Evaluación de permisos:
+facturacion.js:143 🎯   - puedeCompletar (CompletarFacturas): true
+facturacion.js:144 🎯   - puedeCrear (CrearFacturas): true
+facturacion.js:154 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+facturacion.js:155 👑 Botón: Verde - "Completar Venta"
+facturacion.js:156 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+facturacion.js:193 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+facturacion.js:230 🚀 Inicializando modales...
+facturacion.js:234 🚀 Configurando eventos...
+facturacion.js:238 🚀 Actualizando totales...
+facturacion.js:3916 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:245 🚀 Iniciando carga de productos iniciales...
+facturacion.js:3694 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:3695 📦 cargaInicialCompletada: false
+facturacion.js:3711 📦 Iniciando carga de productos iniciales...
+facturacion.js:427 🔍 === INICIO buscarProductos ===
+facturacion.js:428 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:429 🔍 Término recibido: ""
+facturacion.js:430 🔍 busquedaEnProceso: false
+facturacion.js:431 🔍 ultimaBusqueda: ""
+facturacion.js:446 🔍 Iniciando búsqueda válida...
+facturacion.js:248 ✅ Facturación inicializada correctamente
+facturacion.js:249 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:207 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:208 🎯 Clases CSS: btn w-100 btn-outline-secondary
+facturacion.js:209 🎯 Deshabilitado: true
+facturacion.js:210 🎯 Texto: Completar Venta
+facturacion.js:211 🎯 Título: Agrega productos y selecciona un cliente
+facturacion.js:212 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+facturacion.js:468 📋 Respuesta del servidor recibida
+facturacion.js:471 ✅ Se encontraron 4 productos disponibles
+facturacion.js:510 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:511 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:512 🔄 Productos recibidos: 4
+facturacion.js:547 🔄 Construyendo HTML para 4 productos
+facturacion.js:561 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:562 🖼️ Datos del producto: Object
+facturacion.js:575 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:580 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:599 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:611 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:561 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:562 🖼️ Datos del producto: Object
+facturacion.js:575 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:580 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:599 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:611 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:561 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:562 🖼️ Datos del producto: Object
+facturacion.js:575 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:580 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:599 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:611 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:561 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:562 🖼️ Datos del producto: Object
+facturacion.js:575 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:580 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:599 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:611 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:710 🔄 Actualizando DOM (longitud HTML: 18661 caracteres)
+facturacion.js:743 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:488 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:491 📦 Productos mostrados exitosamente
+facturacion.js:504 🔍 === FIN buscarProductos ===
+facturacion.js:3727 📦 Búsqueda inicial ejecutada
+facturacion.js:3729 📦 === FIN cargarProductosIniciales (exitosa) ===
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:4444 📋 === ABRIENDO FACTURAS PENDIENTES ===
+facturacion.js:4456 📋 Enviando petición al servidor...
+facturacion.js:4468 📋 Respuesta recibida: 200 
+facturacion.js:4475 📋 === DEBUGGING RESPUESTA COMPLETA ===
+facturacion.js:4476 📋 Resultado completo: Array(11)
+facturacion.js:4477 📋 Tipo de resultado: object
+facturacion.js:4478 📋 Propiedades del resultado: Array(11)
+facturacion.js:4487 ✅ Facturas encontradas como array directo: 11
+facturacion.js:4550 📋 Mostrando 11 facturas pendientes
+facturacion.js:4571 📋 Mostrando 11 facturas pendientes
+facturacion.js:4680 🔄 === PROCESANDO FACTURA PENDIENTE ===
+facturacion.js:4681 🔄 Factura: Object
+facturacion.js:4684 🔍 Iniciando verificación de stock para factura: 16
+facturacion.js:4034 📦 Verificando stock para factura: 16
+facturacion.js:4051 📦 === DEBUGGING RESPUESTA VERIFICACIÓN STOCK ===
+facturacion.js:4052 📦 Resultado completo: Object
+facturacion.js:4053 📦 Tipo de resultado: object
+facturacion.js:4054 📦 Propiedades del resultado: Array(3)
+facturacion.js:4083 ⚠️ Estructura de respuesta inesperada: Object
+facturacion.js:4687 🔍 Resultado de verificación de stock: Object
+facturacion.js:4690 ❌ Error en verificación de stock: Object
+procesarFacturaPendiente @ facturacion.js:4690
+await in procesarFacturaPendiente
+onclick @ Facturacion:1

@@ -1,0 +1,49 @@
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFacturasPendientes()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
+
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}", 
+                    resultado.success, resultado.message);
+
+                if (resultado.success && resultado.data != null)
+                {
+                    _logger.LogInformation("📋 Procesando respuesta del API de facturas pendientes");
+
+                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
+                    // Solo necesitamos devolverla tal como viene
+                    return Json(resultado.data);
+                }
+                else
+                {
+                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "No se pudieron obtener las facturas pendientes",
+                        facturas = new List<object>(),
+                        totalFacturas = 0
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    facturas = new List<object>(),
+                    totalFacturas = 0
+                });
+            }
+        }
