@@ -4641,7 +4641,7 @@ async function eliminarProductoConProblema(facturaId, productoId) {
             return;
         }
 
-        const response = await fetch('/Facturacion/EliminarProductoFactura', {
+        const response = await fetch('/Facturacion/EliminarProductosFactura', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -4649,7 +4649,7 @@ async function eliminarProductoConProblema(facturaId, productoId) {
             },
             body: JSON.stringify({
                 facturaId: facturaId,
-                productoId: productoId
+                productosAEliminar: [productoId]
             }),
             credentials: 'include'
         });
