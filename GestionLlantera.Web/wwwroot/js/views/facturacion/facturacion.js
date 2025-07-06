@@ -4598,6 +4598,96 @@ function eliminarProductoProblema(productoId) {
 }
 
 /**
+ * Eliminar producto con problema de stock desde el endpoint del servidor
+ */
+async function eliminarProductoConProblema(facturaId, productoId) {
+    try {
+        console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA DE STOCK ===');
+        console.log('🗑️ Factura ID:', facturaId);
+        console.log('🗑️ Producto ID:', productoId);
+        
+        const confirmacion = await Swal.fire({
+            title: '¿Eliminar producto?',
+            text: '¿Está seguro de que desea eliminar este producto de la factura?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
+
+        const response = await fetch('/Facturacion/EliminarProductoFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                facturaId: facturaId,
+                productoId: productoId
+            }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 Respuesta del servidor:', resultado);
+
+        if (resultado.success) {
+            // Eliminar producto del carrito local también
+            const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
+            if (indiceEnCarrito !== -1) {
+                const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+                productosEnVenta.splice(indiceEnCarrito, 1);
+                
+                // Actualizar vista del carrito
+                actualizarVistaCarrito();
+                actualizarTotales();
+                
+                // Ocultar fila en la tabla de problemas
+                $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
+                    $(this).remove();
+                });
+                
+                // Mostrar notificación
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Producto eliminado',
+                    text: `${nombreProducto} ha sido eliminado de la factura`,
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+                
+                console.log('✅ Producto eliminado exitosamente');
+            }
+        } else {
+            throw new Error(resultado.message || 'Error al eliminar el producto');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando producto:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo eliminar el producto: ' + error.message,
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+/**
  * Configurar eventos de los botones del modal de problemas de stock
  */
 function configurarEventosModalProblemasStock() {
@@ -5468,6 +5558,7 @@ window.agregarNuevoPago = agregarNuevoPago;
 window.eliminarPago = eliminarPago;
 window.validarPagosMultiples = validarPagosMultiples;
 window.eliminarProductoProblema = eliminarProductoProblema;
+window.eliminarProductoConProblema = eliminarProductoConProblema;
 window.procesarConProblemas = procesarConProblemas;
 window.continuarSinProblemas = continuarSinProblemas;
 window.cancelarProblemasStock = cancelarProblemasStock;
