@@ -568,8 +568,7 @@ namespace GestionLlantera.Web.Services
                     // ✅ DESERIALIZAR CORRECTAMENTE LA RESPUESTA DEL API
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
 
-                    _logger.LogInformation("📋 Respuesta del API deserializada: {Resultado}", 
-                        JsonConvert.SerializeObject(resultado, Formatting.Indented));
+                        JsonConvert.SerializeObject(resultado, Formatting.Indented);
 
                     return (
                         success: true, 
