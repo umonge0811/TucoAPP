@@ -4385,28 +4385,47 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
             return;
         }
         
-        // ✅ CONFIGURAR EVENTO PARA LIMPIAR CARRITO AL CANCELAR
+        // ✅ VARIABLE PARA CONTROLAR SI EL MODAL SE CERRÓ POR UNA ACCIÓN VÁLIDA
+        let modalCerradoPorAccion = false;
+        
+        // ✅ LIMPIAR EVENTOS ANTERIORES Y CONFIGURAR NUEVO COMPORTAMIENTO
         $(modalElement).off('hidden.bs.modal.problemasStock').on('hidden.bs.modal.problemasStock', function() {
-            console.log('❌ === MODAL PROBLEMAS STOCK CANCELADO ===');
-            console.log('❌ Limpiando carrito por cancelación del usuario');
+            console.log('🔍 === MODAL PROBLEMAS STOCK CERRADO ===');
+            console.log('🔍 Modal cerrado por acción válida:', modalCerradoPorAccion);
             
-            // Limpiar carrito completamente
-            productosEnVenta = [];
-            clienteSeleccionado = null;
-            facturaPendienteActual = null;
+            // Solo limpiar carrito si NO fue cerrado por una acción válida
+            if (!modalCerradoPorAccion) {
+                console.log('❌ === MODAL CERRADO SIN ACCIÓN VÁLIDA ===');
+                console.log('❌ Limpiando carrito por cancelación del usuario');
+                
+                // Limpiar carrito completamente
+                productosEnVenta = [];
+                clienteSeleccionado = null;
+                facturaPendienteActual = null;
+                
+                // Limpiar interfaz
+                $('#clienteBusqueda').val('');
+                $('#clienteSeleccionado').addClass('d-none');
+                actualizarVistaCarrito();
+                actualizarTotales();
+                actualizarEstadoBotonFinalizar();
+                
+                // Mostrar notificación
+                mostrarToast('Operación cancelada', 'El carrito ha sido limpiado', 'info');
+                
+                console.log('✅ Carrito limpiado por cancelación');
+            } else {
+                console.log('✅ Modal cerrado por acción válida - carrito mantenido');
+            }
             
-            // Limpiar interfaz
-            $('#clienteBusqueda').val('');
-            $('#clienteSeleccionado').addClass('d-none');
-            actualizarVistaCarrito();
-            actualizarTotales();
-            actualizarEstadoBotonFinalizar();
-            
-            // Mostrar notificación
-            mostrarToast('Operación cancelada', 'El carrito ha sido limpiado', 'info');
-            
-            console.log('✅ Carrito limpiado por cancelación');
+            // Resetear la variable para futuros usos
+            modalCerradoPorAccion = false;
         });
+        
+        // ✅ FUNCIÓN HELPER PARA MARCAR CIERRE VÁLIDO
+        window.marcarCierreValidoProblemasStock = function() {
+            modalCerradoPorAccion = true;
+        };
         
         // Mostrar modal
         const modal = new bootstrap.Modal(modalElement);
@@ -4578,6 +4597,11 @@ function eliminarProductoProblema(productoId) {
 function procesarConProblemas() {
     console.log('⚠️ Usuario decidió procesar con problemas de stock');
     
+    // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
+    if (window.marcarCierreValidoProblemasStock) {
+        window.marcarCierreValidoProblemasStock();
+    }
+    
     // Cerrar modal de problemas
     $('#problemasStockModal').modal('hide');
     
@@ -4591,6 +4615,11 @@ function continuarSinProblemas() {
     console.log('✅ Usuario decidió continuar solo con productos válidos');
     
     try {
+        // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
+        if (window.marcarCierreValidoProblemasStock) {
+            window.marcarCierreValidoProblemasStock();
+        }
+        
         // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM
         const productosConProblemasIds = [];
         $('.problema-stock-row').each(function() {
