@@ -4524,8 +4524,8 @@ function mostrarProductosConProblemas(productos, factura) {
                             </td>
                             <td class="text-center">
                                 <button type="button" 
-                                        class="btn btn-sm btn-outline-danger" 
-                                        onclick="eliminarProductoProblema(${productoId})"
+                                        class="btn btn-sm btn-outline-danger btn-eliminar-problema" 
+                                        data-producto-id="${productoId}"
                                         title="Eliminar este producto de la factura">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -4559,6 +4559,15 @@ function mostrarProductosConProblemas(productos, factura) {
         // Actualizar tabla
         $('#problemasStockTableBody').html(html);
         
+        // ✅ CONFIGURAR EVENTOS PARA BOTONES DE ELIMINAR PRODUCTO
+        $(document).off('click.eliminarProblema', '.btn-eliminar-problema').on('click.eliminarProblema', '.btn-eliminar-problema', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const productoId = $(this).data('producto-id');
+            console.log('🗑️ Eliminar producto problema ID:', productoId);
+            eliminarProductoProblema(productoId);
+        });
+        
         // Mostrar contenido y ocultar loading
         $('#problemasStockLoading').hide();
         $('#problemasStockContent').show();
@@ -4581,19 +4590,30 @@ function mostrarProductosConProblemas(productos, factura) {
  * Eliminar producto con problema de stock
  */
 function eliminarProductoProblema(productoId) {
-    const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
-    if (indiceEnCarrito !== -1) {
-        const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
-        productosEnVenta.splice(indiceEnCarrito, 1);
-        actualizarVistaCarrito();
-        actualizarTotales();
-        
-        // Ocultar fila en la tabla
-        $(`.problema-stock-row`).filter(function() {
-            return $(this).find('button').attr('onclick').includes(productoId);
-        }).fadeOut();
-        
-        mostrarToast('Producto eliminado', `${nombreProducto} removido de la factura`, 'info');
+    console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA ===');
+    console.log('🗑️ Producto ID:', productoId);
+    console.log('🗑️ Factura pendiente actual:', facturaPendienteActual);
+    
+    // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE
+    if (facturaPendienteActual && facturaPendienteActual.facturaId) {
+        // Si es factura pendiente, usar endpoint del servidor
+        eliminarProductoConProblema(facturaPendienteActual.facturaId, productoId);
+    } else {
+        // Si es carrito local, eliminar directamente
+        const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
+        if (indiceEnCarrito !== -1) {
+            const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+            productosEnVenta.splice(indiceEnCarrito, 1);
+            actualizarVistaCarrito();
+            actualizarTotales();
+            
+            // Ocultar fila en la tabla
+            $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
+                $(this).remove();
+            });
+            
+            mostrarToast('Producto eliminado', `${nombreProducto} removido de la factura`, 'info');
+        }
     }
 }
 
@@ -4694,35 +4714,35 @@ function configurarEventosModalProblemasStock() {
     console.log('⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===');
     
     // ✅ LIMPIAR EVENTOS ANTERIORES PARA EVITAR DUPLICADOS
-    $('#btnProcesarConProblemas').off('click.problemasStock');
-    $('#btnContinuarSinProblemas').off('click.problemasStock');
-    $('#btnCancelarProblemasStock').off('click.problemasStock');
+    $(document).off('click.problemasStock', '#btnProcesarConProblemas');
+    $(document).off('click.problemasStock', '#btnContinuarSinProblemas');
+    $(document).off('click.problemasStock', '#btnCancelarProblemasStock');
     
-    // ✅ CONFIGURAR EVENTO PROCESAR CON PROBLEMAS
-    $('#btnProcesarConProblemas').on('click.problemasStock', function(e) {
+    // ✅ CONFIGURAR EVENTO PROCESAR CON PROBLEMAS (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnProcesarConProblemas', function(e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('✅ BOTÓN PROCESAR CON PROBLEMAS CLICKEADO');
         procesarConProblemas();
     });
     
-    // ✅ CONFIGURAR EVENTO CONTINUAR SIN PROBLEMAS
-    $('#btnContinuarSinProblemas').on('click.problemasStock', function(e) {
+    // ✅ CONFIGURAR EVENTO CONTINUAR SIN PROBLEMAS (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnContinuarSinProblemas', function(e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('✅ BOTÓN CONTINUAR SIN PROBLEMAS CLICKEADO');
         continuarSinProblemas();
     });
     
-    // ✅ CONFIGURAR EVENTO CANCELAR
-    $('#btnCancelarProblemasStock').on('click.problemasStock', function(e) {
+    // ✅ CONFIGURAR EVENTO CANCELAR (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnCancelarProblemasStock', function(e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('❌ BOTÓN CANCELAR CLICKEADO');
         cancelarProblemasStock();
     });
     
-    console.log('✅ Eventos del modal de problemas de stock configurados');
+    console.log('✅ Eventos del modal de problemas de stock configurados con delegación');
 }
 
 function procesarConProblemas() {
