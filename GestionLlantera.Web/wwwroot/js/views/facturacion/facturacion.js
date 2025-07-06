@@ -4427,6 +4427,9 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
             modalCerradoPorAccion = true;
         };
         
+        // ✅ CONFIGURAR EVENTOS DE LOS BOTONES DEL MODAL
+        configurarEventosModalProblemasStock();
+        
         // Mostrar modal
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
@@ -4592,6 +4595,44 @@ function eliminarProductoProblema(productoId) {
         
         mostrarToast('Producto eliminado', `${nombreProducto} removido de la factura`, 'info');
     }
+}
+
+/**
+ * Configurar eventos de los botones del modal de problemas de stock
+ */
+function configurarEventosModalProblemasStock() {
+    console.log('⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===');
+    
+    // ✅ LIMPIAR EVENTOS ANTERIORES PARA EVITAR DUPLICADOS
+    $('#btnProcesarConProblemas').off('click.problemasStock');
+    $('#btnContinuarSinProblemas').off('click.problemasStock');
+    $('#btnCancelarProblemasStock').off('click.problemasStock');
+    
+    // ✅ CONFIGURAR EVENTO PROCESAR CON PROBLEMAS
+    $('#btnProcesarConProblemas').on('click.problemasStock', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('✅ BOTÓN PROCESAR CON PROBLEMAS CLICKEADO');
+        procesarConProblemas();
+    });
+    
+    // ✅ CONFIGURAR EVENTO CONTINUAR SIN PROBLEMAS
+    $('#btnContinuarSinProblemas').on('click.problemasStock', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('✅ BOTÓN CONTINUAR SIN PROBLEMAS CLICKEADO');
+        continuarSinProblemas();
+    });
+    
+    // ✅ CONFIGURAR EVENTO CANCELAR
+    $('#btnCancelarProblemasStock').on('click.problemasStock', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('❌ BOTÓN CANCELAR CLICKEADO');
+        cancelarProblemasStock();
+    });
+    
+    console.log('✅ Eventos del modal de problemas de stock configurados');
 }
 
 function procesarConProblemas() {
@@ -5389,6 +5430,7 @@ function verDetalleFacturaPendiente(facturaId) {
 window.facturaPendienteActual = facturaPendienteActual;
 window.recargarPermisosUsuario = recargarPermisosUsuario;
 window.cerrarToastModerno = cerrarToastModerno;
+window.configurarEventosModalProblemasStock = configurarEventosModalProblemasStock;
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
 window.limpiarVenta = limpiarVenta;
