@@ -2327,18 +2327,27 @@ async function crearNuevaFactura() {
             console.log('✅ Es factura pendiente:', resultadoFactura.esFacturaPendiente);
             console.log('✅ Es colaborador:', resultadoFactura.esColaborador);
 
+            // ✅ CERRAR MODAL DE FINALIZAR VENTA INMEDIATAMENTE PARA TODOS LOS CASOS
+            modalFinalizarVenta.hide();
+
             // ✅ PROCESAR SEGÚN EL TIPO DE USUARIO Y PERMISOS
             if (resultadoFactura.esFacturaPendiente || resultadoFactura.estado === 'Pendiente') {
                 // ✅ COLABORADORES: Modal específico de envío a cajas
                 console.log('📋 Factura pendiente - Mostrando modal de envío a cajas');
                 
-                // ✅ CERRAR MODAL DE FINALIZAR VENTA INMEDIATAMENTE
-                modalFinalizarVenta.hide();
+                // ✅ LIMPIAR CARRITO INMEDIATAMENTE PARA COLABORADORES
+                productosEnVenta = [];
+                clienteSeleccionado = null;
+                $('#clienteBusqueda').val('');
+                $('#clienteSeleccionado').addClass('d-none');
+                actualizarVistaCarrito();
+                actualizarTotales();
+                actualizarEstadoBotonFinalizar();
                 
                 // ✅ ACTUALIZAR VISTA DE PRODUCTOS (sin ajuste de stock)
                 await actualizarVistaProductosPostAjuste();
                 
-                // Para colaboradores: mostrar modal específico de envío a cajas con todos los datos
+                // ✅ MOSTRAR MODAL DE CONFIRMACIÓN PARA COLABORADORES
                 setTimeout(() => {
                     mostrarModalFacturaPendiente(resultadoFactura);
                 }, 300);
@@ -2418,8 +2427,14 @@ async function crearNuevaFactura() {
                     });
                 }
 
-                // ✅ CERRAR MODAL INMEDIATAMENTE DESPUÉS DE PROCESAR
-                modalFinalizarVenta.hide();
+                // ✅ LIMPIAR CARRITO PARA FACTURAS PAGADAS
+                productosEnVenta = [];
+                clienteSeleccionado = null;
+                $('#clienteBusqueda').val('');
+                $('#clienteSeleccionado').addClass('d-none');
+                actualizarVistaCarrito();
+                actualizarTotales();
+                actualizarEstadoBotonFinalizar();
                 
                 // ✅ MOSTRAR SWEETALERT EN LUGAR DE TOAST
                 Swal.fire({
@@ -2432,15 +2447,6 @@ async function crearNuevaFactura() {
                     timerProgressBar: true
                 });
             }
-
-            // ✅ LIMPIAR CARRITO DESPUÉS DE PROCESAR (PARA AMBOS CASOS)
-            productosEnVenta = [];
-            clienteSeleccionado = null;
-            $('#clienteBusqueda').val('');
-            $('#clienteSeleccionado').addClass('d-none');
-            actualizarVistaCarrito();
-            actualizarTotales();
-            actualizarEstadoBotonFinalizar();
 
             // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DE COMPLETAR LA VENTA
             setTimeout(async () => {
@@ -3943,23 +3949,34 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
         new Date(resultadoFactura.fechaCreacion).toLocaleString('es-CR') : 
         new Date().toLocaleString('es-CR');
     
+    // ✅ EXTRAER INFORMACIÓN DEL CLIENTE (usar clienteSeleccionado como fallback)
+    const nombreCliente = resultadoFactura?.nombreCliente || 
+                         cliente?.nombre || 
+                         clienteSeleccionado?.nombre || 
+                         'Cliente General';
+    const emailCliente = resultadoFactura?.emailCliente || 
+                        cliente?.email || 
+                        clienteSeleccionado?.email || 
+                        '';
+    
     console.log('🔢 Datos extraídos:', {
         numeroFactura,
-        cliente: cliente.nombre,
+        nombreCliente,
+        emailCliente,
         total,
         metodoPago,
         esColaborador
     });
 
     // Determinar título y mensaje según permisos y tipo de usuario
-    let tituloModal = 'Factura Procesada';
-    let mensajePrincipal = 'Factura guardada como pendiente';
-    let descripcionMensaje = 'La factura ha sido guardada y está pendiente de procesamiento.';
+    let tituloModal = '✅ Factura Enviada a Caja';
+    let mensajePrincipal = '¡Factura enviada exitosamente!';
+    let descripcionMensaje = 'La factura ha sido creada y enviada al sistema de caja para procesamiento de pago.';
 
     if (esColaborador || (permisosUsuario.puedeCrearFacturas && !permisosUsuario.puedeCompletarFacturas && !permisosUsuario.esAdmin)) {
-        tituloModal = 'Factura Enviada Exitosamente';
-        mensajePrincipal = '¡Factura enviada a caja!';
-        descripcionMensaje = 'La factura ha sido enviada exitosamente al área de caja para procesamiento de pago.';
+        tituloModal = '✅ Factura Enviada a Caja';
+        mensajePrincipal = '¡Factura enviada exitosamente!';
+        descripcionMensaje = 'La factura ha sido creada y enviada al sistema de caja. El cliente debe presentar el número de factura para completar el pago.';
     }
 
     const modalHtml = `
@@ -3997,45 +4014,52 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <strong>Cliente:</strong><br>
-                                <span class="text-dark">${cliente.nombre || 'Cliente General'}</span>
-                                ${cliente.email ? `<br><small class="text-muted">${cliente.email}</small>` : ''}
+                                <span class="text-dark">${nombreCliente}</span>
+                                ${emailCliente ? `<br><small class="text-muted">${emailCliente}</small>` : ''}
                             </div>
                             <div class="col-md-6">
-                                <strong>Total:</strong><br>
-                                <span class="text-success fs-5">₡${formatearMoneda(total)}</span>
-                                <br><small class="text-muted">${metodoPago}</small>
+                                <strong>Total a Pagar:</strong><br>
+                                <span class="text-success fs-4 fw-bold">₡${formatearMoneda(total)}</span>
+                                <br><small class="text-muted">Método: ${metodoPago}</small>
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <strong>Tipo de Documento:</strong><br>
-                                <span class="badge bg-info">${tipoDocumento}</span>
+                                <span class="badge bg-info fs-6">${tipoDocumento}</span>
                             </div>
                             <div class="col-md-6">
-                                <strong>Fecha de Creación:</strong><br>
+                                <strong>Fecha y Hora:</strong><br>
                                 <small class="text-muted">${fechaCreacion}</small>
                             </div>
-                        </div></div>
+                        </div>
 
-                        <div class="alert alert-info">
-                            <h6><i class="bi bi-info-circle me-2"></i>Siguiente paso:</h6>
-                            <ul class="mb-0">
-                                <li>La factura está disponible en el sistema de caja</li>
-                                <li>El cajero procesará el pago cuando el cliente se presente</li>
-                                <li>Una vez pagada, se ajustará automáticamente el inventario</li>
-                                <li>Se generará el comprobante de pago final</li>
+                        <div class="alert alert-warning border-warning">
+                            <h6 class="text-warning mb-2">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>Importante para el Cliente:
+                            </h6>
+                            <ul class="mb-0 small">
+                                <li><strong>La factura está pendiente de pago</strong></li>
+                                <li>Debe dirigirse al área de <strong>CAJA</strong> para completar el pago</li>
+                                <li>Una vez pagada, podrá retirar sus productos</li>
+                                <li>El inventario se reservará temporalmente</li>
                             </ul>
                         </div>
 
-                        <div class="bg-light p-3 rounded text-center">
-                            <h6 class="text-primary mb-2">
-                                <i class="bi bi-clipboard-check me-2"></i>Instrucciones para el cliente
-                            </h6>
-                            <p class="mb-1"><strong>Presente este número de factura en caja:</strong></p>
-                            <div class="bg-white p-2 rounded border">
-                                <code class="fs-4 text-primary">${numeroFactura}</code>
+                        <div class="bg-primary p-4 rounded text-center text-white">
+                            <h5 class="text-white mb-3">
+                                <i class="bi bi-credit-card me-2"></i>NÚMERO DE FACTURA
+                            </h5>
+                            <p class="mb-2">Presente este número en caja para pagar:</p>
+                            <div class="bg-white p-3 rounded">
+                                <h2 class="text-primary fw-bold mb-0" style="font-family: 'Courier New', monospace;">
+                                    ${numeroFactura}
+                                </h2>
                             </div>
+                            <small class="text-light mt-2 d-block">
+                                <i class="bi bi-clock me-1"></i>Válida por 24 horas
+                            </small>
                         </div>
                     </div>
                     <div class="modal-footer">
