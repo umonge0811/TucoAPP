@@ -2302,22 +2302,20 @@ async function crearNuevaFactura() {
         console.log('📋 Datos de factura preparados:', facturaData);
 
         // Crear la factura
-        const responseFactura = await (await fetch('/Facturacion/CrearFactura', {
+        const response = await fetch('/Facturacion/CrearFactura', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify(facturaData)
-        })).json();
-
-        if (!responseFactura.ok) {
-            const errorText = await responseFactura.text();
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
             console.error('❌ Error del servidor al crear factura:', errorText);
-            throw new Error(`Error al crear la factura: ${responseFactura.status} - ${errorText}`);
+            throw new Error(`Error al crear la factura: ${response.status} - ${errorText}`);
         }
-
-        const resultadoFactura = await responseFactura.json();
+        const resultadoFactura = await response.json();
         console.log('✅ Factura creada:', resultadoFactura);
 
         if (resultadoFactura.success) {
