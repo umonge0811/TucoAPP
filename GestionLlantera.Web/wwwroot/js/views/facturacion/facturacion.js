@@ -4220,6 +4220,29 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
             return;
         }
         
+        // ✅ CONFIGURAR EVENTO PARA LIMPIAR CARRITO AL CANCELAR
+        $(modalElement).off('hidden.bs.modal.problemasStock').on('hidden.bs.modal.problemasStock', function() {
+            console.log('❌ === MODAL PROBLEMAS STOCK CANCELADO ===');
+            console.log('❌ Limpiando carrito por cancelación del usuario');
+            
+            // Limpiar carrito completamente
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+            facturaPendienteActual = null;
+            
+            // Limpiar interfaz
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+            
+            // Mostrar notificación
+            mostrarToast('Operación cancelada', 'El carrito ha sido limpiado', 'info');
+            
+            console.log('✅ Carrito limpiado por cancelación');
+        });
+        
         // Mostrar modal
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
@@ -4463,6 +4486,16 @@ function continuarSinProblemas() {
         console.error('❌ Error filtrando productos:', error);
         mostrarToast('Error', 'No se pudieron filtrar los productos con problemas', 'danger');
     }
+}
+
+function cancelarProblemasStock() {
+    console.log('❌ === CANCELANDO MODAL PROBLEMAS DE STOCK ===');
+    console.log('❌ Usuario canceló modal de problemas de stock');
+    
+    // Cerrar modal
+    $('#problemasStockModal').modal('hide');
+    
+    // El evento hidden.bs.modal se encargará de limpiar el carrito
 }
 
 function imprimirComprobanteEnvio(numeroFactura) {
@@ -5200,6 +5233,7 @@ window.validarPagosMultiples = validarPagosMultiples;
 window.eliminarProductoProblema = eliminarProductoProblema;
 window.procesarConProblemas = procesarConProblemas;
 window.continuarSinProblemas = continuarSinProblemas;
+window.cancelarProblemasStock = cancelarProblemasStock;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `
