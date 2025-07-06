@@ -840,6 +840,74 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> EliminarProductosFactura([FromBody] EliminarProductosFacturaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ === ELIMINANDO PRODUCTOS DE FACTURA ===");
+                _logger.LogInformation("🗑️ Factura ID: {FacturaId}, Productos: {ProductosCount}", 
+                    request.FacturaId, request.ProductosAEliminar?.Count ?? 0);
+
+                // Verificar permisos
+                if (!await this.TienePermisoAsync("Editar Facturas"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permisos para editar facturas");
+                    return Json(new { 
+                        success = false, 
+                        message = "Sin permisos para editar facturas"
+                    });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogError("❌ No se pudo obtener token JWT");
+                    return Json(new { 
+                        success = false, 
+                        message = "Error de autenticación"
+                    });
+                }
+
+                if (request.FacturaId <= 0 || request.ProductosAEliminar == null || !request.ProductosAEliminar.Any())
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Datos de solicitud inválidos"
+                    });
+                }
+
+                // Usar el servicio de facturación para eliminar productos
+                var resultado = await _facturacionService.EliminarProductosFacturaAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Productos eliminados exitosamente de factura {FacturaId}", request.FacturaId);
+                    return Json(new { 
+                        success = true, 
+                        message = resultado.message,
+                        productosEliminados = resultado.data
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error eliminando productos: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico eliminando productos de factura: {FacturaId}", request?.FacturaId);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor"
+                });
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> VerificarStockFactura([FromBody] VerificarStockFacturaRequest request)
         {
             try
@@ -951,6 +1019,12 @@ namespace GestionLlantera.Web.Controllers
     public class VerificarStockFacturaRequest
     {
         public int FacturaId { get; set; }
+    }
+
+    public class EliminarProductosFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public List<int> ProductosAEliminar { get; set; } = new List<int>();
     }
 
     public class CompletarFacturaRequest

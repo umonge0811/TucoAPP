@@ -920,6 +920,123 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("eliminar-productos-factura")]
+        [Authorize]
+        public async Task<IActionResult> EliminarProductosFactura([FromBody] EliminarProductosFacturaRequest request)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Editar Facturas",
+                "Solo usuarios con permiso 'EditarFacturas' pueden eliminar productos de facturas");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _logger.LogInformation("🗑️ Eliminando productos de factura: {FacturaId}", request.FacturaId);
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
+
+                if (factura == null)
+                    return NotFound(new { 
+                        success = false, 
+                        message = "Factura no encontrada" 
+                    });
+
+                if (factura.Estado != "Pendiente")
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "Solo se pueden modificar facturas pendientes" 
+                    });
+
+                var productosEliminados = new List<object>();
+
+                foreach (var productoId in request.ProductosAEliminar)
+                {
+                    var detalleAEliminar = factura.DetallesFactura
+                        .FirstOrDefault(d => d.ProductoId == productoId);
+
+                    if (detalleAEliminar != null)
+                    {
+                        productosEliminados.Add(new {
+                            productoId = detalleAEliminar.ProductoId,
+                            nombreProducto = detalleAEliminar.NombreProducto,
+                            cantidad = detalleAEliminar.Cantidad,
+                            subtotal = detalleAEliminar.Subtotal
+                        });
+
+                        _context.DetallesFactura.Remove(detalleAEliminar);
+
+                        _logger.LogInformation("🗑️ Producto eliminado: {Producto} (Cantidad: {Cantidad})", 
+                            detalleAEliminar.NombreProducto, detalleAEliminar.Cantidad);
+                    }
+                }
+
+                if (!productosEliminados.Any())
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "No se encontraron productos para eliminar" 
+                    });
+                }
+
+                // Recalcular totales de la factura
+                var detallesRestantes = factura.DetallesFactura
+                    .Where(d => !request.ProductosAEliminar.Contains(d.ProductoId))
+                    .ToList();
+
+                if (!detallesRestantes.Any())
+                {
+                    // Si no quedan productos, anular la factura
+                    factura.Estado = "Anulada";
+                    factura.Observaciones = (factura.Observaciones ?? "") + 
+                        " [ANULADA AUTOMÁTICAMENTE - Sin productos restantes]";
+                    
+                    _logger.LogInformation("🗑️ Factura anulada automáticamente por falta de productos");
+                }
+                else
+                {
+                    // Recalcular totales
+                    var nuevoSubtotal = detallesRestantes.Sum(d => d.Subtotal);
+                    var nuevoImpuesto = nuevoSubtotal * (factura.PorcentajeImpuesto ?? 0.13m);
+                    var nuevoTotal = nuevoSubtotal + nuevoImpuesto;
+
+                    factura.Subtotal = nuevoSubtotal;
+                    factura.MontoImpuesto = nuevoImpuesto;
+                    factura.Total = nuevoTotal;
+
+                    _logger.LogInformation("💰 Totales recalculados - Subtotal: {Subtotal}, Total: {Total}", 
+                        nuevoSubtotal, nuevoTotal);
+                }
+
+                factura.FechaActualizacion = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ {Count} productos eliminados de factura {NumeroFactura}", 
+                    productosEliminados.Count, factura.NumeroFactura);
+
+                return Ok(new { 
+                    success = true, 
+                    message = $"{productosEliminados.Count} producto(s) eliminado(s) exitosamente",
+                    productosEliminados = productosEliminados,
+                    facturaAnulada = factura.Estado == "Anulada",
+                    nuevoTotal = factura.Total,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error eliminando productos de factura: {FacturaId}", request.FacturaId);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno al eliminar productos" 
+                });
+            }
+        }
+
         [HttpPost("verificar-stock-factura")]
         [Authorize]
         public async Task<IActionResult> VerificarStockFactura([FromBody] VerificarStockFacturaRequest request)
@@ -1031,5 +1148,11 @@ namespace API.Controllers
     public class VerificarStockFacturaRequest
     {
         public int FacturaId { get; set; }
+    }
+
+    public class EliminarProductosFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public List<int> ProductosAEliminar { get; set; } = new List<int>();
     }
 }
