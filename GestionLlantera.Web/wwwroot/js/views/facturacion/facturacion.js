@@ -3205,65 +3205,219 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
     // Implementar toast notifications
     console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
 
-    // ✅ IMPLEMENTACIÓN DE TOAST VISUAL
+    // ✅ IMPLEMENTACIÓN DE TOAST VISUAL MODERNO
     try {
         // Verificar si existe un contenedor de toasts
-        let toastContainer = document.getElementById('toast-container');
+        let toastContainer = document.getElementById('toast-container-moderno');
         if (!toastContainer) {
-            // Crear contenedor de toasts
+            // Crear contenedor de toasts moderno
             toastContainer = document.createElement('div');
-            toastContainer.id = 'toast-container';
-            toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+            toastContainer.id = 'toast-container-moderno';
+            toastContainer.className = 'toast-container-moderno position-fixed top-0 end-0 p-3';
             toastContainer.style.zIndex = '9999';
             document.body.appendChild(toastContainer);
         }
 
-        // Mapear tipos de toast a clases de Bootstrap
-        const tipoClases = {
-            'success': 'text-bg-success',
-            'error': 'text-bg-danger',
-            'danger': 'text-bg-danger',
-            'warning': 'text-bg-warning',
-            'info': 'text-bg-info'
+        // Configuración moderna para diferentes tipos
+        const tipoConfiguracion = {
+            'success': {
+                icono: 'bi-check-circle-fill',
+                gradiente: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                color: '#ffffff',
+                shadow: '0 8px 32px rgba(40, 167, 69, 0.3)'
+            },
+            'error': {
+                icono: 'bi-exclamation-triangle-fill',
+                gradiente: 'linear-gradient(135deg, #dc3545 0%, #e74c3c 100%)',
+                color: '#ffffff',
+                shadow: '0 8px 32px rgba(220, 53, 69, 0.3)'
+            },
+            'danger': {
+                icono: 'bi-exclamation-triangle-fill',
+                gradiente: 'linear-gradient(135deg, #dc3545 0%, #e74c3c 100%)',
+                color: '#ffffff',
+                shadow: '0 8px 32px rgba(220, 53, 69, 0.3)'
+            },
+            'warning': {
+                icono: 'bi-exclamation-circle-fill',
+                gradiente: 'linear-gradient(135deg, #ffc107 0%, #ff8c00 100%)',
+                color: '#212529',
+                shadow: '0 8px 32px rgba(255, 193, 7, 0.3)'
+            },
+            'info': {
+                icono: 'bi-info-circle-fill',
+                gradiente: 'linear-gradient(135deg, #17a2b8 0%, #007bff 100%)',
+                color: '#ffffff',
+                shadow: '0 8px 32px rgba(23, 162, 184, 0.3)'
+            }
         };
 
-        const claseColor = tipoClases[tipo] || 'text-bg-info';
+        const config = tipoConfiguracion[tipo] || tipoConfiguracion['info'];
 
-        // Crear toast HTML
-        const toastId = 'toast-' + Date.now();
+        // Crear toast HTML moderno
+        const toastId = 'toast-moderno-' + Date.now();
         const toastHtml = `
-            <div id="${toastId}" class="toast ${claseColor}" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="toast-header">
-                    <strong class="me-auto">${titulo}</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            <div id="${toastId}" class="toast-moderno" role="alert" aria-live="assertive" aria-atomic="true" 
+                 style="background: ${config.gradiente}; 
+                        color: ${config.color}; 
+                        box-shadow: ${config.shadow};
+                        border: none;
+                        border-radius: 16px;
+                        backdrop-filter: blur(10px);
+                        margin-bottom: 12px;
+                        min-width: 350px;
+                        max-width: 450px;
+                        opacity: 0;
+                        transform: translateX(100%);
+                        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
+                <div class="toast-moderno-content" style="display: flex; 
+                                                          align-items: flex-start; 
+                                                          padding: 16px 20px;
+                                                          gap: 12px;">
+                    <div class="toast-moderno-icon" style="display: flex;
+                                                           align-items: center;
+                                                           justify-content: center;
+                                                           width: 24px;
+                                                           height: 24px;
+                                                           flex-shrink: 0;
+                                                           margin-top: 2px;">
+                        <i class="bi ${config.icono}" style="font-size: 20px;"></i>
+                    </div>
+                    <div class="toast-moderno-text" style="flex: 1; min-width: 0;">
+                        <div class="toast-moderno-titulo" style="font-weight: 600;
+                                                                font-size: 15px;
+                                                                line-height: 1.3;
+                                                                margin-bottom: 4px;
+                                                                letter-spacing: -0.2px;">
+                            ${titulo}
+                        </div>
+                        <div class="toast-moderno-mensaje" style="font-weight: 400;
+                                                                  font-size: 13px;
+                                                                  line-height: 1.4;
+                                                                  opacity: 0.95;
+                                                                  word-wrap: break-word;">
+                            ${mensaje}
+                        </div>
+                    </div>
+                    <button type="button" 
+                            class="toast-moderno-close" 
+                            onclick="cerrarToastModerno('${toastId}')"
+                            style="background: rgba(255, 255, 255, 0.2);
+                                   border: none;
+                                   border-radius: 50%;
+                                   width: 28px;
+                                   height: 28px;
+                                   display: flex;
+                                   align-items: center;
+                                   justify-content: center;
+                                   cursor: pointer;
+                                   transition: all 0.2s ease;
+                                   flex-shrink: 0;
+                                   color: inherit;"
+                            onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'; this.style.transform='scale(1.1)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.transform='scale(1)'">
+                        <i class="bi bi-x-lg" style="font-size: 12px; font-weight: bold;"></i>
+                    </button>
                 </div>
-                <div class="toast-body">
-                    ${mensaje}
+                <div class="toast-moderno-progress" style="position: absolute;
+                                                           bottom: 0;
+                                                           left: 0;
+                                                           height: 3px;
+                                                           background: rgba(255, 255, 255, 0.3);
+                                                           border-radius: 0 0 16px 16px;
+                                                           transform-origin: left;
+                                                           animation: toastProgress ${tipo === 'success' ? '5000' : '3000'}ms linear;">
                 </div>
             </div>
         `;
 
+        // Agregar estilos CSS para animaciones si no existen
+        if (!document.getElementById('toast-moderno-styles')) {
+            const styles = document.createElement('style');
+            styles.id = 'toast-moderno-styles';
+            styles.innerHTML = `
+                @keyframes toastProgress {
+                    from { transform: scaleX(1); }
+                    to { transform: scaleX(0); }
+                }
+                
+                .toast-moderno.mostrar {
+                    opacity: 1 !important;
+                    transform: translateX(0) !important;
+                }
+                
+                .toast-moderno.ocultar {
+                    opacity: 0 !important;
+                    transform: translateX(100%) scale(0.8) !important;
+                }
+                
+                .toast-container-moderno {
+                    max-height: 100vh;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                }
+                
+                .toast-container-moderno::-webkit-scrollbar {
+                    width: 4px;
+                }
+                
+                .toast-container-moderno::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                
+                .toast-container-moderno::-webkit-scrollbar-thumb {
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 2px;
+                }
+            `;
+            document.head.appendChild(styles);
+        }
+
         // Agregar toast al contenedor
         toastContainer.insertAdjacentHTML('beforeend', toastHtml);
 
-        // Mostrar toast usando Bootstrap
+        // Mostrar toast con animación
         const toastElement = document.getElementById(toastId);
-        if (toastElement && typeof bootstrap !== 'undefined') {
-            const toast = new bootstrap.Toast(toastElement, {
-                delay: tipo === 'success' ? 5000 : 3000 // 5 segundos para éxito, 3 para otros
-            });
-            toast.show();
+        if (toastElement) {
+            // Mostrar con animación
+            setTimeout(() => {
+                toastElement.classList.add('mostrar');
+            }, 50);
 
-            // Limpiar toast después de que se oculte
-            toastElement.addEventListener('hidden.bs.toast', function() {
-                this.remove();
+            // Auto-ocultar después del tiempo especificado
+            const delay = tipo === 'success' ? 5000 : 3000;
+            setTimeout(() => {
+                cerrarToastModerno(toastId);
+            }, delay);
+
+            // Agregar evento de click para cerrar
+            toastElement.addEventListener('click', function(e) {
+                if (e.target === toastElement || e.target.closest('.toast-moderno-content')) {
+                    // Solo cerrar si se hace click fuera del botón close
+                    if (!e.target.closest('.toast-moderno-close')) {
+                        cerrarToastModerno(toastId);
+                    }
+                }
             });
         }
 
     } catch (error) {
-        console.error('❌ Error mostrando toast:', error);
+        console.error('❌ Error mostrando toast moderno:', error);
         // Fallback a alert si falla el toast
         alert(`${titulo}: ${mensaje}`);
+    }
+}
+
+// Función auxiliar para cerrar toast moderno
+function cerrarToastModerno(toastId) {
+    const toastElement = document.getElementById(toastId);
+    if (toastElement) {
+        toastElement.classList.add('ocultar');
+        setTimeout(() => {
+            if (toastElement.parentNode) {
+                toastElement.parentNode.removeChild(toastElement);
+            }
+        }, 400);
     }
 }
 
@@ -5194,6 +5348,7 @@ function verDetalleFacturaPendiente(facturaId) {
 // ===== HACER FUNCIONES Y VARIABLES GLOBALES =====
 window.facturaPendienteActual = facturaPendienteActual;
 window.recargarPermisosUsuario = recargarPermisosUsuario;
+window.cerrarToastModerno = cerrarToastModerno;
 window.abrirModalNuevoCliente = abrirModalNuevoCliente;
 window.seleccionarCliente = seleccionarCliente;
 window.limpiarVenta = limpiarVenta;
