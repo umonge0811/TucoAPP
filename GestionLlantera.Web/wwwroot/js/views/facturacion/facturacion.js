@@ -4664,6 +4664,7 @@ async function eliminarProductoConProblema(facturaId, productoId) {
         console.log('📋 Respuesta del servidor:', resultado);
 
         if (resultado.success) {
+            actualizarCarritoDespuesDeEliminar([productoId]);
             // Eliminar producto del carrito local también
             const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
             if (indiceEnCarrito !== -1) {
@@ -4704,6 +4705,48 @@ async function eliminarProductoConProblema(facturaId, productoId) {
             text: 'No se pudo eliminar el producto: ' + error.message,
             confirmButtonColor: '#dc3545'
         });
+    }
+}
+
+/**
+ * Actualizar carrito después de eliminar productos de una factura
+ */
+function actualizarCarritoDespuesDeEliminar(productosEliminados) {
+    console.log('🔄 === ACTUALIZANDO CARRITO DESPUÉS DE ELIMINAR ===');
+    console.log('🔄 Productos a eliminar del carrito:', productosEliminados);
+    console.log('🔄 Estado inicial del carrito:', productosEnVenta.length, 'productos');
+
+    try {
+        // ✅ ELIMINAR PRODUCTOS DEL CARRITO LOCAL
+        productosEliminados.forEach(productoId => {
+            const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId == productoId);
+            if (indiceEnCarrito !== -1) {
+                const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+                productosEnVenta.splice(indiceEnCarrito, 1);
+                console.log('🗑️ Producto eliminado del carrito:', nombreProducto);
+            }
+        });
+
+        console.log('🔄 Estado final del carrito:', productosEnVenta.length, 'productos');
+
+        // ✅ ACTUALIZAR VISTA DEL CARRITO
+        actualizarVistaCarrito();
+        actualizarTotales();
+        actualizarEstadoBotonFinalizar();
+
+        // ✅ LIMPIAR ESTADO DE FACTURA PENDIENTE SI NO QUEDAN PRODUCTOS
+        if (productosEnVenta.length === 0) {
+            facturaPendienteActual = null;
+            clienteSeleccionado = null;
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            console.log('🧹 Carrito limpiado completamente - no quedan productos');
+        }
+
+        console.log('✅ Carrito actualizado exitosamente después de eliminar productos');
+
+    } catch (error) {
+        console.error('❌ Error actualizando carrito después de eliminar:', error);
     }
 }
 
