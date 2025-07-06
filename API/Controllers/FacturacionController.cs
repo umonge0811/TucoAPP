@@ -372,13 +372,42 @@ namespace API.Controllers
                     DetallesFactura = facturaDto.DetallesFactura
                 };
 
-                return Ok(new
+                // ✅ RESPUESTA COMPLETA CON TODA LA INFORMACIÓN NECESARIA
+                var respuestaCompleta = new
                 {
                     success = true,
                     message = mensajeRespuesta,
                     numeroFactura = factura.NumeroFactura,
-                    facturaId = factura.FacturaId
-                });
+                    facturaId = factura.FacturaId,
+                    estado = factura.Estado,
+                    esFacturaPendiente = estadoInicial == "Pendiente",
+                    tipoDocumento = factura.TipoDocumento,
+                    total = factura.Total,
+                    metodoPago = factura.MetodoPago,
+                    fechaCreacion = factura.FechaCreacion,
+                    // Datos del cliente para el modal
+                    cliente = new
+                    {
+                        nombre = factura.NombreCliente,
+                        email = factura.EmailCliente,
+                        telefono = factura.TelefonoCliente,
+                        identificacion = factura.IdentificacionCliente
+                    },
+                    // Datos del usuario para el modal
+                    usuario = new
+                    {
+                        id = factura.UsuarioCreadorId,
+                        nombre = "Sistema" // Se puede expandir con más datos si es necesario
+                    },
+                    // Información específica para colaboradores
+                    esColaborador = !puedeCompletar,
+                    requiereProcesamientoCaja = estadoInicial == "Pendiente"
+                };
+
+                _logger.LogInformation("✅ Respuesta completa preparada para factura {NumeroFactura}: {Estado}", 
+                    factura.NumeroFactura, estadoInicial);
+
+                return Ok(respuestaCompleta);
             }
             catch (Exception ex)
             {
