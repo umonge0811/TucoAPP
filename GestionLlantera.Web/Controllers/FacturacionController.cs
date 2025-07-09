@@ -8,6 +8,7 @@ using Tuco.Clases.DTOs.Facturacion;
 using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
 using Newtonsoft.Json;
+using ProductoVentaDTO = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -314,7 +315,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> VerificarStock([FromBody] List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO> productos)
+        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaDTO> productos)
         {
             try
             {
@@ -499,7 +500,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO> productos)
+        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaDTO> productos)
         {
             try
             {
