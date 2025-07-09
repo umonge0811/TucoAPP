@@ -4675,6 +4675,17 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                 actualizarTotales();
                 actualizarEstadoBotonFinalizar();
                 
+                // Mostrar confirmación de eliminación inmediatamente
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Producto eliminado',
+                    text: `${nombreProducto} ha sido eliminado de la factura`,
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+                
                 // Ocultar fila en la tabla de problemas
                 $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
                     $(this).remove();
@@ -4703,17 +4714,6 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                             }
                         }, 500);
                     }
-                });
-                
-                // Mostrar confirmación de eliminación
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Producto eliminado',
-                    text: `${nombreProducto} ha sido eliminado de la factura`,
-                    timer: 2000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
                 });
                 
                 console.log('✅ Producto eliminado exitosamente');
