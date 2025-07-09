@@ -1,0 +1,229 @@
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1633
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-06",
+  "horaActual": "12:14",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:208 🎯 Clases CSS: btn w-100 btn-outline-secondary
+facturacion.js:209 🎯 Deshabilitado: true
+facturacion.js:210 🎯 Texto: Completar Venta
+facturacion.js:211 🎯 Título: Agrega productos y selecciona un cliente
+facturacion.js:212 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+facturacion.js:468 📋 Respuesta del servidor recibida
+facturacion.js:471 ✅ Se encontraron 2 productos disponibles
+facturacion.js:510 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:511 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:512 🔄 Productos recibidos: 2
+facturacion.js:547 🔄 Construyendo HTML para 2 productos
+facturacion.js:561 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:562 🖼️ Datos del producto: Object
+facturacion.js:575 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:580 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:599 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:611 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+facturacion.js:561 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:562 🖼️ Datos del producto: Object
+facturacion.js:575 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:580 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:599 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:611 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:710 🔄 Actualizando DOM (longitud HTML: 9538 caracteres)
+facturacion.js:743 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:488 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:491 📦 Productos mostrados exitosamente
+facturacion.js:504 🔍 === FIN buscarProductos ===
+facturacion.js:3945 📦 Búsqueda inicial ejecutada
+facturacion.js:3947 📦 === FIN cargarProductosIniciales (exitosa) ===
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:5015 📋 === ABRIENDO FACTURAS PENDIENTES ===
+facturacion.js:5027 📋 Enviando petición al servidor...
+facturacion.js:5039 📋 Respuesta recibida: 200 
+facturacion.js:5046 📋 === DEBUGGING RESPUESTA COMPLETA ===
+facturacion.js:5047 📋 Resultado completo: Array(22)
+facturacion.js:5048 📋 Tipo de resultado: object
+facturacion.js:5049 📋 Propiedades del resultado: Array(22)
+facturacion.js:5058 ✅ Facturas encontradas como array directo: 22
+facturacion.js:5121 📋 Mostrando 22 facturas pendientes
+facturacion.js:5142 📋 Mostrando 22 facturas pendientes
+facturacion.js:5251 🔄 === PROCESANDO FACTURA PENDIENTE ===
+facturacion.js:5252 🔄 Factura: Object
+facturacion.js:5255 🔍 Iniciando verificación de stock para factura: 114
+facturacion.js:4252 📦 === VERIFICANDO STOCK PARA FACTURA ===
+facturacion.js:4253 📦 Factura ID: 114
+facturacion.js:4272 📦 === RESPUESTA DEL SERVIDOR ===
+facturacion.js:4273 📦 Resultado completo: {
+  "success": true,
+  "hayProblemasStock": true,
+  "tieneProblemas": true,
+  "productosConProblemas": [
+    {
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcion": "Para ver si aqui si toma las cantidades 11",
+      "precio": 120000,
+      "cantidadRequerida": 1,
+      "stockDisponible": 0,
+      "problema": "Stock insuficiente",
+      "diferencia": 1
+    }
+  ],
+  "message": "Se encontraron 1 productos con problemas de stock"
+}
+facturacion.js:4274 📦 Tipo: object
+facturacion.js:4275 📦 Propiedades: Array(5)
+facturacion.js:4328 📦 === RESULTADO FINAL ===
+facturacion.js:4329 📦 Success: true
+facturacion.js:4330 📦 Tiene problemas: true
+facturacion.js:4331 📦 Productos con problemas: 1
+facturacion.js:4332 📦 Productos normalizados: Array(1)
+facturacion.js:5258 🔍 Resultado de verificación de stock: Object
+facturacion.js:5314 📦 === CARGANDO FACTURA EN CARRITO ===
+facturacion.js:5315 📦 Datos completos de la factura recibida: Object
+facturacion.js:5316 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+facturacion.js:5317 📦 Factura completa recibida: {
+  "facturaId": 114,
+  "numeroFactura": "FAC-202507-000045",
+  "nombreCliente": "Julissa Mejias",
+  "emailCliente": "jmejias@ticodevcr.com",
+  "identificacionCliente": "123",
+  "telefonoCliente": "62828588",
+  "direccionCliente": "moin",
+  "total": 259900,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 114,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    },
+    {
+      "detalleFacturaId": 115,
+      "productoId": 20,
+      "nombreProducto": "Llanta Agregar Marca Agrega Modelo",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 110000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 110000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+facturacion.js:5318 📦 Datos del cliente extraídos: Object
+facturacion.js:5333 📦 Todas las propiedades de factura: Array(10)
+facturacion.js:5344 💾 Factura pendiente guardada globalmente: Object
+facturacion.js:5410 👤 Cliente seleccionado creado: Object
+facturacion.js:4134 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:4134 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:5439 ✅ Factura cargada en carrito: Object
+facturacion.js:5279 ⚠️ === PROBLEMAS DE STOCK DETECTADOS ===
+facturacion.js:5280 ⚠️ Cantidad: 1
+facturacion.js:5281 ⚠️ Productos: Array(1)
+facturacion.js:4356 ⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===
+facturacion.js:4357 ⚠️ Productos recibidos: Array(1)
+facturacion.js:4358 ⚠️ Factura: Object
+facturacion.js:4373 ⚠️ Inicializando modal de problemas de stock...
+facturacion.js:4714 ⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===
+facturacion.js:4745 ✅ Eventos del modal de problemas de stock configurados con delegación
+facturacion.js:4458 ⚠️ === MOSTRANDO PRODUCTOS CON PROBLEMAS ===
+facturacion.js:4459 ⚠️ Cantidad de productos: 1
+facturacion.js:4460 ⚠️ Productos detallados: Array(1)
+facturacion.js:4461 ⚠️ Factura: Object
+facturacion.js:4481 ⚠️ Información de la factura extraída: Object
+facturacion.js:4499 ⚠️ Procesando producto 1: Object
+facturacion.js:4542 ⚠️ Productos válidos con problemas: 1
+facturacion.js:4575 ✅ Modal de problemas de stock mostrado correctamente
+facturacion.js:4567 🗑️ Eliminar producto problema ID: 17
+facturacion.js:4593 🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA ===
+facturacion.js:4594 🗑️ Producto ID: 17
+facturacion.js:4595 🗑️ Factura pendiente actual: Object
+facturacion.js:4625 🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA DE STOCK ===
+facturacion.js:4626 🗑️ Factura ID: 114
+facturacion.js:4627 🗑️ Producto ID: 17
+facturacion.js:4664 📋 Respuesta del servidor: Object
+facturacion.js:4700 ❌ Error eliminando producto: Error: Error interno del servidor
+    at eliminarProductoConProblema (facturacion.js:4696:19)
+eliminarProductoConProblema @ facturacion.js:4700
+await in eliminarProductoConProblema
+eliminarProductoProblema @ facturacion.js:4600
+(anonymous) @ facturacion.js:4568
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2

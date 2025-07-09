@@ -1101,6 +1101,76 @@ namespace GestionLlantera.Web.Services
                 return null;
             }
         }
+
+        public async Task<(bool success, object? data, string? message, string? details)> EliminarProductosFacturaAsync(object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ === ELIMINANDO PRODUCTOS DE FACTURA ===");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(request);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
+
+                // Llamar al endpoint del API para eliminar productos
+                var response = await _httpClient.PostAsync("api/Facturacion/eliminar-productos-factura", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                    return (
+                        success: true,
+                        data: resultado,
+                        message: "Productos eliminados exitosamente",
+                        details: null
+                    );
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API eliminando productos: {StatusCode} - {Content}",
+                        response.StatusCode, responseContent);
+
+                    string errorMessage = response.StatusCode switch
+                    {
+                        System.Net.HttpStatusCode.Unauthorized => "Token de autenticación inválido o expirado",
+                        System.Net.HttpStatusCode.NotFound => "Factura no encontrada",
+                        System.Net.HttpStatusCode.BadRequest => "Datos de la solicitud inválidos",
+                        System.Net.HttpStatusCode.InternalServerError => "Error interno del servidor",
+                        _ => $"Error del servidor: {response.StatusCode}"
+                    };
+
+                    return (
+                        success: false,
+                        data: null,
+                        message: errorMessage,
+                        details: responseContent
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error inesperado eliminando productos de factura");
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno al eliminar productos: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
     }
     // Modelos para la deserialización
     public class StockVerificationResponse

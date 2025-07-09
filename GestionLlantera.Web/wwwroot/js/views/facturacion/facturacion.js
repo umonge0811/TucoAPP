@@ -1966,6 +1966,16 @@ async function completarFacturaExistente(facturaId) {
         if (result.success) {
             console.log('✅ Factura completada exitosamente:', result);
             
+            // ✅ PRESERVAR INFORMACIÓN DE FACTURA SI NO ESTÁ EN EL RESULTADO
+            if (!result.numeroFactura && facturaPendienteActual && facturaPendienteActual.numeroFactura) {
+                console.log('📋 Preservando información de factura para recibo:', facturaPendienteActual.numeroFactura);
+                window.facturaParaRecibo = {
+                    numeroFactura: facturaPendienteActual.numeroFactura,
+                    nombreCliente: facturaPendienteActual.nombreCliente || clienteSeleccionado?.nombre,
+                    usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre
+                };
+            }
+            
             // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
             const productosParaRecibo = [...productosEnVenta];
             
@@ -2997,26 +3007,32 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('🖨️ Productos:', productos);
         console.log('🖨️ Método de pago:', metodoPago);
         console.log('🖨️ Factura pendiente actual:', facturaPendienteActual);
+        console.log('🖨️ Factura preservada para recibo:', window.facturaParaRecibo);
 
-        // ✅ EXTRACCIÓN MEJORADA DEL NÚMERO DE FACTURA
+        // ✅ EXTRACCIÓN MEJORADA DEL NÚMERO DE FACTURA CON INFORMACIÓN PRESERVADA
         let numeroFactura = 'N/A';
         
-        // Prioridad 1: Desde resultadoFactura (respuesta del servidor)
-        if (resultadoFactura && resultadoFactura.numeroFactura) {
+        // Prioridad 1: Desde información preservada (para casos de productos eliminados)
+        if (window.facturaParaRecibo && window.facturaParaRecibo.numeroFactura) {
+            numeroFactura = window.facturaParaRecibo.numeroFactura;
+            console.log('🖨️ Número de factura desde información preservada:', numeroFactura);
+        }
+        // Prioridad 2: Desde resultadoFactura (respuesta del servidor)
+        else if (resultadoFactura && resultadoFactura.numeroFactura) {
             numeroFactura = resultadoFactura.numeroFactura;
             console.log('🖨️ Número de factura desde resultadoFactura:', numeroFactura);
         }
-        // Prioridad 2: Desde resultadoFactura.data
+        // Prioridad 3: Desde resultadoFactura.data
         else if (resultadoFactura && resultadoFactura.data && resultadoFactura.data.numeroFactura) {
             numeroFactura = resultadoFactura.data.numeroFactura;
             console.log('🖨️ Número de factura desde resultadoFactura.data:', numeroFactura);
         }
-        // Prioridad 3: Desde facturaPendienteActual
+        // Prioridad 4: Desde facturaPendienteActual
         else if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
             numeroFactura = facturaPendienteActual.numeroFactura;
             console.log('🖨️ Número de factura desde facturaPendienteActual:', numeroFactura);
         }
-        // Prioridad 4: Desde los productos si tienen facturaId
+        // Prioridad 5: Desde los productos si tienen facturaId
         else if (productos && productos.length > 0 && productos[0].facturaId) {
             numeroFactura = `FAC-${productos[0].facturaId}`;
             console.log('🖨️ Número de factura generado desde facturaId:', numeroFactura);
@@ -3036,14 +3052,16 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        // ✅ CREAR OBJETO DE DATOS COMPLETO CON INFORMACIÓN EXTRAÍDA
+        // ✅ CREAR OBJETO DE DATOS COMPLETO CON INFORMACIÓN EXTRAÍDA Y PRESERVADA
         const datosRecibo = {
             numeroFactura: numeroFactura,
-            nombreCliente: clienteSeleccionado?.nombre || 
+            nombreCliente: window.facturaParaRecibo?.nombreCliente ||
+                          clienteSeleccionado?.nombre || 
                           clienteSeleccionado?.nombreCliente || 
                           resultadoFactura?.nombreCliente || 
                           'Cliente General',
-            usuarioCreadorNombre: resultadoFactura?.usuarioCreadorNombre || 
+            usuarioCreadorNombre: window.facturaParaRecibo?.usuarioCreadorNombre ||
+                                 resultadoFactura?.usuarioCreadorNombre || 
                                  facturaPendienteActual?.usuarioCreadorNombre || 
                                  obtenerUsuarioActual()?.nombre || 
                                  'Sistema'
@@ -3067,6 +3085,12 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
 
         // Usar la función existente de generación de recibos
         generarRecibo(datosRecibo, productos, totalesRecibo);
+
+        // ✅ LIMPIAR INFORMACIÓN PRESERVADA DESPUÉS DE USAR
+        if (window.facturaParaRecibo) {
+            console.log('🧹 Limpiando información preservada de factura');
+            delete window.facturaParaRecibo;
+        }
 
         console.log('✅ Recibo de factura completada generado exitosamente con número:', numeroFactura);
 
@@ -4524,8 +4548,8 @@ function mostrarProductosConProblemas(productos, factura) {
                             </td>
                             <td class="text-center">
                                 <button type="button" 
-                                        class="btn btn-sm btn-outline-danger" 
-                                        onclick="eliminarProductoProblema(${productoId})"
+                                        class="btn btn-sm btn-outline-danger btn-eliminar-problema" 
+                                        data-producto-id="${productoId}"
                                         title="Eliminar este producto de la factura">
                                     <i class="bi bi-trash"></i>
                                 </button>
@@ -4559,6 +4583,15 @@ function mostrarProductosConProblemas(productos, factura) {
         // Actualizar tabla
         $('#problemasStockTableBody').html(html);
         
+        // ✅ CONFIGURAR EVENTOS PARA BOTONES DE ELIMINAR PRODUCTO
+        $(document).off('click.eliminarProblema', '.btn-eliminar-problema').on('click.eliminarProblema', '.btn-eliminar-problema', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const productoId = $(this).data('producto-id');
+            console.log('🗑️ Eliminar producto problema ID:', productoId);
+            eliminarProductoProblema(productoId);
+        });
+        
         // Mostrar contenido y ocultar loading
         $('#problemasStockLoading').hide();
         $('#problemasStockContent').show();
@@ -4581,19 +4614,205 @@ function mostrarProductosConProblemas(productos, factura) {
  * Eliminar producto con problema de stock
  */
 function eliminarProductoProblema(productoId) {
-    const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
-    if (indiceEnCarrito !== -1) {
-        const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
-        productosEnVenta.splice(indiceEnCarrito, 1);
+    console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA ===');
+    console.log('🗑️ Producto ID:', productoId);
+    console.log('🗑️ Factura pendiente actual:', facturaPendienteActual);
+    
+    // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE
+    if (facturaPendienteActual && facturaPendienteActual.facturaId) {
+        // Si es factura pendiente, usar endpoint del servidor
+        eliminarProductoConProblema(facturaPendienteActual.facturaId, productoId);
+    } else {
+        // Si es carrito local, eliminar directamente
+        const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
+        if (indiceEnCarrito !== -1) {
+            const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+            productosEnVenta.splice(indiceEnCarrito, 1);
+            actualizarVistaCarrito();
+            actualizarTotales();
+            
+            // Ocultar fila en la tabla
+            $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
+                $(this).remove();
+            });
+            
+            mostrarToast('Producto eliminado', `${nombreProducto} removido de la factura`, 'info');
+        }
+    }
+}
+
+/**
+ * Eliminar producto con problema de stock desde el endpoint del servidor
+ */
+async function eliminarProductoConProblema(facturaId, productoId) {
+    try {
+        console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA DE STOCK ===');
+        console.log('🗑️ Factura ID:', facturaId);
+        console.log('🗑️ Producto ID:', productoId);
+        
+        const confirmacion = await Swal.fire({
+            title: '¿Eliminar producto?',
+            text: '¿Está seguro de que desea eliminar este producto de la factura?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
+
+        const response = await fetch('/Facturacion/EliminarProductosFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                facturaId: facturaId,
+                productosAEliminar: [productoId]
+            }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 Respuesta del servidor:', resultado);
+
+        if (resultado.success) {
+            // Eliminar producto del carrito local
+            const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
+            if (indiceEnCarrito !== -1) {
+                const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+                productosEnVenta.splice(indiceEnCarrito, 1);
+                
+                // Actualizar vista del carrito
+                actualizarVistaCarrito();
+                actualizarTotales();
+                actualizarEstadoBotonFinalizar();
+                
+                // Mostrar confirmación de eliminación con SweetAlert
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Producto Eliminado!',
+                    text: `${nombreProducto} ha sido eliminado exitosamente de la factura`,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                });
+                
+                // Ocultar fila en la tabla de problemas
+                $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
+                    $(this).remove();
+                    
+                    // Verificar si quedan productos con problemas
+                    const problemasRestantes = $('.problema-stock-row').length;
+                    console.log('🔍 Problemas restantes:', problemasRestantes);
+                    
+                    if (problemasRestantes === 0) {
+                        console.log('✅ No quedan productos con problemas - cerrando modal y abriendo finalización');
+                        
+                        // ✅ PRESERVAR INFORMACIÓN DE LA FACTURA ANTES DE CONTINUAR
+                        if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
+                            console.log('📋 Preservando número de factura:', facturaPendienteActual.numeroFactura);
+                            
+                            // Asegurar que la factura pendiente mantenga su información
+                            window.facturaParaRecibo = {
+                                numeroFactura: facturaPendienteActual.numeroFactura,
+                                nombreCliente: facturaPendienteActual.nombreCliente || clienteSeleccionado?.nombre,
+                                usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre
+                            };
+                        }
+                        
+                        // Marcar cierre válido para evitar limpiar carrito
+                        if (window.marcarCierreValidoProblemasStock) {
+                            window.marcarCierreValidoProblemasStock();
+                        }
+                        
+                        // Cerrar modal de problemas
+                        $('#problemasStockModal').modal('hide');
+                        
+                        // Abrir modal de finalización después de un breve delay
+                        setTimeout(() => {
+                            if (productosEnVenta.length > 0) {
+                                mostrarModalFinalizarVenta();
+                            } else {
+                                mostrarToast('Carrito vacío', 'No quedan productos para finalizar la venta', 'warning');
+                            }
+                        }, 500);
+                    }
+                });
+                
+                console.log('✅ Producto eliminado exitosamente');
+            }
+            
+            // Actualizar carrito después de eliminar
+            actualizarCarritoDespuesDeEliminar([productoId]);
+            
+        } else {
+            throw new Error(resultado.message || 'Error al eliminar el producto');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando producto:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo eliminar el producto: ' + error.message,
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+/**
+ * Actualizar carrito después de eliminar productos de una factura
+ */
+function actualizarCarritoDespuesDeEliminar(productosEliminados) {
+    console.log('🔄 === ACTUALIZANDO CARRITO DESPUÉS DE ELIMINAR ===');
+    console.log('🔄 Productos a eliminar del carrito:', productosEliminados);
+    console.log('🔄 Estado inicial del carrito:', productosEnVenta.length, 'productos');
+
+    try {
+        // ✅ ELIMINAR PRODUCTOS DEL CARRITO LOCAL
+        productosEliminados.forEach(productoId => {
+            const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId == productoId);
+            if (indiceEnCarrito !== -1) {
+                const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+                productosEnVenta.splice(indiceEnCarrito, 1);
+                console.log('🗑️ Producto eliminado del carrito:', nombreProducto);
+            }
+        });
+
+        console.log('🔄 Estado final del carrito:', productosEnVenta.length, 'productos');
+
+        // ✅ ACTUALIZAR VISTA DEL CARRITO
         actualizarVistaCarrito();
         actualizarTotales();
-        
-        // Ocultar fila en la tabla
-        $(`.problema-stock-row`).filter(function() {
-            return $(this).find('button').attr('onclick').includes(productoId);
-        }).fadeOut();
-        
-        mostrarToast('Producto eliminado', `${nombreProducto} removido de la factura`, 'info');
+        actualizarEstadoBotonFinalizar();
+
+        // ✅ LIMPIAR ESTADO DE FACTURA PENDIENTE SI NO QUEDAN PRODUCTOS
+        if (productosEnVenta.length === 0) {
+            facturaPendienteActual = null;
+            clienteSeleccionado = null;
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            console.log('🧹 Carrito limpiado completamente - no quedan productos');
+        }
+
+        console.log('✅ Carrito actualizado exitosamente después de eliminar productos');
+
+    } catch (error) {
+        console.error('❌ Error actualizando carrito después de eliminar:', error);
     }
 }
 
@@ -4604,35 +4823,35 @@ function configurarEventosModalProblemasStock() {
     console.log('⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===');
     
     // ✅ LIMPIAR EVENTOS ANTERIORES PARA EVITAR DUPLICADOS
-    $('#btnProcesarConProblemas').off('click.problemasStock');
-    $('#btnContinuarSinProblemas').off('click.problemasStock');
-    $('#btnCancelarProblemasStock').off('click.problemasStock');
+    $(document).off('click.problemasStock', '#btnProcesarConProblemas');
+    $(document).off('click.problemasStock', '#btnContinuarSinProblemas');
+    $(document).off('click.problemasStock', '#btnCancelarProblemasStock');
     
-    // ✅ CONFIGURAR EVENTO PROCESAR CON PROBLEMAS
-    $('#btnProcesarConProblemas').on('click.problemasStock', function(e) {
+    // ✅ CONFIGURAR EVENTO PROCESAR CON PROBLEMAS (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnProcesarConProblemas', function(e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('✅ BOTÓN PROCESAR CON PROBLEMAS CLICKEADO');
         procesarConProblemas();
     });
     
-    // ✅ CONFIGURAR EVENTO CONTINUAR SIN PROBLEMAS
-    $('#btnContinuarSinProblemas').on('click.problemasStock', function(e) {
+    // ✅ CONFIGURAR EVENTO CONTINUAR SIN PROBLEMAS (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnContinuarSinProblemas', function(e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('✅ BOTÓN CONTINUAR SIN PROBLEMAS CLICKEADO');
         continuarSinProblemas();
     });
     
-    // ✅ CONFIGURAR EVENTO CANCELAR
-    $('#btnCancelarProblemasStock').on('click.problemasStock', function(e) {
+    // ✅ CONFIGURAR EVENTO CANCELAR (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnCancelarProblemasStock', function(e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('❌ BOTÓN CANCELAR CLICKEADO');
         cancelarProblemasStock();
     });
     
-    console.log('✅ Eventos del modal de problemas de stock configurados');
+    console.log('✅ Eventos del modal de problemas de stock configurados con delegación');
 }
 
 function procesarConProblemas() {
@@ -5468,6 +5687,7 @@ window.agregarNuevoPago = agregarNuevoPago;
 window.eliminarPago = eliminarPago;
 window.validarPagosMultiples = validarPagosMultiples;
 window.eliminarProductoProblema = eliminarProductoProblema;
+window.eliminarProductoConProblema = eliminarProductoConProblema;
 window.procesarConProblemas = procesarConProblemas;
 window.continuarSinProblemas = continuarSinProblemas;
 window.cancelarProblemasStock = cancelarProblemasStock;
