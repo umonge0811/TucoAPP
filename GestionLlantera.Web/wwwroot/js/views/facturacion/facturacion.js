@@ -4864,31 +4864,7 @@ async function facturarTodosModos() {
     console.log('⚠️ Usuario decidió facturar con productos pendientes de entrega');
     
     try {
-        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM
-        const productosConProblemas = [];
-        $('.problema-stock-row').each(function() {
-            const productoId = $(this).data('producto-id');
-            const nombreProducto = $(this).find('td:first strong').text();
-            const cantidadRequerida = parseInt($(this).find('.badge.bg-info').text());
-            const stockDisponible = parseInt($(this).find('.badge.bg-warning, .badge.bg-danger').first().text());
-            const faltante = cantidadRequerida - stockDisponible;
-            
-            productosConProblemas.push({
-                productoId: productoId,
-                nombreProducto: nombreProducto,
-                cantidadRequerida: cantidadRequerida,
-                stockDisponible: stockDisponible,
-                cantidadPendiente: faltante
-            });
-        });
-
-        console.log('⚠️ Productos con problemas detectados:', productosConProblemas);
-
         // ✅ CONFIRMAR LA ACCIÓN CON EL USUARIO
-        const productosHtml = productosConProblemas.map(p => 
-            `<li><strong>${p.nombreProducto}</strong> - Pendiente: ${p.cantidadPendiente} unidades</li>`
-        ).join('');
-
         const confirmacion = await Swal.fire({
             title: '¿Facturar de todos modos?',
             html: `
@@ -4898,123 +4874,7 @@ async function facturarTodosModos() {
                         <li>Creará la factura con todos los productos</li>
                         <li>Los productos sin stock quedarán pendientes de entrega</li>
                         <li>Se registrarán automáticamente para entrega posterior</li>
-                        <li>El cliente recibirá notificación sobre productos pendientes</li>
-                    </ul>
-                    <div class="mt-3">
-                        <strong>Productos que quedarán pendientes:</strong>
-                        <ul class="mt-2">
-                            ${productosHtml}
-                        </ul>
-                    </div>
-                </div>
-            `,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, facturar de todas formas',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#f39c12',
-            cancelButtonColor: '#6c757d'
-        });
-
-        if (!confirmacion.isConfirmed) {
-            return;
-        }
-
-        // ✅ PREPARAR DATOS PARA ENVÍO AL SERVIDOR
-        const datosFacturacion = {
-            facturaId: facturaPendienteActual?.facturaId || null,
-            clienteId: clienteSeleccionado?.clienteId,
-            productos: productosEnVenta.map(producto => ({
-                productoId: producto.productoId,
-                cantidad: producto.cantidad,
-                precio: producto.precio
-            })),
-            productosConProblemas: productosConProblemas,
-            metodoPago: 'Efectivo', // Por defecto
-            observaciones: 'Factura procesada con productos pendientes de entrega'
-        };
-
-        console.log('⚠️ Enviando datos al servidor:', datosFacturacion);
-
-        // ✅ LLAMAR AL NUEVO ENDPOINT
-        const response = await fetch('/api/facturacion/procesar-con-pendientes', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${window.facturaConfig?.Token || ''}`
-            },
-            body: JSON.stringify(datosFacturacion),
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Error del servidor:', errorText);
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const resultado = await response.json();
-        console.log('✅ Respuesta del servidor:', resultado);
-
-        if (resultado.success) {
-            // ✅ MARCAR CIERRE VÁLIDO DEL MODAL
-            window.marcarCierreValidoProblemasStock();
-            
-            // ✅ CERRAR MODAL DE PROBLEMAS
-            $('#problemasStockModal').modal('hide');
-            
-            // ✅ MOSTRAR CONFIRMACIÓN DE ÉXITO
-            Swal.fire({
-                icon: 'success',
-                title: '¡Factura Procesada!',
-                html: `
-                    <div class="text-start">
-                        <p><strong>Factura número:</strong> ${resultado.numeroFactura}</p>
-                        <p><strong>Total facturado:</strong> ₡${resultado.total}</p>
-                        <div class="mt-3">
-                            <h6>Productos pendientes de entrega:</h6>
-                            <ul>
-                                ${productosConProblemas.map(p => 
-                                    `<li>${p.nombreProducto}: ${p.cantidadPendiente} unidades</li>`
-                                ).join('')}
-                            </ul>
-                        </div>
-                        <div class="alert alert-info mt-3">
-                            <small><i class="bi bi-info-circle me-1"></i>
-                            Los productos pendientes han sido registrados para entrega posterior.
-                            </small>
-                        </div>
-                    </div>
-                `,
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: '#28a745'
-            });
-
-            // ✅ LIMPIAR CARRITO Y ESTADO
-            productosEnVenta = [];
-            clienteSeleccionado = null;
-            facturaPendienteActual = null;
-            
-            // ✅ ACTUALIZAR INTERFAZ
-            $('#clienteBusqueda').val('');
-            $('#clienteSeleccionado').addClass('d-none');
-            actualizarVistaCarrito();
-            actualizarTotales();
-            actualizarEstadoBotonFinalizar();
-
-        } else {
-            throw new Error(resultado.message || 'Error procesando la factura');
-        }
-
-    } catch (error) {
-        console.error('❌ Error en facturarTodosModos:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No se pudo procesar la factura: ' + error.message,
-            confirmButtonColor: '#dc3545'
-        });
-    }cación cuando llegue el stock</li>
+                        <li>El cliente recibirá notificación cuando llegue el stock</li>
                     </ul>
                     <p class="text-warning"><strong>¿Desea continuar?</strong></p>
                 </div>
@@ -5045,7 +4905,8 @@ async function facturarTodosModos() {
                     nombreProducto: nombreProducto,
                     cantidadRequerida: cantidadRequerida,
                     cantidadPendiente: Math.max(0, cantidadRequerida - stockDisponible),
-                    stockDisponible: stockDisponible
+                    stockDisponible: stockDisponible,
+                    precioUnitario: productosEnVenta.find(p => p.productoId == productoId)?.precioUnitario || 0
                 });
             }
         });
@@ -5074,6 +4935,7 @@ async function facturarTodosModos() {
         console.error('❌ Error en facturarTodosModos:', error);
         mostrarToast('Error', 'No se pudo procesar la facturación con pendientes', 'danger');
     }
+}
 }
 
 function cancelarProblemasStock() {
