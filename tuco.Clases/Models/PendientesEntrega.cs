@@ -47,9 +47,9 @@ namespace tuco.Clases.Models
         public virtual Producto Producto { get; set; }
 
         [ForeignKey("UsuarioCreacion")]
-        public virtual Usuario UsuarioCreacion { get; set; }
+        public virtual Usuario UsuarioCreacionNavigation { get; set; }
 
         [ForeignKey("UsuarioEntrega")]
-        public virtual Usuario? UsuarioEntrega { get; set; }
+        public virtual Usuario? UsuarioEntregaNavigation { get; set; }
     }
 }
