@@ -2305,6 +2305,9 @@ async function crearNuevaFactura() {
             metodoPago: metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
             usuarioCreadorId: usuarioId, // ✅ ID del usuario actual
+            // ✅ INCLUIR PRODUCTOS PENDIENTES SI EXISTEN
+            productosPendientesEntrega: window.productosPendientesEntrega || [],
+            tieneProductosPendientes: window.facturaConPendientes || false,
             detallesPago: esPagoMultiple ? detallesPagoActuales.map(pago => ({
                 metodoPago: pago.metodoPago,
                 monto: pago.monto,
@@ -2457,6 +2460,14 @@ async function crearNuevaFactura() {
             actualizarVistaCarrito();
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
+            
+            // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES
+            if (window.productosPendientesEntrega) {
+                delete window.productosPendientesEntrega;
+            }
+            if (window.facturaConPendientes) {
+                delete window.facturaConPendientes;
+            }
 
             // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DE COMPLETAR LA VENTA
             setTimeout(async () => {
@@ -4823,24 +4834,15 @@ function configurarEventosModalProblemasStock() {
     console.log('⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===');
     
     // ✅ LIMPIAR EVENTOS ANTERIORES PARA EVITAR DUPLICADOS
-    $(document).off('click.problemasStock', '#btnProcesarConProblemas');
-    $(document).off('click.problemasStock', '#btnContinuarSinProblemas');
+    $(document).off('click.problemasStock', '#btnFacturarTodosModos');
     $(document).off('click.problemasStock', '#btnCancelarProblemasStock');
     
-    // ✅ CONFIGURAR EVENTO PROCESAR CON PROBLEMAS (delegación de eventos)
-    $(document).on('click.problemasStock', '#btnProcesarConProblemas', function(e) {
+    // ✅ CONFIGURAR EVENTO FACTURAR DE TODOS MODOS (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnFacturarTodosModos', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('✅ BOTÓN PROCESAR CON PROBLEMAS CLICKEADO');
-        procesarConProblemas();
-    });
-    
-    // ✅ CONFIGURAR EVENTO CONTINUAR SIN PROBLEMAS (delegación de eventos)
-    $(document).on('click.problemasStock', '#btnContinuarSinProblemas', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('✅ BOTÓN CONTINUAR SIN PROBLEMAS CLICKEADO');
-        continuarSinProblemas();
+        console.log('✅ BOTÓN FACTURAR DE TODOS MODOS CLICKEADO');
+        facturarTodosModos();
     });
     
     // ✅ CONFIGURAR EVENTO CANCELAR (delegación de eventos)
@@ -4854,91 +4856,83 @@ function configurarEventosModalProblemasStock() {
     console.log('✅ Eventos del modal de problemas de stock configurados con delegación');
 }
 
-function procesarConProblemas() {
-    console.log('⚠️ Usuario decidió procesar con problemas de stock');
-    
-    // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
-    if (window.marcarCierreValidoProblemasStock) {
-        window.marcarCierreValidoProblemasStock();
-    }
-    
-    // Cerrar modal de problemas
-    $('#problemasStockModal').modal('hide');
-    
-    // Continuar con el modal de finalización después de un breve delay
-    setTimeout(() => {
-        mostrarModalFinalizarVenta();
-    }, 500);
-}
-
-function continuarSinProblemas() {
-    console.log('✅ Usuario decidió continuar solo con productos válidos');
+/**
+ * Facturar de todos modos - Crear registros pendientes para productos sin stock
+ */
+async function facturarTodosModos() {
+    console.log('⚠️ === FACTURAR DE TODOS MODOS ===');
+    console.log('⚠️ Usuario decidió facturar con productos pendientes de entrega');
     
     try {
+        // ✅ CONFIRMAR LA ACCIÓN CON EL USUARIO
+        const confirmacion = await Swal.fire({
+            title: '¿Facturar de todos modos?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Esta acción:</strong></p>
+                    <ul>
+                        <li>Creará la factura con todos los productos</li>
+                        <li>Los productos sin stock quedarán pendientes de entrega</li>
+                        <li>Se registrarán automáticamente para entrega posterior</li>
+                        <li>El cliente recibirá notificación cuando llegue el stock</li>
+                    </ul>
+                    <p class="text-warning"><strong>¿Desea continuar?</strong></p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, Facturar de todos modos',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
+
+        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM
+        const productosConProblemas = [];
+        $('.problema-stock-row').each(function() {
+            const productoId = $(this).data('producto-id');
+            const nombreProducto = $(this).find('td:first strong').text();
+            const cantidadRequerida = parseInt($(this).find('.badge.bg-info').text()) || 0;
+            const stockDisponible = parseInt($(this).find('.badge.bg-warning, .badge.bg-danger').text()) || 0;
+            
+            if (productoId) {
+                productosConProblemas.push({
+                    productoId: parseInt(productoId),
+                    nombreProducto: nombreProducto,
+                    cantidadRequerida: cantidadRequerida,
+                    cantidadPendiente: Math.max(0, cantidadRequerida - stockDisponible),
+                    stockDisponible: stockDisponible
+                });
+            }
+        });
+        
+        console.log('🔍 Productos con problemas para facturar:', productosConProblemas);
+        
         // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
         if (window.marcarCierreValidoProblemasStock) {
             window.marcarCierreValidoProblemasStock();
         }
         
-        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM
-        const productosConProblemasIds = [];
-        $('.problema-stock-row').each(function() {
-            const productoId = $(this).data('producto-id');
-            if (productoId) {
-                productosConProblemasIds.push(parseInt(productoId));
-            }
-        });
-        
-        console.log('🔍 Productos con problemas identificados:', productosConProblemasIds);
-        
-        if (productosConProblemasIds.length > 0) {
-            // ✅ FILTRAR PRODUCTOS DEL CARRITO (remover los que tienen problemas)
-            const productosOriginales = [...productosEnVenta];
-            productosEnVenta = productosEnVenta.filter(producto => 
-                !productosConProblemasIds.includes(parseInt(producto.productoId))
-            );
-            
-            const productosEliminados = productosOriginales.length - productosEnVenta.length;
-            
-            console.log('🗑️ Productos eliminados del carrito:', productosEliminados);
-            console.log('✅ Productos restantes en carrito:', productosEnVenta.length);
-            
-            // ✅ ACTUALIZAR VISTA DEL CARRITO
-            actualizarVistaCarrito();
-            actualizarTotales();
-            actualizarEstadoBotonFinalizar();
-            
-            // ✅ MOSTRAR NOTIFICACIÓN AL USUARIO
-            if (productosEliminados > 0) {
-                mostrarToast(
-                    'Productos filtrados', 
-                    `Se eliminaron ${productosEliminados} producto(s) con problemas de stock`, 
-                    'warning'
-                );
-            }
-        }
+        // ✅ GUARDAR INFORMACIÓN DE PRODUCTOS PENDIENTES PARA EL PROCESO DE FACTURACIÓN
+        window.productosPendientesEntrega = productosConProblemas;
         
         // ✅ CERRAR MODAL DE PROBLEMAS
         $('#problemasStockModal').modal('hide');
         
-        // ✅ VALIDAR QUE AÚN HAYA PRODUCTOS EN EL CARRITO
-        if (productosEnVenta.length === 0) {
-            mostrarToast(
-                'Carrito vacío', 
-                'No quedan productos válidos para procesar la venta', 
-                'warning'
-            );
-            return;
-        }
-        
-        // ✅ CONTINUAR CON MODAL DE FINALIZACIÓN
+        // ✅ CONTINUAR CON MODAL DE FINALIZACIÓN DESPUÉS DE UN BREVE DELAY
         setTimeout(() => {
+            // Agregar flag para indicar que hay pendientes
+            window.facturaConPendientes = true;
             mostrarModalFinalizarVenta();
         }, 500);
         
     } catch (error) {
-        console.error('❌ Error filtrando productos:', error);
-        mostrarToast('Error', 'No se pudieron filtrar los productos con problemas', 'danger');
+        console.error('❌ Error en facturarTodosModos:', error);
+        mostrarToast('Error', 'No se pudo procesar la facturación con pendientes', 'danger');
     }
 }
 
@@ -5688,8 +5682,7 @@ window.eliminarPago = eliminarPago;
 window.validarPagosMultiples = validarPagosMultiples;
 window.eliminarProductoProblema = eliminarProductoProblema;
 window.eliminarProductoConProblema = eliminarProductoConProblema;
-window.procesarConProblemas = procesarConProblemas;
-window.continuarSinProblemas = continuarSinProblemas;
+window.facturarTodosModos = facturarTodosModos;
 window.cancelarProblemasStock = cancelarProblemasStock;
 
 // Estilos CSS para cards de productos
