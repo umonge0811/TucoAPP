@@ -1,24 +1,13 @@
 using GestionLlantera.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.DTOs.Facturacion;
-using Tuco.Clases.Models;
 using System.Text.Json;
-using System.Text;
-using GestionLlantera.Web.Services.Interfaces;
-using ProductoVentaFacturacion = Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO;
-using ProductoVentaService = GestionLlantera.Web.Services.Interfaces.ProductoVentaDTO;
-using AjusteStockFacturacionRequest = GestionLlantera.Web.Services.Interfaces.AjusteStockFacturacionRequest;
-using ProductoAjusteStock = GestionLlantera.Web.Services.Interfaces.ProductoAjusteStock;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -278,8 +267,54 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFacturasPendientes()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
+
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}", 
+                    resultado.success, resultado.message);
+
+                if (resultado.success && resultado.data != null)
+                {
+                    _logger.LogInformation("📋 Procesando respuesta del API de facturas pendientes");
+                    return Json(resultado.data);
+                }
+                else
+                {
+                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "No se pudieron obtener las facturas pendientes",
+                        facturas = new List<object>(),
+                        totalFacturas = 0
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    facturas = new List<object>(),
+                    totalFacturas = 0
+                });
+            }
+        }
+
         [HttpPost]
-        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaFacturacion> productos)
+        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaDTO> productos)
         {
             try
             {
@@ -289,25 +324,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
-
-                // Convertir a la clase esperada por el servicio
-                var productosService = productos.Select(p => new ProductoVentaService
-                {
-                    ProductoId = p.ProductoId,
-                    NombreProducto = p.NombreProducto,
-                    Descripcion = p.Descripcion,
-                    PrecioUnitario = p.Precio,
-                    Cantidad = 1, // Valor por defecto
-                    CantidadEnInventario = p.CantidadEnInventario,
-                    StockMinimo = p.StockMinimo,
-                    EsLlanta = p.EsLlanta,
-                    MedidaCompleta = p.MedidaCompleta,
-                    Marca = p.Marca,
-                    Modelo = p.Modelo,
-                    ImagenesUrls = p.ImagenesUrls
-                }).ToList();
-
-                var stockDisponible = await _facturacionService.VerificarStockDisponibleAsync(productosService, jwtToken);
+                var stockDisponible = await _facturacionService.VerificarStockDisponibleAsync(productos, jwtToken);
 
                 return Json(new { success = stockDisponible });
             }
