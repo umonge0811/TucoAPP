@@ -4675,15 +4675,16 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                 actualizarTotales();
                 actualizarEstadoBotonFinalizar();
                 
-                // Mostrar confirmación de eliminación inmediatamente
+                // Mostrar confirmación de eliminación inmediatamente con SweetAlert modal
                 Swal.fire({
                     icon: 'success',
-                    title: 'Producto eliminado',
-                    text: `${nombreProducto} ha sido eliminado de la factura`,
-                    timer: 2000,
-                    showConfirmButton: false,
-                    toast: true,
-                    position: 'top-end'
+                    title: '¡Producto Eliminado!',
+                    text: `${nombreProducto} ha sido eliminado exitosamente de la factura`,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
                 });
                 
                 // Ocultar fila en la tabla de problemas
