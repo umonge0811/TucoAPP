@@ -1138,8 +1138,290 @@ namespace API.Controllers
 
 
         // =====================================
+        // GESTIÓN DE PENDIENTES DE ENTREGA
+        // =====================================
+
+        [HttpPost("pendientes-entrega")]
+        [Authorize]
+        public async Task<IActionResult> CrearPendientesEntrega([FromBody] CrearPendientesEntregaRequest request)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Facturas",
+                "Solo usuarios con permiso 'CrearFacturas' pueden crear pendientes de entrega");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _logger.LogInformation("📦 Creando pendientes de entrega para factura: {FacturaId}", request.FacturaId);
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
+
+                if (factura == null)
+                    return NotFound(new { message = "Factura no encontrada" });
+
+                var pendientesCreados = new List<object>();
+
+                foreach (var productoPendiente in request.ProductosPendientes)
+                {
+                    var pendienteEntrega = new PendientesEntrega
+                    {
+                        FacturaId = request.FacturaId,
+                        ProductoId = productoPendiente.ProductoId,
+                        CantidadSolicitada = productoPendiente.CantidadSolicitada,
+                        CantidadPendiente = productoPendiente.CantidadPendiente,
+                        FechaCreacion = DateTime.Now,
+                        Estado = "Pendiente",
+                        Observaciones = $"Stock insuficiente al momento de la facturación. Disponible: {productoPendiente.StockDisponible}",
+                        UsuarioCreacion = request.UsuarioCreacion
+                    };
+
+                    _context.PendientesEntrega.Add(pendienteEntrega);
+
+                    pendientesCreados.Add(new
+                    {
+                        productoId = productoPendiente.ProductoId,
+                        nombreProducto = productoPendiente.NombreProducto,
+                        cantidadPendiente = productoPendiente.CantidadPendiente,
+                        cantidadSolicitada = productoPendiente.CantidadSolicitada
+                    });
+
+                    _logger.LogInformation("📦 Pendiente creado: {Producto} - {Cantidad} unidades", 
+                        productoPendiente.NombreProducto, productoPendiente.CantidadPendiente);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Se crearon {pendientesCreados.Count} pendientes de entrega",
+                    pendientesCreados = pendientesCreados,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error creando pendientes de entrega");
+                return StatusCode(500, new { message = "Error al crear pendientes de entrega" });
+            }
+        }
+
+        [HttpGet("pendientes-entrega")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<object>>> ObtenerPendientesEntrega(
+            [FromQuery] string? estado = null,
+            [FromQuery] int? facturaId = null,
+            [FromQuery] int pagina = 1,
+            [FromQuery] int tamano = 20)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo pendientes de entrega");
+
+                var query = _context.PendientesEntrega
+                    .Include(p => p.Factura)
+                    .Include(p => p.Producto)
+                        .ThenInclude(pr => pr.Llanta)
+                    .Include(p => p.UsuarioCreacionNavigation)
+                    .Include(p => p.UsuarioEntregaNavigation)
+                    .AsQueryable();
+
+                // Aplicar filtros
+                if (!string.IsNullOrWhiteSpace(estado))
+                {
+                    query = query.Where(p => p.Estado == estado);
+                }
+
+                if (facturaId.HasValue)
+                {
+                    query = query.Where(p => p.FacturaId == facturaId.Value);
+                }
+
+                var totalRegistros = await query.CountAsync();
+                var pendientes = await query
+                    .OrderByDescending(p => p.FechaCreacion)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
+                    .Select(p => new
+                    {
+                        id = p.Id,
+                        facturaId = p.FacturaId,
+                        numeroFactura = p.Factura.NumeroFactura,
+                        clienteNombre = p.Factura.NombreCliente,
+                        productoId = p.ProductoId,
+                        nombreProducto = p.Producto.NombreProducto,
+                        descripcionProducto = p.Producto.Descripcion,
+                        esLlanta = p.Producto.Llanta.Any(),
+                        medidaLlanta = p.Producto.Llanta.Any() ? 
+                            p.Producto.Llanta.First().Ancho + "/" + p.Producto.Llanta.First().Perfil + "R" + p.Producto.Llanta.First().Diametro : null,
+                        marcaLlanta = p.Producto.Llanta.Any() ? p.Producto.Llanta.First().Marca : null,
+                        cantidadSolicitada = p.CantidadSolicitada,
+                        cantidadPendiente = p.CantidadPendiente,
+                        fechaCreacion = p.FechaCreacion,
+                        fechaEntrega = p.FechaEntrega,
+                        estado = p.Estado,
+                        observaciones = p.Observaciones,
+                        usuarioCreacion = p.UsuarioCreacionNavigation.NombreUsuario,
+                        usuarioEntrega = p.UsuarioEntregaNavigation != null ? p.UsuarioEntregaNavigation.NombreUsuario : null
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    pendientes,
+                    totalRegistros,
+                    pagina,
+                    tamano,
+                    totalPaginas = (int)Math.Ceiling((double)totalRegistros / tamano)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener pendientes de entrega");
+                return StatusCode(500, new { message = "Error al obtener pendientes de entrega" });
+            }
+        }
+
+        [HttpPut("pendientes-entrega/{id}/entregar")]
+        [Authorize]
+        public async Task<IActionResult> EntregarPendiente(int id, [FromBody] EntregarPendienteRequest request)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Gestionar Entregas",
+                "Solo usuarios con permiso para gestionar entregas pueden completar pendientes");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var pendiente = await _context.PendientesEntrega
+                    .Include(p => p.Producto)
+                    .Include(p => p.Factura)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (pendiente == null)
+                    return NotFound(new { message = "Pendiente de entrega no encontrado" });
+
+                if (pendiente.Estado != "Pendiente")
+                    return BadRequest(new { message = "Este pendiente ya fue procesado" });
+
+                // Verificar stock disponible
+                var stockDisponible = (int)(pendiente.Producto.CantidadEnInventario ?? 0);
+                var cantidadAEntregar = request.CantidadEntregada ?? pendiente.CantidadPendiente;
+
+                if (stockDisponible < cantidadAEntregar)
+                {
+                    return BadRequest(new { 
+                        message = $"Stock insuficiente. Disponible: {stockDisponible}, Solicitado: {cantidadAEntregar}" 
+                    });
+                }
+
+                // Actualizar inventario
+                pendiente.Producto.CantidadEnInventario = Math.Max(0, 
+                    (pendiente.Producto.CantidadEnInventario ?? 0) - cantidadAEntregar);
+                pendiente.Producto.FechaUltimaActualizacion = DateTime.Now;
+
+                // Actualizar pendiente
+                pendiente.Estado = "Entregado";
+                pendiente.FechaEntrega = DateTime.Now;
+                pendiente.UsuarioEntrega = request.UsuarioEntrega;
+                pendiente.Observaciones = (pendiente.Observaciones ?? "") + 
+                    $" | ENTREGADO: {cantidadAEntregar} unidades el {DateTime.Now:dd/MM/yyyy HH:mm}";
+
+                if (!string.IsNullOrEmpty(request.ObservacionesEntrega))
+                {
+                    pendiente.Observaciones += $" | {request.ObservacionesEntrega}";
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Pendiente entregado: {Producto} - {Cantidad} unidades", 
+                    pendiente.Producto.NombreProducto, cantidadAEntregar);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Pendiente entregado exitosamente",
+                    cantidadEntregada = cantidadAEntregar,
+                    stockRestante = pendiente.Producto.CantidadEnInventario,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error al entregar pendiente: {Id}", id);
+                return StatusCode(500, new { message = "Error al procesar entrega" });
+            }
+        }
+
+        [HttpGet("pendientes-entrega/por-factura/{facturaId}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<object>>> ObtenerPendientesPorFactura(int facturaId)
+        {
+            try
+            {
+                var pendientes = await _context.PendientesEntrega
+                    .Include(p => p.Producto)
+                        .ThenInclude(pr => pr.Llanta)
+                    .Where(p => p.FacturaId == facturaId)
+                    .Select(p => new
+                    {
+                        id = p.Id,
+                        productoId = p.ProductoId,
+                        nombreProducto = p.Producto.NombreProducto,
+                        descripcionProducto = p.Producto.Descripcion,
+                        esLlanta = p.Producto.Llanta.Any(),
+                        medidaLlanta = p.Producto.Llanta.Any() ? 
+                            p.Producto.Llanta.First().Ancho + "/" + p.Producto.Llanta.First().Perfil + "R" + p.Producto.Llanta.First().Diametro : null,
+                        cantidadSolicitada = p.CantidadSolicitada,
+                        cantidadPendiente = p.CantidadPendiente,
+                        estado = p.Estado,
+                        fechaCreacion = p.FechaCreacion,
+                        fechaEntrega = p.FechaEntrega,
+                        observaciones = p.Observaciones
+                    })
+                    .ToListAsync();
+
+                return Ok(pendientes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener pendientes por factura: {FacturaId}", facturaId);
+                return StatusCode(500, new { message = "Error al obtener pendientes" });
+            }
+        }
+
+        // =====================================
         // DTOs PARA COMPLETAR FACTURAS
         // =====================================
+    }
+
+    public class CrearPendientesEntregaRequest
+    {
+        public int FacturaId { get; set; }
+        public int UsuarioCreacion { get; set; }
+        public List<ProductoPendienteDTO> ProductosPendientes { get; set; } = new List<ProductoPendienteDTO>();
+    }
+
+    public class ProductoPendienteDTO
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadSolicitada { get; set; }
+        public int CantidadPendiente { get; set; }
+        public int StockDisponible { get; set; }
+    }
+
+    public class EntregarPendienteRequest
+    {
+        public int? CantidadEntregada { get; set; }
+        public int UsuarioEntrega { get; set; }
+        public string? ObservacionesEntrega { get; set; }
     }
 
     public class CompletarFacturaRequest
