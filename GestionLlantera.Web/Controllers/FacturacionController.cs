@@ -1014,6 +1014,160 @@ namespace GestionLlantera.Web.Controllers
 
             return defaultValue;
         }
+
+        [HttpPost]
+        public async Task<IActionResult> RegistrarPendientesEntrega([FromBody] RegistrarPendientesEntregaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📝 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===");
+                _logger.LogInformation("📝 Factura: {NumeroFactura}, Productos: {Count}",
+                    request.NumeroFactura, request.ProductosPendientes?.Count ?? 0);
+
+                if (!await this.TienePermisoAsync("Crear Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para registrar pendientes de entrega" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.RegistrarPendientesEntregaAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message,
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error registrando pendientes de entrega");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerPendientesEntrega()
+        {
+            try
+            {
+                _logger.LogInformation("📦 === OBTENIENDO PENDIENTES DE ENTREGA ===");
+
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para ver pendientes de entrega" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.ObtenerPendientesEntregaAsync(jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        data = resultado.data,
+                        message = resultado.message
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo pendientes de entrega");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarcarProductosEntregados([FromBody] MarcarEntregadosRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("✅ === MARCANDO PRODUCTOS COMO ENTREGADOS ===");
+                _logger.LogInformation("✅ Productos a marcar: {Count}", request.ProductosIds?.Count ?? 0);
+
+                if (!await this.TienePermisoAsync("Completar Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para marcar productos como entregados" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.MarcarProductosEntregadosAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message,
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando productos como entregados");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
     }
 
     public class VerificarStockFacturaRequest
@@ -1047,5 +1201,28 @@ namespace GestionLlantera.Web.Controllers
         public string? Referencia { get; set; }
         public string? Observaciones { get; set; }
         public DateTime? FechaPago { get; set; }
+    }
+
+    public class RegistrarPendientesEntregaRequest
+    {
+        public string NumeroFactura { get; set; } = string.Empty;
+        public int FacturaId { get; set; }
+        public List<ProductoPendienteEntrega> ProductosPendientes { get; set; } = new List<ProductoPendienteEntrega>();
+    }
+
+    public class ProductoPendienteEntrega
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadPendiente { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class MarcarEntregadosRequest
+    {
+        public List<int> ProductosIds { get; set; } = new List<int>();
+        public string? ObservacionesEntrega { get; set; }
+        public DateTime? FechaEntrega { get; set; }
     }
 }
