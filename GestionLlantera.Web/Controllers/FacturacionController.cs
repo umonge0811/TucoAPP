@@ -314,7 +314,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> VerificarStock([FromBody] List<ProductoVentaDTO> productos)
+        public async Task<IActionResult> VerificarStock([FromBody] List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO> productos)
         {
             try
             {
@@ -499,29 +499,12 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<ProductoVentaFacturacion> productos)
+        public async Task<IActionResult> CalcularTotalVenta([FromBody] List<Tuco.Clases.DTOs.Facturacion.ProductoVentaDTO> productos)
         {
             try
             {
-                // Convertir a la clase esperada por el servicio
-                var productosService = productos.Select(p => new ProductoVentaService
-                {
-                    ProductoId = p.ProductoId,
-                    NombreProducto = p.NombreProducto,
-                    Descripcion = p.Descripcion,
-                    PrecioUnitario = p.Precio,
-                    Cantidad = 1, // Se necesitará enviar este dato desde el frontend
-                    CantidadEnInventario = p.CantidadEnInventario,
-                    StockMinimo = p.StockMinimo,
-                    EsLlanta = p.EsLlanta,
-                    MedidaCompleta = p.MedidaCompleta,
-                    Marca = p.Marca,
-                    Modelo = p.Modelo,
-                    ImagenesUrls = p.ImagenesUrls
-                }).ToList();
-
-                var total = await _facturacionService.CalcularTotalVentaAsync(productosService);
-                var subtotal = productosService.Sum(p => p.Subtotal);
+                var total = await _facturacionService.CalcularTotalVentaAsync(productos);
+                var subtotal = productos.Sum(p => p.Precio);
                 var iva = subtotal * 0.13m; // 13% IVA
 
                 return Json(new { 
@@ -683,54 +666,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ObtenerFacturasPendientes()
-        {
-            try
-            {
-                _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
-
-                var token = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    return Json(new { success = false, message = "Sesión expirada" });
-                }
-
-                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
-
-                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}", 
-                    resultado.success, resultado.message);
-
-                if (resultado.success && resultado.data != null)
-                {
-                    _logger.LogInformation("📋 Procesando respuesta del API de facturas pendientes");
-
-                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
-                    // Solo necesitamos devolverla tal como viene
-                    return Json(resultado.data);
-                }
-                else
-                {
-                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
-                    return Json(new { 
-                        success = false, 
-                        message = resultado.message ?? "No se pudieron obtener las facturas pendientes",
-                        facturas = new List<object>(),
-                        totalFacturas = 0
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
-                return Json(new { 
-                    success = false, 
-                    message = "Error interno del servidor",
-                    facturas = new List<object>(),
-                    totalFacturas = 0
-                });
-            }
-        }
+        
 
         [HttpPost]
         public async Task<IActionResult> CompletarFactura([FromBody] CompletarFacturaWebRequest request)
