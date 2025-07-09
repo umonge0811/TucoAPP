@@ -817,6 +817,50 @@ public partial class TucoContext : DbContext
                     .HasConstraintName("FK_DetallesPago_Facturas");
             });
 
+        // Configuración para PendientesEntrega
+        modelBuilder.Entity<PendientesEntrega>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("PendientesEntrega");
+
+            entity.Property(e => e.CantidadSolicitada)
+                .IsRequired();
+
+            entity.Property(e => e.CantidadPendiente)
+                .IsRequired();
+
+            entity.Property(e => e.FechaCreacion)
+                .HasDefaultValueSql("GETDATE()");
+
+            entity.Property(e => e.Estado)
+                .HasMaxLength(50)
+                .HasDefaultValue("Pendiente");
+
+            entity.Property(e => e.Observaciones)
+                .HasMaxLength(500);
+
+            entity.HasOne(d => d.Factura)
+                .WithMany()
+                .HasForeignKey(d => d.FacturaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Producto)
+                .WithMany()
+                .HasForeignKey(d => d.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.UsuarioCreacion)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioCreacion)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.UsuarioEntrega)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioEntrega)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
         OnModelCreatingPartial(modelBuilder);
     }
 
