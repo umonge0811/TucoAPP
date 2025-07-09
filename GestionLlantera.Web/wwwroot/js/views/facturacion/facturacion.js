@@ -4936,7 +4936,7 @@ async function facturarTodosModos() {
         mostrarToast('Error', 'No se pudo procesar la facturación con pendientes', 'danger');
     }
 }
-}
+
 
 function cancelarProblemasStock() {
     console.log('❌ === CANCELANDO MODAL PROBLEMAS DE STOCK ===');
