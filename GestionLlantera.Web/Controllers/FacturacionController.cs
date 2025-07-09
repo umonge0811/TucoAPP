@@ -1040,18 +1040,26 @@ namespace GestionLlantera.Web.Controllers
         public string? Observaciones { get; set; }
     }
 
-    // =====================================
+    public class DetallePagoWebDTO
+    {
+        public string MetodoPago { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+        public DateTime? FechaPago { get; set; }
+
+        // =====================================
         // GESTIÓN DE PENDIENTES DE ENTREGA
         // =====================================
 
-        [HttpPost]
+        [HttpPost("crear-pendientes-entrega")]
         public async Task<IActionResult> CrearPendientesEntrega([FromBody] object request)
         {
             try
             {
                 _logger.LogInformation("📦 Creando pendientes de entrega desde Web");
 
-                var jwtToken = this.ObtenerTokenJWT();
+                var jwtToken = ObtenerTokenJwt();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
                     return Json(new { success = false, message = "Token de autenticación no válido" });
@@ -1091,7 +1099,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("obtener-pendientes-entrega")]
         public async Task<IActionResult> ObtenerPendientesEntrega(
             [FromQuery] string? estado = null,
             [FromQuery] int? facturaId = null,
@@ -1102,7 +1110,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("📋 Obteniendo pendientes de entrega desde Web");
 
-                var jwtToken = this.ObtenerTokenJWT();
+                var jwtToken = ObtenerTokenJwt();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
                     return Json(new { success = false, message = "Token de autenticación no válido" });
@@ -1142,14 +1150,14 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("obtener-pendientes-por-factura/{facturaId}")]
         public async Task<IActionResult> ObtenerPendientesPorFactura(int facturaId)
         {
             try
             {
                 _logger.LogInformation("📋 Obteniendo pendientes por factura {FacturaId} desde Web", facturaId);
 
-                var jwtToken = this.ObtenerTokenJWT();
+                var jwtToken = ObtenerTokenJwt();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
                     return Json(new { success = false, message = "Token de autenticación no válido" });
@@ -1189,14 +1197,14 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpPut]
+        [HttpPut("entregar-pendiente/{pendienteId}")]
         public async Task<IActionResult> EntregarPendiente(int pendienteId, [FromBody] object request)
         {
             try
             {
                 _logger.LogInformation("✅ Entregando pendiente {PendienteId} desde Web", pendienteId);
 
-                var jwtToken = this.ObtenerTokenJWT();
+                var jwtToken = ObtenerTokenJwt();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
                     return Json(new { success = false, message = "Token de autenticación no válido" });
@@ -1236,12 +1244,4 @@ namespace GestionLlantera.Web.Controllers
             }
         }
     }
-
-    public class DetallePagoWebDTO
-    {
-        public string MetodoPago { get; set; } = string.Empty;
-        public decimal Monto { get; set; }
-        public string? Referencia { get; set; }
-        public string? Observaciones { get; set; }
-        public DateTime? FechaPago { get; set; }
 }
