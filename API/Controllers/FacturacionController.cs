@@ -1137,9 +1137,173 @@ namespace API.Controllers
 
 
 
+        [HttpPost("procesar-con-pendientes")]
+        [Authorize]
+        public async Task<IActionResult> ProcesarFacturaConPendientes([FromBody] ProcesarConPendientesRequest request)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Facturas",
+                "Solo usuarios con permiso 'CrearFacturas' pueden procesar facturas con productos pendientes");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _logger.LogInformation("⚠️ Procesando factura con productos pendientes - Factura ID: {FacturaId}", request.FacturaId);
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
+
+                if (factura == null)
+                    return NotFound(new { message = "Factura no encontrada" });
+
+                if (factura.Estado != "Pendiente")
+                    return BadRequest(new { message = "Solo se pueden procesar facturas pendientes" });
+
+                // ✅ 1. PROCESAR PRODUCTOS CON STOCK DISPONIBLE
+                var productosConStock = new List<DetalleFactura>();
+                var productosPendientes = new List<ProductoPendienteInfo>();
+
+                foreach (var detalle in factura.DetallesFactura)
+                {
+                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                    if (producto == null) continue;
+
+                    var stockDisponible = (int)(producto.CantidadEnInventario ?? 0);
+                    var productoPendiente = request.ProductosPendientes.FirstOrDefault(p => p.ProductoId == detalle.ProductoId);
+
+                    if (productoPendiente != null && stockDisponible < detalle.Cantidad)
+                    {
+                        // ✅ PRODUCTO CON PROBLEMAS - CREAR REGISTRO PENDIENTE
+                        var cantidadPendiente = detalle.Cantidad - stockDisponible;
+                        
+                        // Ajustar stock disponible (si hay algo)
+                        if (stockDisponible > 0)
+                        {
+                            producto.CantidadEnInventario = 0;
+                            producto.FechaUltimaActualizacion = DateTime.Now;
+                        }
+
+                        // Crear registro de pendiente de entrega
+                        var pendienteEntrega = new PendientesEntrega
+                        {
+                            FacturaId = factura.FacturaId,
+                            ProductoId = detalle.ProductoId,
+                            CantidadSolicitada = detalle.Cantidad,
+                            CantidadPendiente = cantidadPendiente,
+                            FechaCreacion = DateTime.Now,
+                            Estado = "Pendiente",
+                            Observaciones = $"Producto sin stock suficiente al momento de facturación. Stock disponible: {stockDisponible}",
+                            UsuarioCreacion = factura.UsuarioCreadorId
+                        };
+
+                        _context.PendientesEntrega.Add(pendienteEntrega);
+
+                        productosPendientes.Add(new ProductoPendienteInfo
+                        {
+                            ProductoId = detalle.ProductoId,
+                            NombreProducto = detalle.NombreProducto,
+                            CantidadSolicitada = detalle.Cantidad,
+                            CantidadPendiente = cantidadPendiente,
+                            StockDisponible = stockDisponible
+                        });
+
+                        _logger.LogInformation("📦 Producto pendiente registrado: {Producto} - Pendiente: {Cantidad}", 
+                            detalle.NombreProducto, cantidadPendiente);
+                    }
+                    else
+                    {
+                        // ✅ PRODUCTO CON STOCK SUFICIENTE - AJUSTAR INVENTARIO
+                        producto.CantidadEnInventario = Math.Max(0, stockDisponible - detalle.Cantidad);
+                        producto.FechaUltimaActualizacion = DateTime.Now;
+                        productosConStock.Add(detalle);
+
+                        _logger.LogInformation("📦 Stock ajustado para {Producto}: {StockAnterior} → {StockNuevo}", 
+                            detalle.NombreProducto, stockDisponible, producto.CantidadEnInventario);
+                    }
+                }
+
+                // ✅ 2. COMPLETAR LA FACTURA
+                factura.Estado = "Pagada";
+                factura.MetodoPago = request.MetodoPago ?? "Efectivo";
+                factura.Observaciones = (factura.Observaciones ?? "") + 
+                    $" [PROCESADA CON PENDIENTES - {productosPendientes.Count} productos pendientes de entrega]";
+                factura.FechaActualizacion = DateTime.Now;
+
+                // ✅ 3. AGREGAR DETALLE DE PAGO
+                if (!string.IsNullOrEmpty(request.MetodoPago))
+                {
+                    var detallePago = new DetallePago
+                    {
+                        FacturaId = factura.FacturaId,
+                        MetodoPago = request.MetodoPago,
+                        Monto = factura.Total,
+                        FechaPago = DateTime.Now,
+                        Observaciones = productosPendientes.Any() ? 
+                            $"Pago procesado con {productosPendientes.Count} productos pendientes" : null
+                    };
+                    _context.DetallesPago.Add(detallePago);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Factura {NumeroFactura} procesada con {ProductosPendientes} productos pendientes", 
+                    factura.NumeroFactura, productosPendientes.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Factura procesada exitosamente con productos pendientes",
+                    numeroFactura = factura.NumeroFactura,
+                    facturaId = factura.FacturaId,
+                    total = factura.Total,
+                    productosConStock = productosConStock.Count,
+                    productosPendientes = productosPendientes.Count,
+                    detallesPendientes = productosPendientes,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error procesando factura con productos pendientes: {FacturaId}", request.FacturaId);
+                return StatusCode(500, new { 
+                    success = false,
+                    message = "Error interno al procesar factura con productos pendientes" 
+                });
+            }
+        }
+
         // =====================================
         // DTOs PARA COMPLETAR FACTURAS
         // =====================================
+    }
+
+    public class ProcesarConPendientesRequest
+    {
+        public int FacturaId { get; set; }
+        public List<ProductoPendienteRequest> ProductosPendientes { get; set; } = new List<ProductoPendienteRequest>();
+        public string? MetodoPago { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class ProductoPendienteRequest
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadRequerida { get; set; }
+        public int StockDisponible { get; set; }
+        public int CantidadPendiente { get; set; }
+    }
+
+    public class ProductoPendienteInfo
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadSolicitada { get; set; }
+        public int CantidadPendiente { get; set; }
+        public int StockDisponible { get; set; }
     }
 
     public class CompletarFacturaRequest

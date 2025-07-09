@@ -889,7 +889,8 @@ namespace GestionLlantera.Web.Controllers
                     });
                 }
                 else
-                {
+                ```tool_code
+{
                     _logger.LogWarning("⚠️ Error eliminando productos: {Message}", resultado.message);
                     return Json(new { 
                         success = false, 
@@ -1013,6 +1014,57 @@ namespace GestionLlantera.Web.Controllers
             }
 
             return defaultValue;
+        }
+    
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProcesarConPendientes([FromBody] object requestData)
+    {
+        try
+        {
+            _logger.LogInformation("⚠️ Procesando factura con productos pendientes desde controlador web");
+
+            var token = ObtenerTokenJWT();
+            if (string.IsNullOrEmpty(token))
+            {
+                return Json(new { success = false, message = "Token de autorización no válido" });
+            }
+
+            var resultado = await _facturacionService.ProcesarFacturaConPendientesAsync(requestData, token);
+
+            if (resultado.success)
+            {
+                return Json(new { 
+                    success = true, 
+                    data = resultado.data,
+                    message = resultado.message 
+                });
+            }
+            else
+            {
+                return Json(new { 
+                    success = false, 
+                    message = resultado.message,
+                    details = resultado.details 
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error procesando factura con pendientes");
+            return Json(new { success = false, message = "Error interno", details = ex.Message });
+        }
+    }
+    
+        private string? ObtenerTokenAutorizacion()
+        {
+            var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ No se pudo obtener el token de autorización del header.");
+            }
+            return token;
         }
     }
 
