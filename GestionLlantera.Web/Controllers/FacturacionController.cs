@@ -736,9 +736,11 @@ namespace GestionLlantera.Web.Controllers
                 // Estructurar datos para el API
                 var datosCompletamiento = new
                 {
+                    facturaId = request.FacturaId,
                     metodoPago = request.MetodoPago,
+                    observaciones = request.Observaciones,
                     detallesPago = request.DetallesPago,
-                    observaciones = request.Observaciones
+                    forzarVerificacionStock = false // Por defecto no forzar verificación para facturas pendientes
                 };
 
                 _logger.LogInformation("📋 Enviando datos de completamiento: {Datos}", 
@@ -883,8 +885,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogInformation("✅ Productos eliminados exitosamente de factura {FacturaId}", request.FacturaId);
                     return Json(new { 
-                        success = true, 
-                        message = resultado.message,
+                        success = true,                         message = resultado.message,
                         productosEliminados = resultado.data
                     });
                 }

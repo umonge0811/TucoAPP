@@ -594,26 +594,51 @@ namespace API.Controllers
                 if (factura.TipoDocumento == "Proforma")
                     return BadRequest(new { message = "No se puede completar una proforma. Debe convertirse a factura primero" });
 
-                // ✅ Verificar stock antes de completar
-                var erroresStock = new List<string>();
-                foreach (var detalle in factura.DetallesFactura)
+                // ✅ Verificar stock antes de completar SOLO si es necesario
+                // Para facturas pendientes, omitir verificación de stock ya que se validó al crearla
+                var debeVerificarStock = true;
+                
+                // Si la factura ya está en estado "Pendiente", significa que el stock ya se verificó
+                // al momento de crear la factura, así que no necesitamos verificarlo de nuevo
+                if (factura.Estado == "Pendiente")
                 {
-                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
-                    if (producto == null)
-                    {
-                        erroresStock.Add($"Producto {detalle.NombreProducto} no encontrado");
-                        continue;
-                    }
-
-                    if ((producto.CantidadEnInventario ?? 0) < detalle.Cantidad)
-                    {
-                        erroresStock.Add($"Stock insuficiente para {detalle.NombreProducto}. Disponible: {producto.CantidadEnInventario}, Requerido: {detalle.Cantidad}");
-                    }
+                    debeVerificarStock = false;
+                    _logger.LogInformation("⚠️ Omitiendo verificación de stock para factura pendiente {NumeroFactura} - Ya verificada al crearla", factura.NumeroFactura);
+                }
+                
+                // También permitir forzar la verificación mediante un parámetro en el request
+                if (request?.ForzarVerificacionStock == true)
+                {
+                    debeVerificarStock = true;
+                    _logger.LogInformation("🔍 Forzando verificación de stock por parámetro en request");
                 }
 
-                if (erroresStock.Any())
+                if (debeVerificarStock)
                 {
-                    return BadRequest(new { message = "Error de stock", errores = erroresStock });
+                    var erroresStock = new List<string>();
+                    foreach (var detalle in factura.DetallesFactura)
+                    {
+                        var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                        if (producto == null)
+                        {
+                            erroresStock.Add($"Producto {detalle.NombreProducto} no encontrado");
+                            continue;
+                        }
+
+                        if ((producto.CantidadEnInventario ?? 0) < detalle.Cantidad)
+                        {
+                            erroresStock.Add($"Stock insuficiente para {detalle.NombreProducto}. Disponible: {producto.CantidadEnInventario}, Requerido: {detalle.Cantidad}");
+                        }
+                    }
+
+                    if (erroresStock.Any())
+                    {
+                        return BadRequest(new { message = "Error de stock", errores = erroresStock });
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("✅ Verificación de stock omitida para factura pendiente");
                 }
 
                 // ✅ Actualizar inventario
@@ -1428,6 +1453,7 @@ namespace API.Controllers
     {
         public string? MetodoPago { get; set; }
         public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
+        public bool ForzarVerificacionStock { get; set; } = false;
     }
 
     public class DetallePagoCompletarDTO
