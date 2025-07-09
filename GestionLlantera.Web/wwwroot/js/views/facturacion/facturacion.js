@@ -4675,7 +4675,7 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                 actualizarTotales();
                 actualizarEstadoBotonFinalizar();
                 
-                // Mostrar confirmación de eliminación inmediatamente con SweetAlert modal
+                // Mostrar confirmación de eliminación con SweetAlert
                 Swal.fire({
                     icon: 'success',
                     title: '¡Producto Eliminado!',
