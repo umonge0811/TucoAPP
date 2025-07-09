@@ -4664,8 +4664,7 @@ async function eliminarProductoConProblema(facturaId, productoId) {
         console.log('📋 Respuesta del servidor:', resultado);
 
         if (resultado.success) {
-            actualizarCarritoDespuesDeEliminar([productoId]);
-            // Eliminar producto del carrito local también
+            // Eliminar producto del carrito local
             const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
             if (indiceEnCarrito !== -1) {
                 const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
@@ -4674,14 +4673,40 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                 // Actualizar vista del carrito
                 actualizarVistaCarrito();
                 actualizarTotales();
+                actualizarEstadoBotonFinalizar();
                 
                 // Ocultar fila en la tabla de problemas
                 $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
                     $(this).remove();
+                    
+                    // Verificar si quedan productos con problemas
+                    const problemasRestantes = $('.problema-stock-row').length;
+                    console.log('🔍 Problemas restantes:', problemasRestantes);
+                    
+                    if (problemasRestantes === 0) {
+                        console.log('✅ No quedan productos con problemas - cerrando modal y abriendo finalización');
+                        
+                        // Marcar cierre válido para evitar limpiar carrito
+                        if (window.marcarCierreValidoProblemasStock) {
+                            window.marcarCierreValidoProblemasStock();
+                        }
+                        
+                        // Cerrar modal de problemas
+                        $('#problemasStockModal').modal('hide');
+                        
+                        // Abrir modal de finalización después de un breve delay
+                        setTimeout(() => {
+                            if (productosEnVenta.length > 0) {
+                                mostrarModalFinalizarVenta();
+                            } else {
+                                mostrarToast('Carrito vacío', 'No quedan productos para finalizar la venta', 'warning');
+                            }
+                        }, 500);
+                    }
                 });
                 
-                // Mostrar notificación
-                Swal.fire({
+                // Mostrar confirmación de eliminación
+                await Swal.fire({
                     icon: 'success',
                     title: 'Producto eliminado',
                     text: `${nombreProducto} ha sido eliminado de la factura`,
@@ -4693,6 +4718,10 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                 
                 console.log('✅ Producto eliminado exitosamente');
             }
+            
+            // Actualizar carrito después de eliminar
+            actualizarCarritoDespuesDeEliminar([productoId]);
+            
         } else {
             throw new Error(resultado.message || 'Error al eliminar el producto');
         }
