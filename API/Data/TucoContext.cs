@@ -83,6 +83,8 @@ public partial class TucoContext : DbContext
 
     public DbSet<UsuarioPermisoRE> UsuarioPermiso { get; set; }
 
+    public DbSet<PendientesEntrega> PendientesEntrega { get; set; }
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
