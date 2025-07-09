@@ -1171,6 +1171,273 @@ namespace GestionLlantera.Web.Services
                 );
             }
         }
+
+        // =====================================
+        // GESTIÓN DE PENDIENTES DE ENTREGA
+        // =====================================
+
+        public async Task<(bool success, object? data, string? message, string? details)> CrearPendientesEntregaAsync(object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === CREANDO PENDIENTES DE ENTREGA ===");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(request);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
+
+                var response = await _httpClient.PostAsync("api/Facturacion/pendientes-entrega", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                    return (
+                        success: true,
+                        data: resultado,
+                        message: "Pendientes de entrega creados exitosamente",
+                        details: null
+                    );
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API creando pendientes: {StatusCode} - {Content}",
+                        response.StatusCode, responseContent);
+
+                    string errorMessage = response.StatusCode switch
+                    {
+                        System.Net.HttpStatusCode.Unauthorized => "Token de autenticación inválido o expirado",
+                        System.Net.HttpStatusCode.NotFound => "Factura no encontrada",
+                        System.Net.HttpStatusCode.BadRequest => "Datos de la solicitud inválidos",
+                        System.Net.HttpStatusCode.InternalServerError => "Error interno del servidor",
+                        _ => $"Error del servidor: {response.StatusCode}"
+                    };
+
+                    return (
+                        success: false,
+                        data: null,
+                        message: errorMessage,
+                        details: responseContent
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error inesperado creando pendientes de entrega");
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno al crear pendientes: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
+
+        public async Task<(bool success, object? data, string? message, string? details)> ObtenerPendientesEntregaAsync(string? estado = null, int? facturaId = null, int pagina = 1, int tamano = 20, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📋 === OBTENIENDO PENDIENTES DE ENTREGA ===");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Construir URL con parámetros de consulta
+                var queryParams = new List<string>();
+                if (!string.IsNullOrEmpty(estado))
+                    queryParams.Add($"estado={Uri.EscapeDataString(estado)}");
+                if (facturaId.HasValue)
+                    queryParams.Add($"facturaId={facturaId.Value}");
+                queryParams.Add($"pagina={pagina}");
+                queryParams.Add($"tamano={tamano}");
+
+                var url = "api/Facturacion/pendientes-entrega";
+                if (queryParams.Any())
+                    url += "?" + string.Join("&", queryParams);
+
+                _logger.LogInformation("📤 URL de consulta: {Url}", url);
+
+                var response = await _httpClient.GetAsync(url);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent.Substring(0, Math.Min(500, responseContent.Length)));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                    return (
+                        success: true,
+                        data: resultado,
+                        message: "Pendientes de entrega obtenidos exitosamente",
+                        details: null
+                    );
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API obteniendo pendientes: {StatusCode} - {Content}",
+                        response.StatusCode, responseContent);
+
+                    return (
+                        success: false,
+                        data: null,
+                        message: $"Error del servidor: {response.StatusCode}",
+                        details: responseContent
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error inesperado obteniendo pendientes de entrega");
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno al obtener pendientes: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
+
+        public async Task<(bool success, object? data, string? message, string? details)> ObtenerPendientesPorFacturaAsync(int facturaId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📋 === OBTENIENDO PENDIENTES POR FACTURA {FacturaId} ===", facturaId);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.GetAsync($"api/Facturacion/pendientes-entrega/por-factura/{facturaId}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                    return (
+                        success: true,
+                        data: resultado,
+                        message: "Pendientes por factura obtenidos exitosamente",
+                        details: null
+                    );
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API obteniendo pendientes por factura: {StatusCode} - {Content}",
+                        response.StatusCode, responseContent);
+
+                    return (
+                        success: false,
+                        data: null,
+                        message: $"Error del servidor: {response.StatusCode}",
+                        details: responseContent
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error inesperado obteniendo pendientes por factura: {FacturaId}", facturaId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno al obtener pendientes: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
+
+        public async Task<(bool success, object? data, string? message, string? details)> EntregarPendienteAsync(int pendienteId, object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("✅ === ENTREGANDO PENDIENTE {PendienteId} ===", pendienteId);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(request);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
+
+                var response = await _httpClient.PutAsync($"api/Facturacion/pendientes-entrega/{pendienteId}/entregar", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                    return (
+                        success: true,
+                        data: resultado,
+                        message: "Pendiente entregado exitosamente",
+                        details: null
+                    );
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API entregando pendiente: {StatusCode} - {Content}",
+                        response.StatusCode, responseContent);
+
+                    string errorMessage = response.StatusCode switch
+                    {
+                        System.Net.HttpStatusCode.Unauthorized => "Token de autenticación inválido o expirado",
+                        System.Net.HttpStatusCode.NotFound => "Pendiente no encontrado",
+                        System.Net.HttpStatusCode.BadRequest => "Datos de la solicitud inválidos o stock insuficiente",
+                        System.Net.HttpStatusCode.InternalServerError => "Error interno del servidor",
+                        _ => $"Error del servidor: {response.StatusCode}"
+                    };
+
+                    return (
+                        success: false,
+                        data: null,
+                        message: errorMessage,
+                        details: responseContent
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error inesperado entregando pendiente: {PendienteId}", pendienteId);
+                return (
+                    success: false,
+                    data: null,
+                    message: "Error interno al entregar pendiente: " + ex.Message,
+                    details: ex.ToString()
+                );
+            }
+        }
     }
     // Modelos para la deserialización
     public class StockVerificationResponse

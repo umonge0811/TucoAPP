@@ -42,6 +42,26 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<(bool success, object? data, string? message, string? details)> CompletarFacturaAsync(int facturaId, object datosCompletamiento, string jwtToken = null);
         Task<(bool success, object? data, string? message, string? details)> VerificarStockFacturaAsync(int facturaId, string jwtToken = null);
         Task<(bool success, object? data, string? message, string? details)> EliminarProductosFacturaAsync(object request, string jwtToken = null);
+
+        /// <summary>
+        /// Crea pendientes de entrega para productos sin stock
+        /// </summary>
+        Task<(bool success, object? data, string? message, string? details)> CrearPendientesEntregaAsync(object request, string jwtToken = null);
+
+        /// <summary>
+        /// Obtiene pendientes de entrega con filtros
+        /// </summary>
+        Task<(bool success, object? data, string? message, string? details)> ObtenerPendientesEntregaAsync(string? estado = null, int? facturaId = null, int pagina = 1, int tamano = 20, string jwtToken = null);
+
+        /// <summary>
+        /// Obtiene pendientes de entrega por factura específica
+        /// </summary>
+        Task<(bool success, object? data, string? message, string? details)> ObtenerPendientesPorFacturaAsync(int facturaId, string jwtToken = null);
+
+        /// <summary>
+        /// Procesa la entrega de un pendiente
+        /// </summary>
+        Task<(bool success, object? data, string? message, string? details)> EntregarPendienteAsync(int pendienteId, object request, string jwtToken = null);
     }
 
     // Clase ApiResponse para manejar respuestas de la API

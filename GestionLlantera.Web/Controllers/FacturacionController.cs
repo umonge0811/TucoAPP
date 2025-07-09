@@ -1047,5 +1047,201 @@ namespace GestionLlantera.Web.Controllers
         public string? Referencia { get; set; }
         public string? Observaciones { get; set; }
         public DateTime? FechaPago { get; set; }
+
+        // =====================================
+        // GESTIÓN DE PENDIENTES DE ENTREGA
+        // =====================================
+
+        [HttpPost("crear-pendientes-entrega")]
+        public async Task<IActionResult> CrearPendientesEntrega([FromBody] object request)
+        {
+            try
+            {
+                _logger.LogInformation("📦 Creando pendientes de entrega desde Web");
+
+                var jwtToken = ObtenerTokenJwt();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
+                var resultado = await _facturacionService.CrearPendientesEntregaAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        data = resultado.data,
+                        message = resultado.message
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error creando pendientes: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico creando pendientes de entrega");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor",
+                    details = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("obtener-pendientes-entrega")]
+        public async Task<IActionResult> ObtenerPendientesEntrega(
+            [FromQuery] string? estado = null,
+            [FromQuery] int? facturaId = null,
+            [FromQuery] int pagina = 1,
+            [FromQuery] int tamano = 20)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo pendientes de entrega desde Web");
+
+                var jwtToken = ObtenerTokenJwt();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
+                var resultado = await _facturacionService.ObtenerPendientesEntregaAsync(estado, facturaId, pagina, tamano, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        data = resultado.data,
+                        message = resultado.message
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error obteniendo pendientes: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo pendientes de entrega");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor",
+                    details = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("obtener-pendientes-por-factura/{facturaId}")]
+        public async Task<IActionResult> ObtenerPendientesPorFactura(int facturaId)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo pendientes por factura {FacturaId} desde Web", facturaId);
+
+                var jwtToken = ObtenerTokenJwt();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
+                var resultado = await _facturacionService.ObtenerPendientesPorFacturaAsync(facturaId, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        data = resultado.data,
+                        message = resultado.message
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error obteniendo pendientes por factura: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo pendientes por factura");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor",
+                    details = ex.Message
+                });
+            }
+        }
+
+        [HttpPut("entregar-pendiente/{pendienteId}")]
+        public async Task<IActionResult> EntregarPendiente(int pendienteId, [FromBody] object request)
+        {
+            try
+            {
+                _logger.LogInformation("✅ Entregando pendiente {PendienteId} desde Web", pendienteId);
+
+                var jwtToken = ObtenerTokenJwt();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
+                var resultado = await _facturacionService.EntregarPendienteAsync(pendienteId, request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        data = resultado.data,
+                        message = resultado.message
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error entregando pendiente: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico entregando pendiente");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor",
+                    details = ex.Message
+                });
+            }
+        }
     }
 }
