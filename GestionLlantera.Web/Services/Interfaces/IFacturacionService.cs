@@ -42,7 +42,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<(bool success, object? data, string? message, string? details)> CompletarFacturaAsync(int facturaId, object datosCompletamiento, string jwtToken = null);
         Task<(bool success, object? data, string? message, string? details)> VerificarStockFacturaAsync(int facturaId, string jwtToken = null);
         Task<(bool success, object? data, string? message, string? details)> EliminarProductosFacturaAsync(object request, string jwtToken = null);
-        Task<(bool success, object? data, string? message, string? details)> ProcesarFacturaConPendientesAsync(object request, string jwtToken = null);
     }
 
     // Clase ApiResponse para manejar respuestas de la API

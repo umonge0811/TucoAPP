@@ -68,9 +68,22 @@ public partial class TucoContext : DbContext
     public virtual DbSet<Permiso> Permisos { get; set; }
 
     public virtual DbSet<Producto> Productos { get; set; }
+
     public virtual DbSet<Proveedore> Proveedores { get; set; }
+
     public virtual DbSet<Role> Roles { get; set; }
-    public virtual DbSet<PendientesEntrega> PendientesEntrega { get; set; }
+
+    public virtual DbSet<SesionUsuario> SesionUsuario { get; set; }
+
+    public virtual DbSet<Usuario> Usuarios { get; set; }
+
+    public DbSet<RolPermisoRE> RolPermisos { get; set; }
+
+    public DbSet<UsuarioRolRE> UsuarioRoles { get; set; }
+
+    public DbSet<UsuarioPermisoRE> UsuarioPermiso { get; set; }
+
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
