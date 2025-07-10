@@ -5007,25 +5007,37 @@ async function facturarTodosModos() {
             return;
         }
 
-        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM Y CARRITO
+        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM CORRECTAMENTE
         const productosConProblemas = [];
         $('.problema-stock-row').each(function() {
-            const productoId = $(this).data('producto-id');
-            const nombreProducto = $(this).find('td:first strong').text();
-            const cantidadRequerida = parseInt($(this).find('.badge.bg-info').text()) || 0;
-            const stockDisponible = parseInt($(this).find('.badge.bg-warning, .badge.bg-danger').text()) || 0;
+            const $fila = $(this);
+            const productoId = $fila.data('producto-id');
+            const nombreProducto = $fila.find('td:first strong').text().trim();
             
-            if (productoId) {
-                // Buscar el producto en el carrito para obtener más información
+            // ✅ CAPTURAR CANTIDADES CORRECTAMENTE DESDE LAS COLUMNAS DE LA TABLA
+            const cantidadSolicitada = parseInt($fila.find('td:eq(1) .badge.bg-info').text().trim()) || 0;
+            const stockDisponible = parseInt($fila.find('td:eq(2) .badge.bg-warning, td:eq(2) .badge.bg-danger').text().trim()) || 0;
+            const cantidadPendiente = parseInt($fila.find('td:eq(3) .badge.bg-danger').text().trim()) || 0;
+            
+            console.log(`📦 Procesando producto ${productoId}:`, {
+                nombreProducto,
+                cantidadSolicitada,
+                stockDisponible,
+                cantidadPendiente
+            });
+            
+            if (productoId && cantidadSolicitada > 0) {
+                // Buscar el producto en el carrito para obtener precio
                 const productoEnCarrito = productosEnVenta.find(p => p.productoId == productoId);
                 
                 productosConProblemas.push({
                     productoId: parseInt(productoId),
                     nombreProducto: nombreProducto,
-                    cantidadRequerida: cantidadRequerida,
-                    cantidadRequirida: cantidadRequerida, // Alias adicional
-                    cantidad: cantidadRequerida, // Otro alias
-                    cantidadPendiente: Math.max(0, cantidadRequerida - stockDisponible),
+                    cantidadSolicitada: cantidadSolicitada,
+                    cantidadRequerida: cantidadSolicitada, // Alias
+                    cantidadRequirida: cantidadSolicitada, // Alias adicional
+                    cantidad: cantidadSolicitada, // Otro alias
+                    cantidadPendiente: cantidadPendiente > 0 ? cantidadPendiente : Math.max(0, cantidadSolicitada - stockDisponible),
                     stockDisponible: stockDisponible,
                     stock: stockDisponible, // Alias adicional
                     precioUnitario: productoEnCarrito?.precioUnitario || 0
@@ -5033,7 +5045,14 @@ async function facturarTodosModos() {
             }
         });
         
-        console.log('🔍 Productos con problemas normalizados para facturar:', productosConProblemas);
+        console.log('🔍 Productos con problemas capturados correctamente:', productosConProblemas);
+        
+        // ✅ VALIDAR QUE SE CAPTURARON DATOS
+        if (productosConProblemas.length === 0) {
+            console.warn('⚠️ No se capturaron productos con problemas');
+            mostrarToast('Advertencia', 'No se detectaron productos con problemas para procesar', 'warning');
+            return;
+        }
         
         // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
         if (window.marcarCierreValidoProblemasStock) {
@@ -5042,6 +5061,8 @@ async function facturarTodosModos() {
         
         // ✅ GUARDAR INFORMACIÓN DE PRODUCTOS PENDIENTES PARA EL PROCESO DE FACTURACIÓN
         window.productosPendientesEntrega = productosConProblemas;
+        
+        console.log('💾 Productos pendientes guardados globalmente:', window.productosPendientesEntrega);
         
         // ✅ CERRAR MODAL DE PROBLEMAS
         $('#problemasStockModal').modal('hide');
