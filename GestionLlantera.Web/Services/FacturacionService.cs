@@ -1264,11 +1264,28 @@ namespace GestionLlantera.Web.Services
                 {
                     try
                     {
-                        var data = System.Text.Json.JsonSerializer.Deserialize<object>(responseContent);
-                        return (true, data, "Pendientes registrados exitosamente", null);
+                        // ✅ DESERIALIZAR RESPUESTA COMPLETA Y EXTRAER PENDIENTES CREADOS
+                        var jsonDocument = System.Text.Json.JsonDocument.Parse(responseContent);
+                        var root = jsonDocument.RootElement;
+                        
+                        if (root.TryGetProperty("pendientesCreados", out var pendientesElement))
+                        {
+                            var pendientesCreados = System.Text.Json.JsonSerializer.Deserialize<object[]>(pendientesElement.GetRawText());
+                            
+                            _logger.LogInformation("📦 Pendientes extraídos correctamente: {Count} items", pendientesCreados?.Length ?? 0);
+                            
+                            return (true, new { pendientesCreados = pendientesCreados }, "Pendientes registrados exitosamente", null);
+                        }
+                        else
+                        {
+                            // Si no hay propiedad pendientesCreados, devolver respuesta completa
+                            var data = System.Text.Json.JsonSerializer.Deserialize<object>(responseContent);
+                            return (true, data, "Pendientes registrados exitosamente", null);
+                        }
                     }
-                    catch (System.Text.Json.JsonException)
+                    catch (System.Text.Json.JsonException ex)
                     {
+                        _logger.LogError(ex, "❌ Error deserializando respuesta de pendientes");
                         return (true, (object)responseContent, "Pendientes registrados exitosamente", null);
                     }
                 }
