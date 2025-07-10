@@ -1022,8 +1022,12 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("📝 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===");
-                _logger.LogInformation("📝 Factura: {NumeroFactura}, Productos: {Count}",
-                    request.NumeroFactura, request.ProductosPendientes?.Count ?? 0);
+                _logger.LogInformation("📝 Factura ID: {FacturaId}, Usuario: {UsuarioCreacion}, Productos: {Count}",
+                    request.FacturaId, request.UsuarioCreacion, request.ProductosPendientes?.Count ?? 0);
+
+                // Log detallado de los datos recibidos
+                _logger.LogInformation("📝 Datos completos recibidos: {Request}", 
+                    System.Text.Json.JsonSerializer.Serialize(request));
 
                 if (!await this.TienePermisoAsync("Crear Facturas"))
                 {
@@ -1035,6 +1039,26 @@ namespace GestionLlantera.Web.Controllers
                 {
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
+
+                // ✅ MAPEAR CORRECTAMENTE LOS DATOS PARA LA API
+                var datosParaAPI = new
+                {
+                    facturaId = request.FacturaId,
+                    usuarioCreacion = request.UsuarioCreacion,
+                    productosPendientes = request.ProductosPendientes.Select(p => new
+                    {
+                        productoId = p.ProductoId,
+                        nombreProducto = p.NombreProducto,
+                        cantidadSolicitada = p.CantidadPendiente, // La cantidad que se solicitó originalmente
+                        cantidadPendiente = p.CantidadPendiente,  // La cantidad que queda pendiente
+                        stockDisponible = 0, // Stock disponible al momento (generalmente 0)
+                        precioUnitario = p.PrecioUnitario,
+                        observaciones = p.Observaciones
+                    }).ToList()
+                };
+
+                _logger.LogInformation("📝 Datos mapeados para API: {DatosAPI}", 
+                    System.Text.Json.JsonSerializer.Serialize(datosParaAPI));
 
                 var resultado = await _facturacionService.RegistrarPendientesEntregaAsync(request, jwtToken);
 
@@ -1206,8 +1230,8 @@ namespace GestionLlantera.Web.Controllers
 
     public class RegistrarPendientesEntregaRequest
     {
-        public string NumeroFactura { get; set; } = string.Empty;
         public int FacturaId { get; set; }
+        public int UsuarioCreacion { get; set; }
         public List<ProductoPendienteEntrega> ProductosPendientes { get; set; } = new List<ProductoPendienteEntrega>();
     }
 
@@ -1215,7 +1239,9 @@ namespace GestionLlantera.Web.Controllers
     {
         public int ProductoId { get; set; }
         public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadSolicitada { get; set; }
         public int CantidadPendiente { get; set; }
+        public int StockDisponible { get; set; }
         public decimal PrecioUnitario { get; set; }
         public string? Observaciones { get; set; }
     }

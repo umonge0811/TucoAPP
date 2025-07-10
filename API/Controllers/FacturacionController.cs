@@ -1177,19 +1177,40 @@ namespace API.Controllers
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                _logger.LogInformation("📦 Creando pendientes de entrega para factura: {FacturaId}", request.FacturaId);
+                _logger.LogInformation("📦 === CREANDO PENDIENTES DE ENTREGA EN API ===");
+                _logger.LogInformation("📦 Factura ID: {FacturaId}", request.FacturaId);
+                _logger.LogInformation("📦 Usuario Creación: {UsuarioCreacion}", request.UsuarioCreacion);
+                _logger.LogInformation("📦 Productos recibidos: {Count}", request.ProductosPendientes?.Count ?? 0);
+
+                // ✅ LOG DETALLADO DE LOS DATOS RECIBIDOS
+                _logger.LogInformation("📦 Datos completos recibidos en API: {Request}", 
+                    System.Text.Json.JsonSerializer.Serialize(request, new JsonSerializerOptions { WriteIndented = true }));
+
+                if (request.ProductosPendientes == null || !request.ProductosPendientes.Any())
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "No se recibieron productos pendientes para registrar" 
+                    });
+                }
 
                 var factura = await _context.Facturas
                     .Include(f => f.DetallesFactura)
                     .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
 
                 if (factura == null)
-                    return NotFound(new { message = "Factura no encontrada" });
+                    return NotFound(new { 
+                        success = false, 
+                        message = "Factura no encontrada" 
+                    });
 
                 var pendientesCreados = new List<object>();
 
                 foreach (var productoPendiente in request.ProductosPendientes)
                 {
+                    _logger.LogInformation("📦 Procesando producto: {ProductoId} - {Nombre} - Cantidad: {Cantidad}", 
+                        productoPendiente.ProductoId, productoPendiente.NombreProducto, productoPendiente.CantidadPendiente);
+
                     var pendienteEntrega = new PendientesEntrega
                     {
                         FacturaId = request.FacturaId,
@@ -1212,12 +1233,14 @@ namespace API.Controllers
                         cantidadSolicitada = productoPendiente.CantidadSolicitada
                     });
 
-                    _logger.LogInformation("📦 Pendiente creado: {Producto} - {Cantidad} unidades", 
+                    _logger.LogInformation("📦 Pendiente creado exitosamente: {Producto} - {Cantidad} unidades", 
                         productoPendiente.NombreProducto, productoPendiente.CantidadPendiente);
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Todos los pendientes creados exitosamente: {Count} items", pendientesCreados.Count);
 
                 return Ok(new
                 {
@@ -1230,8 +1253,11 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                _logger.LogError(ex, "❌ Error creando pendientes de entrega");
-                return StatusCode(500, new { message = "Error al crear pendientes de entrega" });
+                _logger.LogError(ex, "❌ Error creando pendientes de entrega en API");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno al crear pendientes de entrega: " + ex.Message 
+                });
             }
         }
 

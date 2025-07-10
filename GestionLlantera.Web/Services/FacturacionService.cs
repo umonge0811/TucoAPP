@@ -1210,52 +1210,66 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string? message, string? details)> RegistrarPendientesEntregaAsync(object request, string jwtToken = null)
+        public async Task<(bool success, object? data, string? message, string? details)> RegistrarPendientesEntregaAsync(RegistrarPendientesEntregaRequest request, string jwtToken)
         {
             try
             {
-                _logger.LogInformation("📝 === REGISTRANDO PENDIENTES DE ENTREGA ===");
+                _logger.LogInformation("📦 === ENVIANDO PENDIENTES DE ENTREGA A API ===");
+                _logger.LogInformation("📦 Factura ID: {FacturaId}", request.FacturaId);
+                _logger.LogInformation("📦 Usuario Creación: {UsuarioCreacion}", request.UsuarioCreacion);
+                _logger.LogInformation("📦 Productos: {Count}", request.ProductosPendientes?.Count ?? 0);
 
-                // Configurar token JWT si se proporciona
-                if (!string.IsNullOrEmpty(jwtToken))
+                // ✅ CREAR ESTRUCTURA EXACTA QUE ESPERA LA API
+                var datosParaAPI = new
                 {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                }
+                    facturaId = request.FacturaId,
+                    usuarioCreacion = request.UsuarioCreacion,
+                    productosPendientes = request.ProductosPendientes.Select(p => new
+                    {
+                        productoId = p.ProductoId,
+                        nombreProducto = p.NombreProducto,
+                        cantidadSolicitada = p.CantidadSolicitada,
+                        cantidadPendiente = p.CantidadPendiente,
+                        stockDisponible = p.StockDisponible
+                    }).ToList()
+                };
 
-                var jsonContent = JsonConvert.SerializeObject(request, new JsonSerializerSettings
-                {
-                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
-                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
-                    NullValueHandling = NullValueHandling.Include
-                });
+                _logger.LogInformation("📦 Datos estructurados para API: {Datos}", 
+                    System.Text.Json.JsonSerializer.Serialize(datosParaAPI, new JsonSerializerOptions { WriteIndented = true }));
 
-                _logger.LogInformation("📤 JSON enviado al API: {Json}", jsonContent);
+                // ✅ CONFIGURAR HEADERS CON TOKEN JWT
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
 
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsJsonAsync("api/Facturacion/registrar-pendientes-entrega", datosParaAPI);
 
-                var response = await _httpClient.PostAsync("api/Facturacion/registrar-pendientes-entrega", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
-
-                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+                _logger.LogInformation("📦 Respuesta de API: {StatusCode} - {Content}", response.StatusCode, responseContent);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                    return (success: true, data: resultado, message: "Pendientes de entrega registrados exitosamente", details: null);
+                    try
+                    {
+                        var data = System.Text.Json.JsonSerializer.Deserialize<object>(responseContent);
+                        return (true, "Pendientes registrados exitosamente", data, null);
+                    }
+                    catch (System.Text.Json.JsonException)
+                    {
+                        return (true, "Pendientes registrados exitosamente", responseContent, null);
+                    }
                 }
                 else
                 {
-                    _logger.LogError("❌ Error registrando pendientes de entrega: {StatusCode} - {Content}", 
+                    _logger.LogError("❌ Error en API registrando pendientes: {StatusCode} - {Content}", 
                         response.StatusCode, responseContent);
-                    return (success: false, data: null, message: "Error al registrar pendientes de entrega", details: responseContent);
+
+                    return (false, $"Error del servidor: {response.StatusCode}", null, responseContent);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error registrando pendientes de entrega");
-                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+                _logger.LogError(ex, "❌ Error de comunicación registrando pendientes de entrega");
+                return (false, "Error de comunicación con el servidor", null, ex.Message);
             }
         }
 
@@ -1397,6 +1411,22 @@ namespace GestionLlantera.Web.Services
         public string? MedidaLlanta { get; set; }
         public string? MarcaLlanta { get; set; }
         public string? ModeloLlanta { get; set; }
+        public int StockDisponible { get; set; }
+    }
+
+    public class RegistrarPendientesEntregaRequest
+    {
+        public int FacturaId { get; set; }
+        public int UsuarioCreacion { get; set; }
+        public List<ProductoPendienteEntrega> ProductosPendientes { get; set; } = new List<ProductoPendienteEntrega>();
+    }
+
+    public class ProductoPendienteEntrega
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; }
+        public int CantidadSolicitada { get; set; }
+        public int CantidadPendiente { get; set; }
         public int StockDisponible { get; set; }
     }
 }
