@@ -842,6 +842,10 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.Observaciones)
                 .HasMaxLength(500);
 
+            entity.Property(e => e.CodigoSeguimiento)
+                .HasMaxLength(20)
+                .IsRequired(false);
+
             entity.HasOne(d => d.Factura)
                 .WithMany()
                 .HasForeignKey(d => d.FacturaId)
@@ -861,6 +865,10 @@ public partial class TucoContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.UsuarioEntrega)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Índice para búsquedas por código de seguimiento
+            entity.HasIndex(e => e.CodigoSeguimiento)
+                .HasDatabaseName("IX_PendientesEntrega_CodigoSeguimiento");
         });
 
         OnModelCreatingPartial(modelBuilder);
