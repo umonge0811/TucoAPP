@@ -2605,11 +2605,13 @@ function generarRecibo(factura, productos, totales) {
     
     // Verificar si hay productos pendientes (desde variables globales o datos de factura)
     const tieneProductosPendientes = window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0;
+    const tieneCodigosSeguimiento = window.codigosSeguimientoPendientes && window.codigosSeguimientoPendientes.length > 0;
     const facturaConPendientes = window.facturaConPendientes || facturaPendienteActual?.tieneProductosPendientes;
     
     if (tieneProductosPendientes || facturaConPendientes) {
         console.log('🎫 Agregando sección de productos pendientes al recibo');
         console.log('🎫 Productos pendientes:', window.productosPendientesEntrega);
+        console.log('🎫 Códigos de seguimiento:', window.codigosSeguimientoPendientes);
         
         seccionProductosPendientes = `
             <div class="separador"></div>
@@ -2621,7 +2623,20 @@ function generarRecibo(factura, productos, totales) {
                     <div>por falta de stock.</div>
                 </div>
                 <div class="separador-pendientes"></div>
-                ${tieneProductosPendientes ? 
+                ${tieneCodigosSeguimiento ? 
+                    window.codigosSeguimientoPendientes.map(pendiente => {
+                        const cantidadPendiente = pendiente.cantidadPendiente || 0;
+                        const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 22);
+                        const codigoSeguimiento = pendiente.codigoSeguimiento || `${numeroFactura}-${pendiente.productoId}`;
+                        return `
+                            <div class="producto-pendiente">
+                                <div class="pendiente-nombre">${nombreProducto}</div>
+                                <div class="pendiente-cantidad">Pendiente: ${cantidadPendiente} unidad(es)</div>
+                                <div class="pendiente-codigo">Código: ${codigoSeguimiento}</div>
+                            </div>
+                        `;
+                    }).join('') :
+                    tieneProductosPendientes ? 
                     window.productosPendientesEntrega.map(pendiente => {
                         const cantidadPendiente = pendiente.cantidadPendiente || pendiente.cantidad || 0;
                         const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 25);
@@ -2643,10 +2658,18 @@ function generarRecibo(factura, productos, totales) {
                     <div>🎫 CONSERVE ESTE RECIBO</div>
                     <div>como respaldo de entrega</div>
                 </div>
-                <div class="codigo-seguimiento">
-                    <div>Código de seguimiento:</div>
-                    <div class="codigo">${numeroFactura}-PEND</div>
-                </div>
+                ${tieneCodigosSeguimiento ? 
+                    `<div class="codigos-seguimiento">
+                        <div>Códigos de seguimiento:</div>
+                        ${window.codigosSeguimientoPendientes.map(p => 
+                            `<div class="codigo">${p.codigoSeguimiento}</div>`
+                        ).join('')}
+                    </div>` :
+                    `<div class="codigo-seguimiento">
+                        <div>Código de seguimiento:</div>
+                        <div class="codigo">${numeroFactura}-PEND</div>
+                    </div>`
+                }
             </div>
         `;
     }
@@ -4911,6 +4934,19 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
 
         if (resultado.success) {
             console.log('✅ Productos pendientes registrados exitosamente');
+            
+            // ✅ CAPTURAR CÓDIGOS DE SEGUIMIENTO DE LA RESPUESTA DEL SERVIDOR
+            if (resultado.pendientesCreados && Array.isArray(resultado.pendientesCreados)) {
+                console.log('🎫 Capturando códigos de seguimiento de la API...');
+                window.codigosSeguimientoPendientes = resultado.pendientesCreados.map(pendiente => ({
+                    productoId: pendiente.productoId,
+                    nombreProducto: pendiente.nombreProducto,
+                    cantidadPendiente: pendiente.cantidadPendiente,
+                    codigoSeguimiento: pendiente.codigoSeguimiento
+                }));
+                console.log('🎫 Códigos capturados:', window.codigosSeguimientoPendientes);
+            }
+            
             const cantidadRegistrados = resultado.pendientesCreados?.length || productosConProblemas.length;
             mostrarToast('Productos Pendientes', 
                 `Se registraron ${cantidadRegistrados} productos para entrega posterior`, 
@@ -5220,6 +5256,7 @@ async function facturarTodosModos() {
         
         // ✅ GUARDAR INFORMACIÓN DE PRODUCTOS PENDIENTES PARA EL PROCESO DE FACTURACIÓN
         window.productosPendientesEntrega = productosConProblemas;
+        window.codigosSeguimientoPendientes = []; // Inicializar array para códigos
         
         console.log('💾 Productos pendientes guardados globalmente:', window.productosPendientesEntrega);
         
