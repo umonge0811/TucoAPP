@@ -1966,6 +1966,15 @@ async function completarFacturaExistente(facturaId) {
         if (result.success) {
             console.log('✅ Factura completada exitosamente:', result);
             
+            // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN
+            if (window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
+                console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE COMPLETAR FACTURA ===');
+                console.log('📦 Productos pendientes:', window.productosPendientesEntrega);
+                console.log('📦 Factura completada ID:', facturaId);
+                
+                await registrarProductosPendientesEntrega(facturaId, window.productosPendientesEntrega);
+            }
+            
             // ✅ PRESERVAR INFORMACIÓN DE FACTURA SI NO ESTÁ EN EL RESULTADO
             if (!result.numeroFactura && facturaPendienteActual && facturaPendienteActual.numeroFactura) {
                 console.log('📋 Preservando información de factura para recibo:', facturaPendienteActual.numeroFactura);
@@ -2001,6 +2010,14 @@ async function completarFacturaExistente(facturaId) {
             actualizarVistaCarrito();
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
+            
+            // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES
+            if (window.productosPendientesEntrega) {
+                delete window.productosPendientesEntrega;
+            }
+            if (window.facturaConPendientes) {
+                delete window.facturaConPendientes;
+            }
 
             // ✅ LIMPIAR ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
             window.lastProductsHash = null;
