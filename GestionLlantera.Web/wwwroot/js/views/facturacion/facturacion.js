@@ -1966,6 +1966,24 @@ async function completarFacturaExistente(facturaId) {
         if (result.success) {
             console.log('✅ Factura completada exitosamente:', result);
             
+            // ✅ PRESERVAR INFORMACIÓN COMPLETA DE FACTURA ANTES DE PROCESAR
+            console.log('📋 === PRESERVANDO INFORMACIÓN DE FACTURA PARA RECIBO ===');
+            if (facturaPendienteActual) {
+                window.facturaParaRecibo = {
+                    numeroFactura: facturaPendienteActual.numeroFactura || `FAC-${facturaId}`,
+                    nombreCliente: facturaPendienteActual.nombreCliente || 
+                                  facturaPendienteActual.NombreCliente ||
+                                  clienteSeleccionado?.nombre || 
+                                  clienteSeleccionado?.nombreCliente ||
+                                  'Cliente General',
+                    usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre ||
+                                         facturaPendienteActual.UsuarioCreadorNombre ||
+                                         obtenerUsuarioActual()?.nombre ||
+                                         'Sistema'
+                };
+                console.log('📋 Información preservada:', window.facturaParaRecibo);
+            }
+            
             // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN
             if (window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
                 console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE COMPLETAR FACTURA ===');
@@ -1973,16 +1991,6 @@ async function completarFacturaExistente(facturaId) {
                 console.log('📦 Factura completada ID:', facturaId);
                 
                 await registrarProductosPendientesEntrega(facturaId, window.productosPendientesEntrega);
-            }
-            
-            // ✅ PRESERVAR INFORMACIÓN DE FACTURA SI NO ESTÁ EN EL RESULTADO
-            if (!result.numeroFactura && facturaPendienteActual && facturaPendienteActual.numeroFactura) {
-                console.log('📋 Preservando información de factura para recibo:', facturaPendienteActual.numeroFactura);
-                window.facturaParaRecibo = {
-                    numeroFactura: facturaPendienteActual.numeroFactura,
-                    nombreCliente: facturaPendienteActual.nombreCliente || clienteSeleccionado?.nombre,
-                    usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre
-                };
             }
             
             // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
@@ -3051,28 +3059,38 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('🖨️ Factura pendiente actual:', facturaPendienteActual);
         console.log('🖨️ Factura preservada para recibo:', window.facturaParaRecibo);
 
-        // ✅ EXTRACCIÓN MEJORADA DEL NÚMERO DE FACTURA CON INFORMACIÓN PRESERVADA
+        // ✅ EXTRACCIÓN MEJORADA DEL NÚMERO DE FACTURA CON MÚLTIPLES FUENTES
         let numeroFactura = 'N/A';
+        let nombreCliente = 'Cliente General';
+        let usuarioCreadorNombre = 'Sistema';
         
-        // Prioridad 1: Desde información preservada (para casos de productos eliminados)
-        if (window.facturaParaRecibo && window.facturaParaRecibo.numeroFactura) {
-            numeroFactura = window.facturaParaRecibo.numeroFactura;
-            console.log('🖨️ Número de factura desde información preservada:', numeroFactura);
+        // ✅ PRIORIZAR INFORMACIÓN DE FACTURA PENDIENTE ACTUAL
+        if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
+            numeroFactura = facturaPendienteActual.numeroFactura;
+            nombreCliente = facturaPendienteActual.nombreCliente || facturaPendienteActual.NombreCliente || nombreCliente;
+            usuarioCreadorNombre = facturaPendienteActual.usuarioCreadorNombre || facturaPendienteActual.UsuarioCreadorNombre || usuarioCreadorNombre;
+            console.log('🖨️ Datos desde facturaPendienteActual:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
         }
-        // Prioridad 2: Desde resultadoFactura (respuesta del servidor)
+        // Prioridad 2: Desde información preservada
+        else if (window.facturaParaRecibo && window.facturaParaRecibo.numeroFactura) {
+            numeroFactura = window.facturaParaRecibo.numeroFactura;
+            nombreCliente = window.facturaParaRecibo.nombreCliente || nombreCliente;
+            usuarioCreadorNombre = window.facturaParaRecibo.usuarioCreadorNombre || usuarioCreadorNombre;
+            console.log('🖨️ Datos desde información preservada:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
+        }
+        // Prioridad 3: Desde resultadoFactura (respuesta del servidor)
         else if (resultadoFactura && resultadoFactura.numeroFactura) {
             numeroFactura = resultadoFactura.numeroFactura;
-            console.log('🖨️ Número de factura desde resultadoFactura:', numeroFactura);
+            nombreCliente = resultadoFactura.nombreCliente || nombreCliente;
+            usuarioCreadorNombre = resultadoFactura.usuarioCreadorNombre || usuarioCreadorNombre;
+            console.log('🖨️ Datos desde resultadoFactura:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
         }
-        // Prioridad 3: Desde resultadoFactura.data
+        // Prioridad 4: Desde resultadoFactura.data
         else if (resultadoFactura && resultadoFactura.data && resultadoFactura.data.numeroFactura) {
             numeroFactura = resultadoFactura.data.numeroFactura;
-            console.log('🖨️ Número de factura desde resultadoFactura.data:', numeroFactura);
-        }
-        // Prioridad 4: Desde facturaPendienteActual
-        else if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
-            numeroFactura = facturaPendienteActual.numeroFactura;
-            console.log('🖨️ Número de factura desde facturaPendienteActual:', numeroFactura);
+            nombreCliente = resultadoFactura.data.nombreCliente || nombreCliente;
+            usuarioCreadorNombre = resultadoFactura.data.usuarioCreadorNombre || usuarioCreadorNombre;
+            console.log('🖨️ Datos desde resultadoFactura.data:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
         }
         // Prioridad 5: Desde los productos si tienen facturaId
         else if (productos && productos.length > 0 && productos[0].facturaId) {
@@ -3080,7 +3098,25 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             console.log('🖨️ Número de factura generado desde facturaId:', numeroFactura);
         }
 
-        console.log('🖨️ Número de factura final determinado:', numeroFactura);
+        // ✅ COMPLETAR INFORMACIÓN FALTANTE CON CLIENTE SELECCIONADO Y USUARIO ACTUAL
+        if (nombreCliente === 'Cliente General' && clienteSeleccionado) {
+            nombreCliente = clienteSeleccionado.nombre || 
+                           clienteSeleccionado.nombreCliente || 
+                           clienteSeleccionado.NombreCliente || 
+                           'Cliente General';
+            console.log('🖨️ Nombre cliente completado desde clienteSeleccionado:', nombreCliente);
+        }
+
+        if (usuarioCreadorNombre === 'Sistema') {
+            const usuarioActual = obtenerUsuarioActual();
+            usuarioCreadorNombre = usuarioActual?.nombre || 
+                                  usuarioActual?.nombreUsuario || 
+                                  usuarioActual?.NombreUsuario || 
+                                  'Sistema';
+            console.log('🖨️ Usuario creador completado desde usuarioActual:', usuarioCreadorNombre);
+        }
+
+        console.log('🖨️ Información final determinada:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
 
         // Calcular totales basándose en los productos del carrito
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
@@ -3094,19 +3130,11 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        // ✅ CREAR OBJETO DE DATOS COMPLETO CON INFORMACIÓN EXTRAÍDA Y PRESERVADA
+        // ✅ CREAR OBJETO DE DATOS COMPLETO PARA EL RECIBO
         const datosRecibo = {
             numeroFactura: numeroFactura,
-            nombreCliente: window.facturaParaRecibo?.nombreCliente ||
-                          clienteSeleccionado?.nombre || 
-                          clienteSeleccionado?.nombreCliente || 
-                          resultadoFactura?.nombreCliente || 
-                          'Cliente General',
-            usuarioCreadorNombre: window.facturaParaRecibo?.usuarioCreadorNombre ||
-                                 resultadoFactura?.usuarioCreadorNombre || 
-                                 facturaPendienteActual?.usuarioCreadorNombre || 
-                                 obtenerUsuarioActual()?.nombre || 
-                                 'Sistema'
+            nombreCliente: nombreCliente,
+            usuarioCreadorNombre: usuarioCreadorNombre
         };
 
         const totalesRecibo = {
@@ -3114,18 +3142,26 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             iva: iva,
             total: total,
             metodoPago: metodoPago,
-            cliente: clienteSeleccionado,
-            usuario: obtenerUsuarioActual()
+            cliente: {
+                nombre: nombreCliente,
+                nombreCliente: nombreCliente
+            },
+            usuario: {
+                nombre: usuarioCreadorNombre,
+                nombreUsuario: usuarioCreadorNombre
+            }
         };
 
         console.log('🖨️ Datos del recibo preparados:', {
             datosRecibo,
             cantidadProductos: productos.length,
             totalCalculado: total,
-            numeroFactura: numeroFactura
+            numeroFactura: numeroFactura,
+            cliente: nombreCliente,
+            usuario: usuarioCreadorNombre
         });
 
-        // Usar la función existente de generación de recibos
+        // ✅ LLAMAR A LA FUNCIÓN DE GENERACIÓN DE RECIBOS CON DATOS COMPLETOS
         generarRecibo(datosRecibo, productos, totalesRecibo);
 
         // ✅ LIMPIAR INFORMACIÓN PRESERVADA DESPUÉS DE USAR
@@ -3134,7 +3170,10 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             delete window.facturaParaRecibo;
         }
 
-        console.log('✅ Recibo de factura completada generado exitosamente con número:', numeroFactura);
+        console.log('✅ Recibo de factura completada generado exitosamente');
+        console.log('✅ Número:', numeroFactura);
+        console.log('✅ Cliente:', nombreCliente);
+        console.log('✅ Cajero:', usuarioCreadorNombre);
 
     } catch (error) {
         console.error('❌ Error generando recibo para factura completada:', error);
