@@ -2350,6 +2350,20 @@ async function crearNuevaFactura() {
         console.log('✅ Factura creada:', resultadoFactura);
 
         if (resultadoFactura.success) {
+            // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN
+            if (window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
+                console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE CREAR FACTURA ===');
+                console.log('📦 Productos pendientes:', window.productosPendientesEntrega);
+                console.log('📦 Factura creada ID:', resultadoFactura.facturaId || resultadoFactura.data?.facturaId);
+                
+                const facturaIdCreada = resultadoFactura.facturaId || resultadoFactura.data?.facturaId;
+                if (facturaIdCreada) {
+                    await registrarProductosPendientesEntrega(facturaIdCreada, window.productosPendientesEntrega);
+                } else {
+                    console.warn('⚠️ No se pudo obtener ID de factura para registrar pendientes');
+                }
+            }
+
             // ✅ PROCESAR SEGÚN EL TIPO DE USUARIO Y PERMISOS
             if (estadoFactura === 'Pendiente') {
                 // ✅ COLABORADORES: Modal específico de envío a cajas
@@ -4653,6 +4667,69 @@ function eliminarProductoProblema(productoId) {
 }
 
 /**
+ * Registrar productos pendientes de entrega
+ */
+async function registrarProductosPendientesEntrega(facturaId, productosConProblemas) {
+    try {
+        console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===');
+        console.log('📦 Factura ID:', facturaId);
+        console.log('📦 Productos con problemas:', productosConProblemas);
+        
+        if (!productosConProblemas || productosConProblemas.length === 0) {
+            console.log('📦 No hay productos pendientes para registrar');
+            return { success: true, message: 'No hay productos pendientes' };
+        }
+
+        const datosRegistro = {
+            facturaId: facturaId,
+            productos: productosConProblemas.map(producto => ({
+                productoId: producto.productoId,
+                nombreProducto: producto.nombreProducto,
+                cantidadPendiente: producto.cantidadPendiente || Math.max(0, producto.cantidadRequerida - producto.stockDisponible),
+                precioUnitario: producto.precioUnitario || 0,
+                observaciones: `Stock insuficiente al momento de la facturación. Disponible: ${producto.stockDisponible}, Requerido: ${producto.cantidadRequerida}`
+            }))
+        };
+
+        console.log('📦 Datos a enviar:', datosRegistro);
+
+        const response = await fetch('/Facturacion/RegistrarProductosPendientesEntrega', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(datosRegistro),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📦 Respuesta del servidor:', resultado);
+
+        if (resultado.success) {
+            console.log('✅ Productos pendientes registrados exitosamente');
+            mostrarToast('Productos Pendientes', 
+                `Se registraron ${productosConProblemas.length} productos para entrega posterior`, 
+                'info');
+            return resultado;
+        } else {
+            throw new Error(resultado.message || 'Error al registrar productos pendientes');
+        }
+
+    } catch (error) {
+        console.error('❌ Error registrando productos pendientes:', error);
+        mostrarToast('Error', 'No se pudieron registrar los productos pendientes: ' + error.message, 'warning');
+        return { success: false, message: error.message };
+    }
+}
+
+/**
  * Eliminar producto con problema de stock desde el endpoint del servidor
  */
 async function eliminarProductoConProblema(facturaId, productoId) {
@@ -5686,6 +5763,7 @@ window.eliminarProductoProblema = eliminarProductoProblema;
 window.eliminarProductoConProblema = eliminarProductoConProblema;
 window.facturarTodosModos = facturarTodosModos;
 window.cancelarProblemasStock = cancelarProblemasStock;
+window.registrarProductosPendientesEntrega = registrarProductosPendientesEntrega;
 
 // Estilos CSS para cards de productos
 const estilosCSS = `
