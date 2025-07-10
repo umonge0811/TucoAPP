@@ -4690,27 +4690,48 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
     try {
         console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===');
         console.log('📦 Factura ID:', facturaId);
-        console.log('📦 Productos con problemas:', productosConProblemas);
+        console.log('📦 Productos con problemas recibidos:', productosConProblemas);
         
         if (!productosConProblemas || productosConProblemas.length === 0) {
             console.log('📦 No hay productos pendientes para registrar');
             return { success: true, message: 'No hay productos pendientes' };
         }
 
+        // Obtener información del usuario actual
+        const usuarioActual = obtenerUsuarioActual();
+        const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
+
+        // Estructura correcta que espera el controlador
         const datosRegistro = {
             facturaId: facturaId,
-            productos: productosConProblemas.map(producto => ({
-                productoId: producto.productoId,
-                nombreProducto: producto.nombreProducto,
-                cantidadPendiente: producto.cantidadPendiente || Math.max(0, producto.cantidadRequerida - producto.stockDisponible),
-                precioUnitario: producto.precioUnitario || 0,
-                observaciones: `Stock insuficiente al momento de la facturación. Disponible: ${producto.stockDisponible}, Requerido: ${producto.cantidadRequerida}`
-            }))
+            usuarioCreacion: usuarioId,
+            productosPendientes: productosConProblemas.map(producto => {
+                // Normalizar datos del producto
+                const cantidadRequerida = producto.cantidadRequerida || producto.cantidadRequirida || producto.cantidad || 0;
+                const stockDisponible = producto.stockDisponible || producto.stock || 0;
+                const cantidadPendiente = Math.max(0, cantidadRequerida - stockDisponible);
+                
+                console.log(`📦 Procesando producto ${producto.productoId}:`, {
+                    cantidadRequerida,
+                    stockDisponible,
+                    cantidadPendiente
+                });
+                
+                return {
+                    productoId: producto.productoId,
+                    nombreProducto: producto.nombreProducto || 'Sin nombre',
+                    cantidadSolicitada: cantidadRequerida,
+                    cantidadPendiente: cantidadPendiente,
+                    stockDisponible: stockDisponible,
+                    precioUnitario: producto.precioUnitario || 0,
+                    observaciones: `Stock insuficiente al momento de la facturación. Disponible: ${stockDisponible}, Requerido: ${cantidadRequerida}`
+                };
+            })
         };
 
-        console.log('📦 Datos a enviar:', datosRegistro);
+        console.log('📦 Datos a enviar al servidor:', JSON.stringify(datosRegistro, null, 2));
 
-        const response = await fetch('/Facturacion/RegistrarProductosPendientesEntrega', {
+        const response = await fetch('/Facturacion/RegistrarPendientesEntrega', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -4731,8 +4752,9 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
 
         if (resultado.success) {
             console.log('✅ Productos pendientes registrados exitosamente');
+            const cantidadRegistrados = resultado.pendientesCreados?.length || productosConProblemas.length;
             mostrarToast('Productos Pendientes', 
-                `Se registraron ${productosConProblemas.length} productos para entrega posterior`, 
+                `Se registraron ${cantidadRegistrados} productos para entrega posterior`, 
                 'info');
             return resultado;
         } else {
@@ -4985,7 +5007,7 @@ async function facturarTodosModos() {
             return;
         }
 
-        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM
+        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM Y CARRITO
         const productosConProblemas = [];
         $('.problema-stock-row').each(function() {
             const productoId = $(this).data('producto-id');
@@ -4994,18 +5016,24 @@ async function facturarTodosModos() {
             const stockDisponible = parseInt($(this).find('.badge.bg-warning, .badge.bg-danger').text()) || 0;
             
             if (productoId) {
+                // Buscar el producto en el carrito para obtener más información
+                const productoEnCarrito = productosEnVenta.find(p => p.productoId == productoId);
+                
                 productosConProblemas.push({
                     productoId: parseInt(productoId),
                     nombreProducto: nombreProducto,
                     cantidadRequerida: cantidadRequerida,
+                    cantidadRequirida: cantidadRequerida, // Alias adicional
+                    cantidad: cantidadRequerida, // Otro alias
                     cantidadPendiente: Math.max(0, cantidadRequerida - stockDisponible),
                     stockDisponible: stockDisponible,
-                    precioUnitario: productosEnVenta.find(p => p.productoId == productoId)?.precioUnitario || 0
+                    stock: stockDisponible, // Alias adicional
+                    precioUnitario: productoEnCarrito?.precioUnitario || 0
                 });
             }
         });
         
-        console.log('🔍 Productos con problemas para facturar:', productosConProblemas);
+        console.log('🔍 Productos con problemas normalizados para facturar:', productosConProblemas);
         
         // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
         if (window.marcarCierreValidoProblemasStock) {
