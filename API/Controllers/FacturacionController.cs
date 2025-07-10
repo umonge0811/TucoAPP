@@ -1,4 +1,3 @@
-
 using API.Data;
 using API.Extensions;
 using API.ServicesAPI.Interfaces;
@@ -8,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Facturacion;
 using System.Linq;
+using System.Text.Json;
 
 namespace API.Controllers
 {
@@ -51,7 +51,7 @@ namespace API.Controllers
             try
             {
                 var puedeVerCostos = await this.TienePermisoAsync(_permisosService, "VerCostos");
-                
+
                 _logger.LogInformation("🛒 Obteniendo productos para venta - Página: {Pagina}, Tamaño: {Tamano}", pagina, tamano);
 
                 var query = _context.Productos
@@ -128,7 +128,7 @@ namespace API.Controllers
             try
             {
                 var puedeVerCostos = await this.TienePermisoAsync(_permisosService, "VerCostos");
-                
+
                 var producto = await _context.Productos
                     .Include(p => p.ImagenesProductos)
                     .Include(p => p.Llanta)
@@ -199,7 +199,7 @@ namespace API.Controllers
 
                 // ✅ VERIFICAR PERMISOS PARA DETERMINAR ESTADO INICIAL
                 var puedeCompletar = await this.TienePermisoAsync(_permisosService, "CompletarFacturas");
-                
+
                 // Determinar estado inicial según permisos y el estado enviado
                 string estadoInicial;
                 if (facturaDto.TipoDocumento == "Proforma")
@@ -291,7 +291,7 @@ namespace API.Controllers
                         };
 
                         _context.DetallesPago.Add(pagoBD);
-                        
+
                         _logger.LogInformation("💳 Detalle de pago agregado: {MetodoPago} - ₡{Monto}", 
                             detallePago.MetodoPago, detallePago.Monto);
                     }
@@ -310,7 +310,7 @@ namespace API.Controllers
                     };
 
                     _context.DetallesPago.Add(pagoUnico);
-                    
+
                     _logger.LogInformation("💳 Detalle de pago único creado: {MetodoPago} - ₡{Monto}", 
                         facturaDto.MetodoPago, facturaDto.TotalCalculado);
                 }
@@ -597,7 +597,7 @@ namespace API.Controllers
                 // ✅ Verificar stock antes de completar SOLO si es necesario
                 // Para facturas pendientes, omitir verificación de stock ya que se validó al crearla
                 var debeVerificarStock = true;
-                
+
                 // Si la factura ya está en estado "Pendiente", significa que el stock ya se verificó
                 // al momento de crear la factura, así que no necesitamos verificarlo de nuevo
                 if (factura.Estado == "Pendiente")
@@ -605,7 +605,7 @@ namespace API.Controllers
                     debeVerificarStock = false;
                     _logger.LogInformation("⚠️ Omitiendo verificación de stock para factura pendiente {NumeroFactura} - Ya verificada al crearla", factura.NumeroFactura);
                 }
-                
+
                 // También permitir forzar la verificación mediante un parámetro en el request
                 if (request?.ForzarVerificacionStock == true)
                 {
@@ -650,7 +650,7 @@ namespace API.Controllers
                         producto.CantidadEnInventario = Math.Max(0, 
                             (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
                         producto.FechaUltimaActualizacion = DateTime.Now;
-                        
+
                         _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
                             producto.NombreProducto, detalle.Cantidad);
                     }
@@ -802,8 +802,7 @@ namespace API.Controllers
                 _logger.LogError(ex, "❌ Error al obtener facturas pendientes");
                 return StatusCode(500, new { 
                     success = false,
-                    message = "Error al obtener facturas pendientes",
-                    timestamp = DateTime.Now 
+                    message = "Error al obtener facturas pendientes",                    timestamp = DateTime.Now 
                 });
             }
         }
@@ -928,7 +927,7 @@ namespace API.Controllers
 
                 // Por ahora, simulamos una respuesta exitosa para que la funcionalidad continúe
                 // En el futuro aquí se puede agregar lógica específica para diferentes tipos de impresoras
-                
+
                 return Ok(new { 
                     success = true, 
                     message = "Recibo enviado a impresora",
@@ -1028,7 +1027,7 @@ namespace API.Controllers
                     factura.Estado = "Anulada";
                     factura.Observaciones = (factura.Observaciones ?? "") + 
                         " [ANULADA AUTOMÁTICAMENTE - Sin productos restantes]";
-                    
+
                     _logger.LogInformation("🗑️ Factura anulada automáticamente por falta de productos");
                 }
                 else

@@ -1210,21 +1210,35 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string? message, string? details)> RegistrarPendientesEntregaAsync(RegistrarPendientesEntregaRequest request, string jwtToken)
+        public async Task<(bool success, object? data, string? message, string? details)> RegistrarPendientesEntregaAsync(object request, string jwtToken = null)
         {
             try
             {
                 _logger.LogInformation("📦 === ENVIANDO PENDIENTES DE ENTREGA A API ===");
-                _logger.LogInformation("📦 Factura ID: {FacturaId}", request.FacturaId);
-                _logger.LogInformation("📦 Usuario Creación: {UsuarioCreacion}", request.UsuarioCreacion);
-                _logger.LogInformation("📦 Productos: {Count}", request.ProductosPendientes?.Count ?? 0);
+                
+                // Convertir object a RegistrarPendientesEntregaRequest
+                RegistrarPendientesEntregaRequest typedRequest;
+                if (request is RegistrarPendientesEntregaRequest directRequest)
+                {
+                    typedRequest = directRequest;
+                }
+                else
+                {
+                    // Deserializar desde JSON si es necesario
+                    var jsonString = JsonConvert.SerializeObject(request);
+                    typedRequest = JsonConvert.DeserializeObject<RegistrarPendientesEntregaRequest>(jsonString);
+                }
+
+                _logger.LogInformation("📦 Factura ID: {FacturaId}", typedRequest.FacturaId);
+                _logger.LogInformation("📦 Usuario Creación: {UsuarioCreacion}", typedRequest.UsuarioCreacion);
+                _logger.LogInformation("📦 Productos: {Count}", typedRequest.ProductosPendientes?.Count ?? 0);
 
                 // ✅ CREAR ESTRUCTURA EXACTA QUE ESPERA LA API
                 var datosParaAPI = new
                 {
-                    facturaId = request.FacturaId,
-                    usuarioCreacion = request.UsuarioCreacion,
-                    productosPendientes = request.ProductosPendientes.Select(p => new
+                    facturaId = typedRequest.FacturaId,
+                    usuarioCreacion = typedRequest.UsuarioCreacion,
+                    productosPendientes = typedRequest.ProductosPendientes.Select(p => new
                     {
                         productoId = p.ProductoId,
                         nombreProducto = p.NombreProducto,
@@ -1251,11 +1265,11 @@ namespace GestionLlantera.Web.Services
                     try
                     {
                         var data = System.Text.Json.JsonSerializer.Deserialize<object>(responseContent);
-                        return (true, "Pendientes registrados exitosamente", data, null);
+                        return (true, data, "Pendientes registrados exitosamente", null);
                     }
                     catch (System.Text.Json.JsonException)
                     {
-                        return (true, "Pendientes registrados exitosamente", responseContent, null);
+                        return (true, (object)responseContent, "Pendientes registrados exitosamente", null);
                     }
                 }
                 else
