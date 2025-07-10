@@ -842,6 +842,9 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.Observaciones)
                 .HasMaxLength(500);
 
+            entity.Property(e => e.CodigoSeguimiento)
+                .HasMaxLength(20);
+
             entity.HasOne(d => d.Factura)
                 .WithMany()
                 .HasForeignKey(d => d.FacturaId)

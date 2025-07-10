@@ -1210,6 +1210,9 @@ namespace API.Controllers
                     _logger.LogInformation("📦 Procesando producto: {ProductoId} - {Nombre} - Cantidad: {Cantidad}", 
                         productoPendiente.ProductoId, productoPendiente.NombreProducto, productoPendiente.CantidadPendiente);
 
+                    // Generar código de seguimiento único
+                    var codigoSeguimiento = $"PEND-{DateTime.Now:yyyyMMdd}-{request.FacturaId:D4}-{productoPendiente.ProductoId:D3}";
+                    
                     var pendienteEntrega = new PendientesEntrega
                     {
                         FacturaId = request.FacturaId,
@@ -1219,7 +1222,8 @@ namespace API.Controllers
                         FechaCreacion = DateTime.Now,
                         Estado = "Pendiente",
                         Observaciones = $"Stock insuficiente al momento de la facturación. Disponible: {productoPendiente.StockDisponible}",
-                        UsuarioCreacion = request.UsuarioCreacion
+                        UsuarioCreacion = request.UsuarioCreacion,
+                        CodigoSeguimiento = codigoSeguimiento
                     };
 
                     _context.PendientesEntrega.Add(pendienteEntrega);
@@ -1229,7 +1233,8 @@ namespace API.Controllers
                         productoId = productoPendiente.ProductoId,
                         nombreProducto = productoPendiente.NombreProducto,
                         cantidadPendiente = productoPendiente.CantidadPendiente,
-                        cantidadSolicitada = productoPendiente.CantidadSolicitada
+                        cantidadSolicitada = productoPendiente.CantidadSolicitada,
+                        codigoSeguimiento = codigoSeguimiento
                     });
 
                     _logger.LogInformation("📦 Pendiente creado exitosamente: {Producto} - {Cantidad} unidades", 
@@ -1256,6 +1261,62 @@ namespace API.Controllers
                 return StatusCode(500, new { 
                     success = false, 
                     message = "Error interno al crear pendientes de entrega: " + ex.Message 
+                });
+            }
+        }
+
+        [HttpGet("buscar-pendiente/{codigo}")]
+        [Authorize]
+        public async Task<ActionResult<object>> BuscarPendientePorCodigo(string codigo)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Buscando pendiente con código: {Codigo}", codigo);
+
+                var pendiente = await _context.PendientesEntrega
+                    .Include(p => p.Producto)
+                    .Include(p => p.Factura)
+                    .FirstOrDefaultAsync(p => p.CodigoSeguimiento == codigo.ToUpper());
+
+                if (pendiente == null)
+                {
+                    return NotFound(new { 
+                        success = false, 
+                        message = "No se encontró ningún pendiente con ese código de seguimiento" 
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        id = pendiente.Id,
+                        codigoSeguimiento = pendiente.CodigoSeguimiento,
+                        facturaId = pendiente.FacturaId,
+                        numeroFactura = pendiente.Factura.NumeroFactura,
+                        cliente = pendiente.Factura.NombreCliente,
+                        producto = new
+                        {
+                            id = pendiente.ProductoId,
+                            nombre = pendiente.Producto.NombreProducto,
+                            stockActual = pendiente.Producto.CantidadEnInventario
+                        },
+                        cantidadSolicitada = pendiente.CantidadSolicitada,
+                        cantidadPendiente = pendiente.CantidadPendiente,
+                        estado = pendiente.Estado,
+                        fechaCreacion = pendiente.FechaCreacion,
+                        fechaEntrega = pendiente.FechaEntrega,
+                        observaciones = pendiente.Observaciones
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error buscando pendiente por código");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno del servidor" 
                 });
             }
         }
