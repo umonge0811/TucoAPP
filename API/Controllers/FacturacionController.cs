@@ -1166,7 +1166,7 @@ namespace API.Controllers
         // GESTIÓN DE PENDIENTES DE ENTREGA
         // =====================================
 
-        [HttpPost("pendientes-entrega")]
+        [HttpPost("registrar-pendientes-entrega")]
         [Authorize]
         public async Task<IActionResult> CrearPendientesEntrega([FromBody] CrearPendientesEntregaRequest request)
         {
@@ -1421,6 +1421,106 @@ namespace API.Controllers
             }
         }
 
+        [HttpPut("marcar-entregados")]
+        [Authorize]
+        public async Task<IActionResult> MarcarProductosEntregados([FromBody] MarcarEntregadosRequest request)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Gestionar Entregas",
+                "Solo usuarios con permiso para gestionar entregas pueden marcar productos como entregados");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _logger.LogInformation("✅ Marcando productos como entregados: {Count} items", request.ProductosIds?.Count ?? 0);
+
+                if (request.ProductosIds == null || !request.ProductosIds.Any())
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "Debe especificar al menos un producto para marcar como entregado" 
+                    });
+                }
+
+                var productosActualizados = new List<object>();
+
+                foreach (var productoId in request.ProductosIds)
+                {
+                    var pendiente = await _context.PendientesEntrega
+                        .Include(p => p.Producto)
+                        .Include(p => p.Factura)
+                        .FirstOrDefaultAsync(p => p.Id == productoId && p.Estado == "Pendiente");
+
+                    if (pendiente == null)
+                    {
+                        _logger.LogWarning("⚠️ Pendiente no encontrado o ya procesado: {ProductoId}", productoId);
+                        continue;
+                    }
+
+                    // Verificar stock disponible
+                    var stockDisponible = (int)(pendiente.Producto.CantidadEnInventario ?? 0);
+                    var cantidadAEntregar = pendiente.CantidadPendiente;
+
+                    if (stockDisponible < cantidadAEntregar)
+                    {
+                        return BadRequest(new { 
+                            success = false,
+                            message = $"Stock insuficiente para {pendiente.Producto.NombreProducto}. Disponible: {stockDisponible}, Requerido: {cantidadAEntregar}" 
+                        });
+                    }
+
+                    // Actualizar inventario
+                    pendiente.Producto.CantidadEnInventario = Math.Max(0, 
+                        (pendiente.Producto.CantidadEnInventario ?? 0) - cantidadAEntregar);
+                    pendiente.Producto.FechaUltimaActualizacion = DateTime.Now;
+
+                    // Actualizar pendiente
+                    pendiente.Estado = "Entregado";
+                    pendiente.FechaEntrega = DateTime.Now;
+                    pendiente.UsuarioEntrega = request.UsuarioEntrega;
+                    pendiente.Observaciones = (pendiente.Observaciones ?? "") + 
+                        $" | ENTREGADO: {cantidadAEntregar} unidades el {DateTime.Now:dd/MM/yyyy HH:mm}";
+
+                    if (!string.IsNullOrEmpty(request.ObservacionesEntrega))
+                    {
+                        pendiente.Observaciones += $" | {request.ObservacionesEntrega}";
+                    }
+
+                    productosActualizados.Add(new
+                    {
+                        id = pendiente.Id,
+                        productoId = pendiente.ProductoId,
+                        nombreProducto = pendiente.Producto.NombreProducto,
+                        cantidadEntregada = cantidadAEntregar,
+                        stockRestante = pendiente.Producto.CantidadEnInventario
+                    });
+
+                    _logger.LogInformation("✅ Producto marcado como entregado: {Producto} - {Cantidad} unidades", 
+                        pendiente.Producto.NombreProducto, cantidadAEntregar);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"{productosActualizados.Count} producto(s) marcado(s) como entregado(s) exitosamente",
+                    productosActualizados = productosActualizados,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error al marcar productos como entregados");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno al procesar entregas" 
+                });
+            }
+        }
+
         // =====================================
         // DTOs PARA COMPLETAR FACTURAS
         // =====================================
@@ -1474,5 +1574,12 @@ namespace API.Controllers
     {
         public int FacturaId { get; set; }
         public List<int> ProductosAEliminar { get; set; } = new List<int>();
+    }
+
+    public class MarcarEntregadosRequest
+    {
+        public List<int> ProductosIds { get; set; } = new List<int>();
+        public int UsuarioEntrega { get; set; }
+        public string? ObservacionesEntrega { get; set; }
     }
 }
