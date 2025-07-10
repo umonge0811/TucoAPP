@@ -2622,13 +2622,15 @@ function generarRecibo(factura, productos, totales) {
                 </div>
                 <div class="separador-pendientes"></div>
                 ${tieneProductosPendientes ? 
-                    window.productosPendientesEntrega.map(pendiente => {
+                    window.productosPendientesEntrega.map((pendiente, index) => {
                         const cantidadPendiente = pendiente.cantidadPendiente || pendiente.cantidad || 0;
                         const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 25);
+                        const codigoSeguimiento = pendiente.codigoSeguimiento || `${numeroFactura}-PEND-${(Date.now() + index).toString().slice(-6)}`;
                         return `
                             <div class="producto-pendiente">
                                 <div class="pendiente-nombre">${nombreProducto}</div>
                                 <div class="pendiente-cantidad">Pendiente: ${cantidadPendiente} unidad(es)</div>
+                                <div class="pendiente-codigo">Código: ${codigoSeguimiento}</div>
                             </div>
                         `;
                     }).join('') :
@@ -2645,7 +2647,7 @@ function generarRecibo(factura, productos, totales) {
                 </div>
                 <div class="codigo-seguimiento">
                     <div>Código de seguimiento:</div>
-                    <div class="codigo">${numeroFactura}-PEND</div>
+                    <div class="codigo">${numeroFactura}-PEND-${Date.now().toString().slice(-6)}</div>
                 </div>
             </div>
         `;
@@ -2996,6 +2998,16 @@ function generarRecibo(factura, productos, totales) {
                         .pendiente-cantidad {
                             font-size: 6px;
                             color: #666;
+                        }
+
+                        .pendiente-codigo {
+                            font-size: 6px;
+                            font-weight: bold;
+                            color: #000;
+                            margin-top: 0.5mm;
+                            border: 1px solid #000;
+                            padding: 0.5mm;
+                            display: inline-block;
                         }
 
                         .instrucciones-pendientes {
@@ -4883,6 +4895,7 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
                     cantidadPendiente: cantidadPendiente,
                     stockDisponible: stockDisponible,
                     precioUnitario: producto.precioUnitario || 0,
+                    codigoSeguimiento: `${numeroFactura || 'FAC'}-PEND-${Date.now().toString().slice(-6)}`,
                     observaciones: `Stock insuficiente al momento de la facturación. Disponible: ${stockDisponible}, Requerido: ${cantidadRequerida}`
                 };
             })
