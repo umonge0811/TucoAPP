@@ -1171,6 +1171,170 @@ namespace GestionLlantera.Web.Services
                 );
             }
         }
+
+        public async Task<(bool success, object? data, string? message, string? details)> ObtenerPendientesEntregaAsync(string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === OBTENIENDO PENDIENTES DE ENTREGA ===");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.GetAsync("api/Facturacion/pendientes-entrega");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📦 Respuesta de la API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    return (success: true, data: resultado, message: "Pendientes de entrega obtenidos exitosamente", details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error obteniendo pendientes de entrega: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (success: false, data: null, message: "Error al obtener pendientes de entrega", details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo pendientes de entrega");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+            }
+        }
+
+        public async Task<(bool success, object? data, string? message, string? details)> RegistrarPendientesEntregaAsync(object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === ENVIANDO PENDIENTES DE ENTREGA A API ===");
+                
+                // Convertir object a RegistrarPendientesEntregaRequest
+                RegistrarPendientesEntregaRequest typedRequest;
+                if (request is RegistrarPendientesEntregaRequest directRequest)
+                {
+                    typedRequest = directRequest;
+                }
+                else
+                {
+                    // Deserializar desde JSON si es necesario
+                    var jsonString = JsonConvert.SerializeObject(request);
+                    typedRequest = JsonConvert.DeserializeObject<RegistrarPendientesEntregaRequest>(jsonString);
+                }
+
+                _logger.LogInformation("📦 Factura ID: {FacturaId}", typedRequest.FacturaId);
+                _logger.LogInformation("📦 Usuario Creación: {UsuarioCreacion}", typedRequest.UsuarioCreacion);
+                _logger.LogInformation("📦 Productos: {Count}", typedRequest.ProductosPendientes?.Count ?? 0);
+
+                // ✅ CREAR ESTRUCTURA EXACTA QUE ESPERA LA API
+                var datosParaAPI = new
+                {
+                    facturaId = typedRequest.FacturaId,
+                    usuarioCreacion = typedRequest.UsuarioCreacion,
+                    productosPendientes = typedRequest.ProductosPendientes.Select(p => new
+                    {
+                        productoId = p.ProductoId,
+                        nombreProducto = p.NombreProducto,
+                        cantidadSolicitada = p.CantidadSolicitada,
+                        cantidadPendiente = p.CantidadPendiente,
+                        stockDisponible = p.StockDisponible
+                    }).ToList()
+                };
+
+                _logger.LogInformation("📦 Datos estructurados para API: {Datos}", 
+                    System.Text.Json.JsonSerializer.Serialize(datosParaAPI, new JsonSerializerOptions { WriteIndented = true }));
+
+                // ✅ CONFIGURAR HEADERS CON TOKEN JWT
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+
+                var response = await _httpClient.PostAsJsonAsync("api/Facturacion/registrar-pendientes-entrega", datosParaAPI);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📦 Respuesta de API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        var data = System.Text.Json.JsonSerializer.Deserialize<object>(responseContent);
+                        return (true, data, "Pendientes registrados exitosamente", null);
+                    }
+                    catch (System.Text.Json.JsonException)
+                    {
+                        return (true, (object)responseContent, "Pendientes registrados exitosamente", null);
+                    }
+                }
+                else
+                {
+                    _logger.LogError("❌ Error en API registrando pendientes: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+
+                    return (false, $"Error del servidor: {response.StatusCode}", null, responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error de comunicación registrando pendientes de entrega");
+                return (false, "Error de comunicación con el servidor", null, ex.Message);
+            }
+        }
+
+        public async Task<(bool success, object? data, string? message, string? details)> MarcarProductosEntregadosAsync(object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("✅ === MARCANDO PRODUCTOS COMO ENTREGADOS ===");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(request, new JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON enviado al API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync("api/Facturacion/marcar-entregados", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    return (success: true, data: resultado, message: "Productos marcados como entregados exitosamente", details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error marcando productos como entregados: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (success: false, data: null, message: "Error al marcar productos como entregados", details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando productos como entregados");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+            }
+        }
     }
     // Modelos para la deserialización
     public class StockVerificationResponse
@@ -1261,6 +1425,22 @@ namespace GestionLlantera.Web.Services
         public string? MedidaLlanta { get; set; }
         public string? MarcaLlanta { get; set; }
         public string? ModeloLlanta { get; set; }
+        public int StockDisponible { get; set; }
+    }
+
+    public class RegistrarPendientesEntregaRequest
+    {
+        public int FacturaId { get; set; }
+        public int UsuarioCreacion { get; set; }
+        public List<ProductoPendienteEntrega> ProductosPendientes { get; set; } = new List<ProductoPendienteEntrega>();
+    }
+
+    public class ProductoPendienteEntrega
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; }
+        public int CantidadSolicitada { get; set; }
+        public int CantidadPendiente { get; set; }
         public int StockDisponible { get; set; }
     }
 }

@@ -736,9 +736,11 @@ namespace GestionLlantera.Web.Controllers
                 // Estructurar datos para el API
                 var datosCompletamiento = new
                 {
+                    facturaId = request.FacturaId,
                     metodoPago = request.MetodoPago,
+                    observaciones = request.Observaciones,
                     detallesPago = request.DetallesPago,
-                    observaciones = request.Observaciones
+                    forzarVerificacionStock = false // Por defecto no forzar verificación para facturas pendientes
                 };
 
                 _logger.LogInformation("📋 Enviando datos de completamiento: {Datos}", 
@@ -883,8 +885,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogInformation("✅ Productos eliminados exitosamente de factura {FacturaId}", request.FacturaId);
                     return Json(new { 
-                        success = true, 
-                        message = resultado.message,
+                        success = true,                         message = resultado.message,
                         productosEliminados = resultado.data
                     });
                 }
@@ -1014,6 +1015,184 @@ namespace GestionLlantera.Web.Controllers
 
             return defaultValue;
         }
+
+        [HttpPost]
+        public async Task<IActionResult> RegistrarProductosPendientesEntrega([FromBody] RegistrarPendientesEntregaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📝 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===");
+                _logger.LogInformation("📝 Factura ID: {FacturaId}, Usuario: {UsuarioCreacion}, Productos: {Count}",
+                    request.FacturaId, request.UsuarioCreacion, request.ProductosPendientes?.Count ?? 0);
+
+                // Log detallado de los datos recibidos
+                _logger.LogInformation("📝 Datos completos recibidos: {Request}", 
+                    System.Text.Json.JsonSerializer.Serialize(request));
+
+                if (!await this.TienePermisoAsync("Crear Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para registrar pendientes de entrega" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                // ✅ MAPEAR CORRECTAMENTE LOS DATOS PARA LA API
+                var datosParaAPI = new
+                {
+                    facturaId = request.FacturaId,
+                    usuarioCreacion = request.UsuarioCreacion,
+                    productosPendientes = request.ProductosPendientes.Select(p => new
+                    {
+                        productoId = p.ProductoId,
+                        nombreProducto = p.NombreProducto,
+                        cantidadSolicitada = p.CantidadPendiente, // La cantidad que se solicitó originalmente
+                        cantidadPendiente = p.CantidadPendiente,  // La cantidad que queda pendiente
+                        stockDisponible = 0, // Stock disponible al momento (generalmente 0)
+                        precioUnitario = p.PrecioUnitario,
+                        observaciones = p.Observaciones
+                    }).ToList()
+                };
+
+                _logger.LogInformation("📝 Datos mapeados para API: {DatosAPI}", 
+                    System.Text.Json.JsonSerializer.Serialize(datosParaAPI));
+
+                var resultado = await _facturacionService.RegistrarPendientesEntregaAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message,
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error registrando pendientes de entrega");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerPendientesEntrega()
+        {
+            try
+            {
+                _logger.LogInformation("📦 === OBTENIENDO PENDIENTES DE ENTREGA ===");
+
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para ver pendientes de entrega" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.ObtenerPendientesEntregaAsync(jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        data = resultado.data,
+                        message = resultado.message
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo pendientes de entrega");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarcarProductosEntregados([FromBody] MarcarEntregadosRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("✅ === MARCANDO PRODUCTOS COMO ENTREGADOS ===");
+                _logger.LogInformation("✅ Productos a marcar: {Count}", request.ProductosIds?.Count ?? 0);
+
+                if (!await this.TienePermisoAsync("Completar Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para marcar productos como entregados" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.MarcarProductosEntregadosAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message,
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando productos como entregados");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
     }
 
     public class VerificarStockFacturaRequest
@@ -1047,5 +1226,30 @@ namespace GestionLlantera.Web.Controllers
         public string? Referencia { get; set; }
         public string? Observaciones { get; set; }
         public DateTime? FechaPago { get; set; }
+    }
+
+    public class RegistrarPendientesEntregaRequest
+    {
+        public int FacturaId { get; set; }
+        public int UsuarioCreacion { get; set; }
+        public List<ProductoPendienteEntrega> ProductosPendientes { get; set; } = new List<ProductoPendienteEntrega>();
+    }
+
+    public class ProductoPendienteEntrega
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadSolicitada { get; set; }
+        public int CantidadPendiente { get; set; }
+        public int StockDisponible { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class MarcarEntregadosRequest
+    {
+        public List<int> ProductosIds { get; set; } = new List<int>();
+        public string? ObservacionesEntrega { get; set; }
+        public DateTime? FechaEntrega { get; set; }
     }
 }
