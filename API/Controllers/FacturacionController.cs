@@ -1224,8 +1224,14 @@ namespace API.Controllers
 
                     _context.PendientesEntrega.Add(pendienteEntrega);
                     await _context.SaveChangesAsync();
-                    // Generar el código compuesto "FacturaId+id"
+                    
+                    // Generar el código compuesto "FacturaId+id" y guardarlo en la base de datos
                     var codigoSeguimiento = $"FAC-{pendienteEntrega.FacturaId}-{pendienteEntrega.Id}";
+                    pendienteEntrega.CodigoSeguimiento = codigoSeguimiento;
+                    
+                    // Guardar el código de seguimiento en la base de datos
+                    _context.PendientesEntrega.Update(pendienteEntrega);
+                    await _context.SaveChangesAsync();
                     pendientesCreados.Add(new
                     {
                         id = pendienteEntrega.Id,
