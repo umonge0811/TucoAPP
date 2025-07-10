@@ -4731,7 +4731,7 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
 
         console.log('📦 Datos a enviar al servidor:', JSON.stringify(datosRegistro, null, 2));
 
-        const response = await fetch('/Facturacion/RegistrarPendientesEntrega', {
+        const response = await fetch('/Facturacion/RegistrarProductosPendientesEntrega', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
