@@ -39,9 +39,6 @@ namespace tuco.Clases.Models
 
         public int? UsuarioEntrega { get; set; }
 
-        [StringLength(20)]
-        public string? CodigoSeguimiento { get; set; }
-
         // Navigation properties
         [ForeignKey("FacturaId")]
         public virtual Factura Factura { get; set; }
