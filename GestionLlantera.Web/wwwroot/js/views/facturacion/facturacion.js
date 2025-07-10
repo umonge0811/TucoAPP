@@ -2600,6 +2600,57 @@ function generarRecibo(factura, productos, totales) {
         return izquierda + ' '.repeat(Math.max(0, espacios)) + derecha;
     }
 
+    // ===== SECCIÓN PRODUCTOS PENDIENTES =====
+    let seccionProductosPendientes = '';
+    
+    // Verificar si hay productos pendientes (desde variables globales o datos de factura)
+    const tieneProductosPendientes = window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0;
+    const facturaConPendientes = window.facturaConPendientes || facturaPendienteActual?.tieneProductosPendientes;
+    
+    if (tieneProductosPendientes || facturaConPendientes) {
+        console.log('🎫 Agregando sección de productos pendientes al recibo');
+        console.log('🎫 Productos pendientes:', window.productosPendientesEntrega);
+        
+        seccionProductosPendientes = `
+            <div class="separador"></div>
+            <div class="seccion-pendientes">
+                <div class="titulo-seccion">⏳ PRODUCTOS PENDIENTES</div>
+                <div class="info-pendientes">
+                    <div>IMPORTANTE: Algunos productos</div>
+                    <div>quedan pendientes de entrega</div>
+                    <div>por falta de stock.</div>
+                </div>
+                <div class="separador-pendientes"></div>
+                ${tieneProductosPendientes ? 
+                    window.productosPendientesEntrega.map(pendiente => {
+                        const cantidadPendiente = pendiente.cantidadPendiente || pendiente.cantidad || 0;
+                        const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 25);
+                        return `
+                            <div class="producto-pendiente">
+                                <div class="pendiente-nombre">${nombreProducto}</div>
+                                <div class="pendiente-cantidad">Pendiente: ${cantidadPendiente} unidad(es)</div>
+                            </div>
+                        `;
+                    }).join('') :
+                    `<div class="producto-pendiente">
+                        <div class="pendiente-nombre">Consulte detalles en caja</div>
+                    </div>`
+                }
+                <div class="separador-pendientes"></div>
+                <div class="instrucciones-pendientes">
+                    <div>📞 Le notificaremos cuando</div>
+                    <div>llegue el stock faltante</div>
+                    <div>🎫 CONSERVE ESTE RECIBO</div>
+                    <div>como respaldo de entrega</div>
+                </div>
+                <div class="codigo-seguimiento">
+                    <div>Código de seguimiento:</div>
+                    <div class="codigo">${numeroFactura}-PEND</div>
+                </div>
+            </div>
+        `;
+    }
+
     // ===== SECCIÓN MÉTODO DE PAGO =====
     let seccionMetodoPago = '';
     
@@ -2689,6 +2740,9 @@ function generarRecibo(factura, productos, totales) {
 
             <!-- MÉTODO DE PAGO -->
             ${seccionMetodoPago}
+
+            <!-- PRODUCTOS PENDIENTES DE ENTREGA -->
+            ${seccionProductosPendientes}
 
             <!-- PIE DE PÁGINA -->
             <div class="pie-pagina">
@@ -2905,6 +2959,72 @@ function generarRecibo(factura, productos, totales) {
 
                         .espaciado-final {
                             height: 5mm;
+                        }
+
+                        /* Estilos para productos pendientes */
+                        .seccion-pendientes {
+                            margin-bottom: 3mm;
+                            border: 1px solid #000;
+                            padding: 2mm;
+                        }
+
+                        .info-pendientes {
+                            text-align: center;
+                            font-size: 7px;
+                            margin-bottom: 2mm;
+                        }
+
+                        .info-pendientes div {
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .separador-pendientes {
+                            border-top: 1px dashed #000;
+                            margin: 1mm 0;
+                        }
+
+                        .producto-pendiente {
+                            margin-bottom: 1mm;
+                            font-size: 7px;
+                        }
+
+                        .pendiente-nombre {
+                            font-weight: bold;
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .pendiente-cantidad {
+                            font-size: 6px;
+                            color: #666;
+                        }
+
+                        .instrucciones-pendientes {
+                            text-align: center;
+                            font-size: 6px;
+                            margin: 2mm 0;
+                        }
+
+                        .instrucciones-pendientes div {
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .codigo-seguimiento {
+                            text-align: center;
+                            margin-top: 2mm;
+                        }
+
+                        .codigo-seguimiento div:first-child {
+                            font-size: 6px;
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .codigo {
+                            font-size: 8px;
+                            font-weight: bold;
+                            font-family: 'Courier New', monospace;
+                            border: 1px solid #000;
+                            padding: 1mm;
+                            display: inline-block;
                         }
 
                         /* Estilos específicos para vista previa en pantalla */
