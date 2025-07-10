@@ -4116,25 +4116,25 @@ function obtenerUsuarioActual() {
             }
         }
 
-        console.warn('⚠️ No se pudo obtener información del usuario, usando valores por defecto');
+        console.warn('⚠️ No se pudo obtener información del usuario, usando ID 1 (Ulises Monge Aguilar) como fallback seguro');
         console.log('🔍 Debug completo de configuraciones disponibles:');
         console.log('🔍 window.facturaConfig:', window.facturaConfig);
         console.log('🔍 window.inventarioConfig:', window.inventarioConfig);
 
-        // Fallback básico
+        // Fallback seguro con ID 1 que sabemos que existe
         return {
             usuarioId: 1,
             id: 1,
-            nombre: 'Usuario Sistema',
-            nombreUsuario: 'sistema'
+            nombre: 'Ulises Monge Aguilar',
+            nombreUsuario: 'umongegds@gmail.com'
         };
     } catch (error) {
         console.error('❌ Error obteniendo usuario actual:', error);
         return {
             usuarioId: 1,
             id: 1,
-            nombre: 'Usuario Error',
-            nombreUsuario: 'error'
+            nombre: 'Ulises Monge Aguilar',
+            nombreUsuario: 'sistema'
         };
     }
 }
@@ -4701,11 +4701,13 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
         const usuarioActual = obtenerUsuarioActual();
         const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
 
+        console.log('👤 Usuario para registro:', { usuarioActual, usuarioId });
+
         // Estructura correcta que espera el controlador
         const datosRegistro = {
-            facturaId: facturaId,
-            usuarioCreacion: usuarioId,
-            productosPendientes: productosConProblemas.map(producto => {
+            FacturaId: facturaId,
+            UsuarioCreacion: usuarioId,
+            ProductosPendientes: productosConProblemas.map(producto => {
                 // Normalizar datos del producto
                 const cantidadRequerida = producto.cantidadRequerida || producto.cantidadRequirida || producto.cantidad || 0;
                 const stockDisponible = producto.stockDisponible || producto.stock || 0;
@@ -4718,20 +4720,20 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
                 });
                 
                 return {
-                    productoId: producto.productoId,
-                    nombreProducto: producto.nombreProducto || 'Sin nombre',
-                    cantidadSolicitada: cantidadRequerida,
-                    cantidadPendiente: cantidadPendiente,
-                    stockDisponible: stockDisponible,
-                    precioUnitario: producto.precioUnitario || 0,
-                    observaciones: `Stock insuficiente al momento de la facturación. Disponible: ${stockDisponible}, Requerido: ${cantidadRequerida}`
+                    ProductoId: producto.productoId,
+                    NombreProducto: producto.nombreProducto || 'Sin nombre',
+                    CantidadSolicitada: cantidadRequerida,
+                    CantidadPendiente: cantidadPendiente,
+                    StockDisponible: stockDisponible,
+                    PrecioUnitario: producto.precioUnitario || 0,
+                    Observaciones: `Stock insuficiente al momento de la facturación. Disponible: ${stockDisponible}, Requerido: ${cantidadRequerida}`
                 };
             })
         };
 
         console.log('📦 Datos a enviar al servidor:', JSON.stringify(datosRegistro, null, 2));
 
-        const response = await fetch('/Facturacion/RegistrarProductosPendientesEntrega', {
+        const response = await fetch('/api/Facturacion/registrar-pendientes-entrega', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -5007,17 +5009,17 @@ async function facturarTodosModos() {
             return;
         }
 
-        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM CORRECTAMENTE
+        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM - CORREGIDO
         const productosConProblemas = [];
         $('.problema-stock-row').each(function() {
             const $fila = $(this);
             const productoId = $fila.data('producto-id');
             const nombreProducto = $fila.find('td:first strong').text().trim();
             
-            // ✅ CAPTURAR CANTIDADES CORRECTAMENTE DESDE LAS COLUMNAS DE LA TABLA
-            const cantidadSolicitada = parseInt($fila.find('td:eq(1) .badge.bg-info').text().trim()) || 0;
-            const stockDisponible = parseInt($fila.find('td:eq(2) .badge.bg-warning, td:eq(2) .badge.bg-danger').text().trim()) || 0;
-            const cantidadPendiente = parseInt($fila.find('td:eq(3) .badge.bg-danger').text().trim()) || 0;
+            // ✅ CORREGIR CAPTURA DE STOCK DISPONIBLE - USAR LA COLUMNA CORRECTA
+            const cantidadSolicitada = parseInt($fila.find('td:eq(1) .badge').text().trim()) || 0;
+            const stockDisponible = parseInt($fila.find('td:eq(2) .badge').text().trim()) || 0;
+            const cantidadPendiente = parseInt($fila.find('td:eq(3) .badge').text().trim()) || 0;
             
             console.log(`📦 Procesando producto ${productoId}:`, {
                 nombreProducto,
@@ -5034,12 +5036,12 @@ async function facturarTodosModos() {
                     productoId: parseInt(productoId),
                     nombreProducto: nombreProducto,
                     cantidadSolicitada: cantidadSolicitada,
-                    cantidadRequerida: cantidadSolicitada, // Alias
-                    cantidadRequirida: cantidadSolicitada, // Alias adicional
-                    cantidad: cantidadSolicitada, // Otro alias
+                    cantidadRequerida: cantidadSolicitada,
+                    cantidadRequirida: cantidadSolicitada,
+                    cantidad: cantidadSolicitada,
                     cantidadPendiente: cantidadPendiente > 0 ? cantidadPendiente : Math.max(0, cantidadSolicitada - stockDisponible),
                     stockDisponible: stockDisponible,
-                    stock: stockDisponible, // Alias adicional
+                    stock: stockDisponible,
                     precioUnitario: productoEnCarrito?.precioUnitario || 0
                 });
             }
