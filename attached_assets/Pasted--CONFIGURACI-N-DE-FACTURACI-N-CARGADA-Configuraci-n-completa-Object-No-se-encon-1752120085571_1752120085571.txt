@@ -1,0 +1,548 @@
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1630
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-09",
+  "horaActual": "21:59",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 2 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 2
+ 🔄 Construyendo HTML para 2 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🔄 Actualizando DOM (longitud HTML: 9185 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ 📦 Búsqueda inicial ejecutada
+ 📦 === FIN cargarProductosIniciales (exitosa) ===
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 🖼️ Procesando imágenes para modal de producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ URL original en modal: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final en modal: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🛒 === INICIO AGREGAR PRODUCTO ===
+ 🛒 Producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🛒 Cantidad: 1
+ 🛒 Precio base: 120000
+ 🛒 Stock disponible: 1
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Producto agregado exitosamente
+ 🛒 === FIN AGREGAR PRODUCTO ===
+ 🧹 Limpiando eventos del modal de producto
+ 👥 Buscando clientes: "juli"
+ 🔄 Estado botón finalizar actualizado: Object
+ Cliente seleccionado: Object
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(7)
+ 📋 Factura pendiente actual: null
+ 📋 Ocultando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Julissa Mejias
+ 📋 Cédula: 123
+ 📋 Teléfono: 62828588
+ 📋 Email: jmejias@ticodevcr.com
+ 📋 Dirección: moin
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: false
+ 🔍 Factura ID: null
+ 🆕 Creando nueva factura
+ 🆕 === CREANDO NUEVA FACTURA ===
+ 🔐 === VERIFICACIÓN DE PERMISOS ===
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeCrearFacturas: true
+ 👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock
+ 📋 Estado determinado: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 👤 Usuario actual para factura: Object
+ 📋 Datos de factura preparados: Object
+ ✅ Factura creada: Object
+ 💰 Factura pagada - Procesando venta completa
+ 💰 === INICIO AJUSTE INVENTARIO FRONTEND ===
+ 💰 Usuario autorizado - Ajustando inventario automáticamente
+ 📦 Ajustando stock para productos: Array(1)
+ ✅ Stock ajustado exitosamente
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 2
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 1 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 2
+ 🔄 Productos recibidos: 1
+ 🔄 Construyendo HTML para 1 productos
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🔄 Actualizando DOM (longitud HTML: 4534 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+ 💰 === FIN AJUSTE INVENTARIO FRONTEND ===
+ 🖨️ Generando recibo para nueva factura pagada: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(1)
+ 🖨️ Método de pago: efectivo
+ 🖨️ Factura pendiente actual: null
+ 🖨️ Factura preservada para recibo: undefined
+ 🖨️ Número de factura desde resultadoFactura: FAC-202507-000114
+ 🖨️ Número de factura final determinado: FAC-202507-000114
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO ===
+ 🖨️ Factura recibida: Object
+ 🖨️ Productos recibidos: Array(1)
+ 🖨️ Totales recibidos: Object
+ 🖨️ Número desde factura.numeroFactura: FAC-202507-000114
+ 🖨️ Número de factura final determinado: FAC-202507-000114
+ 🖨️ Método de pago: efectivo
+ 🖨️ Es pago múltiple: false
+ 🖨️ Detalles de pago actuales: Array(0)
+ 🖨️ Iniciando impresión de recibo térmico...
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo de factura completada generado exitosamente con número: FAC-202507-000114
+ 🔄 Estado botón finalizar actualizado: Object
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 3
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 1 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 3
+ 🔄 Productos recibidos: 1
+ 🔄 Construyendo HTML para 1 productos
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🔄 Actualizando DOM (longitud HTML: 4534 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(37)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(37)
+ ✅ Facturas encontradas como array directo: 37
+ 📋 Mostrando 37 facturas pendientes
+ 📋 Mostrando 37 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 182
+ 📦 === VERIFICANDO STOCK PARA FACTURA ===
+ 📦 Factura ID: 182
+ 📦 === RESPUESTA DEL SERVIDOR ===
+ 📦 Resultado completo: {
+  "success": true,
+  "hayProblemasStock": true,
+  "tieneProblemas": true,
+  "productosConProblemas": [
+    {
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcion": "Para ver si aqui si toma las cantidades 11",
+      "precio": 120000,
+      "cantidadRequerida": 1,
+      "stockDisponible": 0,
+      "problema": "Stock insuficiente",
+      "diferencia": 1
+    }
+  ],
+  "message": "Se encontraron 1 productos con problemas de stock"
+}
+ 📦 Tipo: object
+ 📦 Propiedades: Array(5)
+ 📦 === RESULTADO FINAL ===
+ 📦 Success: true
+ 📦 Tiene problemas: true
+ 📦 Productos con problemas: 1
+ 📦 Productos normalizados: Array(1)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 182,
+  "numeroFactura": "FAC-202507-000113",
+  "nombreCliente": "Freddy Sanchez",
+  "emailCliente": "fsanchez@gmail.com",
+  "identificacionCliente": "1-1111-2222",
+  "telefonoCliente": "1111-1111",
+  "direccionCliente": "Limon",
+  "total": 259900,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 221,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    },
+    {
+      "detalleFacturaId": 222,
+      "productoId": 20,
+      "nombreProducto": "Llanta Agregar Marca Agrega Modelo",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 110000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 110000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ⚠️ === PROBLEMAS DE STOCK DETECTADOS ===
+ ⚠️ Cantidad: 1
+ ⚠️ Productos: Array(1)
+ ⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===
+ ⚠️ Productos recibidos: Array(1)
+ ⚠️ Factura: Object
+ ⚠️ Inicializando modal de problemas de stock...
+ ⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===
+ ✅ Eventos del modal de problemas de stock configurados con delegación
+ ⚠️ === MOSTRANDO PRODUCTOS CON PROBLEMAS ===
+ ⚠️ Cantidad de productos: 1
+ ⚠️ Productos detallados: Array(1)
+ ⚠️ Factura: Object
+ ⚠️ Información de la factura extraída: Object
+ ⚠️ Procesando producto 1: Object
+ ⚠️ Productos válidos con problemas: 1
+ ✅ Modal de problemas de stock mostrado correctamente
+ ⚠️ === FACTURAR DE TODOS MODOS ===
+ ⚠️ Usuario decidió facturar con productos pendientes de entrega
+ ✅ BOTÓN FACTURAR DE TODOS MODOS CLICKEADO
+ ⚠️ === FACTURAR DE TODOS MODOS ===
+ ⚠️ Usuario decidió facturar con productos pendientes de entrega
+ 📦 Procesando producto 17: Object
+ 🔍 Productos con problemas capturados correctamente: Array(1)
+ 💾 Productos pendientes guardados globalmente: Array(1)
+ 🔍 === MODAL PROBLEMAS STOCK CERRADO ===
+ 🔍 Modal cerrado por acción válida: true
+ ✅ Modal cerrado por acción válida - carrito mantenido
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(12)
+ 📋 Factura pendiente actual: Object
+facturacion.js:1360 📋 Mostrando información de factura pendiente
+facturacion.js:1533 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+facturacion.js:1534 🎯 Permisos del usuario: Object
+facturacion.js:1535 🎯 puedeCompletarFacturas: true
+facturacion.js:1536 🎯 puedeCrearFacturas: true
+facturacion.js:1537 🎯 esAdmin: true
+facturacion.js:1549 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+facturacion.js:1583 🎯 Estado final del modal: Object
+facturacion.js:1411 📋 Datos mapeados para formulario: Object
+facturacion.js:1421 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+facturacion.js:1422 📋 Nombre: Freddy Sanchez
+facturacion.js:1423 📋 Cédula: 1-1111-2222
+facturacion.js:1424 📋 Teléfono: 1111-1111
+facturacion.js:1425 📋 Email: fsanchez@gmail.com
+facturacion.js:1426 📋 Dirección: Limon
+facturacion.js:1900 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+facturacion.js:1901 🔍 Es factura pendiente: true
+facturacion.js:1902 🔍 Factura ID: 182
+facturacion.js:1906 ✅ Completando factura pendiente ID: 182
+facturacion.js:1940 💰 === COMPLETANDO FACTURA EXISTENTE ===
+facturacion.js:1941 💰 Factura ID: 182
+facturacion.js:1952 📋 Datos de completamiento: Object
+facturacion.js:1967 ✅ Factura completada exitosamente: Object
+facturacion.js:1971 📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE COMPLETAR FACTURA ===
+facturacion.js:1972 📦 Productos pendientes: Array(1)
+facturacion.js:1973 📦 Factura completada ID: 182
+facturacion.js:4691 📦 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===
+facturacion.js:4692 📦 Factura ID: 182
+facturacion.js:4693 📦 Productos con problemas recibidos: Array(1)
+facturacion.js:4083 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+facturacion.js:4084 👤 facturaConfig disponible: true
+facturacion.js:4088 👤 Usuario encontrado en facturaConfig: Object
+facturacion.js:4089 👤 Tipo de usuario obtenido: object
+facturacion.js:4090 👤 Propiedades del usuario: Array(5)
+facturacion.js:4091 👤 ID de usuario: 4
+facturacion.js:4092 👤 Nombre de usuario: Julissa Mejias
+facturacion.js:4704 👤 Usuario para registro: Object
+facturacion.js:4716 📦 Procesando producto 17: Object
+facturacion.js:4734 📦 Datos a enviar al servidor: {
+  "FacturaId": 182,
+  "UsuarioCreacion": 4,
+  "ProductosPendientes": [
+    {
+      "ProductoId": 17,
+      "NombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "CantidadSolicitada": 1,
+      "CantidadPendiente": 1,
+      "StockDisponible": 0,
+      "PrecioUnitario": 120000,
+      "Observaciones": "Stock insuficiente al momento de la facturación. Disponible: 0, Requerido: 1"
+    }
+  ]
+}
+api/Facturacion/registrar-pendientes-entrega:1  Failed to load resource: the server responded with a status of 500 ()
+facturacion.js:4748 ❌ Error del servidor: System.InvalidOperationException: Unable to resolve service for type 'API.ServicesAPI.Interfaces.IPermisosService' while attempting to activate 'API.Controllers.FacturacionController'.
+   at Microsoft.Extensions.DependencyInjection.ActivatorUtilities.GetService(IServiceProvider sp, Type type, Type requiredBy, Boolean isDefaultParameterRequired)
+   at lambda_method435(Closure, IServiceProvider, Object[])
+   at Microsoft.AspNetCore.Mvc.Controllers.ControllerFactoryProvider.<>c__DisplayClass6_0.<CreateControllerFactory>g__CreateController|0(ControllerContext controllerContext)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|6_0(Endpoint endpoint, Task requestTask, ILogger logger)
+   at GestionLlantera.Web.Middleware.PermisosAuditoriaMiddleware.InvokeAsync(HttpContext context) in C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Middleware\PermisosAuditoriaMiddleware.cs:line 22
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at GestionLlantera.Web.Middleware.JwtClaimsMiddleware.InvokeAsync(HttpContext context) in C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Middleware\JwtClaimsMiddleware.cs:line 60
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+
+HEADERS
+=======
+Accept: */*
+Host: localhost:7038
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: es-ES,es;q=0.9
+Content-Type: application/json
+Cookie: .AspNetCore.Antiforgery.jPihv7U68uE=CfDJ8E-MSibRVNlJt8pQIXro9-fr6zOv0J_sD7e7T904TzWpDkNPEupyplGuvfmuR-fCa8NapWPNXovhTHgBI_q_q3KXvOPr9BnKMYv-1UzWNVmv8Z4oLgLCSZipRK_fuqrB5ZiiyKUO2I9rzS0cURdQJNQ; JwtToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiSnVsaXNzYSBNZWppYXMiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJ6bGt0bWJzMzM0QHRvcm1haWxzLmNvbSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWVpZGVudGlmaWVyIjoiNCIsInVzZXJJZCI6IjQiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbmlzdHJhZG9yIiwiUGVybWlzc2lvbiI6WyJNb2RpZmljYXIgSW52ZW50YXJpbyIsIkNyZWFyIEZhY3R1cmFzIiwiVmVyIENvc3RvcyIsIlZlciBVdGlsaWRhZGVzIiwiUHJvZ3JhbWFyIEludmVudGFyaW8iLCJHZXN0aW9uIENvbXBsZXRhIiwiRWRpdGFyIFByb2R1Y3RvcyIsIkVsaW1pbmFyIFByb2R1Y3RvcyIsIkFqdXN0YXIgU3RvY2siLCJWZXIgUmVwb3J0ZXMiLCJHZXN0aW9uIFVzdWFyaW9zIiwiQ29uZmlndXJhY2lvbiBTaXN0ZW1hIiwiVmVyQ29zdG9zIiwiVmVyVXRpbGlkYWRlcyIsIlByb2dyYW1hckludmVudGFyaW8iLCJJbmljaWFyIEludmVudGFyaW8iLCJDb21wbGV0YXIgSW52ZW50YXJpbyIsIkRlc2NhcmdhciBSZXBvcnRlcyIsIlZlciBGYWN0dXJhY2nDs24iLCJFZGl0YXIgQ2xpZW50ZXMiLCJWZXIgUHJvZHVjdG9zIiwiQ29tcGxldGFyRmFjdHVyYXMiLCJFZGl0YXJGYWN0dXJhcyIsIkFudWxhckZhY3R1cmFzIl0sImV4cCI6MTc1MjEyMzU3NiwiaXNzIjoiVHVjby5BUEkiLCJhdWQiOiJUdWNvLkNsaWVudCJ9.IiCxtbjL-ZWDfYtgWT3ylXtzzrAELU6mV0fvonAkGS8; .AspNetCore.Cookies=CfDJ8E-MSibRVNlJt8pQIXro9-f8kqGisIjELlP3PSozi5_xFeGAdINiJdwf9l6Gqkp2uWkz0CPy5kqGDtgiTIa1vwiptuxpAI-h3efwlcOYVR9dRHMLLDIvy9vfmCcA4up2GZQ9nSmaICDyXU69LOsjk3tXYiaQFn4Tv6byLec7dMFpoFmwCclEQDwWFeIXUWBN1OIafnGzkTcDwiDBsQaLq7k-qoXqBNKNTWXw4TvEwMvpT3ysTIXdcd74eWyrOnTXD71Zyhk0tCLrACvCND0ukyNqA_-VGPYH0fTsZiwAw6nh57CC9v6aVrUVq8TJG272F1ESzIJf7J1y6sf-0icwa6m6_wzdVZLhOXK-cqECQ5YBWzqdr7pk0CuF2vM0nKcIPKaHB1NatQLgRiXViOTqWOP69QyR2vpDP-Rdu-i7KcYK_enzWRBhf_p-2-4pttP5Fklq9Xbv9BlCQu1tEI3sGPziThlx84SC74F0SrhMWT9DuJZ6GctGNlW57iNHtokNN8tvIDLAgeoQ-uL5HpJEB4SPlV37rytLTadYc1zX8YDVxq2GCYCj_Uw4v1MDrab6AdjEroPHpJlWlm_XPiKsHPcxUJ3x03LkccjTVjzKX396UJw5ad5emYqGn_9AzFa_-OnLwEbpdEy4u8V53oG65HA5HJtUXru99ijxGhUZNo7IGd_QZqYc8vgSjETR0a4lXWmxjZlQwCX12577SHkIEuHdSuu7lXvY0UWAf2IDzl3489hDXlRx88n2l_Yy3A_Kfwc604ZhmjgN7GwXuvgnnlBeVfyMXXLMNMfiqd44SfP68hFwe1wWEf8_OTDeYx_ppg73oxZVFyMCQaYQZi0wXF9XqeAIrloEymETQQ3kgczPWPtZV1UsB_pMMFozEMGM1Fiby9x92uR7FYqFXFDHabycpyM1CvkQUFV4-eSXPYwfITGlNoT7Ob_CjvZTj4XzzjD8fUT5A9ChqhSgKtGnMg-wvHmxxoKC3IHqVT-RUAJZ3aFcNbtroohsC9rSKN-Owl85sxPYrWKXuklGKa5fdDtAd1IFd7brpEE2rAeI6k2MHc_BTKKH20X3ZDGT71VzlEoBx6IMU1Vf1Rn3ylAkleXsNQQCUSRiFSTA3D1dRATsJvjXkWilsTAo39iXFGoY1G-T4h-9OS_g1KIjHPKF0FgYhfY3-kUZSFse6V7ZCijkKHPZIQhZ_tyP6Eu3Zj6MagvqMPcsG5HdwKHBvoe3bEC0TOS8-3ML1W7GEwVxG7HFYrot7PJaiWP76Z8e0pg-nZR3xWG3LAi0lLKNbFS5X36gWjXvdBw-EA2eSnBIvOHsh1qUdf7ocbQp5WUgS1VQdQsjEEmaxsbBco4ybkOXC8n0_4etep_mMhmtnx4OPmVgpMVT8jNU_42swufBV2HyyyMHYaVi_miJCin86ZxbLLSpoz5hP8XohpsbrQ4gzqDpNhSKEjW8q7rR1ET4OY4cv5dk4CYUUx9Jhbjrs14wlGU_kpb8QJ1equQNiT-X-x-YyGOzC7VKxsLDgxc_nKsWCdP4yjSHKZNqn1MloKLFeGybuQlMInhMZyJlisNF4tHu0sXPH_dAeqnSXMrn978hhGRsjywJlFvBsvibU-vy6HhBblqp-AMuJws4-TerUlgAo7KzmD8Cg6L5kc7Rmb7HHPW-gf5elG_zlsmfDDLQrLPLCbjtwRx3Rq_MEYMAttUIBjlMWa2ZqZdnAFS0kByWsYsT_ttjYkylDZoPuAcJwg-7SA6hUadUcdBKxYq-4A_pVs14DWhYXQK-x64HZ_2VPGM1Lc7pb7MqxI3Aeif7C0rT3yWu5rSc4oiCVGDgFgK-uJhM14tKRPXAxT0ImtEK0qpFFUYkI51mgU-dSGLSfQIQ_HnfiyMM8Jh-VSWlrh7cHNjSWfMkNnuElDKOJdUKCxSAPPTcUDWncZeVk0DIWqa8OCpEZCrjSalwfPyhCWT_LUKKGDDiGZm1t1_CDz5Pj3s_nfd_gqUil-yFsto5O1RmiL_C1CqeEMy6xPXwwlGfYuUDDWJUc5zQVot9hJ8BtcshtlSQED8xjZX4T8nDnhO9l_KT52rwfP2J7-YNQ3A8WJS-AlVix6NzRZA2mUgCXkpp6TgYAKM2H19iRflnN89kSxLZBal0KpjVgZCtJ_yMOExfy7LL8rH-7s6cC5wpej9uzvM5PYj6FHA2PfySPsLCbROaAj6tGG2_5iT6f9xcWA2wnKWSWFAWDNL7ISNaolnJK3WC2hpiVgbm59YEZe8HC3cOpf71lI84jlvynHSzUkLZRtc2FGKBzXSB_IaNgm-0S3uHX-jSeaqu7MVZdeU79Cdpmx33NDwK4-KqcbqQYoJDuEVYOeHIqNJnbmMEGklPdV10wjD0NN_-ZUJU7LFN-cOXBDLJoD1jQ-1EibqtpIN_Oxau72HYJfRvbW6g4AP2NQaPX_3oMwdSRftSeowRUMCbPJtip3FdL6RyEhMz0rp4EGRHblzz7g0RuTtoDeB160qFVL970JDFiaSSJBbb83ZfgNCtBeeailv-aFen6-Xd_qwX3O40KkPl9gqOotcQO72OZ3-OYEJ7mElGuGWFCzbkSFcSUEoww2mxbGb-OzTgTIWuuAHqAliWFj8IoHi3uw27BTeh3SnblscMlVG1cTnxRG66-nMcSeHyTOvAHtxgXqzgspVmQUBp7-nWspSyJxvhqDKdr9hhGWIinlVmHtP9itEHph16Oayuu8yNHEw-T4ufTC4-uDKlynqPrGzYj4HEY4rRPvji7gSlJqeysCXiVSg4XsnGp-AJE_pzKW7-IlPPd0Yyx6A3jBdr4ystrobR97UrVhb978ZF6wJYh5I5v8MuUeL8OYro0WlCZKVdBC3NsFCwNSAOC8d50IamkiyWB5Jzuw_JWpU8qAVWj-OdiV9gfUTnqGPg0gSdRo_jH253HrflT5WlpI1_ATvD32o5fwe_Y0BAD-nE0dPBlMIy5q5Ua6RSij_hnURjrB8JOQZgQERDPQiqOngismgWNZ_uh-6WhsLyOq9cQX2uzj8dZ4SDzM3g9rvpHH72r9FI1EyHjUoz2ISkpY0rWwhFVV0FIPr53VRaZir2ExUWjgatG6IzCcxeP-33lOOQZc5o9GOXtJKm3j_XtzSeUwnQsHj0OUEW0BJkuV74oCJvYDjjy5xiPAWLEdxlIq1a-uhMhOpBGJwllg0X4B_t7j94rjxnr1ECXY66l5mu4G4gMbOVscIqgMt0TKOe9R8acCk8ftw4VpB6Hc071ag1Xg8p0Ze2oRnkclLyHmEeiSGgCz-i7-MMTDaP-1ImVpH2XCFArZrMCxSq0fLlpfXjnrVbAx7yY3-3WUiYyzUwRHCnqAkt1jlXCk2mMbnqBgv2CalklOQER-zI31hOqWAlZEWeasw_qzAkUwEweaNHlcLbR_-CiG9uc58QAjAz18NnrvFSh4-ozk9DTCxgUS--pCArLXIejEOjHdVqYlX3j2kG5P0cN0hvrk0HfoyESpI6TLQnQ_y2JF7NhbXuMZSUhR-7yQheuGXIPzPk8utda8Od1Lj1_gB0RjubNIVYJLfDYIDDgicfYV8fGS9szROyz08JPp8zHVrgfNmIun4iMtBNGL1vmMomAxECftxml9yQTEoB3Hdclx8o1gGOrq3igCbvI39RNvZ1NONUCEPVHQI
+Origin: https://localhost:7038
+Referer: https://localhost:7038/Facturacion
+Content-Length: 328
+sec-ch-ua-platform: "Windows"
+X-Requested-With: XMLHttpRequest
+sec-ch-ua: "Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"
+sec-ch-ua-mobile: ?0
+sec-fetch-site: same-origin
+sec-fetch-mode: cors
+sec-fetch-dest: empty
+priority: u=1, i
+
+registrarProductosPendientesEntrega @ facturacion.js:4748
+await in registrarProductosPendientesEntrega
+completarFacturaExistente @ facturacion.js:1975
+await in completarFacturaExistente
+procesarVentaFinal @ facturacion.js:1907
+(anonymous) @ facturacion.js:420
+dispatch @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+facturacion.js:4767 ❌ Error registrando productos pendientes: Error: Error 500: 
+    at registrarProductosPendientesEntrega (facturacion.js:4749:19)
+    at async completarFacturaExistente (facturacion.js:1975:17)
+    at async procesarVentaFinal (facturacion.js:1907:13)
+registrarProductosPendientesEntrega @ facturacion.js:4767
+await in registrarProductosPendientesEntrega
+completarFacturaExistente @ facturacion.js:1975
+await in completarFacturaExistente
+procesarVentaFinal @ facturacion.js:1907
+(anonymous) @ facturacion.js:420
+dispatch @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+facturacion.js:3283 WARNING: Error - No se pudieron registrar los productos pendientes: Error 500: 
+facturacion.js:1980 📋 Preservando información de factura para recibo: FAC-202507-000113
+facturacion.js:1995 🖨️ Llamando a generarReciboFacturaCompletada con: Object
+facturacion.js:3047 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+facturacion.js:3048 🖨️ Resultado factura: Object
+facturacion.js:3049 🖨️ Productos: Array(2)
+facturacion.js:3050 🖨️ Método de pago: efectivo
+facturacion.js:3051 🖨️ Factura pendiente actual: Object
+facturacion.js:3052 🖨️ Factura preservada para recibo: Object
+facturacion.js:3060 🖨️ Número de factura desde información preservada: FAC-202507-000113
+facturacion.js:3083 🖨️ Número de factura final determinado: FAC-202507-000113
+facturacion.js:4083 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+facturacion.js:4084 👤 facturaConfig disponible: true
+facturacion.js:4088 👤 Usuario encontrado en facturaConfig: Object
+facturacion.js:4089 👤 Tipo de usuario obtenido: object
+facturacion.js:4090 👤 Propiedades del usuario: Array(5)
+facturacion.js:4091 👤 ID de usuario: 4
+facturacion.js:4092 👤 Nombre de usuario: Julissa Mejias
+facturacion.js:3121 🖨️ Datos del recibo preparados: Object
+facturacion.js:2546 🖨️ === GENERANDO RECIBO ===
+facturacion.js:2547 🖨️ Factura recibida: Object
+facturacion.js:2548 🖨️ Productos recibidos: Array(2)
+facturacion.js:2549 🖨️ Totales recibidos: Object
+facturacion.js:2557 🖨️ Número desde factura.numeroFactura: FAC-202507-000113
+facturacion.js:2578 🖨️ Número de factura final determinado: FAC-202507-000113
+facturacion.js:2579 🖨️ Método de pago: efectivo
+facturacion.js:2580 🖨️ Es pago múltiple: false
+facturacion.js:2581 🖨️ Detalles de pago actuales: Array(0)
+facturacion.js:2700 🖨️ Iniciando impresión de recibo térmico...
+facturacion.js:3025 ✅ Ventana de impresión creada exitosamente
+facturacion.js:3133 🧹 Limpiando información preservada de factura
+facturacion.js:3137 ✅ Recibo de factura completada generado exitosamente con número: FAC-202507-000113
+facturacion.js:4200 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:5209 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+facturacion.js:5244 🔄 Actualizando productos iniciales
+facturacion.js:427 🔍 === INICIO buscarProductos ===
+facturacion.js:428 🔍 CONTADOR DE LLAMADAS: 4
+facturacion.js:429 🔍 Término recibido: ""
+facturacion.js:430 🔍 busquedaEnProceso: false
+facturacion.js:431 🔍 ultimaBusqueda: ""
+facturacion.js:446 🔍 Iniciando búsqueda válida...
+facturacion.js:468 📋 Respuesta del servidor recibida
+facturacion.js:471 ✅ Se encontraron 0 productos disponibles
+facturacion.js:510 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:511 🔄 CONTADOR DE LLAMADAS: 4
+facturacion.js:512 🔄 Productos recibidos: 0
+facturacion.js:517 🔄 No hay productos, mostrando sin resultados
+facturacion.js:488 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:491 📦 Productos mostrados exitosamente
+facturacion.js:504 🔍 === FIN buscarProductos ===
+facturacion.js:5248 ✅ Vista de productos actualizada exitosamente
