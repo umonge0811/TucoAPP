@@ -71,15 +71,64 @@ async function cargarPendientes() {
         
         const resultado = await response.json();
         
-        if (resultado.success) {
-            pendientesData = resultado.data || [];
-            console.log('🚚 Pendientes cargados:', pendientesData.length);
-            
-            mostrarPendientes(pendientesData);
-        } else {
-            console.error('❌ Error cargando pendientes:', resultado.message);
-            mostrarError('Error al cargar pendientes: ' + resultado.message);
+        console.log('🚚 Respuesta completa del servidor:', resultado);
+        
+        // Manejar diferentes estructuras de respuesta (igual que facturas pendientes)
+        let pendientes = null;
+        
+        // CASO 1: Respuesta directa como array
+        if (Array.isArray(resultado)) {
+            pendientes = resultado;
+            console.log('✅ Pendientes encontrados como array directo:', pendientes.length);
         }
+        // CASO 2: Respuesta con propiedad success
+        else if (resultado.success && resultado.data) {
+            if (Array.isArray(resultado.data)) {
+                pendientes = resultado.data;
+                console.log('✅ Pendientes encontrados en resultado.data:', pendientes.length);
+            }
+        }
+        // CASO 3: Buscar en propiedades del resultado
+        else {
+            // Buscar arrays en las propiedades principales
+            for (const [key, value] of Object.entries(resultado)) {
+                if (Array.isArray(value) && value.length > 0 && value[0].id && value[0].nombreProducto) {
+                    pendientes = value;
+                    console.log(`✅ Pendientes encontrados en resultado.${key}:`, pendientes.length);
+                    break;
+                }
+            }
+        }
+        
+        // CASO 4: Respuesta de error explícita
+        if (resultado.success === false) {
+            console.log('❌ Respuesta de error del servidor:', resultado.message);
+            pendientes = [];
+        }
+        
+        // Debug detallado si no encontramos pendientes
+        if (!pendientes) {
+            console.log('⚠️ No se encontraron pendientes. Análisis detallado:');
+            console.log('📋 Es array directo?:', Array.isArray(resultado));
+            console.log('📋 Tiene propiedad pendientes?:', 'pendientes' in resultado);
+            console.log('📋 Tiene propiedad data?:', 'data' in resultado);
+            console.log('📋 Tiene propiedad success?:', 'success' in resultado);
+            console.log('📋 Todas las propiedades:', Object.keys(resultado));
+            
+            // Intentar encontrar cualquier array en la respuesta
+            const arrayProperties = Object.entries(resultado)
+                .filter(([key, value]) => Array.isArray(value))
+                .map(([key, value]) => ({ key, length: value.length }));
+            console.log('📋 Propiedades tipo array encontradas:', arrayProperties);
+            
+            // Establecer array vacío como fallback
+            pendientes = [];
+        }
+        
+        pendientesData = pendientes;
+        console.log('🚚 Pendientes cargados:', pendientesData.length);
+        
+        mostrarPendientes(pendientesData);
         
     } catch (error) {
         console.error('❌ Error en cargarPendientes:', error);
@@ -116,16 +165,20 @@ function crearFilaPendiente(pendiente) {
     const estadoClass = pendiente.estado === 'Entregado' ? 'success' : 'warning';
     const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleDateString('es-ES');
     
+    // Generar código de seguimiento si no existe
+    const codigoSeguimiento = pendiente.codigoSeguimiento || `${pendiente.numeroFactura}-${pendiente.id}`;
+    
     return `
         <tr>
             <td>
-                <code>${pendiente.codigoSeguimiento || 'N/A'}</code>
+                <code>${codigoSeguimiento}</code>
             </td>
             <td>
-                <strong>FAC-${pendiente.facturaId}</strong>
+                <strong>${pendiente.numeroFactura || 'FAC-' + pendiente.facturaId}</strong>
             </td>
             <td>
                 ${pendiente.nombreProducto || 'Producto sin nombre'}
+                ${pendiente.esLlanta && pendiente.medidaLlanta ? `<br><small class="text-muted">${pendiente.medidaLlanta}</small>` : ''}
             </td>
             <td class="text-center">
                 <span class="badge bg-info">${pendiente.cantidadSolicitada || 0}</span>
