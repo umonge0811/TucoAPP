@@ -1,0 +1,590 @@
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1643
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-11",
+  "horaActual": "15:13",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 3 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 3
+ 🔄 Construyendo HTML para 3 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ Procesando imágenes para producto: Llanta Test
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 13698 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ 📦 Búsqueda inicial ejecutada
+ 📦 === FIN cargarProductosIniciales (exitosa) ===
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 🖼️ Procesando imágenes para modal de producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ URL original en modal: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final en modal: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🛒 === INICIO AGREGAR PRODUCTO ===
+ 🛒 Producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🛒 Cantidad: 1
+ 🛒 Precio base: 120000
+ 🛒 Stock disponible: 1
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Producto agregado exitosamente
+ 🛒 === FIN AGREGAR PRODUCTO ===
+ 🧹 Limpiando eventos del modal de producto
+ 🖼️ Procesando imágenes para modal de producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ URL original en modal: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+ 🖼️ URL final en modal: https://localhost:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png
+:7273/uploads/productos/811e75d9-9874-4a1d-9172-046a0fb6449a_abue.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🛒 === INICIO AGREGAR PRODUCTO ===
+ 🛒 Producto: Llanta Agregar Marca Agrega Modelo
+ 🛒 Cantidad: 1
+ 🛒 Precio base: 110000
+ 🛒 Stock disponible: 1
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Producto agregado exitosamente
+ 🛒 === FIN AGREGAR PRODUCTO ===
+ 🧹 Limpiando eventos del modal de producto
+ 👥 Buscando clientes: "fre"
+ 🔄 Estado botón finalizar actualizado: Object
+ Cliente seleccionado: Object
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(7)
+ 📋 Factura pendiente actual: null
+ 📋 Ocultando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Freddy Sanchez
+ 📋 Cédula: 1-1111-2222
+ 📋 Teléfono: 1111-1111
+ 📋 Email: fsanchez@gmail.com
+ 📋 Dirección: Limon
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: false
+ 🔍 Factura ID: null
+ 🆕 Creando nueva factura
+ 🆕 === CREANDO NUEVA FACTURA ===
+ 🔐 === VERIFICACIÓN DE PERMISOS ===
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeCrearFacturas: true
+ 👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock
+ 📋 Estado determinado: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 👤 Usuario actual para factura: Object
+ 📋 Datos de factura preparados: Object
+ ✅ Factura creada: Object
+ 💰 Factura pagada - Procesando venta completa
+ 💰 === INICIO AJUSTE INVENTARIO FRONTEND ===
+ 💰 Usuario autorizado - Ajustando inventario automáticamente
+ 📦 Ajustando stock para productos: Array(2)
+ ✅ Stock ajustado exitosamente
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 2
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 1 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 2
+ 🔄 Productos recibidos: 1
+ 🔄 Construyendo HTML para 1 productos
+ 🖼️ Procesando imágenes para producto: Llanta Test
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 4513 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+ 💰 === FIN AJUSTE INVENTARIO FRONTEND ===
+ 🖨️ Generando recibo para nueva factura pagada: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(2)
+ 🖨️ Método de pago: efectivo
+ 🖨️ Factura pendiente actual: null
+ 🖨️ Factura preservada para recibo: undefined
+ 🖨️ Datos desde resultadoFactura: Object
+ 🖨️ Nombre cliente completado desde clienteSeleccionado: Freddy Sanchez
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Usuario creador completado desde usuarioActual: Julissa Mejias
+ 🖨️ Información final determinada: Object
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO ===
+ 🖨️ Factura recibida: Object
+ 🖨️ Productos recibidos: Array(2)
+ 🖨️ Totales recibidos: Object
+ 🖨️ Número desde factura.numeroFactura: FAC-202507-000163
+ 🖨️ Número de factura final determinado: FAC-202507-000163
+ 🖨️ Método de pago: efectivo
+ 🖨️ Es pago múltiple: false
+ 🖨️ Detalles de pago actuales: Array(0)
+ 🎫 === DEBUG PRODUCTOS PENDIENTES EN RECIBO ===
+ 🎫 tieneProductosPendientes: undefined
+ 🎫 tieneCodigosSeguimiento: undefined
+ 🎫 facturaConPendientes: undefined
+ 🎫 window.codigosSeguimientoPendientes: undefined
+ 🎫 window.productosPendientesEntrega: undefined
+ 🎫 No se agregará sección de productos pendientes - no hay datos
+ 🖨️ Iniciando impresión de recibo térmico...
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo de factura completada generado exitosamente
+ ✅ Número: FAC-202507-000163
+ ✅ Cliente: Freddy Sanchez
+ ✅ Cajero: Julissa Mejias
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+ 🔄 Actualizando productos iniciales
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 3
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 1 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 3
+ 🔄 Productos recibidos: 1
+ 🔄 Construyendo HTML para 1 productos
+ 🖼️ Procesando imágenes para producto: Llanta Test
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🔄 Actualizando DOM (longitud HTML: 4513 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ ✅ Vista de productos actualizada exitosamente
+ 📋 === ABRIENDO FACTURAS PENDIENTES ===
+ 📋 Enviando petición al servidor...
+ 📋 Respuesta recibida: 200 
+ 📋 === DEBUGGING RESPUESTA COMPLETA ===
+ 📋 Resultado completo: Array(32)
+ 📋 Tipo de resultado: object
+ 📋 Propiedades del resultado: Array(32)
+ ✅ Facturas encontradas como array directo: 32
+ 📋 Mostrando 32 facturas pendientes
+ 📋 Mostrando 32 facturas pendientes
+ 🔄 === PROCESANDO FACTURA PENDIENTE ===
+ 🔄 Factura: Object
+ 🔍 Iniciando verificación de stock para factura: 231
+ 📦 === VERIFICANDO STOCK PARA FACTURA ===
+ 📦 Factura ID: 231
+ 📦 === RESPUESTA DEL SERVIDOR ===
+ 📦 Resultado completo: {
+  "success": true,
+  "hayProblemasStock": true,
+  "tieneProblemas": true,
+  "productosConProblemas": [
+    {
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcion": "Para ver si aqui si toma las cantidades 11",
+      "precio": 120000,
+      "cantidadRequerida": 1,
+      "stockDisponible": 0,
+      "problema": "Stock insuficiente",
+      "diferencia": 1
+    },
+    {
+      "productoId": 20,
+      "nombreProducto": "Llanta Agregar Marca Agrega Modelo",
+      "descripcion": "Sin descripción",
+      "precio": 110000,
+      "cantidadRequerida": 1,
+      "stockDisponible": 0,
+      "problema": "Stock insuficiente",
+      "diferencia": 1
+    }
+  ],
+  "message": "Se encontraron 2 productos con problemas de stock"
+}
+ 📦 Tipo: object
+ 📦 Propiedades: Array(5)
+ 📦 === RESULTADO FINAL ===
+ 📦 Success: true
+ 📦 Tiene problemas: true
+ 📦 Productos con problemas: 2
+ 📦 Productos normalizados: Array(2)
+ 🔍 Resultado de verificación de stock: Object
+ 📦 === CARGANDO FACTURA EN CARRITO ===
+ 📦 Datos completos de la factura recibida: Object
+ 📦 === ANÁLISIS COMPLETO DE DATOS DEL CLIENTE ===
+ 📦 Factura completa recibida: {
+  "facturaId": 231,
+  "numeroFactura": "FAC-202507-000162",
+  "nombreCliente": "Freddy Sanchez",
+  "emailCliente": "fsanchez@gmail.com",
+  "identificacionCliente": "1-1111-2222",
+  "telefonoCliente": "1111-1111",
+  "direccionCliente": "Limon",
+  "total": 332446,
+  "metodoPago": "efectivo",
+  "detallesFactura": [
+    {
+      "detalleFacturaId": 297,
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 120000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 120000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    },
+    {
+      "detalleFacturaId": 298,
+      "productoId": 20,
+      "nombreProducto": "Llanta Agregar Marca Agrega Modelo",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 110000,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 110000,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    },
+    {
+      "detalleFacturaId": 299,
+      "productoId": 1017,
+      "nombreProducto": "Llanta Test",
+      "descripcionProducto": "",
+      "cantidad": 1,
+      "precioUnitario": 64200,
+      "porcentajeDescuento": 0,
+      "montoDescuento": 0,
+      "subtotal": 64200,
+      "esLlanta": false,
+      "medidaLlanta": null,
+      "marcaLlanta": null,
+      "modeloLlanta": null,
+      "stockDisponible": 0
+    }
+  ]
+}
+ 📦 Datos del cliente extraídos: Object
+ 📦 Todas las propiedades de factura: Array(10)
+ 💾 Factura pendiente guardada globalmente: Object
+ 👤 Cliente seleccionado creado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Factura cargada en carrito: Object
+ ⚠️ === PROBLEMAS DE STOCK DETECTADOS ===
+ ⚠️ Cantidad: 2
+ ⚠️ Productos: Array(2)
+ ⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===
+ ⚠️ Productos recibidos: Array(2)
+ ⚠️ Factura: Object
+ ⚠️ Inicializando modal de problemas de stock...
+ ⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===
+ ✅ Eventos del modal de problemas de stock configurados con delegación
+ ⚠️ === MOSTRANDO PRODUCTOS CON PROBLEMAS ===
+ ⚠️ Cantidad de productos: 2
+ ⚠️ Productos detallados: Array(2)
+ ⚠️ Factura: Object
+ ⚠️ Información de la factura extraída: Object
+ ⚠️ Procesando producto 1: Object
+ ⚠️ Procesando producto 2: Object
+ ⚠️ Productos válidos con problemas: 2
+ ✅ Modal de problemas de stock mostrado correctamente
+ ⚠️ === FACTURAR DE TODOS MODOS ===
+ ⚠️ Usuario decidió facturar con productos pendientes de entrega
+ ✅ BOTÓN FACTURAR DE TODOS MODOS CLICKEADO
+ ⚠️ === FACTURAR DE TODOS MODOS ===
+ ⚠️ Usuario decidió facturar con productos pendientes de entrega
+ 📦 Procesando producto 17: Object
+ 📦 Procesando producto 20: Object
+ 🔍 Productos con problemas capturados correctamente: Array(2)
+ 💾 Productos pendientes guardados globalmente: Array(2)
+ 🔍 === MODAL PROBLEMAS STOCK CERRADO ===
+ 🔍 Modal cerrado por acción válida: true
+ ✅ Modal cerrado por acción válida - carrito mantenido
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(12)
+ 📋 Factura pendiente actual: Object
+ 📋 Mostrando información de factura pendiente
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 🎯 Estado final del modal: Object
+ 📋 Datos mapeados para formulario: Object
+ 📋 === VERIFICACIÓN DE CAMPOS LLENADOS ===
+ 📋 Nombre: Freddy Sanchez
+ 📋 Cédula: 1-1111-2222
+ 📋 Teléfono: 1111-1111
+ 📋 Email: fsanchez@gmail.com
+ 📋 Dirección: Limon
+ 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+ 🔍 Es factura pendiente: true
+ 🔍 Factura ID: 231
+ ✅ Completando factura pendiente ID: 231
+ 💰 === COMPLETANDO FACTURA EXISTENTE ===
+ 💰 Factura ID: 231
+ 📋 Datos de completamiento: Object
+ ✅ Factura completada exitosamente: Object
+ 📋 === PRESERVANDO INFORMACIÓN DE FACTURA PARA RECIBO ===
+facturacion.js:1996 📋 Información preservada: Object
+facturacion.js:2001 📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE COMPLETAR FACTURA ===
+facturacion.js:2002 📦 Productos pendientes: Array(2)
+facturacion.js:2003 📦 Factura completada ID: 231
+facturacion.js:4934 📦 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===
+facturacion.js:4935 📦 Factura ID: 231
+facturacion.js:4936 📦 Productos con problemas recibidos: Array(2)
+facturacion.js:4326 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+facturacion.js:4327 👤 facturaConfig disponible: true
+facturacion.js:4331 👤 Usuario encontrado en facturaConfig: Object
+facturacion.js:4332 👤 Tipo de usuario obtenido: object
+facturacion.js:4333 👤 Propiedades del usuario: Array(5)
+facturacion.js:4334 👤 ID de usuario: 4
+facturacion.js:4335 👤 Nombre de usuario: Julissa Mejias
+facturacion.js:4957 📦 Procesando producto 17: Object
+facturacion.js:4957 📦 Procesando producto 20: Object
+facturacion.js:4975 📦 Datos a enviar al servidor: {
+  "facturaId": 231,
+  "usuarioCreacion": 4,
+  "productosPendientes": [
+    {
+      "productoId": 17,
+      "nombreProducto": "Prueba de Stock 3 Despues de eliminar imagen",
+      "cantidadSolicitada": 1,
+      "cantidadPendiente": 1,
+      "stockDisponible": 0,
+      "precioUnitario": 120000,
+      "observaciones": "Stock insuficiente al momento de la facturación. Disponible: 0, Requerido: 1"
+    },
+    {
+      "productoId": 20,
+      "nombreProducto": "Llanta Agregar Marca Agrega Modelo",
+      "cantidadSolicitada": 1,
+      "cantidadPendiente": 1,
+      "stockDisponible": 0,
+      "precioUnitario": 110000,
+      "observaciones": "Stock insuficiente al momento de la facturación. Disponible: 0, Requerido: 1"
+    }
+  ]
+}
+Facturacion/RegistrarProductosPendientesEntrega:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:4989 ❌ Error del servidor: 
+registrarProductosPendientesEntrega @ facturacion.js:4989
+await in registrarProductosPendientesEntrega
+completarFacturaExistente @ facturacion.js:2005
+await in completarFacturaExistente
+procesarVentaFinal @ facturacion.js:1919
+(anonymous) @ facturacion.js:420
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+facturacion.js:5076 ❌ Error registrando productos pendientes: Error: Error 404: 
+    at registrarProductosPendientesEntrega (facturacion.js:4990:19)
+    at async completarFacturaExistente (facturacion.js:2005:17)
+    at async procesarVentaFinal (facturacion.js:1919:13)
+registrarProductosPendientesEntrega @ facturacion.js:5076
+await in registrarProductosPendientesEntrega
+completarFacturaExistente @ facturacion.js:2005
+await in completarFacturaExistente
+procesarVentaFinal @ facturacion.js:1919
+(anonymous) @ facturacion.js:420
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+facturacion.js:3526 WARNING: Error - No se pudieron registrar los productos pendientes: Error 404: 
+facturacion.js:2015 🖨️ Llamando a generarReciboFacturaCompletada con: Object
+facturacion.js:3259 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+facturacion.js:3260 🖨️ Resultado factura: Object
+facturacion.js:3261 🖨️ Productos: Array(3)
+facturacion.js:3262 🖨️ Método de pago: efectivo
+facturacion.js:3263 🖨️ Factura pendiente actual: Object
+facturacion.js:3264 🖨️ Factura preservada para recibo: Object
+facturacion.js:3276 🖨️ Datos desde facturaPendienteActual: Object
+facturacion.js:3311 🖨️ Nombre cliente completado desde clienteSeleccionado: Freddy Sanchez
+facturacion.js:4326 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+facturacion.js:4327 👤 facturaConfig disponible: true
+facturacion.js:4331 👤 Usuario encontrado en facturaConfig: Object
+facturacion.js:4332 👤 Tipo de usuario obtenido: object
+facturacion.js:4333 👤 Propiedades del usuario: Array(5)
+facturacion.js:4334 👤 ID de usuario: 4
+facturacion.js:4335 👤 Nombre de usuario: Julissa Mejias
+facturacion.js:3320 🖨️ Usuario creador completado desde usuarioActual: Julissa Mejias
+facturacion.js:3323 🖨️ Información final determinada: Object
+facturacion.js:3359 🖨️ Datos del recibo preparados: Object
+facturacion.js:2595 🖨️ === GENERANDO RECIBO ===
+facturacion.js:2596 🖨️ Factura recibida: Object
+facturacion.js:2597 🖨️ Productos recibidos: Array(3)
+facturacion.js:2598 🖨️ Totales recibidos: Object
+facturacion.js:2606 🖨️ Número desde factura.numeroFactura: FAC-202507-000162
+facturacion.js:2627 🖨️ Número de factura final determinado: FAC-202507-000162
+facturacion.js:2628 🖨️ Método de pago: efectivo
+facturacion.js:2629 🖨️ Es pago múltiple: false
+facturacion.js:2630 🖨️ Detalles de pago actuales: Array(0)
+facturacion.js:2652 🎫 === DEBUG PRODUCTOS PENDIENTES EN RECIBO ===
+facturacion.js:2653 🎫 tieneProductosPendientes: true
+facturacion.js:2654 🎫 tieneCodigosSeguimiento: false
+facturacion.js:2655 🎫 facturaConPendientes: true
+facturacion.js:2656 🎫 window.codigosSeguimientoPendientes: Array(0)
+facturacion.js:2657 🎫 window.productosPendientesEntrega: Array(2)
+facturacion.js:2660 🎫 Agregando sección de productos pendientes al recibo
+facturacion.js:2690 🎫 Procesando pendiente sin código: Prueba de Stock 3 Desp...
+facturacion.js:2690 🎫 Procesando pendiente sin código: Llanta Agregar Marca A...
+facturacion.js:2726 🎫 Sección de productos pendientes generada: 1894 caracteres
+facturacion.js:2839 🖨️ Iniciando impresión de recibo térmico...
+facturacion.js:3237 ✅ Ventana de impresión creada exitosamente
+facturacion.js:3373 🧹 Limpiando información preservada de factura
+facturacion.js:3377 ✅ Recibo de factura completada generado exitosamente
+facturacion.js:3378 ✅ Número: FAC-202507-000162
+facturacion.js:3379 ✅ Cliente: Freddy Sanchez
+facturacion.js:3380 ✅ Cajero: Julissa Mejias
+facturacion.js:4443 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:5519 🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===
+facturacion.js:5554 🔄 Actualizando productos iniciales
+facturacion.js:427 🔍 === INICIO buscarProductos ===
+facturacion.js:428 🔍 CONTADOR DE LLAMADAS: 4
+facturacion.js:429 🔍 Término recibido: ""
+facturacion.js:430 🔍 busquedaEnProceso: false
+facturacion.js:431 🔍 ultimaBusqueda: ""
+facturacion.js:446 🔍 Iniciando búsqueda válida...
+facturacion.js:468 📋 Respuesta del servidor recibida
+facturacion.js:471 ✅ Se encontraron 1 productos disponibles
+facturacion.js:510 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:511 🔄 CONTADOR DE LLAMADAS: 4
+facturacion.js:512 🔄 Productos recibidos: 1
+facturacion.js:547 🔄 Construyendo HTML para 1 productos
+facturacion.js:561 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:562 🖼️ Datos del producto: Object
+facturacion.js:575 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:580 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:599 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:611 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:710 🔄 Actualizando DOM (longitud HTML: 4513 caracteres)
+facturacion.js:743 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:488 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:491 📦 Productos mostrados exitosamente
+facturacion.js:504 🔍 === FIN buscarProductos ===
+facturacion.js:5558 ✅ Vista de productos actualizada exitosamente
