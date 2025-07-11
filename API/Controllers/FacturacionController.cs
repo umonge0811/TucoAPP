@@ -1558,6 +1558,117 @@ namespace API.Controllers
             }
         }
 
+        [HttpPost("marcar-entregado-por-codigo")]
+        [Authorize]
+        public async Task<IActionResult> MarcarEntregadoPorCodigo([FromBody] MarcarEntregadoPorCodigoRequest request)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Gestionar Entregas",
+                "Solo usuarios con permiso para gestionar entregas pueden marcar productos como entregados");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO ===");
+                _logger.LogInformation("🚚 Código de seguimiento: {CodigoSeguimiento}", request.CodigoSeguimiento);
+
+                if (string.IsNullOrEmpty(request.CodigoSeguimiento))
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "Código de seguimiento es requerido" 
+                    });
+                }
+
+                // Buscar el pendiente por código de seguimiento
+                var pendiente = await _context.PendientesEntrega
+                    .Include(p => p.Producto)
+                    .Include(p => p.Factura)
+                    .FirstOrDefaultAsync(p => p.CodigoSeguimiento == request.CodigoSeguimiento && p.Estado == "Pendiente");
+
+                if (pendiente == null)
+                {
+                    return NotFound(new { 
+                        success = false, 
+                        message = $"No se encontró un pendiente activo con el código: {request.CodigoSeguimiento}" 
+                    });
+                }
+
+                _logger.LogInformation("🚚 Pendiente encontrado: {ProductoId} - {NombreProducto}", 
+                    pendiente.ProductoId, pendiente.Producto.NombreProducto);
+
+                // Determinar cantidad a entregar (usar la enviada o la pendiente completa)
+                var cantidadAEntregar = request.CantidadAEntregar > 0 ? request.CantidadAEntregar : pendiente.CantidadPendiente;
+
+                if (cantidadAEntregar > pendiente.CantidadPendiente)
+                {
+                    return BadRequest(new { 
+                        success = false,
+                        message = $"No se puede entregar más cantidad ({cantidadAEntregar}) que la pendiente ({pendiente.CantidadPendiente})" 
+                    });
+                }
+
+                // Verificar stock disponible
+                var stockDisponible = (int)(pendiente.Producto.CantidadEnInventario ?? 0);
+                if (stockDisponible < cantidadAEntregar)
+                {
+                    return BadRequest(new { 
+                        success = false,
+                        message = $"Stock insuficiente para {pendiente.Producto.NombreProducto}. Disponible: {stockDisponible}, Requerido: {cantidadAEntregar}" 
+                    });
+                }
+
+                // Actualizar inventario
+                pendiente.Producto.CantidadEnInventario = Math.Max(0, 
+                    (pendiente.Producto.CantidadEnInventario ?? 0) - cantidadAEntregar);
+                pendiente.Producto.FechaUltimaActualizacion = DateTime.Now;
+
+                // Actualizar pendiente
+                pendiente.Estado = "Entregado";
+                pendiente.FechaEntrega = DateTime.Now;
+                pendiente.UsuarioEntrega = request.UsuarioEntrega;
+                pendiente.Observaciones = (pendiente.Observaciones ?? "") + 
+                    $" | ENTREGADO: {cantidadAEntregar} unidades el {DateTime.Now:dd/MM/yyyy HH:mm} por código {request.CodigoSeguimiento}";
+
+                if (!string.IsNullOrEmpty(request.ObservacionesEntrega))
+                {
+                    pendiente.Observaciones += $" | {request.ObservacionesEntrega}";
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Producto entregado por código: {Producto} - {Cantidad} unidades", 
+                    pendiente.Producto.NombreProducto, cantidadAEntregar);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Producto entregado exitosamente - Código: {request.CodigoSeguimiento}",
+                    data = new
+                    {
+                        id = pendiente.Id,
+                        codigoSeguimiento = pendiente.CodigoSeguimiento,
+                        productoId = pendiente.ProductoId,
+                        nombreProducto = pendiente.Producto.NombreProducto,
+                        cantidadEntregada = cantidadAEntregar,
+                        stockRestante = pendiente.Producto.CantidadEnInventario,
+                        fechaEntrega = pendiente.FechaEntrega
+                    },
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error al marcar como entregado por código: {CodigoSeguimiento}", request.CodigoSeguimiento);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno al procesar entrega" 
+                });
+            }
+        }
+
         // =====================================
         // DTOs PARA COMPLETAR FACTURAS
         // =====================================
@@ -1616,6 +1727,15 @@ namespace API.Controllers
     public class MarcarEntregadosRequest
     {
         public List<int> ProductosIds { get; set; } = new List<int>();
+        public int UsuarioEntrega { get; set; }
+        public string? ObservacionesEntrega { get; set; }
+    }
+
+    public class MarcarEntregadoPorCodigoRequest
+    {
+        public string CodigoSeguimiento { get; set; } = string.Empty;
+        public int PendienteId { get; set; }
+        public int CantidadAEntregar { get; set; }
         public int UsuarioEntrega { get; set; }
         public string? ObservacionesEntrega { get; set; }
     }
