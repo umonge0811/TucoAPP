@@ -1,0 +1,32 @@
+entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:376 🚚 Módulo de entregas pendientes cargado exitosamente
+entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:15 🚚 === INICIALIZANDO MÓDULO DE ENTREGAS PENDIENTES ===
+entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:61 🚚 Cargando pendientes de entrega...
+permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:20  GET https://localhost:7038/api/permisos/funciones 404 (Not Found)
+cargarFunciones @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:20
+init @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:13
+PermisosInfoService @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:8
+(anonymous) @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:164
+permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:32  GET https://localhost:7038/DiagnosticoPermisos/mis-permisos net::ERR_ABORTED 404 (Not Found)
+cargarPermisosUsuario @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:32
+init @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:14
+await in init
+PermisosInfoService @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:8
+(anonymous) @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:164
+entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:76 🚚 Pendientes cargados: undefined
+entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:85 ❌ Error en cargarPendientes: TypeError: pendientes.forEach is not a function
+    at mostrarPendientes (entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:109:16)
+    at cargarPendientes (entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:78:13)
+cargarPendientes @ entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:85
+await in cargarPendientes
+(anonymous) @ entregasPendientes.js?v=K5vXM-0ftDtLAaV8wAC0NIlOtv0-h2jqDTCiIOOCMmI:25
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
