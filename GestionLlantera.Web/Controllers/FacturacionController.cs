@@ -1,3 +1,4 @@
+
 using GestionLlantera.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -612,8 +613,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-
-
         /// <summary>
         /// Obtener información completa del usuario desde los claims (igual que InventarioController)
         /// </summary>
@@ -885,7 +884,8 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogInformation("✅ Productos eliminados exitosamente de factura {FacturaId}", request.FacturaId);
                     return Json(new { 
-                        success = true,                         message = resultado.message,
+                        success = true,
+                        message = resultado.message,
                         productosEliminados = resultado.data
                     });
                 }
@@ -1017,7 +1017,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RegistrarProductosPendientesEntrega([FromBody] RegistrarPendientesEntregaRequest request)
+        public async Task<IActionResult> RegistrarPendientesEntrega([FromBody] RegistrarPendientesEntregaRequest request)
         {
             try
             {
@@ -1219,15 +1219,17 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> MarcarComoEntregado([FromBody] object request)
+        public async Task<IActionResult> MarcarComoEntregado([FromBody] MarcarEntregadoRequest request)
         {
             try
             {
                 _logger.LogInformation("🚚 === MARCANDO PRODUCTO COMO ENTREGADO ===");
+                _logger.LogInformation("🚚 Código de seguimiento: {CodigoSeguimiento}", request.CodigoSeguimiento);
+                _logger.LogInformation("🚚 Pendiente ID: {PendienteId}", request.PendienteId);
 
-                if (!await this.TienePermisoAsync("Ver Facturación"))
+                if (!await this.TienePermisoAsync("Gestionar Entregas"))
                 {
-                    return Json(new { success = false, message = "Sin permisos para marcar entregas" });
+                    return Json(new { success = false, message = "Sin permisos para gestionar entregas" });
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
@@ -1236,7 +1238,13 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                var resultado = await _facturacionService.MarcarProductosEntregadosAsync(request, jwtToken);
+                // Validar que se proporcione código de seguimiento
+                if (string.IsNullOrEmpty(request.CodigoSeguimiento))
+                {
+                    return Json(new { success = false, message = "Código de seguimiento requerido" });
+                }
+
+                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(request, jwtToken);
 
                 if (resultado.success)
                 {
@@ -1267,8 +1275,16 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+    }
 
-
+    // Clases de request para el controlador
+    public class MarcarEntregadoRequest
+    {
+        public string CodigoSeguimiento { get; set; } = string.Empty;
+        public int PendienteId { get; set; }
+        public int CantidadAEntregar { get; set; }
+        public int UsuarioEntrega { get; set; }
+        public string ObservacionesEntrega { get; set; } = string.Empty;
     }
 
     public class VerificarStockFacturaRequest

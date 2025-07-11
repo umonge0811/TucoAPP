@@ -244,40 +244,58 @@ async function confirmarEntrega() {
             return;
         }
         
+        // Obtener el código de seguimiento del pendiente seleccionado
+        const pendienteSeleccionado = pendientesData.find(p => p.id === pendienteId);
+        const codigoSeguimiento = pendienteSeleccionado?.codigoSeguimiento;
+        
+        if (!codigoSeguimiento) {
+            mostrarError('No se encontró código de seguimiento para este pendiente');
+            return;
+        }
+        
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
         const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
         
         const datosEntrega = {
+            codigoSeguimiento: codigoSeguimiento,
             pendienteId: pendienteId,
             cantidadAEntregar: cantidadAEntregar,
             usuarioEntrega: usuarioId,
             observacionesEntrega: observaciones
         };
         
-        console.log('🚚 Confirmando entrega:', datosEntrega);
+        console.log('🚚 Confirmando entrega con código:', datosEntrega);
+        
+        // Deshabilitar botón mientras se procesa
+        $('#btnConfirmarEntrega').prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Procesando...');
         
         const response = await fetch('/Facturacion/MarcarComoEntregado', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify(datosEntrega)
+            body: JSON.stringify(datosEntrega),
+            credentials: 'include'
         });
         
         const resultado = await response.json();
         
         if (resultado.success) {
-            mostrarExito('Entrega confirmada exitosamente');
+            mostrarExito('Entrega confirmada exitosamente - Código: ' + codigoSeguimiento);
             modalMarcarEntregado.hide();
             cargarPendientes(); // Recargar la lista
         } else {
-            mostrarError('Error confirmando entrega: ' + resultado.message);
+            mostrarError('Error confirmando entrega: ' + (resultado.message || 'Error desconocido'));
         }
         
     } catch (error) {
         console.error('❌ Error confirmando entrega:', error);
         mostrarError('Error de conexión al confirmar entrega');
+    } finally {
+        // Restaurar botón
+        $('#btnConfirmarEntrega').prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Confirmar Entrega');
     }
 }
 
