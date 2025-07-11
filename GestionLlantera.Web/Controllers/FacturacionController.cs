@@ -1275,6 +1275,53 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> MarcarComoEntregado([FromBody] object request)
+        {
+            try
+            {
+                _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN CONTROLADOR WEB ===");
+
+                var jwtToken = HttpContext.Session.GetString("JwtToken");
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Producto marcado como entregado exitosamente");
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message,
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error marcando como entregado: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico marcando como entregado");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
     }
 
     // Clases de request para el controlador
