@@ -1193,66 +1193,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-    }
-
-    public class VerificarStockFacturaRequest
-    {
-        public int FacturaId { get; set; }
-    }
-
-    public class EliminarProductosFacturaRequest
-    {
-        public int FacturaId { get; set; }
-        public List<int> ProductosAEliminar { get; set; } = new List<int>();
-    }
-
-    public class CompletarFacturaRequest
-    {
-        public int FacturaId { get; set; }
-    }
-
-    public class CompletarFacturaWebRequest
-    {
-        public int FacturaId { get; set; }
-        public string? MetodoPago { get; set; }
-        public List<DetallePagoWebDTO>? DetallesPago { get; set; }
-        public string? Observaciones { get; set; }
-    }
-
-    public class DetallePagoWebDTO
-    {
-        public string MetodoPago { get; set; } = string.Empty;
-        public decimal Monto { get; set; }
-        public string? Referencia { get; set; }
-        public string? Observaciones { get; set; }
-        public DateTime? FechaPago { get; set; }
-    }
-
-    public class RegistrarPendientesEntregaRequest
-    {
-        public int FacturaId { get; set; }
-        public int UsuarioCreacion { get; set; }
-        public List<ProductoPendienteEntrega> ProductosPendientes { get; set; } = new List<ProductoPendienteEntrega>();
-    }
-
-    public class ProductoPendienteEntrega
-    {
-        public int ProductoId { get; set; }
-        public string NombreProducto { get; set; } = string.Empty;
-        public int CantidadSolicitada { get; set; }
-        public int CantidadPendiente { get; set; }
-        public int StockDisponible { get; set; }
-        public decimal PrecioUnitario { get; set; }
-        public string? Observaciones { get; set; }
-    }
-
-    public class MarcarEntregadosRequest
-    {
-        public List<int> ProductosIds { get; set; } = new List<int>();
-        public string? ObservacionesEntrega { get; set; }
-        public DateTime? FechaEntrega { get; set; }
-    }
-}
         [HttpGet]
         public async Task<IActionResult> EntregasPendientes()
         {
@@ -1322,3 +1262,65 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
+
+    }
+
+    public class VerificarStockFacturaRequest
+    {
+        public int FacturaId { get; set; }
+    }
+
+    public class EliminarProductosFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public List<int> ProductosAEliminar { get; set; } = new List<int>();
+    }
+
+    public class CompletarFacturaRequest
+    {
+        public int FacturaId { get; set; }
+    }
+
+    public class CompletarFacturaWebRequest
+    {
+        public int FacturaId { get; set; }
+        public string? MetodoPago { get; set; }
+        public List<DetallePagoWebDTO>? DetallesPago { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class DetallePagoWebDTO
+    {
+        public string MetodoPago { get; set; } = string.Empty;
+        public decimal Monto { get; set; }
+        public string? Referencia { get; set; }
+        public string? Observaciones { get; set; }
+        public DateTime? FechaPago { get; set; }
+    }
+
+    public class RegistrarPendientesEntregaRequest
+    {
+        public int FacturaId { get; set; }
+        public int UsuarioCreacion { get; set; }
+        public List<ProductoPendienteEntrega> ProductosPendientes { get; set; } = new List<ProductoPendienteEntrega>();
+    }
+
+    public class ProductoPendienteEntrega
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public int CantidadSolicitada { get; set; }
+        public int CantidadPendiente { get; set; }
+        public int StockDisponible { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public string? Observaciones { get; set; }
+    }
+
+    public class MarcarEntregadosRequest
+    {
+        public List<int> ProductosIds { get; set; } = new List<int>();
+        public string? ObservacionesEntrega { get; set; }
+        public DateTime? FechaEntrega { get; set; }
+    }
+}
