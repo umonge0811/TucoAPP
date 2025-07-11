@@ -1224,11 +1224,11 @@ namespace API.Controllers
 
                     _context.PendientesEntrega.Add(pendienteEntrega);
                     await _context.SaveChangesAsync();
-                    
+
                     // Generar el código compuesto "FacturaId+id" y guardarlo en la base de datos
                     var codigoSeguimiento = $"FAC-{pendienteEntrega.FacturaId}-{pendienteEntrega.Id}";
                     pendienteEntrega.CodigoSeguimiento = codigoSeguimiento;
-                    
+
                     // Guardar el código de seguimiento en la base de datos
                     _context.PendientesEntrega.Update(pendienteEntrega);
                     await _context.SaveChangesAsync();
@@ -1247,7 +1247,7 @@ namespace API.Controllers
                         productoPendiente.NombreProducto, productoPendiente.CantidadPendiente);
                 }
 
-                
+
                 await transaction.CommitAsync();
 
                 _logger.LogInformation("✅ Todos los pendientes creados exitosamente: {Count} items", pendientesCreados.Count);
@@ -1328,7 +1328,8 @@ namespace API.Controllers
                         observaciones = p.Observaciones,
                         codigoSeguimiento = p.CodigoSeguimiento, // ✅ INCLUIR CÓDIGO DE SEGUIMIENTO DE LA BD
                         usuarioCreacion = p.UsuarioCreacionNavigation.NombreUsuario,
-                        usuarioEntrega = p.UsuarioEntregaNavigation != null ? p.UsuarioEntregaNavigation.NombreUsuario : null
+                        usuarioEntrega = p.UsuarioEntregaNavigation != null ? p.UsuarioEntregaNavigation.NombreUsuario : null,
+                        StockActual = (int)(p.Producto.CantidadEnInventario ?? 0)
                     })
                     .ToListAsync();
 
@@ -1370,20 +1371,9 @@ namespace API.Controllers
                 if (pendiente.Estado != "Pendiente")
                     return BadRequest(new { message = "Este pendiente ya fue procesado" });
 
-                // Verificar stock disponible
-                var stockDisponible = (int)(pendiente.Producto.CantidadEnInventario ?? 0);
-                var cantidadAEntregar = request.CantidadEntregada ?? pendiente.CantidadPendiente;
-
-                if (stockDisponible < cantidadAEntregar)
-                {
-                    return BadRequest(new { 
-                        message = $"Stock insuficiente. Disponible: {stockDisponible}, Solicitado: {cantidadAEntregar}" 
-                    });
-                }
-
                 // Actualizar inventario
                 pendiente.Producto.CantidadEnInventario = Math.Max(0, 
-                    (pendiente.Producto.CantidadEnInventario ?? 0) - cantidadAEntregar);
+                    (pendiente.Producto.CantidadEnInventario ?? 0) - (request.CantidadEntregada ?? pendiente.CantidadPendiente));
                 pendiente.Producto.FechaUltimaActualizacion = DateTime.Now;
 
                 // Actualizar pendiente
@@ -1391,7 +1381,7 @@ namespace API.Controllers
                 pendiente.FechaEntrega = DateTime.Now;
                 pendiente.UsuarioEntrega = request.UsuarioEntrega;
                 pendiente.Observaciones = (pendiente.Observaciones ?? "") + 
-                    $" | ENTREGADO: {cantidadAEntregar} unidades el {DateTime.Now:dd/MM/yyyy HH:mm}";
+                    $" | ENTREGADO: {(request.CantidadEntregada ?? pendiente.CantidadPendiente)} unidades el {DateTime.Now:dd/MM/yyyy HH:mm}";
 
                 if (!string.IsNullOrEmpty(request.ObservacionesEntrega))
                 {
@@ -1402,13 +1392,13 @@ namespace API.Controllers
                 await transaction.CommitAsync();
 
                 _logger.LogInformation("✅ Pendiente entregado: {Producto} - {Cantidad} unidades", 
-                    pendiente.Producto.NombreProducto, cantidadAEntregar);
+                    pendiente.Producto.NombreProducto, (request.CantidadEntregada ?? pendiente.CantidadPendiente));
 
                 return Ok(new
                 {
                     success = true,
                     message = "Pendiente entregado exitosamente",
-                    cantidadEntregada = cantidadAEntregar,
+                    cantidadEntregada = (request.CantidadEntregada ?? pendiente.CantidadPendiente),
                     stockRestante = pendiente.Producto.CantidadEnInventario,
                     timestamp = DateTime.Now
                 });
@@ -1494,21 +1484,9 @@ namespace API.Controllers
                         continue;
                     }
 
-                    // Verificar stock disponible
-                    var stockDisponible = (int)(pendiente.Producto.CantidadEnInventario ?? 0);
-                    var cantidadAEntregar = pendiente.CantidadPendiente;
-
-                    if (stockDisponible < cantidadAEntregar)
-                    {
-                        return BadRequest(new { 
-                            success = false,
-                            message = $"Stock insuficiente para {pendiente.Producto.NombreProducto}. Disponible: {stockDisponible}, Requerido: {cantidadAEntregar}" 
-                        });
-                    }
-
                     // Actualizar inventario
                     pendiente.Producto.CantidadEnInventario = Math.Max(0, 
-                        (pendiente.Producto.CantidadEnInventario ?? 0) - cantidadAEntregar);
+                        (pendiente.Producto.CantidadEnInventario ?? 0) - pendiente.CantidadPendiente);
                     pendiente.Producto.FechaUltimaActualizacion = DateTime.Now;
 
                     // Actualizar pendiente
@@ -1516,7 +1494,7 @@ namespace API.Controllers
                     pendiente.FechaEntrega = DateTime.Now;
                     pendiente.UsuarioEntrega = request.UsuarioEntrega;
                     pendiente.Observaciones = (pendiente.Observaciones ?? "") + 
-                        $" | ENTREGADO: {cantidadAEntregar} unidades el {DateTime.Now:dd/MM/yyyy HH:mm}";
+                        $" | ENTREGADO: {pendiente.CantidadPendiente} unidades el {DateTime.Now:dd/MM/yyyy HH:mm}";
 
                     if (!string.IsNullOrEmpty(request.ObservacionesEntrega))
                     {
@@ -1528,12 +1506,12 @@ namespace API.Controllers
                         id = pendiente.Id,
                         productoId = pendiente.ProductoId,
                         nombreProducto = pendiente.Producto.NombreProducto,
-                        cantidadEntregada = cantidadAEntregar,
+                        cantidadEntregada = pendiente.CantidadPendiente,
                         stockRestante = pendiente.Producto.CantidadEnInventario
                     });
 
                     _logger.LogInformation("✅ Producto marcado como entregado: {Producto} - {Cantidad} unidades", 
-                        pendiente.Producto.NombreProducto, cantidadAEntregar);
+                        pendiente.Producto.NombreProducto, pendiente.CantidadPendiente);
                 }
 
                 await _context.SaveChangesAsync();
@@ -1571,7 +1549,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN API ===");
                 _logger.LogInformation("🚚 Request completo recibido: {Request}", 
-                    System.Text.Json.JsonSerializer.Serialize(request));
+                    System.Text.JsonSerializer.Serialize(request));
                 _logger.LogInformation("🚚 Código de seguimiento: {CodigoSeguimiento}", request.CodigoSeguimiento);
                 _logger.LogInformation("🚚 Pendiente ID: {PendienteId}", request.PendienteId);
                 _logger.LogInformation("🚚 Cantidad a entregar: {Cantidad}", request.CantidadAEntregar);
@@ -1610,16 +1588,6 @@ namespace API.Controllers
                     return BadRequest(new { 
                         success = false,
                         message = $"No se puede entregar más cantidad ({cantidadAEntregar}) que la pendiente ({pendiente.CantidadPendiente})" 
-                    });
-                }
-
-                // Verificar stock disponible
-                var stockDisponible = (int)(pendiente.Producto.CantidadEnInventario ?? 0);
-                if (stockDisponible < cantidadAEntregar)
-                {
-                    return BadRequest(new { 
-                        success = false,
-                        message = $"❌ STOCK INSUFICIENTE: El producto '{pendiente.Producto.NombreProducto}' tiene {stockDisponible} unidades disponibles, pero se requieren {cantidadAEntregar} unidades para completar la entrega. Debe recibir más inventario antes de poder completar esta entrega." 
                     });
                 }
 
