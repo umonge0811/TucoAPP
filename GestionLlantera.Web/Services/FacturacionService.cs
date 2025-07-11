@@ -1413,6 +1413,14 @@ namespace GestionLlantera.Web.Services
                     System.Text.Json.JsonSerializer.Serialize(request));
                 _logger.LogInformation("🚚 URL de API: {Url}", "api/Facturacion/marcar-entregado-por-codigo");
 
+                // ✅ CONFIGURAR TOKEN JWT ANTES DE LA LLAMADA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
                 var response = await _httpClient.PostAsJsonAsync("api/Facturacion/marcar-entregado-por-codigo", request);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
