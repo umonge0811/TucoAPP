@@ -1353,23 +1353,9 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> EntregarPendiente(int id, [FromBody] EntregarPendienteRequest request)
         {
-            // ✅ VERIFICAR MÚLTIPLES VARIACIONES DEL PERMISO
-            var tienePermiso = await _permisosService.TienePermisoAsync(User, "Entrega Pendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "EntregaPendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "Entregar Pendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "Completar Entregas") ||
-                               await _permisosService.EsAdministradorAsync(User);
-
-            if (!tienePermiso)
-            {
-                _logger.LogWarning("❌ Usuario {Usuario} no tiene permisos para entregar pendientes", User.Identity?.Name);
-                return Forbid(new { 
-                    success = false, 
-                    message = "Solo usuarios con permiso 'Entrega Pendientes' pueden completar pendientes" 
-                });
-            }
-
-            _logger.LogInformation("✅ Usuario {Usuario} autorizado para entregar pendientes", User.Identity?.Name);
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entrega Pendientes",
+                "Solo usuarios con permiso 'Entrega Pendientes' pueden completar pendientes");
+            if (validacionPermiso != null) return validacionPermiso;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -1466,23 +1452,9 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> MarcarProductosEntregados([FromBody] MarcarEntregadosRequest request)
         {
-            // ✅ VERIFICAR MÚLTIPLES VARIACIONES DEL PERMISO
-            var tienePermiso = await _permisosService.TienePermisoAsync(User, "Entrega Pendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "EntregaPendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "Entregar Pendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "Completar Entregas") ||
-                               await _permisosService.EsAdministradorAsync(User);
-
-            if (!tienePermiso)
-            {
-                _logger.LogWarning("❌ Usuario {Usuario} no tiene permisos para marcar entregas", User.Identity?.Name);
-                return Forbid(new { 
-                    success = false, 
-                    message = "Solo usuarios con permiso 'Entrega Pendientes' pueden marcar productos como entregados" 
-                });
-            }
-
-            _logger.LogInformation("✅ Usuario {Usuario} autorizado para marcar entregas", User.Identity?.Name);
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entrega Pendientes",
+                "Solo usuarios con permiso 'Entrega Pendientes' pueden marcar productos como entregados");
+            if (validacionPermiso != null) return validacionPermiso;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -1568,30 +1540,16 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> MarcarEntregadoPorCodigo([FromBody] MarcarEntregadoPorCodigoRequest request)
         {
-            // ✅ VERIFICAR MÚLTIPLES VARIACIONES DEL PERMISO
-            var tienePermiso = await _permisosService.TienePermisoAsync(User, "Entrega Pendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "EntregaPendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "Entregar Pendientes") ||
-                               await _permisosService.TienePermisoAsync(User, "Completar Entregas") ||
-                               await _permisosService.EsAdministradorAsync(User);
-
-            if (!tienePermiso)
-            {
-                _logger.LogWarning("❌ Usuario {Usuario} no tiene permisos para marcar entregas", User.Identity?.Name);
-                return Forbid(new { 
-                    success = false, 
-                    message = "Solo usuarios con permiso 'Entrega Pendientes' pueden marcar productos como entregados" 
-                });
-            }
-
-            _logger.LogInformation("✅ Usuario {Usuario} autorizado para marcar entregas", User.Identity?.Name);
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entrega Pendientes",
+                "Solo usuarios con permiso 'Entrega Pendientes' pueden marcar productos como entregados");
+            if (validacionPermiso != null) return validacionPermiso;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN API ===");
                 _logger.LogInformation("🚚 Request completo recibido: {Request}", 
-                    System.Text.JsonSerializer.Serialize(request));
+                  JsonSerializer.Serialize(request));
                 _logger.LogInformation("🚚 Código de seguimiento: {CodigoSeguimiento}", request.CodigoSeguimiento);
                 _logger.LogInformation("🚚 Pendiente ID: {PendienteId}", request.PendienteId);
                 _logger.LogInformation("🚚 Cantidad a entregar: {Cantidad}", request.CantidadAEntregar);

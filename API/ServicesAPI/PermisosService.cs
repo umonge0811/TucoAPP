@@ -1,4 +1,4 @@
-using API.Data;
+﻿using API.Data;
 using API.ServicesAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -57,25 +57,8 @@ namespace API.ServicesAPI
                 }
 
                 var tienePermiso = permisosUsuario.Contains(nombrePermiso);
-                
-                // ✅ LOGGING DETALLADO PARA DIAGNÓSTICO
-                _logger.LogInformation("🔍 === DIAGNÓSTICO DE PERMISO ===");
-                _logger.LogInformation("🔍 Usuario ID: {UserId}", userId.Value);
-                _logger.LogInformation("🔍 Permiso buscado: '{Permiso}'", nombrePermiso);
-                _logger.LogInformation("🔍 Permisos del usuario: [{Permisos}]", string.Join(", ", permisosUsuario));
-                _logger.LogInformation("🔍 Resultado: {Resultado}", tienePermiso ? "✅ TIENE PERMISO" : "❌ NO TIENE PERMISO");
-                
-                // ✅ BUSCAR COINCIDENCIAS PARCIALES PARA DIAGNÓSTICO
-                var coincidenciasParciales = permisosUsuario
-                    .Where(p => p.ToLower().Contains(nombrePermiso.ToLower()) || 
-                               nombrePermiso.ToLower().Contains(p.ToLower()))
-                    .ToList();
-                    
-                if (coincidenciasParciales.Any())
-                {
-                    _logger.LogInformation("🔍 Coincidencias parciales encontradas: [{Coincidencias}]", 
-                        string.Join(", ", coincidenciasParciales));
-                }
+                _logger.LogInformation("Usuario {UserId} {Resultado} permiso {Permiso}",
+                    userId.Value, tienePermiso ? "TIENE" : "NO TIENE", nombrePermiso);
 
                 return tienePermiso;
             }
