@@ -1093,11 +1093,17 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerPendientesEntrega()
+        public async Task<IActionResult> ObtenerPendientesEntrega(
+            [FromQuery] string? estado = null,
+            [FromQuery] string? codigo = null,
+            [FromQuery] DateTime? fechaDesde = null,
+            [FromQuery] DateTime? fechaHasta = null)
         {
             try
             {
                 _logger.LogInformation("📦 === OBTENIENDO PENDIENTES DE ENTREGA ===");
+                _logger.LogInformation("📦 Filtros aplicados - Estado: {Estado}, Código: {Codigo}, FechaDesde: {FechaDesde}, FechaHasta: {FechaHasta}", 
+                    estado, codigo, fechaDesde, fechaHasta);
 
                 if (!await this.TienePermisoAsync("Ver Productos"))
                 {
@@ -1110,7 +1116,15 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                var resultado = await _facturacionService.ObtenerPendientesEntregaAsync(jwtToken);
+                var filtros = new FiltrosPendientesEntrega
+                {
+                    Estado = estado,
+                    Codigo = codigo,
+                    FechaDesde = fechaDesde,
+                    FechaHasta = fechaHasta
+                };
+
+                var resultado = await _facturacionService.ObtenerPendientesEntregaAsync(jwtToken, filtros);
 
                 _logger.LogInformation("📦 Resultado del servicio: Success={Success}, Message={Message}", 
                     resultado.success, resultado.message);
@@ -1343,5 +1357,13 @@ namespace GestionLlantera.Web.Controllers
         public List<int> ProductosIds { get; set; } = new List<int>();
         public string? ObservacionesEntrega { get; set; }
         public DateTime? FechaEntrega { get; set; }
+    }
+
+    public class FiltrosPendientesEntrega
+    {
+        public string? Estado { get; set; }
+        public string? Codigo { get; set; }
+        public DateTime? FechaDesde { get; set; }
+        public DateTime? FechaHasta { get; set; }
     }
 }

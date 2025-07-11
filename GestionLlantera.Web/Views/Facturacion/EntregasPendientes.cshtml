@@ -1,4 +1,3 @@
-
 @{
     ViewData["Title"] = "Entregas Pendientes";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -60,6 +59,9 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Información de Filtros Aplicados -->
+            <div id="infoFiltrosAplicados" style="display: none;" class="mb-3"></div>
 
             <!-- Tabla de pendientes -->
             <div class="card">
@@ -127,23 +129,23 @@
             <div class="modal-body">
                 <form id="formMarcarEntregado">
                     <input type="hidden" id="pendienteId" />
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Producto</label>
                         <input type="text" id="nombreProducto" class="form-control" readonly>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Cantidad Pendiente</label>
                         <input type="number" id="cantidadPendiente" class="form-control" readonly>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Cantidad a Entregar</label>
                         <input type="number" id="cantidadAEntregar" class="form-control" min="1" required>
                         <div class="form-text">Máximo: <span id="maxCantidad"></span> unidades</div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Observaciones de Entrega</label>
                         <textarea id="observacionesEntrega" class="form-control" rows="3" 

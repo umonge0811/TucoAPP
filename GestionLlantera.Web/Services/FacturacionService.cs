@@ -1172,7 +1172,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string? message, string? details)> ObtenerPendientesEntregaAsync(string jwtToken = null)
+        public async Task<(bool success, object? data, string? message, string? details)> ObtenerPendientesEntregaAsync(string jwtToken = null, object filtros = null)
         {
             try
             {
@@ -1183,7 +1183,49 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync("api/Facturacion/pendientes-entrega");
+                // ✅ CONSTRUIR URL CON PARÁMETROS DE FILTRO
+                string url = "api/Facturacion/pendientes-entrega";
+                var queryParams = new List<string>();
+
+                if (filtros != null)
+                {
+                    var filtrosObj = filtros as dynamic;
+                    var filtrosDict = new Dictionary<string, object>();
+
+                    // Convertir objeto a diccionario para acceder a propiedades
+                    if (filtros.GetType().GetProperty("Estado")?.GetValue(filtros) is string estado && !string.IsNullOrEmpty(estado))
+                    {
+                        queryParams.Add($"estado={Uri.EscapeDataString(estado)}");
+                        _logger.LogInformation("📦 Filtro Estado aplicado: {Estado}", estado);
+                    }
+
+                    if (filtros.GetType().GetProperty("Codigo")?.GetValue(filtros) is string codigo && !string.IsNullOrEmpty(codigo))
+                    {
+                        queryParams.Add($"codigo={Uri.EscapeDataString(codigo)}");
+                        _logger.LogInformation("📦 Filtro Código aplicado: {Codigo}", codigo);
+                    }
+
+                    if (filtros.GetType().GetProperty("FechaDesde")?.GetValue(filtros) is DateTime fechaDesde)
+                    {
+                        queryParams.Add($"fechaDesde={fechaDesde:yyyy-MM-dd}");
+                        _logger.LogInformation("📦 Filtro FechaDesde aplicado: {FechaDesde}", fechaDesde);
+                    }
+
+                    if (filtros.GetType().GetProperty("FechaHasta")?.GetValue(filtros) is DateTime fechaHasta)
+                    {
+                        queryParams.Add($"fechaHasta={fechaHasta:yyyy-MM-dd}");
+                        _logger.LogInformation("📦 Filtro FechaHasta aplicado: {FechaHasta}", fechaHasta);
+                    }
+                }
+
+                if (queryParams.Any())
+                {
+                    url += "?" + string.Join("&", queryParams);
+                }
+
+                _logger.LogInformation("📦 URL final con filtros: {Url}", url);
+
+                var response = await _httpClient.GetAsync(url);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📦 Respuesta de la API: {StatusCode}", response.StatusCode);

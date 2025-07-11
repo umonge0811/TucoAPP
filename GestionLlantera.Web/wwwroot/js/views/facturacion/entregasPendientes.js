@@ -61,8 +61,34 @@ async function cargarPendientes() {
         console.log('🚚 Cargando pendientes de entrega...');
         
         mostrarIndicadorCarga(true);
+
+        // ✅ CONSTRUIR URL CON PARÁMETROS DE FILTROS
+        const filtroEstado = $('#filtroEstado').val();
+        const filtroCodigo = $('#filtroCodigo').val().trim();
+        const filtroFechaDesde = $('#filtroFechaDesde').val();
+        const filtroFechaHasta = $('#filtroFechaHasta').val();
+
+        let url = '/Facturacion/ObtenerPendientesEntrega?';
+        const params = new URLSearchParams();
+
+        if (filtroEstado) {
+            params.append('estado', filtroEstado);
+        }
+        if (filtroCodigo) {
+            params.append('codigo', filtroCodigo);
+        }
+        if (filtroFechaDesde) {
+            params.append('fechaDesde', filtroFechaDesde);
+        }
+        if (filtroFechaHasta) {
+            params.append('fechaHasta', filtroFechaHasta);
+        }
+
+        url += params.toString();
+
+        console.log('🔍 URL con filtros:', url);
         
-        const response = await fetch('/Facturacion/ObtenerPendientesEntrega', {
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -127,6 +153,9 @@ async function cargarPendientes() {
         
         pendientesData = pendientes;
         console.log('🚚 Pendientes cargados:', pendientesData.length);
+
+        // ✅ MOSTRAR MENSAJE INFORMATIVO SOBRE FILTROS APLICADOS
+        mostrarInformacionFiltros();
         
         mostrarPendientes(pendientesData);
         
@@ -425,6 +454,43 @@ function obtenerUsuarioActual() {
         return usuario ? JSON.parse(usuario) : { id: 1, usuarioId: 1 };
     } catch {
         return { id: 1, usuarioId: 1 };
+    }
+}
+
+function mostrarInformacionFiltros() {
+    const filtroEstado = $('#filtroEstado').val();
+    const filtroCodigo = $('#filtroCodigo').val().trim();
+    const filtroFechaDesde = $('#filtroFechaDesde').val();
+    const filtroFechaHasta = $('#filtroFechaHasta').val();
+
+    const filtrosActivos = [];
+    
+    if (filtroEstado) {
+        filtrosActivos.push(`Estado: ${filtroEstado}`);
+    }
+    if (filtroCodigo) {
+        filtrosActivos.push(`Código: ${filtroCodigo}`);
+    }
+    if (filtroFechaDesde) {
+        filtrosActivos.push(`Desde: ${new Date(filtroFechaDesde).toLocaleDateString('es-ES')}`);
+    }
+    if (filtroFechaHasta) {
+        filtrosActivos.push(`Hasta: ${new Date(filtroFechaHasta).toLocaleDateString('es-ES')}`);
+    }
+
+    const infoFiltros = $('#infoFiltrosAplicados');
+    if (filtrosActivos.length > 0) {
+        infoFiltros.html(`
+            <div class="alert alert-info alert-sm">
+                <i class="bi bi-funnel me-2"></i>
+                <strong>Filtros aplicados:</strong> ${filtrosActivos.join(', ')}
+                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="limpiarFiltros()">
+                    <i class="bi bi-x"></i> Limpiar
+                </button>
+            </div>
+        `).show();
+    } else {
+        infoFiltros.hide();
     }
 }
 
