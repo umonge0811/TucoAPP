@@ -2690,12 +2690,12 @@ function generarRecibo(factura, productos, totales) {
                     `<div class="codigos-seguimiento">
                         <div>📋 Códigos de seguimiento:</div>
                         ${window.codigosSeguimientoPendientes.map(p => 
-                            `<div class="codigo">${p.codigoSeguimiento}</div>`
+                            `<div class="codigo-recuadro">${p.codigoSeguimiento}</div>`
                         ).join('')}
                     </div>` :
                     `<div class="codigo-seguimiento">
                         <div>📋 Código de seguimiento:</div>
-                        <div class="codigo">${numeroFactura}-PEND</div>
+                        <div class="codigo-recuadro">${numeroFactura}-PEND</div>
                     </div>`
                 }
             </div>
@@ -3073,13 +3073,17 @@ function generarRecibo(factura, productos, totales) {
                             margin-bottom: 0.5mm;
                         }
 
-                        .codigo {
+                        .codigo-recuadro {
                             font-size: 8px;
                             font-weight: bold;
                             font-family: 'Courier New', monospace;
-                            border: 1px solid #000;
-                            padding: 1mm;
+                            border: 2px solid #000;
+                            padding: 2mm;
+                            margin: 1mm 0;
                             display: inline-block;
+                            background: #f9f9f9;
+                            text-align: center;
+                            min-width: 20mm;
                         }
 
                         /* Estilos específicos para vista previa en pantalla */
