@@ -1166,7 +1166,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                var resultado = await _facturacionService.MarcarProductosEntregadosAsync(request, jwtToken);
+                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(request, jwtToken);
 
                 if (resultado.success)
                 {
