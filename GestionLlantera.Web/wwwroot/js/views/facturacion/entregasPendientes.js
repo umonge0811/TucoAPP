@@ -443,6 +443,135 @@ function mostrarError(mensaje) {
     }
 }
 
+// Función para mostrar/ocultar indicador de carga
+function mostrarLoading(mostrar) {
+    if (mostrar) {
+        $('#loadingIndicator').show();
+        $('#tablaPendientes').hide();
+        $('#sinResultados').hide();
+    } else {
+        $('#loadingIndicator').hide();
+        $('#tablaPendientes').show();
+    }
+}
+
+// Función para obtener clase CSS del estado
+function obtenerClaseEstado(estado) {
+    switch (estado?.toLowerCase()) {
+        case 'pendiente':
+            return 'bg-warning text-dark';
+        case 'entregado':
+            return 'bg-success';
+        case 'cancelado':
+            return 'bg-danger';
+        default:
+            return 'bg-secondary';
+    }
+}
+
+// Función para ver detalles de entrega
+function verDetalleEntrega(entregaId) {
+    const entrega = entregasPendientes.find(e => e.id === entregaId);
+    if (!entrega) {
+        mostrarError('No se encontró la entrega seleccionada');
+        return;
+    }
+
+    // Mostrar modal con detalles
+    const detallesHtml = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Información General</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Código:</strong></td>
+                        <td><code>${entrega.codigoSeguimiento || 'N/A'}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Factura:</strong></td>
+                        <td>${entrega.numeroFactura || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cliente:</strong></td>
+                        <td>${entrega.clienteNombre || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estado:</strong></td>
+                        <td>
+                            <span class="badge ${obtenerClaseEstado(entrega.estado)}">
+                                ${entrega.estado || 'Pendiente'}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Producto</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Producto:</strong></td>
+                        <td>${entrega.producto || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cantidad:</strong></td>
+                        <td><span class="badge bg-info">${entrega.cantidad || 0}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Fecha:</strong></td>
+                        <td>${entrega.fechaCreacion ? new Date(entrega.fechaCreacion).toLocaleDateString() : 'N/A'}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    `;
+
+    $('#detallesPendienteContent').html(detallesHtml);
+    modalDetallesPendiente.show();
+}
+
+// Función para marcar como entregado
+async function marcarComoEntregado(codigoSeguimiento) {
+    if (!codigoSeguimiento) {
+        mostrarError('Código de seguimiento no válido');
+        return;
+    }
+
+    // Confirmar acción
+    if (!confirm(`¿Confirmar entrega del producto con código: ${codigoSeguimiento}?`)) {
+        return;
+    }
+
+    try {
+        console.log('🚚 Marcando como entregado:', codigoSeguimiento);
+
+        const response = await fetch('/Facturacion/MarcarComoEntregado', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                codigoSeguimiento: codigoSeguimiento,
+                usuarioEntrega: 1, // Obtener del usuario actual
+                observacionesEntrega: 'Entrega confirmada desde lista de pendientes'
+            })
+        });
+
+        const resultado = await response.json();
+
+        if (resultado.success) {
+            mostrarExito('Entrega confirmada exitosamente');
+            cargarEntregasPendientes(); // Recargar lista
+        } else {
+            mostrarError('Error al confirmar entrega: ' + (resultado.message || 'Error desconocido'));
+        }
+
+    } catch (error) {
+        console.error('❌ Error marcando como entregado:', error);
+        mostrarError('Error de conexión al confirmar entrega');
+    }
+}
+
 console.log('🚚 Módulo de entregas pendientes cargado exitosamente');
 /**
  * Módulo de entregas pendientes
