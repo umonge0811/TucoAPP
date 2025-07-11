@@ -1253,3 +1253,72 @@ namespace GestionLlantera.Web.Controllers
         public DateTime? FechaEntrega { get; set; }
     }
 }
+        [HttpGet]
+        public async Task<IActionResult> EntregasPendientes()
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Ver Facturación"))
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
+                ViewBag.Title = "Entregas Pendientes";
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cargando vista de entregas pendientes");
+                return RedirectToAction("Index", "Dashboard");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarcarComoEntregado([FromBody] object request)
+        {
+            try
+            {
+                _logger.LogInformation("🚚 === MARCANDO PRODUCTO COMO ENTREGADO ===");
+
+                if (!await this.TienePermisoAsync("Ver Facturación"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para marcar entregas" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.MarcarProductosEntregadosAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message,
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando producto como entregado");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
