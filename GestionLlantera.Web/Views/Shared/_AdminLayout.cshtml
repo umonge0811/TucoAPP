@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="~/css/views/admin/inventario.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/views/admin/agregarProducto.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/views/admin/Breadcrumbs.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/views/admin/entregasPendientes.css" asp-append-version="true" />
 
     @* Librerías de terceros *@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
@@ -109,6 +110,11 @@
                                 <li class="nav-item" asp-permiso="Ver Reportes">
                                     <a class="nav-link" asp-controller="Ventas" asp-action="Reportes">
                                         <i class="bi bi-graph-up"></i> Reportes de Ventas
+                                    </a>
+                                </li>
+                                <li class="nav-item" asp-permiso="Ver Facturación">
+                                    <a class="nav-link" asp-controller="Facturacion" asp-action="EntregasPendientes">
+                                        <i class="bi bi-truck"></i> Entregas Pendientes
                                     </a>
                                 </li>
                             </ul>

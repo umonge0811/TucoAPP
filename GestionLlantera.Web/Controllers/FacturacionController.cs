@@ -1112,32 +1112,37 @@ namespace GestionLlantera.Web.Controllers
 
                 var resultado = await _facturacionService.ObtenerPendientesEntregaAsync(jwtToken);
 
-                if (resultado.success)
+                _logger.LogInformation("📦 Resultado del servicio: Success={Success}, Message={Message}", 
+                    resultado.success, resultado.message);
+
+                if (resultado.success && resultado.data != null)
                 {
-                    return Json(new
-                    {
-                        success = true,
-                        data = resultado.data,
-                        message = resultado.message
-                    });
+                    _logger.LogInformation("📦 Procesando respuesta del API de pendientes de entrega");
+
+                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
+                    // Solo necesitamos devolverla tal como viene (igual que facturas pendientes)
+                    return Json(resultado.data);
                 }
                 else
                 {
-                    return Json(new
-                    {
-                        success = false,
-                        message = resultado.message,
-                        details = resultado.details
+                    _logger.LogWarning("📦 No se pudieron obtener los pendientes: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "No se pudieron obtener los pendientes de entrega",
+                        pendientes = new List<object>(),
+                        totalRegistros = 0
                     });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo pendientes de entrega");
+                _logger.LogError(ex, "❌ Error crítico obteniendo pendientes de entrega");
                 return Json(new
                 {
                     success = false,
-                    message = "Error interno del servidor: " + ex.Message
+                    message = "Error interno del servidor",
+                    pendientes = new List<object>(),
+                    totalRegistros = 0
                 });
             }
         }
@@ -1192,6 +1197,77 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> EntregasPendientes()
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Ver Facturación"))
+                {
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
+                ViewBag.Title = "Entregas Pendientes";
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cargando vista de entregas pendientes");
+                return RedirectToAction("Index", "Dashboard");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MarcarComoEntregado([FromBody] object request)
+        {
+            try
+            {
+                _logger.LogInformation("🚚 === MARCANDO PRODUCTO COMO ENTREGADO ===");
+
+                if (!await this.TienePermisoAsync("Ver Facturación"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para marcar entregas" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.MarcarProductosEntregadosAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message,
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando producto como entregado");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
 
     }
 

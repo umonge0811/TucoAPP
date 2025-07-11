@@ -1178,23 +1178,75 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("📦 === OBTENIENDO PENDIENTES DE ENTREGA ===");
 
-                // Configurar token JWT si se proporciona
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
                 var response = await _httpClient.GetAsync("api/Facturacion/pendientes-entrega");
                 var responseContent = await response.Content.ReadAsStringAsync();
 
-                _logger.LogInformation("📦 Respuesta de la API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+                _logger.LogInformation("📦 Respuesta de la API: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📦 Contenido de respuesta: {Content}", responseContent.Substring(0, Math.Min(1000, responseContent.Length)));
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                    return (success: true, data: resultado, message: "Pendientes de entrega obtenidos exitosamente", details: null);
+                    if (string.IsNullOrWhiteSpace(responseContent))
+                    {
+                        _logger.LogWarning("📦 Respuesta vacía del API");
+                        return (success: false, data: null, message: "Respuesta vacía del servidor", details: null);
+                    }
+
+                    // Deserializar la respuesta JSON completa
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions 
+                    { 
+                        PropertyNameCaseInsensitive = true 
+                    });
+
+                    _logger.LogInformation("📦 Respuesta del API deserializada. Kind: {Kind}", apiResponse.ValueKind);
+
+                    // El API de pendientes devuelve directamente la estructura con pendientes
+                    if (apiResponse.TryGetProperty("pendientes", out var pendientesElement))
+                    {
+                        var pendientesArray = System.Text.Json.JsonSerializer.Deserialize<object[]>(pendientesElement.GetRawText(), new JsonSerializerOptions 
+                        { 
+                            PropertyNameCaseInsensitive = true 
+                        });
+
+                        _logger.LogInformation("📦 Pendientes deserializados: {Count}", pendientesArray?.Length ?? 0);
+
+                        // Devolver la estructura exacta que espera el frontend (igual que facturas)
+                        return (success: true, 
+                               data: pendientesArray ?? new object[0], 
+                               message: "Pendientes de entrega obtenidos", 
+                               details: null);
+                    }
+                    else
+                    {
+                        // Si no tiene la propiedad pendientes, verificar si es directamente un array
+                        if (apiResponse.ValueKind == JsonValueKind.Array)
+                        {
+                            var pendientesArray = System.Text.Json.JsonSerializer.Deserialize<object[]>(responseContent, new JsonSerializerOptions 
+                            { 
+                                PropertyNameCaseInsensitive = true 
+                            });
+
+                            _logger.LogInformation("📦 Array directo de pendientes deserializado: {Count}", pendientesArray?.Length ?? 0);
+
+                            return (success: true, 
+                                   data: pendientesArray ?? new object[0], 
+                                   message: "Pendientes de entrega obtenidos", 
+                                   details: null);
+                        }
+                        else
+                        {
+                            _logger.LogInformation("📦 No se encontró propiedad 'pendientes' en la respuesta");
+                            return (success: true, 
+                                   data: new object[0], 
+                                   message: "No hay pendientes de entrega", 
+                                   details: null);
+                        }
+                    }
                 }
                 else
                 {
@@ -1206,7 +1258,7 @@ namespace GestionLlantera.Web.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo pendientes de entrega");
-                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+                return (success: false, data: null, message: "Error interno al obtener pendientes de entrega", details: ex.ToString());
             }
         }
 
@@ -1215,7 +1267,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("📦 === ENVIANDO PENDIENTES DE ENTREGA A API ===");
-                
+
                 // Convertir object a RegistrarPendientesEntregaRequest
                 RegistrarPendientesEntregaRequest typedRequest;
                 if (request is RegistrarPendientesEntregaRequest directRequest)
@@ -1267,13 +1319,13 @@ namespace GestionLlantera.Web.Services
                         // ✅ DESERIALIZAR RESPUESTA COMPLETA Y EXTRAER PENDIENTES CREADOS
                         var jsonDocument = System.Text.Json.JsonDocument.Parse(responseContent);
                         var root = jsonDocument.RootElement;
-                        
+
                         if (root.TryGetProperty("pendientesCreados", out var pendientesElement))
                         {
                             var pendientesCreados = System.Text.Json.JsonSerializer.Deserialize<object[]>(pendientesElement.GetRawText());
-                            
+
                             _logger.LogInformation("📦 Pendientes extraídos correctamente: {Count} items", pendientesCreados?.Length ?? 0);
-                            
+
                             return (true, new { pendientesCreados = pendientesCreados }, "Pendientes registrados exitosamente", null);
                         }
                         else
@@ -1459,5 +1511,29 @@ namespace GestionLlantera.Web.Services
         public int CantidadSolicitada { get; set; }
         public int CantidadPendiente { get; set; }
         public int StockDisponible { get; set; }
+    }
+
+    public class PendienteEntregaDTO
+    {
+        public int Id { get; set; }
+        public int FacturaId { get; set; }
+        public string NumeroFactura { get; set; }
+        public string ClienteNombre { get; set; }
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; }
+        public string DescripcionProducto { get; set; }
+        public bool EsLlanta { get; set; }
+        public string MedidaLlanta { get; set; }
+        public string MarcaLlanta { get; set; }
+        public int CantidadSolicitada { get; set; }
+        public int CantidadPendiente { get; set; }
+        public DateTime FechaCreacion { get; set; }
+        public DateTime FechaEntrega { get; set; }
+        public string Estado { get; set; }
+        public string Observaciones { get; set; }
+        public int UsuarioCreacion { get; set; }
+        public int UsuarioEntrega { get; set; }
+        public string CodigoSeguimiento { get; set; }
+
     }
 }
