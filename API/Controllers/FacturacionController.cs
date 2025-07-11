@@ -1275,18 +1275,13 @@ namespace API.Controllers
         [Authorize]
         public async Task<ActionResult<IEnumerable<object>>> ObtenerPendientesEntrega(
             [FromQuery] string? estado = null,
-            [FromQuery] string? codigo = null,
-            [FromQuery] DateTime? fechaDesde = null,
-            [FromQuery] DateTime? fechaHasta = null,
             [FromQuery] int? facturaId = null,
             [FromQuery] int pagina = 1,
             [FromQuery] int tamano = 20)
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo pendientes de entrega con filtros");
-                _logger.LogInformation("📋 Filtros recibidos - Estado: {Estado}, Código: {Codigo}, FechaDesde: {FechaDesde}, FechaHasta: {FechaHasta}", 
-                    estado, codigo, fechaDesde, fechaHasta);
+                _logger.LogInformation("📋 Obteniendo pendientes de entrega");
 
                 var query = _context.PendientesEntrega
                     .Include(p => p.Factura)
@@ -1296,31 +1291,10 @@ namespace API.Controllers
                     .Include(p => p.UsuarioEntregaNavigation)
                     .AsQueryable();
 
-                // ✅ APLICAR FILTROS MEJORADOS
+                // Aplicar filtros
                 if (!string.IsNullOrWhiteSpace(estado))
                 {
                     query = query.Where(p => p.Estado == estado);
-                    _logger.LogInformation("📋 Filtro por estado aplicado: {Estado}", estado);
-                }
-
-                if (!string.IsNullOrWhiteSpace(codigo))
-                {
-                    query = query.Where(p => p.CodigoSeguimiento.Contains(codigo) || 
-                                           p.Factura.NumeroFactura.Contains(codigo));
-                    _logger.LogInformation("📋 Filtro por código aplicado: {Codigo}", codigo);
-                }
-
-                if (fechaDesde.HasValue)
-                {
-                    query = query.Where(p => p.FechaCreacion >= fechaDesde.Value.Date);
-                    _logger.LogInformation("📋 Filtro fecha desde aplicado: {FechaDesde}", fechaDesde.Value);
-                }
-
-                if (fechaHasta.HasValue)
-                {
-                    var fechaHastaFinal = fechaHasta.Value.Date.AddDays(1).AddTicks(-1);
-                    query = query.Where(p => p.FechaCreacion <= fechaHastaFinal);
-                    _logger.LogInformation("📋 Filtro fecha hasta aplicado: {FechaHasta}", fechaHasta.Value);
                 }
 
                 if (facturaId.HasValue)
