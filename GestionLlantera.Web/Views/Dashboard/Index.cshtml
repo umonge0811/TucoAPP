@@ -1,4 +1,4 @@
-﻿
+
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "_AdminLayout";
@@ -191,25 +191,25 @@
     @* Accesos Rápidos *@
     <div class="dashboard-section">
         <div class="quick-access-grid">
-            <a href="#" class="quick-access-card">
+            <a href="@Url.Action("Index", "Facturacion")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-cart-plus"></i>
                 </div>
                 <span>Nueva Venta</span>
             </a>
-            <a href="#" class="quick-access-card">
+            <a href="@Url.Action("Index", "Inventario")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-box-seam"></i>
                 </div>
                 <span>Inventario</span>
             </a>
-            <a href="#" class="quick-access-card">
+            <a href="@Url.Action("EntregasPendientes", "Facturacion")" class="quick-access-card">
                 <div class="quick-access-icon">
-                    <i class="bi bi-tools"></i>
+                    <i class="bi bi-truck"></i>
                 </div>
-                <span>Servicios</span>
+                <span>Entregas Pendientes</span>
             </a>
-            <a href="#" class="quick-access-card">
+            <a href="@Url.Action("Index", "Clientes")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-people"></i>
                 </div>
@@ -221,7 +221,7 @@
                 </div>
                 <span>Reportes</span>
             </a>
-            <a href="#" class="quick-access-card">
+            <a href="@Url.Action("RolesPermisos", "Configuracion")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-gear"></i>
                 </div>
