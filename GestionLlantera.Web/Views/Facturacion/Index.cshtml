@@ -1,296 +1,238 @@
-
 @{
     ViewData["Title"] = "Facturación";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css">
+    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css">
 }
 
-<link rel="stylesheet" href="~/css/views/facturacion/facturacion.css">
-<link rel="stylesheet" href="~/css/views/facturacion/mobile.css">
 
-<!-- Breadcrumb -->
-<nav aria-label="breadcrumb" class="mb-4">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item">
-            <a href="@Url.Action("Index", "Dashboard")">
-                <i class="fas fa-home me-1"></i>Inicio
-            </a>
-        </li>
-        <li class="breadcrumb-item active" aria-current="page">
-            <i class="fas fa-cash-register me-1"></i>Facturación
-        </li>
-    </ol>
-</nav>
 
-<!-- Header de Facturación -->
-<div class="page-header">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h2 class="mb-0">
-                <i class="bi bi-receipt me-2"></i>Sistema de Facturación
-            </h2>
-            <p class="text-muted mb-0">Gestiona ventas y procesa facturas</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button type="button" 
-                    id="btnFacturasPendientes" 
-                    class="btn btn-outline-warning"
-                    title="Ver facturas pendientes"
-                    style="display: none;">
-                <i class="bi bi-clock-history me-1"></i>Facturas Pendientes
-            </button>
-            <button type="button" 
-                    id="btnAbrirEntregaPendientes" 
-                    class="btn btn-outline-info"
-                    title="Entrega de productos pendientes">
-                <i class="bi bi-truck me-1"></i>Entregas Pendientes
-            </button>
-        </div>
-    </div>
-</div>
 
-<div class="container-fluid">
-    <!-- Sección para entregas de pendientes -->
-    <div class="row mb-4" id="seccionEntregaPendientes" style="display: none;">
-        <div class="col-12">
-            <div class="dashboard-card border-info">
-                <div class="card-header bg-info text-white">
-                    <h6 class="mb-0">
-                        <i class="bi bi-truck me-2"></i>Entrega de Productos Pendientes
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="input-group">
-                                <span class="input-group-text">
-                                    <i class="bi bi-qr-code-scan"></i>
-                                </span>
-                                <input type="text" 
-                                       id="codigoSeguimientoBusqueda" 
-                                       class="form-control" 
-                                       placeholder="Ingrese código de seguimiento (ej: FAC-63-123)"
-                                       autocomplete="off">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Dashboard")">
+                    <i class="fas fa-home me-1"></i>Inicio
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-cash-register me-1"></i>Facturación
+            </li>
+        </ol>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Nueva sección para entregas de pendientes -->
+        <div class="row mb-3" id="seccionEntregaPendientes" style="display: none;">
+            <div class="col-12">
+                <div class="card shadow-sm border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-truck me-2"></i>Entrega de Productos Pendientes
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-qr-code-scan"></i>
+                                    </span>
+                                    <input type="text" 
+                                           id="codigoSeguimientoBusqueda" 
+                                           class="form-control" 
+                                           placeholder="Ingrese código de seguimiento (ej: FAC-63-123)"
+                                           autocomplete="off">
+                                    <button type="button" 
+                                            id="btnBuscarPendiente" 
+                                            class="btn btn-info">
+                                        <i class="bi bi-search me-1"></i>Buscar
+                                    </button>
+                                </div>
+                                <small class="text-muted">Escanee o escriba el código de seguimiento del producto pendiente</small>
+                            </div>
+                            <div class="col-md-4 text-end">
                                 <button type="button" 
-                                        id="btnBuscarPendiente" 
-                                        class="btn btn-info">
-                                    <i class="bi bi-search me-1"></i>Buscar
+                                        id="btnCerrarEntregaPendientes" 
+                                        class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>Cerrar
                                 </button>
                             </div>
-                            <small class="text-muted">Escanee o escriba el código de seguimiento del producto pendiente</small>
                         </div>
-                        <div class="col-md-4 text-end">
-                            <button type="button" 
-                                    id="btnCerrarEntregaPendientes" 
-                                    class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle me-1"></i>Cerrar
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Resultados de búsqueda de pendientes -->
-                    <div id="resultadosPendientes" class="mt-3" style="display: none;">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover">
-                                <thead class="table-info">
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th>Factura</th>
-                                        <th>Cliente</th>
-                                        <th>Cantidad Pendiente</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaPendientesBody">
-                                    <!-- Se llena dinámicamente -->
-                                </tbody>
-                            </table>
+                        <!-- Resultados de búsqueda de pendientes -->
+                        <div id="resultadosPendientes" class="mt-3" style="display: none;">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-info">
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Factura</th>
+                                            <th>Cliente</th>
+                                            <th>Cantidad Pendiente</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaPendientesBody">
+                                        <!-- Se llena dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <!-- Panel izquierdo - Búsqueda y productos -->
-        <div class="col-lg-8">
-            <div class="dashboard-card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-search me-2"></i>Catálogo de Productos
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Barra de búsqueda mejorada -->
-                    <div class="search-container mb-4">
-                        <div class="row">
-                            <div class="col-md-10">
-                                <div class="position-relative">
-                                    <div class="input-group input-group-lg">
-                                        <span class="input-group-text bg-light">
-                                            <i class="bi bi-search text-primary"></i>
-                                        </span>
-                                        <input type="text" 
-                                               id="busquedaProducto" 
-                                               class="form-control" 
-                                               placeholder="Buscar productos por nombre, marca, modelo..."
-                                               autocomplete="off">
-                                        <button type="button" 
-                                                class="btn btn-outline-secondary" 
-                                                id="btnLimpiarBusqueda"
-                                                title="Limpiar búsqueda">
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                    </div>
+        <div class="row">
+            <!-- Panel izquierdo - Productos y búsqueda -->
+            <div class="col-lg-7"></div>
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-search me-2"></i>Buscar Productos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Barra de búsqueda -->
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" 
+                                           id="busquedaProducto" 
+                                           class="form-control" 
+                                           placeholder="Buscar por nombre, marca, modelo..."
+                                           autocomplete="off">
                                 </div>
                             </div>
                             <div class="col-md-2">
                                 <button type="button" 
+                                        id="btnFacturasPendientes" 
+                                        class="btn btn-outline-warning w-100"
+                                        title="Ver facturas pendientes"
+                                        style="display: none;">
+                                    <i class="bi bi-clock-history"></i>
+                                </button>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" 
                                         id="btnAbrirInventario" 
-                                        class="btn btn-outline-info w-100"
+                                        class="btn btn-outline-secondary w-100"
                                         title="Ver inventario completo">
-                                    <i class="bi bi-grid-3x3-gap me-1"></i>
-                                    <span class="d-none d-md-inline">Inventario</span>
+                                    <i class="bi bi-grid-3x3-gap"></i>
+                                </button>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" 
+                                        id="btnAbrirEntregaPendientes" 
+                                        class="btn btn-outline-info w-100"
+                                        title="Entrega de productos pendientes">
+                                    <i class="bi bi-truck"></i>
                                 </button>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Filtros rápidos -->
-                    <div class="quick-filters mb-3">
-                        <div class="d-flex flex-wrap gap-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary filter-btn active" data-filter="todos">
-                                Todos los productos
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-success filter-btn" data-filter="stock">
-                                Con stock
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-warning filter-btn" data-filter="bajo-stock">
-                                Stock bajo
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-danger filter-btn" data-filter="sin-stock">
-                                Sin stock
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Contador de resultados -->
-                    <div class="results-info mb-3">
-                        <small class="text-muted">
-                            <span id="contadorResultados">Cargando productos...</span>
-                        </small>
-                    </div>
-
-                    <!-- Resultados de búsqueda -->
-                    <div id="resultadosBusqueda" class="productos-grid">
-                        <div class="text-center py-5">
-                            <div class="spinner-border text-primary mb-3" role="status">
-                                <span class="visually-hidden">Cargando...</span>
+                        <!-- Resultados de búsqueda -->
+                        <div id="resultadosBusqueda" class="row">
+                            <div class="col-12 text-center py-4 text-muted">
+                                <i class="bi bi-search display-1"></i>
+                                <p class="mt-2">Busca productos para agregar a la venta</p>
                             </div>
-                            <p class="text-muted">Cargando productos disponibles...</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Panel derecho - Carrito de venta -->
-        <div class="col-lg-4">
-            <div class="dashboard-card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-cart me-2"></i>Carrito de Venta
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Información del cliente -->
-                    <div class="cliente-section mb-4">
-                        <label class="form-label fw-bold d-flex align-items-center">
-                            <i class="bi bi-person me-2"></i>
-                            Cliente 
-                            <span class="text-danger ms-1">*</span>
-                            <small class="text-muted ms-2">(Requerido)</small>
-                        </label>
-                        <div class="input-group">
-                            <input type="text" 
-                                   id="clienteBusqueda" 
-                                   class="form-control" 
-                                   placeholder="Buscar cliente..."
-                                   autocomplete="off">
-                            <button type="button" 
-                                    id="btnNuevoCliente" 
-                                    class="btn btn-outline-primary"
-                                    title="Agregar nuevo cliente">
-                                <i class="bi bi-person-plus"></i>
-                            </button>
-                        </div>
-                        <div id="clienteSeleccionado" class="d-none mt-2">
-                            <div class="alert alert-info py-2 mb-0">
-                                <small class="text-muted d-block">Cliente seleccionado:</small>
-                                <strong id="nombreClienteSeleccionado"></strong>
-                                <br><small id="emailClienteSeleccionado" class="text-muted"></small>
-                            </div>
-                        </div>
+            <!-- Panel derecho - Carrito de venta -->
+            <div class="col-lg-5">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-cart me-2"></i>Venta Actual
+                        </h5>
                     </div>
-
-                    <!-- Lista de productos en venta -->
-                    <div class="productos-section mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <label class="form-label fw-bold mb-0 d-flex align-items-center">
-                                <i class="bi bi-bag me-2"></i>Productos
+                    <div class="card-body">
+                        <!-- Información del cliente -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                Cliente 
+                                <span class="text-danger">*</span>
+                                <small class="text-muted">(Requerido)</small>
                             </label>
-                            <span id="contadorProductos" class="badge bg-secondary">0 productos</span>
+                            <div class="input-group">
+                                <input type="text" 
+                                       id="clienteBusqueda" 
+                                       class="form-control" 
+                                       placeholder="Buscar cliente... (obligatorio)"
+                                       autocomplete="off">
+                                <button type="button" 
+                                        id="btnNuevoCliente" 
+                                        class="btn btn-outline-primary"
+                                        title="Agregar nuevo cliente">
+                                    <i class="bi bi-person-plus"></i>
+                                </button>
+                            </div>
+                            <div id="clienteSeleccionado" class="d-none mt-2">
+                                <small class="text-muted">Cliente seleccionado:</small>
+                                <div class="alert alert-info py-2">
+                                    <strong id="nombreClienteSeleccionado"></strong><br>
+                                    <small id="emailClienteSeleccionado"></small>
+                                </div>
+                            </div>
                         </div>
 
-                        <div id="listaProductosVenta" class="productos-venta-container">
-                            <div class="empty-cart text-center py-4">
-                                <i class="bi bi-cart-x display-4 text-muted"></i>
-                                <p class="text-muted mt-2 mb-0">Carrito vacío</p>
-                                <small class="text-muted">Busca y agrega productos</small>
+                        <!-- Lista de productos en venta -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">Productos</label>
+                                <span id="contadorProductos" class="badge bg-secondary">0 productos</span>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Resumen de totales -->
-                    <div class="totales-section border-top pt-3 mb-4">
-                        <div class="row mb-2">
-                            <div class="col-6">
-                                <span class="fw-medium">Subtotal:</span>
-                            </div>
-                            <div class="col-6 text-end">
-                                <span id="subtotalVenta" class="fw-medium">₡0.00</span>
+                            <div id="listaProductosVenta" class="productos-venta-container">
+                                <div class="text-center py-4 text-muted">
+                                    <i class="bi bi-cart-x display-4"></i>
+                                    <p class="mt-2">No hay productos en la venta</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="row mb-2">
-                            <div class="col-6">
-                                <span class="fw-medium">IVA (13%):</span>
-                            </div>
-                            <div class="col-6 text-end">
-                                <span id="ivaVenta" class="fw-medium">₡0.00</span>
-                            </div>
-                        </div>
-                        <div class="row border-top pt-2">
-                            <div class="col-6">
-                                <h5 class="mb-0 fw-bold">Total:</h5>
-                            </div>
-                            <div class="col-6 text-end">
-                                <h5 class="mb-0 text-success fw-bold">
-                                    <span id="totalVenta">₡0.00</span>
-                                </h5>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Botones de acción -->
-                    <div class="acciones-section">
-                        <div class="d-grid gap-2">
-                            <button type="button" 
-                                    id="btnFinalizarVenta" 
-                                    class="btn btn-success btn-lg"
-                                    disabled>
-                                <i class="bi bi-check-circle me-2"></i>Finalizar Venta
-                            </button>
+                        <!-- Totales -->
+                        <div class="border-top pt-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>Subtotal:</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span id="subtotalVenta">₡0.00</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>IVA (13%):</strong>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <span id="ivaVenta">₡0.00</span>
+                                </div>
+                            </div>
+                            <div class="row border-top pt-2">
+                                <div class="col-6">
+                                    <h5 class="mb-0"><strong>Total:</strong></h5>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <h5 class="mb-0 text-success">
+                                        <strong id="totalVenta">₡0.00</strong>
+                                    </h5>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="mt-3">
                             <div class="row">
                                 <div class="col-6">
                                     <button type="button" 
@@ -302,9 +244,10 @@
                                 </div>
                                 <div class="col-6">
                                     <button type="button" 
-                                            id="btnNuevaVenta" 
-                                            class="btn btn-outline-secondary w-100">
-                                        <i class="bi bi-plus-circle me-1"></i>Nueva Venta
+                                            id="btnFinalizarVenta" 
+                                            class="btn btn-success w-100"
+                                            disabled>
+                                        <i class="bi bi-check-circle me-1"></i>Finalizar
                                     </button>
                                 </div>
                             </div>
@@ -312,25 +255,13 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Card de ayuda -->
-            <div class="dashboard-card mt-3">
-                <div class="card-body text-center">
-                    <i class="bi bi-info-circle text-primary mb-2" style="font-size: 2rem;"></i>
-                    <h6 class="card-title">¿Necesitas ayuda?</h6>
-                    <p class="card-text small text-muted">
-                        Busca productos, selecciona un cliente y agrega productos al carrito para procesar una venta.
-                    </p>
-                </div>
-            </div>
         </div>
     </div>
-</div>
 
-<!-- Modales -->
-@await Html.PartialAsync("_ModalInventario")
-@await Html.PartialAsync("_ModalDetalleProducto")
-@await Html.PartialAsync("_ModalFinalizarVenta")
+    <!-- Modales -->
+    @await Html.PartialAsync("_ModalInventario")
+    @await Html.PartialAsync("_ModalDetalleProducto")
+    @await Html.PartialAsync("_ModalFinalizarVenta")
 
 <!-- Modal de Problemas de Stock -->
 <div class="modal fade" id="problemasStockModal" tabindex="-1" aria-labelledby="problemasStockModalLabel" aria-hidden="true">
@@ -400,7 +331,7 @@
 <div class="modal fade" id="facturasPendientesModal" tabindex="-1" aria-labelledby="facturasPendientesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
+            <div class="modal-header">
                 <h5 class="modal-title" id="facturasPendientesModalLabel">
                     <i class="bi bi-clock-history me-2"></i>Facturas Pendientes
                 </h5>
@@ -423,7 +354,7 @@
                 <div id="facturasPendientesContent" style="display: none;">
                     <div class="table-responsive">
                         <table class="table table-hover table-striped">
-                            <thead class="table-warning">
+                            <thead class="table-primary">
                                 <tr>
                                     <th>Número de Factura</th>
                                     <th>Cliente</th>
@@ -455,8 +386,8 @@
 <!-- Toast Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
 
-@section Scripts {
-    <script src="~/js/views/facturacion/facturacion.js"></script>
+    @section Scripts {
+        <script src="~/js/views/facturacion/facturacion.js"></script>
 
     <script>
         // ===== CONFIGURACIÓN GLOBAL PARA FACTURACIÓN =====
@@ -474,4 +405,16 @@
             console.error('❌ No se encontraron permisos en la configuración');
         }
     </script>
-}
+
+<!-- Configuración para JavaScript -->
+    <script>
+        window.facturaConfig = @Html.Raw(Json.Serialize(ViewBag.ConfiguracionFacturacion));
+        console.log('🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===');
+        console.log('🔧 Configuración completa:', window.facturaConfig);
+        console.log('🔧 Usuario disponible:', window.facturaConfig?.Usuario);
+        console.log('🔧 Permisos disponibles:', window.facturaConfig?.Permisos);
+        console.log('🔧 Token disponible:', window.facturaConfig?.TokenDisponible);
+    </script>
+
+
+    }
