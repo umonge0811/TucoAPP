@@ -34,6 +34,9 @@ namespace tuco.Clases.Models
         [StringLength(500)]
         public string? Observaciones { get; set; }
 
+        [StringLength(20)]
+        public string? CodigoSeguimiento { get; set; }
+
         [Required]
         public int UsuarioCreacion { get; set; }
 

@@ -1318,6 +1318,18 @@ async function limpiarVenta() {
         facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
         $('#clienteBusqueda').val('');
         $('#clienteSeleccionado').addClass('d-none');
+        
+        // ✅ LIMPIAR CÓDIGOS DE SEGUIMIENTO Y PRODUCTOS PENDIENTES
+        if (window.codigosSeguimientoPendientes) {
+            delete window.codigosSeguimientoPendientes;
+        }
+        if (window.productosPendientesEntrega) {
+            delete window.productosPendientesEntrega;
+        }
+        if (window.facturaConPendientes) {
+            delete window.facturaConPendientes;
+        }
+        
         actualizarVistaCarrito();
         actualizarTotales();
 
@@ -2500,13 +2512,20 @@ async function crearNuevaFactura() {
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
             
-            // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES
+            // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES Y CÓDIGOS DE SEGUIMIENTO
             if (window.productosPendientesEntrega) {
                 delete window.productosPendientesEntrega;
             }
             if (window.facturaConPendientes) {
                 delete window.facturaConPendientes;
             }
+            // ✅ LIMPIAR CÓDIGOS DE SEGUIMIENTO DESPUÉS DE UN DELAY PARA QUE SE USEN EN EL RECIBO
+            setTimeout(() => {
+                if (window.codigosSeguimientoPendientes) {
+                    console.log('🧹 Limpiando códigos de seguimiento después del recibo');
+                    delete window.codigosSeguimientoPendientes;
+                }
+            }, 3000); // 3 segundos de delay para que se use en el recibo
 
             // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DE COMPLETAR LA VENTA
             setTimeout(async () => {
@@ -2605,11 +2624,18 @@ function generarRecibo(factura, productos, totales) {
     
     // Verificar si hay productos pendientes (desde variables globales o datos de factura)
     const tieneProductosPendientes = window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0;
+    const tieneCodigosSeguimiento = window.codigosSeguimientoPendientes && window.codigosSeguimientoPendientes.length > 0;
     const facturaConPendientes = window.facturaConPendientes || facturaPendienteActual?.tieneProductosPendientes;
     
-    if (tieneProductosPendientes || facturaConPendientes) {
+    console.log('🎫 === DEBUG PRODUCTOS PENDIENTES EN RECIBO ===');
+    console.log('🎫 tieneProductosPendientes:', tieneProductosPendientes);
+    console.log('🎫 tieneCodigosSeguimiento:', tieneCodigosSeguimiento);
+    console.log('🎫 facturaConPendientes:', facturaConPendientes);
+    console.log('🎫 window.codigosSeguimientoPendientes:', window.codigosSeguimientoPendientes);
+    console.log('🎫 window.productosPendientesEntrega:', window.productosPendientesEntrega);
+    
+    if (tieneProductosPendientes || facturaConPendientes || tieneCodigosSeguimiento) {
         console.log('🎫 Agregando sección de productos pendientes al recibo');
-        console.log('🎫 Productos pendientes:', window.productosPendientesEntrega);
         
         seccionProductosPendientes = `
             <div class="separador"></div>
@@ -2621,19 +2647,36 @@ function generarRecibo(factura, productos, totales) {
                     <div>por falta de stock.</div>
                 </div>
                 <div class="separador-pendientes"></div>
-                ${tieneProductosPendientes ? 
-                    window.productosPendientesEntrega.map(pendiente => {
-                        const cantidadPendiente = pendiente.cantidadPendiente || pendiente.cantidad || 0;
-                        const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 25);
+                ${tieneCodigosSeguimiento ? 
+                    window.codigosSeguimientoPendientes.map(pendiente => {
+                        const cantidadPendiente = pendiente.cantidadPendiente || 0;
+                        const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 22);
+                        const codigoSeguimiento = pendiente.codigoSeguimiento || `${numeroFactura}-${pendiente.productoId}`;
+                        console.log(`🎫 Procesando pendiente: ${nombreProducto} - ${codigoSeguimiento}`);
                         return `
                             <div class="producto-pendiente">
                                 <div class="pendiente-nombre">${nombreProducto}</div>
                                 <div class="pendiente-cantidad">Pendiente: ${cantidadPendiente} unidad(es)</div>
+                                <div class="pendiente-codigo">Código: ${codigoSeguimiento}</div>
+                            </div>
+                        `;
+                    }).join('') :
+                    tieneProductosPendientes ? 
+                    window.productosPendientesEntrega.map(pendiente => {
+                        const cantidadPendiente = pendiente.cantidadPendiente || pendiente.cantidad || 0;
+                        const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 25);
+                        console.log(`🎫 Procesando pendiente sin código: ${nombreProducto}`);
+                        return `
+                            <div class="producto-pendiente">
+                                <div class="pendiente-nombre">${nombreProducto}</div>
+                                <div class="pendiente-cantidad">Pendiente: ${cantidadPendiente} unidad(es)</div>
+                                <div class="pendiente-codigo">Código: ${numeroFactura}-${pendiente.productoId || 'PEND'}</div>
                             </div>
                         `;
                     }).join('') :
                     `<div class="producto-pendiente">
                         <div class="pendiente-nombre">Consulte detalles en caja</div>
+                        <div class="pendiente-codigo">Código: ${numeroFactura}-PEND</div>
                     </div>`
                 }
                 <div class="separador-pendientes"></div>
@@ -2643,12 +2686,24 @@ function generarRecibo(factura, productos, totales) {
                     <div>🎫 CONSERVE ESTE RECIBO</div>
                     <div>como respaldo de entrega</div>
                 </div>
-                <div class="codigo-seguimiento">
-                    <div>Código de seguimiento:</div>
-                    <div class="codigo">${numeroFactura}-PEND</div>
-                </div>
+                ${tieneCodigosSeguimiento ? 
+                    `<div class="codigos-seguimiento">
+                        <div>📋 Códigos de seguimiento:</div>
+                        ${window.codigosSeguimientoPendientes.map(p => 
+                            `<div class="codigo-recuadro">${p.codigoSeguimiento}</div>`
+                        ).join('')}
+                    </div>` :
+                    `<div class="codigo-seguimiento">
+                        <div>📋 Código de seguimiento:</div>
+                        <div class="codigo-recuadro">${numeroFactura}-PEND</div>
+                    </div>`
+                }
             </div>
         `;
+        
+        console.log('🎫 Sección de productos pendientes generada:', seccionProductosPendientes.length, 'caracteres');
+    } else {
+        console.log('🎫 No se agregará sección de productos pendientes - no hay datos');
     }
 
     // ===== SECCIÓN MÉTODO DE PAGO =====
@@ -3008,23 +3063,30 @@ function generarRecibo(factura, productos, totales) {
                             margin-bottom: 0.5mm;
                         }
 
-                        .codigo-seguimiento {
+                        .codigo-seguimiento, .codigos-seguimiento {
                             text-align: center;
                             margin-top: 2mm;
+                            width: 100%;
                         }
 
-                        .codigo-seguimiento div:first-child {
+                        .codigo-seguimiento div:first-child, .codigos-seguimiento div:first-child {
                             font-size: 6px;
                             margin-bottom: 0.5mm;
+                            text-align: center;
                         }
 
-                        .codigo {
+                        .codigo-recuadro {
                             font-size: 8px;
                             font-weight: bold;
                             font-family: 'Courier New', monospace;
-                            border: 1px solid #000;
-                            padding: 1mm;
-                            display: inline-block;
+                            border: 2px solid #000;
+                            padding: 2mm;
+                            margin: 1mm auto;
+                            display: block;
+                            background: #f9f9f9;
+                            text-align: center;
+                            width: 80%;
+                            max-width: 40mm;
                         }
 
                         /* Estilos específicos para vista previa en pantalla */
@@ -4843,7 +4905,7 @@ function eliminarProductoProblema(productoId) {
 }
 
 /**
- * Registrar productos pendientes de entrega
+ * Registrar productos pendientes de entrega y capturar códigos de seguimiento
  */
 async function registrarProductosPendientesEntrega(facturaId, productosConProblemas) {
     try {
@@ -4907,11 +4969,79 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
         }
 
         const resultado = await response.json();
-        console.log('📦 Respuesta del servidor:', resultado);
+        console.log('📦 === RESPUESTA COMPLETA DEL SERVIDOR ===');
+        console.log('📦 Resultado completo:', resultado);
+        console.log('📦 Tipo de resultado:', typeof resultado);
+        console.log('📦 Propiedades:', Object.keys(resultado || {}));
 
         if (resultado.success) {
             console.log('✅ Productos pendientes registrados exitosamente');
-            const cantidadRegistrados = resultado.pendientesCreados?.length || productosConProblemas.length;
+            
+            // ✅ CAPTURAR CÓDIGOS DE SEGUIMIENTO CON MÚLTIPLES ESTRATEGIAS
+            let codigosCapturados = [];
+            
+            // Estrategia 1: Desde pendientesCreados directo
+            if (resultado.pendientesCreados && Array.isArray(resultado.pendientesCreados)) {
+                console.log('🎫 Capturando desde resultado.pendientesCreados...');
+                codigosCapturados = resultado.pendientesCreados.map(pendiente => ({
+                    productoId: pendiente.productoId,
+                    nombreProducto: pendiente.nombreProducto,
+                    cantidadPendiente: pendiente.cantidadPendiente,
+                    codigoSeguimiento: pendiente.codigoSeguimiento
+                }));
+            }
+            // Estrategia 2: Desde data.pendientesCreados
+            else if (resultado.data && resultado.data.pendientesCreados && Array.isArray(resultado.data.pendientesCreados)) {
+                console.log('🎫 Capturando desde resultado.data.pendientesCreados...');
+                codigosCapturados = resultado.data.pendientesCreados.map(pendiente => ({
+                    productoId: pendiente.productoId,
+                    nombreProducto: pendiente.nombreProducto,
+                    cantidadPendiente: pendiente.cantidadPendiente,
+                    codigoSeguimiento: pendiente.codigoSeguimiento
+                }));
+            }
+            // Estrategia 3: Buscar en cualquier propiedad que sea array
+            else {
+                console.log('🔍 Buscando códigos en otras propiedades...');
+                for (const [key, value] of Object.entries(resultado)) {
+                    if (Array.isArray(value) && value.length > 0) {
+                        const firstItem = value[0];
+                        if (firstItem && firstItem.codigoSeguimiento) {
+                            console.log(`🎫 Códigos encontrados en resultado.${key}`);
+                            codigosCapturados = value.map(pendiente => ({
+                                productoId: pendiente.productoId,
+                                nombreProducto: pendiente.nombreProducto,
+                                cantidadPendiente: pendiente.cantidadPendiente,
+                                codigoSeguimiento: pendiente.codigoSeguimiento
+                            }));
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // ✅ GUARDAR CÓDIGOS GLOBALMENTE
+            if (codigosCapturados.length > 0) {
+                window.codigosSeguimientoPendientes = codigosCapturados;
+                console.log('🎫 === CÓDIGOS DE SEGUIMIENTO CAPTURADOS ===');
+                console.log('🎫 Cantidad:', codigosCapturados.length);
+                console.log('🎫 Códigos:', window.codigosSeguimientoPendientes);
+                codigosCapturados.forEach((codigo, index) => {
+                    console.log(`🎫 ${index + 1}. ${codigo.nombreProducto}: ${codigo.codigoSeguimiento}`);
+                });
+            } else {
+                console.warn('⚠️ No se pudieron capturar códigos de seguimiento de la respuesta');
+                // Fallback: generar códigos básicos
+                window.codigosSeguimientoPendientes = productosConProblemas.map((producto, index) => ({
+                    productoId: producto.productoId,
+                    nombreProducto: producto.nombreProducto,
+                    cantidadPendiente: producto.cantidadPendiente || Math.max(0, (producto.cantidadRequerida || 0) - (producto.stockDisponible || 0)),
+                    codigoSeguimiento: `FAC-${facturaId}-${producto.productoId}`
+                }));
+                console.log('🎫 Códigos fallback generados:', window.codigosSeguimientoPendientes);
+            }
+            
+            const cantidadRegistrados = resultado.pendientesCreados?.length || codigosCapturados.length || productosConProblemas.length;
             mostrarToast('Productos Pendientes', 
                 `Se registraron ${cantidadRegistrados} productos para entrega posterior`, 
                 'info');
@@ -5220,6 +5350,7 @@ async function facturarTodosModos() {
         
         // ✅ GUARDAR INFORMACIÓN DE PRODUCTOS PENDIENTES PARA EL PROCESO DE FACTURACIÓN
         window.productosPendientesEntrega = productosConProblemas;
+        window.codigosSeguimientoPendientes = []; // Inicializar array para códigos
         
         console.log('💾 Productos pendientes guardados globalmente:', window.productosPendientesEntrega);
         

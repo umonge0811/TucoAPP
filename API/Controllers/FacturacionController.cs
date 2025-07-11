@@ -1223,9 +1223,20 @@ namespace API.Controllers
                     };
 
                     _context.PendientesEntrega.Add(pendienteEntrega);
-
+                    await _context.SaveChangesAsync();
+                    
+                    // Generar el código compuesto "FacturaId+id" y guardarlo en la base de datos
+                    var codigoSeguimiento = $"FAC-{pendienteEntrega.FacturaId}-{pendienteEntrega.Id}";
+                    pendienteEntrega.CodigoSeguimiento = codigoSeguimiento;
+                    
+                    // Guardar el código de seguimiento en la base de datos
+                    _context.PendientesEntrega.Update(pendienteEntrega);
+                    await _context.SaveChangesAsync();
                     pendientesCreados.Add(new
                     {
+                        id = pendienteEntrega.Id,
+                        facturaId = pendienteEntrega.FacturaId,
+                        codigoSeguimiento = codigoSeguimiento, // Incluir el código compuesto
                         productoId = productoPendiente.ProductoId,
                         nombreProducto = productoPendiente.NombreProducto,
                         cantidadPendiente = productoPendiente.CantidadPendiente,
@@ -1236,7 +1247,7 @@ namespace API.Controllers
                         productoPendiente.NombreProducto, productoPendiente.CantidadPendiente);
                 }
 
-                await _context.SaveChangesAsync();
+                
                 await transaction.CommitAsync();
 
                 _logger.LogInformation("✅ Todos los pendientes creados exitosamente: {Count} items", pendientesCreados.Count);
