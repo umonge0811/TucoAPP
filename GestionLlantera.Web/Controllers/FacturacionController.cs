@@ -1219,71 +1219,19 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> MarcarComoEntregado([FromBody] MarcarEntregadoRequest request)
-        {
-            try
-            {
-                _logger.LogInformation("🚚 === MARCANDO PRODUCTO COMO ENTREGADO ===");
-                _logger.LogInformation("🚚 Código de seguimiento: {CodigoSeguimiento}", request.CodigoSeguimiento);
-                _logger.LogInformation("🚚 Pendiente ID: {PendienteId}", request.PendienteId);
-
-                if (!await this.TienePermisoAsync("Gestionar Entregas"))
-                {
-                    return Json(new { success = false, message = "Sin permisos para gestionar entregas" });
-                }
-
-                var jwtToken = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return Json(new { success = false, message = "Token de autenticación no disponible" });
-                }
-
-                // Validar que se proporcione código de seguimiento
-                if (string.IsNullOrEmpty(request.CodigoSeguimiento))
-                {
-                    return Json(new { success = false, message = "Código de seguimiento requerido" });
-                }
-
-                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(request, jwtToken);
-
-                if (resultado.success)
-                {
-                    return Json(new
-                    {
-                        success = true,
-                        message = resultado.message,
-                        data = resultado.data
-                    });
-                }
-                else
-                {
-                    return Json(new
-                    {
-                        success = false,
-                        message = resultado.message,
-                        details = resultado.details
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error marcando producto como entregado");
-                return Json(new
-                {
-                    success = false,
-                    message = "Error interno del servidor: " + ex.Message
-                });
-            }
-        }
-
-        [HttpPost]
         public async Task<IActionResult> MarcarComoEntregado([FromBody] object request)
         {
             try
             {
                 _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN CONTROLADOR WEB ===");
+                _logger.LogInformation("🚚 Request recibido: {Request}", System.Text.Json.JsonSerializer.Serialize(request));
 
-                var jwtToken = HttpContext.Session.GetString("JwtToken");
+                if (!await this.TienePermisoAsync("Completar Facturas"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para gestionar entregas" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
