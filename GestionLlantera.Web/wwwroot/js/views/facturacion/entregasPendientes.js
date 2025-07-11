@@ -30,9 +30,18 @@ $(document).ready(function() {
 
 function configurarEventos() {
     // Filtros
-    $('#btnFiltrar').on('click', cargarPendientes);
+    $('#btnFiltrar').on('click', aplicarFiltros);
     $('#btnLimpiar').on('click', limpiarFiltros);
     $('#btnRefrescar').on('click', cargarPendientes);
+
+    // Filtro en tiempo real por código de seguimiento
+    $('#filtroCodigo').on('input', function() {
+        clearTimeout(window.filtroTimeout);
+        window.filtroTimeout = setTimeout(aplicarFiltros, 300);
+    });
+
+    // Filtro por estado
+    $('#filtroEstado').on('change', aplicarFiltros);
 
     // Eventos del modal de entrega
     $('#btnConfirmarEntrega').on('click', confirmarEntrega);
@@ -127,7 +136,16 @@ async function cargarPendientes() {
         pendientesData = pendientes;
         console.log('🚚 Pendientes cargados:', pendientesData.length);
 
-        mostrarPendientes(pendientesData);
+        // Aplicar filtros si hay alguno activo, sino mostrar todos
+        const hayFiltrosActivos = $('#filtroEstado').val() || $('#filtroCodigo').val() || 
+                                 $('#filtroFechaDesde').val() || $('#filtroFechaHasta').val();
+        
+        if (hayFiltrosActivos) {
+            aplicarFiltros();
+        } else {
+            mostrarPendientes(pendientesData);
+            actualizarContadorResultados(pendientesData.length, pendientesData.length);
+        }
 
     } catch (error) {
         console.error('❌ Error en cargarPendientes:', error);
@@ -148,16 +166,24 @@ function mostrarPendientes(pendientes) {
     if (!pendientes || pendientes.length === 0) {
         $('#sinResultados').show();
         $('#tablaPendientes').hide();
+        $('#contadorResultados').hide();
         return;
     }
 
     $('#sinResultados').hide();
     $('#tablaPendientes').show();
+    $('#contadorResultados').show();
 
     pendientes.forEach(pendiente => {
         const fila = crearFilaPendiente(pendiente);
         tbody.append(fila);
     });
+
+    // Resaltar términos de búsqueda si hay filtro de código
+    const filtroCodigo = $('#filtroCodigo').val().trim();
+    if (filtroCodigo) {
+        resaltarTerminoBusqueda(filtroCodigo);
+    }
 }
 
 function crearFilaPendiente(pendiente) {
@@ -394,13 +420,90 @@ function generarContenidoDetalles(pendiente) {
 // FILTROS
 // =========================================
 
+function aplicarFiltros() {
+    console.log('🔍 Aplicando filtros a entregas pendientes...');
+    
+    // Obtener valores de filtros
+    const filtroEstado = $('#filtroEstado').val().toLowerCase().trim();
+    const filtroCodigo = $('#filtroCodigo').val().toLowerCase().trim();
+    const filtroFechaDesde = $('#filtroFechaDesde').val();
+    const filtroFechaHasta = $('#filtroFechaHasta').val();
+
+    // Filtrar datos
+    let pendientesFiltrados = pendientesData.filter(pendiente => {
+        // Filtro por estado
+        if (filtroEstado && !pendiente.estado.toLowerCase().includes(filtroEstado)) {
+            return false;
+        }
+
+        // Filtro por código de seguimiento
+        if (filtroCodigo) {
+            const codigo = (pendiente.codigoSeguimiento || '').toLowerCase();
+            const numeroFactura = (pendiente.numeroFactura || '').toLowerCase();
+            
+            // Buscar en código de seguimiento o número de factura
+            if (!codigo.includes(filtroCodigo) && !numeroFactura.includes(filtroCodigo)) {
+                return false;
+            }
+        }
+
+        // Filtro por fecha desde
+        if (filtroFechaDesde) {
+            const fechaPendiente = new Date(pendiente.fechaCreacion);
+            const fechaDesde = new Date(filtroFechaDesde);
+            if (fechaPendiente < fechaDesde) {
+                return false;
+            }
+        }
+
+        // Filtro por fecha hasta
+        if (filtroFechaHasta) {
+            const fechaPendiente = new Date(pendiente.fechaCreacion);
+            const fechaHasta = new Date(filtroFechaHasta);
+            fechaHasta.setHours(23, 59, 59, 999); // Incluir todo el día
+            if (fechaPendiente > fechaHasta) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    console.log(`🔍 Filtros aplicados: ${pendientesFiltrados.length} de ${pendientesData.length} pendientes mostrados`);
+    
+    // Mostrar resultados filtrados
+    mostrarPendientes(pendientesFiltrados);
+    
+    // Actualizar contador de resultados
+    actualizarContadorResultados(pendientesFiltrados.length, pendientesData.length);
+}
+
 function limpiarFiltros() {
+    console.log('🧹 Limpiando filtros...');
+    
     $('#filtroEstado').val('');
     $('#filtroCodigo').val('');
     $('#filtroFechaDesde').val('');
     $('#filtroFechaHasta').val('');
 
-    cargarPendientes();
+    // Mostrar todos los pendientes
+    mostrarPendientes(pendientesData);
+    actualizarContadorResultados(pendientesData.length, pendientesData.length);
+}
+
+function actualizarContadorResultados(mostrados, total) {
+    const texto = mostrados === total 
+        ? `Mostrando ${total} entregas pendientes`
+        : `Mostrando ${mostrados} de ${total} entregas pendientes`;
+    
+    // Actualizar texto si existe el elemento
+    if ($('#contadorResultados').length) {
+        $('#contadorResultados').text(texto);
+    } else {
+        // Crear elemento si no existe
+        const contador = `<div id="contadorResultados" class="text-muted small mb-2">${texto}</div>`;
+        $('#tablaPendientes').before(contador);
+    }
 }
 
 // =========================================
@@ -425,6 +528,26 @@ function obtenerUsuarioActual() {
     } catch {
         return { id: 1, usuarioId: 1 };
     }
+}
+
+function resaltarTerminoBusqueda(termino) {
+    if (!termino) return;
+    
+    const regex = new RegExp(`(${termino.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    
+    $('#bodyPendientes tr').each(function() {
+        const $fila = $(this);
+        
+        // Resaltar en código de seguimiento y número de factura
+        $fila.find('td:first-child code, td:nth-child(2) strong').each(function() {
+            const $elemento = $(this);
+            const texto = $elemento.text();
+            const textoResaltado = texto.replace(regex, '<mark>$1</mark>');
+            if (texto !== textoResaltado) {
+                $elemento.html(textoResaltado);
+            }
+        });
+    });
 }
 
 function mostrarExito(mensaje) {
