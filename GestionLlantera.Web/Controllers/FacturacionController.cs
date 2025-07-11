@@ -1017,7 +1017,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> RegistrarProductosPendientesEntrega([FromBody] RegistrarPendientesEntregaRequest request)
+        public async Task<IActionResult> RegistrarPendientesEntrega([FromBody] RegistrarPendientesEntregaRequest request)
         {
             try
             {

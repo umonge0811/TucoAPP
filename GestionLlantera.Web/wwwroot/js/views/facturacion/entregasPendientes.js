@@ -257,12 +257,17 @@ async function confirmarEntrega() {
         
         console.log('🚚 Confirmando entrega:', datosEntrega);
         
+        // Deshabilitar botón mientras se procesa
+        $('#btnConfirmarEntrega').prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Procesando...');
+        
         const response = await fetch('/Facturacion/MarcarComoEntregado', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify(datosEntrega)
+            body: JSON.stringify(datosEntrega),
+            credentials: 'include'
         });
         
         const resultado = await response.json();
@@ -272,12 +277,15 @@ async function confirmarEntrega() {
             modalMarcarEntregado.hide();
             cargarPendientes(); // Recargar la lista
         } else {
-            mostrarError('Error confirmando entrega: ' + resultado.message);
+            mostrarError('Error confirmando entrega: ' + (resultado.message || 'Error desconocido'));
         }
         
     } catch (error) {
         console.error('❌ Error confirmando entrega:', error);
         mostrarError('Error de conexión al confirmar entrega');
+    } finally {
+        // Restaurar botón
+        $('#btnConfirmarEntrega').prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Confirmar Entrega');
     }
 }
 
