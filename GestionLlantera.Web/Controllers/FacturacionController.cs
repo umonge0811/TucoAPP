@@ -65,6 +65,7 @@ namespace GestionLlantera.Web.Controllers
                 var puedeCompletarFacturas = this.TienePermisoEnToken("Completar Facturas");
                 var puedeEditarFacturas = this.TienePermisoEnToken("Editar Facturas");
                 var puedeAnularFacturas = this.TienePermisoEnToken("Anular Facturas");
+                var puedeEntregarPendientes = this.TienePermisoEnToken("Entrega Pendientes");
                 var esAdmin = await this.EsAdministradorAsync();
 
                 _logger.LogInformation("🔐 === PERMISOS VALIDADOS DESDE TOKEN JWT ===");
@@ -81,6 +82,7 @@ namespace GestionLlantera.Web.Controllers
                     puedeCompletarFacturas = puedeCompletarFacturas,
                     puedeEditarFacturas = puedeEditarFacturas,
                     puedeAnularFacturas = puedeAnularFacturas,
+                    puedeEntregarPendientes = puedeEntregarPendientes,
                     esAdmin = esAdmin
                 };
 
@@ -1142,6 +1144,128 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> BuscarPendientePorCodigo(string codigo)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 === BUSCANDO PENDIENTE POR CÓDIGO ===");
+                _logger.LogInformation("🔍 Código recibido: {Codigo}", codigo);
+
+                if (string.IsNullOrWhiteSpace(codigo))
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Debe proporcionar un código de seguimiento" 
+                    });
+                }
+
+                if (!await this.TienePermisoAsync("Entrega Pendientes"))
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Sin permisos para buscar pendientes de entrega" 
+                    });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Token de autenticación no disponible" 
+                    });
+                }
+
+                var resultado = await _facturacionService.BuscarPendientePorCodigoAsync(codigo, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        pendiente = resultado.data,
+                        message = resultado.message
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error buscando pendiente por código: {Codigo}", codigo);
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EntregarPendiente([FromBody] EntregarPendienteRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === ENTREGANDO PENDIENTE ===");
+                _logger.LogInformation("📦 Pendiente ID: {PendienteId}", request.PendienteId);
+
+                if (!await this.TienePermisoAsync("Entrega Pendientes"))
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Sin permisos para entregar pendientes" 
+                    });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { 
+                        success = false, 
+                        message = "Token de autenticación no disponible" 
+                    });
+                }
+
+                var resultado = await _facturacionService.EntregarPendienteAsync(request, jwtToken);
+
+                if (resultado.success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message,
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message,
+                        details = resultado.details
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error entregando pendiente");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> MarcarProductosEntregados([FromBody] MarcarEntregadosRequest request)
         {
@@ -1251,5 +1375,12 @@ namespace GestionLlantera.Web.Controllers
         public List<int> ProductosIds { get; set; } = new List<int>();
         public string? ObservacionesEntrega { get; set; }
         public DateTime? FechaEntrega { get; set; }
+    }
+
+    public class EntregarPendienteRequest
+    {
+        public int PendienteId { get; set; }
+        public string? ObservacionesEntrega { get; set; }
+        public int? UsuarioEntrega { get; set; }
     }
 }

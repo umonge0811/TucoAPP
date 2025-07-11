@@ -1304,6 +1304,94 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<(bool success, object? data, string? message, string? details)> BuscarPendientePorCodigoAsync(string codigo, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 === BUSCANDO PENDIENTE POR CÓDIGO ===");
+                _logger.LogInformation("🔍 Código: {Codigo}", codigo);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.GetAsync($"api/Facturacion/buscar-pendiente-por-codigo?codigo={Uri.EscapeDataString(codigo)}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("🔍 Respuesta de la API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    return (success: true, data: resultado, message: "Pendiente encontrado exitosamente", details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error buscando pendiente por código: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (success: false, data: null, message: "No se encontró el pendiente con ese código", details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error buscando pendiente por código");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+            }
+        }
+
+        public async Task<(bool success, object? data, string? message, string? details)> EntregarPendienteAsync(object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📦 === ENTREGANDO PENDIENTE ===");
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(request, new JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON enviado al API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/Facturacion/entregar-pendiente", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    return (success: true, data: resultado, message: "Pendiente entregado exitosamente", details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error entregando pendiente: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (success: false, data: null, message: "Error al entregar pendiente", details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error entregando pendiente");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+            }
+        }
+
         public async Task<(bool success, object? data, string? message, string? details)> MarcarProductosEntregadosAsync(object request, string jwtToken = null)
         {
             try
