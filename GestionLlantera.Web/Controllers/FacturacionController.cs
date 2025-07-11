@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -1219,16 +1218,23 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> MarcarComoEntregado([FromBody] object request)
+        public async Task<IActionResult> MarcarComoEntregadoPorCodigo([FromBody] MarcarEntregadoPorCodigoRequest request)
         {
             try
             {
                 _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN CONTROLADOR WEB ===");
-                _logger.LogInformation("🚚 Request recibido: {Request}", System.Text.Json.JsonSerializer.Serialize(request));
+                _logger.LogInformation("🚚 Request recibido: {Request}", 
+                    System.Text.Json.JsonSerializer.Serialize(request));
 
-                if (!await this.TienePermisoAsync("Completar Facturas"))
+                // Validar que el request tenga los datos necesarios
+                if (string.IsNullOrEmpty(request.CodigoSeguimiento))
                 {
-                    return Json(new { success = false, message = "Sin permisos para gestionar entregas" });
+                    return Json(new { success = false, message = "Código de seguimiento es requerido" });
+                }
+
+                if (request.UsuarioEntrega <= 0)
+                {
+                    return Json(new { success = false, message = "Usuario de entrega es requerido" });
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
@@ -1237,95 +1243,33 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                // ✅ EXTRAER Y MAPEAR CORRECTAMENTE LOS DATOS DEL REQUEST
-                string codigoSeguimiento = null;
-                int pendienteId = 0;
-                int cantidadAEntregar = 0;
-                int usuarioEntrega = 1;
-                string observacionesEntrega = null;
-
-                try
+                // Crear el objeto con la estructura exacta que espera la API
+                var requestParaApi = new 
                 {
-                    // Convertir el object a JsonElement para extraer propiedades
-                    var jsonString = System.Text.Json.JsonSerializer.Serialize(request);
-                    var jsonElement = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(jsonString);
-
-                    // Extraer código de seguimiento
-                    if (jsonElement.TryGetProperty("codigoSeguimiento", out var codigoProperty))
-                    {
-                        codigoSeguimiento = codigoProperty.GetString();
-                    }
-
-                    // Extraer pendiente ID
-                    if (jsonElement.TryGetProperty("pendienteId", out var pendienteProperty))
-                    {
-                        pendienteId = pendienteProperty.GetInt32();
-                    }
-
-                    // Extraer cantidad a entregar
-                    if (jsonElement.TryGetProperty("cantidadAEntregar", out var cantidadProperty))
-                    {
-                        cantidadAEntregar = cantidadProperty.GetInt32();
-                    }
-
-                    // Extraer usuario entrega
-                    if (jsonElement.TryGetProperty("usuarioEntrega", out var usuarioProperty))
-                    {
-                        usuarioEntrega = usuarioProperty.GetInt32();
-                    }
-
-                    // Extraer observaciones
-                    if (jsonElement.TryGetProperty("observacionesEntrega", out var observacionesProperty))
-                    {
-                        observacionesEntrega = observacionesProperty.GetString();
-                    }
-
-                    _logger.LogInformation("🚚 Datos extraídos - Código: {Codigo}, PendienteId: {PendienteId}, Cantidad: {Cantidad}, Usuario: {Usuario}",
-                        codigoSeguimiento, pendienteId, cantidadAEntregar, usuarioEntrega);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "❌ Error extrayendo datos del request");
-                    return Json(new { success = false, message = "Error procesando los datos del request" });
-                }
-
-                // Validar código de seguimiento
-                if (string.IsNullOrEmpty(codigoSeguimiento))
-                {
-                    return Json(new { success = false, message = "Código de seguimiento es requerido" });
-                }
-
-                // ✅ CREAR REQUEST ESTRUCTURADO PARA LA API
-                var requestParaAPI = new
-                {
-                    codigoSeguimiento = codigoSeguimiento,
-                    pendienteId = pendienteId,
-                    cantidadAEntregar = cantidadAEntregar,
-                    usuarioEntrega = usuarioEntrega,
-                    observacionesEntrega = observacionesEntrega ?? ""
+                    codigoSeguimiento = request.CodigoSeguimiento,
+                    pendienteId = request.PendienteId,
+                    cantidadAEntregar = request.CantidadAEntregar,
+                    usuarioEntrega = request.UsuarioEntrega,
+                    observacionesEntrega = request.ObservacionesEntrega
                 };
 
-                _logger.LogInformation("🚚 Request estructurado para API: {RequestAPI}", 
-                    System.Text.Json.JsonSerializer.Serialize(requestParaAPI));
+                _logger.LogInformation("🚚 Datos estructurados para API: {Request}", 
+                    System.Text.Json.JsonSerializer.Serialize(requestParaApi));
 
-                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(requestParaAPI, jwtToken);
+                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(requestParaApi, jwtToken);
 
                 if (resultado.success)
                 {
-                    _logger.LogInformation("✅ Producto marcado como entregado exitosamente");
-                    return Json(new
-                    {
-                        success = true,
+                    return Json(new { 
+                        success = true, 
                         message = resultado.message,
                         data = resultado.data
                     });
                 }
                 else
                 {
-                    _logger.LogError("❌ Error marcando como entregado: {Message}", resultado.message);
-                    return Json(new
-                    {
-                        success = false,
+                    return Json(new { 
+                        success = false, 
                         message = resultado.message,
                         details = resultado.details
                     });
@@ -1333,11 +1277,10 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error crítico marcando como entregado");
-                return Json(new
-                {
-                    success = false,
-                    message = "Error interno del servidor: " + ex.Message
+                _logger.LogError(ex, "❌ Error en controlador web marcando como entregado por código");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor: " + ex.Message 
                 });
             }
         }
@@ -1409,5 +1352,14 @@ namespace GestionLlantera.Web.Controllers
         public List<int> ProductosIds { get; set; } = new List<int>();
         public string? ObservacionesEntrega { get; set; }
         public DateTime? FechaEntrega { get; set; }
+    }
+
+    public class MarcarEntregadoPorCodigoRequest
+    {
+        public string CodigoSeguimiento { get; set; } = string.Empty;
+        public int PendienteId { get; set; }
+        public int CantidadAEntregar { get; set; }
+        public int UsuarioEntrega { get; set; }
+        public string? ObservacionesEntrega { get; set; }
     }
 }
