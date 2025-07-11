@@ -272,6 +272,26 @@ function inicializarModales() {
 }
 
 function configurarEventos() {
+    // ===== FILTROS RÁPIDOS =====
+    $('.filter-btn').on('click', function() {
+        $('.filter-btn').removeClass('active');
+        $(this).addClass('active');
+        
+        const filtro = $(this).data('filter');
+        aplicarFiltroRapido(filtro);
+    });
+
+    // ===== LIMPIAR BÚSQUEDA =====
+    $('#btnLimpiarBusqueda').on('click', function() {
+        $('#busquedaProducto').val('');
+        $('#busquedaProducto').trigger('input');
+    });
+
+    // ===== NUEVA VENTA =====
+    $('#btnNuevaVenta').on('click', function() {
+        nuevaVenta();
+    });
+
     // ===== BÚSQUEDA DE PRODUCTOS =====
     let ultimoEventoInput = 0; // Para throttling adicional
 
@@ -505,6 +525,58 @@ async function buscarProductos(termino) {
     }
 }
 
+function aplicarFiltroRapido(filtro) {
+    console.log('🔍 Aplicando filtro rápido:', filtro);
+    
+    const productos = $('.producto-card');
+    let contadorVisible = 0;
+    
+    productos.each(function() {
+        const $card = $(this);
+        const stock = parseInt($card.find('.producto-card-stock').text().match(/\d+/)?.[0] || 0);
+        const stockMinimo = 5; // Valor de referencia para stock bajo
+        
+        let mostrar = false;
+        
+        switch(filtro) {
+            case 'todos':
+                mostrar = true;
+                break;
+            case 'stock':
+                mostrar = stock > 0;
+                break;
+            case 'bajo-stock':
+                mostrar = stock > 0 && stock <= stockMinimo;
+                break;
+            case 'sin-stock':
+                mostrar = stock === 0;
+                break;
+        }
+        
+        if (mostrar) {
+            $card.parent().show();
+            contadorVisible++;
+        } else {
+            $card.parent().hide();
+        }
+    });
+    
+    actualizarContadorResultados(contadorVisible, productos.length);
+}
+
+function actualizarContadorResultados(visible, total) {
+    const filtroActivo = $('.filter-btn.active').data('filter');
+    let mensaje = '';
+    
+    if (filtroActivo === 'todos') {
+        mensaje = `Mostrando ${visible} productos disponibles`;
+    } else {
+        mensaje = `Mostrando ${visible} de ${total} productos`;
+    }
+    
+    $('#contadorResultados').text(mensaje);
+}
+
 function mostrarResultadosProductos(productos) {
     contadorLlamadasMostrarResultados++;
     console.log('🔄 === INICIO mostrarResultadosProductos ===');
@@ -516,6 +588,7 @@ function mostrarResultadosProductos(productos) {
     if (!productos || productos.length === 0) {
         console.log('🔄 No hay productos, mostrando sin resultados');
         mostrarSinResultados('productos');
+        actualizarContadorResultados(0, 0);
         return;
     }
 
@@ -739,6 +812,9 @@ function mostrarResultadosProductos(productos) {
             mostrarToast('Error', 'No se pudo mostrar el detalle del producto', 'danger');
         }
     });
+
+    // ✅ ACTUALIZAR CONTADOR DE RESULTADOS
+    actualizarContadorResultados(productos.length, productos.length);
 
     console.log('🔄 === FIN mostrarResultadosProductos ===');
 }
@@ -3471,9 +3547,13 @@ function mostrarCargandoBusqueda() {
 function mostrarSinResultados(tipo) {
     const mensaje = tipo === 'productos' ? 'No se encontraron productos' : 'No se encontraron clientes';
     $('#resultadosBusqueda').html(`
-        <div class="col-12 text-center py-4 text-muted">
-            <i class="bi bi-search display-1"></i>
-            <p class="mt-2">${mensaje}</p>
+        <div class="text-center py-5">
+            <i class="bi bi-search display-1 text-muted"></i>
+            <h5 class="mt-3 text-muted">${mensaje}</h5>
+            <p class="text-muted">Intenta con otros términos de búsqueda</p>
+            <button class="btn btn-outline-primary" onclick="reiniciarCargaProductos()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Recargar productos
+            </button>
         </div>
     `);
 }
