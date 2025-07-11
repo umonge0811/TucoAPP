@@ -278,6 +278,11 @@ async function confirmarEntrega() {
             return;
         }
 
+        // ✅ VALIDACIÓN PREVIA: Advertir al usuario sobre posibles problemas de stock
+        if (!confirm(`⚠️ IMPORTANTE: Al confirmar esta entrega se verificará que exista stock suficiente del producto.\n\n¿Está seguro de que desea proceder con la entrega de ${cantidadAEntregar} unidad(es) del producto "${pendienteSeleccionado.nombreProducto}"?\n\nCódigo: ${codigoSeguimiento}`)) {
+            return;
+        }
+
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
         const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
@@ -312,7 +317,10 @@ async function confirmarEntrega() {
             modalMarcarEntregado.hide();
             cargarPendientes(); // Recargar la lista
         } else {
-            mostrarError('Error confirmando entrega: ' + (resultado.message || 'Error desconocido'));
+            // Mostrar el mensaje específico del error, especialmente útil para errores de stock
+            const mensajeError = resultado.message || 'Error desconocido al confirmar entrega';
+            mostrarError(mensajeError);
+            console.error('❌ Error detallado:', resultado);
         }
 
     } catch (error) {
