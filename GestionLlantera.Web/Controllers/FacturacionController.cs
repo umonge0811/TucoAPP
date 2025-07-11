@@ -1237,7 +1237,78 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(request, jwtToken);
+                // ✅ EXTRAER Y MAPEAR CORRECTAMENTE LOS DATOS DEL REQUEST
+                string codigoSeguimiento = null;
+                int pendienteId = 0;
+                int cantidadAEntregar = 0;
+                int usuarioEntrega = 1;
+                string observacionesEntrega = null;
+
+                try
+                {
+                    // Convertir el object a JsonElement para extraer propiedades
+                    var jsonString = System.Text.Json.JsonSerializer.Serialize(request);
+                    var jsonElement = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(jsonString);
+
+                    // Extraer código de seguimiento
+                    if (jsonElement.TryGetProperty("codigoSeguimiento", out var codigoProperty))
+                    {
+                        codigoSeguimiento = codigoProperty.GetString();
+                    }
+
+                    // Extraer pendiente ID
+                    if (jsonElement.TryGetProperty("pendienteId", out var pendienteProperty))
+                    {
+                        pendienteId = pendienteProperty.GetInt32();
+                    }
+
+                    // Extraer cantidad a entregar
+                    if (jsonElement.TryGetProperty("cantidadAEntregar", out var cantidadProperty))
+                    {
+                        cantidadAEntregar = cantidadProperty.GetInt32();
+                    }
+
+                    // Extraer usuario entrega
+                    if (jsonElement.TryGetProperty("usuarioEntrega", out var usuarioProperty))
+                    {
+                        usuarioEntrega = usuarioProperty.GetInt32();
+                    }
+
+                    // Extraer observaciones
+                    if (jsonElement.TryGetProperty("observacionesEntrega", out var observacionesProperty))
+                    {
+                        observacionesEntrega = observacionesProperty.GetString();
+                    }
+
+                    _logger.LogInformation("🚚 Datos extraídos - Código: {Codigo}, PendienteId: {PendienteId}, Cantidad: {Cantidad}, Usuario: {Usuario}",
+                        codigoSeguimiento, pendienteId, cantidadAEntregar, usuarioEntrega);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Error extrayendo datos del request");
+                    return Json(new { success = false, message = "Error procesando los datos del request" });
+                }
+
+                // Validar código de seguimiento
+                if (string.IsNullOrEmpty(codigoSeguimiento))
+                {
+                    return Json(new { success = false, message = "Código de seguimiento es requerido" });
+                }
+
+                // ✅ CREAR REQUEST ESTRUCTURADO PARA LA API
+                var requestParaAPI = new
+                {
+                    codigoSeguimiento = codigoSeguimiento,
+                    pendienteId = pendienteId,
+                    cantidadAEntregar = cantidadAEntregar,
+                    usuarioEntrega = usuarioEntrega,
+                    observacionesEntrega = observacionesEntrega ?? ""
+                };
+
+                _logger.LogInformation("🚚 Request estructurado para API: {RequestAPI}", 
+                    System.Text.Json.JsonSerializer.Serialize(requestParaAPI));
+
+                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(requestParaAPI, jwtToken);
 
                 if (resultado.success)
                 {

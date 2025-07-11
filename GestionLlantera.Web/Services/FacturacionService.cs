@@ -865,8 +865,7 @@ namespace GestionLlantera.Web.Services
                                     factura.Items;
 
                 if (detallesFactura == null)
-                {
-                    _logger.LogError("❌ No se encontraron productos en la factura. Propiedades disponibles: {Propiedades}", 
+                {                    _logger.LogError("❌ No se encontraron productos en la factura. Propiedades disponibles: {Propiedades}", 
                         string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p.Name)));
                     throw new ArgumentException("La factura debe tener al menos un producto");
                 }
@@ -1409,30 +1408,14 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO DE SEGUIMIENTO ===");
+                _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN SERVICIO ===");
+                _logger.LogInformation("🚚 Request recibido en servicio: {Request}", 
+                    System.Text.Json.JsonSerializer.Serialize(request));
+                _logger.LogInformation("🚚 URL de API: {Url}", "api/Facturacion/marcar-entregado-por-codigo");
 
-                // Configurar token JWT si se proporciona
-                if (!string.IsNullOrEmpty(jwtToken))
-                {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                }
+                var response = await _httpClient.PostAsJsonAsync("api/Facturacion/marcar-entregado-por-codigo", request);
 
-                var jsonContent = JsonConvert.SerializeObject(request, new JsonSerializerSettings
-                {
-                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
-                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
-                    NullValueHandling = NullValueHandling.Include
-                });
-
-                _logger.LogInformation("📤 JSON enviado al API: {Json}", jsonContent);
-
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PostAsync("api/Facturacion/marcar-entregado-por-codigo", content);
                 var responseContent = await response.Content.ReadAsStringAsync();
-
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
 
                 if (response.IsSuccessStatusCode)
