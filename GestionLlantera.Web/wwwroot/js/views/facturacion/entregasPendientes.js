@@ -295,7 +295,7 @@ async function confirmarEntrega() {
         // Deshabilitar botón mientras se procesa
         $('#btnConfirmarEntrega').prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Procesando...');
 
-        const response = await fetch('/Facturacion/MarcarComoEntregado', {
+        const response = await fetch('/Facturacion/MarcarComoEntregadoPorCodigo', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
