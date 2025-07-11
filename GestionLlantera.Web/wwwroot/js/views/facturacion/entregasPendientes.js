@@ -165,8 +165,8 @@ function crearFilaPendiente(pendiente) {
     const estadoClass = pendiente.estado === 'Entregado' ? 'success' : 'warning';
     const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleDateString('es-ES');
     
-    // Generar código de seguimiento correcto
-    const codigoSeguimiento = pendiente.codigoSeguimiento || `${pendiente.numeroFactura}-PEND-${pendiente.id}`;
+    // Usar directamente el código de seguimiento de la base de datos
+    const codigoSeguimiento = pendiente.codigoSeguimiento || 'Sin código';
     
     return `
         <tr>
@@ -311,11 +311,11 @@ function generarContenidoDetalles(pendiente) {
                 <table class="table table-sm">
                     <tr>
                         <td><strong>Código:</strong></td>
-                        <td><code>${pendiente.codigoSeguimiento || `${pendiente.numeroFactura}-PEND-${pendiente.id}`}</code></td>
+                        <td><code>${pendiente.codigoSeguimiento || 'Sin código'}</code></td>
                     </tr>
                     <tr>
                         <td><strong>Factura:</strong></td>
-                        <td>FAC-${pendiente.facturaId}</td>
+                        <td>${pendiente.numeroFactura || 'FAC-' + pendiente.facturaId}</td>
                     </tr>
                     <tr>
                         <td><strong>Estado:</strong></td>

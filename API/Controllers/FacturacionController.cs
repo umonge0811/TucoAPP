@@ -1326,6 +1326,7 @@ namespace API.Controllers
                         fechaEntrega = p.FechaEntrega,
                         estado = p.Estado,
                         observaciones = p.Observaciones,
+                        codigoSeguimiento = p.CodigoSeguimiento, // ✅ INCLUIR CÓDIGO DE SEGUIMIENTO DE LA BD
                         usuarioCreacion = p.UsuarioCreacionNavigation.NombreUsuario,
                         usuarioEntrega = p.UsuarioEntregaNavigation != null ? p.UsuarioEntregaNavigation.NombreUsuario : null
                     })
