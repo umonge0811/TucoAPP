@@ -1419,6 +1419,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Clear();
                     _httpClient.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para marcar entregado por código");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para marcar entregado por código");
                 }
 
                 var response = await _httpClient.PostAsJsonAsync("api/Facturacion/marcar-entregado-por-codigo", request);
