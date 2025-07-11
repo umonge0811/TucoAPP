@@ -1,3 +1,4 @@
+
 using GestionLlantera.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -612,8 +613,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-
-
         /// <summary>
         /// Obtener información completa del usuario desde los claims (igual que InventarioController)
         /// </summary>
@@ -885,7 +884,8 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogInformation("✅ Productos eliminados exitosamente de factura {FacturaId}", request.FacturaId);
                     return Json(new { 
-                        success = true,                         message = resultado.message,
+                        success = true,
+                        message = resultado.message,
                         productosEliminados = resultado.data
                     });
                 }
@@ -1275,53 +1275,16 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+    }
 
-        // Clase para el request de marcar como entregado
-        public class MarcarEntregadoRequest
-        {
-            public string CodigoSeguimiento { get; set; }
-            public int PendienteId { get; set; }
-            public int CantidadAEntregar { get; set; }
-            public int UsuarioEntrega { get; set; }
-            public string ObservacionesEntrega { get; set; }ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return Json(new { success = false, message = "Token de autenticación no disponible" });
-                }
-
-                var resultado = await _facturacionService.MarcarProductosEntregadosAsync(request, jwtToken);
-
-                if (resultado.success)
-                {
-                    return Json(new
-                    {
-                        success = true,
-                        message = resultado.message,
-                        data = resultado.data
-                    });
-                }
-                else
-                {
-                    return Json(new
-                    {
-                        success = false,
-                        message = resultado.message,
-                        details = resultado.details
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error marcando producto como entregado");
-                return Json(new
-                {
-                    success = false,
-                    message = "Error interno del servidor: " + ex.Message
-                });
-            }
-        }
-
-
+    // Clases de request para el controlador
+    public class MarcarEntregadoRequest
+    {
+        public string CodigoSeguimiento { get; set; } = string.Empty;
+        public int PendienteId { get; set; }
+        public int CantidadAEntregar { get; set; }
+        public int UsuarioEntrega { get; set; }
+        public string ObservacionesEntrega { get; set; } = string.Empty;
     }
 
     public class VerificarStockFacturaRequest
