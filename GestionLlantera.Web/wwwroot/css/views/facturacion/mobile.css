@@ -175,25 +175,25 @@
 @media (max-width: 576px) {
     .producto-card {
         border-radius: 12px;
-        min-height: 420px;
+        min-height: 380px;
     }
 
     .producto-card-imagen-container {
-        height: 160px;
+        height: 140px;
     }
 
     .producto-card-imagen {
-        padding: 10px;
+        padding: 8px;
     }
 
     .producto-card-imagen:hover {
         transform: scale(1.02);
-        padding: 8px;
+        padding: 6px;
     }
 
     .producto-card-sin-imagen {
-        font-size: 2.5rem;
-        margin: 10px;
+        font-size: 2rem;
+        margin: 8px;
     }
 
     .producto-card-body {
@@ -201,11 +201,10 @@
     }
 
     .producto-card-titulo {
-        font-size: 0.95rem;
+        font-size: 1rem;
         margin-bottom: 0.5rem;
         -webkit-line-clamp: 2;
         min-height: 2.4rem;
-        text-align: center;
     }
 
     .precios-metodos {
@@ -214,21 +213,20 @@
     }
 
     .precios-metodos .col-6 {
-        padding: 0.2rem;
-        text-align: center;
+        padding: 0.15rem;
     }
 
     .precios-metodos small {
-        font-size: 0.65rem;
+        font-size: 0.7rem;
     }
 
     .precios-metodos .fw-bold {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
     }
 
     .producto-card-info-adicional {
-        padding: 0.5rem;
-        font-size: 0.75rem;
+        padding: 0.4rem;
+        font-size: 0.8rem;
         margin-bottom: 0.75rem;
     }
 
