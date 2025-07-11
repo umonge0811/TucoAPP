@@ -3063,14 +3063,16 @@ function generarRecibo(factura, productos, totales) {
                             margin-bottom: 0.5mm;
                         }
 
-                        .codigo-seguimiento {
+                        .codigo-seguimiento, .codigos-seguimiento {
                             text-align: center;
                             margin-top: 2mm;
+                            width: 100%;
                         }
 
-                        .codigo-seguimiento div:first-child {
+                        .codigo-seguimiento div:first-child, .codigos-seguimiento div:first-child {
                             font-size: 6px;
                             margin-bottom: 0.5mm;
+                            text-align: center;
                         }
 
                         .codigo-recuadro {
@@ -3079,11 +3081,12 @@ function generarRecibo(factura, productos, totales) {
                             font-family: 'Courier New', monospace;
                             border: 2px solid #000;
                             padding: 2mm;
-                            margin: 1mm 0;
-                            display: inline-block;
+                            margin: 1mm auto;
+                            display: block;
                             background: #f9f9f9;
                             text-align: center;
-                            min-width: 20mm;
+                            width: 80%;
+                            max-width: 40mm;
                         }
 
                         /* Estilos específicos para vista previa en pantalla */
