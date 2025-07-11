@@ -1267,7 +1267,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("📦 === ENVIANDO PENDIENTES DE ENTREGA A API ===");
-                
+
                 // Convertir object a RegistrarPendientesEntregaRequest
                 RegistrarPendientesEntregaRequest typedRequest;
                 if (request is RegistrarPendientesEntregaRequest directRequest)
@@ -1319,13 +1319,13 @@ namespace GestionLlantera.Web.Services
                         // ✅ DESERIALIZAR RESPUESTA COMPLETA Y EXTRAER PENDIENTES CREADOS
                         var jsonDocument = System.Text.Json.JsonDocument.Parse(responseContent);
                         var root = jsonDocument.RootElement;
-                        
+
                         if (root.TryGetProperty("pendientesCreados", out var pendientesElement))
                         {
                             var pendientesCreados = System.Text.Json.JsonSerializer.Deserialize<object[]>(pendientesElement.GetRawText());
-                            
+
                             _logger.LogInformation("📦 Pendientes extraídos correctamente: {Count} items", pendientesCreados?.Length ?? 0);
-                            
+
                             return (true, new { pendientesCreados = pendientesCreados }, "Pendientes registrados exitosamente", null);
                         }
                         else
@@ -1511,5 +1511,29 @@ namespace GestionLlantera.Web.Services
         public int CantidadSolicitada { get; set; }
         public int CantidadPendiente { get; set; }
         public int StockDisponible { get; set; }
+    }
+
+    public class PendienteEntregaDTO
+    {
+        public int Id { get; set; }
+        public int FacturaId { get; set; }
+        public string NumeroFactura { get; set; }
+        public string ClienteNombre { get; set; }
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; }
+        public string DescripcionProducto { get; set; }
+        public bool EsLlanta { get; set; }
+        public string MedidaLlanta { get; set; }
+        public string MarcaLlanta { get; set; }
+        public int CantidadSolicitada { get; set; }
+        public int CantidadPendiente { get; set; }
+        public DateTime FechaCreacion { get; set; }
+        public DateTime FechaEntrega { get; set; }
+        public string Estado { get; set; }
+        public string Observaciones { get; set; }
+        public int UsuarioCreacion { get; set; }
+        public int UsuarioEntrega { get; set; }
+        public string CodigoSeguimiento { get; set; }
+
     }
 }
