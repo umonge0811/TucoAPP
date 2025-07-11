@@ -1549,7 +1549,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN API ===");
                 _logger.LogInformation("🚚 Request completo recibido: {Request}", 
-                    System.Text.JsonSerializer.Serialize(request));
+                  JsonSerializer.Serialize(request));
                 _logger.LogInformation("🚚 Código de seguimiento: {CodigoSeguimiento}", request.CodigoSeguimiento);
                 _logger.LogInformation("🚚 Pendiente ID: {PendienteId}", request.PendienteId);
                 _logger.LogInformation("🚚 Cantidad a entregar: {Cantidad}", request.CantidadAEntregar);

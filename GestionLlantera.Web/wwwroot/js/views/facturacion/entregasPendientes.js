@@ -308,10 +308,7 @@ async function confirmarEntrega() {
             return;
         }
 
-        // ✅ CONFIRMACIÓN SIMPLE DE ENTREGA
-        if (!confirm(`¿Está seguro de que desea confirmar la entrega de ${cantidadAEntregar} unidad(es) del producto "${pendienteSeleccionado.nombreProducto}"?\n\nCódigo: ${codigoSeguimiento}`)) {
-            return;
-        }
+       
 
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
