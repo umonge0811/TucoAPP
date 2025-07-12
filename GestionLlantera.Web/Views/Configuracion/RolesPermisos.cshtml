@@ -160,12 +160,11 @@
                     <div class="accordion" id="accordionPermisos">
                         @{
                             int accordionIndex = 0;
-                        }
-                        @foreach (var grupoModulo in permisosUnicos)
-                        {
-                            var collapseId = $"collapse{accordionIndex}";
-                            var headingId = $"heading{accordionIndex}";
-                            var isFirstItem = accordionIndex == 0;
+                            foreach (var grupoModulo in permisosUnicos)
+                            {
+                                var collapseId = $"collapse{accordionIndex}";
+                                var headingId = $"heading{accordionIndex}";
+                                var isFirstItem = accordionIndex == 0;
                             
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="@headingId">
@@ -253,7 +252,6 @@
                                     </div>
                                 </div>
                             </div>
-                            @{
                                 accordionIndex++;
                             }
                         }
