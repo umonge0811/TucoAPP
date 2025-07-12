@@ -14,8 +14,6 @@ public class Permiso
 
     public string? DescripcionPermiso { get; set; }
 
-    public string? Categoria { get; set; }
-
     public string? Modulo { get; set; }
 
     [JsonIgnore]

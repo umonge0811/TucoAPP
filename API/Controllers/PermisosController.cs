@@ -236,7 +236,6 @@ public class PermisosController : ControllerBase
                     PermisoId = p.PermisoId,
                     NombrePermiso = p.NombrePermiso,
                     DescripcionPermiso = p.DescripcionPermiso,
-                    Categoria = p.Categoria,
                     Modulo = p.Modulo
                 }).ToList());
 
@@ -265,7 +264,6 @@ public class PermisosController : ControllerBase
                     PermisoId = p.PermisoId,
                     NombrePermiso = p.NombrePermiso,
                     DescripcionPermiso = p.DescripcionPermiso,
-                    Categoria = p.Categoria,
                     Modulo = p.Modulo
                 }).ToList());
 
