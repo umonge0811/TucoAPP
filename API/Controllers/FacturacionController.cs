@@ -1353,8 +1353,8 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> EntregarPendiente(int id, [FromBody] EntregarPendienteRequest request)
         {
-            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entrega Pendientes",
-                "Solo usuarios con permiso 'Entrega Pendientes' pueden completar pendientes");
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
+                "Solo usuarios con permiso 'Entregar Pendientes' pueden completar pendientes");
             if (validacionPermiso != null) return validacionPermiso;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -1452,8 +1452,8 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> MarcarProductosEntregados([FromBody] MarcarEntregadosRequest request)
         {
-            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entrega Pendientes",
-                "Solo usuarios con permiso 'Entrega Pendientes' pueden marcar productos como entregados");
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
+                "Solo usuarios con permiso 'Entregar Pendientes' pueden marcar productos como entregados");
             if (validacionPermiso != null) return validacionPermiso;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
@@ -1540,8 +1540,8 @@ namespace API.Controllers
         [Authorize]
         public async Task<IActionResult> MarcarEntregadoPorCodigo([FromBody] MarcarEntregadoPorCodigoRequest request)
         {
-            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entrega Pendientes",
-                "Solo usuarios con permiso 'Entrega Pendientes' pueden marcar productos como entregados");
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
+                "Solo usuarios con permiso 'Entregar Pendientes' pueden marcar productos como entregados");
             if (validacionPermiso != null) return validacionPermiso;
 
             using var transaction = await _context.Database.BeginTransactionAsync();
