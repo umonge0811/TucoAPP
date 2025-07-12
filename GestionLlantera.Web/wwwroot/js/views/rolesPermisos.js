@@ -208,19 +208,8 @@ function actualizarTablaPermisos(permisos) {
 
     tbody.innerHTML = permisos.map(permiso => `
         <tr>
-            <td>
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-key-fill text-primary"></i>
-                    ${permiso.nombrePermiso}
-                </div>
-            </td>
+            <td>${permiso.nombrePermiso}</td>
             <td>${permiso.descripcionPermiso || '-'}</td>
-            <td>
-                ${permiso.modulo ? 
-                    `<span class="badge bg-info text-dark">${permiso.modulo}</span>` : 
-                    '<span class="text-muted">Sin módulo</span>'
-                }
-            </td>
             <td>
                 <button class="btn btn-sm btn-primary me-2" onclick="editarPermiso(${permiso.permisoId})" title="Editar">
                     <i class="bi bi-pencil-fill"></i>
@@ -259,27 +248,27 @@ async function abrirModalNuevoRol() {
             throw new Error('No se encontró el elemento listaPermisos');
         }
 
-        // Obtener permisos por módulo
-        const responseModulo = await fetch(`/api/Permisos/por-categoria`);
-        if (!responseModulo.ok) {
+        // Obtener permisos por categoría
+        const responseCategoria = await fetch(`/api/Permisos/por-categoria`);
+        if (!responseCategoria.ok) {
             throw new Error('Error al cargar permisos disponibles');
         }
 
-        const permisosPorCategoria = await responseModulo.json();
-        console.log('Permisos por módulo:', permisosPorCategoria);
+        const permisosPorCategoria = await responseCategoria.json();
+        console.log('Permisos por categoría:', permisosPorCategoria);
 
         // Generar HTML para lista de permisos categorizados
         let html = '';
 
-        Object.keys(permisosPorCategoria).forEach(modulo => {
+        Object.keys(permisosPorCategoria).forEach(categoria => {
             html += `
                 <div class="categoria-group">
                     <div class="categoria-header">
                         <i class="bi bi-folder me-2"></i>
-                        ${modulo}
+                        ${categoria}
                     </div>
                     <div class="categoria-permisos">
-                        ${permisosPorCategoria[modulo].map(permiso => `
+                        ${permisosPorCategoria[categoria].map(permiso => `
                             <div class="permiso-item">
                                 <input class="form-check-input" type="checkbox" value="${permiso.permisoId}" id="permiso_${permiso.permisoId}">
                                 <div class="permiso-label">
@@ -624,11 +613,9 @@ async function guardarPermiso() {
         }
 
         // Preparar datos
-        const moduloPermiso = document.getElementById('moduloPermiso').value.trim();
         const data = {
             nombrePermiso: nombrePermiso,
-            descripcionPermiso: descripcionPermiso,
-            modulo: moduloPermiso || null
+            descripcionPermiso: descripcionPermiso
         };
 
         console.log('Datos a enviar:', data);
@@ -679,7 +666,6 @@ async function editarPermiso(permisoId) {
         document.getElementById('permisoId').value = permisoId;
         document.getElementById('nombrePermiso').value = permiso.nombrePermiso;
         document.getElementById('descripcionPermiso').value = permiso.descripcionPermiso || '';
-        document.getElementById('moduloPermiso').value = permiso.modulo || '';
 
         // Actualizar título del modal
         document.querySelector('#modalNuevoPermiso .modal-title').textContent = 'Editar Permiso';
@@ -759,6 +745,5 @@ document.getElementById('modalNuevoRol').addEventListener('hidden.bs.modal', fun
 document.getElementById('modalNuevoPermiso').addEventListener('hidden.bs.modal', function () {
     document.getElementById('formPermiso').reset();
     document.getElementById('permisoId').value = '0';
-    document.getElementById('moduloPermiso').value = '';
     document.querySelector('#modalNuevoPermiso .modal-title').textContent = 'Nuevo Permiso';
 });

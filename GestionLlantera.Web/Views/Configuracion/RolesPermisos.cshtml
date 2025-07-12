@@ -155,7 +155,6 @@
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Descripción</th>
-                                    <th>Módulo</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
@@ -175,16 +174,6 @@
                                             </div>
                                         </td>
                                         <td>@permiso.DescripcionPermiso</td>
-                                        <td>
-                                            @if (!string.IsNullOrEmpty(permiso.Modulo))
-                                            {
-                                                <span class="badge bg-info text-dark">@permiso.Modulo</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="text-muted">Sin módulo</span>
-                                            }
-                                        </td>
                                         <td>
                                             <div class="btn-group">
                                                 <button class="btn btn-sm btn-primary" onclick="editarPermiso(@permiso.PermisoId)">
@@ -220,10 +209,6 @@
                                             @permiso.NombrePermiso
                                         </div>
                                         <p class="permission-description">@permiso.DescripcionPermiso</p>
-                                        @if (!string.IsNullOrEmpty(permiso.Modulo))
-                                        {
-                                            <span class="badge bg-info text-dark">@permiso.Modulo</span>
-                                        }
                                     </div>
                                     <div class="permission-actions">
                                         <button class="btn btn-sm btn-primary" onclick="editarPermiso(@permiso.PermisoId)">
@@ -307,18 +292,6 @@
                     <div class="mb-4">
                         <label class="form-label">Descripción</label>
                         <textarea class="form-control" id="descripcionPermiso" rows="3"></textarea>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">Módulo</label>
-                        <select class="form-control" id="moduloPermiso">
-                            <option value="">Seleccionar módulo</option>
-                            <option value="Inventario">Inventario</option>
-                            <option value="Facturación">Facturación</option>
-                            <option value="Clientes">Clientes</option>
-                            <option value="Reportes">Reportes</option>
-                            <option value="Administración">Administración</option>
-                            <option value="Sistema">Sistema</option>
-                        </select>
                     </div>
                 </form>
             </div>

@@ -1,4 +1,4 @@
-/* Tabs personalizados */
+﻿/* Tabs personalizados */
 .custom-tabs {
     border: none;
     gap: 2rem;
@@ -109,21 +109,6 @@
         display: flex;
         gap: 0.5rem;
     }
-
-/* Estilos para módulos */
-.modulo-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-}
-
-.tabla-permisos .modulo-column {
-    width: 120px;
-}
-
-.permission-module {
-    margin-top: 0.5rem;
-}
 
 /* Contenedor de la cuadrícula de roles */
 .roles-grid {
