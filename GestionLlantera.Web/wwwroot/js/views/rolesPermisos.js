@@ -103,48 +103,8 @@ async function cargarRoles() {
         const roles = await response.json();
         console.log('Roles recibidos:', roles); // Verificar la estructura de los datos
 
-        const tbody = document.querySelector('#roles table tbody');
-        if (!tbody) {
-            console.error('No se encontró el elemento tbody de la tabla de roles');
-            return;
-        }
-
-        tbody.innerHTML = roles.map(rol => {
-            console.log('Procesando rol:', rol); // Ver cada rol individual
-            console.log('Permisos del rol:', rol.permisos); // Ver los permisos de cada rol
-
-            return `
-                <tr>
-                    <td class="fw-semibold">${rol.nombreRol}</td>
-                    <td>${rol.descripcionRol || '-'}</td>
-                    <td>
-                        <div class="d-flex flex-wrap gap-1">
-                            ${Array.isArray(rol.permisos) && rol.permisos.length > 0
-                    ? rol.permisos.map(permiso =>
-                        `<span class="badge bg-light text-dark">
-                        <i class="bi bi-key-fill me-1 text-primary"></i>
-                        ${permiso.nombrePermiso}
-                    </span>`
-                    ).join('')
-                    : '<span class="text-muted">Sin permisos</span>'
-                }
-                        </div>
-                    </td>
-                    <td>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-primary" onclick="editarRol(${rol.rolId})">
-                                <i class="bi bi-pencil me-1"></i>
-                                Editar
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})">
-                                <i class="bi bi-trash me-1"></i>
-                                Eliminar
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        // Usar la función auxiliar para actualizar la tabla
+        actualizarTablaRoles(roles);
 
         return roles;
     } catch (error) {
