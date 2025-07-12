@@ -62,7 +62,8 @@ public class PermisosController : ControllerBase
             var permiso = new Permiso
             {
                 NombrePermiso = permisoDTO.NombrePermiso,
-                DescripcionPermiso = permisoDTO.DescripcionPermiso
+                DescripcionPermiso = permisoDTO.DescripcionPermiso,
+                Modulo = permisoDTO.Modulo
             };
 
             // Guardar en la base de datos
@@ -150,6 +151,7 @@ public class PermisosController : ControllerBase
             // Actualizar los valores del permiso existente
             permisoExistente.NombrePermiso = permiso.NombrePermiso;
             permisoExistente.DescripcionPermiso = permiso.DescripcionPermiso;
+            permisoExistente.Modulo = permiso.Modulo;
 
             // Guardar los cambios en la base de datos
             await _context.SaveChangesAsync();
@@ -213,21 +215,51 @@ public class PermisosController : ControllerBase
         try
         {
             var permisos = await _context.Permisos
-                .OrderBy(p => p.Categoria)
+                .OrderBy(p => p.Modulo)
                 .ThenBy(p => p.NombrePermiso)
                 .ToListAsync();
 
-            var permisosPorCategoria = permisos
-                .GroupBy(p => p.Categoria ?? "General")
+            var permisosPorModulo = permisos
+                .GroupBy(p => p.Modulo ?? "General")
                 .ToDictionary(g => g.Key, g => g.Select(p => new PermisoDTO
                 {
                     PermisoId = p.PermisoId,
                     NombrePermiso = p.NombrePermiso,
                     DescripcionPermiso = p.DescripcionPermiso,
-                    Categoria = p.Categoria
+                    Categoria = p.Categoria,
+                    Modulo = p.Modulo
                 }).ToList());
 
-            return Ok(permisosPorCategoria);
+            return Ok(permisosPorModulo);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpGet("por-modulo")]
+    public async Task<ActionResult> ObtenerPermisosPorModulo()
+    {
+        try
+        {
+            var permisos = await _context.Permisos
+                .OrderBy(p => p.Modulo)
+                .ThenBy(p => p.NombrePermiso)
+                .ToListAsync();
+
+            var permisosPorModulo = permisos
+                .GroupBy(p => p.Modulo ?? "General")
+                .ToDictionary(g => g.Key, g => g.Select(p => new PermisoDTO
+                {
+                    PermisoId = p.PermisoId,
+                    NombrePermiso = p.NombrePermiso,
+                    DescripcionPermiso = p.DescripcionPermiso,
+                    Categoria = p.Categoria,
+                    Modulo = p.Modulo
+                }).ToList());
+
+            return Ok(permisosPorModulo);
         }
         catch (Exception ex)
         {
