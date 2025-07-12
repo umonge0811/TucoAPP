@@ -1,0 +1,31 @@
+API.Controllers.NotificacionesController: Information: Claims del usuario:
+API.Controllers.NotificacionesController: Information: Claim Type: JwtToken, Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiVWxpc2VzIE1vbmdlIEFndWlsYXIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJ1bW9uZ2VnZHNAZ21haWwuY29tIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiIxIiwidXNlcklkIjoiMSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkNvbGFib3JhZG9yIiwiUGVybWlzc2lvbiI6WyJNb2RpZmljYXIgSW52ZW50YXJpbyIsIkNyZWFyIEZhY3R1cmFzIiwiR2VzdGlvbiBDb21wbGV0YSIsIkFqdXN0YXIgU3RvY2siLCJWZXIgUmVwb3J0ZXMiLCJJbmljaWFyIEludmVudGFyaW8iLCJDb21wbGV0YXIgSW52ZW50YXJpbyIsIkRlc2NhcmdhciBSZXBvcnRlcyIsIlZlciBGYWN0dXJhY2nDs24iLCJFZGl0YXIgQ2xpZW50ZXMiLCJWZXIgUHJvZHVjdG9zIiwiQ3JlYXIgQ2xpZW50ZXMiLCJWZXIgQ2xpZW50ZXMiLCJFbGltaW5hciBDbGllbnRlcyIsIkVudHJlZ2FyIFBlbmRpZW50ZXMiXSwiZXhwIjoxNzUyMjk0NDU2LCJpc3MiOiJUdWNvLkFQSSIsImF1ZCI6IlR1Y28uQ2xpZW50In0.bzpR2zYyipbi2HIvyRxmG5CZpt2k08DpOhK5zBTDdcA
+API.Controllers.NotificacionesController: Information: Claim Type: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name, Value: Ulises Monge Aguilar
+API.Controllers.NotificacionesController: Information: Claim Type: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress, Value: umongegds@gmail.com
+API.Controllers.NotificacionesController: Information: Claim Type: http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier, Value: 1
+API.Controllers.NotificacionesController: Information: Claim Type: userId, Value: 1
+API.Controllers.NotificacionesController: Information: Claim Type: http://schemas.microsoft.com/ws/2008/06/identity/claims/role, Value: Colaborador
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Modificar Inventario
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Crear Facturas
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Gestion Completa
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Ajustar Stock
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Ver Reportes
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Iniciar Inventario
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Completar Inventario
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Descargar Reportes
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Ver Facturación
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Editar Clientes
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Ver Productos
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Crear Clientes
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Ver Clientes
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Eliminar Clientes
+API.Controllers.NotificacionesController: Information: Claim Type: Permission, Value: Entregar Pendientes
+API.Controllers.NotificacionesController: Information: Claim Type: exp, Value: 1752294456
+API.Controllers.NotificacionesController: Information: Claim Type: iss, Value: Tuco.API
+API.Controllers.NotificacionesController: Information: Claim Type: aud, Value: Tuco.Client
+API.Controllers.NotificacionesController: Information: Usuario ID obtenido del claim 'userId': 1
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (4ms) [Parameters=[@__userId_Value_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+SELECT COUNT(*)
+FROM [Notificaciones] AS [n]
+WHERE [n].[UsuarioId] = @__userId_Value_0 AND [n].[Leida] = CAST(0 AS bit)
+API.Controllers.NotificacionesController: Information: Usuario 1 tiene 0 notificaciones no leídas
