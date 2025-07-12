@@ -161,32 +161,43 @@
                             <tbody>
                                 @{
                                     var permisosUnicos = Model.SelectMany(r => r.Permisos)
-                                    .GroupBy(p => p.PermisoId)
-                                    .Select(g => g.First());
+                                        .GroupBy(p => p.PermisoId)
+                                        .Select(g => g.First())
+                                        .GroupBy(p => p.Modulo ?? "General")
+                                        .OrderBy(g => g.Key);
                                 }
-                                @foreach (var permiso in permisosUnicos)
+                                @foreach (var grupoModulo in permisosUnicos)
                                 {
-                                    <tr>
-                                        <td class="fw-semibold">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <i class="bi bi-key-fill text-primary"></i>
-                                                @permiso.NombrePermiso
-                                            </div>
-                                        </td>
-                                        <td>@permiso.DescripcionPermiso</td>
-                                        <td>
-                                            <div class="btn-group">
-                                                <button class="btn btn-sm btn-primary" onclick="editarPermiso(@permiso.PermisoId)">
-                                                    <i class="bi bi-pencil me-1"></i>
-                                                    Editar
-                                                </button>
-                                                <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(@permiso.PermisoId)">
-                                                    <i class="bi bi-trash me-1"></i>
-                                                    Eliminar
-                                                </button>
-                                            </div>
+                                    <tr class="modulo-header-row">
+                                        <td colspan="3" class="modulo-title">
+                                            <i class="bi bi-layers me-2"></i>
+                                            <strong>@grupoModulo.Key</strong>
                                         </td>
                                     </tr>
+                                    @foreach (var permiso in grupoModulo.OrderBy(p => p.NombrePermiso))
+                                    {
+                                        <tr class="permiso-row">
+                                            <td class="fw-semibold ps-4">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bi bi-key-fill text-primary"></i>
+                                                    @permiso.NombrePermiso
+                                                </div>
+                                            </td>
+                                            <td>@permiso.DescripcionPermiso</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button class="btn btn-sm btn-primary" onclick="editarPermiso(@permiso.PermisoId)">
+                                                        <i class="bi bi-pencil me-1"></i>
+                                                        Editar
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(@permiso.PermisoId)">
+                                                        <i class="bi bi-trash me-1"></i>
+                                                        Eliminar
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
                                 }
                             </tbody>
                         </table>
@@ -196,29 +207,40 @@
                     <div class="d-md-none">
                         @{
                             var permisosUnicosMobile = Model.SelectMany(r => r.Permisos)
-                            .GroupBy(p => p.PermisoId)
-                            .Select(g => g.First());
+                                .GroupBy(p => p.PermisoId)
+                                .Select(g => g.First())
+                                .GroupBy(p => p.Modulo ?? "General")
+                                .OrderBy(g => g.Key);
                         }
-                        @foreach (var permiso in permisosUnicosMobile)
+                        @foreach (var grupoModulo in permisosUnicosMobile)
                         {
-                            <div class="mobile-permission-card">
-                                <div class="permission-item">
-                                    <i class="bi bi-key-fill permission-icon"></i>
-                                    <div class="permission-content">
-                                        <div class="permission-name">
-                                            @permiso.NombrePermiso
-                                        </div>
-                                        <p class="permission-description">@permiso.DescripcionPermiso</p>
-                                    </div>
-                                    <div class="permission-actions">
-                                        <button class="btn btn-sm btn-primary" onclick="editarPermiso(@permiso.PermisoId)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(@permiso.PermisoId)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                            <div class="mobile-modulo-group">
+                                <div class="mobile-modulo-header">
+                                    <i class="bi bi-layers me-2"></i>
+                                    <strong>@grupoModulo.Key</strong>
                                 </div>
+                                @foreach (var permiso in grupoModulo.OrderBy(p => p.NombrePermiso))
+                                {
+                                    <div class="mobile-permission-card">
+                                        <div class="permission-item">
+                                            <i class="bi bi-key-fill permission-icon"></i>
+                                            <div class="permission-content">
+                                                <div class="permission-name">
+                                                    @permiso.NombrePermiso
+                                                </div>
+                                                <p class="permission-description">@permiso.DescripcionPermiso</p>
+                                            </div>
+                                            <div class="permission-actions">
+                                                <button class="btn btn-sm btn-primary" onclick="editarPermiso(@permiso.PermisoId)">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(@permiso.PermisoId)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -253,8 +275,8 @@
                         <textarea class="form-control" id="descripcionRol" rows="3"></textarea>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label">Permisos por Categoría</label>
-                        <div id="listaPermisos" class="permisos-categorias">
+                        <label class="form-label">Permisos por Módulo</label>
+                        <div id="listaPermisos" class="permisos-modulos">
                             <!-- Se cargará dinámicamente vía JavaScript -->
                         </div>
                     </div>
@@ -292,6 +314,18 @@
                     <div class="mb-4">
                         <label class="form-label">Descripción</label>
                         <textarea class="form-control" id="descripcionPermiso" rows="3"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Módulo</label>
+                        <select class="form-control" id="moduloPermiso">
+                            <option value="">Seleccionar módulo</option>
+                            <option value="Facturación">Facturación</option>
+                            <option value="Inventario">Inventario</option>
+                            <option value="Usuarios">Usuarios</option>
+                            <option value="Reportes">Reportes</option>
+                            <option value="Configuración">Configuración</option>
+                            <option value="General">General</option>
+                        </select>
                     </div>
                 </form>
             </div>

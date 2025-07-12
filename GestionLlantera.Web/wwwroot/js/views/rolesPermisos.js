@@ -206,20 +206,50 @@ function actualizarTablaPermisos(permisos) {
         return;
     }
 
-    tbody.innerHTML = permisos.map(permiso => `
-        <tr>
-            <td>${permiso.nombrePermiso}</td>
-            <td>${permiso.descripcionPermiso || '-'}</td>
-            <td>
-                <button class="btn btn-sm btn-primary me-2" onclick="editarPermiso(${permiso.permisoId})" title="Editar">
-                    <i class="bi bi-pencil-fill"></i>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(${permiso.permisoId})" title="Eliminar">
-                    <i class="bi bi-trash-fill"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    // Agrupar permisos por módulo
+    const permisosPorModulo = permisos.reduce((grupos, permiso) => {
+        const modulo = permiso.modulo || 'General';
+        if (!grupos[modulo]) {
+            grupos[modulo] = [];
+        }
+        grupos[modulo].push(permiso);
+        return grupos;
+    }, {});
+
+    let html = '';
+    
+    // Generar HTML agrupado por módulo
+    Object.keys(permisosPorModulo).sort().forEach(modulo => {
+        // Agregar fila de encabezado del módulo
+        html += `
+            <tr class="modulo-header-row">
+                <td colspan="3" class="modulo-title">
+                    <i class="bi bi-layers me-2"></i>
+                    <strong>${modulo}</strong>
+                </td>
+            </tr>
+        `;
+        
+        // Agregar permisos del módulo
+        permisosPorModulo[modulo].forEach(permiso => {
+            html += `
+                <tr class="permiso-row">
+                    <td class="ps-4">${permiso.nombrePermiso}</td>
+                    <td>${permiso.descripcionPermiso || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-2" onclick="editarPermiso(${permiso.permisoId})" title="Editar">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(${permiso.permisoId})" title="Eliminar">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    });
+    
+    tbody.innerHTML = html;
 }
 
 // Función para abrir el modal de nuevo rol
@@ -248,27 +278,27 @@ async function abrirModalNuevoRol() {
             throw new Error('No se encontró el elemento listaPermisos');
         }
 
-        // Obtener permisos por categoría
-        const responseCategoria = await fetch(`/api/Permisos/por-categoria`);
-        if (!responseCategoria.ok) {
+        // Obtener permisos por módulo
+        const responseModulo = await fetch(`/api/Permisos/por-modulo`);
+        if (!responseModulo.ok) {
             throw new Error('Error al cargar permisos disponibles');
         }
 
-        const permisosPorCategoria = await responseCategoria.json();
-        console.log('Permisos por categoría:', permisosPorCategoria);
+        const permisosPorModulo = await responseModulo.json();
+        console.log('Permisos por módulo:', permisosPorModulo);
 
-        // Generar HTML para lista de permisos categorizados
+        // Generar HTML para lista de permisos categorizados por módulo
         let html = '';
 
-        Object.keys(permisosPorCategoria).forEach(categoria => {
+        Object.keys(permisosPorModulo).forEach(modulo => {
             html += `
-                <div class="categoria-group">
-                    <div class="categoria-header">
-                        <i class="bi bi-folder me-2"></i>
-                        ${categoria}
+                <div class="modulo-group">
+                    <div class="modulo-header">
+                        <i class="bi bi-layers me-2"></i>
+                        ${modulo}
                     </div>
-                    <div class="categoria-permisos">
-                        ${permisosPorCategoria[categoria].map(permiso => `
+                    <div class="modulo-permisos">
+                        ${permisosPorModulo[modulo].map(permiso => `
                             <div class="permiso-item">
                                 <input class="form-check-input" type="checkbox" value="${permiso.permisoId}" id="permiso_${permiso.permisoId}">
                                 <div class="permiso-label">
@@ -603,6 +633,7 @@ async function guardarPermiso() {
         const permisoId = document.getElementById('permisoId').value;
         const nombrePermiso = document.getElementById('nombrePermiso').value.trim();
         const descripcionPermiso = document.getElementById('descripcionPermiso').value.trim();
+        const moduloPermiso = document.getElementById('moduloPermiso').value.trim();
 
         // Validaciones básicas
         if (!nombrePermiso) {
@@ -615,7 +646,8 @@ async function guardarPermiso() {
         // Preparar datos
         const data = {
             nombrePermiso: nombrePermiso,
-            descripcionPermiso: descripcionPermiso
+            descripcionPermiso: descripcionPermiso,
+            modulo: moduloPermiso
         };
 
         console.log('Datos a enviar:', data);
@@ -666,6 +698,7 @@ async function editarPermiso(permisoId) {
         document.getElementById('permisoId').value = permisoId;
         document.getElementById('nombrePermiso').value = permiso.nombrePermiso;
         document.getElementById('descripcionPermiso').value = permiso.descripcionPermiso || '';
+        document.getElementById('moduloPermiso').value = permiso.modulo || '';
 
         // Actualizar título del modal
         document.querySelector('#modalNuevoPermiso .modal-title').textContent = 'Editar Permiso';
