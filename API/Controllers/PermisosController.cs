@@ -220,7 +220,7 @@ public class PermisosController : ControllerBase
                 .ToListAsync();
 
             var permisosPorModulo = permisos
-                .GroupBy(p => p.Modulo ?? "General")
+                .GroupBy(p => p.Modulo ?? "Sin Módulo")
                 .ToDictionary(g => g.Key, g => g.Select(p => new PermisoDTO
                 {
                     PermisoId = p.PermisoId,
@@ -249,7 +249,7 @@ public class PermisosController : ControllerBase
                 .ToListAsync();
 
             var permisosPorModulo = permisos
-                .GroupBy(p => p.Modulo ?? "General")
+                .GroupBy(p => p.Modulo ?? "Sin Módulo")
                 .ToDictionary(g => g.Key, g => g.Select(p => new PermisoDTO
                 {
                     PermisoId = p.PermisoId,
