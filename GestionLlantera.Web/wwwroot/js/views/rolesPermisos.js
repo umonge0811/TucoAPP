@@ -169,17 +169,41 @@ function actualizarTablaRoles(roles) {
             <td class="fw-semibold">${rol.nombreRol}</td>
             <td>${rol.descripcionRol || '-'}</td>
             <td>
-                <div class="d-flex flex-wrap gap-1">
-                    ${rol.permisos && rol.permisos.length > 0
-            ? rol.permisos.map(permiso =>
-                `<span class="badge bg-light text-dark">
-                    <i class="bi bi-key-fill me-1 text-primary"></i>
-                    ${permiso.nombrePermiso}
-                </span>`
-            ).join('')
-            : '<span class="text-muted">Sin permisos</span>'
+                ${rol.permisos && rol.permisos.length > 0
+            ? (() => {
+                // Agrupar permisos por módulo
+                const permisosPorModulo = rol.permisos.reduce((grupos, permiso) => {
+                    const modulo = permiso.modulo || 'General';
+                    if (!grupos[modulo]) {
+                        grupos[modulo] = [];
+                    }
+                    grupos[modulo].push(permiso);
+                    return grupos;
+                }, {});
+
+                // Generar HTML para cada módulo
+                return `<div class="permisos-modulos-container">
+                    ${Object.keys(permisosPorModulo).sort().map(modulo => `
+                        <div class="modulo-group mb-2">
+                            <div class="modulo-header">
+                                <i class="bi bi-layers me-1"></i>
+                                <strong>${modulo}</strong>
+                                <span class="badge bg-primary ms-1">${permisosPorModulo[modulo].length}</span>
+                            </div>
+                            <div class="permisos-list">
+                                ${permisosPorModulo[modulo].sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso)).map(permiso => `
+                                    <span class="permission-tag">
+                                        <i class="bi bi-key-fill me-1"></i>
+                                        ${permiso.nombrePermiso}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
+            })()
+            : '<span class="text-muted">Sin permisos asignados</span>'
         }
-                </div>
             </td>
             <td>
                 <div class="btn-group">

@@ -65,15 +65,40 @@
                                         <td class="fw-semibold">@rol.NombreRol</td>
                                         <td>@rol.DescripcionRol</td>
                                         <td>
-                                            <div class="d-flex flex-wrap gap-1">
-                                                @foreach (var permiso in rol.Permisos)
-                                                {
-                                                    <span class="badge bg-light text-dark">
-                                                        <i class="bi bi-key-fill me-1 text-primary"></i>
-                                                        @permiso.NombrePermiso
-                                                    </span>
-                                                }
-                                            </div>
+                                            @{
+                                                var permisosPorModulo = rol.Permisos
+                                                    .GroupBy(p => p.Modulo ?? "General")
+                                                    .OrderBy(g => g.Key);
+                                            }
+                                            
+                                            @if (permisosPorModulo.Any())
+                                            {
+                                                <div class="permisos-modulos-container">
+                                                    @foreach (var grupo in permisosPorModulo)
+                                                    {
+                                                        <div class="modulo-group mb-2">
+                                                            <div class="modulo-header">
+                                                                <i class="bi bi-layers me-1"></i>
+                                                                <strong>@grupo.Key</strong>
+                                                                <span class="badge bg-primary ms-1">@grupo.Count()</span>
+                                                            </div>
+                                                            <div class="permisos-list">
+                                                                @foreach (var permiso in grupo.OrderBy(p => p.NombrePermiso))
+                                                                {
+                                                                    <span class="permission-tag">
+                                                                        <i class="bi bi-key-fill me-1"></i>
+                                                                        @permiso.NombrePermiso
+                                                                    </span>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sin permisos asignados</span>
+                                            }
                                         </td>
                                         <td>
                                             <div class="btn-group">
@@ -109,15 +134,40 @@
                                                 <i class="bi bi-key-fill me-2"></i>
                                                 Permisos Asignados
                                             </h5>
-                                            <div class="permissions-list">
-                                                @foreach (var permiso in rol.Permisos)
-                                                {
-                                                    <span class="permission-badge">
-                                                        <i class="bi bi-key-fill me-1"></i>
-                                                        @permiso.NombrePermiso
-                                                    </span>
-                                                }
-                                            </div>
+                                            @{
+                                                var permisosPorModuloMovil = rol.Permisos
+                                                    .GroupBy(p => p.Modulo ?? "General")
+                                                    .OrderBy(g => g.Key);
+                                            }
+                                            
+                                            @if (permisosPorModuloMovil.Any())
+                                            {
+                                                <div class="permissions-by-module">
+                                                    @foreach (var grupo in permisosPorModuloMovil)
+                                                    {
+                                                        <div class="mobile-module-group mb-3">
+                                                            <div class="mobile-module-header">
+                                                                <i class="bi bi-layers me-1"></i>
+                                                                <strong>@grupo.Key</strong>
+                                                                <span class="badge bg-primary ms-1">@grupo.Count()</span>
+                                                            </div>
+                                                            <div class="mobile-permissions-list">
+                                                                @foreach (var permiso in grupo.OrderBy(p => p.NombrePermiso))
+                                                                {
+                                                                    <span class="mobile-permission-tag">
+                                                                        <i class="bi bi-key-fill me-1"></i>
+                                                                        @permiso.NombrePermiso
+                                                                    </span>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sin permisos asignados</span>
+                                            }
                                         </div>
                                     </div>
                                     <div class="role-card-footer">

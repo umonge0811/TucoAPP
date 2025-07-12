@@ -203,6 +203,121 @@
     gap: 1.25rem;
 }
 
+/* Contenedor de permisos por módulos */
+.permisos-modulos-container {
+    max-width: 100%;
+}
+
+.modulo-group {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.modulo-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.modulo-header .badge {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    font-size: 0.75rem;
+}
+
+.permisos-list {
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: white;
+}
+
+.permission-tag {
+    background: #e0f2fe;
+    color: #0277bd;
+    border: 1px solid #b3e5fc;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.permission-tag:hover {
+    background: #b3e5fc;
+    transform: translateY(-1px);
+}
+
+.permission-tag i {
+    font-size: 0.7rem;
+}
+
+/* Estilos para vista móvil */
+.permissions-by-module {
+    margin-top: 12px;
+}
+
+.mobile-module-group {
+    background: #f8fafc;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.mobile-module-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mobile-module-header .badge {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    font-size: 0.75rem;
+}
+
+.mobile-permissions-list {
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: white;
+}
+
+.mobile-permission-tag {
+    background: #e0f2fe;
+    color: #0277bd;
+    border: 1px solid #b3e5fc;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-weight: 500;
+}
+
+.mobile-permission-tag i {
+    font-size: 0.7rem;
+}
+
 /* Estilos para agrupación por módulos */
 .modulo-group {
     margin-bottom: 1.5rem;
