@@ -1,0 +1,30 @@
+PermisoID	NombrePermiso	DescripcionPermiso	Categoria
+1	Modificar Inventario	Permiso para modificar la cantidad de productos en inventario	NULL
+2	Crear Facturas	Permite crear y hacer cobros de facturar	NULL
+3	Ver Costos	Permite ver información de costos de productos	NULL
+4	Ver Utilidades	Permite ver información de utilidades y márgenes de ganancia	NULL
+5	Programar Inventario	Permite crear y programar inventarios	NULL
+6	Gestion Completa	Acceso completo a todas las funciones administrativas	NULL
+7	Editar Productos	Permite crear y editar productos	NULL
+8	Eliminar Productos	Permite eliminar productos del sistema	NULL
+9	Ajustar Stock	Permite realizar ajustes de inventario y stock	NULL
+10	Ver Reportes	Permite acceder a reportes y estadísticas	NULL
+11	Gestion Usuarios	Permite gestionar usuarios y sus permisos	NULL
+12	Configuracion Sistema	Permite acceder a configuraciones del sistema	NULL
+13	VerCostos	Permite ver los costos de los productos en el inventario	NULL
+14	VerUtilidades	Permite ver las utilidades y porcentajes de ganancia de los productos	NULL
+15	ProgramarInventario	Permite crear y programar nuevos inventarios	NULL
+16	Iniciar Inventario	Para poder dar inicio a los inventarios	NULL
+1016	Completar Inventario	Se utiliza para que los asignados a realizar inventarios puedas dar por finalizado el proceso.	NULL
+1017	Descargar Reportes	Permite descargar reportes en Excel y PDF	NULL
+1018	Ver Facturación	Para acceder al módulo de facturación	NULL
+1019	Editar Clientes	Permite modificar la informacion de los clientes	NULL
+1020	Ver Productos	Para visualizar Productos de Inventario	NULL
+1021	Ver Historial Inventarios Completo	Permite Visualizar inventarios Anteriores	NULL
+1022	CompletarFacturas	Permite completar facturas y cambiar estado a pagada	NULL
+1023	EditarFacturas	Permite editar facturas existentes	NULL
+1024	AnularFacturas	Permite anular facturas	NULL
+1025	Crear Clientes	Permiso para agregar nuevos clientes	NULL
+1026	Ver Clientes	Permiso para ver los clientes del Sistema	NULL
+1027	Eliminar Clientes	Permiso para eliminar un cliente de la Base de Datos	NULL
+1028	Entregar Pendientes	Permite al Usuario Entregar a nivel de sistema productos pendientes de Entrega	NULL
