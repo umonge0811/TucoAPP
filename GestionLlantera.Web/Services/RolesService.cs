@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using System.Net.Http;
 using System.Text.Json;
 using tuco.Clases.Models;
@@ -238,10 +238,17 @@ namespace GestionLlantera.Web.Services
 
                 // Realizamos la petición GET a la API para obtener los permisos
                 var response = await _httpClient.GetAsync("api/Permisos/obtener-todos");
-                response.EnsureSuccessStatusCode();
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Error en API: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                    throw new HttpRequestException($"Error al obtener permisos: {response.StatusCode} - {errorContent}");
+                }
 
                 // Leemos el contenido de la respuesta
                 var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta de API: {Content}", content);
 
                 // Deserializamos el JSON a una lista de PermisoDTO
                 var permisos = JsonSerializer.Deserialize<List<PermisoDTO>>(content, _jsonOptions);

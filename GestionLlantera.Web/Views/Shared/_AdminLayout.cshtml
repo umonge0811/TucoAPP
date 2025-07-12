@@ -142,7 +142,7 @@
                         </div>
                     </li>
 
-                    <li class="nav-item" asp-permiso="Gestión Completa">
+                    <li class="nav-item" asp-permiso="Gestion Completa">
 
                         <a class="nav-link" data-bs-toggle="collapse" href="#configMenu">
                             <i class="bi bi-gear"></i> Configuración
@@ -150,13 +150,13 @@
                         <div class="collapse submenu" id="configMenu">
                             <ul class="nav flex-column">
                                 <!-- Roles y Permisos - Solo gestión completa -->
-                                <li class="nav-item" asp-permiso="Gestión Completa">
+                                <li class="nav-item" asp-permiso="Gestion Completa">
                                     <a class="nav-link" asp-controller="Configuracion" asp-action="RolesPermisos">
                                         <i class="bi bi-shield-check"></i> Roles y Permisos
                                     </a>
                                 </li>
                                 <!-- Gestión de Usuarios - Permiso específico -->
-                                <li class="nav-item" asp-permiso="Gestión Usuarios">
+                                <li class="nav-item" asp-permiso="Gestion Usuarios">
                                     <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
                                         <i class="bi bi-people"></i> Gestión de Usuarios
                                     </a>
@@ -167,20 +167,20 @@
                     </li>
                     <!-- herramientas de administración -->
                     <!-- ✅ HERRAMIENTAS DE SISTEMA - Solo gestión completa -->
-                    <li class="nav-item" asp-permiso="Gestión Completa">
+                    <li class="nav-item" asp-permiso="Gestion Completa">
                         <a class="nav-link" data-bs-toggle="collapse" href="#herramientasMenu">
                             <i class="bi bi-tools"></i> Herramientas de Sistema
                         </a>
                         <div class="collapse submenu" id="herramientasMenu">
                             <ul class="nav flex-column">
                                 <!-- Diagnóstico de Permisos -->
-                                <li class="nav-item" asp-permiso="Gestión Completa">
+                                <li class="nav-item" asp-permiso="Gestion Completa">
                                     <a class="nav-link" asp-controller="DiagnosticoPermisos" asp-action="Index">
                                         <i class="bi bi-shield-check"></i> Diagnóstico de Permisos
                                     </a>
                                 </li>
                                 <!-- Logs del Sistema (si existe) -->
-                                <li class="nav-item" asp-permiso="Gestión Completa">
+                                <li class="nav-item" asp-permiso="Gestion Completa">
                                     <a class="nav-link" asp-controller="Sistema" asp-action="Logs">
                                         <i class="bi bi-journal-text"></i> Logs del Sistema
                                     </a>

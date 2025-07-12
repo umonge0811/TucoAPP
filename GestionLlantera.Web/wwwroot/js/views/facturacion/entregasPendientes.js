@@ -57,6 +57,14 @@ function configurarEventos() {
         if (cantidad < 1) {
             $(this).val(1);
         }
+        
+        // ✅ ACTUALIZAR ESTADO DEL BOTÓN SEGÚN DISPONIBILIDAD
+        const btnConfirmar = $('#btnConfirmarEntrega');
+        if (cantidad > 0 && cantidad <= max) {
+            btnConfirmar.prop('disabled', false);
+        } else {
+            btnConfirmar.prop('disabled', true);
+        }
     });
 }
 
@@ -192,6 +200,15 @@ function crearFilaPendiente(pendiente) {
 
     // Usar directamente el código de seguimiento de la base de datos
     const codigoSeguimiento = pendiente.codigoSeguimiento || 'Sin código';
+    
+    // ✅ VALIDAR STOCK DISPONIBLE
+    const stockActual = pendiente.stockActual || 0;
+    const cantidadPendiente = pendiente.cantidadPendiente || 0;
+    const stockSuficiente = stockActual >= cantidadPendiente;
+    
+    // Determinar clase CSS para el stock
+    const stockClass = stockSuficiente ? 'bg-success' : 'bg-danger';
+    const stockTitle = stockSuficiente ? 'Stock suficiente' : 'Stock insuficiente para completar la entrega';
 
     return `
         <tr>
@@ -209,7 +226,10 @@ function crearFilaPendiente(pendiente) {
                 <span class="badge bg-info">${pendiente.cantidadSolicitada || 0}</span>
             </td>
             <td class="text-center">
-                <span class="badge bg-warning">${pendiente.cantidadPendiente || 0}</span>
+                <span class="badge bg-warning">${cantidadPendiente}</span>
+            </td>
+            <td class="text-center">
+                <span class="badge ${stockClass}" title="${stockTitle}">${stockActual}</span>
             </td>
             <td>${fechaCreacion}</td>
             <td>
@@ -223,9 +243,10 @@ function crearFilaPendiente(pendiente) {
                         <i class="bi bi-eye"></i>
                     </button>
                     ${pendiente.estado === 'Pendiente' ? `
-                    <button type="button" class="btn btn-outline-success btn-sm" 
+                    <button type="button" class="btn btn-outline-success btn-sm ${!stockSuficiente ? 'disabled' : ''}" 
                             onclick="abrirModalEntrega(${pendiente.id})" 
-                            title="Marcar como entregado">
+                            title="${stockSuficiente ? 'Marcar como entregado' : 'Stock insuficiente - No se puede entregar'}"
+                            ${!stockSuficiente ? 'disabled' : ''}>
                         <i class="bi bi-check-circle"></i>
                     </button>
                     ` : ''}
@@ -247,12 +268,21 @@ function abrirModalEntrega(pendienteId) {
         return;
     }
 
+    // ✅ VALIDAR STOCK ANTES DE ABRIR MODAL
+    const stockActual = pendiente.stockActual || 0;
+    const cantidadPendiente = pendiente.cantidadPendiente || 0;
+    
+    if (stockActual < cantidadPendiente) {
+        mostrarError(`❌ STOCK INSUFICIENTE: El producto "${pendiente.nombreProducto}" tiene ${stockActual} unidades disponibles, pero se requieren ${cantidadPendiente} unidades para completar la entrega.`);
+        return;
+    }
+
     // Llenar datos del modal
     $('#pendienteId').val(pendiente.id);
     $('#nombreProducto').val(pendiente.nombreProducto || 'Producto sin nombre');
-    $('#cantidadPendiente').val(pendiente.cantidadPendiente || 0);
-    $('#maxCantidad').text(pendiente.cantidadPendiente || 0);
-    $('#cantidadAEntregar').val(pendiente.cantidadPendiente || 0);
+    $('#cantidadPendiente').val(cantidadPendiente);
+    $('#maxCantidad').text(Math.min(cantidadPendiente, stockActual)); // ✅ LIMITAR POR STOCK DISPONIBLE
+    $('#cantidadAEntregar').val(Math.min(cantidadPendiente, stockActual));
     $('#observacionesEntrega').val('');
 
     modalMarcarEntregado.show();
@@ -278,6 +308,8 @@ async function confirmarEntrega() {
             return;
         }
 
+       
+
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
         const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
@@ -295,7 +327,7 @@ async function confirmarEntrega() {
         // Deshabilitar botón mientras se procesa
         $('#btnConfirmarEntrega').prop('disabled', true).html('<i class="bi bi-hourglass-split me-2"></i>Procesando...');
 
-        const response = await fetch('/Facturacion/MarcarComoEntregado', {
+        const response = await fetch('/Facturacion/MarcarComoEntregadoPorCodigo', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -305,14 +337,38 @@ async function confirmarEntrega() {
             credentials: 'include'
         });
 
-        const resultado = await response.json();
+        console.log('🌐 Respuesta HTTP status:', response.status);
+        console.log('🌐 Respuesta HTTP headers:', response.headers);
+        
+        const textoRespuesta = await response.text();
+        console.log('🌐 Respuesta como texto:', textoRespuesta);
+        
+        let resultado;
+        try {
+            resultado = JSON.parse(textoRespuesta);
+            console.log('📋 Resultado parseado:', resultado);
+        } catch (parseError) {
+            console.error('❌ Error parseando JSON:', parseError);
+            console.error('❌ Texto recibido:', textoRespuesta);
+            mostrarError('Error de comunicación con el servidor');
+            return;
+        }
 
         if (resultado.success) {
             mostrarExito('Entrega confirmada exitosamente - Código: ' + codigoSeguimiento);
             modalMarcarEntregado.hide();
             cargarPendientes(); // Recargar la lista
         } else {
-            mostrarError('Error confirmando entrega: ' + (resultado.message || 'Error desconocido'));
+            // Mostrar el mensaje específico del error, especialmente útil para errores de stock
+            const mensajeError = resultado.message || 'Error desconocido al confirmar entrega';
+            mostrarError(mensajeError);
+            console.error('❌ Error detallado completo:', {
+                success: resultado.success,
+                message: resultado.message,
+                statusCode: response.status,
+                url: response.url,
+                respuestaCompleta: resultado
+            });
         }
 
     } catch (error) {
@@ -384,6 +440,10 @@ function generarContenidoDetalles(pendiente) {
                     <tr>
                         <td><strong>Pendiente:</strong></td>
                         <td><span class="badge bg-warning">${pendiente.cantidadPendiente || 0}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stock Actual:</strong></td>
+                        <td><span class="badge ${(pendiente.stockActual || 0) >= (pendiente.cantidadPendiente || 0) ? 'bg-success' : 'bg-danger'}">${pendiente.stockActual || 0}</span></td>
                     </tr>
                 </table>
             </div>

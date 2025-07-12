@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -1219,17 +1218,38 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> MarcarComoEntregado([FromBody] MarcarEntregadoRequest request)
+        public async Task<IActionResult> MarcarComoEntregadoPorCodigo([FromBody] MarcarEntregadoPorCodigoRequest request)
         {
             try
             {
-                _logger.LogInformation("🚚 === MARCANDO PRODUCTO COMO ENTREGADO ===");
-                _logger.LogInformation("🚚 Código de seguimiento: {CodigoSeguimiento}", request.CodigoSeguimiento);
-                _logger.LogInformation("🚚 Pendiente ID: {PendienteId}", request.PendienteId);
+                // ✅ VALIDAR PERMISO EN EL CONTROLADOR WEB
+                var tienePermiso = await this.TienePermisoAsync("Entregar Pendientes");
+                _logger.LogInformation("🔐 === VALIDACIÓN DE PERMISO EN WEB CONTROLLER ===");
+                _logger.LogInformation("🔐 Usuario: {Usuario}", User.Identity?.Name);
+                _logger.LogInformation("🔐 Permiso requerido: 'Entregar Pendientes'");
+                _logger.LogInformation("🔐 Tiene permiso: {TienePermiso}", tienePermiso);
 
-                if (!await this.TienePermisoAsync("Gestionar Entregas"))
+                if (!tienePermiso)
                 {
-                    return Json(new { success = false, message = "Sin permisos para gestionar entregas" });
+                    _logger.LogWarning("⛔ Usuario sin permiso 'Entregar Pendientes'");
+                    return Json(new { 
+                        success = false, 
+                        message = "No tiene permisos para entregar pendientes" 
+                    });
+                }
+                _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN CONTROLADOR WEB ===");
+                _logger.LogInformation("🚚 Request recibido: {Request}", 
+                    System.Text.Json.JsonSerializer.Serialize(request));
+
+                // Validar que el request tenga los datos necesarios
+                if (string.IsNullOrEmpty(request.CodigoSeguimiento))
+                {
+                    return Json(new { success = false, message = "Código de seguimiento es requerido" });
+                }
+
+                if (request.UsuarioEntrega <= 0)
+                {
+                    return Json(new { success = false, message = "Usuario de entrega es requerido" });
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
@@ -1238,28 +1258,33 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                // Validar que se proporcione código de seguimiento
-                if (string.IsNullOrEmpty(request.CodigoSeguimiento))
+                // Crear el objeto con la estructura exacta que espera la API
+                var requestParaApi = new 
                 {
-                    return Json(new { success = false, message = "Código de seguimiento requerido" });
-                }
+                    codigoSeguimiento = request.CodigoSeguimiento,
+                    pendienteId = request.PendienteId,
+                    cantidadAEntregar = request.CantidadAEntregar,
+                    usuarioEntrega = request.UsuarioEntrega,
+                    observacionesEntrega = request.ObservacionesEntrega
+                };
 
-                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(request, jwtToken);
+                _logger.LogInformation("🚚 Datos estructurados para API: {Request}", 
+                    System.Text.Json.JsonSerializer.Serialize(requestParaApi));
+
+                var resultado = await _facturacionService.MarcarComoEntregadoPorCodigoAsync(requestParaApi, jwtToken);
 
                 if (resultado.success)
                 {
-                    return Json(new
-                    {
-                        success = true,
+                    return Json(new { 
+                        success = true, 
                         message = resultado.message,
                         data = resultado.data
                     });
                 }
                 else
                 {
-                    return Json(new
-                    {
-                        success = false,
+                    return Json(new { 
+                        success = false, 
                         message = resultado.message,
                         details = resultado.details
                     });
@@ -1267,11 +1292,10 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error marcando producto como entregado");
-                return Json(new
-                {
-                    success = false,
-                    message = "Error interno del servidor: " + ex.Message
+                _logger.LogError(ex, "❌ Error en controlador web marcando como entregado por código");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor: " + ex.Message 
                 });
             }
         }
@@ -1343,5 +1367,14 @@ namespace GestionLlantera.Web.Controllers
         public List<int> ProductosIds { get; set; } = new List<int>();
         public string? ObservacionesEntrega { get; set; }
         public DateTime? FechaEntrega { get; set; }
+    }
+
+    public class MarcarEntregadoPorCodigoRequest
+    {
+        public string CodigoSeguimiento { get; set; } = string.Empty;
+        public int PendienteId { get; set; }
+        public int CantidadAEntregar { get; set; }
+        public int UsuarioEntrega { get; set; }
+        public string? ObservacionesEntrega { get; set; }
     }
 }

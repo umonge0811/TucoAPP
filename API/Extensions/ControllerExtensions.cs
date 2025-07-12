@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using API.ServicesAPI.Interfaces;
 using System.Security.Claims;
 
@@ -22,13 +22,41 @@ namespace API.Extensions
             IPermisosService permisosService,
             string nombrePermiso)
         {
-            if (string.IsNullOrEmpty(nombrePermiso))
-                return false;
+            try
+            {
+                var loggerFactory = controller.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("TienePermisoAsync");
+                
+                logger?.LogInformation("🔎 === VERIFICANDO PERMISO ===");
+                logger?.LogInformation("🔎 Permiso: '{NombrePermiso}'", nombrePermiso);
 
-            if (controller.User == null || !controller.User.Identity.IsAuthenticated)
-                return false;
+                if (string.IsNullOrEmpty(nombrePermiso))
+                {
+                    logger?.LogWarning("🔎 Permiso vacío o nulo");
+                    return false;
+                }
 
-            return await permisosService.TienePermisoAsync(controller.User, nombrePermiso);
+                if (controller.User == null || !controller.User.Identity.IsAuthenticated)
+                {
+                    logger?.LogWarning("🔎 Usuario no autenticado o nulo");
+                    return false;
+                }
+
+                logger?.LogInformation("🔎 Usuario autenticado: {Usuario}", controller.User.Identity.Name);
+
+                var resultado = await permisosService.TienePermisoAsync(controller.User, nombrePermiso);
+                logger?.LogInformation("🔎 Resultado del servicio: {Resultado}", resultado);
+                logger?.LogInformation("🔎 === FIN VERIFICACIÓN PERMISO ===");
+
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                var loggerFactory = controller.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("TienePermisoAsync");
+                logger?.LogError(ex, "❌ Error verificando permiso {Permiso}", nombrePermiso);
+                return false;
+            }
         }
 
         /// <summary>
@@ -42,17 +70,79 @@ namespace API.Extensions
             string nombrePermiso,
             string? mensajePersonalizado = null)
         {
-            if (!await controller.TienePermisoAsync(permisosService, nombrePermiso))
+            try
             {
-                return controller.StatusCode(403, new
+                // ✅ LOGGING DETALLADO PARA DIAGNÓSTICO
+                var loggerFactory = controller.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("ValidarPermisoAsync");
+                
+                logger?.LogInformation("🔍 === INICIO VALIDACIÓN DE PERMISO ===");
+                logger?.LogInformation("🔍 Permiso solicitado: '{NombrePermiso}'", nombrePermiso);
+                logger?.LogInformation("🔍 Usuario: {Usuario}", controller.User.Identity?.Name ?? "Anónimo");
+                logger?.LogInformation("🔍 Controlador: {Controlador}", controller.GetType().Name);
+                logger?.LogInformation("🔍 Acción: {Accion}", controller.ControllerContext.ActionDescriptor.ActionName);
+
+                // Verificar autenticación
+                if (!controller.User.Identity?.IsAuthenticated ?? true)
                 {
-                    message = mensajePersonalizado ?? $"No tienes permisos para realizar esta acción. Permiso requerido: {nombrePermiso}",
+                    logger?.LogWarning("⚠️ Usuario no autenticado");
+                    return controller.StatusCode(401, new
+                    {
+                        message = "Usuario no autenticado",
+                        permisoRequerido = nombrePermiso,
+                        tienePermiso = false
+                    });
+                }
+
+                // Obtener ID del usuario para logging
+                var userId = permisosService.ObtenerUsuarioId(controller.User);
+                logger?.LogInformation("🔍 ID Usuario obtenido: {UserId}", userId);
+
+                // Verificar si es administrador
+                var esAdministrador = await permisosService.EsAdministradorAsync(controller.User);
+                logger?.LogInformation("🔍 Es administrador: {EsAdministrador}", esAdministrador);
+
+                // Llamar al método principal de verificación
+                var tienePermiso = await controller.TienePermisoAsync(permisosService, nombrePermiso);
+                logger?.LogInformation("🔍 Resultado TienePermisoAsync: {TienePermiso}", tienePermiso);
+
+                if (!tienePermiso)
+                {
+                    logger?.LogWarning("🚫 PERMISO DENEGADO - Usuario: {Usuario}, Permiso: {Permiso}", 
+                        controller.User.Identity?.Name, nombrePermiso);
+
+                    return controller.StatusCode(403, new
+                    {
+                        message = mensajePersonalizado ?? $"No tienes permisos para realizar esta acción. Permiso requerido: {nombrePermiso}",
+                        permisoRequerido = nombrePermiso,
+                        tienePermiso = false,
+                        usuario = controller.User.Identity?.Name,
+                        esAdministrador = esAdministrador,
+                        userId = userId
+                    });
+                }
+
+                logger?.LogInformation("✅ PERMISO CONCEDIDO - Usuario: {Usuario}, Permiso: {Permiso}", 
+                    controller.User.Identity?.Name, nombrePermiso);
+                logger?.LogInformation("🔍 === FIN VALIDACIÓN DE PERMISO (EXITOSA) ===");
+
+                return null; // null significa que SÍ tiene permiso, continuar
+            }
+            catch (Exception ex)
+            {
+                var loggerFactory = controller.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("ValidarPermisoAsync");
+                logger?.LogError(ex, "❌ ERROR EN VALIDACIÓN DE PERMISO: {Permiso}", nombrePermiso);
+
+                // En caso de error, denegar por seguridad
+                return controller.StatusCode(500, new
+                {
+                    message = "Error interno al validar permisos",
                     permisoRequerido = nombrePermiso,
-                    tienePermiso = false
+                    tienePermiso = false,
+                    error = ex.Message
                 });
             }
-
-            return null; // null significa que SÍ tiene permiso, continuar
         }
 
         /// <summary>

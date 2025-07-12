@@ -88,7 +88,7 @@ namespace GestionLlantera.Web.Services
                 });
 
                 var permisosPorCategoria = permisos
-                    .GroupBy(p => p.Categoria ?? "General")
+                    .GroupBy(p => p.Modulo ?? "General")
                     .ToDictionary(g => g.Key, g => g.ToList());
 
                 return permisosPorCategoria;

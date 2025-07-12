@@ -14,7 +14,7 @@ public class Permiso
 
     public string? DescripcionPermiso { get; set; }
 
-    public string? Categoria { get; set; }
+    public string? Modulo { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<Role> Rols { get; set; } = new List<Role>();

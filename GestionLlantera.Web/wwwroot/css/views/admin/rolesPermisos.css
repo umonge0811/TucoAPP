@@ -1,4 +1,4 @@
-﻿/* Tabs personalizados */
+/* Tabs personalizados */
 .custom-tabs {
     border: none;
     gap: 2rem;
@@ -203,6 +203,96 @@
     gap: 1.25rem;
 }
 
+/* Estilos para agrupación por módulos */
+.modulo-group {
+    margin-bottom: 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.modulo-header {
+    background: #f8fafc;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modulo-permisos {
+    padding: 1rem;
+}
+
+.modulo-permisos .permiso-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.modulo-permisos .permiso-item:last-child {
+    border-bottom: none;
+}
+
+.permiso-label {
+    flex: 1;
+}
+
+.permiso-description {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+}
+
+/* Estilos para tabla de permisos agrupados */
+.modulo-header-row {
+    background: #f8fafc;
+}
+
+.modulo-title {
+    font-size: 1rem;
+    color: #374151;
+    padding: 0.75rem 1rem;
+}
+
+.permiso-row {
+    border-left: 3px solid transparent;
+}
+
+.permiso-row:hover {
+    border-left-color: #3b82f6;
+    background: #f8fafc;
+}
+
+/* Vista móvil para módulos */
+.mobile-modulo-group {
+    margin-bottom: 1.5rem;
+}
+
+.mobile-modulo-header {
+    background: #f8fafc;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem 0.5rem 0 0;
+    margin-bottom: 0;
+}
+
+.mobile-modulo-group .mobile-permission-card {
+    border-radius: 0;
+    border-top: none;
+}
+
+.mobile-modulo-group .mobile-permission-card:first-of-type {
+    border-radius: 0;
+}
+
+.mobile-modulo-group .mobile-permission-card:last-of-type {
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
 .permission-item {
     background: #f9fafb;
     border-radius: 0.75rem;
@@ -301,6 +391,159 @@
         color: white;
     }
 
+/* Estilos para el acordeón de permisos */
+.accordion-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem !important;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.accordion-item:last-child {
+    margin-bottom: 0;
+}
+
+.accordion-header .accordion-button {
+    background: #f8fafc;
+    color: #374151;
+    font-weight: 600;
+    border: none;
+    border-radius: 0.5rem !important;
+    padding: 1rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.accordion-header .accordion-button:not(.collapsed) {
+    background: var(--admin-primary);
+    color: white;
+    box-shadow: none;
+}
+
+.accordion-header .accordion-button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    border: none;
+}
+
+.accordion-header .accordion-button::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23374151'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+.accordion-header .accordion-button:not(.collapsed)::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+.accordion-body {
+    padding: 1.5rem;
+    background: white;
+}
+
+.accordion-body .table {
+    margin-bottom: 0;
+}
+
+.accordion-body .table thead th {
+    background: #f9fafb;
+    color: #374151;
+    font-weight: 600;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+}
+
+.accordion-body .table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.accordion-body .table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Badge en el header del acordeón */
+.accordion-button .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.accordion-button:not(.collapsed) .badge {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: white;
+}
+
+/* Cards para vista móvil dentro del acordeón */
+.accordion-body .card {
+    transition: all 0.2s ease;
+}
+
+.accordion-body .card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Estilos para acordeón en modales */
+#accordionPermisosModal .accordion-item,
+#accordionPermisosModalEditar .accordion-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem !important;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+#accordionPermisosModal .accordion-header .accordion-button,
+#accordionPermisosModalEditar .accordion-header .accordion-button {
+    background: #f8fafc;
+    color: #374151;
+    font-weight: 500;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 0.375rem !important;
+    padding: 0.75rem 1rem;
+}
+
+#accordionPermisosModal .accordion-header .accordion-button:not(.collapsed),
+#accordionPermisosModalEditar .accordion-header .accordion-button:not(.collapsed) {
+    background: var(--admin-primary);
+    color: white;
+    box-shadow: none;
+}
+
+#accordionPermisosModal .accordion-body,
+#accordionPermisosModalEditar .accordion-body {
+    background: white;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#accordionPermisosModal .form-check,
+#accordionPermisosModalEditar .form-check {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+#accordionPermisosModal .form-check:hover,
+#accordionPermisosModalEditar .form-check:hover {
+    background: #f3f4f6;
+    border-color: var(--admin-primary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#accordionPermisosModal .form-check-input:checked,
+#accordionPermisosModalEditar .form-check-input:checked {
+    background-color: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+
+#accordionPermisosModal .form-check-label,
+#accordionPermisosModalEditar .form-check-label {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .custom-tabs {
@@ -314,5 +557,18 @@
 
     .permission-item {
         padding: 1rem;
+    }
+
+    .accordion-header .accordion-button {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .accordion-body {
+        padding: 1rem;
+    }
+
+    .accordion-body .card-body {
+        padding: 0.75rem;
     }
 }
