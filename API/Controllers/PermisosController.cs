@@ -105,7 +105,17 @@ public class PermisosController : ControllerBase
     [HttpGet("obtener-todos")]
     public async Task<ActionResult<List<Permiso>>> ObtenerPermisos()
     {
-        return Ok(await _context.Permisos.ToListAsync());
+        try
+        {
+            var permisos = await _context.Permisos.ToListAsync();
+            _logger.LogInformation("Se obtuvieron {Count} permisos", permisos.Count);
+            return Ok(permisos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener todos los permisos");
+            return StatusCode(500, new { Message = $"Error al obtener permisos: {ex.Message}" });
+        }
     }
 
     // Obtener todos los permisos
