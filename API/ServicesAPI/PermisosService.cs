@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.ServicesAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -30,41 +30,84 @@ namespace API.ServicesAPI
         {
             try
             {
+                _logger.LogInformation("🔍 === INICIO VERIFICACIÓN PERMISO EN SERVICE ===");
+                _logger.LogInformation("🔍 Permiso solicitado: '{NombrePermiso}'", nombrePermiso);
+                _logger.LogInformation("🔍 Usuario Identity: {Usuario}", user.Identity?.Name ?? "N/A");
+
                 var userId = ObtenerUsuarioId(user);
+                _logger.LogInformation("🔍 ID Usuario extraído: {UserId}", userId);
+
                 if (userId == null)
                 {
-                    _logger.LogWarning("No se pudo obtener el ID del usuario");
+                    _logger.LogWarning("⚠️ No se pudo obtener el ID del usuario");
                     return false;
                 }
 
                 // ✅ PRIMERO: Verificar si es administrador (acceso total)
-                if (await EsAdministradorAsync(user))
+                var esAdministrador = await EsAdministradorAsync(user);
+                _logger.LogInformation("🔍 Es administrador: {EsAdministrador}", esAdministrador);
+
+                if (esAdministrador)
                 {
-                    _logger.LogInformation("Usuario {UserId} es administrador - acceso concedido a {Permiso}", userId, nombrePermiso);
+                    _logger.LogInformation("✅ Usuario {UserId} es administrador - acceso concedido a {Permiso}", userId, nombrePermiso);
                     return true;
                 }
 
                 // ✅ SEGUNDO: Buscar en caché
                 var cacheKey = $"permisos_usuario_{userId.Value}";
+                _logger.LogInformation("🔍 Buscando en caché con key: {CacheKey}", cacheKey);
+
                 if (!_cache.TryGetValue(cacheKey, out List<string> permisosUsuario))
                 {
+                    _logger.LogInformation("🔍 No encontrado en caché, consultando base de datos...");
+                    
                     // ✅ TERCERO: Consultar base de datos
                     permisosUsuario = await ObtenerPermisosUsuarioAsync(userId.Value);
 
                     // ✅ CUARTO: Guardar en caché
                     _cache.Set(cacheKey, permisosUsuario, _cacheExpiration);
-                    _logger.LogInformation("Permisos del usuario {UserId} cargados en caché", userId.Value);
+                    _logger.LogInformation("✅ Permisos del usuario {UserId} cargados en caché", userId.Value);
+                }
+                else
+                {
+                    _logger.LogInformation("✅ Permisos encontrados en caché para usuario {UserId}", userId.Value);
                 }
 
-                var tienePermiso = permisosUsuario.Contains(nombrePermiso);
-                _logger.LogInformation("Usuario {UserId} {Resultado} permiso {Permiso}",
+                _logger.LogInformation("🔍 Total permisos del usuario: {TotalPermisos}", permisosUsuario.Count);
+                _logger.LogInformation("🔍 Permisos del usuario: [{Permisos}]", string.Join(", ", permisosUsuario));
+
+                // Verificar coincidencia exacta
+                var tienePermisoExacto = permisosUsuario.Contains(nombrePermiso);
+                _logger.LogInformation("🔍 Coincidencia exacta con '{Permiso}': {Resultado}", nombrePermiso, tienePermisoExacto);
+
+                // Si no hay coincidencia exacta, verificar variaciones
+                if (!tienePermisoExacto)
+                {
+                    var variaciones = permisosUsuario.Where(p => 
+                        p.Equals(nombrePermiso, StringComparison.OrdinalIgnoreCase) ||
+                        p.Replace(" ", "").Equals(nombrePermiso.Replace(" ", ""), StringComparison.OrdinalIgnoreCase) ||
+                        p.Replace(" ", "_").Equals(nombrePermiso.Replace(" ", "_"), StringComparison.OrdinalIgnoreCase)
+                    ).ToList();
+
+                    _logger.LogInformation("🔍 Variaciones encontradas: [{Variaciones}]", string.Join(", ", variaciones));
+                    
+                    if (variaciones.Any())
+                    {
+                        _logger.LogInformation("✅ Encontrada coincidencia por variación");
+                        return true;
+                    }
+                }
+
+                var tienePermiso = tienePermisoExacto;
+                _logger.LogInformation("🔍 RESULTADO FINAL: Usuario {UserId} {Resultado} permiso '{Permiso}'",
                     userId.Value, tienePermiso ? "TIENE" : "NO TIENE", nombrePermiso);
+                _logger.LogInformation("🔍 === FIN VERIFICACIÓN PERMISO EN SERVICE ===");
 
                 return tienePermiso;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al verificar permiso {Permiso} para usuario", nombrePermiso);
+                _logger.LogError(ex, "❌ Error al verificar permiso {Permiso} para usuario", nombrePermiso);
                 return false; // Por seguridad, denegar acceso en caso de error
             }
         }

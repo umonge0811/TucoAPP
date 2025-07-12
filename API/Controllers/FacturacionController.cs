@@ -1536,6 +1536,38 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("test-permiso-entregar")]
+        [Authorize]
+        public async Task<IActionResult> TestPermisoEntregar()
+        {
+            try
+            {
+                _logger.LogInformation("🧪 === TEST PERMISO ENTREGAR PENDIENTES ===");
+                
+                var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
+                    "Solo usuarios con permiso 'Entregar Pendientes' pueden marcar productos como entregados");
+                
+                var resultado = new
+                {
+                    mensaje = "Test de validación del permiso 'Entregar Pendientes'",
+                    validacionEsNull = validacionPermiso == null,
+                    interpretacion = validacionPermiso == null ? "TIENE PERMISO" : "NO TIENE PERMISO",
+                    tipoValidacion = validacionPermiso?.GetType().Name,
+                    usuario = User.Identity?.Name,
+                    timestamp = DateTime.Now
+                };
+
+                _logger.LogInformation("🧪 Resultado test: {@Resultado}", resultado);
+
+                return Ok(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error en test de permiso");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
         [HttpPost("marcar-entregado-por-codigo")]
         [Authorize]
         public async Task<IActionResult> MarcarEntregadoPorCodigo([FromBody] MarcarEntregadoPorCodigoRequest request)
