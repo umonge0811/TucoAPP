@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 
 namespace API.ServicesAPI.Interfaces
 {
@@ -51,8 +51,13 @@ namespace API.ServicesAPI.Interfaces
         Task<bool> EsAdministradorAsync(ClaimsPrincipal user);
 
         /// <summary>
-        /// Refresca los permisos en caché (útil cuando se modifican permisos)
+        /// Refresca los permisos en caché
         /// </summary>
         Task RefrescarCachePermisosAsync();
+
+        /// <summary>
+        /// Limpia el caché para un usuario específico
+        /// </summary>
+        void LimpiarCacheUsuario(int userId);
     }
 }
