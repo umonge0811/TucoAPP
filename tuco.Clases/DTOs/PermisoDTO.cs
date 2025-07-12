@@ -26,6 +26,9 @@ namespace Tuco.Clases.DTOs
 
             [StringLength(100, ErrorMessage = "La categoría no puede exceder los 100 caracteres.")]
             public string? Categoria { get; set; }
+
+            [StringLength(100, ErrorMessage = "El módulo no puede exceder los 100 caracteres.")]
+            public string? Modulo { get; set; }
         }
     }
 }
