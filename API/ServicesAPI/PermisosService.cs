@@ -270,22 +270,5 @@ namespace API.ServicesAPI
                 _logger.LogError(ex, "Error al refrescar caché de permisos");
             }
         }
-
-        /// <summary>
-        /// Limpia el caché para un usuario específico
-        /// </summary>
-        public void LimpiarCacheUsuario(int userId)
-        {
-            try
-            {
-                _cache.Remove($"permisos_usuario_{userId}");
-                _cache.Remove($"roles_usuario_{userId}");
-                _logger.LogInformation("Caché limpiado para usuario {UserId}", userId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al limpiar caché del usuario {UserId}", userId);
-            }
-        }
     }
 }
