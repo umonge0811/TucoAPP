@@ -200,9 +200,11 @@ function actualizarTablaRoles(roles) {
 
 // Función auxiliar para actualizar la tabla de permisos
 function actualizarTablaPermisos(permisos) {
-    const tbody = document.querySelector('#permisos table tbody');
-    if (!tbody) {
-        console.error('No se encontró el elemento tabla de permisos');
+    console.log('Actualizando acordeón de permisos con:', permisos);
+    
+    const accordionContainer = document.getElementById('accordionPermisos');
+    if (!accordionContainer) {
+        console.error('No se encontró el contenedor del acordeón de permisos');
         return;
     }
 
@@ -217,39 +219,117 @@ function actualizarTablaPermisos(permisos) {
     }, {});
 
     let html = '';
+    let accordionIndex = 0;
     
-    // Generar HTML agrupado por módulo
+    // Generar HTML del acordeón agrupado por módulo
     Object.keys(permisosPorModulo).sort().forEach(modulo => {
-        // Agregar fila de encabezado del módulo
+        const collapseId = `collapse${accordionIndex}`;
+        const headingId = `heading${accordionIndex}`;
+        const isFirstItem = accordionIndex === 0;
+        const permisosDelModulo = permisosPorModulo[modulo];
+        
         html += `
-            <tr class="modulo-header-row">
-                <td colspan="3" class="modulo-title">
-                    <i class="bi bi-layers me-2"></i>
-                    <strong>${modulo}</strong>
-                </td>
-            </tr>
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="${headingId}">
+                    <button class="accordion-button ${isFirstItem ? '' : 'collapsed'}" type="button" 
+                            data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
+                            aria-expanded="${isFirstItem ? 'true' : 'false'}" aria-controls="${collapseId}">
+                        <i class="bi bi-layers me-2"></i>
+                        <strong>${modulo}</strong>
+                        <span class="badge bg-primary ms-2">${permisosDelModulo.length}</span>
+                    </button>
+                </h2>
+                <div id="${collapseId}" class="accordion-collapse collapse ${isFirstItem ? 'show' : ''}" 
+                     aria-labelledby="${headingId}" data-bs-parent="#accordionPermisos">
+                    <div class="accordion-body">
+                        <!-- Vista Desktop -->
+                        <div class="d-none d-md-block">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Descripción</th>
+                                            <th width="150">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${permisosDelModulo.map(permiso => `
+                                            <tr>
+                                                <td class="fw-semibold">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="bi bi-key-fill text-primary"></i>
+                                                        ${permiso.nombrePermiso}
+                                                    </div>
+                                                </td>
+                                                <td class="text-muted">${permiso.descripcionPermiso || '-'}</td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <button class="btn btn-sm btn-outline-primary" onclick="editarPermiso(${permiso.permisoId})" title="Editar">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarPermiso(${permiso.permisoId})" title="Eliminar">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Vista Móvil -->
+                        <div class="d-md-none">
+                            <div class="row g-3">
+                                ${permisosDelModulo.map(permiso => `
+                                    <div class="col-12">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-body p-3">
+                                                <div class="d-flex align-items-start gap-3">
+                                                    <i class="bi bi-key-fill text-primary fs-5 mt-1"></i>
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="card-title mb-1">${permiso.nombrePermiso}</h6>
+                                                        <p class="card-text text-muted small mb-2">${permiso.descripcionPermiso || '-'}</p>
+                                                        <div class="d-flex gap-2">
+                                                            <button class="btn btn-sm btn-primary" onclick="editarPermiso(${permiso.permisoId})">
+                                                                <i class="bi bi-pencil me-1"></i>
+                                                                Editar
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-danger" onclick="eliminarPermiso(${permiso.permisoId})">
+                                                                <i class="bi bi-trash me-1"></i>
+                                                                Eliminar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
         
-        // Agregar permisos del módulo
-        permisosPorModulo[modulo].forEach(permiso => {
-            html += `
-                <tr class="permiso-row">
-                    <td class="ps-4">${permiso.nombrePermiso}</td>
-                    <td>${permiso.descripcionPermiso || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-primary me-2" onclick="editarPermiso(${permiso.permisoId})" title="Editar">
-                            <i class="bi bi-pencil-fill"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="eliminarPermiso(${permiso.permisoId})" title="Eliminar">
-                            <i class="bi bi-trash-fill"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
+        accordionIndex++;
     });
     
-    tbody.innerHTML = html;
+    // Si no hay permisos, mostrar mensaje
+    if (Object.keys(permisosPorModulo).length === 0) {
+        html = `
+            <div class="text-center py-5">
+                <i class="bi bi-key display-1 text-muted"></i>
+                <h5 class="text-muted mt-3">No hay permisos configurados</h5>
+                <p class="text-muted">Comienza creando tu primer permiso</p>
+            </div>
+        `;
+    }
+    
+    accordionContainer.innerHTML = html;
 }
 
 // Función para abrir el modal de nuevo rol
