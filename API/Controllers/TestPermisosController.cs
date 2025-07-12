@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using API.ServicesAPI.Interfaces;
 using API.Extensions;
@@ -165,6 +165,44 @@ namespace API.Controllers
             {
                 mensaje = "Información completa del usuario actual",
                 usuario = info,
+                timestamp = DateTime.Now
+            });
+        }
+
+        /// <summary>
+        /// Endpoint específico para probar el permiso "Entregar Pendientes"
+        /// </summary>
+        [HttpGet("test-entregar-pendientes")]
+        public async Task<IActionResult> TestEntregarPendientes()
+        {
+            var userId = _permisosService.ObtenerUsuarioId(User);
+
+            if (!userId.HasValue)
+            {
+                return Ok(new
+                {
+                    mensaje = "Usuario no autenticado",
+                    usuarioId = (int?)null,
+                    tienePermiso = false,
+                    timestamp = DateTime.Now
+                });
+            }
+
+            var permisos = await _permisosService.ObtenerPermisosUsuarioAsync(userId.Value);
+            var tienePermiso = await _permisosService.TienePermisoAsync(User, "Entregar Pendientes");
+
+            return Ok(new
+            {
+                mensaje = "Diagnóstico del permiso 'Entregar Pendientes'",
+                usuarioId = userId,
+                permisoBuscado = "Entregar Pendientes",
+                tienePermiso = tienePermiso,
+                todosLosPermisos = permisos.OrderBy(p => p).ToList(),
+                totalPermisos = permisos.Count(),
+                coincidenciasExactas = permisos.Where(p => p == "Entregar Pendientes").ToList(),
+                coincidenciasParciales = permisos.Where(p => p.Contains("Entregar") || p.Contains("Pendientes")).ToList(),
+                usuario = User.Identity?.Name,
+                claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList(),
                 timestamp = DateTime.Now
             });
         }

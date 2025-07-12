@@ -337,7 +337,22 @@ async function confirmarEntrega() {
             credentials: 'include'
         });
 
-        const resultado = await response.json();
+        console.log('🌐 Respuesta HTTP status:', response.status);
+        console.log('🌐 Respuesta HTTP headers:', response.headers);
+        
+        const textoRespuesta = await response.text();
+        console.log('🌐 Respuesta como texto:', textoRespuesta);
+        
+        let resultado;
+        try {
+            resultado = JSON.parse(textoRespuesta);
+            console.log('📋 Resultado parseado:', resultado);
+        } catch (parseError) {
+            console.error('❌ Error parseando JSON:', parseError);
+            console.error('❌ Texto recibido:', textoRespuesta);
+            mostrarError('Error de comunicación con el servidor');
+            return;
+        }
 
         if (resultado.success) {
             mostrarExito('Entrega confirmada exitosamente - Código: ' + codigoSeguimiento);
@@ -347,7 +362,13 @@ async function confirmarEntrega() {
             // Mostrar el mensaje específico del error, especialmente útil para errores de stock
             const mensajeError = resultado.message || 'Error desconocido al confirmar entrega';
             mostrarError(mensajeError);
-            console.error('❌ Error detallado:', resultado);
+            console.error('❌ Error detallado completo:', {
+                success: resultado.success,
+                message: resultado.message,
+                statusCode: response.status,
+                url: response.url,
+                respuestaCompleta: resultado
+            });
         }
 
     } catch (error) {

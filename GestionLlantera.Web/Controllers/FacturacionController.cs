@@ -1222,6 +1222,21 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ VALIDAR PERMISO EN EL CONTROLADOR WEB
+                var tienePermiso = await this.TienePermisoAsync("Entregar Pendientes");
+                _logger.LogInformation("🔐 === VALIDACIÓN DE PERMISO EN WEB CONTROLLER ===");
+                _logger.LogInformation("🔐 Usuario: {Usuario}", User.Identity?.Name);
+                _logger.LogInformation("🔐 Permiso requerido: 'Entregar Pendientes'");
+                _logger.LogInformation("🔐 Tiene permiso: {TienePermiso}", tienePermiso);
+
+                if (!tienePermiso)
+                {
+                    _logger.LogWarning("⛔ Usuario sin permiso 'Entregar Pendientes'");
+                    return Json(new { 
+                        success = false, 
+                        message = "No tiene permisos para entregar pendientes" 
+                    });
+                }
                 _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN CONTROLADOR WEB ===");
                 _logger.LogInformation("🚚 Request recibido: {Request}", 
                     System.Text.Json.JsonSerializer.Serialize(request));
