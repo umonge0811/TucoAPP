@@ -166,27 +166,39 @@ function actualizarTablaRoles(roles) {
                 const ordenModulos = ['Administración', 'Inventario', 'Facturación', 'Clientes', 'Reportes', 'Configuración', 'General'];
                 const modulosOrdenados = ordenModulos.filter(modulo => permisosPorModulo[modulo]);
 
-                // Generar HTML para cada módulo
+                // Generar HTML para cada módulo usando acordeones
                 return `<div class="permisos-modulos-container">
-                    ${modulosOrdenados.map(modulo => `
-                        <div class="modulo-group mb-2">
-                            <div class="modulo-header">
-                                <i class="${obtenerIconoModulo(modulo)} me-1"></i>
-                                <strong>${modulo}</strong>
-                                <span class="badge bg-light text-dark ms-1">${permisosPorModulo[modulo].length}</span>
+                    <div class="accordion" id="accordion-permisos-rol-${rol.rolId}">
+                        ${modulosOrdenados.map((modulo, index) => `
+                            <div class="accordion-item mb-1">
+                                <h2 class="accordion-header" id="heading-${rol.rolId}-${index}">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#collapse-${rol.rolId}-${index}" 
+                                            aria-expanded="false" aria-controls="collapse-${rol.rolId}-${index}"
+                                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                                        <i class="${obtenerIconoModulo(modulo)} me-2"></i>
+                                        <strong>${modulo}</strong>
+                                        <span class="badge bg-primary ms-2">${permisosPorModulo[modulo].length}</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse-${rol.rolId}-${index}" class="accordion-collapse collapse" 
+                                     aria-labelledby="heading-${rol.rolId}-${index}" data-bs-parent="#accordion-permisos-rol-${rol.rolId}">
+                                    <div class="accordion-body p-2">
+                                        <div class="permisos-list">
+                                            ${permisosPorModulo[modulo]
+                                                .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
+                                                .map(permiso => `
+                                                    <span class="permission-tag ${obtenerClaseModulo(modulo)}">
+                                                        <i class="bi bi-check2 me-1"></i>
+                                                        ${permiso.nombrePermiso}
+                                                    </span>
+                                                `).join('')}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="permisos-list">
-                                ${permisosPorModulo[modulo]
-                                    .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
-                                    .map(permiso => `
-                                        <span class="permission-tag ${obtenerClaseModulo(modulo)}">
-                                            <i class="bi bi-check2 me-1"></i>
-                                            ${permiso.nombrePermiso}
-                                        </span>
-                                    `).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
+                        `).join('')}
+                    </div>
                 </div>`;
             })()
             : '<span class="text-muted">Sin permisos asignados</span>'
