@@ -131,9 +131,30 @@ function actualizarTablaRoles(roles) {
             <td>
                 ${rol.permisos && rol.permisos.length > 0
             ? (() => {
-                // Agrupar permisos por módulo
+                // Mapear nombres de permisos a módulos específicos basado en patrones comunes
+                const obtenerModulo = (nombrePermiso) => {
+                    const nombre = nombrePermiso.toLowerCase();
+                    
+                    if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
+                        return 'Inventario';
+                    } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
+                        return 'Facturación';
+                    } else if (nombre.includes('cliente')) {
+                        return 'Clientes';
+                    } else if (nombre.includes('usuario') || nombre.includes('rol') || nombre.includes('permiso')) {
+                        return 'Administración';
+                    } else if (nombre.includes('reporte') || nombre.includes('estadistica')) {
+                        return 'Reportes';
+                    } else if (nombre.includes('configuracion') || nombre.includes('sistema')) {
+                        return 'Configuración';
+                    } else {
+                        return 'General';
+                    }
+                };
+
+                // Agrupar permisos por módulo usando la función de mapeo
                 const permisosPorModulo = rol.permisos.reduce((grupos, permiso) => {
-                    const modulo = permiso.modulo || 'General';
+                    const modulo = obtenerModulo(permiso.nombrePermiso);
                     if (!grupos[modulo]) {
                         grupos[modulo] = [];
                     }
@@ -141,22 +162,28 @@ function actualizarTablaRoles(roles) {
                     return grupos;
                 }, {});
 
+                // Orden específico para los módulos
+                const ordenModulos = ['Administración', 'Inventario', 'Facturación', 'Clientes', 'Reportes', 'Configuración', 'General'];
+                const modulosOrdenados = ordenModulos.filter(modulo => permisosPorModulo[modulo]);
+
                 // Generar HTML para cada módulo
                 return `<div class="permisos-modulos-container">
-                    ${Object.keys(permisosPorModulo).sort().map(modulo => `
+                    ${modulosOrdenados.map(modulo => `
                         <div class="modulo-group mb-2">
                             <div class="modulo-header">
-                                <i class="bi bi-layers me-1"></i>
+                                <i class="${obtenerIconoModulo(modulo)} me-1"></i>
                                 <strong>${modulo}</strong>
-                                <span class="badge bg-primary ms-1">${permisosPorModulo[modulo].length}</span>
+                                <span class="badge bg-light text-dark ms-1">${permisosPorModulo[modulo].length}</span>
                             </div>
                             <div class="permisos-list">
-                                ${permisosPorModulo[modulo].sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso)).map(permiso => `
-                                    <span class="permission-tag">
-                                        <i class="bi bi-key-fill me-1"></i>
-                                        ${permiso.nombrePermiso}
-                                    </span>
-                                `).join('')}
+                                ${permisosPorModulo[modulo]
+                                    .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
+                                    .map(permiso => `
+                                        <span class="permission-tag ${obtenerClaseModulo(modulo)}">
+                                            <i class="bi bi-check2 me-1"></i>
+                                            ${permiso.nombrePermiso}
+                                        </span>
+                                    `).join('')}
                             </div>
                         </div>
                     `).join('')}
@@ -181,6 +208,34 @@ function actualizarTablaRoles(roles) {
     `).join('');
 }
 
+// Función auxiliar para obtener el icono del módulo
+function obtenerIconoModulo(modulo) {
+    const iconos = {
+        'Administración': 'bi bi-gear',
+        'Inventario': 'bi bi-boxes',
+        'Facturación': 'bi bi-receipt',
+        'Clientes': 'bi bi-people',
+        'Reportes': 'bi bi-graph-up',
+        'Configuración': 'bi bi-sliders',
+        'General': 'bi bi-layers'
+    };
+    return iconos[modulo] || 'bi bi-layers';
+}
+
+// Función auxiliar para obtener la clase CSS del módulo
+function obtenerClaseModulo(modulo) {
+    const clases = {
+        'Administración': 'tag-administracion',
+        'Inventario': 'tag-inventario',
+        'Facturación': 'tag-facturacion',
+        'Clientes': 'tag-clientes',
+        'Reportes': 'tag-reportes',
+        'Configuración': 'tag-configuracion',
+        'General': 'tag-general'
+    };
+    return clases[modulo] || 'tag-general';
+}
+
 
 // Función auxiliar para actualizar la tabla de permisos
 function actualizarTablaPermisos(permisos) {
@@ -192,9 +247,30 @@ function actualizarTablaPermisos(permisos) {
         return;
     }
 
-    // Agrupar permisos por módulo
+    // Función para mapear permisos a módulos específicos
+    const obtenerModulo = (nombrePermiso) => {
+        const nombre = nombrePermiso.toLowerCase();
+        
+        if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
+            return 'Inventario';
+        } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
+            return 'Facturación';
+        } else if (nombre.includes('cliente')) {
+            return 'Clientes';
+        } else if (nombre.includes('usuario') || nombre.includes('rol') || nombre.includes('permiso')) {
+            return 'Administración';
+        } else if (nombre.includes('reporte') || nombre.includes('estadistica')) {
+            return 'Reportes';
+        } else if (nombre.includes('configuracion') || nombre.includes('sistema')) {
+            return 'Configuración';
+        } else {
+            return 'General';
+        }
+    };
+
+    // Agrupar permisos por módulo usando la función de mapeo
     const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-        const modulo = permiso.modulo || 'General';
+        const modulo = obtenerModulo(permiso.nombrePermiso);
         if (!grupos[modulo]) {
             grupos[modulo] = [];
         }
@@ -345,9 +421,30 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
         // Los permisos ya están cargados arriba, no necesitamos hacer otra llamada
         console.log('Usando permisos ya cargados para crear acordeón');
 
-        // Agrupar permisos por módulo manualmente
+        // Función para mapear permisos a módulos específicos
+        const obtenerModulo = (nombrePermiso) => {
+            const nombre = nombrePermiso.toLowerCase();
+            
+            if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
+                return 'Inventario';
+            } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
+                return 'Facturación';
+            } else if (nombre.includes('cliente')) {
+                return 'Clientes';
+            } else if (nombre.includes('usuario') || nombre.includes('rol') || nombre.includes('permiso')) {
+                return 'Administración';
+            } else if (nombre.includes('reporte') || nombre.includes('estadistica')) {
+                return 'Reportes';
+            } else if (nombre.includes('configuracion') || nombre.includes('sistema')) {
+                return 'Configuración';
+            } else {
+                return 'General';
+            }
+        };
+
+        // Agrupar permisos por módulo usando la función de mapeo
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-            const modulo = permiso.modulo || 'General';
+            const modulo = obtenerModulo(permiso.nombrePermiso);
             if (!grupos[modulo]) {
                 grupos[modulo] = [];
             }
@@ -484,9 +581,30 @@ async function cargarPermisosParaRol(rolId) {
         const permisos = await responsePermisos.json();
         console.log('Permisos disponibles:', permisos);
 
-        // Agrupar permisos por módulo
+        // Función para mapear permisos a módulos específicos
+        const obtenerModulo = (nombrePermiso) => {
+            const nombre = nombrePermiso.toLowerCase();
+            
+            if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
+                return 'Inventario';
+            } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
+                return 'Facturación';
+            } else if (nombre.includes('cliente')) {
+                return 'Clientes';
+            } else if (nombre.includes('usuario') || nombre.includes('rol') || nombre.includes('permiso')) {
+                return 'Administración';
+            } else if (nombre.includes('reporte') || nombre.includes('estadistica')) {
+                return 'Reportes';
+            } else if (nombre.includes('configuracion') || nombre.includes('sistema')) {
+                return 'Configuración';
+            } else {
+                return 'General';
+            }
+        };
+
+        // Agrupar permisos por módulo usando la función de mapeo
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-            const modulo = permiso.modulo || 'General';
+            const modulo = obtenerModulo(permiso.nombrePermiso);
             if (!grupos[modulo]) {
                 grupos[modulo] = [];
             }

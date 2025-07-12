@@ -225,6 +225,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    border-radius: 6px 6px 0 0;
 }
 
 .modulo-header .badge {
@@ -239,12 +240,10 @@
     flex-wrap: wrap;
     gap: 6px;
     background: white;
+    border-radius: 0 0 6px 6px;
 }
 
 .permission-tag {
-    background: #e0f2fe;
-    color: #0277bd;
-    border: 1px solid #b3e5fc;
     font-size: 0.75rem;
     padding: 4px 8px;
     border-radius: 12px;
@@ -253,15 +252,87 @@
     gap: 3px;
     font-weight: 500;
     transition: all 0.2s ease;
+    border: 1px solid;
 }
 
 .permission-tag:hover {
-    background: #b3e5fc;
     transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .permission-tag i {
     font-size: 0.7rem;
+}
+
+/* Estilos específicos por módulo */
+.tag-administracion {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+.tag-administracion:hover {
+    background: #fde68a;
+}
+
+.tag-inventario {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+}
+
+.tag-inventario:hover {
+    background: #bfdbfe;
+}
+
+.tag-facturacion {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
+}
+
+.tag-facturacion:hover {
+    background: #bbf7d0;
+}
+
+.tag-clientes {
+    background: #fce7f3;
+    color: #be185d;
+    border-color: #f9a8d4;
+}
+
+.tag-clientes:hover {
+    background: #fbcfe8;
+}
+
+.tag-reportes {
+    background: #f3e8ff;
+    color: #7c3aed;
+    border-color: #c4b5fd;
+}
+
+.tag-reportes:hover {
+    background: #e9d5ff;
+}
+
+.tag-configuracion {
+    background: #f0f9ff;
+    color: #0369a1;
+    border-color: #7dd3fc;
+}
+
+.tag-configuracion:hover {
+    background: #e0f2fe;
+}
+
+.tag-general {
+    background: #f3f4f6;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.tag-general:hover {
+    background: #e5e7eb;
 }
 
 /* Estilos para vista móvil */
