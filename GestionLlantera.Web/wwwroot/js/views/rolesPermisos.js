@@ -333,7 +333,7 @@ function actualizarTablaPermisos(permisos) {
 }
 
 // Función para abrir el modal de nuevo rol
-async function abrirModalNuevoRol() {
+window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
     const submitButton = document.querySelector('.btn-primary-custom');
 
     try {
@@ -358,15 +358,8 @@ async function abrirModalNuevoRol() {
             throw new Error('No se encontró el elemento listaPermisos');
         }
 
-        // Obtener permisos por módulo - usar el endpoint del ConfiguracionController
-        const responseModulo = await fetch('/Configuracion/permisos');
-        if (!responseModulo.ok) {
-            const errorText = await responseModulo.text();
-            console.error('Error response:', errorText);
-            throw new Error(`Error al cargar permisos disponibles: ${responseModulo.status} - ${responseModulo.statusText}`);
-        }
-
-        const permisos = await responseModulo.json();
+        // Los permisos ya están cargados arriba, no necesitamos hacer otra llamada
+        console.log('Usando permisos ya cargados para crear acordeón');
 
         // Agrupar permisos por módulo manualmente
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
@@ -428,7 +421,7 @@ async function abrirModalNuevoRol() {
 }
 
 // Función para abrir el modal de nuevo permiso
-async function abrirModalNuevoPermiso() {
+window.abrirModalNuevoPermiso = async function abrirModalNuevoPermiso() {
     try {
         // Resetear el formulario
         document.getElementById('formPermiso').reset();
@@ -443,7 +436,7 @@ async function abrirModalNuevoPermiso() {
     }
 }
 
-async function editarRol(rolId) {
+window.editarRol = async function editarRol(rolId) {
     try {
         console.log(`Editando rol con ID: ${rolId}`);
 
@@ -662,7 +655,7 @@ async function actualizarRol() {
 
 
 // Función para eliminar rol
-async function eliminarRol(rolId) {
+window.eliminarRol = async function eliminarRol(rolId) {
     // Mostrar confirmación con SweetAlert2
     const result = await Swal.fire({
         title: '¿Estás seguro?',
@@ -779,7 +772,7 @@ async function guardarPermiso() {
 }
 
 // Función para editar permiso
-async function editarPermiso(permisoId) {
+window.editarPermiso = async function editarPermiso(permisoId) {
     try {
         // Obtener datos del permiso - ahora usando ruta del controlador
         const response = await fetch(`/Configuracion/permiso/${permisoId}`);
@@ -806,7 +799,7 @@ async function editarPermiso(permisoId) {
 }
 
 // Función para eliminar permiso
-async function eliminarPermiso(permisoId) {
+window.eliminarPermiso = async function eliminarPermiso(permisoId) {
     try {
         // Confirmar eliminación con SweetAlert2
         const result = await Swal.fire({
