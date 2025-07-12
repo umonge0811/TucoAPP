@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using API.ServicesAPI.Interfaces;
 using API.Extensions;
+using API.Data;
 
 namespace API.Controllers
 {
@@ -16,11 +18,13 @@ namespace API.Controllers
     {
         private readonly IPermisosService _permisosService;
         private readonly ILogger<TestPermisosController> _logger;
+        private readonly TucoContext _context;
 
-        public TestPermisosController(IPermisosService permisosService, ILogger<TestPermisosController> logger)
+        public TestPermisosController(IPermisosService permisosService, ILogger<TestPermisosController> logger, TucoContext context)
         {
             _permisosService = permisosService;
             _logger = logger;
+            _context = context;
         }
 
         /// <summary>
