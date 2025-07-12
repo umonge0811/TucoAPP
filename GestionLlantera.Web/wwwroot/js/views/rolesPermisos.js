@@ -201,7 +201,7 @@ function actualizarTablaRoles(roles) {
 // Función auxiliar para actualizar la tabla de permisos
 function actualizarTablaPermisos(permisos) {
     console.log('Actualizando acordeón de permisos con:', permisos);
-    
+
     const accordionContainer = document.getElementById('accordionPermisos');
     if (!accordionContainer) {
         console.error('No se encontró el contenedor del acordeón de permisos');
@@ -220,14 +220,14 @@ function actualizarTablaPermisos(permisos) {
 
     let html = '';
     let accordionIndex = 0;
-    
+
     // Generar HTML del acordeón agrupado por módulo
     Object.keys(permisosPorModulo).sort().forEach(modulo => {
         const collapseId = `collapse${accordionIndex}`;
         const headingId = `heading${accordionIndex}`;
         const isFirstItem = accordionIndex === 0;
         const permisosDelModulo = permisosPorModulo[modulo];
-        
+
         html += `
             <div class="accordion-item">
                 <h2 class="accordion-header" id="${headingId}">
@@ -298,7 +298,7 @@ function actualizarTablaPermisos(permisos) {
                                                                 Editar
                                                             </button>
                                                             <button class="btn btn-sm btn-outline-danger" onclick="eliminarPermiso(${permiso.permisoId})">
-                                                                <i class="bi bi-trash me-1"></i>
+                                                                <i class="bi bi-trash"></i>
                                                                 Eliminar
                                                             </button>
                                                         </div>
@@ -314,10 +314,10 @@ function actualizarTablaPermisos(permisos) {
                 </div>
             </div>
         `;
-        
+
         accordionIndex++;
     });
-    
+
     // Si no hay permisos, mostrar mensaje
     if (Object.keys(permisosPorModulo).length === 0) {
         html = `
@@ -328,7 +328,7 @@ function actualizarTablaPermisos(permisos) {
             </div>
         `;
     }
-    
+
     accordionContainer.innerHTML = html;
 }
 
@@ -358,13 +358,26 @@ async function abrirModalNuevoRol() {
             throw new Error('No se encontró el elemento listaPermisos');
         }
 
-        // Obtener permisos por módulo
-        const responseModulo = await fetch(`/api/Permisos/por-modulo`);
+        // Obtener permisos por módulo - usar el endpoint del ConfiguracionController
+        const responseModulo = await fetch('/Configuracion/permisos');
         if (!responseModulo.ok) {
-            throw new Error('Error al cargar permisos disponibles');
+            const errorText = await responseModulo.text();
+            console.error('Error response:', errorText);
+            throw new Error(`Error al cargar permisos disponibles: ${responseModulo.status} - ${responseModulo.statusText}`);
         }
 
-        const permisosPorModulo = await responseModulo.json();
+        const permisos = await responseModulo.json();
+
+        // Agrupar permisos por módulo manualmente
+        const permisosPorModulo = permisos.reduce((grupos, permiso) => {
+            const modulo = permiso.modulo || 'General';
+            if (!grupos[modulo]) {
+                grupos[modulo] = [];
+            }
+            grupos[modulo].push(permiso);
+            return grupos;
+        }, {});
+
         console.log('Permisos por módulo:', permisosPorModulo);
 
         // Generar HTML para lista de permisos categorizados por módulo

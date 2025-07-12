@@ -1,4 +1,4 @@
-﻿// Controllers/ConfiguracionController.cs
+// Controllers/ConfiguracionController.cs
 
 // Importaciones necesarias para el controlador
 using GestionLlantera.Web.Extensions;
@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
+using System.Linq;
 
 // Controlador que maneja la configuración del sistema, incluyendo roles y permisos
 [Authorize] // Asegura que solo usuarios autenticados puedan acceder a este controlador
@@ -417,6 +418,28 @@ public class ConfiguracionController : Controller
         {
             _logger.LogError(ex, "Error al eliminar permiso");
             return StatusCode(500, new { message = "Error al eliminar el permiso" });
+        }
+    }
+
+    // GET: Configuracion/permisos-por-modulo
+    [HttpGet("permisos-por-modulo")]
+    public async Task<IActionResult> ObtenerPermisosPorModulo()
+    {
+        try
+        {
+            var permisos = await _permisosService.ObtenerTodosLosPermisos();
+
+            // Agrupar por módulo
+            var permisosPorModulo = permisos
+                .GroupBy(p => p.Modulo ?? "General")
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            return Ok(permisosPorModulo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener permisos por módulo");
+            return StatusCode(500, new { message = "Error al obtener permisos por módulo" });
         }
     }
 }
