@@ -124,24 +124,11 @@ function actualizarTablaRoles(roles) {
         return;
     }
 
-    // Función para obtener el módulo del permiso usando el campo Modulo de la BD
+    // Función para obtener el módulo del permiso usando el campo modulo de la BD
     const obtenerModulo = (permiso) => {
-        console.log('DEBUG - Objeto permiso completo:', permiso);
-        console.log('DEBUG - Propiedades del permiso:', Object.keys(permiso));
-        console.log('DEBUG - permiso.Modulo:', permiso.Modulo);
-        console.log('DEBUG - permiso.modulo:', permiso.modulo);
-        console.log('DEBUG - permiso.categoria:', permiso.categoria);
-        console.log('DEBUG - permiso.Categoria:', permiso.Categoria);
-
-        // Intentar todas las posibles variaciones del campo módulo
-        const modulo = permiso.Modulo || permiso.modulo || permiso.Categoria || permiso.categoria || permiso.Module || permiso.module;
-
-        if (modulo && modulo.trim() !== '') {
-            console.log('DEBUG - Módulo encontrado:', modulo);
-            return modulo;
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo;
         }
-
-        console.log('DEBUG - No se encontró módulo, usando General');
         return 'General';
     };
 
@@ -300,24 +287,11 @@ function actualizarTablaPermisos(permisos) {
         return;
     }
 
-    // Función para obtener el módulo del permiso usando el campo Modulo de la BD
+    // Función para obtener el módulo del permiso usando el campo modulo de la BD
     const obtenerModulo = (permiso) => {
-        console.log('DEBUG - Objeto permiso completo:', permiso);
-        console.log('DEBUG - Propiedades del permiso:', Object.keys(permiso));
-        console.log('DEBUG - permiso.Modulo:', permiso.Modulo);
-        console.log('DEBUG - permiso.modulo:', permiso.modulo);
-        console.log('DEBUG - permiso.categoria:', permiso.categoria);
-        console.log('DEBUG - permiso.Categoria:', permiso.Categoria);
-
-        // Intentar todas las posibles variaciones del campo módulo
-        const modulo = permiso.Modulo || permiso.modulo || permiso.Categoria || permiso.categoria || permiso.Module || permiso.module;
-
-        if (modulo && modulo.trim() !== '') {
-            console.log('DEBUG - Módulo encontrado:', modulo);
-            return modulo;
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo;
         }
-
-        console.log('DEBUG - No se encontró módulo, usando General');
         return 'General';
     };
 
@@ -474,24 +448,11 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
         // Los permisos ya están cargados arriba, no necesitamos hacer otra llamada
         console.log('Usando permisos ya cargados para crear acordeón');
 
-        // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
+        // Función para obtener el módulo del permiso usando el campo modulo de la BD
         const obtenerModuloModal = (permiso) => {
-        console.log('DEBUG - Objeto permiso completo:', permiso);
-        console.log('DEBUG - Propiedades del permiso:', Object.keys(permiso));
-        console.log('DEBUG - permiso.Modulo:', permiso.Modulo);
-        console.log('DEBUG - permiso.modulo:', permiso.modulo);
-        console.log('DEBUG - permiso.categoria:', permiso.categoria);
-        console.log('DEBUG - permiso.Categoria:', permiso.Categoria);
-
-        // Intentar todas las posibles variaciones del campo módulo
-        const modulo = permiso.Modulo || permiso.modulo || permiso.Categoria || permiso.categoria || permiso.Module || permiso.module;
-
-        if (modulo && modulo.trim() !== '') {
-            console.log('DEBUG - Módulo encontrado:', modulo);
-            return modulo;
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo;
         }
-
-        console.log('DEBUG - No se encontró módulo, usando General');
         return 'General';
     };
 
@@ -634,24 +595,11 @@ async function cargarPermisosParaRol(rolId) {
         const permisos = await responsePermisos.json();
         console.log('Permisos disponibles:', permisos);
 
-        // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
+        // Función para obtener el módulo del permiso usando el campo modulo de la BD
         const obtenerModuloEditar = (permiso) => {
-        console.log('DEBUG - Objeto permiso completo:', permiso);
-        console.log('DEBUG - Propiedades del permiso:', Object.keys(permiso));
-        console.log('DEBUG - permiso.Modulo:', permiso.Modulo);
-        console.log('DEBUG - permiso.modulo:', permiso.modulo);
-        console.log('DEBUG - permiso.categoria:', permiso.categoria);
-        console.log('DEBUG - permiso.Categoria:', permiso.Categoria);
-
-        // Intentar todas las posibles variaciones del campo módulo
-        const modulo = permiso.Modulo || permiso.modulo || permiso.Categoria || permiso.categoria || permiso.Module || permiso.module;
-
-        if (modulo && modulo.trim() !== '') {
-            console.log('DEBUG - Módulo encontrado:', modulo);
-            return modulo;
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo;
         }
-
-        console.log('DEBUG - No se encontró módulo, usando General');
         return 'General';
     };
 
