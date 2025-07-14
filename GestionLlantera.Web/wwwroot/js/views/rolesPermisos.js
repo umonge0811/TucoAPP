@@ -124,25 +124,14 @@ function actualizarTablaRoles(roles) {
         return;
     }
 
-    // Función para mapear nombres de permisos a módulos específicos basado en patrones comunes
-    const obtenerModulo = (nombrePermiso) => {
-        const nombre = nombrePermiso.toLowerCase();
-
-        if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
-            return 'Inventario';
-        } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
-            return 'Facturación';
-        } else if (nombre.includes('cliente')) {
-            return 'Clientes';
-        } else if (nombre.includes('usuario') || nombre.includes('rol') || nombre.includes('permiso')) {
-            return 'Administración';
-        } else if (nombre.includes('reporte') || nombre.includes('estadistica')) {
-            return 'Reportes';
-        } else if (nombre.includes('configuracion') || nombre.includes('sistema')) {
-            return 'Configuración';
-        } else {
-            return 'General';
+    // Función para obtener el módulo del permiso usando el campo Modulo de la BD
+    const obtenerModulo = (permiso) => {
+        // Usar directamente el campo Modulo de la base de datos
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo;
         }
+        // Fallback si no tiene módulo definido
+        return 'General';
     };
 
     tbody.innerHTML = roles.map(rol => `
@@ -152,9 +141,9 @@ function actualizarTablaRoles(roles) {
             <td>
                 ${rol.permisos && rol.permisos.length > 0
             ? (() => {
-                // Agrupar permisos por módulo usando la función de mapeo
+                // Agrupar permisos por módulo usando el campo Modulo de la BD
                 const permisosPorModulo = rol.permisos.reduce((grupos, permiso) => {
-                    const modulo = obtenerModulo(permiso.nombrePermiso);
+                    const modulo = obtenerModulo(permiso);
                     if (!grupos[modulo]) {
                         grupos[modulo] = [];
                     }
@@ -300,30 +289,19 @@ function actualizarTablaPermisos(permisos) {
         return;
     }
 
-    // Función para mapear permisos a módulos específicos
-    const obtenerModulo = (nombrePermiso) => {
-        const nombre = nombrePermiso.toLowerCase();
-
-        if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
-            return 'Inventario';
-        } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
-            return 'Facturación';
-        } else if (nombre.includes('cliente')) {
-            return 'Clientes';
-        } else if (nombre.includes('usuario') || nombre.includes('rol') || nombre.includes('permiso')) {
-            return 'Administración';
-        } else if (nombre.includes('reporte') || nombre.includes('estadistica')) {
-            return 'Reportes';
-        } else if (nombre.includes('configuracion') || nombre.includes('sistema')) {
-            return 'Configuración';
-        } else {
-            return 'General';
+    // Función para obtener el módulo del permiso usando el campo Modulo de la BD
+    const obtenerModulo = (permiso) => {
+        // Usar directamente el campo Modulo de la base de datos
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo;
         }
+        // Fallback si no tiene módulo definido
+        return 'General';
     };
 
-    // Agrupar permisos por módulo usando la función de mapeo
+    // Agrupar permisos por módulo usando el campo Modulo de la BD
     const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-        const modulo = obtenerModulo(permiso.nombrePermiso);
+        const modulo = obtenerModulo(permiso);
         if (!grupos[modulo]) {
             grupos[modulo] = [];
         }
