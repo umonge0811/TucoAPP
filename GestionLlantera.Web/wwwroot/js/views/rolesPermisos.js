@@ -118,15 +118,17 @@ async function cargarRoles() {
 
 // Función auxiliar para actualizar la tabla de roles
 function actualizarTablaRoles(roles) {
-    const tbody = document.querySelector('#roles table tbody');
-    if (!tbody) {
-        console.error('No se encontró la tabla de roles');
+    console.log('Actualizando acordeón de roles con:', roles);
+
+    const accordionContainer = document.getElementById('accordionRoles');
+    if (!accordionContainer) {
+        console.error('No se encontró el contenedor del acordeón de roles');
         return;
     }
 
     // Función para obtener el módulo del permiso usando el campo modulo de la BD
     const obtenerModulo = (permiso) => {
-        console.log('Obteniendo módulo para permiso:', permiso);
+        console.log('Obteniendo módulo para permiso en acordeón de roles:', permiso);
         if (permiso.modulo && permiso.modulo.trim() !== '') {
             return permiso.modulo.trim();
         }
@@ -153,120 +155,194 @@ function actualizarTablaRoles(roles) {
         return 'General';
     };
 
-    tbody.innerHTML = roles.map(rol => `
-        <tr>
-            <td class="fw-semibold">${rol.nombreRol}</td>
-            <td>${rol.descripcionRol || '-'}</td>
-            <td>
-                ${rol.permisos && rol.permisos.length > 0
-            ? (() => {
-                // Agrupar permisos por módulo usando el campo Modulo de la BD
-                const permisosPorModulo = rol.permisos.reduce((grupos, permiso) => {
-                    const modulo = obtenerModulo(permiso);
-                    if (!grupos[modulo]) {
-                        grupos[modulo] = [];
-                    }
-                    grupos[modulo].push(permiso);
-                    return grupos;
-                }, {});
+    let html = '';
+    let accordionIndex = 0;
 
-                // Orden específico para los módulos
-                const ordenModulos = ['Administración', 'Inventario', 'Facturación', 'Clientes', 'Reportes', 'Configuración', 'General'];
-                const modulosOrdenados = ordenModulos.filter(modulo => permisosPorModulo[modulo]);
+    // Generar HTML del acordeón agrupado por rol
+    roles.forEach(rol => {
+        const collapseId = `collapseRol${accordionIndex}`;
+        const headingId = `headingRol${accordionIndex}`;
+        const isFirstItem = accordionIndex === 0;
 
-                // Vista Desktop - Acordeones
-                const vistaDesktop = `
-                    <div class="d-none d-md-block permisos-modulos-container">
-                        <div class="accordion" id="accordion-permisos-rol-${rol.rolId}">
-                            ${modulosOrdenados.map((modulo, index) => `
-                                <div class="accordion-item mb-1">
-                                    <h2 class="accordion-header" id="heading-${rol.rolId}-${index}">
-                                        <button class="accordion-button collapsed" type="button" 
-                                                data-bs-toggle="collapse" data-bs-target="#collapse-${rol.rolId}-${index}" 
-                                                aria-expanded="false" aria-controls="collapse-${rol.rolId}-${index}"
-                                                style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
-                                            <i class="${obtenerIconoModulo(modulo)} me-2"></i>
-                                            <strong>${modulo}</strong>
-                                            <span class="badge bg-primary ms-2">${permisosPorModulo[modulo].length}</span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapse-${rol.rolId}-${index}" class="accordion-collapse collapse" 
-                                         aria-labelledby="heading-${rol.rolId}-${index}" data-bs-parent="#accordion-permisos-rol-${rol.rolId}">
-                                        <div class="accordion-body p-2">
-                                            <div class="permisos-list">
-                                                ${permisosPorModulo[modulo]
-                                                    .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
-                                                    .map(permiso => `
-                                                        <span class="permission-tag ${obtenerClaseModulo(modulo)}">
-                                                            <i class="bi bi-check2 me-1"></i>
-                                                            ${permiso.nombrePermiso}
-                                                        </span>
-                                                    `).join('')}
+        html += `
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="${headingId}">
+                    <button class="accordion-button ${isFirstItem ? '' : 'collapsed'}" type="button" 
+                            data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
+                            aria-expanded="${isFirstItem ? 'true' : 'false'}" aria-controls="${collapseId}">
+                        <i class="bi bi-person-badge me-2"></i>
+                        <strong>${rol.nombreRol}</strong>
+                        ${rol.permisos ? `<span class="badge bg-primary ms-2">${rol.permisos.length}</span>` : ''}
+                    </button>
+                </h2>
+                <div id="${collapseId}" class="accordion-collapse collapse ${isFirstItem ? 'show' : ''}" 
+                     aria-labelledby="${headingId}" data-bs-parent="#accordionRoles">
+                    <div class="accordion-body">
+                        <!-- Información del Rol -->
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <h6 class="text-primary mb-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Información del Rol
+                                </h6>
+                                <p class="mb-1"><strong>Nombre:</strong> ${rol.nombreRol}</p>
+                                <p class="mb-3"><strong>Descripción:</strong> ${rol.descripcionRol || 'Sin descripción'}</p>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary" onclick="editarRol(${rol.rolId})">
+                                        <i class="bi bi-pencil me-1"></i>
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})">
+                                        <i class="bi bi-trash me-1"></i>
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Permisos del Rol agrupados por módulo -->
+                        ${rol.permisos && rol.permisos.length > 0 ? (() => {
+                            // Agrupar permisos por módulo
+                            const permisosPorModulo = rol.permisos.reduce((grupos, permiso) => {
+                                const modulo = obtenerModulo(permiso);
+                                if (!grupos[modulo]) {
+                                    grupos[modulo] = [];
+                                }
+                                grupos[modulo].push(permiso);
+                                return grupos;
+                            }, {});
+
+                            // Orden específico para los módulos
+                            const ordenModulos = ['Administración', 'Inventario', 'Facturación', 'Clientes', 'Reportes', 'Costos y Utilidades', 'General'];
+                            const modulosOrdenados = ordenModulos.filter(modulo => permisosPorModulo[modulo]);
+
+                            return `
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-shield-check me-1"></i>
+                                    Permisos Asignados
+                                </h6>
+                                
+                                <!-- Vista Desktop -->
+                                <div class="d-none d-md-block">
+                                    <div class="accordion" id="accordion-modulos-rol-${rol.rolId}">
+                                        ${modulosOrdenados.map((modulo, moduloIndex) => `
+                                            <div class="accordion-item mb-2">
+                                                <h2 class="accordion-header" id="heading-modulo-${rol.rolId}-${moduloIndex}">
+                                                    <button class="accordion-button collapsed" type="button" 
+                                                            data-bs-toggle="collapse" data-bs-target="#collapse-modulo-${rol.rolId}-${moduloIndex}" 
+                                                            aria-expanded="false" aria-controls="collapse-modulo-${rol.rolId}-${moduloIndex}"
+                                                            style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                                                        <i class="${obtenerIconoModulo(modulo)} me-2"></i>
+                                                        <strong>${modulo}</strong>
+                                                        <span class="badge bg-secondary ms-2">${permisosPorModulo[modulo].length}</span>
+                                                    </button>
+                                                </h2>
+                                                <div id="collapse-modulo-${rol.rolId}-${moduloIndex}" class="accordion-collapse collapse" 
+                                                     aria-labelledby="heading-modulo-${rol.rolId}-${moduloIndex}" data-bs-parent="#accordion-modulos-rol-${rol.rolId}">
+                                                    <div class="accordion-body p-3">
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm mb-0">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>Permiso</th>
+                                                                        <th>Descripción</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    ${permisosPorModulo[modulo]
+                                                                        .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
+                                                                        .map(permiso => `
+                                                                            <tr>
+                                                                                <td class="fw-semibold">
+                                                                                    <i class="bi bi-check2 text-success me-1"></i>
+                                                                                    ${permiso.nombrePermiso}
+                                                                                </td>
+                                                                                <td class="text-muted">${permiso.descripcionPermiso || '-'}</td>
+                                                                            </tr>
+                                                                        `).join('')}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        `).join('')}
                                     </div>
                                 </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
 
-                // Vista Móvil - Acordeones compactos agrupados por módulo
-                const vistaMobile = `
-                    <div class="d-md-none permisos-modulos-container">
-                        <div class="accordion" id="accordion-permisos-rol-mobile-${rol.rolId}">
-                            ${modulosOrdenados.map((modulo, index) => `
-                                <div class="accordion-item mb-1">
-                                    <h2 class="accordion-header" id="heading-mobile-${rol.rolId}-${index}">
-                                        <button class="accordion-button collapsed" type="button" 
-                                                data-bs-toggle="collapse" data-bs-target="#collapse-mobile-${rol.rolId}-${index}" 
-                                                aria-expanded="false" aria-controls="collapse-mobile-${rol.rolId}-${index}"
-                                                style="padding: 0.375rem 0.5rem; font-size: 0.75rem;">
-                                            <i class="${obtenerIconoModulo(modulo)} me-1" style="font-size: 0.8rem;"></i>
-                                            <strong>${modulo}</strong>
-                                            <span class="badge bg-primary ms-2" style="font-size: 0.65rem;">${permisosPorModulo[modulo].length}</span>
-                                        </button>
-                                    </h2>
-                                    <div id="collapse-mobile-${rol.rolId}-${index}" class="accordion-collapse collapse" 
-                                         aria-labelledby="heading-mobile-${rol.rolId}-${index}" data-bs-parent="#accordion-permisos-rol-mobile-${rol.rolId}">
-                                        <div class="accordion-body p-2">
-                                            <div class="permisos-list">
-                                                ${permisosPorModulo[modulo]
-                                                    .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
-                                                    .map(permiso => `
-                                                        <span class="permission-tag ${obtenerClaseModulo(modulo)}" style="font-size: 0.65rem; padding: 0.125rem 0.375rem;">
-                                                            <i class="bi bi-check2 me-1" style="font-size: 0.6rem;"></i>
-                                                            ${permiso.nombrePermiso}
-                                                        </span>
-                                                    `).join('')}
+                                <!-- Vista Móvil -->
+                                <div class="d-md-none">
+                                    <div class="accordion" id="accordion-modulos-rol-mobile-${rol.rolId}">
+                                        ${modulosOrdenados.map((modulo, moduloIndex) => `
+                                            <div class="accordion-item mb-2">
+                                                <h2 class="accordion-header" id="heading-modulo-mobile-${rol.rolId}-${moduloIndex}">
+                                                    <button class="accordion-button collapsed" type="button" 
+                                                            data-bs-toggle="collapse" data-bs-target="#collapse-modulo-mobile-${rol.rolId}-${moduloIndex}" 
+                                                            aria-expanded="false" aria-controls="collapse-modulo-mobile-${rol.rolId}-${moduloIndex}"
+                                                            style="padding: 0.375rem 0.5rem; font-size: 0.75rem;">
+                                                        <i class="${obtenerIconoModulo(modulo)} me-1" style="font-size: 0.8rem;"></i>
+                                                        <strong>${modulo}</strong>
+                                                        <span class="badge bg-secondary ms-2" style="font-size: 0.65rem;">${permisosPorModulo[modulo].length}</span>
+                                                    </button>
+                                                </h2>
+                                                <div id="collapse-modulo-mobile-${rol.rolId}-${moduloIndex}" class="accordion-collapse collapse" 
+                                                     aria-labelledby="heading-modulo-mobile-${rol.rolId}-${moduloIndex}" data-bs-parent="#accordion-modulos-rol-mobile-${rol.rolId}">
+                                                    <div class="accordion-body p-2">
+                                                        <div class="row g-2">
+                                                            ${permisosPorModulo[modulo]
+                                                                .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
+                                                                .map(permiso => `
+                                                                    <div class="col-12">
+                                                                        <div class="card border-0 shadow-sm">
+                                                                            <div class="card-body p-2">
+                                                                                <h6 class="card-title mb-1" style="font-size: 0.8rem;">
+                                                                                    <i class="bi bi-check2 text-success me-1"></i>
+                                                                                    ${permiso.nombrePermiso}
+                                                                                </h6>
+                                                                                <p class="card-text text-muted small mb-0" style="font-size: 0.7rem;">
+                                                                                    ${permiso.descripcionPermiso || 'Sin descripción'}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                `).join('')}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        `).join('')}
                                     </div>
                                 </div>
-                            `).join('')}
-                        </div>
+                            `;
+                        })() : `
+                            <div class="text-center py-4">
+                                <i class="bi bi-shield-x display-6 text-muted"></i>
+                                <h6 class="text-muted mt-2">Sin permisos asignados</h6>
+                                <p class="text-muted small">Este rol no tiene permisos configurados</p>
+                            </div>
+                        `}
                     </div>
-                `;
-
-                return vistaDesktop + vistaMobile;
-            })()
-            : '<span class="text-muted">Sin permisos asignados</span>'
-        }
-            </td>
-            <td>
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-primary" onclick="editarRol(${rol.rolId})">
-                        <i class="bi bi-pencil me-1"></i>
-                        Editar
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})">
-                        <i class="bi bi-trash me-1"></i>
-                        Eliminar
-                    </button>
                 </div>
-            </td>
-        </tr>
-    `).join('');
+            </div>
+        `;
+
+        accordionIndex++;
+    });
+
+    // Si no hay roles, mostrar mensaje
+    if (roles.length === 0) {
+        html = `
+            <div class="text-center py-5">
+                <i class="bi bi-person-badge display-1 text-muted"></i>
+                <h5 class="text-muted mt-3">No hay roles configurados</h5>
+                <p class="text-muted">Comienza creando tu primer rol</p>
+            </div>
+        `;
+    }
+
+    accordionContainer.innerHTML = html;
 }
 
 // Función auxiliar para obtener el icono del módulo
