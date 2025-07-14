@@ -126,11 +126,22 @@ function actualizarTablaRoles(roles) {
 
     // Función para obtener el módulo del permiso usando el campo Modulo de la BD
     const obtenerModulo = (permiso) => {
-        // Usar directamente el campo Modulo de la base de datos (mayúscula)
-        if (permiso.Modulo && permiso.Modulo.trim() !== '') {
-            return permiso.Modulo;
+        console.log('DEBUG - Objeto permiso completo:', permiso);
+        console.log('DEBUG - Propiedades del permiso:', Object.keys(permiso));
+        console.log('DEBUG - permiso.Modulo:', permiso.Modulo);
+        console.log('DEBUG - permiso.modulo:', permiso.modulo);
+        console.log('DEBUG - permiso.categoria:', permiso.categoria);
+        console.log('DEBUG - permiso.Categoria:', permiso.Categoria);
+
+        // Intentar todas las posibles variaciones del campo módulo
+        const modulo = permiso.Modulo || permiso.modulo || permiso.Categoria || permiso.categoria || permiso.Module || permiso.module;
+
+        if (modulo && modulo.trim() !== '') {
+            console.log('DEBUG - Módulo encontrado:', modulo);
+            return modulo;
         }
-        // Fallback si no tiene módulo definido
+
+        console.log('DEBUG - No se encontró módulo, usando General');
         return 'General';
     };
 
@@ -291,11 +302,22 @@ function actualizarTablaPermisos(permisos) {
 
     // Función para obtener el módulo del permiso usando el campo Modulo de la BD
     const obtenerModulo = (permiso) => {
-        // Usar directamente el campo Modulo de la base de datos (mayúscula)
-        if (permiso.Modulo && permiso.Modulo.trim() !== '') {
-            return permiso.Modulo;
+        console.log('DEBUG - Objeto permiso completo:', permiso);
+        console.log('DEBUG - Propiedades del permiso:', Object.keys(permiso));
+        console.log('DEBUG - permiso.Modulo:', permiso.Modulo);
+        console.log('DEBUG - permiso.modulo:', permiso.modulo);
+        console.log('DEBUG - permiso.categoria:', permiso.categoria);
+        console.log('DEBUG - permiso.Categoria:', permiso.Categoria);
+
+        // Intentar todas las posibles variaciones del campo módulo
+        const modulo = permiso.Modulo || permiso.modulo || permiso.Categoria || permiso.categoria || permiso.Module || permiso.module;
+
+        if (modulo && modulo.trim() !== '') {
+            console.log('DEBUG - Módulo encontrado:', modulo);
+            return modulo;
         }
-        // Fallback si no tiene módulo definido
+
+        console.log('DEBUG - No se encontró módulo, usando General');
         return 'General';
     };
 
@@ -454,30 +476,24 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
 
         // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
         const obtenerModuloModal = (permiso) => {
-            // Si el permiso tiene módulo definido en la BD, usarlo
-            if (permiso.Modulo && permiso.Modulo.trim() !== '') {
-                return permiso.Modulo;
-            }
+        console.log('DEBUG - Objeto permiso completo:', permiso);
+        console.log('DEBUG - Propiedades del permiso:', Object.keys(permiso));
+        console.log('DEBUG - permiso.Modulo:', permiso.Modulo);
+        console.log('DEBUG - permiso.modulo:', permiso.modulo);
+        console.log('DEBUG - permiso.categoria:', permiso.categoria);
+        console.log('DEBUG - permiso.Categoria:', permiso.Categoria);
 
-            // Fallback: mapear por nombre si no tiene módulo definido
-            const nombre = permiso.nombrePermiso.toLowerCase();
+        // Intentar todas las posibles variaciones del campo módulo
+        const modulo = permiso.Modulo || permiso.modulo || permiso.Categoria || permiso.categoria || permiso.Module || permiso.module;
 
-            if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
-                return 'Inventario';
-            } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
-                return 'Facturación';
-            } else if (nombre.includes('cliente')) {
-                return 'Clientes';
-            } else if (nombre.includes('usuario') || nombre.includes('rol') || nombre.includes('permiso')) {
-                return 'Administración';
-            } else if (nombre.includes('reporte') || nombre.includes('estadistica')) {
-                return 'Reportes';
-            } else if (nombre.includes('configuracion') || nombre.includes('sistema')) {
-                return 'Configuración';
-            } else {
-                return 'General';
-            }
-        };
+        if (modulo && modulo.trim() !== '') {
+            console.log('DEBUG - Módulo encontrado:', modulo);
+            return modulo;
+        }
+
+        console.log('DEBUG - No se encontró módulo, usando General');
+        return 'General';
+    };
 
         // Agrupar permisos por módulo usando el campo Modulo de la BD
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
@@ -620,30 +636,24 @@ async function cargarPermisosParaRol(rolId) {
 
         // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
         const obtenerModuloEditar = (permiso) => {
-            // Si el permiso tiene módulo definido en la BD, usarlo
-            if (permiso.Modulo && permiso.Modulo.trim() !== '') {
-                return permiso.Modulo;
-            }
+        console.log('DEBUG - Objeto permiso completo:', permiso);
+        console.log('DEBUG - Propiedades del permiso:', Object.keys(permiso));
+        console.log('DEBUG - permiso.Modulo:', permiso.Modulo);
+        console.log('DEBUG - permiso.modulo:', permiso.modulo);
+        console.log('DEBUG - permiso.categoria:', permiso.categoria);
+        console.log('DEBUG - permiso.Categoria:', permiso.Categoria);
 
-            // Fallback: mapear por nombre si no tiene módulo definido
-            const nombre = permiso.nombrePermiso.toLowerCase();
+        // Intentar todas las posibles variaciones del campo módulo
+        const modulo = permiso.Modulo || permiso.modulo || permiso.Categoria || permiso.categoria || permiso.Module || permiso.module;
 
-            if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
-                return 'Inventario';
-            } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
-                return 'Facturación';
-            } else if (nombre.includes('cliente')) {
-                return 'Clientes';
-            } else if (nombre.includes('usuario') || nombre.includes('rol') || nombre.includes('permiso')) {
-                return 'Administración';
-            } else if (nombre.includes('reporte') || nombre.includes('estadistica')) {
-                return 'Reportes';
-            } else if (nombre.includes('configuracion') || nombre.includes('sistema')) {
-                return 'Configuración';
-            } else {
-                return 'General';
-            }
-        };
+        if (modulo && modulo.trim() !== '') {
+            console.log('DEBUG - Módulo encontrado:', modulo);
+            return modulo;
+        }
+
+        console.log('DEBUG - No se encontró módulo, usando General');
+        return 'General';
+    };
 
         // Agrupar permisos por módulo usando el campo Modulo de la BD
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
@@ -809,8 +819,7 @@ async function actualizarRol() {
             console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
             ButtonUtils.stopLoading(submitButton);
-            return;
-        }
+            return;        }
 
         // Obtener permisos seleccionados  
         const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
