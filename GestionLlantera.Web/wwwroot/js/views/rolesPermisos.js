@@ -127,7 +127,7 @@ function actualizarTablaRoles(roles) {
     }
 
     // Función para obtener el módulo del permiso usando el campo modulo de la BD
-    const obtenerModuloRol = (permiso) => {
+    const obtenerModulo = (permiso) => {
         console.log('Obteniendo módulo para permiso en acordeón de roles:', permiso);
         if (permiso.modulo && permiso.modulo.trim() !== '') {
             return permiso.modulo.trim();
@@ -205,8 +205,8 @@ function actualizarTablaRoles(roles) {
                         <!-- Permisos del Rol agrupados por módulo -->
                         ${rol.permisos && rol.permisos.length > 0 ? (() => {
                             // Agrupar permisos por módulo
-                            const permisosPorModuloRol = rol.permisos.reduce((grupos, permiso) => {
-                                const modulo = obtenerModuloRol(permiso);
+                            const permisosPorModulo = rol.permisos.reduce((grupos, permiso) => {
+                                const modulo = obtenerModulo(permiso);
                                 if (!grupos[modulo]) {
                                     grupos[modulo] = [];
                                 }
@@ -216,7 +216,7 @@ function actualizarTablaRoles(roles) {
 
                             // Orden específico para los módulos
                             const ordenModulos = ['Administración', 'Inventario', 'Facturación', 'Clientes', 'Reportes', 'Costos y Utilidades', 'General'];
-                            const modulosOrdenados = ordenModulos.filter(modulo => permisosPorModuloRol[modulo]);
+                            const modulosOrdenados = ordenModulos.filter(modulo => permisosPorModulo[modulo]);
 
                             return `
                                 <h6 class="text-primary mb-3">
@@ -236,7 +236,7 @@ function actualizarTablaRoles(roles) {
                                                             style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                                                         <i class="${obtenerIconoModulo(modulo)} me-2"></i>
                                                         <strong>${modulo}</strong>
-                                                        <span class="badge bg-secondary ms-2">${permisosPorModuloRol[modulo].length}</span>
+                                                        <span class="badge bg-secondary ms-2">${permisosPorModulo[modulo].length}</span>
                                                     </button>
                                                 </h2>
                                                 <div id="collapse-modulo-${rol.rolId}-${moduloIndex}" class="accordion-collapse collapse" 
@@ -251,7 +251,7 @@ function actualizarTablaRoles(roles) {
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
-                                                                    ${permisosPorModuloRol[modulo]
+                                                                    ${permisosPorModulo[modulo]
                                                                         .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
                                                                         .map(permiso => `
                                                                             <tr>
@@ -284,14 +284,14 @@ function actualizarTablaRoles(roles) {
                                                             style="padding: 0.375rem 0.5rem; font-size: 0.75rem;">
                                                         <i class="${obtenerIconoModulo(modulo)} me-1" style="font-size: 0.8rem;"></i>
                                                         <strong>${modulo}</strong>
-                                                        <span class="badge bg-secondary ms-2" style="font-size: 0.65rem;">${permisosPorModuloRol[modulo].length}</span>
+                                                        <span class="badge bg-secondary ms-2" style="font-size: 0.65rem;">${permisosPorModulo[modulo].length}</span>
                                                     </button>
                                                 </h2>
                                                 <div id="collapse-modulo-mobile-${rol.rolId}-${moduloIndex}" class="accordion-collapse collapse" 
                                                      aria-labelledby="heading-modulo-mobile-${rol.rolId}-${moduloIndex}" data-bs-parent="#accordion-modulos-rol-mobile-${rol.rolId}">
                                                     <div class="accordion-body p-2">
                                                         <div class="row g-2">
-                                                            ${permisosPorModuloRol[modulo]
+                                                            ${permisosPorModulo[modulo]
                                                                 .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
                                                                 .map(permiso => `
                                                                     <div class="col-12">
