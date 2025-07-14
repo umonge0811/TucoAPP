@@ -211,7 +211,7 @@ function actualizarTablaRoles(roles) {
                     </div>
                 `;
 
-                // Vista Móvil - Acordeones compactos agrupados por módulo
+                // Vista Móvil - Replicar la misma agrupación por módulos que desktop
                 const vistaMobile = `
                     <div class="d-md-none permisos-modulos-container">
                         <div class="accordion" id="accordion-permisos-rol-mobile-${rol.rolId}">
