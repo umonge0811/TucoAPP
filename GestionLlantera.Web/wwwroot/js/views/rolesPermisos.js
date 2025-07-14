@@ -126,8 +126,29 @@ function actualizarTablaRoles(roles) {
 
     // Función para obtener el módulo del permiso usando el campo modulo de la BD
     const obtenerModulo = (permiso) => {
+        console.log('Obteniendo módulo para permiso:', permiso);
         if (permiso.modulo && permiso.modulo.trim() !== '') {
-            return permiso.modulo;
+            return permiso.modulo.trim();
+        }
+        // Si no hay módulo específico, clasificar por nombre del permiso
+        const nombrePermiso = permiso.nombrePermiso.toLowerCase();
+        if (nombrePermiso.includes('inventario') || nombrePermiso.includes('stock') || nombrePermiso.includes('producto')) {
+            return 'Inventario';
+        }
+        if (nombrePermiso.includes('factur') || nombrePermiso.includes('venta')) {
+            return 'Facturación';
+        }
+        if (nombrePermiso.includes('cliente')) {
+            return 'Clientes';
+        }
+        if (nombrePermiso.includes('reporte')) {
+            return 'Reportes';
+        }
+        if (nombrePermiso.includes('usuario') || nombrePermiso.includes('rol') || nombrePermiso.includes('permiso') || nombrePermiso.includes('gestion') || nombrePermiso.includes('administr') || nombrePermiso.includes('configuracion')) {
+            return 'Administración';
+        }
+        if (nombrePermiso.includes('costo') || nombrePermiso.includes('utilidad')) {
+            return 'Costos y Utilidades';
         }
         return 'General';
     };
@@ -289,8 +310,29 @@ function actualizarTablaPermisos(permisos) {
 
     // Función para obtener el módulo del permiso usando el campo modulo de la BD
     const obtenerModulo = (permiso) => {
+        console.log('Obteniendo módulo para permiso en acordeón:', permiso);
         if (permiso.modulo && permiso.modulo.trim() !== '') {
-            return permiso.modulo;
+            return permiso.modulo.trim();
+        }
+        // Si no hay módulo específico, clasificar por nombre del permiso
+        const nombrePermiso = permiso.nombrePermiso.toLowerCase();
+        if (nombrePermiso.includes('inventario') || nombrePermiso.includes('stock') || nombrePermiso.includes('producto')) {
+            return 'Inventario';
+        }
+        if (nombrePermiso.includes('factur') || nombrePermiso.includes('venta')) {
+            return 'Facturación';
+        }
+        if (nombrePermiso.includes('cliente')) {
+            return 'Clientes';
+        }
+        if (nombrePermiso.includes('reporte')) {
+            return 'Reportes';
+        }
+        if (nombrePermiso.includes('usuario') || nombrePermiso.includes('rol') || nombrePermiso.includes('permiso') || nombrePermiso.includes('gestion') || nombrePermiso.includes('administr') || nombrePermiso.includes('configuracion')) {
+            return 'Administración';
+        }
+        if (nombrePermiso.includes('costo') || nombrePermiso.includes('utilidad')) {
+            return 'Costos y Utilidades';
         }
         return 'General';
     };
@@ -450,8 +492,29 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
 
         // Función para obtener el módulo del permiso usando el campo modulo de la BD
         const obtenerModuloModal = (permiso) => {
+        console.log('Obteniendo módulo para permiso:', permiso);
         if (permiso.modulo && permiso.modulo.trim() !== '') {
-            return permiso.modulo;
+            return permiso.modulo.trim();
+        }
+        // Si no hay módulo específico, clasificar por nombre del permiso
+        const nombrePermiso = permiso.nombrePermiso.toLowerCase();
+        if (nombrePermiso.includes('inventario') || nombrePermiso.includes('stock') || nombrePermiso.includes('producto')) {
+            return 'Inventario';
+        }
+        if (nombrePermiso.includes('factur') || nombrePermiso.includes('venta')) {
+            return 'Facturación';
+        }
+        if (nombrePermiso.includes('cliente')) {
+            return 'Clientes';
+        }
+        if (nombrePermiso.includes('reporte')) {
+            return 'Reportes';
+        }
+        if (nombrePermiso.includes('usuario') || nombrePermiso.includes('rol') || nombrePermiso.includes('permiso') || nombrePermiso.includes('gestion') || nombrePermiso.includes('administr') || nombrePermiso.includes('configuracion')) {
+            return 'Administración';
+        }
+        if (nombrePermiso.includes('costo') || nombrePermiso.includes('utilidad')) {
+            return 'Costos y Utilidades';
         }
         return 'General';
     };
@@ -597,8 +660,29 @@ async function cargarPermisosParaRol(rolId) {
 
         // Función para obtener el módulo del permiso usando el campo modulo de la BD
         const obtenerModuloEditar = (permiso) => {
+        console.log('Obteniendo módulo para permiso:', permiso);
         if (permiso.modulo && permiso.modulo.trim() !== '') {
-            return permiso.modulo;
+            return permiso.modulo.trim();
+        }
+        // Si no hay módulo específico, clasificar por nombre del permiso
+        const nombrePermiso = permiso.nombrePermiso.toLowerCase();
+        if (nombrePermiso.includes('inventario') || nombrePermiso.includes('stock') || nombrePermiso.includes('producto')) {
+            return 'Inventario';
+        }
+        if (nombrePermiso.includes('factur') || nombrePermiso.includes('venta')) {
+            return 'Facturación';
+        }
+        if (nombrePermiso.includes('cliente')) {
+            return 'Clientes';
+        }
+        if (nombrePermiso.includes('reporte')) {
+            return 'Reportes';
+        }
+        if (nombrePermiso.includes('usuario') || nombrePermiso.includes('rol') || nombrePermiso.includes('permiso') || nombrePermiso.includes('gestion') || nombrePermiso.includes('administr') || nombrePermiso.includes('configuracion')) {
+            return 'Administración';
+        }
+        if (nombrePermiso.includes('costo') || nombrePermiso.includes('utilidad')) {
+            return 'Costos y Utilidades';
         }
         return 'General';
     };
