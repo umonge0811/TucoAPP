@@ -475,7 +475,7 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
         console.log('Usando permisos ya cargados para crear acordeón');
 
         // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
-        const obtenerModulo = (permiso) => {
+        const obtenerModuloModal = (permiso) => {
             // Si el permiso tiene módulo definido en la BD, usarlo
             if (permiso.modulo && permiso.modulo.trim() !== '') {
                 return permiso.modulo;
@@ -503,7 +503,7 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
 
         // Agrupar permisos por módulo usando el campo Modulo de la BD
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-            const modulo = obtenerModulo(permiso);
+            const modulo = obtenerModuloModal(permiso);
             if (!grupos[modulo]) {
                 grupos[modulo] = [];
             }
@@ -641,7 +641,7 @@ async function cargarPermisosParaRol(rolId) {
         console.log('Permisos disponibles:', permisos);
 
         // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
-        const obtenerModulo = (permiso) => {
+        const obtenerModuloEditar = (permiso) => {
             // Si el permiso tiene módulo definido en la BD, usarlo
             if (permiso.modulo && permiso.modulo.trim() !== '') {
                 return permiso.modulo;
@@ -669,7 +669,7 @@ async function cargarPermisosParaRol(rolId) {
 
         // Agrupar permisos por módulo usando el campo Modulo de la BD
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-            const modulo = obtenerModulo(permiso);
+            const modulo = obtenerModuloEditar(permiso);
             if (!grupos[modulo]) {
                 grupos[modulo] = [];
             }
@@ -818,8 +818,7 @@ async function actualizarRol() {
     const submitButton = document.getElementById('btnGuardarRol');
 
     try {
-        ```text
-console.log('Iniciando proceso de actualización de rol');
+        console.log('Iniciando proceso de actualización de rol');
         ButtonUtils.startLoading(submitButton);
 
         // Obtener los datos del formulario  
