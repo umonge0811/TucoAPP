@@ -2,24 +2,16 @@
    ENTREGAS PENDIENTES - ESTILOS
    ========================================= */
 
-.page-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 2rem;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
 .page-title {
     font-size: 1.8rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
+    color: #495057;
 }
 
 .page-description {
-    opacity: 0.9;
-    margin-bottom: 0;
+    margin-bottom: 2rem;
+    color: #6c757d;
 }
 
 /* =========================================
