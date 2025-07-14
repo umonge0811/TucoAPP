@@ -126,9 +126,9 @@ function actualizarTablaRoles(roles) {
 
     // Función para obtener el módulo del permiso usando el campo Modulo de la BD
     const obtenerModulo = (permiso) => {
-        // Usar directamente el campo Modulo de la base de datos
-        if (permiso.modulo && permiso.modulo.trim() !== '') {
-            return permiso.modulo;
+        // Usar directamente el campo Modulo de la base de datos (mayúscula)
+        if (permiso.Modulo && permiso.Modulo.trim() !== '') {
+            return permiso.Modulo;
         }
         // Fallback si no tiene módulo definido
         return 'General';
@@ -291,9 +291,9 @@ function actualizarTablaPermisos(permisos) {
 
     // Función para obtener el módulo del permiso usando el campo Modulo de la BD
     const obtenerModulo = (permiso) => {
-        // Usar directamente el campo Modulo de la base de datos
-        if (permiso.modulo && permiso.modulo.trim() !== '') {
-            return permiso.modulo;
+        // Usar directamente el campo Modulo de la base de datos (mayúscula)
+        if (permiso.Modulo && permiso.Modulo.trim() !== '') {
+            return permiso.Modulo;
         }
         // Fallback si no tiene módulo definido
         return 'General';
@@ -455,8 +455,8 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
         // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
         const obtenerModuloModal = (permiso) => {
             // Si el permiso tiene módulo definido en la BD, usarlo
-            if (permiso.modulo && permiso.modulo.trim() !== '') {
-                return permiso.modulo;
+            if (permiso.Modulo && permiso.Modulo.trim() !== '') {
+                return permiso.Modulo;
             }
 
             // Fallback: mapear por nombre si no tiene módulo definido
@@ -621,8 +621,8 @@ async function cargarPermisosParaRol(rolId) {
         // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
         const obtenerModuloEditar = (permiso) => {
             // Si el permiso tiene módulo definido en la BD, usarlo
-            if (permiso.modulo && permiso.modulo.trim() !== '') {
-                return permiso.modulo;
+            if (permiso.Modulo && permiso.Modulo.trim() !== '') {
+                return permiso.Modulo;
             }
 
             // Fallback: mapear por nombre si no tiene módulo definido
