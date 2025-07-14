@@ -127,7 +127,7 @@ function actualizarTablaRoles(roles) {
     // Función para mapear nombres de permisos a módulos específicos basado en patrones comunes
     const obtenerModulo = (nombrePermiso) => {
         const nombre = nombrePermiso.toLowerCase();
-        
+
         if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
             return 'Inventario';
         } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
@@ -303,7 +303,7 @@ function actualizarTablaPermisos(permisos) {
     // Función para mapear permisos a módulos específicos
     const obtenerModulo = (nombrePermiso) => {
         const nombre = nombrePermiso.toLowerCase();
-        
+
         if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
             return 'Inventario';
         } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
@@ -474,10 +474,16 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
         // Los permisos ya están cargados arriba, no necesitamos hacer otra llamada
         console.log('Usando permisos ya cargados para crear acordeón');
 
-        // Función para mapear permisos a módulos específicos
-        const obtenerModulo = (nombrePermiso) => {
-            const nombre = nombrePermiso.toLowerCase();
-            
+        // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
+        const obtenerModulo = (permiso) => {
+            // Si el permiso tiene módulo definido en la BD, usarlo
+            if (permiso.modulo && permiso.modulo.trim() !== '') {
+                return permiso.modulo;
+            }
+
+            // Fallback: mapear por nombre si no tiene módulo definido
+            const nombre = permiso.nombrePermiso.toLowerCase();
+
             if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
                 return 'Inventario';
             } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
@@ -495,9 +501,9 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
             }
         };
 
-        // Agrupar permisos por módulo usando la función de mapeo
+        // Agrupar permisos por módulo usando el campo Modulo de la BD
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-            const modulo = obtenerModulo(permiso.nombrePermiso);
+            const modulo = obtenerModulo(permiso);
             if (!grupos[modulo]) {
                 grupos[modulo] = [];
             }
@@ -634,10 +640,16 @@ async function cargarPermisosParaRol(rolId) {
         const permisos = await responsePermisos.json();
         console.log('Permisos disponibles:', permisos);
 
-        // Función para mapear permisos a módulos específicos
-        const obtenerModulo = (nombrePermiso) => {
-            const nombre = nombrePermiso.toLowerCase();
-            
+        // Función para obtener el módulo del permiso (usando el campo Modulo de la BD)
+        const obtenerModulo = (permiso) => {
+            // Si el permiso tiene módulo definido en la BD, usarlo
+            if (permiso.modulo && permiso.modulo.trim() !== '') {
+                return permiso.modulo;
+            }
+
+            // Fallback: mapear por nombre si no tiene módulo definido
+            const nombre = permiso.nombrePermiso.toLowerCase();
+
             if (nombre.includes('inventario') || nombre.includes('stock') || nombre.includes('productos')) {
                 return 'Inventario';
             } else if (nombre.includes('factura') || nombre.includes('venta') || nombre.includes('cobro')) {
@@ -655,9 +667,9 @@ async function cargarPermisosParaRol(rolId) {
             }
         };
 
-        // Agrupar permisos por módulo usando la función de mapeo
+        // Agrupar permisos por módulo usando el campo Modulo de la BD
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-            const modulo = obtenerModulo(permiso.nombrePermiso);
+            const modulo = obtenerModulo(permiso);
             if (!grupos[modulo]) {
                 grupos[modulo] = [];
             }
@@ -806,7 +818,8 @@ async function actualizarRol() {
     const submitButton = document.getElementById('btnGuardarRol');
 
     try {
-        console.log('Iniciando proceso de actualización de rol');
+        ```text
+console.log('Iniciando proceso de actualización de rol');
         ButtonUtils.startLoading(submitButton);
 
         // Obtener los datos del formulario  
