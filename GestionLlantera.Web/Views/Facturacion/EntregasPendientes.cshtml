@@ -6,6 +6,28 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
+            <!-- Breadcrumbs -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Dashboard")">
+                            <i class="bi bi-house-door me-1"></i>
+                            Inicio
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="@Url.Action("Index", "Facturacion")">
+                            <i class="bi bi-receipt me-1"></i>
+                            Facturación
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        <i class="bi bi-truck me-1"></i>
+                        Entregas Pendientes
+                    </li>
+                </ol>
+            </nav>
+
             <div class="page-header">
                 <h1 class="page-title">
                     <i class="bi bi-truck me-2"></i>
