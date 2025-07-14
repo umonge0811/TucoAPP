@@ -781,6 +781,100 @@
     gap: 6px;
 }
 
+/* Mejoras para scroll horizontal en móvil si es necesario */
+@media (max-width: 576px) {
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+    
+    .permisos-modulos-container .accordion-header .accordion-button {
+        padding: 0.25rem 0.375rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    .permisos-modulos-container .accordion-header .accordion-button strong {
+        font-weight: 600;
+    }
+
+    .permisos-modulos-container .accordion-body {
+        padding: 0.25rem;
+    }
+
+    .permisos-modulos-container .permission-tag {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.3rem;
+        margin-bottom: 2px;
+    }
+
+    /* Hacer que los acordeones ocupen todo el ancho disponible */
+    .permisos-modulos-container .accordion {
+        width: 100%;
+    }
+
+    .permisos-modulos-container .accordion-item {
+        width: 100%;
+    }
+}
+
+/* Vista móvil para acordeones en roles */
+@media (max-width: 767.98px) {
+    .permisos-modulos-container {
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .permisos-modulos-container .accordion-item {
+        border-radius: 0.25rem !important;
+        margin-bottom: 0.125rem;
+        font-size: 0.8rem;
+    }
+
+    .permisos-modulos-container .accordion-header .accordion-button {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.75rem;
+        line-height: 1.2;
+        min-height: auto;
+    }
+
+    .permisos-modulos-container .accordion-header .accordion-button i {
+        font-size: 0.8rem;
+        margin-right: 0.25rem;
+    }
+
+    .permisos-modulos-container .accordion-header .accordion-button .badge {
+        font-size: 0.65rem;
+        padding: 0.125rem 0.375rem;
+        margin-left: 0.25rem;
+    }
+
+    .permisos-modulos-container .accordion-body {
+        padding: 0.375rem;
+    }
+
+    .permisos-modulos-container .permisos-list {
+        gap: 3px;
+    }
+
+    .permisos-modulos-container .permission-tag {
+        font-size: 0.65rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 8px;
+        line-height: 1.2;
+    }
+
+    .permisos-modulos-container .permission-tag i {
+        font-size: 0.6rem;
+        margin-right: 0.125rem;
+    }
+
+    /* Ajustar el ancho de la columna de permisos en móvil */
+    .table-responsive table td:nth-child(3) {
+        min-width: 200px;
+        max-width: 250px;
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .custom-tabs {
@@ -807,10 +901,5 @@
 
     .accordion-body .card-body {
         padding: 0.75rem;
-    }
-
-    .permisos-modulos-container .accordion-header .accordion-button {
-        padding: 0.5rem;
-        font-size: 0.8rem;
     }
 }
