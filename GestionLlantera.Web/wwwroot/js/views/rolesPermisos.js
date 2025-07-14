@@ -103,48 +103,8 @@ async function cargarRoles() {
         const roles = await response.json();
         console.log('Roles recibidos:', roles); // Verificar la estructura de los datos
 
-        const tbody = document.querySelector('#roles table tbody');
-        if (!tbody) {
-            console.error('No se encontró el elemento tbody de la tabla de roles');
-            return;
-        }
-
-        tbody.innerHTML = roles.map(rol => {
-            console.log('Procesando rol:', rol); // Ver cada rol individual
-            console.log('Permisos del rol:', rol.permisos); // Ver los permisos de cada rol
-
-            return `
-                <tr>
-                    <td class="fw-semibold">${rol.nombreRol}</td>
-                    <td>${rol.descripcionRol || '-'}</td>
-                    <td>
-                        <div class="d-flex flex-wrap gap-1">
-                            ${Array.isArray(rol.permisos) && rol.permisos.length > 0
-                    ? rol.permisos.map(permiso =>
-                        `<span class="badge bg-light text-dark">
-                        <i class="bi bi-key-fill me-1 text-primary"></i>
-                        ${permiso.nombrePermiso}
-                    </span>`
-                    ).join('')
-                    : '<span class="text-muted">Sin permisos</span>'
-                }
-                        </div>
-                    </td>
-                    <td>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-primary" onclick="editarRol(${rol.rolId})">
-                                <i class="bi bi-pencil me-1"></i>
-                                Editar
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="eliminarRol(${rol.rolId})">
-                                <i class="bi bi-trash me-1"></i>
-                                Eliminar
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        // Usar la función auxiliar para actualizar la tabla
+        actualizarTablaRoles(roles);
 
         return roles;
     } catch (error) {
@@ -164,22 +124,134 @@ function actualizarTablaRoles(roles) {
         return;
     }
 
+    // Función para obtener el módulo del permiso usando el campo modulo de la BD
+    const obtenerModulo = (permiso) => {
+        console.log('Obteniendo módulo para permiso:', permiso);
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo.trim();
+        }
+        // Si no hay módulo específico, clasificar por nombre del permiso
+        const nombrePermiso = permiso.nombrePermiso.toLowerCase();
+        if (nombrePermiso.includes('inventario') || nombrePermiso.includes('stock') || nombrePermiso.includes('producto')) {
+            return 'Inventario';
+        }
+        if (nombrePermiso.includes('factur') || nombrePermiso.includes('venta')) {
+            return 'Facturación';
+        }
+        if (nombrePermiso.includes('cliente')) {
+            return 'Clientes';
+        }
+        if (nombrePermiso.includes('reporte')) {
+            return 'Reportes';
+        }
+        if (nombrePermiso.includes('usuario') || nombrePermiso.includes('rol') || nombrePermiso.includes('permiso') || nombrePermiso.includes('gestion') || nombrePermiso.includes('administr') || nombrePermiso.includes('configuracion')) {
+            return 'Administración';
+        }
+        if (nombrePermiso.includes('costo') || nombrePermiso.includes('utilidad')) {
+            return 'Costos y Utilidades';
+        }
+        return 'General';
+    };
+
     tbody.innerHTML = roles.map(rol => `
         <tr>
             <td class="fw-semibold">${rol.nombreRol}</td>
             <td>${rol.descripcionRol || '-'}</td>
             <td>
-                <div class="d-flex flex-wrap gap-1">
-                    ${rol.permisos && rol.permisos.length > 0
-            ? rol.permisos.map(permiso =>
-                `<span class="badge bg-light text-dark">
-                    <i class="bi bi-key-fill me-1 text-primary"></i>
-                    ${permiso.nombrePermiso}
-                </span>`
-            ).join('')
-            : '<span class="text-muted">Sin permisos</span>'
+                ${rol.permisos && rol.permisos.length > 0
+            ? (() => {
+                // Agrupar permisos por módulo usando el campo Modulo de la BD
+                const permisosPorModulo = rol.permisos.reduce((grupos, permiso) => {
+                    const modulo = obtenerModulo(permiso);
+                    if (!grupos[modulo]) {
+                        grupos[modulo] = [];
+                    }
+                    grupos[modulo].push(permiso);
+                    return grupos;
+                }, {});
+
+                // Orden específico para los módulos
+                const ordenModulos = ['Administración', 'Inventario', 'Facturación', 'Clientes', 'Reportes', 'Configuración', 'General'];
+                const modulosOrdenados = ordenModulos.filter(modulo => permisosPorModulo[modulo]);
+
+                // Vista Desktop - Acordeones
+                const vistaDesktop = `
+                    <div class="d-none d-md-block permisos-modulos-container">
+                        <div class="accordion" id="accordion-permisos-rol-${rol.rolId}">
+                            ${modulosOrdenados.map((modulo, index) => `
+                                <div class="accordion-item mb-1">
+                                    <h2 class="accordion-header" id="heading-${rol.rolId}-${index}">
+                                        <button class="accordion-button collapsed" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#collapse-${rol.rolId}-${index}" 
+                                                aria-expanded="false" aria-controls="collapse-${rol.rolId}-${index}"
+                                                style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
+                                            <i class="${obtenerIconoModulo(modulo)} me-2"></i>
+                                            <strong>${modulo}</strong>
+                                            <span class="badge bg-primary ms-2">${permisosPorModulo[modulo].length}</span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-${rol.rolId}-${index}" class="accordion-collapse collapse" 
+                                         aria-labelledby="heading-${rol.rolId}-${index}" data-bs-parent="#accordion-permisos-rol-${rol.rolId}">
+                                        <div class="accordion-body p-2">
+                                            <div class="permisos-list">
+                                                ${permisosPorModulo[modulo]
+                                                    .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
+                                                    .map(permiso => `
+                                                        <span class="permission-tag ${obtenerClaseModulo(modulo)}">
+                                                            <i class="bi bi-check2 me-1"></i>
+                                                            ${permiso.nombrePermiso}
+                                                        </span>
+                                                    `).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                // Vista Móvil - Acordeones agrupados por módulo igual que desktop
+                const vistaMobile = `
+                    <div class="d-md-none permisos-modulos-container">
+                        <div class="accordion" id="accordion-permisos-rol-mobile-${rol.rolId}">
+                            ${modulosOrdenados.map((modulo, index) => `
+                                <div class="accordion-item mb-1">
+                                    <h2 class="accordion-header" id="heading-mobile-${rol.rolId}-${index}">
+                                        <button class="accordion-button collapsed" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#collapse-mobile-${rol.rolId}-${index}" 
+                                                aria-expanded="false" aria-controls="collapse-mobile-${rol.rolId}-${index}"
+                                                style="padding: 0.375rem 0.5rem; font-size: 0.75rem;">
+                                            <i class="${obtenerIconoModulo(modulo)} me-1" style="font-size: 0.8rem;"></i>
+                                            <strong>${modulo}</strong>
+                                            <span class="badge bg-primary ms-2" style="font-size: 0.65rem;">${permisosPorModulo[modulo].length}</span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse-mobile-${rol.rolId}-${index}" class="accordion-collapse collapse" 
+                                         aria-labelledby="heading-mobile-${rol.rolId}-${index}" data-bs-parent="#accordion-permisos-rol-mobile-${rol.rolId}">
+                                        <div class="accordion-body p-2">
+                                            <div class="permisos-list">
+                                                ${permisosPorModulo[modulo]
+                                                    .sort((a, b) => a.nombrePermiso.localeCompare(b.nombrePermiso))
+                                                    .map(permiso => `
+                                                        <span class="permission-tag ${obtenerClaseModulo(modulo)}" style="font-size: 0.65rem; padding: 0.125rem 0.375rem;">
+                                                            <i class="bi bi-check2 me-1" style="font-size: 0.6rem;"></i>
+                                                            ${permiso.nombrePermiso}
+                                                        </span>
+                                                    `).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                return vistaDesktop + vistaMobile;
+            })()
+            : '<span class="text-muted">Sin permisos asignados</span>'
         }
-                </div>
             </td>
             <td>
                 <div class="btn-group">
@@ -197,6 +269,34 @@ function actualizarTablaRoles(roles) {
     `).join('');
 }
 
+// Función auxiliar para obtener el icono del módulo
+function obtenerIconoModulo(modulo) {
+    const iconos = {
+        'Administración': 'bi bi-gear',
+        'Inventario': 'bi bi-boxes',
+        'Facturación': 'bi bi-receipt',
+        'Clientes': 'bi bi-people',
+        'Reportes': 'bi bi-graph-up',
+        'Configuración': 'bi bi-sliders',
+        'General': 'bi bi-layers'
+    };
+    return iconos[modulo] || 'bi bi-layers';
+}
+
+// Función auxiliar para obtener la clase CSS del módulo
+function obtenerClaseModulo(modulo) {
+    const clases = {
+        'Administración': 'tag-administracion',
+        'Inventario': 'tag-inventario',
+        'Facturación': 'tag-facturacion',
+        'Clientes': 'tag-clientes',
+        'Reportes': 'tag-reportes',
+        'Configuración': 'tag-configuracion',
+        'General': 'tag-general'
+    };
+    return clases[modulo] || 'tag-general';
+}
+
 
 // Función auxiliar para actualizar la tabla de permisos
 function actualizarTablaPermisos(permisos) {
@@ -208,9 +308,38 @@ function actualizarTablaPermisos(permisos) {
         return;
     }
 
-    // Agrupar permisos por módulo
+    // Función para obtener el módulo del permiso usando el campo modulo de la BD
+    const obtenerModulo = (permiso) => {
+        console.log('Obteniendo módulo para permiso en acordeón:', permiso);
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo.trim();
+        }
+        // Si no hay módulo específico, clasificar por nombre del permiso
+        const nombrePermiso = permiso.nombrePermiso.toLowerCase();
+        if (nombrePermiso.includes('inventario') || nombrePermiso.includes('stock') || nombrePermiso.includes('producto')) {
+            return 'Inventario';
+        }
+        if (nombrePermiso.includes('factur') || nombrePermiso.includes('venta')) {
+            return 'Facturación';
+        }
+        if (nombrePermiso.includes('cliente')) {
+            return 'Clientes';
+        }
+        if (nombrePermiso.includes('reporte')) {
+            return 'Reportes';
+        }
+        if (nombrePermiso.includes('usuario') || nombrePermiso.includes('rol') || nombrePermiso.includes('permiso') || nombrePermiso.includes('gestion') || nombrePermiso.includes('administr') || nombrePermiso.includes('configuracion')) {
+            return 'Administración';
+        }
+        if (nombrePermiso.includes('costo') || nombrePermiso.includes('utilidad')) {
+            return 'Costos y Utilidades';
+        }
+        return 'General';
+    };
+
+    // Agrupar permisos por módulo usando el campo Modulo de la BD
     const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-        const modulo = permiso.modulo || 'General';
+        const modulo = obtenerModulo(permiso);
         if (!grupos[modulo]) {
             grupos[modulo] = [];
         }
@@ -361,9 +490,38 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
         // Los permisos ya están cargados arriba, no necesitamos hacer otra llamada
         console.log('Usando permisos ya cargados para crear acordeón');
 
-        // Agrupar permisos por módulo manualmente
+        // Función para obtener el módulo del permiso usando el campo modulo de la BD
+        const obtenerModuloModal = (permiso) => {
+        console.log('Obteniendo módulo para permiso:', permiso);
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo.trim();
+        }
+        // Si no hay módulo específico, clasificar por nombre del permiso
+        const nombrePermiso = permiso.nombrePermiso.toLowerCase();
+        if (nombrePermiso.includes('inventario') || nombrePermiso.includes('stock') || nombrePermiso.includes('producto')) {
+            return 'Inventario';
+        }
+        if (nombrePermiso.includes('factur') || nombrePermiso.includes('venta')) {
+            return 'Facturación';
+        }
+        if (nombrePermiso.includes('cliente')) {
+            return 'Clientes';
+        }
+        if (nombrePermiso.includes('reporte')) {
+            return 'Reportes';
+        }
+        if (nombrePermiso.includes('usuario') || nombrePermiso.includes('rol') || nombrePermiso.includes('permiso') || nombrePermiso.includes('gestion') || nombrePermiso.includes('administr') || nombrePermiso.includes('configuracion')) {
+            return 'Administración';
+        }
+        if (nombrePermiso.includes('costo') || nombrePermiso.includes('utilidad')) {
+            return 'Costos y Utilidades';
+        }
+        return 'General';
+    };
+
+        // Agrupar permisos por módulo usando el campo Modulo de la BD
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-            const modulo = permiso.modulo || 'General';
+            const modulo = obtenerModuloModal(permiso);
             if (!grupos[modulo]) {
                 grupos[modulo] = [];
             }
@@ -500,9 +658,38 @@ async function cargarPermisosParaRol(rolId) {
         const permisos = await responsePermisos.json();
         console.log('Permisos disponibles:', permisos);
 
-        // Agrupar permisos por módulo
+        // Función para obtener el módulo del permiso usando el campo modulo de la BD
+        const obtenerModuloEditar = (permiso) => {
+        console.log('Obteniendo módulo para permiso:', permiso);
+        if (permiso.modulo && permiso.modulo.trim() !== '') {
+            return permiso.modulo.trim();
+        }
+        // Si no hay módulo específico, clasificar por nombre del permiso
+        const nombrePermiso = permiso.nombrePermiso.toLowerCase();
+        if (nombrePermiso.includes('inventario') || nombrePermiso.includes('stock') || nombrePermiso.includes('producto')) {
+            return 'Inventario';
+        }
+        if (nombrePermiso.includes('factur') || nombrePermiso.includes('venta')) {
+            return 'Facturación';
+        }
+        if (nombrePermiso.includes('cliente')) {
+            return 'Clientes';
+        }
+        if (nombrePermiso.includes('reporte')) {
+            return 'Reportes';
+        }
+        if (nombrePermiso.includes('usuario') || nombrePermiso.includes('rol') || nombrePermiso.includes('permiso') || nombrePermiso.includes('gestion') || nombrePermiso.includes('administr') || nombrePermiso.includes('configuracion')) {
+            return 'Administración';
+        }
+        if (nombrePermiso.includes('costo') || nombrePermiso.includes('utilidad')) {
+            return 'Costos y Utilidades';
+        }
+        return 'General';
+    };
+
+        // Agrupar permisos por módulo usando el campo Modulo de la BD
         const permisosPorModulo = permisos.reduce((grupos, permiso) => {
-            const modulo = permiso.modulo || 'General';
+            const modulo = obtenerModuloEditar(permiso);
             if (!grupos[modulo]) {
                 grupos[modulo] = [];
             }
@@ -664,8 +851,7 @@ async function actualizarRol() {
             console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
             ButtonUtils.stopLoading(submitButton);
-            return;
-        }
+            return;        }
 
         // Obtener permisos seleccionados  
         const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
