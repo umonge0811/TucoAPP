@@ -568,8 +568,7 @@ namespace GestionLlantera.Web.Services
                     // ✅ DESERIALIZAR CORRECTAMENTE LA RESPUESTA DEL API
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
 
-                    _logger.LogInformation("✅ Factura creada exitosamente. Resultado: {Resultado}", 
-                        JsonConvert.SerializeObject(resultado, Formatting.Indented));
+                        JsonConvert.SerializeObject(resultado, Formatting.Indented);
 
                     return (
                         success: true, 
@@ -1548,7 +1547,7 @@ namespace GestionLlantera.Web.Services
                 ConfigurarAutorizacion(jwtToken);
 
                 var response = await _httpClient.PutAsync($"api/Facturacion/facturas/{facturaId}/estado",
-                    new StringContent(JsonSerializer.Serialize(nuevoEstado), Encoding.UTF8, "application/json"));
+                    new StringContent(System.Text.Json.JsonSerializer.Serialize(nuevoEstado), Encoding.UTF8, "application/json"));
 
                 var content = await response.Content.ReadAsStringAsync();
 
