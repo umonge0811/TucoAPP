@@ -214,13 +214,13 @@
                     <h6><i class="bi bi-info-circle me-2"></i>Información:</h6>
                     <p class="mb-0">Se han detectado productos con stock insuficiente en esta factura. Revisa los detalles y decide cómo proceder.</p>
                 </div>
-                
+
                 <div id="problemasStockLoading" class="text-center py-4">
                     <div class="spinner-border text-warning" role="status">
                         <span class="visually-hidden">Verificando stock...</span>
                     </div>
                 </div>
-                
+
                 <div id="problemasStockContent" style="display: none;">
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -232,7 +232,7 @@
                             <span id="problemasStockCliente">-</span>
                         </div>
                     </div>
-                    
+
                     <div class="table-responsive">
                         <table class="table table-hover table-striped">
                             <thead class="table-warning">
@@ -352,5 +352,55 @@
         console.log('🔧 Token disponible:', window.facturaConfig?.TokenDisponible);
     </script>
 
+    <!-- Modal Facturas Pendientes -->
+    <div class="modal fade" id="modalFacturasPendientes" tabindex="-1" aria-labelledby="modalFacturasPendientesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="modalFacturasPendientesLabel">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Facturas Pendientes de Pago
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="listaFacturasPendientes">
+                        <!-- Contenido dinámico -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Modal Proformas -->
+    <div class="modal fade" id="modalProformas" tabindex="-1" aria-labelledby="modalProformasLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalProformasLabel">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Proformas Guardadas
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Las proformas tienen una validez de 30 días desde su creación. Después de este tiempo se marcarán como vencidas.
+                        </small>
+                    </div>
+                    <div id="listaProformas">
+                        <!-- Contenido dinámico -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
     }
