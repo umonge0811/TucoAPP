@@ -1,4 +1,47 @@
 
+/* ===== BOTONES DE NAVEGACIÓN MÓVILES ===== */
+@media (max-width: 992px) {
+    .botones-navegacion-facturacion {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .botones-navegacion-facturacion .btn {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.85rem;
+        min-height: 40px;
+    }
+
+    .botones-navegacion-facturacion .btn-text {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .botones-navegacion-facturacion {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .botones-navegacion-facturacion .btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        min-height: 48px;
+        justify-content: flex-start;
+    }
+
+    .botones-navegacion-facturacion .btn i {
+        font-size: 1rem;
+        margin-right: 0.75rem;
+    }
+
+    .botones-navegacion-facturacion .btn-text {
+        font-size: 0.9rem;
+        flex: 1;
+        text-align: left;
+    }
+}
+
 /* ===== FACTURACIÓN - ESTILOS MÓVILES ===== */
 
 @media (max-width: 768px) {
