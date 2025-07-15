@@ -972,7 +972,7 @@ namespace GestionLlantera.Web.Services
                     {
                         var valorTruncado = property.Value?.ToString();
                         if (valorTruncado?.Length > 200) valorTruncado = valorTruncado.Substring(0, 200) + "...";
-                        _logger.LogInformation("🔍   {PropertyName}: {PropertyValue}", property.Name, valorTruncado ?? "null");
+                        _logger.LogInformation("🔍   {PropertyName}: {PropertyValue}", property.Name, valorTruncado);
                     }
                 }
 
@@ -1404,56 +1404,38 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string? message, string? details)> MarcarComoEntregadoPorCodigoAsync(object request, string jwtToken)
+        public async Task<(bool success, string message, object data, string details)> MarcarComoEntregadoPorCodigoAsync(object request, string jwtToken)
         {
             try
             {
                 _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN SERVICIO ===");
-                _logger.LogInformation("🚚 Request: {Request}", JsonConvert.SerializeObject(request));
+                _logger.LogInformation("🚚 Request: {Request}", JsonSerializer.Serialize(request));
 
-                // Configurar token JWT si se proporciona
-                if (!string.IsNullOrEmpty(jwtToken))
-                {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                }
+                var response = await _httpClient.PostAsync("api/Facturacion/marcar-entregado-por-codigo",
+                    new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"));
 
-                var jsonContent = JsonConvert.SerializeObject(request);
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PostAsync("api/Facturacion/marcar-entregado-por-codigo", content);
-
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var content = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("🚚 Respuesta del API: Status={Status}, Content={Content}", 
-                    response.StatusCode, responseContent);
+                    response.StatusCode, content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                    return (success: true, data: data, message: "Producto marcado como entregado exitosamente", details: null);
+                    var data = JsonSerializer.Deserialize<object>(content);
+                    return (true, "Producto marcado como entregado exitosamente", data, null);
                 }
                 else
                 {
                     _logger.LogWarning("⚠️ Error del API marcando como entregado: {Status} - {Content}", 
-                        response.StatusCode, responseContent);
+                        response.StatusCode, content);
 
-                    try
-                    {
-                        var errorData = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                        var errorMessage = errorData?.message?.ToString() ?? "Error desconocido";
-                        return (success: false, data: null, message: errorMessage, details: responseContent);
-                    }
-                    catch
-                    {
-                        return (success: false, data: null, message: $"Error del servidor: {response.StatusCode}", details: responseContent);
-                    }
+                    var errorData = TryDeserializeError(content);
+                    return (false, errorData.message, null, content);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error en servicio marcando como entregado por código");
-                return (success: false, data: null, message: $"Error de conexión: {ex.Message}", details: ex.ToString());
+                return (false, $"Error de conexión: {ex.Message}", null, ex.ToString());
             }
         }
 
@@ -1484,7 +1466,7 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = JsonConvert.DeserializeObject<object>(content);
+                    var data = JsonSerializer.Deserialize<object>(content);
                     return (true, "Facturas obtenidas exitosamente", data, null);
                 }
                 else
@@ -1519,7 +1501,7 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = JsonConvert.DeserializeObject<object>(content);
+                    var data = JsonSerializer.Deserialize<object>(content);
                     return (true, "Factura obtenida exitosamente", data, null);
                 }
                 else
@@ -1556,7 +1538,7 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var data = JsonConvert.DeserializeObject<object>(content);
+                    var data = JsonSerializer.Deserialize<object>(content);
                     return (true, "Estado actualizado exitosamente", data, null);
                 }
                 else
@@ -1585,7 +1567,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var errorData = JsonConvert.DeserializeObject<dynamic>(content);
+                var errorData = JsonSerializer.Deserialize<dynamic>(content);
                 var errorMessage = errorData?.message?.ToString() ?? "Error desconocido";
                 return (false, errorMessage);
             }
@@ -1722,7 +1704,7 @@ namespace GestionLlantera.Web.Services
         public string Estado { get; set; }
         public string Observaciones { get; set; }
         public int UsuarioCreacion { get; set; }
-        public int UsuarioEntrega { get; set; }
+        public int UsuarioEntrega { get; set: set; }
         public string CodigoSeguimiento { get; set; }
 
     }
