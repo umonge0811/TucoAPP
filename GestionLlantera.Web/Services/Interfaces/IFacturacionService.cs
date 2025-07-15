@@ -56,7 +56,22 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Marca productos como entregados
         /// </summary>
-        Task<(bool success, object? data, string? message, string? details)> MarcarComoEntregadoPorCodigoAsync(object request, string jwtToken = null);
+        Task<(bool success, object? data, string? message, string? details)> MarcarComoEntregadoPorCodigoAsync(object request, string jwtToken);
+        
+        /// <summary>
+        /// Obtiene todas las facturas con filtros opcionales
+        /// </summary>
+        Task<(bool success, string message, object data, string details)> ObtenerFacturasAsync(string jwtToken, string tipoDocumento = null, string estado = null);
+        
+        /// <summary>
+        /// Obtiene una factura por su ID
+        /// </summary>
+        Task<(bool success, string message, object data, string details)> ObtenerFacturaPorIdAsync(int facturaId, string jwtToken);
+        
+        /// <summary>
+        /// Actualiza el estado de una factura
+        /// </summary>
+        Task<(bool success, string message, object data, string details)> ActualizarEstadoFacturaAsync(int facturaId, string nuevoEstado, string jwtToken);
     }
 
     // Clase ApiResponse para manejar respuestas de la API

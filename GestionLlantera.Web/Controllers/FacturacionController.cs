@@ -1414,7 +1414,7 @@ namespace GestionLlantera.Web.Controllers
 
                 // Obtener los detalles de la proforma original
                 var proformaOriginal = await _facturacionService.ObtenerFacturaPorIdAsync(request.ProformaId, jwtToken);
-                
+
                 if (!proformaOriginal.success || proformaOriginal.data == null)
                 {
                     return Json(new { success = false, message = "No se pudo obtener la proforma original" });
@@ -1607,13 +1607,27 @@ namespace GestionLlantera.Web.Controllers
         public string? Observaciones { get; set; }
     }
 
+    // DTO para manejar detalles de pago en el controlador web
     public class DetallePagoWebDTO
     {
         public string MetodoPago { get; set; } = string.Empty;
         public decimal Monto { get; set; }
         public string? Referencia { get; set; }
+        public DateTime FechaPago { get; set; } = DateTime.Now;
         public string? Observaciones { get; set; }
-        public DateTime? FechaPago { get; set; }
+
+        // Método para convertir a DetallePagoDTO
+        public DetallePagoDTO ToDetallePagoDTO()
+        {
+            return new DetallePagoDTO
+            {
+                MetodoPago = this.MetodoPago,
+                Monto = this.Monto,
+                Referencia = this.Referencia,
+                FechaPago = this.FechaPago,
+                Observaciones = this.Observaciones
+            };
+        }
     }
 
     public class RegistrarPendientesEntregaRequest
