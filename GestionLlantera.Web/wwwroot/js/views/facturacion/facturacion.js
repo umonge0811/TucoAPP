@@ -419,6 +419,10 @@ function configurarEventos() {
     $('#btnConfirmarVenta').on('click', function() {
         procesarVentaFinal();
     });
+
+    $('#btnGuardarProforma').on('click', function() {
+        procesarProforma();
+    });
 }
 
 // ===== BÚSQUEDA DE PRODUCTOS =====
@@ -2615,6 +2619,58 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
 function crearProforma() {
     console.log('📋 === CREANDO PROFORMA ===');
     return crearNuevaFactura('Proforma');
+}
+
+/**
+ * ✅ FUNCIÓN PARA PROCESAR PROFORMA DESDE EL MODAL
+ */
+async function procesarProforma() {
+    const $btnProforma = $('#btnGuardarProforma');
+
+    try {
+        // Deshabilitar el botón y mostrar el estado de carga
+        $btnProforma.prop('disabled', true);
+        $btnProforma.find('.btn-normal-state').addClass('d-none');
+        $btnProforma.find('.btn-loading-state').removeClass('d-none');
+
+        console.log('📋 === PROCESANDO PROFORMA DESDE MODAL ===');
+        
+        // Validar que hay productos en la venta
+        if (productosEnVenta.length === 0) {
+            mostrarToast('Venta vacía', 'Agrega productos antes de crear la proforma', 'warning');
+            return;
+        }
+
+        // Validar que hay cliente seleccionado
+        if (!clienteSeleccionado) {
+            mostrarToast('Cliente requerido', 'Debes seleccionar un cliente antes de crear la proforma', 'warning');
+            return;
+        }
+
+        // ✅ CREAR PROFORMA
+        await crearProforma();
+
+    } catch (error) {
+        console.error('❌ Error procesando proforma:', error);
+        
+        // ✅ MOSTRAR ERROR CON SWEETALERT
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error creando proforma',
+                text: 'Hubo un problema inesperado al crear la proforma',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc3545'
+            });
+        } else {
+            alert('Error: Hubo un problema creando la proforma');
+        }
+    } finally {
+        // Restaurar botón
+        $btnProforma.prop('disabled', false);
+        $btnProforma.find('.btn-normal-state').removeClass('d-none');
+        $btnProforma.find('.btn-loading-state').addClass('d-none');
+    }
 }
 
 
