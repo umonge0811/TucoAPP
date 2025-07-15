@@ -35,8 +35,8 @@
                     <div class="card-body">
                         <!-- Barra de búsqueda -->
                         <div class="row mb-3">
-                            <div class="col-md-8">
-                                <div class="input-group">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
                                     <span class="input-group-text">
                                         <i class="bi bi-search"></i>
                                     </span>
@@ -47,37 +47,44 @@
                                            autocomplete="off">
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <button type="button" 
-                                        id="btnFacturasPendientes" 
-                                        class="btn btn-outline-warning w-100"
-                                        title="Ver facturas pendientes"
-                                        style="display: none;">
-                                    <i class="bi bi-clock-history"></i>
-                                </button>
-                            </div>
-                            <div class="col-md-1">
-                                <button type="button" 
-                                        id="btnProformas" 
-                                        class="btn btn-outline-success w-100"
-                                        title="Ver proformas">
-                                    <i class="bi bi-file-earmark-text"></i>
-                                </button>
-                            </div>
-                            <div class="col-md-1">
-                                <a href="@Url.Action("EntregasPendientes", "Facturacion")" 
-                                   class="btn btn-outline-info w-100"
-                                   title="Ver entregas pendientes">
-                                    <i class="bi bi-truck"></i>
-                                </a>
-                            </div>
-                            <div class="col-md-1">
-                                <button type="button" 
-                                        id="btnAbrirInventario" 
-                                        class="btn btn-outline-secondary w-100"
-                                        title="Ver inventario completo">
-                                    <i class="bi bi-grid-3x3-gap"></i>
-                                </button>
+                        </div>
+
+                        <!-- Botones de navegación -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="botones-navegacion-facturacion">
+                                    <button type="button" 
+                                            id="btnFacturasPendientes" 
+                                            class="btn btn-outline-warning"
+                                            title="Ver facturas pendientes"
+                                            style="display: none;">
+                                        <i class="bi bi-clock-history me-2"></i>
+                                        <span class="btn-text">Facturas Pendientes</span>
+                                    </button>
+                                    
+                                    <button type="button" 
+                                            id="btnProformas" 
+                                            class="btn btn-outline-success"
+                                            title="Ver proformas">
+                                        <i class="bi bi-file-earmark-text me-2"></i>
+                                        <span class="btn-text">Proformas</span>
+                                    </button>
+                                    
+                                    <a href="@Url.Action("EntregasPendientes", "Facturacion")" 
+                                       class="btn btn-outline-info"
+                                       title="Ver entregas pendientes">
+                                        <i class="bi bi-truck me-2"></i>
+                                        <span class="btn-text">Entregas Pendientes</span>
+                                    </a>
+                                    
+                                    <button type="button" 
+                                            id="btnAbrirInventario" 
+                                            class="btn btn-outline-secondary"
+                                            title="Ver inventario completo">
+                                        <i class="bi bi-grid-3x3-gap me-2"></i>
+                                        <span class="btn-text">Inventario</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
