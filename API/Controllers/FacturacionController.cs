@@ -1820,10 +1820,10 @@ namespace API.Controllers
         private DateTime CalcularProximaVerificacion()
         {
             var ahora = DateTime.Now;
-            var proximaVerificacion = new DateTime(ahora.Year, ahora.Month, ahora.Day, 2, 0, 0); // 2:00 AM
+            var proximaVerificacion = new DateTime(ahora.Year, ahora.Month, ahora.Day, 1, 5, 0); // 1:05 AM
 
-            // Si ya pasaron las 2:00 AM de hoy, programar para mañana
-            if (ahora.Hour >= 2)
+            // Si ya pasaron las 1:05 AM de hoy, programar para mañana
+            if (ahora.Hour >= 1 && ahora.Minute >= 5)
             {
                 proximaVerificacion = proximaVerificacion.AddDays(1);
             }
@@ -1897,6 +1897,63 @@ namespace API.Controllers
                     message = "Error interno al verificar vencimiento" 
                 });
             }
+
+        [HttpPost("test-verificacion-proformas")]
+        [Authorize]
+        public async Task<IActionResult> TestVerificacionProformas()
+        {
+            try
+            {
+                _logger.LogInformation("🧪 === TEST MANUAL DE VERIFICACIÓN DE PROFORMAS ===");
+                
+                // Buscar específicamente las proformas de prueba
+                var proformasPrueba = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma" && 
+                               f.Estado == "Vigente" && 
+                               f.NumeroFactura.StartsWith("PROF-TEST-"))
+                    .ToListAsync();
+
+                _logger.LogInformation("🧪 Proformas de prueba encontradas: {Count}", proformasPrueba.Count);
+
+                var resultados = new List<object>();
+
+                foreach (var proforma in proformasPrueba)
+                {
+                    var ahora = DateTime.Now;
+                    var yaVencida = proforma.FechaVencimiento < ahora;
+                    var diasVencida = yaVencida ? (ahora - proforma.FechaVencimiento.Value).Days : 0;
+                    
+                    resultados.Add(new
+                    {
+                        numeroFactura = proforma.NumeroFactura,
+                        fechaVencimiento = proforma.FechaVencimiento,
+                        estadoActual = proforma.Estado,
+                        yaVencida = yaVencida,
+                        diasVencida = diasVencida,
+                        horasVencida = yaVencida ? (ahora - proforma.FechaVencimiento.Value).TotalHours : 0
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Test de verificación completado",
+                    proformasPrueba = resultados,
+                    proximaVerificacionAutomatica = CalcularProximaVerificacion(),
+                    horaActual = DateTime.Now,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error en test de verificación");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error en test de verificación" 
+                });
+            }
+        }
+
         }
 
         // =====================================

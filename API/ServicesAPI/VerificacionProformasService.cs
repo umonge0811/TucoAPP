@@ -129,10 +129,10 @@ namespace API.ServicesAPI
         private DateTime CalcularProximaEjecucion()
         {
             var ahora = DateTime.Now;
-            var proximaEjecucion = new DateTime(ahora.Year, ahora.Month, ahora.Day, 2, 0, 0); // 2:00 AM
+            var proximaEjecucion = new DateTime(ahora.Year, ahora.Month, ahora.Day, 1, 5, 0); // 1:05 AM
 
-            // Si ya pasaron las 2:00 AM de hoy, programar para mañana
-            if (ahora.Hour >= 2)
+            // Si ya pasaron las 1:05 AM de hoy, programar para mañana
+            if (ahora.Hour >= 1 && ahora.Minute >= 5)
             {
                 proximaEjecucion = proximaEjecucion.AddDays(1);
             }
