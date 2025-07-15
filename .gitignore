@@ -361,4 +361,3 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/API/ServicesAPI/VerificacionProformasService.cs
