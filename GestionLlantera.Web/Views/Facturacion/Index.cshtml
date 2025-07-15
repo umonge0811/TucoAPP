@@ -222,13 +222,13 @@
                     <h6><i class="bi bi-info-circle me-2"></i>Información:</h6>
                     <p class="mb-0">Se han detectado productos con stock insuficiente en esta factura. Revisa los detalles y decide cómo proceder.</p>
                 </div>
-                
+
                 <div id="problemasStockLoading" class="text-center py-4">
                     <div class="spinner-border text-warning" role="status">
                         <span class="visually-hidden">Verificando stock...</span>
                     </div>
                 </div>
-                
+
                 <div id="problemasStockContent" style="display: none;">
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -240,7 +240,7 @@
                             <span id="problemasStockCliente">-</span>
                         </div>
                     </div>
-                    
+
                     <div class="table-responsive">
                         <table class="table table-hover table-striped">
                             <thead class="table-warning">
@@ -346,7 +346,7 @@
                         <li><strong>Convertir:</strong> Convierte la proforma en factura oficial</li>
                     </ul>
                 </div>
-                
+
                 <!-- Filtros -->
                 <div class="row mb-3">
                     <div class="col-md-4">
@@ -365,13 +365,25 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="proformasLoading" class="text-center py-4">
                     <div class="spinner-border text-success" role="status">
                         <span class="visually-hidden">Cargando proformas...</span>
                     </div>
                 </div>
                 <div id="proformasContent" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Proformas</h5>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-warning" onclick="verificarVencimientoProformas()" 
+                                    title="Verificar proformas vencidas">
+                                <i class="bi bi-calendar-x me-1"></i>Verificar Vencimiento
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="cargarProformas()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                            </button>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-hover table-striped">
                             <thead class="table-success">
@@ -389,7 +401,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     <!-- Paginación -->
                     <nav aria-label="Navegación de proformas" id="paginacionProformas" style="display: none;">
                         <ul class="pagination justify-content-center">

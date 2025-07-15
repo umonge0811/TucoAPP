@@ -259,7 +259,8 @@ namespace API.Controllers
                     EmailCliente = facturaDto.EmailCliente,
                     DireccionCliente = facturaDto.DireccionCliente,
                     FechaFactura = facturaDto.FechaFactura,
-                    FechaVencimiento = facturaDto.FechaVencimiento,
+                    FechaVencimiento = facturaDto.TipoDocumento == "Proforma" ? 
+                        DateTime.Now.AddDays(30) : facturaDto.FechaVencimiento,
                     Subtotal = facturaDto.SubtotalConDescuento,
                     DescuentoGeneral = facturaDto.DescuentoGeneral,
                     PorcentajeImpuesto = facturaDto.PorcentajeImpuesto,
@@ -1762,6 +1763,62 @@ namespace API.Controllers
                 return StatusCode(500, new { 
                     success = false, 
                     message = "Error interno al procesar entrega" 
+                });
+            }
+        }
+
+        [HttpPost("verificar-vencimiento-proformas")]
+        [Authorize]
+        public async Task<IActionResult> VerificarVencimientoProformas()
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Administrar Proformas",
+                "Solo usuarios con permiso 'Administrar Proformas' pueden verificar vencimiento");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            try
+            {
+                _logger.LogInformation("📅 === VERIFICANDO VENCIMIENTO DE PROFORMAS ===");
+
+                var proformasExpiradas = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma" && 
+                               f.Estado == "Vigente" && 
+                               f.FechaVencimiento < DateTime.Now)
+                    .ToListAsync();
+
+                var cantidadActualizadas = 0;
+
+                foreach (var proforma in proformasExpiradas)
+                {
+                    proforma.Estado = "Expirada";
+                    proforma.FechaActualizacion = DateTime.Now;
+                    cantidadActualizadas++;
+
+                    _logger.LogInformation("📅 Proforma expirada: {NumeroFactura} - Vencía: {FechaVencimiento}", 
+                        proforma.NumeroFactura, proforma.FechaVencimiento);
+                }
+
+                if (cantidadActualizadas > 0)
+                {
+                    await _context.SaveChangesAsync();
+                }
+
+                _logger.LogInformation("✅ Verificación completada: {Cantidad} proformas marcadas como expiradas", 
+                    cantidadActualizadas);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Verificación completada: {cantidadActualizadas} proformas marcadas como expiradas",
+                    proformasExpiradas = cantidadActualizadas,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando vencimiento de proformas");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno al verificar vencimiento" 
                 });
             }
         }
