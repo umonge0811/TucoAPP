@@ -808,6 +808,97 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("proformas")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<FacturaDTO>>> ObtenerProformas(
+            [FromQuery] string? estado = null,
+            [FromQuery] int pagina = 1,
+            [FromQuery] int tamano = 20)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo proformas");
+
+                var query = _context.Facturas
+                    .Include(f => f.UsuarioCreador)
+                    .Include(f => f.DetallesFactura)
+                    .Where(f => f.TipoDocumento == "Proforma");
+
+                // Aplicar filtro de estado si se proporciona
+                if (!string.IsNullOrWhiteSpace(estado))
+                {
+                    query = query.Where(f => f.Estado == estado);
+                }
+
+                var totalRegistros = await query.CountAsync();
+                var proformas = await query
+                    .OrderByDescending(f => f.FechaCreacion)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
+                    .Select(f => new FacturaDTO
+                    {
+                        FacturaId = f.FacturaId,
+                        NumeroFactura = f.NumeroFactura,
+                        ClienteId = f.ClienteId,
+                        NombreCliente = f.NombreCliente,
+                        IdentificacionCliente = f.IdentificacionCliente,
+                        TelefonoCliente = f.TelefonoCliente,
+                        EmailCliente = f.EmailCliente,
+                        DireccionCliente = f.DireccionCliente,
+                        FechaFactura = f.FechaFactura,
+                        FechaVencimiento = f.FechaVencimiento,
+                        Subtotal = f.Subtotal,
+                        DescuentoGeneral = f.DescuentoGeneral,
+                        PorcentajeImpuesto = f.PorcentajeImpuesto,
+                        MontoImpuesto = f.MontoImpuesto ?? 0,
+                        Total = f.Total,
+                        Estado = f.Estado,
+                        TipoDocumento = f.TipoDocumento,
+                        MetodoPago = f.MetodoPago,
+                        Observaciones = f.Observaciones,
+                        UsuarioCreadorId = f.UsuarioCreadorId,
+                        UsuarioCreadorNombre = f.UsuarioCreador.NombreUsuario,
+                        FechaCreacion = f.FechaCreacion,
+                        FechaActualizacion = f.FechaActualizacion,
+                        DetallesFactura = f.DetallesFactura.Select(d => new DetalleFacturaDTO
+                        {
+                            DetalleFacturaId = d.DetalleFacturaId,
+                            ProductoId = d.ProductoId,
+                            NombreProducto = d.NombreProducto,
+                            DescripcionProducto = d.DescripcionProducto,
+                            Cantidad = d.Cantidad,
+                            PrecioUnitario = d.PrecioUnitario,
+                            PorcentajeDescuento = d.PorcentajeDescuento,
+                            MontoDescuento = d.MontoDescuento,
+                            Subtotal = d.Subtotal
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} proformas", proformas.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    proformas = proformas,
+                    totalProformas = totalRegistros,
+                    pagina = pagina,
+                    tamano = tamano,
+                    totalPaginas = (int)Math.Ceiling((double)totalRegistros / tamano),
+                    message = $"Se encontraron {proformas.Count} proformas"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener proformas");
+                return StatusCode(500, new { 
+                    success = false,
+                    message = "Error al obtener proformas",
+                    timestamp = DateTime.Now 
+                });
+            }
+        }
+
         [HttpPut("facturas/{id}/estado")]
         [Authorize]
         public async Task<IActionResult> ActualizarEstadoFactura(int id, [FromBody] string nuevoEstado)

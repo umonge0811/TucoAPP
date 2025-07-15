@@ -400,6 +400,11 @@ function configurarEventos() {
         abrirFacturasPendientes();
     });
 
+    // ===== BOTÓN PROFORMAS =====
+    $('#btnProformas').on('click', function() {
+        abrirProformas();
+    });
+
     // ===== MODAL FINALIZAR VENTA =====
     $('#metodoPago').on('change', function() {
         const metodo = $(this).val();
@@ -2670,6 +2675,335 @@ async function procesarProforma() {
         $btnProforma.prop('disabled', false);
         $btnProforma.find('.btn-normal-state').removeClass('d-none');
         $btnProforma.find('.btn-loading-state').addClass('d-none');
+    }
+}
+
+// ===== GESTIÓN DE PROFORMAS =====
+
+/**
+ * ✅ FUNCIÓN: Abrir modal de proformas
+ */
+async function abrirProformas() {
+    try {
+        console.log('📋 === ABRIENDO MODAL DE PROFORMAS ===');
+
+        const modal = new bootstrap.Modal(document.getElementById('proformasModal'));
+        modal.show();
+
+        // Configurar eventos del modal
+        configurarEventosModalProformas();
+
+        // Cargar proformas iniciales
+        await cargarProformas();
+
+    } catch (error) {
+        console.error('❌ Error abriendo modal de proformas:', error);
+        mostrarToast('Error', 'No se pudo abrir el modal de proformas', 'danger');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Configurar eventos del modal de proformas
+ */
+function configurarEventosModalProformas() {
+    // Limpiar eventos anteriores
+    $('#btnFiltrarProformas').off('click.proformas');
+    $('#filtroEstadoProforma').off('change.proformas');
+
+    // Configurar filtro
+    $('#btnFiltrarProformas').on('click.proformas', async function() {
+        await cargarProformas();
+    });
+
+    $('#filtroEstadoProforma').on('change.proformas', async function() {
+        await cargarProformas();
+    });
+}
+
+/**
+ * ✅ FUNCIÓN: Cargar proformas desde el servidor
+ */
+async function cargarProformas(pagina = 1) {
+    try {
+        console.log('📋 === CARGANDO PROFORMAS ===');
+        console.log('📋 Página:', pagina);
+
+        // Mostrar loading
+        $('#proformasLoading').show();
+        $('#proformasContent').hide();
+        $('#proformasEmpty').hide();
+
+        const estado = $('#filtroEstadoProforma').val();
+        const params = new URLSearchParams({
+            pagina: pagina,
+            tamano: 20
+        });
+
+        if (estado) {
+            params.append('estado', estado);
+        }
+
+        const response = await fetch(`/Facturacion/ObtenerProformas?${params}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 Resultado obtenido:', resultado);
+
+        if (resultado.success && resultado.proformas && resultado.proformas.length > 0) {
+            mostrarProformas(resultado.proformas);
+            mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
+        } else {
+            mostrarProformasVacias();
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando proformas:', error);
+        mostrarProformasVacias();
+        mostrarToast('Error', 'Error al cargar proformas: ' + error.message, 'danger');
+    } finally {
+        $('#proformasLoading').hide();
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar proformas en la tabla
+ */
+function mostrarProformas(proformas) {
+    console.log('📋 Mostrando proformas:', proformas.length);
+
+    const tbody = $('#proformasTableBody');
+    tbody.empty();
+
+    proformas.forEach(proforma => {
+        const fecha = new Date(proforma.fechaFactura).toLocaleDateString('es-CR');
+        const estadoBadge = obtenerBadgeEstadoProforma(proforma.estado);
+        
+        const fila = `
+            <tr data-proforma-id="${proforma.facturaId}" class="proforma-row">
+                <td>
+                    <strong class="text-success">${proforma.numeroFactura}</strong>
+                    <br><small class="text-muted">${proforma.tipoDocumento}</small>
+                </td>
+                <td>
+                    <strong>${proforma.nombreCliente}</strong>
+                    <br><small class="text-muted">${proforma.identificacionCliente || 'Sin cédula'}</small>
+                </td>
+                <td>
+                    <small class="text-muted">Fecha:</small> ${fecha}
+                    <br><small class="text-muted">Por:</small> ${proforma.usuarioCreadorNombre || 'Sistema'}
+                </td>
+                <td>
+                    <strong class="text-success">₡${formatearMoneda(proforma.total)}</strong>
+                    <br><small class="text-muted">${proforma.metodoPago || 'N/A'}</small>
+                </td>
+                <td>
+                    ${estadoBadge}
+                </td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" 
+                                class="btn btn-outline-info btn-ver-proforma"
+                                data-proforma-id="${proforma.facturaId}"
+                                title="Ver detalles">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" 
+                                class="btn btn-outline-success btn-imprimir-proforma"
+                                data-proforma-id="${proforma.facturaId}"
+                                title="Imprimir">
+                            <i class="bi bi-printer"></i>
+                        </button>
+                        ${proforma.estado === 'Vigente' ? `
+                        <button type="button" 
+                                class="btn btn-outline-primary btn-convertir-proforma"
+                                data-proforma-id="${proforma.facturaId}"
+                                title="Convertir a factura">
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+        tbody.append(fila);
+    });
+
+    // Configurar eventos de los botones
+    configurarEventosProformas();
+
+    $('#proformasContent').show();
+}
+
+/**
+ * ✅ FUNCIÓN: Obtener badge según el estado de la proforma
+ */
+function obtenerBadgeEstadoProforma(estado) {
+    switch (estado) {
+        case 'Vigente':
+            return '<span class="badge bg-success">Vigente</span>';
+        case 'Vencida':
+            return '<span class="badge bg-warning">Vencida</span>';
+        case 'Convertida':
+            return '<span class="badge bg-info">Convertida</span>';
+        default:
+            return '<span class="badge bg-secondary">Desconocido</span>';
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Configurar eventos de los botones de proformas
+ */
+function configurarEventosProformas() {
+    // Limpiar eventos anteriores
+    $('.btn-ver-proforma').off('click.proforma');
+    $('.btn-imprimir-proforma').off('click.proforma');
+    $('.btn-convertir-proforma').off('click.proforma');
+
+    // Ver proforma
+    $('.btn-ver-proforma').on('click.proforma', function() {
+        const proformaId = $(this).data('proforma-id');
+        verDetalleProforma(proformaId);
+    });
+
+    // Imprimir proforma
+    $('.btn-imprimir-proforma').on('click.proforma', function() {
+        const proformaId = $(this).data('proforma-id');
+        imprimirProforma(proformaId);
+    });
+
+    // Convertir proforma
+    $('.btn-convertir-proforma').on('click.proforma', function() {
+        const proformaId = $(this).data('proforma-id');
+        convertirProforma(proformaId);
+    });
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar mensaje cuando no hay proformas
+ */
+function mostrarProformasVacias() {
+    $('#proformasContent').hide();
+    $('#proformasEmpty').show();
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar paginación de proformas
+ */
+function mostrarPaginacionProformas(paginaActual, totalPaginas) {
+    console.log('📋 Configurando paginación - Página:', paginaActual, 'Total:', totalPaginas);
+
+    if (totalPaginas <= 1) {
+        $('#paginacionProformas').hide();
+        return;
+    }
+
+    const paginacion = $('#paginacionProformas ul');
+    paginacion.empty();
+
+    // Anterior
+    const anteriorDisabled = paginaActual <= 1 ? 'disabled' : '';
+    paginacion.append(`
+        <li class="page-item ${anteriorDisabled}">
+            <a class="page-link" href="#" data-pagina="${paginaActual - 1}">Anterior</a>
+        </li>
+    `);
+
+    // Páginas
+    for (let i = 1; i <= totalPaginas; i++) {
+        const activa = i === paginaActual ? 'active' : '';
+        paginacion.append(`
+            <li class="page-item ${activa}">
+                <a class="page-link" href="#" data-pagina="${i}">${i}</a>
+            </li>
+        `);
+    }
+
+    // Siguiente
+    const siguienteDisabled = paginaActual >= totalPaginas ? 'disabled' : '';
+    paginacion.append(`
+        <li class="page-item ${siguienteDisabled}">
+            <a class="page-link" href="#" data-pagina="${paginaActual + 1}">Siguiente</a>
+        </li>
+    `);
+
+    // Configurar eventos de paginación
+    $('#paginacionProformas .page-link').on('click', function(e) {
+        e.preventDefault();
+        if (!$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
+            const pagina = parseInt($(this).data('pagina'));
+            cargarProformas(pagina);
+        }
+    });
+
+    $('#paginacionProformas').show();
+}
+
+/**
+ * ✅ FUNCIÓN: Ver detalle de proforma
+ */
+async function verDetalleProforma(proformaId) {
+    try {
+        console.log('👁️ Viendo detalle de proforma:', proformaId);
+        // Implementar lógica para ver detalle de proforma
+        // Por ahora solo mostrar un mensaje
+        mostrarToast('Información', 'Funcionalidad de ver detalle en desarrollo', 'info');
+    } catch (error) {
+        console.error('❌ Error viendo detalle de proforma:', error);
+        mostrarToast('Error', 'Error al ver detalle de proforma', 'danger');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Imprimir proforma
+ */
+async function imprimirProforma(proformaId) {
+    try {
+        console.log('🖨️ Imprimiendo proforma:', proformaId);
+        // Implementar lógica para imprimir proforma
+        // Por ahora solo mostrar un mensaje
+        mostrarToast('Información', 'Funcionalidad de imprimir en desarrollo', 'info');
+    } catch (error) {
+        console.error('❌ Error imprimiendo proforma:', error);
+        mostrarToast('Error', 'Error al imprimir proforma', 'danger');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Convertir proforma a factura
+ */
+async function convertirProforma(proformaId) {
+    try {
+        console.log('🔄 Convirtiendo proforma:', proformaId);
+        
+        const confirmacion = await Swal.fire({
+            title: '¿Convertir proforma?',
+            text: '¿Estás seguro de que deseas convertir esta proforma en factura oficial?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, convertir',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (confirmacion.isConfirmed) {
+            // Implementar lógica para convertir proforma
+            // Por ahora solo mostrar un mensaje
+            mostrarToast('Información', 'Funcionalidad de conversión en desarrollo', 'info');
+        }
+    } catch (error) {
+        console.error('❌ Error convirtiendo proforma:', error);
+        mostrarToast('Error', 'Error al convertir proforma', 'danger');
     }
 }
 
