@@ -2973,6 +2973,107 @@ async function convertirProforma(proformaId) {
     }
 }
 
+/**
+ * ✅ FUNCIÓN: Verificar vencimiento de proformas
+ */
+async function verificarVencimientoProformas() {
+    try {
+        console.log('📅 === VERIFICANDO VENCIMIENTO DE PROFORMAS ===');
+        
+        const confirmacion = await Swal.fire({
+            title: '¿Verificar vencimiento?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Esta acción:</strong></p>
+                    <ul>
+                        <li>Revisará todas las proformas vigentes</li>
+                        <li>Marcará como "Expiradas" las que pasaron 30 días</li>
+                        <li>Actualizará automáticamente los estados</li>
+                    </ul>
+                    <p class="text-info"><strong>¿Desea continuar?</strong></p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#17a2b8',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, verificar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Verificando...',
+            text: 'Revisando vencimiento de proformas',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const response = await fetch('/Facturacion/VerificarVencimientoProformas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📅 Resultado verificación:', resultado);
+
+        if (resultado.success) {
+            const proformasExpiradas = resultado.proformasExpiradas || 0;
+            
+            Swal.fire({
+                icon: 'success',
+                title: '¡Verificación Completada!',
+                html: `
+                    <div class="text-center">
+                        <p><strong>${proformasExpiradas}</strong> proformas han sido marcadas como expiradas</p>
+                        ${proformasExpiradas > 0 ? 
+                            '<p class="text-muted">Los estados han sido actualizados automáticamente</p>' : 
+                            '<p class="text-success">Todas las proformas están dentro de su período de validez</p>'
+                        }
+                    </div>
+                `,
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#28a745',
+                timer: 4000,
+                timerProgressBar: true
+            });
+
+            // Recargar la tabla si hay cambios
+            if (proformasExpiradas > 0) {
+                await cargarProformas();
+            }
+        } else {
+            throw new Error(resultado.message || 'Error en la verificación');
+        }
+
+    } catch (error) {
+        console.error('❌ Error verificando vencimiento:', error);
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error en verificación',
+            text: 'No se pudo completar la verificación de vencimiento: ' + error.message,
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
 
 /**
  * Generar e imprimir recibo de venta optimizado para mini impresoras térmicas
