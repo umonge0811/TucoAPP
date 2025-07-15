@@ -1767,6 +1767,70 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("estadisticas-verificacion-proformas")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerEstadisticasVerificacionProformas()
+        {
+            try
+            {
+                var estadisticas = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma")
+                    .GroupBy(f => f.Estado)
+                    .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
+                    .ToListAsync();
+
+                var proformasVigentes = estadisticas.FirstOrDefault(e => e.Estado == "Vigente")?.Cantidad ?? 0;
+                var proformasExpiradas = estadisticas.FirstOrDefault(e => e.Estado == "Expirada")?.Cantidad ?? 0;
+                var proformasConvertidas = estadisticas.FirstOrDefault(e => e.Estado == "Convertida")?.Cantidad ?? 0;
+
+                // Obtener proformas que van a vencer en los próximos 7 días
+                var fechaLimite = DateTime.Now.AddDays(7);
+                var proformasPorVencer = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma" && 
+                               f.Estado == "Vigente" && 
+                               f.FechaVencimiento <= fechaLimite &&
+                               f.FechaVencimiento > DateTime.Now)
+                    .CountAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    estadisticas = new
+                    {
+                        vigentes = proformasVigentes,
+                        expiradas = proformasExpiradas,
+                        convertidas = proformasConvertidas,
+                        porVencerEn7Dias = proformasPorVencer,
+                        total = estadisticas.Sum(e => e.Cantidad)
+                    },
+                    proximaVerificacionAutomatica = CalcularProximaVerificacion(),
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo estadísticas de verificación");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al obtener estadísticas" 
+                });
+            }
+        }
+
+        private DateTime CalcularProximaVerificacion()
+        {
+            var ahora = DateTime.Now;
+            var proximaVerificacion = new DateTime(ahora.Year, ahora.Month, ahora.Day, 2, 0, 0); // 2:00 AM
+
+            // Si ya pasaron las 2:00 AM de hoy, programar para mañana
+            if (ahora.Hour >= 2)
+            {
+                proximaVerificacion = proximaVerificacion.AddDays(1);
+            }
+
+            return proximaVerificacion;
+        }
+
         [HttpPost("verificar-vencimiento-proformas")]
         [Authorize]
         public async Task<IActionResult> VerificarVencimientoProformas()
