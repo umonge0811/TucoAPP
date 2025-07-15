@@ -908,7 +908,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var prefijo = tipoDocumento == "Proforma" ? "PRO" : "FAC";
+                var prefijo = tipoDocumento == "Proforma" ? "PROF" : "FAC";
                 var año = DateTime.Now.Year;
                 var mes = DateTime.Now.Month;
                 var dia = DateTime.Now.Day;
@@ -922,15 +922,16 @@ namespace GestionLlantera.Web.Services
 
                 var numeroFactura = $"{prefijo}-{año:D4}{mes:D2}-{numeroConsecutivo}";
 
-                _logger.LogInformation("📋 Número de factura generado: {NumeroFactura}", numeroFactura);
+                _logger.LogInformation("📋 Número de {TipoDocumento} generado: {NumeroFactura}", tipoDocumento, numeroFactura);
 
                 return numeroFactura;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error generando número de factura");
+                _logger.LogError(ex, "❌ Error generando número de {TipoDocumento}", tipoDocumento);
                 // Fallback a un número simple
-                return $"FAC-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10, 6)}";
+                var prefijoFallback = tipoDocumento == "Proforma" ? "PROF" : "FAC";
+                return $"{prefijoFallback}-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10, 6)}";
             }
         }
 

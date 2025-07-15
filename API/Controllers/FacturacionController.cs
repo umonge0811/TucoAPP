@@ -200,11 +200,12 @@ namespace API.Controllers
                 // ✅ VERIFICAR PERMISOS PARA DETERMINAR ESTADO INICIAL
                 var puedeCompletar = await this.TienePermisoAsync(_permisosService, "CompletarFacturas");
 
-                // Determinar estado inicial según permisos y el estado enviado
+                // Determinar estado inicial según tipo de documento y permisos
                 string estadoInicial;
                 if (facturaDto.TipoDocumento == "Proforma")
                 {
-                    estadoInicial = "Pendiente"; // Las proformas siempre inician como pendientes
+                    estadoInicial = "Vigente"; // Las proformas inician como vigentes
+                    _logger.LogInformation("📋 Proforma creada con estado VIGENTE");
                 }
                 else if (facturaDto.Estado == "Pagada" && puedeCompletar)
                 {
@@ -870,7 +871,7 @@ namespace API.Controllers
 
         private async Task<string> GenerarNumeroFactura(string tipoDocumento)
         {
-            var prefijo = tipoDocumento == "Proforma" ? "PRO" : "FAC";
+            var prefijo = tipoDocumento == "Proforma" ? "PROF" : "FAC";
             var año = DateTime.Now.Year;
             var mes = DateTime.Now.Month;
 
