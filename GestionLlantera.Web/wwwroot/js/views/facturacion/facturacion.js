@@ -2870,7 +2870,7 @@ function generarRecibo(factura, productos, totales) {
                 <div class="nombre-empresa">GESTIÓN LLANTERA</div>
                 <div class="info-empresa">Sistema de Facturación</div>
                 <div class="telefono">Tel: (506) 0000-0000</div>
-                <div class="tipo-documento">FACTURA DE VENTA</div>
+                <div class="tipo-documento">${numeroFactura && numeroFactura.startsWith('PROF') ? 'PROFORMA' : 'FACTURA DE VENTA'}</div>
                 <div class="numero-factura">No. ${numeroFactura}</div>
             </div>
 
@@ -2917,6 +2917,46 @@ function generarRecibo(factura, productos, totales) {
             <!-- PRODUCTOS PENDIENTES DE ENTREGA -->
             ${seccionProductosPendientes}
 
+            <!-- ADVERTENCIA PARA PROFORMAS -->
+            ${numeroFactura && numeroFactura.startsWith('PROF') ? `
+            <div class="separador"></div>
+            <div class="seccion-proforma">
+                <div class="titulo-seccion">⚠️ IMPORTANTE - PROFORMA</div>
+                <div class="advertencia-proforma">
+                    <div class="info-proforma">
+                        <div><strong>VALIDEZ:</strong> Esta proforma tiene</div>
+                        <div>validez por 30 días calendario</div>
+                        <div>desde su fecha de emisión.</div>
+                    </div>
+                    <div class="separador-proforma"></div>
+                    <div class="info-proforma">
+                        <div><strong>CONDICIONES:</strong></div>
+                        <div>• Los precios están sujetos a</div>
+                        <div>  cambios sin previo aviso</div>
+                        <div>• La disponibilidad de productos</div>
+                        <div>  está sujeta al stock actual</div>
+                        <div>• Para facturación presente</div>
+                        <div>  este documento</div>
+                    </div>
+                    <div class="separador-proforma"></div>
+                    <div class="info-proforma">
+                        <div><strong>NOTA LEGAL:</strong></div>
+                        <div>Este documento NO constituye</div>
+                        <div>una factura fiscal. Es una</div>
+                        <div>cotización formal que requiere</div>
+                        <div>confirmación para proceder con</div>
+                        <div>la facturación oficial.</div>
+                    </div>
+                    <div class="separador-proforma"></div>
+                    <div class="codigo-proforma">
+                        <div>📋 Código de Proforma:</div>
+                        <div class="codigo-recuadro">${numeroFactura}</div>
+                        <div class="conservar-documento">🎫 CONSERVE ESTE DOCUMENTO</div>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
+
             <!-- PIE DE PÁGINA -->
             <div class="pie-pagina">
                 <div>¡Gracias por su compra!</div>
@@ -2949,7 +2989,7 @@ function generarRecibo(factura, productos, totales) {
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Recibo Térmico - ${numeroFactura}</title>
+                    <title>${numeroFactura && numeroFactura.startsWith('PROF') ? 'Proforma' : 'Recibo Térmico'} - ${numeroFactura}</title>
                     <style>
                         /* ===== ESTILOS PARA MINI IMPRESORAS TÉRMICAS ===== */
                         
@@ -3141,6 +3181,49 @@ function generarRecibo(factura, productos, totales) {
                             padding: 2mm;
                         }
 
+                        /* Estilos para proformas */
+                        .seccion-proforma {
+                            margin-bottom: 3mm;
+                            border: 2px solid #000;
+                            padding: 2mm;
+                            background: #f9f9f9;
+                        }
+
+                        .advertencia-proforma {
+                            font-size: 6px;
+                            text-align: center;
+                        }
+
+                        .info-proforma {
+                            margin-bottom: 1mm;
+                        }
+
+                        .info-proforma div {
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .separador-proforma {
+                            border-top: 1px dashed #000;
+                            margin: 1mm 0;
+                        }
+
+                        .codigo-proforma {
+                            text-align: center;
+                            margin-top: 2mm;
+                        }
+
+                        .codigo-proforma div:first-child {
+                            font-size: 6px;
+                            margin-bottom: 0.5mm;
+                        }
+
+                        .conservar-documento {
+                            font-size: 7px;
+                            font-weight: bold;
+                            margin-top: 1mm;
+                            color: #d63384;
+                        }
+
                         .info-pendientes {
                             text-align: center;
                             font-size: 7px;
@@ -3242,6 +3325,16 @@ function generarRecibo(factura, productos, totales) {
                                 padding: 2mm !important;
                                 margin: 0 !important;
                                 background: none !important;
+                            }
+
+                            .seccion-proforma {
+                                background: #f0f0f0 !important;
+                                border: 2px solid #000 !important;
+                            }
+
+                            .conservar-documento {
+                                color: #000 !important;
+                                font-weight: bold !important;
                             }
 
                             /* Asegurar que todo se imprima en negro */
