@@ -2263,47 +2263,47 @@ async function completarFacturaExistente(facturaId) {
 //}
 
 /**
- * ✅ NUEVA FUNCIÓN: Crear nueva factura (modificada para soportar tipo de documento)
+ * ✅ NUEVA FUNCIÓN: Crear nueva factura (modificada para soportar fecha de vencimiento de proformas)
  */
 async function crearNuevaFactura(tipoDocumento = 'Factura') {
     try {
         console.log('🆕 === CREANDO NUEVO DOCUMENTO ===');
         console.log('🆕 Tipo de documento:', tipoDocumento);
-
         // Preparar datos de la venta con método de pago seleccionado
         const metodoPagoSeleccionado = esPagoMultiple ? 'multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
         const configMetodo = esPagoMultiple ? CONFIGURACION_PRECIOS.efectivo : CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
-
         // Validar pagos múltiples si es necesario
         if (esPagoMultiple && !validarPagosMultiples()) {
             return;
         }
-
         let subtotal = 0;
         productosEnVenta.forEach(producto => {
             const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
             subtotal += precioAjustado * producto.cantidad;
         });
-
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
-
         // ✅ DETERMINAR ESTADO Y PERMISOS SEGÚN EL TIPO DE DOCUMENTO
         let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
-
+        let fechaVencimiento = null;
         console.log('🔐 === VERIFICACIÓN DE PERMISOS ===');
         console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
         console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
         console.log('🔐 tipoDocumento:', tipoDocumento);
-
         if (tipoDocumento === 'Proforma') {
-            // ✅ PROFORMAS: Siempre estado "Vigente"
+            // ✅ PROFORMAS: Siempre estado "Vigente" con fecha de vencimiento
             estadoFactura = 'Vigente';
             mensajeExito = 'Proforma creada exitosamente';
             debeImprimir = true;
             debeAjustarInventario = false; // Las proformas NO ajustan inventario
+
+            // ✅ CALCULAR FECHA DE VENCIMIENTO (30 días desde hoy)
+            const fechaActual = new Date();
+            fechaVencimiento = new Date(fechaActual.getTime() + (30 * 24 * 60 * 60 * 1000)); // +30 días
+
             console.log('📋 Creando proforma con estado VIGENTE');
-            
+            console.log('📅 Fecha de vencimiento calculada:', fechaVencimiento);
+
         } else if (permisosUsuario.puedeCompletarFacturas) {
             // ✅ USUARIOS CON PERMISO COMPLETAR: Venta completa e inmediata
             estadoFactura = 'Pagada';
@@ -2311,7 +2311,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             debeImprimir = true;
             debeAjustarInventario = true;
             console.log('👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock');
-
         } else if (permisosUsuario.puedeCrearFacturas) {
             // ✅ COLABORADORES: Factura pendiente para caja SIN AJUSTE DE STOCK
             estadoFactura = 'Pendiente';
@@ -2319,33 +2318,28 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             debeImprimir = false;
             debeAjustarInventario = false; // ✅ CRUCIAL: NO ajustar stock para colaboradores
             console.log('📝 Procesando como colaborador - Factura pendiente para caja SIN ajuste de stock');
-
         } else {
             // ❌ SIN PERMISOS: No debería llegar aquí, pero como fallback
             throw new Error('No tienes permisos para procesar ventas');
         }
-
         console.log('📋 Estado determinado:', {
             tipoDocumento,
             estadoFactura,
+            fechaVencimiento,
             debeImprimir,
             debeAjustarInventario,
             permisos: permisosUsuario
         });
-
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
         const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
-
         console.log('👤 Usuario actual para documento:', {
             usuario: usuarioActual,
             usuarioId: usuarioId
         });
-
         // ✅ CAPTURAR PRODUCTOS PENDIENTES DESDE LAS VARIABLES GLOBALES (solo para facturas)
         let productosPendientesParaEnvio = [];
         let tieneProductosPendientes = false;
-
         if (tipoDocumento === 'Factura' && window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
             console.log('📦 Productos pendientes detectados:', window.productosPendientesEntrega);
             productosPendientesParaEnvio = window.productosPendientesEntrega.map(producto => ({
@@ -2359,7 +2353,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             }));
             tieneProductosPendientes = true;
         }
-
         // Crear objeto de factura para enviar a la API
         const facturaData = {
             clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
@@ -2369,7 +2362,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             emailCliente: clienteSeleccionado?.email || '',
             direccionCliente: clienteSeleccionado?.direccion || '',
             fechaFactura: new Date().toISOString(),
-            fechaVencimiento: null,
+            fechaVencimiento: fechaVencimiento ? fechaVencimiento.toISOString() : null, // ✅ INCLUIR FECHA DE VENCIMIENTO
             subtotal: subtotal,
             descuentoGeneral: 0,
             porcentajeImpuesto: 13,
@@ -2404,9 +2397,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                 };
             })
         };
-
         console.log('📋 Datos de documento preparados:', facturaData);
-
         // Crear la factura/proforma
         const response = await fetch('/Facturacion/CrearFactura', {
             method: 'POST',
@@ -2416,23 +2407,19 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             },
             body: JSON.stringify(facturaData)
         });
-
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Error del servidor al crear documento:', errorText);
             throw new Error(`Error al crear el documento: ${response.status} - ${errorText}`);
         }
-
         const resultadoFactura = await response.json();
         console.log('✅ Documento creado:', resultadoFactura);
-
         if (resultadoFactura.success) {
             // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN (solo para facturas)
             if (tipoDocumento === 'Factura' && tieneProductosPendientes && productosPendientesParaEnvio.length > 0) {
                 console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE CREAR FACTURA ===');
                 console.log('📦 Productos pendientes:', productosPendientesParaEnvio);
                 console.log('📦 Factura creada ID:', resultadoFactura.facturaId || resultadoFactura.data?.facturaId);
-
                 const facturaIdCreada = resultadoFactura.facturaId || resultadoFactura.data?.facturaId;
                 if (facturaIdCreada) {
                     await registrarProductosPendientesEntrega(facturaIdCreada, productosPendientesParaEnvio);
@@ -2440,77 +2427,69 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                     console.warn('⚠️ No se pudo obtener ID de factura para registrar pendientes');
                 }
             }
-
             // ✅ PROCESAR SEGÚN EL TIPO DE DOCUMENTO Y USUARIO
             if (tipoDocumento === 'Proforma') {
                 // ✅ PROFORMAS: Mostrar confirmación y generar recibo
                 console.log('📋 Proforma creada - Generando recibo');
-
                 // ✅ CERRAR MODAL DE FINALIZAR VENTA INMEDIATAMENTE
                 modalFinalizarVenta.hide();
-
                 // ✅ GENERAR RECIBO PARA PROFORMA
                 generarReciboFacturaCompletada(resultadoFactura, productosEnVenta, metodoPagoSeleccionado);
-
                 // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
                 Swal.fire({
                     icon: 'success',
                     title: '¡Proforma Creada!',
-                    text: `Proforma ${resultadoFactura.numeroFactura || 'N/A'} creada exitosamente`,
+                    html: `
+                        <div class="text-center">
+                            <p><strong>Proforma:</strong> ${resultadoFactura.numeroFactura || 'N/A'}</p>
+                            <p><strong>Válida hasta:</strong> ${fechaVencimiento ? fechaVencimiento.toLocaleDateString('es-CR') : 'N/A'}</p>
+                            <div class="alert alert-info mt-3">
+                                <small><strong>Nota:</strong> Esta proforma tiene validez por 30 días calendario</small>
+                            </div>
+                        </div>
+                    `,
                     confirmButtonText: 'Continuar',
                     confirmButtonColor: '#28a745',
-                    timer: 3000,
+                    timer: 5000,
                     timerProgressBar: true
                 });
-
             } else if (estadoFactura === 'Pendiente') {
                 // ✅ COLABORADORES: Modal específico de envío a cajas
                 console.log('📋 Factura pendiente - Mostrando modal de envío a cajas');
-
                 // ✅ CERRAR MODAL DE FINALIZAR VENTA INMEDIATAMENTE
                 modalFinalizarVenta.hide();
-
                 // ✅ ACTUALIZAR VISTA DE PRODUCTOS (sin ajuste de stock)
                 await actualizarVistaProductosPostAjuste();
-
                 // Para colaboradores: mostrar modal específico de envío a cajas
                 setTimeout(() => {
                     mostrarModalFacturaPendiente(resultadoFactura);
                 }, 300);
-
             } else if (estadoFactura === 'Pagada') {
                 // ✅ ADMINISTRADORES/CAJEROS: Venta completa con ajuste de stock
                 console.log('💰 Factura pagada - Procesando venta completa');
-
                 // ✅ AJUSTAR STOCK SOLO PARA FACTURAS PAGADAS
                 if (debeAjustarInventario) {
                     console.log('💰 === INICIO AJUSTE INVENTARIO FRONTEND ===');
                     console.log('💰 Usuario autorizado - Ajustando inventario automáticamente');
-
                     // ✅ PROTECCIÓN CONTRA DOBLE EJECUCIÓN
                     const facturaNumero = resultadoFactura.numeroFactura || 'N/A';
                     const cacheKey = `stock_ajustado_${facturaNumero}`;
-
                     if (window[cacheKey]) {
                         console.log('⚠️ Stock ya fue ajustado para esta factura, saltando ajuste');
                     } else {
                         // Marcar como en proceso
                         window[cacheKey] = true;
-
                         try {
                             const productosParaAjuste = productosEnVenta.map(producto => ({
                                 ProductoId: producto.productoId,
                                 NombreProducto: producto.nombreProducto,
                                 Cantidad: producto.cantidad
                             }));
-
                             const requestData = {
                                 NumeroFactura: facturaNumero,
                                 Productos: productosParaAjuste
                             };
-
                             console.log('📦 Ajustando stock para productos:', productosParaAjuste);
-
                             const responseStock = await fetch('/Facturacion/AjustarStockFacturacion', {
                                 method: 'POST',
                                 headers: {
@@ -2519,39 +2498,31 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                                 },
                                 body: JSON.stringify(requestData)
                             });
-
                             if (responseStock.ok) {
                                 const resultadoStock = await responseStock.json();
                                 console.log('✅ Stock ajustado exitosamente');
-
                                 // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DEL AJUSTE
                                 await actualizarVistaProductosPostAjuste();
                             } else {
                                 console.error('❌ Error ajustando stock');
                                 console.warn('❌ Error ajustando stock - sin toast');
                             }
-
                         } catch (error) {
                             console.error('❌ Error general ajustando stock:', error);
                             console.warn('❌ Error inesperado ajustando inventario - sin toast');
                             delete window[cacheKey];
                         }
                     }
-
                     console.log('💰 === FIN AJUSTE INVENTARIO FRONTEND ===');
                 }
-
                 // ✅ GENERAR E IMPRIMIR RECIBO PARA FACTURAS PAGADAS
                 if (debeImprimir) {
                     console.log('🖨️ Generando recibo para nueva factura pagada:', resultadoFactura);
-
                     // ✅ USAR LA FUNCIÓN ESPECÍFICA PARA FACTURAS COMPLETADAS
                     generarReciboFacturaCompletada(resultadoFactura, productosEnVenta, metodoPagoSeleccionado);
                 }
-
                 // ✅ CERRAR MODAL INMEDIATAMENTE DESPUÉS DE PROCESAR
                 modalFinalizarVenta.hide();
-
                 // ✅ MOSTRAR SWEETALERT EN LUGAR DE TOAST
                 Swal.fire({
                     icon: 'success',
@@ -2563,7 +2534,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                     timerProgressBar: true
                 });
             }
-
             // ✅ LIMPIAR CARRITO DESPUÉS DE PROCESAR (PARA TODOS LOS CASOS)
             productosEnVenta = [];
             clienteSeleccionado = null;
@@ -2572,7 +2542,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             actualizarVistaCarrito();
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
-
             // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES Y CÓDIGOS DE SEGUIMIENTO
             if (window.productosPendientesEntrega) {
                 delete window.productosPendientesEntrega;
@@ -2587,7 +2556,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                     delete window.codigosSeguimientoPendientes;
                 }
             }, 3000); // 3 segundos de delay para que se use en el recibo
-
             // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DE COMPLETAR LA OPERACIÓN
             setTimeout(async () => {
                 try {
@@ -2596,7 +2564,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                     console.error('❌ Error actualizando vista después de operación:', error);
                 }
             }, 500);
-
         } else {
             // ✅ MOSTRAR ERROR CON SWEETALERT
             if (typeof Swal !== 'undefined') {
@@ -2611,7 +2578,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                 alert('Error: ' + (resultadoFactura.message || 'Error al procesar'));
             }
         }
-
     } catch (error) {
         console.error('❌ Error creando nuevo documento:', error);
         throw error;
