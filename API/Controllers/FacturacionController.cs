@@ -1767,17 +1767,86 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("estadisticas-verificacion-proformas")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerEstadisticasVerificacionProformas()
+        {
+            try
+            {
+                var estadisticas = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma")
+                    .GroupBy(f => f.Estado)
+                    .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
+                    .ToListAsync();
+
+                var proformasVigentes = estadisticas.FirstOrDefault(e => e.Estado == "Vigente")?.Cantidad ?? 0;
+                var proformasExpiradas = estadisticas.FirstOrDefault(e => e.Estado == "Expirada")?.Cantidad ?? 0;
+                var proformasConvertidas = estadisticas.FirstOrDefault(e => e.Estado == "Convertida")?.Cantidad ?? 0;
+
+                // Obtener proformas que van a vencer en los próximos 7 días
+                var fechaLimite = DateTime.Now.AddDays(7);
+                var proformasPorVencer = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma" && 
+                               f.Estado == "Vigente" && 
+                               f.FechaVencimiento <= fechaLimite &&
+                               f.FechaVencimiento > DateTime.Now)
+                    .CountAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    estadisticas = new
+                    {
+                        vigentes = proformasVigentes,
+                        expiradas = proformasExpiradas,
+                        convertidas = proformasConvertidas,
+                        porVencerEn7Dias = proformasPorVencer,
+                        total = estadisticas.Sum(e => e.Cantidad)
+                    },
+                    proximaVerificacionAutomatica = CalcularProximaVerificacion(),
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo estadísticas de verificación");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al obtener estadísticas" 
+                });
+            }
+        }
+
+        private DateTime CalcularProximaVerificacion()
+        {
+            var ahora = DateTime.Now;
+            var proximaVerificacion = new DateTime(ahora.Year, ahora.Month, ahora.Day, 2, 0, 0); // 2:00 AM
+
+            // Si ya pasaron las 2:00 AM de hoy, programar para mañana
+            if (ahora.Hour >= 2)
+            {
+                proximaVerificacion = proximaVerificacion.AddDays(1);
+            }
+
+            return proximaVerificacion;
+        }
+
         [HttpPost("verificar-vencimiento-proformas")]
         [Authorize]
-        public async Task<IActionResult> VerificarVencimientoProformas()
+        public async Task<IActionResult> VerificarVencimientoProformas([FromQuery] bool esVerificacionAutomatica = false)
         {
-            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Administrar Proformas",
-                "Solo usuarios con permiso 'Administrar Proformas' pueden verificar vencimiento");
-            if (validacionPermiso != null) return validacionPermiso;
+            // Solo validar permisos si no es verificación automática
+            if (!esVerificacionAutomatica)
+            {
+                var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Administrar Proformas",
+                    "Solo usuarios con permiso 'Administrar Proformas' pueden verificar vencimiento");
+                if (validacionPermiso != null) return validacionPermiso;
+            }
 
             try
             {
-                _logger.LogInformation("📅 === VERIFICANDO VENCIMIENTO DE PROFORMAS ===");
+                var tipoVerificacion = esVerificacionAutomatica ? "AUTOMÁTICA" : "MANUAL";
+                _logger.LogInformation("📅 === VERIFICANDO VENCIMIENTO DE PROFORMAS ({Tipo}) ===", tipoVerificacion);
 
                 var proformasExpiradas = await _context.Facturas
                     .Where(f => f.TipoDocumento == "Proforma" && 
@@ -1789,12 +1858,18 @@ namespace API.Controllers
 
                 foreach (var proforma in proformasExpiradas)
                 {
+                    var diasVencida = (DateTime.Now - proforma.FechaVencimiento.Value).Days;
+                    var observacionTipo = esVerificacionAutomatica ? "AUTOMÁTICAMENTE" : "MANUALMENTE";
+                    
                     proforma.Estado = "Expirada";
                     proforma.FechaActualizacion = DateTime.Now;
+                    proforma.Observaciones = (proforma.Observaciones ?? "") + 
+                        $" | EXPIRADA {observacionTipo}: {DateTime.Now:dd/MM/yyyy HH:mm} ({diasVencida} días de vencimiento)";
+                    
                     cantidadActualizadas++;
 
-                    _logger.LogInformation("📅 Proforma expirada: {NumeroFactura} - Vencía: {FechaVencimiento}", 
-                        proforma.NumeroFactura, proforma.FechaVencimiento);
+                    _logger.LogInformation("📅 Proforma expirada {Tipo}: {NumeroFactura} - Vencía: {FechaVencimiento} ({Dias} días)", 
+                        tipoVerificacion.ToLower(), proforma.NumeroFactura, proforma.FechaVencimiento, diasVencida);
                 }
 
                 if (cantidadActualizadas > 0)
@@ -1802,14 +1877,15 @@ namespace API.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                _logger.LogInformation("✅ Verificación completada: {Cantidad} proformas marcadas como expiradas", 
-                    cantidadActualizadas);
+                _logger.LogInformation("✅ Verificación {Tipo} completada: {Cantidad} proformas marcadas como expiradas", 
+                    tipoVerificacion.ToLower(), cantidadActualizadas);
 
                 return Ok(new
                 {
                     success = true,
-                    message = $"Verificación completada: {cantidadActualizadas} proformas marcadas como expiradas",
+                    message = $"Verificación {tipoVerificacion.ToLower()} completada: {cantidadActualizadas} proformas marcadas como expiradas",
                     proformasExpiradas = cantidadActualizadas,
+                    esVerificacionAutomatica = esVerificacionAutomatica,
                     timestamp = DateTime.Now
                 });
             }
