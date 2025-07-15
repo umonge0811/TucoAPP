@@ -200,11 +200,12 @@ namespace API.Controllers
                 // ✅ VERIFICAR PERMISOS PARA DETERMINAR ESTADO INICIAL
                 var puedeCompletar = await this.TienePermisoAsync(_permisosService, "CompletarFacturas");
 
-                // Determinar estado inicial según permisos y el estado enviado
+                // Determinar estado inicial según tipo de documento y permisos
                 string estadoInicial;
                 if (facturaDto.TipoDocumento == "Proforma")
                 {
-                    estadoInicial = "Pendiente"; // Las proformas siempre inician como pendientes
+                    estadoInicial = "Vigente"; // Las proformas inician como vigentes
+                    _logger.LogInformation("📋 Proforma creada con estado VIGENTE");
                 }
                 else if (facturaDto.Estado == "Pagada" && puedeCompletar)
                 {
@@ -258,7 +259,8 @@ namespace API.Controllers
                     EmailCliente = facturaDto.EmailCliente,
                     DireccionCliente = facturaDto.DireccionCliente,
                     FechaFactura = facturaDto.FechaFactura,
-                    FechaVencimiento = facturaDto.FechaVencimiento,
+                    FechaVencimiento = facturaDto.TipoDocumento == "Proforma" ? 
+                        DateTime.Now.AddDays(30) : facturaDto.FechaVencimiento,
                     Subtotal = facturaDto.SubtotalConDescuento,
                     DescuentoGeneral = facturaDto.DescuentoGeneral,
                     PorcentajeImpuesto = facturaDto.PorcentajeImpuesto,
@@ -807,6 +809,97 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("proformas")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<FacturaDTO>>> ObtenerProformas(
+            [FromQuery] string? estado = null,
+            [FromQuery] int pagina = 1,
+            [FromQuery] int tamano = 20)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo proformas");
+
+                var query = _context.Facturas
+                    .Include(f => f.UsuarioCreador)
+                    .Include(f => f.DetallesFactura)
+                    .Where(f => f.TipoDocumento == "Proforma");
+
+                // Aplicar filtro de estado si se proporciona
+                if (!string.IsNullOrWhiteSpace(estado))
+                {
+                    query = query.Where(f => f.Estado == estado);
+                }
+
+                var totalRegistros = await query.CountAsync();
+                var proformas = await query
+                    .OrderByDescending(f => f.FechaCreacion)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
+                    .Select(f => new FacturaDTO
+                    {
+                        FacturaId = f.FacturaId,
+                        NumeroFactura = f.NumeroFactura,
+                        ClienteId = f.ClienteId,
+                        NombreCliente = f.NombreCliente,
+                        IdentificacionCliente = f.IdentificacionCliente,
+                        TelefonoCliente = f.TelefonoCliente,
+                        EmailCliente = f.EmailCliente,
+                        DireccionCliente = f.DireccionCliente,
+                        FechaFactura = f.FechaFactura,
+                        FechaVencimiento = f.FechaVencimiento,
+                        Subtotal = f.Subtotal,
+                        DescuentoGeneral = f.DescuentoGeneral,
+                        PorcentajeImpuesto = f.PorcentajeImpuesto,
+                        MontoImpuesto = f.MontoImpuesto ?? 0,
+                        Total = f.Total,
+                        Estado = f.Estado,
+                        TipoDocumento = f.TipoDocumento,
+                        MetodoPago = f.MetodoPago,
+                        Observaciones = f.Observaciones,
+                        UsuarioCreadorId = f.UsuarioCreadorId,
+                        UsuarioCreadorNombre = f.UsuarioCreador.NombreUsuario,
+                        FechaCreacion = f.FechaCreacion,
+                        FechaActualizacion = f.FechaActualizacion,
+                        DetallesFactura = f.DetallesFactura.Select(d => new DetalleFacturaDTO
+                        {
+                            DetalleFacturaId = d.DetalleFacturaId,
+                            ProductoId = d.ProductoId,
+                            NombreProducto = d.NombreProducto,
+                            DescripcionProducto = d.DescripcionProducto,
+                            Cantidad = d.Cantidad,
+                            PrecioUnitario = d.PrecioUnitario,
+                            PorcentajeDescuento = d.PorcentajeDescuento,
+                            MontoDescuento = d.MontoDescuento,
+                            Subtotal = d.Subtotal
+                        }).ToList()
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} proformas", proformas.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    proformas = proformas,
+                    totalProformas = totalRegistros,
+                    pagina = pagina,
+                    tamano = tamano,
+                    totalPaginas = (int)Math.Ceiling((double)totalRegistros / tamano),
+                    message = $"Se encontraron {proformas.Count} proformas"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener proformas");
+                return StatusCode(500, new { 
+                    success = false,
+                    message = "Error al obtener proformas",
+                    timestamp = DateTime.Now 
+                });
+            }
+        }
+
         [HttpPut("facturas/{id}/estado")]
         [Authorize]
         public async Task<IActionResult> ActualizarEstadoFactura(int id, [FromBody] string nuevoEstado)
@@ -870,7 +963,7 @@ namespace API.Controllers
 
         private async Task<string> GenerarNumeroFactura(string tipoDocumento)
         {
-            var prefijo = tipoDocumento == "Proforma" ? "PRO" : "FAC";
+            var prefijo = tipoDocumento == "Proforma" ? "PROF" : "FAC";
             var año = DateTime.Now.Year;
             var mes = DateTime.Now.Month;
 
@@ -1670,6 +1763,138 @@ namespace API.Controllers
                 return StatusCode(500, new { 
                     success = false, 
                     message = "Error interno al procesar entrega" 
+                });
+            }
+        }
+
+        [HttpGet("estadisticas-verificacion-proformas")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerEstadisticasVerificacionProformas()
+        {
+            try
+            {
+                var estadisticas = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma")
+                    .GroupBy(f => f.Estado)
+                    .Select(g => new { Estado = g.Key, Cantidad = g.Count() })
+                    .ToListAsync();
+
+                var proformasVigentes = estadisticas.FirstOrDefault(e => e.Estado == "Vigente")?.Cantidad ?? 0;
+                var proformasExpiradas = estadisticas.FirstOrDefault(e => e.Estado == "Expirada")?.Cantidad ?? 0;
+                var proformasConvertidas = estadisticas.FirstOrDefault(e => e.Estado == "Convertida")?.Cantidad ?? 0;
+
+                // Obtener proformas que van a vencer en los próximos 7 días
+                var fechaLimite = DateTime.Now.AddDays(7);
+                var proformasPorVencer = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma" && 
+                               f.Estado == "Vigente" && 
+                               f.FechaVencimiento <= fechaLimite &&
+                               f.FechaVencimiento > DateTime.Now)
+                    .CountAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    estadisticas = new
+                    {
+                        vigentes = proformasVigentes,
+                        expiradas = proformasExpiradas,
+                        convertidas = proformasConvertidas,
+                        porVencerEn7Dias = proformasPorVencer,
+                        total = estadisticas.Sum(e => e.Cantidad)
+                    },
+                    proximaVerificacionAutomatica = CalcularProximaVerificacion(),
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo estadísticas de verificación");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al obtener estadísticas" 
+                });
+            }
+        }
+
+        private DateTime CalcularProximaVerificacion()
+        {
+            var ahora = DateTime.Now;
+            var proximaVerificacion = new DateTime(ahora.Year, ahora.Month, ahora.Day, 2, 0, 0); // 2:00 AM
+
+            // Si ya pasaron las 2:00 AM de hoy, programar para mañana
+            if (ahora.Hour >= 2)
+            {
+                proximaVerificacion = proximaVerificacion.AddDays(1);
+            }
+
+            return proximaVerificacion;
+        }
+
+        [HttpPost("verificar-vencimiento-proformas")]
+        [Authorize]
+        public async Task<IActionResult> VerificarVencimientoProformas([FromQuery] bool esVerificacionAutomatica = false)
+        {
+            // Solo validar permisos si no es verificación automática
+            if (!esVerificacionAutomatica)
+            {
+                var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Administrar Proformas",
+                    "Solo usuarios con permiso 'Administrar Proformas' pueden verificar vencimiento");
+                if (validacionPermiso != null) return validacionPermiso;
+            }
+
+            try
+            {
+                var tipoVerificacion = esVerificacionAutomatica ? "AUTOMÁTICA" : "MANUAL";
+                _logger.LogInformation("📅 === VERIFICANDO VENCIMIENTO DE PROFORMAS ({Tipo}) ===", tipoVerificacion);
+
+                var proformasExpiradas = await _context.Facturas
+                    .Where(f => f.TipoDocumento == "Proforma" && 
+                               f.Estado == "Vigente" && 
+                               f.FechaVencimiento < DateTime.Now)
+                    .ToListAsync();
+
+                var cantidadActualizadas = 0;
+
+                foreach (var proforma in proformasExpiradas)
+                {
+                    var diasVencida = (DateTime.Now - proforma.FechaVencimiento.Value).Days;
+                    var observacionTipo = esVerificacionAutomatica ? "AUTOMÁTICAMENTE" : "MANUALMENTE";
+                    
+                    proforma.Estado = "Expirada";
+                    proforma.FechaActualizacion = DateTime.Now;
+                    proforma.Observaciones = (proforma.Observaciones ?? "") + 
+                        $" | EXPIRADA {observacionTipo}: {DateTime.Now:dd/MM/yyyy HH:mm} ({diasVencida} días de vencimiento)";
+                    
+                    cantidadActualizadas++;
+
+                    _logger.LogInformation("📅 Proforma expirada {Tipo}: {NumeroFactura} - Vencía: {FechaVencimiento} ({Dias} días)", 
+                        tipoVerificacion.ToLower(), proforma.NumeroFactura, proforma.FechaVencimiento, diasVencida);
+                }
+
+                if (cantidadActualizadas > 0)
+                {
+                    await _context.SaveChangesAsync();
+                }
+
+                _logger.LogInformation("✅ Verificación {Tipo} completada: {Cantidad} proformas marcadas como expiradas", 
+                    tipoVerificacion.ToLower(), cantidadActualizadas);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Verificación {tipoVerificacion.ToLower()} completada: {cantidadActualizadas} proformas marcadas como expiradas",
+                    proformasExpiradas = cantidadActualizadas,
+                    esVerificacionAutomatica = esVerificacionAutomatica,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando vencimiento de proformas");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno al verificar vencimiento" 
                 });
             }
         }

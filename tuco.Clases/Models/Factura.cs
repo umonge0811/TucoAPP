@@ -42,7 +42,7 @@ namespace tuco.Clases.Models
         public decimal Total { get; set; }
 
         [Required]
-        public string Estado { get; set; } = "Pendiente"; // Pendiente, Pagada, Anulada
+        public string Estado { get; set; } = "Pendiente"; // Pendiente, Pagada, Anulada, Vigente
 
         [Required]
         public string TipoDocumento { get; set; } = "Factura"; // Factura, Proforma

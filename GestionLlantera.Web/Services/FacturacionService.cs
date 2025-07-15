@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Net.Http.Headers;
 
 namespace GestionLlantera.Web.Services
 {
@@ -12,11 +13,13 @@ namespace GestionLlantera.Web.Services
         private readonly ILogger<FacturacionService> _logger;
         private const decimal IVA_PORCENTAJE = 0.13m; // 13% IVA en Costa Rica
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        private readonly string _baseUrl;
 
-        public FacturacionService(IHttpClientFactory httpClientFactory, ILogger<FacturacionService> logger)
+        public FacturacionService(IHttpClientFactory httpClientFactory, ILogger<FacturacionService> logger, IConfiguration config)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _baseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
         }
 
         public async Task<decimal> CalcularTotalVentaAsync(List<ProductoVentaDTO> productos)
@@ -367,113 +370,154 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string? message, string? details)> ObtenerFacturasPendientesAsync(string jwtToken)
+        public async Task<(bool success, object data, string message, string details)> ObtenerFacturasPendientesAsync(string jwtToken)
         {
             try
             {
-                _logger.LogInformation("📋 === OBTENIENDO FACTURAS PENDIENTES CON DETALLES DEL API ===");
+                _logger.LogInformation("📋 === OBTENIENDO FACTURAS PENDIENTES DESDE SERVICIO ===");
 
-                if (!string.IsNullOrEmpty(jwtToken))
-                {
-                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                }
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
-                // Cambiar el endpoint para incluir detalles
-                var response = await _httpClient.GetAsync("api/Facturacion/facturas/pendientes?incluirDetalles=true");
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                _logger.LogInformation("📋 Respuesta de la API: {StatusCode}", response.StatusCode);
-                _logger.LogInformation("📋 Contenido de respuesta: {Content}", responseContent.Substring(0, Math.Min(1000, responseContent.Length)));
+                var response = await client.GetAsync($"{_baseUrl}/api/Facturacion/facturas/pendientes");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    if (string.IsNullOrWhiteSpace(responseContent))
-                    {
-                        _logger.LogWarning("📋 Respuesta vacía del API");
-                        return (success: false, data: null, message: "Respuesta vacía del servidor", details: null);
-                    }
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("📋 Respuesta del API recibida exitosamente");
 
-                    // Deserializar la respuesta JSON completa
-                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions 
-                    { 
-                        PropertyNameCaseInsensitive = true 
-                    });
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(jsonContent);
 
-                    _logger.LogInformation("📋 Respuesta del API deserializada. Kind: {Kind}", apiResponse.ValueKind);
-
-                    // Verificar si la respuesta tiene la estructura esperada del API
+                    // Verificar si la respuesta tiene la estructura correcta
                     if (apiResponse.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                     {
-                        // El API devuelve: { success: true, facturas: [...], totalFacturas: X, message: "..." }
+                        _logger.LogInformation("📋 API confirmó éxito en obtener facturas pendientes");
+
+                        // Extraer las facturas del response
                         if (apiResponse.TryGetProperty("facturas", out var facturasElement))
                         {
-                            var facturasArray = System.Text.Json.JsonSerializer.Deserialize<FacturaCompletaDTO[]>(facturasElement.GetRawText(), new JsonSerializerOptions 
-                            { 
-                                PropertyNameCaseInsensitive = true 
-                            });
+                            var facturas = System.Text.Json.JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
+                            var totalFacturas = apiResponse.TryGetProperty("totalFacturas", out var totalElement) ? totalElement.GetInt32() : 0;
+                            var mensaje = apiResponse.TryGetProperty("message", out var msgElement) ? msgElement.GetString() : "Facturas obtenidas";
 
-                            _logger.LogInformation("📋 Facturas con detalles deserializadas: {Count}", facturasArray?.Length ?? 0);
-
-                            // Log detalles de cada factura para verificar
-                            if (facturasArray != null)
+                            return (true, new
                             {
-                                foreach (var factura in facturasArray)
-                                {
-                                    _logger.LogInformation("📋 Factura {NumeroFactura}: {DetallesCount} detalles", 
-                                        factura.NumeroFactura, factura.DetallesFactura?.Count ?? 0);
-                                }
-                            }
-
-                            // Devolver la estructura exacta que espera el frontend
-                            return (success: true, 
-                                   data: facturasArray ?? new FacturaCompletaDTO[0], 
-                                   message: "Facturas pendientes con detalles obtenidas", 
-                                   details: null);
+                                success = true,
+                                facturas = facturas,
+                                totalFacturas = totalFacturas,
+                                message = mensaje
+                            }, mensaje, null);
                         }
                         else
                         {
-                            _logger.LogInformation("📋 No se encontró propiedad 'facturas' en la respuesta");
-                            return (success: true, 
-                                   data: new FacturaCompletaDTO[0], 
-                                   message: "No hay facturas pendientes", 
-                                   details: null);
+                            _logger.LogWarning("📋 No se encontró propiedad 'facturas' en la respuesta del API");
+                            return (false, null, "Estructura de respuesta inválida", "Missing 'facturas' property");
                         }
                     }
                     else
                     {
-                        // Si no tiene success=true, verificar si es directamente un array de facturas
-                        if (apiResponse.ValueKind == JsonValueKind.Array)
-                        {
-                            var facturasArray = System.Text.Json.JsonSerializer.Deserialize<FacturaCompletaDTO[]>(responseContent, new JsonSerializerOptions 
-                            { 
-                                PropertyNameCaseInsensitive = true 
-                            });
-
-                            _logger.LogInformation("📋 Array directo de facturas con detalles deserializado: {Count}", facturasArray?.Length ?? 0);
-
-                            return (success: true, 
-                                   data: facturasArray ?? new FacturaCompletaDTO[0], 
-                                   message: "Facturas pendientes obtenidas", 
-                                   details: null);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("📋 Estructura de respuesta no reconocida");
-                            return (success: false, data: null, message: "Estructura de respuesta no válida", details: responseContent);
-                        }
+                        var errorMsg = apiResponse.TryGetProperty("message", out var msgElement) ? 
+                            msgElement.GetString() : "Error desconocido desde el API";
+                        return (false, null, errorMsg, "API returned success=false");
                     }
                 }
                 else
                 {
-                    _logger.LogError("❌ Error obteniendo facturas pendientes: {StatusCode} - {Content}", 
-                        response.StatusCode, responseContent);
-                    return (success: false, data: null, message: "Error al obtener facturas pendientes", details: responseContent);
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("📋 Error HTTP del API: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                    return (false, null, $"Error HTTP {response.StatusCode}", errorContent);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo facturas pendientes");
-                return (success: false, data: null, message: "Error interno al obtener facturas pendientes", details: ex.ToString());
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes desde servicio");
+                return (false, null, "Error interno del servicio", ex.Message);
+            }
+        }
+
+        public async Task<(bool success, object data, string message, string details)> ObtenerProformasAsync(string jwtToken, string estado = null, int pagina = 1, int tamano = 20)
+        {
+            try
+            {
+                _logger.LogInformation("📋 === OBTENIENDO PROFORMAS DESDE SERVICIO ===");
+                _logger.LogInformation("📋 Parámetros: Estado={Estado}, Página={Pagina}, Tamaño={Tamano}", estado, pagina, tamano);
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+                var queryParams = new List<string>
+                {
+                    $"pagina={pagina}",
+                    $"tamano={tamano}"
+                };
+
+                if (!string.IsNullOrWhiteSpace(estado))
+                {
+                    queryParams.Add($"estado={Uri.EscapeDataString(estado)}");
+                }
+
+                var queryString = string.Join("&", queryParams);
+                var url = $"{_baseUrl}/api/Facturacion/proformas?{queryString}";
+
+                _logger.LogInformation("📋 URL construida: {Url}", url);
+
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("📋 Respuesta del API recibida exitosamente");
+
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(jsonContent);
+
+                    // Verificar si la respuesta tiene la estructura correcta
+                    if (apiResponse.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                    {
+                        _logger.LogInformation("📋 API confirmó éxito en obtener proformas");
+
+                        // Extraer las proformas del response
+                        if (apiResponse.TryGetProperty("proformas", out var proformasElement))
+                        {
+                            var proformas = System.Text.Json.JsonSerializer.Deserialize<List<object>>(proformasElement.GetRawText());
+                            var totalProformas = apiResponse.TryGetProperty("totalProformas", out var totalElement) ? totalElement.GetInt32() : 0;
+                            var totalPaginas = apiResponse.TryGetProperty("totalPaginas", out var paginasElement) ? paginasElement.GetInt32() : 1;
+                            var mensaje = apiResponse.TryGetProperty("message", out var msgElement) ? msgElement.GetString() : "Proformas obtenidas";
+
+                            return (true, new
+                            {
+                                success = true,
+                                proformas = proformas,
+                                totalProformas = totalProformas,
+                                pagina = pagina,
+                                tamano = tamano,
+                                totalPaginas = totalPaginas,
+                                message = mensaje
+                            }, mensaje, null);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("📋 No se encontró propiedad 'proformas' en la respuesta del API");
+                            return (false, null, "Estructura de respuesta inválida", "Missing 'proformas' property");
+                        }
+                    }
+                    else
+                    {
+                        var errorMsg = apiResponse.TryGetProperty("message", out var msgElement) ? 
+                            msgElement.GetString() : "Error desconocido desde el API";
+                        return (false, null, errorMsg, "API returned success=false");
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("📋 Error HTTP del API: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                    return (false, null, $"Error HTTP {response.StatusCode}", errorContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo proformas desde servicio");
+                return (false, null, "Error interno del servicio", ex.Message);
             }
         }
 
@@ -908,7 +952,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var prefijo = tipoDocumento == "Proforma" ? "PRO" : "FAC";
+                var prefijo = tipoDocumento == "Proforma" ? "PROF" : "FAC";
                 var año = DateTime.Now.Year;
                 var mes = DateTime.Now.Month;
                 var dia = DateTime.Now.Day;
@@ -922,15 +966,16 @@ namespace GestionLlantera.Web.Services
 
                 var numeroFactura = $"{prefijo}-{año:D4}{mes:D2}-{numeroConsecutivo}";
 
-                _logger.LogInformation("📋 Número de factura generado: {NumeroFactura}", numeroFactura);
+                _logger.LogInformation("📋 Número de {TipoDocumento} generado: {NumeroFactura}", tipoDocumento, numeroFactura);
 
                 return numeroFactura;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error generando número de factura");
+                _logger.LogError(ex, "❌ Error generando número de {TipoDocumento}", tipoDocumento);
                 // Fallback a un número simple
-                return $"FAC-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10, 6)}";
+                var prefijoFallback = tipoDocumento == "Proforma" ? "PROF" : "FAC";
+                return $"{prefijoFallback}-{DateTime.Now:yyyyMMdd}-{DateTime.Now.Ticks.ToString().Substring(10, 6)}";
             }
         }
 

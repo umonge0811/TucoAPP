@@ -713,6 +713,103 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerProformas(string estado = null, int pagina = 1, int tamano = 20)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Solicitud de proformas desde el controlador Web");
+                _logger.LogInformation("📋 Parámetros: Estado={Estado}, Página={Pagina}, Tamaño={Tamano}", estado, pagina, tamano);
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _facturacionService.ObtenerProformasAsync(token, estado, pagina, tamano);
+
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}", 
+                    resultado.success, resultado.message);
+
+                if (resultado.success && resultado.data != null)
+                {
+                    _logger.LogInformation("📋 Procesando respuesta del API de proformas");
+
+                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
+                    return Json(resultado.data);
+                }
+                else
+                {
+                    _logger.LogWarning("📋 No se pudieron obtener las proformas: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "No se pudieron obtener las proformas",
+                        proformas = new List<object>(),
+                        totalProformas = 0
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo proformas");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    proformas = new List<object>(),
+                    totalProformas = 0
+                });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> VerificarVencimientoProformas()
+        {
+            try
+            {
+                _logger.LogInformation("📅 Verificando vencimiento de proformas desde controlador Web");
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await client.PostAsync($"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/verificar-vencimiento-proformas", 
+                    new StringContent("{}", System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+
+                    return Json(resultado);
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error del API verificando vencimiento: {StatusCode} - {Content}", 
+                        response.StatusCode, errorContent);
+                    
+                    return Json(new { 
+                        success = false, 
+                        message = "Error del servidor al verificar vencimiento" 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando vencimiento de proformas");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno al verificar vencimiento" 
+                });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> CompletarFactura([FromBody] CompletarFacturaWebRequest request)
         {

@@ -1,0 +1,47 @@
+        [HttpPost]
+        public async Task<IActionResult> VerificarVencimiento()
+        {
+            try
+            {
+                _logger.LogInformation("📅 Verificando vencimiento de proformas desde controlador Web");
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await client.PostAsync($"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/verificar-vencimiento-proformas", 
+                    new StringContent("{}", System.Text.Encoding.UTF8, "application/json"));
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+
+                    return Json(resultado);
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error del API verificando vencimiento: {StatusCode} - {Content}", 
+                        response.StatusCode, errorContent);
+                    
+                    return Json(new { 
+                        success = false, 
+                        message = "Error del servidor al verificar vencimiento" 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error verificando vencimiento de proformas");
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno al verificar vencimiento" 
+                });
+            }
+        }
