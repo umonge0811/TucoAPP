@@ -410,18 +410,8 @@ input[type=number] {
     100% { opacity: 1; }
 }
 
-/* Estilos para SweetAlert personalizados */
-.swal2-popup-large {
-    width: 32em !important;
-    max-width: 90% !important;
-}
-
-.swal2-popup-large .swal2-html-container {
-    margin: 1em 0 !important;
-}
-
-/* Estilos para tablets */
-@media (max-width: 992px) {
+/* Responsive para móviles */
+@media (max-width: 768px) {
     .facturacion-container {
         padding: 10px;
     }

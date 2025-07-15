@@ -2991,59 +2991,26 @@ async function convertirProforma(proformaId) {
 async function verificarVencimientoProformas() {
     try {
         console.log('📅 === VERIFICANDO VENCIMIENTO DE PROFORMAS ===');
-
-        // Primero obtener estadísticas
-        const estadisticasResponse = await fetch('/Facturacion/EstadisticasVerificacionProformas', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'include'
-        });
-
-        let infoAdicional = '';
-        if (estadisticasResponse.ok) {
-            const estadisticas = await estadisticasResponse.json();
-            if (estadisticas.success) {
-                const proxima = new Date(estadisticas.proximaVerificacionAutomatica).toLocaleString('es-CR');
-                infoAdicional = `
-                    <div class="alert alert-info mt-3">
-                        <h6><i class="bi bi-robot me-2"></i>Verificación Automática</h6>
-                        <p class="mb-1"><strong>Estado actual:</strong></p>
-                        <ul class="mb-2">
-                            <li>Vigentes: ${estadisticas.estadisticas.vigentes}</li>
-                            <li>Por vencer en 7 días: ${estadisticas.estadisticas.porVencerEn7Dias}</li>
-                            <li>Expiradas: ${estadisticas.estadisticas.expiradas}</li>
-                        </ul>
-                        <p class="mb-0"><strong>Próxima verificación automática:</strong><br>${proxima}</p>
-                    </div>
-                `;
-            }
-        }
         
         const confirmacion = await Swal.fire({
-            title: '¿Verificar vencimiento manual?',
+            title: '¿Verificar vencimiento?',
             html: `
                 <div class="text-start">
-                    <p><strong>Esta verificación manual:</strong></p>
+                    <p><strong>Esta acción:</strong></p>
                     <ul>
                         <li>Revisará todas las proformas vigentes</li>
                         <li>Marcará como "Expiradas" las que pasaron 30 días</li>
                         <li>Actualizará automáticamente los estados</li>
                     </ul>
-                    <p class="text-info"><strong>¿Desea continuar con la verificación manual?</strong></p>
-                    ${infoAdicional}
+                    <p class="text-info"><strong>¿Desea continuar?</strong></p>
                 </div>
             `,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#17a2b8',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, verificar manualmente',
-            cancelButtonText: 'Cancelar',
-            customClass: {
-                popup: 'swal2-popup-large'
-            }
+            confirmButtonText: 'Sí, verificar',
+            cancelButtonText: 'Cancelar'
         });
 
         if (!confirmacion.isConfirmed) {
@@ -3062,7 +3029,7 @@ async function verificarVencimientoProformas() {
             }
         });
 
-        const response = await fetch('/Facturacion/VerificarVencimientoProformas?esVerificacionAutomatica=false', {
+        const response = await fetch('/Facturacion/VerificarVencimientoProformas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -3083,7 +3050,7 @@ async function verificarVencimientoProformas() {
             
             Swal.fire({
                 icon: 'success',
-                title: '¡Verificación Manual Completada!',
+                title: '¡Verificación Completada!',
                 html: `
                     <div class="text-center">
                         <p><strong>${proformasExpiradas}</strong> proformas han sido marcadas como expiradas</p>
@@ -3091,16 +3058,11 @@ async function verificarVencimientoProformas() {
                             '<p class="text-muted">Los estados han sido actualizados automáticamente</p>' : 
                             '<p class="text-success">Todas las proformas están dentro de su período de validez</p>'
                         }
-                        <div class="alert alert-info mt-3">
-                            <small><i class="bi bi-info-circle me-1"></i>
-                            <strong>Recordatorio:</strong> El sistema también ejecuta esta verificación automáticamente todos los días a las 2:00 AM
-                            </small>
-                        </div>
                     </div>
                 `,
                 confirmButtonText: 'Entendido',
                 confirmButtonColor: '#28a745',
-                timer: 6000,
+                timer: 4000,
                 timerProgressBar: true
             });
 
