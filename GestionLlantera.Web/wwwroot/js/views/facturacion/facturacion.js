@@ -2254,11 +2254,12 @@ async function completarFacturaExistente(facturaId) {
 //}
 
 /**
- * ✅ NUEVA FUNCIÓN: Crear nueva factura
+ * ✅ NUEVA FUNCIÓN: Crear nueva factura (modificada para soportar tipo de documento)
  */
-async function crearNuevaFactura() {
+async function crearNuevaFactura(tipoDocumento = 'Factura') {
     try {
-        console.log('🆕 === CREANDO NUEVA FACTURA ===');
+        console.log('🆕 === CREANDO NUEVO DOCUMENTO ===');
+        console.log('🆕 Tipo de documento:', tipoDocumento);
 
         // Preparar datos de la venta con método de pago seleccionado
         const metodoPagoSeleccionado = esPagoMultiple ? 'multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
@@ -2278,14 +2279,23 @@ async function crearNuevaFactura() {
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
 
-        // ✅ DETERMINAR ESTADO Y PERMISOS SEGÚN LA LÓGICA CORRECTA
+        // ✅ DETERMINAR ESTADO Y PERMISOS SEGÚN EL TIPO DE DOCUMENTO
         let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
 
         console.log('🔐 === VERIFICACIÓN DE PERMISOS ===');
         console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
         console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
+        console.log('🔐 tipoDocumento:', tipoDocumento);
 
-        if (permisosUsuario.puedeCompletarFacturas) {
+        if (tipoDocumento === 'Proforma') {
+            // ✅ PROFORMAS: Siempre estado "Vigente"
+            estadoFactura = 'Vigente';
+            mensajeExito = 'Proforma creada exitosamente';
+            debeImprimir = true;
+            debeAjustarInventario = false; // Las proformas NO ajustan inventario
+            console.log('📋 Creando proforma con estado VIGENTE');
+            
+        } else if (permisosUsuario.puedeCompletarFacturas) {
             // ✅ USUARIOS CON PERMISO COMPLETAR: Venta completa e inmediata
             estadoFactura = 'Pagada';
             mensajeExito = 'Venta procesada exitosamente y marcada como pagada';
@@ -2307,6 +2317,7 @@ async function crearNuevaFactura() {
         }
 
         console.log('📋 Estado determinado:', {
+            tipoDocumento,
             estadoFactura,
             debeImprimir,
             debeAjustarInventario,
@@ -2317,16 +2328,16 @@ async function crearNuevaFactura() {
         const usuarioActual = obtenerUsuarioActual();
         const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
 
-        console.log('👤 Usuario actual para factura:', {
+        console.log('👤 Usuario actual para documento:', {
             usuario: usuarioActual,
             usuarioId: usuarioId
         });
 
-        // ✅ CAPTURAR PRODUCTOS PENDIENTES DESDE LAS VARIABLES GLOBALES
+        // ✅ CAPTURAR PRODUCTOS PENDIENTES DESDE LAS VARIABLES GLOBALES (solo para facturas)
         let productosPendientesParaEnvio = [];
         let tieneProductosPendientes = false;
 
-        if (window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
+        if (tipoDocumento === 'Factura' && window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
             console.log('📦 Productos pendientes detectados:', window.productosPendientesEntrega);
             productosPendientesParaEnvio = window.productosPendientesEntrega.map(producto => ({
                 productoId: producto.productoId,
@@ -2355,12 +2366,12 @@ async function crearNuevaFactura() {
             porcentajeImpuesto: 13,
             montoImpuesto: iva,
             total: total,
-            estado: estadoFactura, // ✅ Estado dinámico según permisos
-            tipoDocumento: 'Factura',
+            estado: estadoFactura, // ✅ Estado dinámico según tipo y permisos
+            tipoDocumento: tipoDocumento, // ✅ Tipo de documento dinámico
             metodoPago: metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
             usuarioCreadorId: usuarioId, // ✅ ID del usuario actual
-            // ✅ INCLUIR PRODUCTOS PENDIENTES SI EXISTEN
+            // ✅ INCLUIR PRODUCTOS PENDIENTES SI EXISTEN (solo para facturas)
             productosPendientesEntrega: productosPendientesParaEnvio,
             tieneProductosPendientes: tieneProductosPendientes,
             detallesPago: esPagoMultiple ? detallesPagoActuales.map(pago => ({
@@ -2385,9 +2396,9 @@ async function crearNuevaFactura() {
             })
         };
 
-        console.log('📋 Datos de factura preparados:', facturaData);
+        console.log('📋 Datos de documento preparados:', facturaData);
 
-        // Crear la factura
+        // Crear la factura/proforma
         const response = await fetch('/Facturacion/CrearFactura', {
             method: 'POST',
             headers: {
@@ -2399,16 +2410,16 @@ async function crearNuevaFactura() {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Error del servidor al crear factura:', errorText);
-            throw new Error(`Error al crear la factura: ${response.status} - ${errorText}`);
+            console.error('❌ Error del servidor al crear documento:', errorText);
+            throw new Error(`Error al crear el documento: ${response.status} - ${errorText}`);
         }
 
         const resultadoFactura = await response.json();
-        console.log('✅ Factura creada:', resultadoFactura);
+        console.log('✅ Documento creado:', resultadoFactura);
 
         if (resultadoFactura.success) {
-            // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN
-            if (tieneProductosPendientes && productosPendientesParaEnvio.length > 0) {
+            // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN (solo para facturas)
+            if (tipoDocumento === 'Factura' && tieneProductosPendientes && productosPendientesParaEnvio.length > 0) {
                 console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE CREAR FACTURA ===');
                 console.log('📦 Productos pendientes:', productosPendientesParaEnvio);
                 console.log('📦 Factura creada ID:', resultadoFactura.facturaId || resultadoFactura.data?.facturaId);
@@ -2421,8 +2432,29 @@ async function crearNuevaFactura() {
                 }
             }
 
-            // ✅ PROCESAR SEGÚN EL TIPO DE USUARIO Y PERMISOS
-            if (estadoFactura === 'Pendiente') {
+            // ✅ PROCESAR SEGÚN EL TIPO DE DOCUMENTO Y USUARIO
+            if (tipoDocumento === 'Proforma') {
+                // ✅ PROFORMAS: Mostrar confirmación y generar recibo
+                console.log('📋 Proforma creada - Generando recibo');
+
+                // ✅ CERRAR MODAL DE FINALIZAR VENTA INMEDIATAMENTE
+                modalFinalizarVenta.hide();
+
+                // ✅ GENERAR RECIBO PARA PROFORMA
+                generarReciboFacturaCompletada(resultadoFactura, productosEnVenta, metodoPagoSeleccionado);
+
+                // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Proforma Creada!',
+                    text: `Proforma ${resultadoFactura.numeroFactura || 'N/A'} creada exitosamente`,
+                    confirmButtonText: 'Continuar',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+
+            } else if (estadoFactura === 'Pendiente') {
                 // ✅ COLABORADORES: Modal específico de envío a cajas
                 console.log('📋 Factura pendiente - Mostrando modal de envío a cajas');
 
@@ -2523,7 +2555,7 @@ async function crearNuevaFactura() {
                 });
             }
 
-            // ✅ LIMPIAR CARRITO DESPUÉS DE PROCESAR (PARA AMBOS CASOS)
+            // ✅ LIMPIAR CARRITO DESPUÉS DE PROCESAR (PARA TODOS LOS CASOS)
             productosEnVenta = [];
             clienteSeleccionado = null;
             $('#clienteBusqueda').val('');
@@ -2547,12 +2579,12 @@ async function crearNuevaFactura() {
                 }
             }, 3000); // 3 segundos de delay para que se use en el recibo
 
-            // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DE COMPLETAR LA VENTA
+            // ✅ ACTUALIZAR VISTA DE PRODUCTOS DESPUÉS DE COMPLETAR LA OPERACIÓN
             setTimeout(async () => {
                 try {
                     await actualizarVistaProductosPostAjuste();
                 } catch (error) {
-                    console.error('❌ Error actualizando vista después de venta:', error);
+                    console.error('❌ Error actualizando vista después de operación:', error);
                 }
             }, 500);
 
@@ -2561,20 +2593,28 @@ async function crearNuevaFactura() {
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error al procesar la venta',
+                    title: 'Error al procesar',
                     text: resultadoFactura.message || 'Error desconocido',
                     confirmButtonText: 'Entendido',
                     confirmButtonColor: '#dc3545'
                 });
             } else {
-                alert('Error: ' + (resultadoFactura.message || 'Error al procesar la venta'));
+                alert('Error: ' + (resultadoFactura.message || 'Error al procesar'));
             }
         }
 
     } catch (error) {
-        console.error('❌ Error creando nueva factura:', error);
+        console.error('❌ Error creando nuevo documento:', error);
         throw error;
     }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear proforma específicamente
+ */
+function crearProforma() {
+    console.log('📋 === CREANDO PROFORMA ===');
+    return crearNuevaFactura('Proforma');
 }
 
 
