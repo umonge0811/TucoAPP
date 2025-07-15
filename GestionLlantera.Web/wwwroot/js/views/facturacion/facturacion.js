@@ -2829,14 +2829,7 @@ function obtenerBadgeEstadoProforma(estado) {
             console.warn('Estado de proforma desconocido:', estado);
             return '<span class="badge bg-secondary">Desconocido</span>';
     }
-}ncida':
-            return '<span class="badge bg-warning">Vencida</span>';
-        case 'Convertida':
-            return '<span class="badge bg-info">Convertida</span>';
-        default:
-            return '<span class="badge bg-secondary">Desconocido</span>';
-    }
-}
+
 
 /**
  * ✅ FUNCIÓN: Configurar eventos de los botones de proformas
