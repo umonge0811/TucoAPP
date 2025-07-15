@@ -2817,7 +2817,19 @@ function obtenerBadgeEstadoProforma(estado) {
     switch (estado) {
         case 'Vigente':
             return '<span class="badge bg-success">Vigente</span>';
+        case 'Expirada':
+            return '<span class="badge bg-danger">Expirada</span>';
         case 'Vencida':
+            return '<span class="badge bg-warning">Vencida</span>';
+        case 'Convertida':
+            return '<span class="badge bg-info">Convertida</span>';
+        case 'Anulada':
+            return '<span class="badge bg-secondary">Anulada</span>';
+        default:
+            console.warn('Estado de proforma desconocido:', estado);
+            return '<span class="badge bg-secondary">Desconocido</span>';
+    }
+}ncida':
             return '<span class="badge bg-warning">Vencida</span>';
         case 'Convertida':
             return '<span class="badge bg-info">Convertida</span>';
