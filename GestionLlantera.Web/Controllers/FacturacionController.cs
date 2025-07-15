@@ -763,7 +763,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> VerificarVencimiento()
+        public async Task<IActionResult> VerificarVencimientoProformas()
         {
             try
             {
