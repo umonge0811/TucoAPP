@@ -1831,6 +1831,56 @@ namespace API.Controllers
             return proximaVerificacion;
         }
 
+        [HttpPut("marcar-proforma-convertida/{proformaId}")]
+        [Authorize]
+        public async Task<IActionResult> MarcarProformaComoConvertida(int proformaId, [FromBody] ConvertirProformaRequest request)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Facturas",
+                "Solo usuarios con permiso 'Crear Facturas' pueden convertir proformas");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            try
+            {
+                var proforma = await _context.Facturas.FindAsync(proformaId);
+                if (proforma == null)
+                    return NotFound(new { success = false, message = "Proforma no encontrada" });
+
+                if (proforma.TipoDocumento != "Proforma")
+                    return BadRequest(new { success = false, message = "El documento no es una proforma" });
+
+                if (proforma.Estado != "Vigente")
+                    return BadRequest(new { success = false, message = "Solo se pueden convertir proformas vigentes" });
+
+                // Marcar como convertida
+                proforma.Estado = "Convertida";
+                proforma.FechaActualizacion = DateTime.Now;
+                proforma.Observaciones = (proforma.Observaciones ?? "") + 
+                    $" | CONVERTIDA A FACTURA: {request.NumeroFacturaGenerada} el {DateTime.Now:dd/MM/yyyy HH:mm}";
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("🔄 Proforma {NumeroProforma} marcada como convertida a factura {NumeroFactura}", 
+                    proforma.NumeroFactura, request.NumeroFacturaGenerada);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Proforma marcada como convertida exitosamente",
+                    numeroProforma = proforma.NumeroFactura,
+                    numeroFacturaGenerada = request.NumeroFacturaGenerada,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando proforma como convertida: {ProformaId}", proformaId);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno al marcar proforma como convertida" 
+                });
+            }
+        }
+
         [HttpPost("verificar-vencimiento-proformas")]
         [Authorize]
         public async Task<IActionResult> VerificarVencimientoProformas([FromQuery] bool esVerificacionAutomatica = false)
@@ -1968,5 +2018,11 @@ namespace API.Controllers
         public int CantidadAEntregar { get; set; }
         public int UsuarioEntrega { get; set; }
         public string? ObservacionesEntrega { get; set; }
+    }
+
+    public class ConvertirProformaRequest
+    {
+        public int? FacturaGeneradaId { get; set; }
+        public string? NumeroFacturaGenerada { get; set; }
     }
 }

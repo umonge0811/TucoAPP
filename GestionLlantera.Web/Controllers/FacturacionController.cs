@@ -793,7 +793,7 @@ namespace GestionLlantera.Web.Controllers
                     var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogError("❌ Error del API verificando vencimiento: {StatusCode} - {Content}", 
                         response.StatusCode, errorContent);
-                    
+
                     return Json(new { 
                         success = false, 
                         message = "Error del servidor al verificar vencimiento" 
