@@ -3378,13 +3378,7 @@ function convertirProforma(proformaId) {
     convertirProformaAFactura(proformaId);
 }
 
-/**
- * ✅ FUNCIÓN: Convertir proforma (alias para compatibilidad con botones HTML)
- */
-function convertirProforma(proformaId) {
-    console.log('🔄 Función convertirProforma llamada con ID:', proformaId);
-    convertirProformaAFactura(proformaId);
-}
+
 
 /**
  * ✅ FUNCIÓN: Verificar vencimiento de proformas
