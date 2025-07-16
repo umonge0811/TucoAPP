@@ -3233,12 +3233,20 @@ async function convertirProformaAFactura(proformaEscapada) {
         console.log('🔄 Proforma escapada recibida:', proformaEscapada);
         console.log('🔄 Tipo de dato recibido:', typeof proformaEscapada);
 
-        // Parsear datos de la proforma - manejar tanto cadena escapada como objeto
+        // ✅ MANEJO ROBUSTO DE DIFERENTES FORMATOS DE ENTRADA
         let proforma;
+        
         if (typeof proformaEscapada === 'string') {
-            // Si es una cadena, aplicar replace y parsear
-            proforma = JSON.parse(proformaEscapada.replace(/&quot;/g, '"'));
-            console.log('🔄 Proforma parseada desde cadena escapada');
+            // Si es una cadena, verificar si está escapada
+            if (proformaEscapada.includes('&quot;')) {
+                // Cadena escapada, aplicar replace y parsear
+                proforma = JSON.parse(proformaEscapada.replace(/&quot;/g, '"'));
+                console.log('🔄 Proforma parseada desde cadena escapada');
+            } else {
+                // Cadena JSON normal
+                proforma = JSON.parse(proformaEscapada);
+                console.log('🔄 Proforma parseada desde cadena JSON');
+            }
         } else if (typeof proformaEscapada === 'object' && proformaEscapada !== null) {
             // Si ya es un objeto, usarlo directamente
             proforma = proformaEscapada;
