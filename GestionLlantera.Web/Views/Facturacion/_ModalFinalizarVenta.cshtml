@@ -11,16 +11,16 @@
             </div>
             <div class="modal-body">
                 <form id="formFinalizarVenta">
-                    <!-- Información de la factura (si es pendiente) -->
+                    <!-- Información de la factura (si es pendiente o conversión de proforma) -->
                     <div class="row mb-3" id="infoFacturaPendiente" style="display: none;">
                         <div class="col-12">
-                            <div class="alert alert-warning d-flex justify-content-between align-items-center">
+                            <div class="alert alert-info d-flex justify-content-between align-items-center" id="alertaFacturaPendiente">
                                 <div>
-                                    <i class="bi bi-clock-history me-2"></i>
-                                    <strong>Completando Factura Pendiente</strong><br>
-                                    <small>Número de Factura: <span id="numeroFacturaPendiente" class="fw-bold text-primary">-</span></small>
+                                    <i class="bi bi-clock-history me-2" id="iconoFacturaPendiente"></i>
+                                    <strong id="tituloFacturaPendiente">Completando Factura Pendiente</strong><br>
+                                    <small id="descripcionFacturaPendiente">Número de Factura: <span id="numeroFacturaPendiente" class="fw-bold text-primary">-</span></small>
                                 </div>
-                                <i class="bi bi-receipt fs-3 text-warning"></i>
+                                <i class="bi bi-receipt fs-3 text-info" id="iconoDerechaFacturaPendiente"></i>
                             </div>
                         </div>
                     </div>
