@@ -1349,6 +1349,51 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFacturaPorId(int id)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo factura/proforma por ID: {Id}", id);
+
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para ver documentos" });
+                }
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ USAR EL SERVICIO EXISTENTE (que usa el endpoint facturas/{id} de la API)
+                var resultado = await _facturacionService.ObtenerFacturaPorIdAsync(id, token);
+
+                if (resultado.success && resultado.data != null)
+                {
+                    _logger.LogInformation("✅ Documento obtenido exitosamente: {Id}", id);
+                    return Json(resultado.data);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudo obtener el documento: {Message}", resultado.message);
+                    return Json(new { 
+                        success = false, 
+                        message = resultado.message ?? "Documento no encontrado" 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo documento por ID: {Id}", id);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor" 
+                });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> MarcarComoEntregadoPorCodigo([FromBody] MarcarEntregadoPorCodigoRequest request)
         {

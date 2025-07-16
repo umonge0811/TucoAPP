@@ -14,12 +14,14 @@ namespace GestionLlantera.Web.Services
         private const decimal IVA_PORCENTAJE = 0.13m; // 13% IVA en Costa Rica
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         private readonly string _baseUrl;
+        private readonly IConfiguration _configuration;
 
         public FacturacionService(IHttpClientFactory httpClientFactory, ILogger<FacturacionService> logger, IConfiguration config)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
             _baseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
+            _configuration = config;
         }
 
         public async Task<decimal> CalcularTotalVentaAsync(List<ProductoVentaDTO> productos)
@@ -439,85 +441,62 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 === OBTENIENDO PROFORMAS DESDE SERVICIO ===");
-                _logger.LogInformation("📋 Parámetros: Estado={Estado}, Página={Pagina}, Tamaño={Tamano}", estado, pagina, tamano);
-
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
-                var queryParams = new List<string>
+                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/proformas?pagina={pagina}&tamano={tamano}";
+                if (!string.IsNullOrEmpty(estado))
                 {
-                    $"pagina={pagina}",
-                    $"tamano={tamano}"
-                };
-
-                if (!string.IsNullOrWhiteSpace(estado))
-                {
-                    queryParams.Add($"estado={Uri.EscapeDataString(estado)}");
+                    url += $"&estado={estado}";
                 }
-
-                var queryString = string.Join("&", queryParams);
-                var url = $"{_baseUrl}/api/Facturacion/proformas?{queryString}";
-
-                _logger.LogInformation("📋 URL construida: {Url}", url);
 
                 var response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogInformation("📋 Respuesta del API recibida exitosamente");
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
 
-                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(jsonContent);
-
-                    // Verificar si la respuesta tiene la estructura correcta
-                    if (apiResponse.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
-                    {
-                        _logger.LogInformation("📋 API confirmó éxito en obtener proformas");
-
-                        // Extraer las proformas del response
-                        if (apiResponse.TryGetProperty("proformas", out var proformasElement))
-                        {
-                            var proformas = System.Text.Json.JsonSerializer.Deserialize<List<object>>(proformasElement.GetRawText());
-                            var totalProformas = apiResponse.TryGetProperty("totalProformas", out var totalElement) ? totalElement.GetInt32() : 0;
-                            var totalPaginas = apiResponse.TryGetProperty("totalPaginas", out var paginasElement) ? paginasElement.GetInt32() : 1;
-                            var mensaje = apiResponse.TryGetProperty("message", out var msgElement) ? msgElement.GetString() : "Proformas obtenidas";
-
-                            return (true, new
-                            {
-                                success = true,
-                                proformas = proformas,
-                                totalProformas = totalProformas,
-                                pagina = pagina,
-                                tamano = tamano,
-                                totalPaginas = totalPaginas,
-                                message = mensaje
-                            }, mensaje, null);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("📋 No se encontró propiedad 'proformas' en la respuesta del API");
-                            return (false, null, "Estructura de respuesta inválida", "Missing 'proformas' property");
-                        }
-                    }
-                    else
-                    {
-                        var errorMsg = apiResponse.TryGetProperty("message", out var msgElement) ? 
-                            msgElement.GetString() : "Error desconocido desde el API";
-                        return (false, null, errorMsg, "API returned success=false");
-                    }
+                    return (true, resultado, "Proformas obtenidas exitosamente", null);
                 }
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("📋 Error HTTP del API: {StatusCode} - {Content}", response.StatusCode, errorContent);
-                    return (false, null, $"Error HTTP {response.StatusCode}", errorContent);
+                    return (false, null, $"Error del servidor: {response.StatusCode}", errorContent);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error crítico obteniendo proformas desde servicio");
-                return (false, null, "Error interno del servicio", ex.Message);
+                return (false, null, "Error al obtener proformas", ex.Message);
+            }
+        }
+
+        public async Task<(bool success, object data, string message, string details)> ObtenerFacturaPorIdAsync(int facturaId, string jwtToken)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/facturas/{facturaId}";
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+
+                    return (true, resultado, "Documento obtenido exitosamente", null);
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return (false, null, $"Error del servidor: {response.StatusCode}", errorContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, null, "Error al obtener documento", ex.Message);
             }
         }
 
@@ -893,7 +872,7 @@ namespace GestionLlantera.Web.Services
                 if (string.IsNullOrEmpty(nombreCliente))
                 {
                     _logger.LogError("❌ Validación fallida: No se encontró nombre del cliente. Propiedades disponibles: {Propiedades}", 
-                        string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p.Name)));
+                        string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p=> p.Name)));
                     throw new ArgumentException("El nombre del cliente es requerido");
                 }
 
