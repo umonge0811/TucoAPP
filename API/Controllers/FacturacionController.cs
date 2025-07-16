@@ -500,7 +500,81 @@ namespace API.Controllers
 
         [HttpGet("facturas/{id}")]
         [Authorize]
+        public async Task<ActionResult<FacturaDTO>> ObtenerFacturaPorId(int id)</old_str>
+</old_str>
+<new_str>        [HttpGet("facturas/{id}")]
+        [Authorize]
         public async Task<ActionResult<FacturaDTO>> ObtenerFacturaPorId(int id)
+        {
+            try
+            {
+                var factura = await _context.Facturas
+                    .Include(f => f.UsuarioCreador)
+                    .Include(f => f.DetallesFactura)
+                        .ThenInclude(d => d.Producto)
+                            .ThenInclude(p => p.ImagenesProductos)
+                    .Include(f => f.DetallesFactura)
+                        .ThenInclude(d => d.Producto)
+                            .ThenInclude(p => p.Llanta)
+                    .Where(f => f.FacturaId == id)
+                    .Select(f => new FacturaDTO
+                    {
+                        FacturaId = f.FacturaId,
+                        NumeroFactura = f.NumeroFactura,
+                        ClienteId = f.ClienteId,
+                        NombreCliente = f.NombreCliente,
+                        IdentificacionCliente = f.IdentificacionCliente,
+                        TelefonoCliente = f.TelefonoCliente,
+                        EmailCliente = f.EmailCliente,
+                        DireccionCliente = f.DireccionCliente,
+                        FechaFactura = f.FechaFactura,
+                        FechaVencimiento = f.FechaVencimiento,
+                        Subtotal = f.Subtotal,
+                        DescuentoGeneral = f.DescuentoGeneral,
+                        PorcentajeImpuesto = f.PorcentajeImpuesto,
+                        MontoImpuesto = f.MontoImpuesto ?? 0,
+                        Total = f.Total,
+                        Estado = f.Estado,
+                        TipoDocumento = f.TipoDocumento,
+                        MetodoPago = f.MetodoPago,
+                        Observaciones = f.Observaciones,
+                        UsuarioCreadorId = f.UsuarioCreadorId,
+                        UsuarioCreadorNombre = f.UsuarioCreador.NombreUsuario,
+                        FechaCreacion = f.FechaCreacion,
+                        FechaActualizacion = f.FechaActualizacion,
+                        DetallesFactura = f.DetallesFactura.Select(d => new DetalleFacturaDTO
+                        {
+                            DetalleFacturaId = d.DetalleFacturaId,
+                            ProductoId = d.ProductoId,
+                            NombreProducto = d.NombreProducto,
+                            DescripcionProducto = d.DescripcionProducto,
+                            Cantidad = d.Cantidad,
+                            PrecioUnitario = d.PrecioUnitario,
+                            PorcentajeDescuento = d.PorcentajeDescuento,
+                            MontoDescuento = d.MontoDescuento,
+                            Subtotal = d.Subtotal,
+                            StockDisponible = (int)(d.Producto.CantidadEnInventario ?? 0),
+                            EsLlanta = d.Producto.Llanta.Any(),
+                            MedidaLlanta = d.Producto.Llanta.Any() ? 
+                                d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "R" + d.Producto.Llanta.First().Diametro : null,
+                            MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
+                            ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null,
+                            ImagenesUrls = d.Producto.ImagenesProductos.Select(img => img.Urlimagen).ToList()
+                        }).ToList()
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (factura == null)
+                    return NotFound(new { message = "Factura no encontrada" });
+
+                return Ok(factura);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener factura: {Id}", id);
+                return StatusCode(500, new { message = "Error al obtener factura" });
+            }
+        }
         {
             try
             {

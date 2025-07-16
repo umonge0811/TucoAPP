@@ -1494,6 +1494,42 @@ namespace GestionLlantera.Web.Services
                 return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
             }
         }
+
+        public async Task<(bool success, string message, object? data, string? details)> ObtenerProformaPorIdAsync(int proformaId, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo proforma por ID: {ProformaId}", proformaId);
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+
+                var response = await client.GetAsync($"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/facturas/{proformaId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var proforma = JsonSerializer.Deserialize<JsonElement>(content);
+
+                    _logger.LogInformation("✅ Proforma obtenida exitosamente: {ProformaId}", proformaId);
+
+                    return (true, "Proforma obtenida exitosamente", proforma, null);
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error del API obteniendo proforma: {StatusCode} - {Content}", 
+                        response.StatusCode, errorContent);
+
+                    return (false, $"Error del servidor: {response.StatusCode}", null, errorContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo proforma por ID: {ProformaId}", proformaId);
+                return (false, "Error interno al obtener proforma", null, ex.Message);
+            }
+        }
     }
     // Modelos para la deserialización
     public class StockVerificationResponse

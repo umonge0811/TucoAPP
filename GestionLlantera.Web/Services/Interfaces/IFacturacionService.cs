@@ -57,7 +57,9 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Marca productos como entregados
         /// </summary>
-        Task<(bool success, object? data, string? message, string? details)> MarcarComoEntregadoPorCodigoAsync(object request, string jwtToken = null);
+        Task<(bool success, string message, object? data, string? details)> MarcarComoEntregadoPorCodigoAsync(object request, string jwtToken);
+
+        Task<(bool success, string message, object? data, string? details)> ObtenerProformaPorIdAsync(int proformaId, string jwtToken);
     }
 
     // Clase ApiResponse para manejar respuestas de la API
