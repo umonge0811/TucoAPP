@@ -1782,6 +1782,7 @@ namespace API.Controllers
                 var proformasVigentes = estadisticas.FirstOrDefault(e => e.Estado == "Vigente")?.Cantidad ?? 0;
                 var proformasExpiradas = estadisticas.FirstOrDefault(e => e.Estado == "Expirada")?.Cantidad ?? 0;
                 var proformasConvertidas = estadisticas.FirstOrDefault(e => e.Estado == "Convertida")?.Cantidad ?? 0;
+                var proformasFacturadas = estadisticas.FirstOrDefault(e => e.Estado == "Facturada")?.Cantidad ?? 0;
 
                 // Obtener proformas que van a vencer en los próximos 7 días
                 var fechaLimite = DateTime.Now.AddDays(7);
@@ -1800,6 +1801,7 @@ namespace API.Controllers
                         vigentes = proformasVigentes,
                         expiradas = proformasExpiradas,
                         convertidas = proformasConvertidas,
+                        facturadas = proformasFacturadas,
                         porVencerEn7Dias = proformasPorVencer,
                         total = estadisticas.Sum(e => e.Cantidad)
                     },
@@ -1831,9 +1833,9 @@ namespace API.Controllers
             return proximaVerificacion;
         }
 
-        [HttpPut("marcar-proforma-convertida/{proformaId}")]
+        [HttpPut("marcar-proforma-facturada/{proformaId}")]
         [Authorize]
-        public async Task<IActionResult> MarcarProformaComoConvertida(int proformaId, [FromBody] ConvertirProformaRequest request)
+        public async Task<IActionResult> MarcarProformaComoFacturada(int proformaId, [FromBody] ConvertirProformaRequest request)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Facturas",
                 "Solo usuarios con permiso 'Crear Facturas' pueden convertir proformas");
@@ -1851,32 +1853,35 @@ namespace API.Controllers
                 if (proforma.Estado != "Vigente")
                     return BadRequest(new { success = false, message = "Solo se pueden convertir proformas vigentes" });
 
-                // Marcar como convertida
-                proforma.Estado = "Convertida";
+                // Marcar como facturada
+                proforma.Estado = "Facturada";
                 proforma.FechaActualizacion = DateTime.Now;
                 proforma.Observaciones = (proforma.Observaciones ?? "") + 
                     $" | CONVERTIDA A FACTURA: {request.NumeroFacturaGenerada} el {DateTime.Now:dd/MM/yyyy HH:mm}";
 
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("🔄 Proforma {NumeroProforma} marcada como convertida a factura {NumeroFactura}", 
+                _logger.LogInformation("🔄 Proforma {NumeroProforma} marcada como facturada (conversión a factura {NumeroFactura})", 
                     proforma.NumeroFactura, request.NumeroFacturaGenerada);
 
                 return Ok(new
                 {
                     success = true,
-                    message = "Proforma marcada como convertida exitosamente",
+                    message = "Proforma marcada como facturada exitosamente",
                     numeroProforma = proforma.NumeroFactura,
                     numeroFacturaGenerada = request.NumeroFacturaGenerada,
+                    estadoAnterior = "Vigente",
+                    estadoNuevo = "Facturada",
+                    fechaActualizacion = proforma.FechaActualizacion,
                     timestamp = DateTime.Now
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error marcando proforma como convertida: {ProformaId}", proformaId);
+                _logger.LogError(ex, "❌ Error marcando proforma como facturada: {ProformaId}", proformaId);
                 return StatusCode(500, new { 
                     success = false, 
-                    message = "Error interno al marcar proforma como convertida" 
+                    message = "Error interno al marcar proforma como facturada" 
                 });
             }
         }

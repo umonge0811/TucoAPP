@@ -101,8 +101,8 @@ namespace API.ServicesAPI
 
                 // Registrar estadísticas en log
                 var estadisticas = await ObtenerEstadisticasProformas(context);
-                _logger.LogInformation("📊 Estadísticas de proformas: Vigentes: {Vigentes}, Expiradas: {Expiradas}, Convertidas: {Convertidas}", 
-                    estadisticas.Vigentes, estadisticas.Expiradas, estadisticas.Convertidas);
+                _logger.LogInformation("📊 Estadísticas de proformas: Vigentes: {Vigentes}, Expiradas: {Expiradas}, Convertidas: {Convertidas}, Facturadas: {Facturadas}", 
+                    estadisticas.Vigentes, estadisticas.Expiradas, estadisticas.Convertidas, estadisticas.Facturadas);
             }
             catch (Exception ex)
             {
@@ -111,7 +111,7 @@ namespace API.ServicesAPI
             }
         }
 
-        private async Task<(int Vigentes, int Expiradas, int Convertidas)> ObtenerEstadisticasProformas(TucoContext context)
+        private async Task<(int Vigentes, int Expiradas, int Convertidas, int Facturadas)> ObtenerEstadisticasProformas(TucoContext context)
         {
             var estadisticas = await context.Facturas
                 .Where(f => f.TipoDocumento == "Proforma")
@@ -122,7 +122,8 @@ namespace API.ServicesAPI
             return (
                 Vigentes: estadisticas.FirstOrDefault(e => e.Estado == "Vigente")?.Cantidad ?? 0,
                 Expiradas: estadisticas.FirstOrDefault(e => e.Estado == "Expirada")?.Cantidad ?? 0,
-                Convertidas: estadisticas.FirstOrDefault(e => e.Estado == "Convertida")?.Cantidad ?? 0
+                Convertidas: estadisticas.FirstOrDefault(e => e.Estado == "Convertida")?.Cantidad ?? 0,
+                Facturadas: estadisticas.FirstOrDefault(e => e.Estado == "Facturada")?.Cantidad ?? 0
             );
         }
 

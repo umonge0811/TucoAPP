@@ -2485,12 +2485,12 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
         const resultadoFactura = await response.json();
         console.log('✅ Documento creado:', resultadoFactura);
         if (resultadoFactura.success) {
-            // ✅ MARCAR PROFORMA COMO CONVERTIDA SI ES UNA CONVERSIÓN
+            // ✅ MARCAR PROFORMA COMO FACTURADA SI ES UNA CONVERSIÓN
             if (window.proformaOriginalParaConversion) {
-                console.log('🔄 === MARCANDO PROFORMA COMO CONVERTIDA ===');
+                console.log('🔄 === MARCANDO PROFORMA COMO FACTURADA ===');
                 console.log('🔄 Proforma original:', window.proformaOriginalParaConversion);
                 try {
-                    const responseConversion = await fetch(`/Facturacion/MarcarProformaComoConvertida/${window.proformaOriginalParaConversion.proformaId}`, {
+                    const responseConversion = await fetch(`/Facturacion/MarcarProformaComoFacturada/${window.proformaOriginalParaConversion.proformaId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -2502,10 +2502,12 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                         }),
                         credentials: 'include'
                     });
+                    
                     if (responseConversion.ok) {
-                        console.log('✅ Proforma marcada como convertida exitosamente');
+                        const resultadoConversion = await responseConversion.json();
+                        console.log('✅ Proforma marcada como facturada exitosamente:', resultadoConversion);
                     } else {
-                        console.warn('⚠️ Error marcando proforma como convertida, pero la factura se creó correctamente');
+                        console.warn('⚠️ Error marcando proforma como facturada, pero la factura se creó correctamente');
                     }
                 } catch (error) {
                     console.warn('⚠️ Error en conversión de proforma, pero la factura se creó:', error);
@@ -2906,6 +2908,13 @@ function mostrarProformas(proformas) {
                                 title="Convertir a factura">
                             <i class="bi bi-arrow-right-circle"></i>
                         </button>
+                        ` : proforma.estado === 'Facturada' ? `
+                        <button type="button" 
+                                class="btn btn-outline-secondary"
+                                disabled
+                                title="Ya fue convertida a factura">
+                            <i class="bi bi-check-circle"></i>
+                        </button>
                         ` : ''}
                     </div>
                 </td>
@@ -2934,6 +2943,8 @@ function obtenerBadgeEstadoProforma(estado) {
             return '<span class="badge bg-warning">Vencida</span>';
         case 'Convertida':
             return '<span class="badge bg-info">Convertida</span>';
+        case 'Facturada':
+            return '<span class="badge bg-primary">Facturada</span>';
         case 'Anulada':
             return '<span class="badge bg-secondary">Anulada</span>';
         default:
