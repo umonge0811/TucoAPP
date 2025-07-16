@@ -711,10 +711,10 @@ namespace API.Controllers
                 }
 
                 // ✅ Completar factura o marcar proforma como facturada
-                if (factura.NumeroFactura.StartsWith("PROF"))
+                if (factura.TipoDocumento == "Proforma" || factura.NumeroFactura.StartsWith("PROF"))
                 {
                     factura.Estado = "Facturada";
-                    _logger.LogInformation("📋 Proforma {NumeroFactura} marcada como FACTURADA", factura.NumeroFactura);
+                    _logger.LogInformation("📋 Proforma {NumeroFactura} marcada como FACTURADA (conversión a factura)", factura.NumeroFactura);
                 }
                 else
                 {
