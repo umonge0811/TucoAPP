@@ -1947,14 +1947,22 @@ async function procesarVentaFinal() {
         const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
         const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
 
+        // ✅ VERIFICAR SI ES CONVERSIÓN DE PROFORMA
+        const esConversionProforma = window.proformaOriginalParaConversion !== undefined;
+
         console.log('🔍 === DETERMINANDO TIPO DE OPERACIÓN ===');
         console.log('🔍 Es factura pendiente:', esFacturaPendiente);
+        console.log('🔍 Es conversión de proforma:', esConversionProforma);
         console.log('🔍 Factura ID:', facturaId);
 
         if (esFacturaPendiente && facturaId) {
             // ✅ COMPLETAR FACTURA EXISTENTE
             console.log('✅ Completando factura pendiente ID:', facturaId);
             await completarFacturaExistente(facturaId);
+        } else if (esConversionProforma) {
+            // ✅ CONVERTIR PROFORMA A FACTURA
+            console.log('🔄 Convirtiendo proforma a factura');
+            await crearNuevaFactura('Factura');
         } else {
             // ✅ CREAR NUEVA FACTURA
             console.log('🆕 Creando nueva factura');
