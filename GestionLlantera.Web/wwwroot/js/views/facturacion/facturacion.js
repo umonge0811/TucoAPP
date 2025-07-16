@@ -2970,6 +2970,7 @@ function configurarEventosProformas() {
         const proformaEscapada = $(this).data('proforma-escapada');
         if (proformaEscapada) {
             console.log('🔄 Convirtiendo proforma con datos:', proformaEscapada);
+            console.log('🔄 Tipo de datos:', typeof proformaEscapada);
             convertirProformaAFactura(proformaEscapada);
         } else {
             console.error('❌ No se encontraron datos de proforma para convertir');
@@ -3230,9 +3231,22 @@ async function convertirProformaAFactura(proformaEscapada) {
     try {
         console.log('🔄 === CONVIRTIENDO PROFORMA A FACTURA ===');
         console.log('🔄 Proforma escapada recibida:', proformaEscapada);
+        console.log('🔄 Tipo de dato recibido:', typeof proformaEscapada);
 
-        // Parsear datos de la proforma
-        const proforma = JSON.parse(proformaEscapada.replace(/&quot;/g, '"'));
+        // Parsear datos de la proforma - manejar tanto cadena escapada como objeto
+        let proforma;
+        if (typeof proformaEscapada === 'string') {
+            // Si es una cadena, aplicar replace y parsear
+            proforma = JSON.parse(proformaEscapada.replace(/&quot;/g, '"'));
+            console.log('🔄 Proforma parseada desde cadena escapada');
+        } else if (typeof proformaEscapada === 'object' && proformaEscapada !== null) {
+            // Si ya es un objeto, usarlo directamente
+            proforma = proformaEscapada;
+            console.log('🔄 Proforma recibida como objeto directo');
+        } else {
+            throw new Error('Formato de proforma no válido: ' + typeof proformaEscapada);
+        }
+        
         console.log('🔄 Proforma deserializada:', proforma);
 
         // Confirmar conversión
