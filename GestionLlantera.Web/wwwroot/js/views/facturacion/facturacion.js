@@ -1981,6 +1981,8 @@ async function procesarVentaFinal(numeroReferencia = null) {
             
             // Procesar como nueva factura con datos de proforma
             await crearNuevaFactura('Factura');
+            await completarFacturaExistente(numeroProforma);
+
             
         } else if (esFacturaPendiente && facturaId) {
             // ✅ COMPLETAR FACTURA EXISTENTE
