@@ -710,17 +710,8 @@ namespace API.Controllers
                     }
                 }
 
-                // ✅ Completar factura o marcar proforma como facturada
-                if (factura.NumeroFactura.StartsWith("PROF"))
-                {
-                    factura.Estado = "Facturada";
-                    _logger.LogInformation("📋 Proforma {NumeroFactura} marcada como FACTURADA", factura.NumeroFactura);
-                }
-                else
-                {
-                    factura.Estado = "Pagada";
-                    _logger.LogInformation("✅ Factura {NumeroFactura} marcada como PAGADA", factura.NumeroFactura);
-                }
+                // ✅ Completar factura
+                factura.Estado = "Pagada";
                 factura.FechaActualizacion = DateTime.Now;
 
                 await _context.SaveChangesAsync();
