@@ -2902,7 +2902,7 @@ function mostrarProformas(proformas) {
                         ${proforma.estado === 'Vigente' ? `
                         <button type="button" 
                                 class="btn btn-outline-primary btn-convertir-proforma"
-                                onclick="convertirProformaAFactura('${proformaEscapada}')"
+                                data-proforma-escapada="${proformaEscapada}"
                                 title="Convertir a factura">
                             <i class="bi bi-arrow-right-circle"></i>
                         </button>
@@ -2963,17 +2963,37 @@ function configurarEventosProformas() {
         imprimirProforma(proformaId);
     });
 
-    // Convertir proforma con datos completos
-    $('.btn-convertir-proforma').on('click.proforma', function () {
+    // Convertir proforma - usar data attributes
+    $(document).off('click.proforma', '.btn-convertir-proforma').on('click.proforma', '.btn-convertir-proforma', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Obtener datos de la proforma desde data-proforma-escapada
+        const proformaEscapada = $(this).data('proforma-escapada');
+        if (proformaEscapada) {
+            console.log('🔄 Datos obtenidos de data-proforma-escapada:', typeof proformaEscapada);
+            convertirProformaAFactura(proformaEscapada);
+            return;
+        }
+        
+        // Fallback: intentar desde otros data attributes
         const proformaData = $(this).data('proforma');
         if (proformaData) {
-            // Si tienes los datos completos, úsalos
             const proformaEscapada = JSON.stringify(proformaData).replace(/"/g, '&quot;');
             convertirProformaAFactura(proformaEscapada);
         } else {
-            // Si solo tienes el ID, usa la función principal
             const proformaId = $(this).data('proforma-id');
-            convertirProformaAFactura(proformaId);
+            if (proformaId) {
+                convertirProformaAFactura(proformaId);
+            } else {
+                console.error('❌ No se encontraron datos de proforma para convertir');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron obtener los datos de la proforma',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
         }
     });
 }
