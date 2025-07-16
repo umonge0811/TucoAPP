@@ -1474,4 +1474,56 @@ namespace GestionLlantera.Web.Controllers
         public int UsuarioEntrega { get; set; }
         public string? ObservacionesEntrega { get; set; }
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarProformaConvertida([FromBody] MarcarProformaConvertidaRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("🔄 === MARCANDO PROFORMA COMO CONVERTIDA ===");
+            _logger.LogInformation("🔄 Proforma ID: {ProformaId}", request.ProformaId);
+            _logger.LogInformation("🔄 Número de factura generada: {NumeroFactura}", request.NumeroFacturaGenerada);
+
+            var token = this.ObtenerTokenJWT();
+            if (string.IsNullOrEmpty(token))
+            {
+                return Json(new { success = false, message = "Sesión expirada" });
+            }
+
+            var resultado = await _facturacionService.MarcarProformaComoConvertidaAsync(request, token);
+
+            if (resultado.success)
+            {
+                _logger.LogInformation("✅ Proforma marcada como convertida exitosamente");
+                return Json(new { 
+                    success = true, 
+                    message = "Proforma marcada como convertida exitosamente",
+                    data = resultado.data
+                });
+            }
+            else
+            {
+                _logger.LogError("❌ Error marcando proforma como convertida: {Message}", resultado.message);
+                return Json(new { 
+                    success = false, 
+                    message = resultado.message ?? "Error al marcar proforma como convertida"
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error crítico marcando proforma como convertida");
+            return Json(new { 
+                success = false, 
+                message = "Error interno del servidor" 
+            });
+        }
+    }
+}
+
+public class MarcarProformaConvertidaRequest
+{
+    public int ProformaId { get; set; }
+    public string NumeroFacturaGenerada { get; set; }
 }
