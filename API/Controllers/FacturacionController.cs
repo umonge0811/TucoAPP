@@ -798,7 +798,7 @@ namespace API.Controllers
                             MontoDescuento = d.MontoDescuento,
                             Subtotal = d.Subtotal
                         }).ToList()
-                    The code adds the implementation for marking a proforma as facturada.                    })
+                    })
                     .ToListAsync();
 
                 _logger.LogInformation("✅ Se encontraron {Count} facturas pendientes", facturasPendientes.Count);
@@ -1648,10 +1648,10 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("🧪 === TEST PERMISO ENTREGAR PENDIENTES ===");
-
+                
                 var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
                     "Solo usuarios con permiso 'Entregar Pendientes' pueden marcar productos como entregados");
-
+                
                 var resultado = new
                 {
                     mensaje = "Test de validación del permiso 'Entregar Pendientes'",
@@ -1846,6 +1846,7 @@ namespace API.Controllers
         }
 
         [HttpPut("marcar-proforma-facturada/{proformaId}")]
+        [Authorize]
         public async Task<IActionResult> MarcarProformaComoFacturada(int proformaId, [FromBody] ConvertirProformaRequest request)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Facturas",
@@ -1926,12 +1927,12 @@ namespace API.Controllers
                 {
                     var diasVencida = (DateTime.Now - proforma.FechaVencimiento.Value).Days;
                     var observacionTipo = esVerificacionAutomatica ? "AUTOMÁTICAMENTE" : "MANUALMENTE";
-
+                    
                     proforma.Estado = "Expirada";
                     proforma.FechaActualizacion = DateTime.Now;
                     proforma.Observaciones = (proforma.Observaciones ?? "") + 
                         $" | EXPIRADA {observacionTipo}: {DateTime.Now:dd/MM/yyyy HH:mm} ({diasVencida} días de vencimiento)";
-
+                    
                     cantidadActualizadas++;
 
                     _logger.LogInformation("📅 Proforma expirada {Tipo}: {NumeroFactura} - Vencía: {FechaVencimiento} ({Dias} días)", 
