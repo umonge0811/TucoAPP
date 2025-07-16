@@ -1,0 +1,122 @@
+Facturacion:1743 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+Facturacion:1744 🎯 Configuración completa: Object
+Facturacion:1753 ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1753
+Facturacion:1760 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+Facturacion:1761 🔧 Configuración completa: Object
+Facturacion:1762 🔧 Usuario disponible: undefined
+Facturacion:1763 🔧 Permisos disponibles: undefined
+Facturacion:1764 🔧 Token disponible: undefined
+facturacion.js:218 🚀 Inicializando módulo de facturación
+facturacion.js:223 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:226 🔐 Cargando permisos del usuario...
+facturacion.js:74 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+facturacion.js:75 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-16",
+  "horaActual": "14:01",
+  "tokenDisponible": true
+}
+facturacion.js:92 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+facturacion.js:93 🔐 puedeCrearFacturas: true
+facturacion.js:94 🔐 puedeCompletarFacturas: true
+facturacion.js:95 🔐 puedeEditarFacturas: true
+facturacion.js:96 🔐 puedeAnularFacturas: true
+facturacion.js:97 🔐 esAdmin: true
+facturacion.js:120 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+facturacion.js:121 🎯 Permisos actuales del usuario: Object
+facturacion.js:122 🎯 puedeCompletarFacturas: true (tipo: boolean )
+facturacion.js:123 🎯 puedeCrearFacturas: true (tipo: boolean )
+facturacion.js:142 🎯 Evaluación de permisos:
+facturacion.js:143 🎯   - puedeCompletar (CompletarFacturas): true
+facturacion.js:144 🎯   - puedeCrear (CrearFacturas): true
+facturacion.js:154 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+facturacion.js:155 👑 Botón: Verde - "Completar Venta"
+facturacion.js:156 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+facturacion.js:193 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+facturacion.js:230 🚀 Inicializando modales...
+facturacion.js:234 🚀 Configurando eventos...
+facturacion.js:238 🚀 Actualizando totales...
+facturacion.js:5416 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:245 🚀 Iniciando carga de productos iniciales...
+facturacion.js:5194 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:5195 📦 cargaInicialCompletada: false
+facturacion.js:5211 📦 Iniciando carga de productos iniciales...
+facturacion.js:436 🔍 === INICIO buscarProductos ===
+facturacion.js:437 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:438 🔍 Término recibido: ""
+facturacion.js:439 🔍 busquedaEnProceso: false
+facturacion.js:440 🔍 ultimaBusqueda: ""
+facturacion.js:455 🔍 Iniciando búsqueda válida...
+facturacion.js:248 ✅ Facturación inicializada correctamente
+facturacion.js:249 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:207 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:208 🎯 Clases CSS: btn w-100 btn-outline-secondary
+facturacion.js:209 🎯 Deshabilitado: true
+facturacion.js:210 🎯 Texto: Completar Venta
+facturacion.js:211 🎯 Título: Agrega productos y selecciona un cliente
+facturacion.js:212 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+facturacion.js:477 📋 Respuesta del servidor recibida
+facturacion.js:480 ✅ Se encontraron 2 productos disponibles
+facturacion.js:519 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:520 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:521 🔄 Productos recibidos: 2
+facturacion.js:556 🔄 Construyendo HTML para 2 productos
+facturacion.js:570 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:571 🖼️ Datos del producto: Object
+facturacion.js:584 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:589 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:608 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:620 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:570 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:571 🖼️ Datos del producto: Object
+facturacion.js:584 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:589 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:608 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:620 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:719 🔄 Actualizando DOM (longitud HTML: 9164 caracteres)
+facturacion.js:752 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:497 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:500 📦 Productos mostrados exitosamente
+facturacion.js:513 🔍 === FIN buscarProductos ===
+facturacion.js:5227 📦 Búsqueda inicial ejecutada
+facturacion.js:5229 📦 === FIN cargarProductosIniciales (exitosa) ===
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:2761 📋 === ABRIENDO MODAL DE PROFORMAS ===
+facturacion.js:2801 📋 === CARGANDO PROFORMAS ===
+facturacion.js:2802 📋 Página: 1
+facturacion.js:2833 📋 Resultado obtenido: Object
+facturacion.js:2855 📋 Mostrando proformas: 11
+facturacion.js:2993 📋 Configurando paginación - Página: 1 Total: 1
+facturacion.js:3226 🔄 === CONVIRTIENDO PROFORMA A FACTURA ===
+facturacion.js:3227 🔄 Proforma escapada recibida: {"facturaId":243,"numeroFactura":"PROF-202507-000004","clienteId":2,"nombreCliente":"Freddy Sanchez","identificacionCliente":"1-1111-2222","telefonoCliente":"1111-1111","emailCliente":"fsanchez@gmail.com","direccionCliente":"Limon","fechaFactura":"2025-07-15T06:21:55","fechaVencimiento":"2025-08-14T00:21:55.6534196","subtotal":120000,"descuentoGeneral":0,"porcentajeImpuesto":13,"montoImpuesto":15600,"total":135600,"estado":"Vigente","tipoDocumento":"Proforma","metodoPago":"efectivo","detallesPago":[],"esPagoMultiple":false,"observaciones":"","usuarioCreadorId":4,"usuarioCreadorNombre":"Julissa Mejias","fechaCreacion":"2025-07-15T00:21:55.6536801","fechaActualizacion":null,"detallesFactura":[{"detalleFacturaId":317,"facturaId":0,"productoId":17,"nombreProducto":"Prueba de Stock 3 Despues de eliminar imagen","descripcionProducto":"","cantidad":1,"precioUnitario":120000,"porcentajeDescuento":0,"montoDescuento":0,"subtotal":120000,"stockDisponible":0,"esLlanta":false,"medidaLlanta":null,"marcaLlanta":null,"modeloLlanta":null,"subtotalSinDescuento":120000,"descuentoCalculado":0,"subtotalConDescuento":120000,"tieneDescuento":false,"stockSuficiente":false}],"subtotalSinDescuento":120000,"montoDescuentoTotal":0,"subtotalConDescuento":120000,"impuestoCalculado":15600,"totalCalculado":135600,"cantidadItems":1,"esProforma":true}
+facturacion.js:3231 🔄 Proforma deserializada: Object
+facturacion.js:3226 🔄 === CONVIRTIENDO PROFORMA A FACTURA ===
+facturacion.js:3227 🔄 Proforma escapada recibida: undefined
+facturacion.js:3337 ❌ Error convirtiendo proforma: TypeError: Cannot read properties of undefined (reading 'replace')
+    at convertirProformaAFactura (facturacion.js:3230:54)
+    at HTMLButtonElement.<anonymous> (facturacion.js:2976:13)
+    at HTMLButtonElement.dispatch (jquery.min.js:2:43064)
+    at S.event.add.v.handle (jquery.min.js:2:41048)
+convertirProformaAFactura @ facturacion.js:3337
+(anonymous) @ facturacion.js:2976
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+Facturacion:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <button.btn-close btn-close-white>
+Ancestor with aria-hidden: <div.admin-wrapper> <div class=​"admin-wrapper" aria-hidden=​"true">​…​</div>​flex
