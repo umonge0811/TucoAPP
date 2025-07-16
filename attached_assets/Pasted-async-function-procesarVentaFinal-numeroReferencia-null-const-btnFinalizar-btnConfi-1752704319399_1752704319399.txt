@@ -1,0 +1,78 @@
+async function procesarVentaFinal(numeroReferencia = null) {
+    const $btnFinalizar = $('#btnConfirmarVenta');
+
+    try {
+        // Deshabilitar el botón y mostrar el estado de carga
+        $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
+
+        console.log('🔍 === DETERMINANDO TIPO DE OPERACIÓN ===');
+        console.log('🔍 Número de referencia recibido:', numeroReferencia);
+        
+        // ✅ DETECTAR SI ES CONVERSIÓN DE PROFORMA
+        const esConversionProforma = numeroReferencia && numeroReferencia.startsWith('PROF') || 
+                                   window.proformaOriginalParaConversion;
+        
+        // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE (tiene facturaId en algún producto)
+        const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
+        const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
+
+        console.log('🔍 Es conversión de proforma:', esConversionProforma);
+        console.log('🔍 Es factura pendiente:', esFacturaPendiente);
+        console.log('🔍 Factura ID:', facturaId);
+
+        if (esConversionProforma) {
+            // ✅ CONVERSIÓN DE PROFORMA A FACTURA
+            console.log('🔄 Procesando conversión de proforma');
+            
+            // Capturar número de proforma
+            let numeroProforma = numeroReferencia;
+            if (!numeroProforma && window.proformaOriginalParaConversion) {
+                numeroProforma = window.proformaOriginalParaConversion.numeroProforma;
+            }
+            
+            console.log('🔄 Número de proforma capturado:', numeroProforma);
+            
+            // Validaciones específicas para conversión de proforma
+            if (!productosEnVenta || productosEnVenta.length === 0) {
+                throw new Error('No hay productos para convertir la proforma');
+            }
+            
+            if (!clienteSeleccionado) {
+                throw new Error('No se ha seleccionado un cliente para la conversión');
+            }
+            
+            // Procesar como nueva factura con datos de proforma
+            await crearNuevaFactura('Factura');
+            await completarFacturaExistente(numeroProforma);
+
+            
+        } else if (esFacturaPendiente && facturaId) {
+            // ✅ COMPLETAR FACTURA EXISTENTE
+            console.log('✅ Completando factura pendiente ID:', facturaId);
+            await completarFacturaExistente(facturaId);
+        } else {
+            // ✅ CREAR NUEVA FACTURA NORMAL
+            console.log('🆕 Creando nueva factura');
+            await crearNuevaFactura();
+        }
+
+    } catch (error) {
+        console.error('❌ Error procesando venta:', error);
+        
+        // ✅ MOSTRAR ERROR CON SWEETALERT
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error procesando la venta',
+                text: 'Hubo un problema inesperado al procesar la venta',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc3545'
+            });
+        } else {
+            alert('Error: Hubo un problema procesando la venta');
+        }
+    } finally {
+        // Restaurar botón
+        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+    }
+}
