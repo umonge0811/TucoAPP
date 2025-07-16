@@ -1494,6 +1494,53 @@ namespace GestionLlantera.Web.Services
                 return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
             }
         }
+
+        public async Task<(bool Success, object? Data, string? Message, string? Details)> MarcarProformaComoFacturadaAsync(int proformaId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 === MARCANDO PROFORMA COMO FACTURADA ===");
+                _logger.LogInformation("🔄 Proforma ID: {ProformaId}", proformaId);
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // Crear request vacío para el endpoint
+                var request = new { };
+                var jsonContent = JsonConvert.SerializeObject(request);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                _logger.LogInformation("📤 Enviando request al API para marcar proforma como facturada");
+
+                // Llamar al endpoint del API
+                var response = await _httpClient.PutAsync($"api/Facturacion/marcar-proforma-facturada/{proformaId}", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    return (Success: true, Data: resultado, Message: "Proforma marcada como facturada exitosamente", Details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error marcando proforma como facturada: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (Success: false, Data: null, Message: "Error al marcar proforma como facturada", Details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando proforma como facturada");
+                return (Success: false, Data: null, Message: "Error interno: " + ex.Message, Details: ex.ToString());
+            }
+        }
     }
     // Modelos para la deserialización
     public class StockVerificationResponse
