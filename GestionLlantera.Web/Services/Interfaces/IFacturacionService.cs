@@ -43,7 +43,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<(bool success, object? data, string? message, string? details)> VerificarStockFacturaAsync(int facturaId, string jwtToken = null);
         Task<(bool success, object? data, string? message, string? details)> EliminarProductosFacturaAsync(object request, string jwtToken = null);
         Task<(bool success, object data, string message, string details)> ObtenerProformasAsync(string jwtToken, string estado = null, int pagina = 1, int tamano = 20);
-        Task<(bool success, object data, string message, string details)> ObtenerFacturaPorIdAsync(int facturaId, string jwtToken);
 
         /// <summary>
         /// Obtiene todas las entregas pendientes
