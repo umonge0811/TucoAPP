@@ -3301,6 +3301,8 @@ async function convertirProformaAFactura(proformaEscapada) {
         productosEnVenta = [];
         clienteSeleccionado = null;
 
+        console.log('🔄 === CARGANDO DATOS DE PROFORMA EN EL CARRITO ===');
+
         // Cargar cliente de la proforma
         clienteSeleccionado = {
             clienteId: proforma.clienteId || null,
@@ -3311,9 +3313,13 @@ async function convertirProformaAFactura(proformaEscapada) {
             direccion: proforma.direccionCliente || ''
         };
 
+        console.log('👤 Cliente cargado desde proforma:', clienteSeleccionado);
+
         // Cargar productos de la proforma
         if (proforma.detallesFactura && Array.isArray(proforma.detallesFactura)) {
-            proforma.detallesFactura.forEach((detalle) => {
+            console.log('📦 Cargando productos desde proforma:', proforma.detallesFactura.length);
+            
+            proforma.detallesFactura.forEach((detalle, index) => {
                 const producto = {
                     productoId: detalle.productoId || 0,
                     nombreProducto: detalle.nombreProducto || 'Producto',
@@ -3323,19 +3329,26 @@ async function convertirProformaAFactura(proformaEscapada) {
                     metodoPago: 'efectivo',
                     imagenUrl: null
                 };
+                
                 productosEnVenta.push(producto);
+                console.log(`📦 Producto ${index + 1} cargado:`, producto.nombreProducto, 'x', producto.cantidad);
             });
         }
 
-        // Actualizar interfaz
+        console.log('📦 Total productos cargados en carrito:', productosEnVenta.length);
+
+        // Actualizar interfaz del cliente
         $('#clienteBusqueda').val(clienteSeleccionado.nombre);
         $('#nombreClienteSeleccionado').text(clienteSeleccionado.nombre);
         $('#emailClienteSeleccionado').text(clienteSeleccionado.email || 'Sin email');
         $('#clienteSeleccionado').removeClass('d-none');
 
+        // Actualizar carrito y totales
         actualizarVistaCarrito();
         actualizarTotales();
         actualizarEstadoBotonFinalizar();
+
+        console.log('🔄 Interfaz actualizada con datos de la proforma');
 
         // Cerrar modal de proformas
         const modalProformas = bootstrap.Modal.getInstance(document.getElementById('proformasModal'));
@@ -3343,14 +3356,37 @@ async function convertirProformaAFactura(proformaEscapada) {
             modalProformas.hide();
         }
 
-        // Guardar referencia a la proforma original
+        // Guardar referencia a la proforma original para el proceso de facturación
         window.proformaOriginalParaConversion = {
             proformaId: proforma.facturaId || proforma.id,
             numeroProforma: proforma.numeroFactura
         };
 
-        // Procesar venta final
-        await procesarVentaFinal(proforma.numeroFactura);
+        console.log('📋 Referencia de proforma guardada:', window.proformaOriginalParaConversion);
+
+        // ✅ MOSTRAR MODAL DE FINALIZAR VENTA DESPUÉS DE UN BREVE DELAY
+        setTimeout(() => {
+            console.log('🎯 === ABRIENDO MODAL FINALIZAR VENTA ===');
+            console.log('🎯 Productos en carrito:', productosEnVenta.length);
+            console.log('🎯 Cliente seleccionado:', clienteSeleccionado?.nombre);
+            
+            // Verificar que tenemos todo lo necesario
+            if (productosEnVenta.length > 0 && clienteSeleccionado) {
+                mostrarModalFinalizarVenta();
+                console.log('✅ Modal de finalizar venta mostrado correctamente');
+            } else {
+                console.error('❌ No se puede mostrar modal - faltan datos');
+                console.error('❌ Productos:', productosEnVenta.length);
+                console.error('❌ Cliente:', !!clienteSeleccionado);
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar los datos de la proforma correctamente',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        }, 800); // Delay de 800ms para asegurar que todo esté cargado
 
     } catch (error) {
         console.error('❌ Error convirtiendo proforma:', error);
