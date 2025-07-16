@@ -1396,50 +1396,6 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
-
-        [HttpGet]
-        public async Task<IActionResult> ObtenerProformaPorId(int id)
-        {
-            try
-            {
-                _logger.LogInformation("📋 Obteniendo proforma por ID: {Id}", id);
-
-                if (!await this.TienePermisoAsync("Ver Productos"))
-                {
-                    return Json(new { success = false, message = "Sin permisos para ver proformas" });
-                }
-
-                var jwtToken = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return Json(new { success = false, message = "Token de autenticación no disponible" });
-                }
-
-                var resultado = await _facturacionService.ObtenerProformaPorIdAsync(id, jwtToken);
-
-                if (resultado.success && resultado.data != null)
-                {
-                    _logger.LogInformation("📋 Proforma obtenida exitosamente: {Id}", id);
-                    return Json(resultado.data);
-                }
-                else
-                {
-                    _logger.LogWarning("📋 No se pudo obtener la proforma: {Message}", resultado.message);
-                    return Json(new { 
-                        success = false, 
-                        message = resultado.message ?? "No se pudo obtener la proforma"
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error crítico obteniendo proforma por ID: {Id}", id);
-                return Json(new { 
-                    success = false, 
-                    message = "Error interno del servidor"
-                });
-            }
-        }
     }
 
     // Clases de request para el controlador
