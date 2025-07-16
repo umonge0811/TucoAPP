@@ -1,0 +1,58 @@
+async function procesarFacturaPendiente(facturaEscapada) {
+    try {
+        const factura = JSON.parse(facturaEscapada.replace(/&quot;/g, '"'));
+        console.log('🔄 === PROCESANDO FACTURA PENDIENTE ===');
+        console.log('🔄 Factura:', factura);
+        
+        // Verificar stock antes de proceder
+        console.log('🔍 Iniciando verificación de stock para factura:', factura.facturaId);
+        const verificacionStock = await verificarStockFacturaPendiente(factura.facturaId);
+        
+        console.log('🔍 Resultado de verificación de stock:', verificacionStock);
+        
+        if (!verificacionStock.success) {
+            console.error('❌ Error en verificación de stock:', verificacionStock);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de verificación',
+                text: verificacionStock.message || 'No se pudo verificar el stock de los productos',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+        
+        // Cerrar modal de facturas pendientes
+        $('#facturasPendientesModal').modal('hide');
+        
+        // Cargar los datos de la factura en el carrito
+        cargarFacturaPendienteEnCarrito(factura);
+        
+        // Procesar resultado de verificación de stock
+        if (verificacionStock.tieneProblemas && verificacionStock.productosConProblemas && verificacionStock.productosConProblemas.length > 0) {
+            console.log('⚠️ === PROBLEMAS DE STOCK DETECTADOS ===');
+            console.log('⚠️ Cantidad:', verificacionStock.productosConProblemas.length);
+            console.log('⚠️ Productos:', verificacionStock.productosConProblemas);
+            
+            // Mostrar modal de problemas de stock
+            mostrarModalProblemasStock(verificacionStock.productosConProblemas, factura);
+        } else {
+            console.log('✅ === SIN PROBLEMAS DE STOCK ===');
+            console.log('✅ tieneProblemas:', verificacionStock.tieneProblemas);
+            console.log('✅ cantidad productos:', verificacionStock.productosConProblemas?.length || 0);
+            
+            // Si no hay problemas, continuar con modal de finalización
+            setTimeout(() => {
+                mostrarModalFinalizarVenta();
+            }, 500);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error procesando factura pendiente:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo procesar la factura seleccionada',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
