@@ -649,11 +649,11 @@ namespace API.Controllers
                     var producto = await _context.Productos.FindAsync(detalle.ProductoId);
                     if (producto != null)
                     {
-                        producto.CantidadEnInventario = Math.Max(0, 
+                        producto.CantidadEnInventario = Math.Max(0,
                             (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
                         producto.FechaUltimaActualizacion = DateTime.Now;
 
-                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
+                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
                             producto.NombreProducto, detalle.Cantidad);
                     }
                 }
@@ -689,7 +689,7 @@ namespace API.Controllers
                         if (request.DetallesPago.Count > 1)
                         {
                             factura.MetodoPago = "Multiple";
-                            _logger.LogInformation("💳 Factura configurada con pago múltiple: {CantidadMetodos} métodos", 
+                            _logger.LogInformation("💳 Factura configurada con pago múltiple: {CantidadMetodos} métodos",
                                 request.DetallesPago.Count);
                         }
                     }
@@ -710,18 +710,28 @@ namespace API.Controllers
                     }
                 }
 
-                // ✅ Completar factura
-                factura.Estado = "Pagada";
+                // ✅ Completar factura o marcar proforma como facturada
+                if (factura.NumeroFactura.StartsWith("PROF"))
+                {
+                    factura.Estado = "Facturada";
+                    _logger.LogInformation("📋 Proforma {NumeroFactura} marcada como FACTURADA", factura.NumeroFactura);
+                }
+                else
+                {
+                    factura.Estado = "Pagada";
+                    _logger.LogInformation("✅ Factura {NumeroFactura} marcada como PAGADA", factura.NumeroFactura);
+                }
                 factura.FechaActualizacion = DateTime.Now;
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("✅ Factura {NumeroFactura} completada exitosamente por usuario {Usuario}", 
+                _logger.LogInformation("✅ Factura {NumeroFactura} completada exitosamente por usuario {Usuario}",
                     factura.NumeroFactura, User.Identity?.Name);
 
-                return Ok(new { 
-                    message = "Factura completada exitosamente", 
+                return Ok(new
+                {
+                    message = "Factura completada exitosamente",
                     numeroFactura = factura.NumeroFactura,
                     estado = factura.Estado,
                     metodoPago = factura.MetodoPago,
@@ -735,6 +745,8 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al completar factura" });
             }
         }
+
+
 
         [HttpGet("facturas/pendientes")]
         [Authorize]
