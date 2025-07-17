@@ -829,14 +829,23 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPut]
+        [Route("MarcarProformaFacturada/{proformaId}")]
         public async Task<IActionResult> MarcarProformaFacturada(int proformaId, [FromBody] object request)
         {
             try
             {
                 _logger.LogInformation("🔄 === MÉTODO MarcarProformaFacturada EJECUTADO ===");
                 _logger.LogInformation("🔄 Proforma ID recibido: {ProformaId}", proformaId);
+                _logger.LogInformation("🔄 Tipo de ProformaId: {Tipo}", proformaId.GetType().Name);
                 _logger.LogInformation("🔄 Request body: {Request}", System.Text.Json.JsonSerializer.Serialize(request));
+                _logger.LogInformation("🔄 Usuario actual: {Usuario}", User.Identity?.Name);
                 _logger.LogInformation("🔄 Marcando proforma como facturada: {ProformaId}", proformaId);
+
+                if (proformaId <= 0)
+                {
+                    _logger.LogError("❌ ID de proforma inválido: {ProformaId}", proformaId);
+                    return BadRequest(new { success = false, message = "ID de proforma inválido" });
+                }
 
                 var response = await _facturacionService.MarcarProformaComoFacturadaAsync(proformaId, request, ObtenerTokenJWT());
 

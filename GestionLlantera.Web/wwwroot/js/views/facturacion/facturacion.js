@@ -2509,29 +2509,42 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             if (window.proformaOriginalParaConversion) {
                 console.log('🔄 === MARCANDO PROFORMA COMO FACTURADA ===');
                 console.log('🔄 Proforma original:', window.proformaOriginalParaConversion);
-                try {
-                    const responseConversion = await fetch(`/Facturacion/MarcarProformaFacturada/${window.proformaOriginalParaConversion.proformaId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({
-                            facturaGeneradaId: resultadoFactura.facturaId || resultadoFactura.data?.facturaId,
-                            numeroFacturaGenerada: resultadoFactura.numeroFactura
-                        }),
-                        credentials: 'include'
-                    });
-                    
-                    if (responseConversion.ok) {
-                        const resultadoConversion = await responseConversion.json();
-                        console.log('✅ Proforma marcada como facturada exitosamente:', resultadoConversion);
-                    } else {
-                        console.warn('⚠️ Error marcando proforma como facturada, pero la factura se creó correctamente');
+                
+                // ✅ VALIDAR QUE TENEMOS EL ID DE LA PROFORMA
+                const proformaId = window.proformaOriginalParaConversion.proformaId || window.proformaOriginalParaConversion.facturaId;
+                console.log('🔄 ID de proforma a marcar:', proformaId);
+                
+                if (!proformaId) {
+                    console.error('❌ No se pudo obtener el ID de la proforma para marcar como facturada');
+                } else {
+                    try {
+                        const responseConversion = await fetch(`/Facturacion/MarcarProformaFacturada/${proformaId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                facturaGeneradaId: resultadoFactura.facturaId || resultadoFactura.data?.facturaId,
+                                numeroFacturaGenerada: resultadoFactura.numeroFactura || resultadoFactura.data?.numeroFactura
+                            }),
+                            credentials: 'include'
+                        });
+                        
+                        const responseText = await responseConversion.text();
+                        console.log('🔄 Respuesta del servidor:', responseText);
+                        
+                        if (responseConversion.ok) {
+                            const resultadoConversion = JSON.parse(responseText);
+                            console.log('✅ Proforma marcada como facturada exitosamente:', resultadoConversion);
+                        } else {
+                            console.warn('⚠️ Error marcando proforma como facturada:', responseConversion.status, responseText);
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Error en conversión de proforma, pero la factura se creó:', error);
                     }
-                } catch (error) {
-                    console.warn('⚠️ Error en conversión de proforma, pero la factura se creó:', error);
                 }
+                
                 // Limpiar referencia
                 delete window.proformaOriginalParaConversion;
             }
@@ -3389,11 +3402,13 @@ async function convertirProformaAFactura(proformaEscapada) {
 
         // Guardar referencia a la proforma original para el proceso de facturación
         window.proformaOriginalParaConversion = {
-            proformaId: proforma.facturaId || proforma.id,
+            proformaId: proforma.facturaId || proforma.id || proforma.proformaId,
+            facturaId: proforma.facturaId || proforma.id || proforma.proformaId,
             numeroProforma: proforma.numeroFactura
         };
 
         console.log('📋 Referencia de proforma guardada:', window.proformaOriginalParaConversion);
+        console.log('📋 ID que se usará:', window.proformaOriginalParaConversion.proformaId);
 
         // ✅ MOSTRAR MODAL DE FINALIZAR VENTA DESPUÉS DE UN BREVE DELAY
         setTimeout(() => {
