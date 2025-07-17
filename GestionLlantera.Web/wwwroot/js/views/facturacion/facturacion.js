@@ -2020,14 +2020,46 @@ async function completarFacturaExistente(facturaId) {
         console.log('💰 === COMPLETANDO FACTURA EXISTENTE ===');
         console.log('💰 Factura ID:', facturaId);
 
+        // ✅ VALIDACIÓN INICIAL
+        if (!facturaId) {
+            console.error('❌ FacturaId es requerido');
+            mostrarToast('Error', 'ID de factura no válido', 'danger');
+            return;
+        }
+
+
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
         
+        // ✅ DETERMINAR SI ES PROFORMA BASADO EN MÚLTIPLES FUENTES
+        const esProforma = window.proformaOriginalParaConversion ||
+            (facturaPendienteActual && facturaPendienteActual.numeroFactura && facturaPendienteActual.numeroFactura.startsWith('PROF')) ||
+            (facturaId && facturaId.toString().includes('PROF'));
+
+        console.log('📋 Es proforma detectada:', esProforma);
+        console.log('📋 Proforma original para conversión:', window.proformaOriginalParaConversion);
+        console.log('📋 Factura pendiente actual:', facturaPendienteActual);
+        // ✅ DATOS COMPLETOS Y VALIDADOS
         const datosCompletamiento = {
-            facturaId: facturaId,
+            facturaId: parseInt(facturaId), // Asegurar que sea número
             metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
-            detallesPago: esPagoMultiple ? detallesPagoActuales : null
+            detallesPago: esPagoMultiple ? detallesPagoActuales : null,
+            forzarVerificacionStock: false,
+            esProforma: esProforma,
+            numeroFacturaGenerada: null,
+            facturaGeneradaId: null
         };
+
+        // ✅ SI ES CONVERSIÓN DE PROFORMA, AGREGAR INFORMACIÓN ADICIONAL
+        if (window.proformaOriginalParaConversion) {
+            datosCompletamiento.numeroFacturaGenerada = `FAC-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}-TEMP`;
+            datosCompletamiento.observaciones = (datosCompletamiento.observaciones || '') +
+                ` | Convertido desde proforma ${window.proformaOriginalParaConversion.numeroProforma}`;
+
+            console.log('📋 Datos adicionales de proforma agregados');
+        }
+
+        console.log('📋 Datos de completamiento finales:', datosCompletamiento);
 
         console.log('📋 Datos de completamiento:', datosCompletamiento);
 

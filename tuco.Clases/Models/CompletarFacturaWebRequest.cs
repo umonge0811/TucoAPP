@@ -12,7 +12,7 @@ namespace Tuco.Clases.Models
         public string? MetodoPago { get; set; }
         public List<DetallePagoWebDTO>? DetallesPago { get; set; }
         public string? Observaciones { get; set; }
-
+        public bool ForzarVerificacionStock { get; set; } = false;
         // ✅ NUEVAS PROPIEDADES PARA MANEJO DE PROFORMAS
         public bool EsProforma { get; set; } = false;
         public string? NumeroFacturaGenerada { get; set; }
