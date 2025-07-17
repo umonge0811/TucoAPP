@@ -1424,22 +1424,8 @@ namespace GestionLlantera.Web.Controllers
         public int FacturaId { get; set; }
     }
 
-    public class CompletarFacturaWebRequest
-    {
-        public int FacturaId { get; set; }
-        public string? MetodoPago { get; set; }
-        public List<DetallePagoWebDTO>? DetallesPago { get; set; }
-        public string? Observaciones { get; set; }
-    }
-
-    public class DetallePagoWebDTO
-    {
-        public string MetodoPago { get; set; } = string.Empty;
-        public decimal Monto { get; set; }
-        public string? Referencia { get; set; }
-        public string? Observaciones { get; set; }
-        public DateTime? FechaPago { get; set; }
-    }
+   
+   
 
     public class RegistrarPendientesEntregaRequest
     {

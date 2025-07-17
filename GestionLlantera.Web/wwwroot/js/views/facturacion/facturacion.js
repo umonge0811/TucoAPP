@@ -1940,17 +1940,14 @@ async function procesarVentaFinal(numeroReferencia = null) {
     const $btnFinalizar = $('#btnConfirmarVenta');
 
     try {
-        // Deshabilitar el botón y mostrar el estado de carga
         $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
 
         console.log('🔍 === DETERMINANDO TIPO DE OPERACIÓN ===');
         console.log('🔍 Número de referencia recibido:', numeroReferencia);
 
-        // ✅ DETECTAR SI ES CONVERSIÓN DE PROFORMA
         const esConversionProforma = numeroReferencia && numeroReferencia.startsWith('PROF') ||
             window.proformaOriginalParaConversion;
 
-        // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE (tiene facturaId en algún producto)
         const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
         const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
 
@@ -1962,20 +1959,17 @@ async function procesarVentaFinal(numeroReferencia = null) {
             // ✅ CONVERSIÓN DE PROFORMA A FACTURA
             console.log('🔄 Procesando conversión de proforma');
 
-            // Capturar número de proforma
-            let numeroProforma = numeroReferencia;
-            if (!numeroProforma && window.proformaOriginalParaConversion) {
-                numeroProforma = window.proformaOriginalParaConversion.numeroProforma;
-            }
-
             // Capturar ID de proforma
             let proformaId = null;
-            if (window.proformaOriginalParaConversion) {
+            if (window.proformaOriginalParaConversion && window.proformaOriginalParaConversion.proformaId) {
                 proformaId = window.proformaOriginalParaConversion.proformaId;
             }
 
-            console.log('🔄 Número de proforma capturado:', numeroProforma);
             console.log('🔄 ID de proforma capturado:', proformaId);
+
+            if (!proformaId) {
+                throw new Error('No se pudo obtener el ID de la proforma para completar');
+            }
 
             // Validaciones específicas para conversión de proforma
             if (!productosEnVenta || productosEnVenta.length === 0) {
@@ -1988,11 +1982,7 @@ async function procesarVentaFinal(numeroReferencia = null) {
 
             // Procesar como nueva factura con datos de proforma
             await crearNuevaFactura('Factura');
-
-            // Completar la proforma original si tenemos el ID
-            if (proformaId) {
-                await completarFacturaExistente(proformaId);
-            }
+            await completarFacturaExistente(proformaId); // ← Pasar ID de proforma
 
         } else if (esFacturaPendiente && facturaId) {
             // ✅ COMPLETAR FACTURA EXISTENTE
@@ -2006,8 +1996,6 @@ async function procesarVentaFinal(numeroReferencia = null) {
 
     } catch (error) {
         console.error('❌ Error procesando venta:', error);
-
-        // ✅ MOSTRAR ERROR CON SWEETALERT
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: 'error',
@@ -2020,11 +2008,9 @@ async function procesarVentaFinal(numeroReferencia = null) {
             alert('Error: Hubo un problema procesando la venta');
         }
     } finally {
-        // Restaurar botón
         $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
     }
 }
-
 
 /**
  * ✅ NUEVA FUNCIÓN: Completar factura existente
