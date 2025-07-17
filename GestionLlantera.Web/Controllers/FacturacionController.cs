@@ -815,25 +815,35 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // ✅ VALIDACIÓN DE NULIDAD - AGREGAR ESTO
                 if (request == null)
                 {
                     _logger.LogError("❌ Request llegó como null en CompletarFactura");
                     return BadRequest(new { success = false, message = "Los datos de la solicitud son inválidos" });
                 }
-                // ✅ VALIDACIÓN ADICIONAL DE PROPIEDADES REQUERIDAS
+
                 if (request.FacturaId <= 0)
                 {
                     _logger.LogError("❌ FacturaId inválido: {FacturaId}", request.FacturaId);
                     return BadRequest(new { success = false, message = "ID de factura inválido" });
                 }
-                _logger.LogInformation("✅ Request válido recibido: {@Request}", request);
 
-                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", request.FacturaId);
+                _logger.LogInformation("✅ Completando {TipoDocumento} ID: {FacturaId}",
+                    request.EsProforma ? "Proforma" : "Factura", request.FacturaId);
 
-                if (!await this.TienePermisoAsync("CompletarFacturas"))
+                // ✅ VERIFICAR PERMISOS SEGÚN EL TIPO DE DOCUMENTO
+                if (request.EsProforma)
                 {
-                    return Json(new { success = false, message = "Sin permisos para completar facturas" });
+                    if (!await this.TienePermisoAsync("Crear Facturas"))
+                    {
+                        return Json(new { success = false, message = "Sin permisos para convertir proformas" });
+                    }
+                }
+                else
+                {
+                    if (!await this.TienePermisoAsync("CompletarFacturas"))
+                    {
+                        return Json(new { success = false, message = "Sin permisos para completar facturas" });
+                    }
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
@@ -842,33 +852,43 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Token de autenticación no disponible" });
                 }
 
-                // Estructurar datos para el API
+                // ✅ ESTRUCTURAR DATOS PARA EL API CON INFORMACIÓN DE PROFORMA
                 var datosCompletamiento = new
                 {
                     facturaId = request.FacturaId,
                     metodoPago = request.MetodoPago,
                     observaciones = request.Observaciones,
                     detallesPago = request.DetallesPago,
-                    forzarVerificacionStock = false // Por defecto no forzar verificación para facturas pendientes
+                    forzarVerificacionStock = request.ForzarVerificacionStock,
+                    esProforma = request.EsProforma,
+                    numeroFacturaGenerada = request.NumeroFacturaGenerada,
+                    facturaGeneradaId = request.FacturaGeneradaId
                 };
 
-                _logger.LogInformation("📋 Enviando datos de completamiento: {Datos}", 
+                _logger.LogInformation("📋 Enviando datos: {Datos}",
                     System.Text.Json.JsonSerializer.Serialize(datosCompletamiento));
 
+                // ✅ USAR EL SERVICIO QUE AHORA MANEJA AMBOS CASOS
                 var resultado = await _facturacionService.CompletarFacturaAsync(request.FacturaId, datosCompletamiento, jwtToken);
 
                 if (resultado.success)
                 {
-                    return Json(new { 
-                        success = true, 
+                    var mensaje = request.EsProforma ?
+                        "Proforma marcada como facturada exitosamente" :
+                        "Factura completada exitosamente";
+
+                    return Json(new
+                    {
+                        success = true,
                         data = resultado.data,
-                        message = resultado.message 
+                        message = mensaje
                     });
                 }
                 else
                 {
-                    return Json(new { 
-                        success = false, 
+                    return Json(new
+                    {
+                        success = false,
                         message = resultado.message,
                         details = resultado.details
                     });
@@ -876,13 +896,16 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error completando factura: {FacturaId}", request?.FacturaId);
-                return Json(new { 
-                    success = false, 
-                    message = "Error interno al completar factura" 
+                _logger.LogError(ex, "❌ Error completando {TipoDocumento}: {FacturaId}",
+                    request?.EsProforma == true ? "Proforma" : "Factura", request?.FacturaId);
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor"
                 });
             }
         }
+
 
         [HttpPost]
         public async Task<IActionResult> CompletarFacturaPendiente([FromBody] CompletarFacturaRequest request)

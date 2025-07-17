@@ -589,7 +589,7 @@ namespace API.Controllers
                     return NotFound(new { message = "Factura no encontrada" });
 
                 // ✅ MANEJO ESPECÍFICO PARA PROFORMAS
-                if (factura.TipoDocumento == "Proforma" || factura.NumeroFactura.StartsWith("PROF"))
+                if (request?.EsProforma == true || factura.TipoDocumento == "Proforma" || factura.NumeroFactura.StartsWith("PROF"))
                 {
                     _logger.LogInformation("📋 Procesando completación de proforma: {NumeroFactura}", factura.NumeroFactura);
 
@@ -767,7 +767,6 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al completar factura" });
             }
         }
-
 
         [HttpGet("facturas/pendientes")]
         [Authorize]

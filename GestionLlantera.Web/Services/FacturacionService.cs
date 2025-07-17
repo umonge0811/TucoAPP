@@ -525,7 +525,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("✅ Completando factura ID: {FacturaId}", facturaId);
+                _logger.LogInformation("✅ Completando documento ID: {FacturaId}", facturaId);
                 _logger.LogInformation("📋 Datos de completamiento: {Datos}", JsonConvert.SerializeObject(datosCompletamiento));
 
                 // Configurar token JWT si se proporciona
@@ -534,6 +534,28 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Clear();
                     _httpClient.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // ✅ EXTRAER INFORMACIÓN PARA DETERMINAR EL ENDPOINT
+                dynamic datos = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(datosCompletamiento));
+                bool esProforma = datos?.esProforma == true;
+
+                string endpoint;
+                string tipoDocumento;
+
+                if (esProforma)
+                {
+                    // ✅ PARA PROFORMAS: Usar endpoint específico para marcar como facturada
+                    endpoint = $"api/Facturacion/proformas/{facturaId}/marcar-facturada";
+                    tipoDocumento = "Proforma";
+                    _logger.LogInformation("📋 Marcando proforma como facturada usando endpoint: {Endpoint}", endpoint);
+                }
+                else
+                {
+                    // ✅ PARA FACTURAS: Usar endpoint de completar factura
+                    endpoint = $"api/Facturacion/facturas/{facturaId}/completar";
+                    tipoDocumento = "Factura";
+                    _logger.LogInformation("📋 Completando factura usando endpoint: {Endpoint}", endpoint);
                 }
 
                 var jsonContent = JsonConvert.SerializeObject(datosCompletamiento, new JsonSerializerSettings
@@ -547,7 +569,8 @@ namespace GestionLlantera.Web.Services
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"api/Facturacion/facturas/{facturaId}/completar", content);
+                // ✅ USAR PUT PARA AMBOS CASOS (COMPLETAR Y MARCAR COMO FACTURADA)
+                var response = await _httpClient.PutAsync(endpoint, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -555,21 +578,22 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var resultado = JsonConvert.DeserializeObject(responseContent);
-                    return (success: true, data: resultado, message: "Factura completada exitosamente", details: null);
+                    return (success: true, data: resultado, message: $"{tipoDocumento} procesada exitosamente", details: null);
                 }
                 else
                 {
-                    _logger.LogError("❌ Error completando factura: {StatusCode} - {Content}", 
-                        response.StatusCode, responseContent);
-                    return (success: false, data: null, message: "Error al completar factura", details: responseContent);
+                    _logger.LogError("❌ Error procesando {TipoDocumento}: {StatusCode} - {Content}",
+                        tipoDocumento, response.StatusCode, responseContent);
+                    return (success: false, data: null, message: $"Error al procesar {tipoDocumento.ToLower()}", details: responseContent);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error completando factura");
+                _logger.LogError(ex, "❌ Error procesando documento");
                 return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
             }
         }
+
 
         public async Task<(bool success, object? data, string? message, string? details)> CrearFacturaAsync(object facturaDto, string jwtToken = null)
         {
