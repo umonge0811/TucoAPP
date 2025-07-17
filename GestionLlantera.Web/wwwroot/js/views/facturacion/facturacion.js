@@ -1638,7 +1638,6 @@ function configurarModalSegunPermisos() {
     });
 }
 
-
 function calcularCambio() {
     const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0) * 1.13;
     const montoRecibido = parseFloat($('#montoRecibido').val()) || 0;
