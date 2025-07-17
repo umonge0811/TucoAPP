@@ -1638,7 +1638,6 @@ function configurarModalSegunPermisos() {
     });
 }
 
-
 function calcularCambio() {
     const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0) * 1.13;
     const montoRecibido = parseFloat($('#montoRecibido').val()) || 0;
@@ -1959,18 +1958,6 @@ async function procesarVentaFinal(numeroReferencia = null) {
             // ✅ CONVERSIÓN DE PROFORMA A FACTURA
             console.log('🔄 Procesando conversión de proforma');
 
-            // Capturar ID de proforma
-            let proformaId = null;
-            if (window.proformaOriginalParaConversion && window.proformaOriginalParaConversion.proformaId) {
-                proformaId = window.proformaOriginalParaConversion.proformaId;
-            }
-
-            console.log('🔄 ID de proforma capturado:', proformaId);
-
-            if (!proformaId) {
-                throw new Error('No se pudo obtener el ID de la proforma para completar');
-            }
-
             // Validaciones específicas para conversión de proforma
             if (!productosEnVenta || productosEnVenta.length === 0) {
                 throw new Error('No hay productos para convertir la proforma');
@@ -1980,9 +1967,15 @@ async function procesarVentaFinal(numeroReferencia = null) {
                 throw new Error('No se ha seleccionado un cliente para la conversión');
             }
 
-            // Procesar como nueva factura con datos de proforma
+            if (!window.proformaOriginalParaConversion || !window.proformaOriginalParaConversion.proformaId) {
+                throw new Error('No se pudo obtener el ID de la proforma para completar');
+            }
+
+            console.log('🔄 ID de proforma:', window.proformaOriginalParaConversion.proformaId);
+
+            // ✅ SOLO CREAR NUEVA FACTURA - La función crearNuevaFactura() maneja internamente 
+            // el marcado de la proforma como "Facturada"
             await crearNuevaFactura('Factura');
-            await completarFacturaExistente(proformaId); // ← Pasar ID de proforma
 
         } else if (esFacturaPendiente && facturaId) {
             // ✅ COMPLETAR FACTURA EXISTENTE
@@ -2030,36 +2023,27 @@ async function completarFacturaExistente(facturaId) {
 
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
         
-        // ✅ DETERMINAR SI ES PROFORMA BASADO EN MÚLTIPLES FUENTES
-        const esProforma = window.proformaOriginalParaConversion ||
-            (facturaPendienteActual && facturaPendienteActual.numeroFactura && facturaPendienteActual.numeroFactura.startsWith('PROF')) ||
-            (facturaId && facturaId.toString().includes('PROF'));
-
-        console.log('📋 Es proforma detectada:', esProforma);
-        console.log('📋 Proforma original para conversión:', window.proformaOriginalParaConversion);
-        console.log('📋 Factura pendiente actual:', facturaPendienteActual);
-        // ✅ DATOS COMPLETOS Y VALIDADOS
+        // ✅ DATOS COMPLETOS Y VALIDADOS PARA EL CONTROLADOR (SOLO FACTURAS PENDIENTES)
         const datosCompletamiento = {
             facturaId: parseInt(facturaId), // Asegurar que sea número
             metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
-            detallesPago: esPagoMultiple ? detallesPagoActuales : null,
             forzarVerificacionStock: false,
-            esProforma: esProforma,
-            numeroFacturaGenerada: null,
-            facturaGeneradaId: null
+            esProforma: false // Esta función solo maneja facturas pendientes
         };
 
-        // ✅ SI ES CONVERSIÓN DE PROFORMA, AGREGAR INFORMACIÓN ADICIONAL
-        if (window.proformaOriginalParaConversion) {
-            datosCompletamiento.numeroFacturaGenerada = `FAC-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}-TEMP`;
-            datosCompletamiento.observaciones = (datosCompletamiento.observaciones || '') +
-                ` | Convertido desde proforma ${window.proformaOriginalParaConversion.numeroProforma}`;
-
-            console.log('📋 Datos adicionales de proforma agregados');
+        // ✅ AGREGAR DETALLES DE PAGO SOLO SI ES PAGO MÚLTIPLE
+        if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 0) {
+            datosCompletamiento.detallesPago = detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || '',
+                fechaPago: new Date().toISOString()
+            }));
         }
 
-        console.log('📋 Datos de completamiento finales:', datosCompletamiento);
+        console.log('📋 Datos de completamiento para factura pendiente:', datosCompletamiento);
 
         console.log('📋 Datos de completamiento:', datosCompletamiento);
 
@@ -2357,6 +2341,11 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
         console.log('🆕 === CREANDO NUEVO DOCUMENTO ===');
         console.log('🆕 Tipo de documento:', tipoDocumento);
         console.log('🆕 Es conversión de proforma:', !!window.proformaOriginalParaConversion);
+        
+        // ✅ NOTA: Esta función maneja:
+        // - Creación de facturas normales
+        // - Creación de proformas 
+        // - Conversión de proformas a facturas (marca automáticamente la proforma como "Facturada")
         // Preparar datos de la venta con método de pago seleccionado
         const metodoPagoSeleccionado = esPagoMultiple ? 'multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
         const configMetodo = esPagoMultiple ? CONFIGURACION_PRECIOS.efectivo : CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
@@ -2520,29 +2509,42 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             if (window.proformaOriginalParaConversion) {
                 console.log('🔄 === MARCANDO PROFORMA COMO FACTURADA ===');
                 console.log('🔄 Proforma original:', window.proformaOriginalParaConversion);
-                try {
-                    const responseConversion = await fetch(`/Facturacion/MarcarProformaComoFacturada/${window.proformaOriginalParaConversion.proformaId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({
-                            facturaGeneradaId: resultadoFactura.facturaId || resultadoFactura.data?.facturaId,
-                            numeroFacturaGenerada: resultadoFactura.numeroFactura
-                        }),
-                        credentials: 'include'
-                    });
-                    
-                    if (responseConversion.ok) {
-                        const resultadoConversion = await responseConversion.json();
-                        console.log('✅ Proforma marcada como facturada exitosamente:', resultadoConversion);
-                    } else {
-                        console.warn('⚠️ Error marcando proforma como facturada, pero la factura se creó correctamente');
+                
+                // ✅ VALIDAR QUE TENEMOS EL ID DE LA PROFORMA
+                const proformaId = window.proformaOriginalParaConversion.proformaId || window.proformaOriginalParaConversion.facturaId;
+                console.log('🔄 ID de proforma a marcar:', proformaId);
+                
+                if (!proformaId) {
+                    console.error('❌ No se pudo obtener el ID de la proforma para marcar como facturada');
+                } else {
+                    try {
+                        const responseConversion = await fetch(`/Facturacion/MarcarProformaFacturada/${proformaId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                facturaGeneradaId: resultadoFactura.facturaId || resultadoFactura.data?.facturaId,
+                                numeroFacturaGenerada: resultadoFactura.numeroFactura || resultadoFactura.data?.numeroFactura
+                            }),
+                            credentials: 'include'
+                        });
+                        
+                        const responseText = await responseConversion.text();
+                        console.log('🔄 Respuesta del servidor:', responseText);
+                        
+                        if (responseConversion.ok) {
+                            const resultadoConversion = JSON.parse(responseText);
+                            console.log('✅ Proforma marcada como facturada exitosamente:', resultadoConversion);
+                        } else {
+                            console.warn('⚠️ Error marcando proforma como facturada:', responseConversion.status, responseText);
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Error en conversión de proforma, pero la factura se creó:', error);
                     }
-                } catch (error) {
-                    console.warn('⚠️ Error en conversión de proforma, pero la factura se creó:', error);
                 }
+                
                 // Limpiar referencia
                 delete window.proformaOriginalParaConversion;
             }
@@ -3400,11 +3402,13 @@ async function convertirProformaAFactura(proformaEscapada) {
 
         // Guardar referencia a la proforma original para el proceso de facturación
         window.proformaOriginalParaConversion = {
-            proformaId: proforma.facturaId || proforma.id,
+            proformaId: proforma.facturaId || proforma.id || proforma.proformaId,
+            facturaId: proforma.facturaId || proforma.id || proforma.proformaId,
             numeroProforma: proforma.numeroFactura
         };
 
         console.log('📋 Referencia de proforma guardada:', window.proformaOriginalParaConversion);
+        console.log('📋 ID que se usará:', window.proformaOriginalParaConversion.proformaId);
 
         // ✅ MOSTRAR MODAL DE FINALIZAR VENTA DESPUÉS DE UN BREVE DELAY
         setTimeout(() => {
