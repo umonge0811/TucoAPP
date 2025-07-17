@@ -811,6 +811,31 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> MarcarProformaFacturada(int proformaId, [FromBody] object request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Marcando proforma como facturada: {ProformaId}", proformaId);
+
+                var response = await _facturacionService.MarcarProformaComoFacturadaAsync(proformaId, request, ObtenerTokenJWT());
+
+                if (response.success)
+                {
+                    return Ok(response.data);
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = response.message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando proforma como facturada");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
         public async Task<IActionResult> CompletarFactura([FromBody] CompletarFacturaWebRequest request)
         {
             try
@@ -855,7 +880,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("📋 Enviando datos de completamiento: {Datos}", 
                     System.Text.Json.JsonSerializer.Serialize(datosCompletamiento));
 
-                var resultado = await _facturacionService.CompletarFacturaAsync(request.FacturaId, datosCompletamiento, jwtToken);
+                var resultado = await _factururacionService.CompletarFacturaAsync(request.FacturaId, datosCompletamiento, jwtToken);
 
                 if (resultado.success)
                 {
@@ -1438,8 +1463,8 @@ namespace GestionLlantera.Web.Controllers
         public int FacturaId { get; set; }
     }
 
-   
-   
+
+
 
     public class RegistrarPendientesEntregaRequest
     {
