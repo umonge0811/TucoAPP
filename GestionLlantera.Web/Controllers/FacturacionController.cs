@@ -793,7 +793,7 @@ namespace GestionLlantera.Web.Controllers
                     var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogError("❌ Error del API verificando vencimiento: {StatusCode} - {Content}", 
                         response.StatusCode, errorContent);
-                    
+
                     return Json(new { 
                         success = false, 
                         message = "Error del servidor al verificar vencimiento" 
@@ -815,6 +815,20 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ VALIDACIÓN DE NULIDAD - AGREGAR ESTO
+                if (request == null)
+                {
+                    _logger.LogError("❌ Request llegó como null en CompletarFactura");
+                    return BadRequest(new { success = false, message = "Los datos de la solicitud son inválidos" });
+                }
+                // ✅ VALIDACIÓN ADICIONAL DE PROPIEDADES REQUERIDAS
+                if (request.FacturaId <= 0)
+                {
+                    _logger.LogError("❌ FacturaId inválido: {FacturaId}", request.FacturaId);
+                    return BadRequest(new { success = false, message = "ID de factura inválido" });
+                }
+                _logger.LogInformation("✅ Request válido recibido: {@Request}", request);
+
                 _logger.LogInformation("✅ Completando factura ID: {FacturaId}", request.FacturaId);
 
                 if (!await this.TienePermisoAsync("CompletarFacturas"))
@@ -1424,22 +1438,8 @@ namespace GestionLlantera.Web.Controllers
         public int FacturaId { get; set; }
     }
 
-    public class CompletarFacturaWebRequest
-    {
-        public int FacturaId { get; set; }
-        public string? MetodoPago { get; set; }
-        public List<DetallePagoWebDTO>? DetallesPago { get; set; }
-        public string? Observaciones { get; set; }
-    }
-
-    public class DetallePagoWebDTO
-    {
-        public string MetodoPago { get; set; } = string.Empty;
-        public decimal Monto { get; set; }
-        public string? Referencia { get; set; }
-        public string? Observaciones { get; set; }
-        public DateTime? FechaPago { get; set; }
-    }
+   
+   
 
     public class RegistrarPendientesEntregaRequest
     {

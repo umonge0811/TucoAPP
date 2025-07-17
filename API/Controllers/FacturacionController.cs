@@ -8,6 +8,7 @@ using tuco.Clases.Models;
 using Tuco.Clases.DTOs.Facturacion;
 using System.Linq;
 using System.Text.Json;
+using Tuco.Clases.Models;
 
 namespace API.Controllers
 {
@@ -570,7 +571,7 @@ namespace API.Controllers
 
         [HttpPut("facturas/{id}/completar")]
         [Authorize]
-        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaRequest? request = null)
+        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaWebRequest? request = null)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
                 "Solo usuarios con permiso 'CompletarFacturas' pueden completar facturas");
@@ -587,28 +588,61 @@ namespace API.Controllers
                 if (factura == null)
                     return NotFound(new { message = "Factura no encontrada" });
 
+                // ✅ MANEJO ESPECÍFICO PARA PROFORMAS
+                if (factura.TipoDocumento == "Proforma" || factura.NumeroFactura.StartsWith("PROF"))
+                {
+                    _logger.LogInformation("📋 Procesando completación de proforma: {NumeroFactura}", factura.NumeroFactura);
+
+                    if (factura.Estado == "Facturada")
+                        return BadRequest(new { message = "La proforma ya ha sido convertida a factura" });
+
+                    if (factura.Estado != "Vigente")
+                        return BadRequest(new { message = "Solo se pueden convertir proformas vigentes" });
+
+                    // Marcar proforma como facturada
+                    factura.Estado = "Facturada";
+                    factura.FechaActualizacion = DateTime.Now;
+
+                    // Agregar información de conversión en observaciones
+                    if (request != null)
+                    {
+                        if (!string.IsNullOrEmpty(request.NumeroFacturaGenerada))
+                        {
+                            factura.Observaciones = (factura.Observaciones ?? "") +
+                                $" | CONVERTIDA A FACTURA: {request.NumeroFacturaGenerada} el {DateTime.Now:dd/MM/yyyy HH:mm}";
+                        }
+
+                        if (!string.IsNullOrEmpty(request.Observaciones))
+                        {
+                            factura.Observaciones = (factura.Observaciones ?? "") + $" | {request.Observaciones}";
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("✅ Proforma {NumeroFactura} marcada como facturada exitosamente", factura.NumeroFactura);
+
+                    return Ok(new
+                    {
+                        message = "Proforma marcada como facturada exitosamente",
+                        numeroProforma = factura.NumeroFactura,
+                        numeroFacturaGenerada = request?.NumeroFacturaGenerada,
+                        estado = factura.Estado,
+                        timestamp = DateTime.Now
+                    });
+                }
+
+                // ✅ MANEJO NORMAL PARA FACTURAS (código existente)
                 if (factura.Estado == "Pagada")
                     return BadRequest(new { message = "La factura ya está completada" });
 
                 if (factura.Estado == "Anulada")
                     return BadRequest(new { message = "No se puede completar una factura anulada" });
 
-                if (factura.TipoDocumento == "Proforma")
-                    return BadRequest(new { message = "No se puede completar una proforma. Debe convertirse a factura primero" });
+                // Verificar stock (omitir para facturas pendientes)
+                var debeVerificarStock = factura.Estado != "Pendiente";
 
-                // ✅ Verificar stock antes de completar SOLO si es necesario
-                // Para facturas pendientes, omitir verificación de stock ya que se validó al crearla
-                var debeVerificarStock = true;
-
-                // Si la factura ya está en estado "Pendiente", significa que el stock ya se verificó
-                // al momento de crear la factura, así que no necesitamos verificarlo de nuevo
-                if (factura.Estado == "Pendiente")
-                {
-                    debeVerificarStock = false;
-                    _logger.LogInformation("⚠️ Omitiendo verificación de stock para factura pendiente {NumeroFactura} - Ya verificada al crearla", factura.NumeroFactura);
-                }
-
-                // También permitir forzar la verificación mediante un parámetro en el request
                 if (request?.ForzarVerificacionStock == true)
                 {
                     debeVerificarStock = true;
@@ -638,39 +672,33 @@ namespace API.Controllers
                         return BadRequest(new { message = "Error de stock", errores = erroresStock });
                     }
                 }
-                else
-                {
-                    _logger.LogInformation("✅ Verificación de stock omitida para factura pendiente");
-                }
 
-                // ✅ Actualizar inventario
+                // Actualizar inventario
                 foreach (var detalle in factura.DetallesFactura)
                 {
                     var producto = await _context.Productos.FindAsync(detalle.ProductoId);
                     if (producto != null)
                     {
-                        producto.CantidadEnInventario = Math.Max(0, 
+                        producto.CantidadEnInventario = Math.Max(0,
                             (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
                         producto.FechaUltimaActualizacion = DateTime.Now;
 
-                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades", 
+                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
                             producto.NombreProducto, detalle.Cantidad);
                     }
                 }
 
-                // ✅ NUEVO: Actualizar método de pago si se proporciona
+                // Actualizar método de pago si se proporciona
                 if (request != null && !string.IsNullOrEmpty(request.MetodoPago))
                 {
                     factura.MetodoPago = request.MetodoPago;
                     _logger.LogInformation("💳 Método de pago actualizado a: {MetodoPago}", request.MetodoPago);
 
-                    // ✅ NUEVO: Gestionar detalles de pago múltiples
+                    // Gestionar detalles de pago múltiples
                     if (request.DetallesPago != null && request.DetallesPago.Any())
                     {
-                        // Eliminar detalles de pago existentes
                         _context.DetallesPago.RemoveRange(factura.DetallesPago);
 
-                        // Agregar nuevos detalles de pago
                         foreach (var detallePago in request.DetallesPago)
                         {
                             var nuevoDetallePago = new DetallePago
@@ -685,17 +713,15 @@ namespace API.Controllers
                             _context.DetallesPago.Add(nuevoDetallePago);
                         }
 
-                        // Si hay múltiples métodos de pago, actualizar el método principal
                         if (request.DetallesPago.Count > 1)
                         {
                             factura.MetodoPago = "Multiple";
-                            _logger.LogInformation("💳 Factura configurada con pago múltiple: {CantidadMetodos} métodos", 
+                            _logger.LogInformation("💳 Factura configurada con pago múltiple: {CantidadMetodos} métodos",
                                 request.DetallesPago.Count);
                         }
                     }
                     else if (!string.IsNullOrEmpty(request.MetodoPago) && request.MetodoPago != "Multiple")
                     {
-                        // Si solo hay un método de pago, crear un detalle único
                         if (!factura.DetallesPago.Any())
                         {
                             var pagoUnico = new DetallePago
@@ -710,18 +736,24 @@ namespace API.Controllers
                     }
                 }
 
-                // ✅ Completar factura
+                // Completar factura
                 factura.Estado = "Pagada";
                 factura.FechaActualizacion = DateTime.Now;
+
+                if (request != null && !string.IsNullOrEmpty(request.Observaciones))
+                {
+                    factura.Observaciones = (factura.Observaciones ?? "") + $" | {request.Observaciones}";
+                }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("✅ Factura {NumeroFactura} completada exitosamente por usuario {Usuario}", 
+                _logger.LogInformation("✅ Factura {NumeroFactura} completada exitosamente por usuario {Usuario}",
                     factura.NumeroFactura, User.Identity?.Name);
 
-                return Ok(new { 
-                    message = "Factura completada exitosamente", 
+                return Ok(new
+                {
+                    message = "Factura completada exitosamente",
                     numeroFactura = factura.NumeroFactura,
                     estado = factura.Estado,
                     metodoPago = factura.MetodoPago,
@@ -735,6 +767,7 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al completar factura" });
             }
         }
+
 
         [HttpGet("facturas/pendientes")]
         [Authorize]
@@ -1782,6 +1815,7 @@ namespace API.Controllers
                 var proformasVigentes = estadisticas.FirstOrDefault(e => e.Estado == "Vigente")?.Cantidad ?? 0;
                 var proformasExpiradas = estadisticas.FirstOrDefault(e => e.Estado == "Expirada")?.Cantidad ?? 0;
                 var proformasConvertidas = estadisticas.FirstOrDefault(e => e.Estado == "Convertida")?.Cantidad ?? 0;
+                var proformasFacturadas = estadisticas.FirstOrDefault(e => e.Estado == "Facturada")?.Cantidad ?? 0;
 
                 // Obtener proformas que van a vencer en los próximos 7 días
                 var fechaLimite = DateTime.Now.AddDays(7);
@@ -1800,6 +1834,7 @@ namespace API.Controllers
                         vigentes = proformasVigentes,
                         expiradas = proformasExpiradas,
                         convertidas = proformasConvertidas,
+                        facturadas = proformasFacturadas,
                         porVencerEn7Dias = proformasPorVencer,
                         total = estadisticas.Sum(e => e.Cantidad)
                     },
@@ -1829,6 +1864,59 @@ namespace API.Controllers
             }
 
             return proximaVerificacion;
+        }
+
+        [HttpPut("marcar-proforma-facturada/{proformaId}")]
+        [Authorize]
+        public async Task<IActionResult> MarcarProformaComoFacturada(int proformaId, [FromBody] ConvertirProformaRequest request)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Crear Facturas",
+                "Solo usuarios con permiso 'Crear Facturas' pueden convertir proformas");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            try
+            {
+                var proforma = await _context.Facturas.FindAsync(proformaId);
+                if (proforma == null)
+                    return NotFound(new { success = false, message = "Proforma no encontrada" });
+
+                if (proforma.TipoDocumento != "Proforma")
+                    return BadRequest(new { success = false, message = "El documento no es una proforma" });
+
+                if (proforma.Estado != "Vigente")
+                    return BadRequest(new { success = false, message = "Solo se pueden convertir proformas vigentes" });
+
+                // Marcar como facturada
+                proforma.Estado = "Facturada";
+                proforma.FechaActualizacion = DateTime.Now;
+                proforma.Observaciones = (proforma.Observaciones ?? "") + 
+                    $" | CONVERTIDA A FACTURA: {request.NumeroFacturaGenerada} el {DateTime.Now:dd/MM/yyyy HH:mm}";
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("🔄 Proforma {NumeroProforma} marcada como facturada (conversión a factura {NumeroFactura})", 
+                    proforma.NumeroFactura, request.NumeroFacturaGenerada);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Proforma marcada como facturada exitosamente",
+                    numeroProforma = proforma.NumeroFactura,
+                    numeroFacturaGenerada = request.NumeroFacturaGenerada,
+                    estadoAnterior = "Vigente",
+                    estadoNuevo = "Facturada",
+                    fechaActualizacion = proforma.FechaActualizacion,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando proforma como facturada: {ProformaId}", proformaId);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno al marcar proforma como facturada" 
+                });
+            }
         }
 
         [HttpPost("verificar-vencimiento-proformas")]
@@ -1968,5 +2056,11 @@ namespace API.Controllers
         public int CantidadAEntregar { get; set; }
         public int UsuarioEntrega { get; set; }
         public string? ObservacionesEntrega { get; set; }
+    }
+
+    public class ConvertirProformaRequest
+    {
+        public int? FacturaGeneradaId { get; set; }
+        public string? NumeroFacturaGenerada { get; set; }
     }
 }
