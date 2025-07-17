@@ -2518,17 +2518,12 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                     console.error('❌ No se pudo obtener el ID de la proforma para marcar como facturada');
                 } else {
                     try {
-                        const responseConversion = await fetch(`/Facturacion/MarcarProformaFacturada/${proformaId}`, {
+                        const responseConversion = await fetch(`/Facturacion/MarcarProformaFacturada?proformaId=${proformaId}`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest'
                             },
-                            body: JSON.stringify({
-                                facturaGeneradaId: resultadoFactura.facturaId || resultadoFactura.data?.facturaId,
-                                numeroFacturaGenerada: resultadoFactura.numeroFactura || resultadoFactura.data?.numeroFactura
-                            }),
-                            credentials: 'include'
+                            body: JSON.stringify({})
                         });
                         
                         const responseText = await responseConversion.text();

@@ -829,8 +829,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPut]
-        [Route("MarcarProformaFacturada/{proformaId}")]
-        public async Task<IActionResult> MarcarProformaFacturada(int proformaId, [FromBody] object request)
+        public async Task<IActionResult> MarcarProformaFacturada([FromQuery] int proformaId, [FromBody] object request)
         {
             try
             {
