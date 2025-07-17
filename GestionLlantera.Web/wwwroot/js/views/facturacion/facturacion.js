@@ -2038,23 +2038,32 @@ async function completarFacturaExistente(facturaId) {
         console.log('📋 Es proforma detectada:', esProforma);
         console.log('📋 Proforma original para conversión:', window.proformaOriginalParaConversion);
         console.log('📋 Factura pendiente actual:', facturaPendienteActual);
-        // ✅ DATOS COMPLETOS Y VALIDADOS
+        // ✅ DATOS COMPLETOS Y VALIDADOS PARA EL CONTROLADOR
         const datosCompletamiento = {
             facturaId: parseInt(facturaId), // Asegurar que sea número
             metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
-            detallesPago: esPagoMultiple ? detallesPagoActuales : null,
             forzarVerificacionStock: false,
-            esProforma: esProforma,
-            numeroFacturaGenerada: null,
-            facturaGeneradaId: null
+            esProforma: esProforma
         };
+
+        // ✅ AGREGAR DETALLES DE PAGO SOLO SI ES PAGO MÚLTIPLE
+        if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 0) {
+            datosCompletamiento.detallesPago = detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || '',
+                fechaPago: new Date().toISOString()
+            }));
+        }
 
         // ✅ SI ES CONVERSIÓN DE PROFORMA, AGREGAR INFORMACIÓN ADICIONAL
         if (window.proformaOriginalParaConversion) {
             datosCompletamiento.numeroFacturaGenerada = `FAC-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}-TEMP`;
             datosCompletamiento.observaciones = (datosCompletamiento.observaciones || '') +
                 ` | Convertido desde proforma ${window.proformaOriginalParaConversion.numeroProforma}`;
+            datosCompletamiento.facturaGeneradaId = null;
 
             console.log('📋 Datos adicionales de proforma agregados');
         }
