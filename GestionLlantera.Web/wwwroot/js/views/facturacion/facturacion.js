@@ -2510,7 +2510,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                 console.log('🔄 === MARCANDO PROFORMA COMO FACTURADA ===');
                 console.log('🔄 Proforma original:', window.proformaOriginalParaConversion);
                 try {
-                    const responseConversion = await fetch(`/Facturacion/MarcarProformaComoFacturada/${window.proformaOriginalParaConversion.proformaId}`, {
+                    const responseConversion = await fetch(`/Facturacion/MarcarProformaFacturada/${window.proformaOriginalParaConversion.proformaId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
