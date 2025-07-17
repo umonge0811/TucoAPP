@@ -2581,11 +2581,13 @@ async function abrirProformas() {
         const modal = new bootstrap.Modal(document.getElementById('proformasModal'));
         modal.show();
 
-        // Configurar eventos del modal
-        configurarEventosModalProformas();
+        // Inicializar filtros usando el módulo dedicado
+        if (typeof inicializarFiltrosProformas === 'function') {
+            inicializarFiltrosProformas();
+        }
 
-        // Cargar proformas iniciales
-        await cargarProformas();
+        // Cargar proformas iniciales usando función básica
+        await cargarProformasBasico();
 
     } catch (error) {
         console.error('❌ Error abriendo modal de proformas:', error);
@@ -2594,45 +2596,21 @@ async function abrirProformas() {
 }
 
 /**
- * ✅ FUNCIÓN: Configurar eventos del modal de proformas
+ * ✅ FUNCIÓN: Cargar proformas básico (sin filtros)
  */
-function configurarEventosModalProformas() {
-    // Limpiar eventos anteriores
-    $('#btnFiltrarProformas').off('click.proformas');
-    $('#filtroEstadoProforma').off('change.proformas');
-
-    // Configurar filtro
-    $('#btnFiltrarProformas').on('click.proformas', async function() {
-        await cargarProformas();
-    });
-
-    $('#filtroEstadoProforma').on('change.proformas', async function() {
-        await cargarProformas();
-    });
-}
-
-/**
- * ✅ FUNCIÓN: Cargar proformas desde el servidor
- */
-async function cargarProformas(pagina = 1) {
+async function cargarProformasBasico(pagina = 1) {
     try {
-        console.log('📋 === CARGANDO PROFORMAS ===');
-        console.log('📋 Página:', pagina);
+        console.log('📋 === CARGANDO PROFORMAS BÁSICO ===');
 
         // Mostrar loading
         $('#proformasLoading').show();
         $('#proformasContent').hide();
         $('#proformasEmpty').hide();
 
-        const estado = $('#filtroEstadoProforma').val();
         const params = new URLSearchParams({
             pagina: pagina,
             tamano: 20
         });
-
-        if (estado) {
-            params.append('estado', estado);
-        }
 
         const response = await fetch(`/Facturacion/ObtenerProformas?${params}`, {
             method: 'GET',
@@ -2864,7 +2842,13 @@ function mostrarPaginacionProformas(paginaActual, totalPaginas) {
         e.preventDefault();
         if (!$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
             const pagina = parseInt($(this).data('pagina'));
-            cargarProformas(pagina);
+            
+            // Usar función de filtros si está disponible, sino usar función básica
+            if (typeof cambiarPaginaProformas === 'function') {
+                cambiarPaginaProformas(pagina);
+            } else {
+                cargarProformasBasico(pagina);
+            }
         }
     });
 
