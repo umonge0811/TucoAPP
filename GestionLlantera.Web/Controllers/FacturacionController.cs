@@ -911,7 +911,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("📋 Enviando datos: {Datos}",
                     System.Text.Json.JsonSerializer.Serialize(datosCompletamiento));
 
-                var resultado = await _factururacionService.CompletarFacturaAsync(request.FacturaId, datosCompletamiento, jwtToken);
+                var resultado = await _facturacionService.CompletarFacturaAsync(request.FacturaId, datosCompletamiento, jwtToken);
 
 
                 if (resultado.success)
