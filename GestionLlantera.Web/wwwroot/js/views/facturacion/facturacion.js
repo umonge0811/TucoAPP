@@ -1935,49 +1935,21 @@ function validarPagosMultiples() {
     return true;
 }
 
-async function procesarVentaFinal(numeroReferencia = null) {
+async function procesarVentaFinal() {
     const $btnFinalizar = $('#btnConfirmarVenta');
 
     try {
         $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
 
-        console.log('🔍 === DETERMINANDO TIPO DE OPERACIÓN ===');
-        console.log('🔍 Número de referencia recibido:', numeroReferencia);
-
-        const esConversionProforma = numeroReferencia && numeroReferencia.startsWith('PROF') ||
-            window.proformaOriginalParaConversion;
+        console.log('🔍 === PROCESANDO VENTA FINAL ===');
 
         const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
         const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
 
-        console.log('🔍 Es conversión de proforma:', esConversionProforma);
         console.log('🔍 Es factura pendiente:', esFacturaPendiente);
         console.log('🔍 Factura ID:', facturaId);
 
-        if (esConversionProforma) {
-            // ✅ CONVERSIÓN DE PROFORMA A FACTURA
-            console.log('🔄 Procesando conversión de proforma');
-
-            // Validaciones específicas para conversión de proforma
-            if (!productosEnVenta || productosEnVenta.length === 0) {
-                throw new Error('No hay productos para convertir la proforma');
-            }
-
-            if (!clienteSeleccionado) {
-                throw new Error('No se ha seleccionado un cliente para la conversión');
-            }
-
-            if (!window.proformaOriginalParaConversion || !window.proformaOriginalParaConversion.proformaId) {
-                throw new Error('No se pudo obtener el ID de la proforma para completar');
-            }
-
-            console.log('🔄 ID de proforma:', window.proformaOriginalParaConversion.proformaId);
-
-            // ✅ SOLO CREAR NUEVA FACTURA - La función crearNuevaFactura() maneja internamente 
-            // el marcado de la proforma como "Facturada"
-            await crearNuevaFactura('Factura');
-
-        } else if (esFacturaPendiente && facturaId) {
+        if (esFacturaPendiente && facturaId) {
             // ✅ COMPLETAR FACTURA EXISTENTE
             console.log('✅ Completando factura pendiente ID:', facturaId);
             await completarFacturaExistente(facturaId);
