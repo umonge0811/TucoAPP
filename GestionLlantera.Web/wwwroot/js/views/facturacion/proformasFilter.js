@@ -1,13 +1,16 @@
+
 // ===== MÓDULO DE FILTROS PARA PROFORMAS =====
 
-let filtroActual = {
+let filtroProformas = {
     busqueda: '',
     estado: 'todos',
     pagina: 1,
     tamano: 20
 };
 
-let timeoutBusqueda = null;
+let timeoutBusquedaProformas = null;
+let busquedaProformasEnProceso = false;
+let ultimaBusquedaProformas = '';
 
 /**
  * Inicializar filtros de proformas
@@ -18,21 +21,21 @@ function inicializarFiltrosProformas() {
     // Configurar evento de búsqueda con debounce
     const $inputBusqueda = $('#busquedaProformas');
     if ($inputBusqueda.length) {
-        $inputBusqueda.off('input.proformasFilter').on('input.proformasFilter', function() {
+        $inputBusqueda.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
             const termino = $(this).val().trim();
-            console.log('🔍 Término de búsqueda:', termino);
+            console.log('🔍 Término de búsqueda proformas:', termino);
 
             // Limpiar timeout anterior
-            if (timeoutBusqueda) {
-                clearTimeout(timeoutBusqueda);
+            if (timeoutBusquedaProformas) {
+                clearTimeout(timeoutBusquedaProformas);
             }
 
-            // Aplicar filtro después de 500ms
-            timeoutBusqueda = setTimeout(() => {
-                filtroActual.busqueda = termino;
-                filtroActual.pagina = 1; // Resetear a primera página
+            // Aplicar filtro después de 300ms (más rápido que el original)
+            timeoutBusquedaProformas = setTimeout(() => {
+                filtroProformas.busqueda = termino;
+                filtroProformas.pagina = 1;
                 aplicarFiltrosProformas();
-            }, 500);
+            }, 300);
         });
         console.log('✅ Evento de búsqueda configurado');
     }
@@ -44,8 +47,8 @@ function inicializarFiltrosProformas() {
             const estado = $(this).val();
             console.log('🔍 Estado seleccionado:', estado);
 
-            filtroActual.estado = estado;
-            filtroActual.pagina = 1; // Resetear a primera página
+            filtroProformas.estado = estado;
+            filtroProformas.pagina = 1;
             aplicarFiltrosProformas();
         });
         console.log('✅ Evento de estado configurado');
@@ -56,6 +59,7 @@ function inicializarFiltrosProformas() {
     if ($btnLimpiar.length) {
         $btnLimpiar.off('click.proformasFilter').on('click.proformasFilter', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             limpiarFiltrosProformas();
         });
         console.log('✅ Botón limpiar configurado');
@@ -68,37 +72,52 @@ function inicializarFiltrosProformas() {
  * Aplicar filtros y cargar proformas
  */
 async function aplicarFiltrosProformas() {
+    // Prevenir múltiples llamadas simultáneas
+    if (busquedaProformasEnProceso) {
+        console.log('⏸️ Búsqueda de proformas ya en proceso, omitiendo llamada duplicada');
+        return;
+    }
+
+    // Prevenir búsquedas duplicadas del mismo término
+    const terminoActual = filtroProformas.busqueda + '|' + filtroProformas.estado;
+    if (terminoActual === ultimaBusquedaProformas) {
+        console.log('⏸️ Búsqueda duplicada del mismo filtro omitida:', terminoActual);
+        return;
+    }
+
     try {
         console.log('🔍 === APLICANDO FILTROS DE PROFORMAS ===');
-        console.log('🔍 Filtro actual:', filtroActual);
+        console.log('🔍 Filtro actual:', filtroProformas);
+
+        busquedaProformasEnProceso = true;
+        ultimaBusquedaProformas = terminoActual;
 
         // Mostrar loading
         $('#proformasLoading').show();
         $('#proformasContent').hide();
         $('#proformasEmpty').hide();
 
-        // Construir parámetros
-        const params = new URLSearchParams({
-            pagina: filtroActual.pagina,
-            tamano: filtroActual.tamano
-        });
+        // Construir URL con parámetros
+        const params = new URLSearchParams();
+        params.append('pagina', filtroProformas.pagina);
+        params.append('tamano', filtroProformas.tamano);
 
         // Agregar estado si no es "todos"
-        if (filtroActual.estado && filtroActual.estado !== 'todos') {
-            params.append('estado', filtroActual.estado);
-            console.log('🔍 Agregando filtro estado:', filtroActual.estado);
+        if (filtroProformas.estado && filtroProformas.estado !== 'todos') {
+            params.append('estado', filtroProformas.estado);
+            console.log('🔍 Agregando filtro estado:', filtroProformas.estado);
         }
 
         // Agregar búsqueda si existe
-        if (filtroActual.busqueda && filtroActual.busqueda.trim() !== '') {
-            params.append('busqueda', filtroActual.busqueda.trim());
-            console.log('🔍 Agregando filtro búsqueda:', filtroActual.busqueda);
+        if (filtroProformas.busqueda && filtroProformas.busqueda.trim() !== '') {
+            params.append('busqueda', filtroProformas.busqueda.trim());
+            console.log('🔍 Agregando filtro búsqueda:', filtroProformas.busqueda);
         }
 
         const urlCompleta = `/Facturacion/ObtenerProformas?${params.toString()}`;
         console.log('📋 URL completa de consulta:', urlCompleta);
 
-        // Realizar petición
+        // Realizar petición AJAX usando el mismo patrón que facturación
         const response = await fetch(urlCompleta, {
             method: 'GET',
             headers: {
@@ -111,44 +130,187 @@ async function aplicarFiltrosProformas() {
         console.log('📋 Respuesta recibida, status:', response.status);
 
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
         }
 
         const resultado = await response.json();
         console.log('📋 Datos recibidos:', resultado);
 
-        if (resultado.success && resultado.proformas && resultado.proformas.length > 0) {
-            // Verificar si la función mostrarProformas existe
-            if (typeof window.mostrarProformas === 'function') {
-                window.mostrarProformas(resultado.proformas);
-            } else if (typeof mostrarProformas === 'function') {
-                mostrarProformas(resultado.proformas);
-            } else {
-                console.error('❌ Función mostrarProformas no encontrada');
-                mostrarProformasManual(resultado.proformas);
+        // Procesar resultado
+        if (resultado.success) {
+            let proformas = null;
+
+            // Buscar proformas en diferentes propiedades del resultado
+            if (resultado.proformas && Array.isArray(resultado.proformas)) {
+                proformas = resultado.proformas;
+            } else if (resultado.data && Array.isArray(resultado.data)) {
+                proformas = resultado.data;
+            } else if (Array.isArray(resultado)) {
+                proformas = resultado;
             }
 
-            $('#proformasContent').show();
+            if (proformas && proformas.length > 0) {
+                console.log('✅ Proformas encontradas:', proformas.length);
+                mostrarProformasEnTabla(proformas);
+                $('#proformasContent').show();
 
-            // Mostrar paginación si existe la función
-            if (typeof window.mostrarPaginacionProformas === 'function') {
-                window.mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
-            } else if (typeof mostrarPaginacionProformas === 'function') {
-                mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
+                // Mostrar paginación si hay datos de paginación
+                if (resultado.totalPaginas > 1) {
+                    mostrarPaginacionProformas(resultado.pagina || filtroProformas.pagina, resultado.totalPaginas);
+                }
+            } else {
+                console.log('ℹ️ No se encontraron proformas');
+                mostrarProformasVacias();
             }
         } else {
+            console.log('❌ Respuesta no exitosa:', resultado.message);
             mostrarProformasVacias();
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Error', resultado.message || 'Error al cargar proformas', 'warning');
+            }
         }
 
     } catch (error) {
-        console.error('❌ Error aplicando filtros:', error);
+        console.error('❌ Error aplicando filtros de proformas:', error);
         mostrarProformasVacias();
         if (typeof mostrarToast === 'function') {
             mostrarToast('Error', 'Error al cargar proformas: ' + error.message, 'danger');
         }
     } finally {
+        busquedaProformasEnProceso = false;
         $('#proformasLoading').hide();
     }
+}
+
+/**
+ * Mostrar proformas en la tabla
+ */
+function mostrarProformasEnTabla(proformas) {
+    console.log('📋 === MOSTRANDO PROFORMAS EN TABLA ===');
+    console.log('📋 Proformas a mostrar:', proformas.length);
+
+    const tbody = $('#proformasTableBody');
+    if (tbody.length === 0) {
+        console.error('❌ No se encontró el tbody de proformas');
+        return;
+    }
+
+    tbody.empty();
+
+    proformas.forEach(proforma => {
+        const fecha = new Date(proforma.fechaFactura || proforma.fechaCreacion).toLocaleDateString('es-CR');
+        let estadoBadge = '';
+
+        // Asignar badge según el estado
+        switch (proforma.estado) {
+            case 'Vigente':
+                estadoBadge = '<span class="badge bg-success">Vigente</span>';
+                break;
+            case 'Facturada':
+                estadoBadge = '<span class="badge bg-primary">Facturada</span>';
+                break;
+            case 'Expirada':
+                estadoBadge = '<span class="badge bg-danger">Expirada</span>';
+                break;
+            default:
+                estadoBadge = `<span class="badge bg-secondary">${proforma.estado || 'Sin Estado'}</span>`;
+        }
+
+        const fila = `
+            <tr data-proforma-id="${proforma.facturaId || proforma.id}">
+                <td>
+                    <strong>${proforma.numeroFactura || 'N/A'}</strong><br>
+                    <small class="text-muted">${proforma.tipoDocumento || 'Proforma'}</small>
+                </td>
+                <td>
+                    <strong>${proforma.nombreCliente || proforma.clienteNombre || 'Cliente General'}</strong><br>
+                    <small class="text-muted">${proforma.emailCliente || proforma.email || ''}</small>
+                </td>
+                <td>
+                    <strong>${fecha}</strong><br>
+                    <small class="text-muted">Por: ${proforma.usuarioCreador || proforma.nombreUsuario || 'Sistema'}</small>
+                </td>
+                <td>
+                    <strong class="text-success">₡${Number(proforma.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong>
+                </td>
+                <td>${estadoBadge}</td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-info" title="Ver detalles" onclick="verDetalleProforma(${proforma.facturaId || proforma.id})">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" title="Imprimir" onclick="imprimirProforma(${proforma.facturaId || proforma.id})">
+                            <i class="bi bi-printer"></i>
+                        </button>
+                        ${proforma.estado === 'Vigente' ? `
+                        <button type="button" class="btn btn-outline-success" title="Convertir a Factura" onclick="convertirProformaAFactura(${proforma.facturaId || proforma.id})">
+                            <i class="bi bi-arrow-up-circle"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        tbody.append(fila);
+    });
+
+    console.log('✅ Proformas mostradas en tabla');
+}
+
+/**
+ * Mostrar paginación
+ */
+function mostrarPaginacionProformas(paginaActual, totalPaginas) {
+    console.log('📄 === MOSTRANDO PAGINACIÓN DE PROFORMAS ===');
+    console.log('📄 Página actual:', paginaActual, 'Total páginas:', totalPaginas);
+
+    const paginacion = $('#paginacionProformas');
+    if (paginacion.length === 0 || totalPaginas <= 1) {
+        return;
+    }
+
+    let html = '<ul class="pagination justify-content-center">';
+
+    // Botón anterior
+    if (paginaActual > 1) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActual - 1})">Anterior</a>
+                </li>`;
+    }
+
+    // Páginas
+    for (let i = 1; i <= totalPaginas; i++) {
+        if (i === paginaActual) {
+            html += `<li class="page-item active">
+                        <span class="page-link">${i}</span>
+                    </li>`;
+        } else {
+            html += `<li class="page-item">
+                        <a class="page-link" href="#" onclick="cambiarPaginaProformas(${i})">${i}</a>
+                    </li>`;
+        }
+    }
+
+    // Botón siguiente
+    if (paginaActual < totalPaginas) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActual + 1})">Siguiente</a>
+                </li>`;
+    }
+
+    html += '</ul>';
+    paginacion.html(html).show();
+}
+
+/**
+ * Mostrar mensaje cuando no hay proformas
+ */
+function mostrarProformasVacias() {
+    console.log('ℹ️ Mostrando mensaje de proformas vacías');
+    $('#proformasEmpty').show();
+    $('#proformasContent').hide();
+    $('#paginacionProformas').hide();
 }
 
 /**
@@ -158,7 +320,7 @@ function limpiarFiltrosProformas() {
     console.log('🧹 === LIMPIANDO FILTROS DE PROFORMAS ===');
 
     // Resetear filtros
-    filtroActual = {
+    filtroProformas = {
         busqueda: '',
         estado: 'todos',
         pagina: 1,
@@ -168,6 +330,10 @@ function limpiarFiltrosProformas() {
     // Limpiar campos del formulario
     $('#busquedaProformas').val('');
     $('#estadoProformas').val('todos');
+
+    // Limpiar variables de control
+    ultimaBusquedaProformas = '';
+    busquedaProformasEnProceso = false;
 
     // Recargar proformas
     aplicarFiltrosProformas();
@@ -183,94 +349,18 @@ function cambiarPaginaProformas(nuevaPagina) {
     console.log('📄 Nueva página:', nuevaPagina);
 
     if (nuevaPagina > 0) {
-        filtroActual.pagina = nuevaPagina;
+        filtroProformas.pagina = nuevaPagina;
         aplicarFiltrosProformas();
     }
 }
 
 /**
- * Cargar proformas (función alternativa para compatibilidad)
+ * Cargar proformas (función de compatibilidad)
  */
 async function cargarProformas(pagina = 1) {
     console.log('📋 === FUNCIÓN COMPATIBILIDAD: cargarProformas ===');
-    filtroActual.pagina = pagina;
+    filtroProformas.pagina = pagina;
     await aplicarFiltrosProformas();
-}
-
-/**
- * FUNCIÓN AUXILIAR: Mostrar proformas manualmente si no existe la función principal
- */
-function mostrarProformasManual(proformas) {
-    console.log('📋 Usando función manual para mostrar proformas');
-
-    const tbody = $('#proformasTableBody');
-    if (tbody.length === 0) {
-        console.error('❌ No se encontró el tbody de proformas');
-        return;
-    }
-
-    tbody.empty();
-
-    proformas.forEach(proforma => {
-        const fecha = new Date(proforma.fechaFactura).toLocaleDateString('es-CR');
-        let estadoBadge = '';
-
-        switch (proforma.estado) {
-            case 'Vigente':
-                estadoBadge = '<span class="badge bg-success">Vigente</span>';
-                break;
-            case 'Facturada':
-                estadoBadge = '<span class="badge bg-primary">Facturada</span>';
-                break;
-            case 'Expirada':
-                estadoBadge = '<span class="badge bg-danger">Expirada</span>';
-                break;
-            default:
-                estadoBadge = `<span class="badge bg-secondary">${proforma.estado}</span>`;
-        }
-
-        const fila = `
-            <tr>
-                <td>
-                    <strong>${proforma.numeroFactura}</strong><br>
-                    <small class="text-muted">${proforma.tipoDocumento}</small>
-                </td>
-                <td>
-                    <strong>${proforma.nombreCliente || 'Cliente General'}</strong><br>
-                    <small class="text-muted">${proforma.emailCliente || ''}</small>
-                </td>
-                <td>
-                    <strong>${fecha}</strong><br>
-                    <small class="text-muted">Por: ${proforma.usuarioCreador || 'Sistema'}</small>
-                </td>
-                <td>
-                    <strong class="text-success">₡${Number(proforma.total).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong>
-                </td>
-                <td>${estadoBadge}</td>
-                <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-info" title="Ver detalles">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" title="Imprimir">
-                            <i class="bi bi-printer"></i>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-
-        tbody.append(fila);
-    });
-}
-
-/**
- * Mostrar proformas vacias
- */
-function mostrarProformasVacias() {
-    console.log('ℹ️ No se encontraron proformas');
-    $('#proformasEmpty').show();
-    $('#proformasContent').hide();
 }
 
 // Exportar funciones para uso global
@@ -279,5 +369,6 @@ window.aplicarFiltrosProformas = aplicarFiltrosProformas;
 window.limpiarFiltrosProformas = limpiarFiltrosProformas;
 window.cambiarPaginaProformas = cambiarPaginaProformas;
 window.cargarProformas = cargarProformas;
+window.mostrarProformasEnTabla = mostrarProformasEnTabla;
 
-console.log('📋 Módulo de filtros de proformas cargado');
+console.log('📋 Módulo de filtros de proformas cargado correctamente');
