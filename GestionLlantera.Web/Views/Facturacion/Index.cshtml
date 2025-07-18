@@ -367,7 +367,7 @@ The code has been updated to correct the states of the filter and the functional
                     <div class="card-body">
                         <div class="row g-3">
                             <!-- Búsqueda general -->
-                            <div class="col-md-6">
+                            <div class="col-md-8">
                                 <label for="busquedaProformas" class="form-label">
                                     <i class="bi bi-search me-1"></i>Búsqueda General:
                                 </label>
@@ -375,7 +375,7 @@ The code has been updated to correct the states of the filter and the functional
                                     <input type="text" 
                                            id="busquedaProformas" 
                                            class="form-control" 
-                                           placeholder="Buscar por número, cliente, fecha..."
+                                           placeholder="Escriba para buscar..."
                                            autocomplete="off">
                                     <button type="button" 
                                             id="btnBuscarProformas" 
@@ -384,12 +384,14 @@ The code has been updated to correct the states of the filter and the functional
                                         <i class="bi bi-search"></i>
                                     </button>
                                 </div>
-                                <small class="text-muted">Busca en número de proforma, nombre del cliente, fecha de creación</small>
+                                <small class="text-muted">Busca mientras escribes en número, cliente o fecha</small>
                             </div>
 
                             <!-- Filtro por estado -->
-                            <div class="col-md-6">
-                                <label for="filtroEstadoProforma" class="form-label">📊 Estado:</label>
+                            <div class="col-md-4">
+                                <label for="filtroEstadoProforma" class="form-label">
+                                    <i class="bi bi-funnel me-1"></i>Estado:
+                                </label>
                                 <select id="filtroEstadoProforma" class="form-select">
                                     <option value="">Todos los estados</option>
                                     <option value="Facturada">Facturada</option>
@@ -397,11 +399,17 @@ The code has been updated to correct the states of the filter and the functional
                                     <option value="Expirada">Expirada</option>
                                 </select>
                             </div>
-
-                            <div class="col-12 mt-2">
+                        </div>
+                        
+                        <div class="row mt-2">
+                            <div class="col-12">
                                 <button type="button" id="btnLimpiarFiltrosProformas" class="btn btn-outline-secondary btn-sm">
-                                    <i class="bi bi-eraser"></i> Limpiar
+                                    <i class="bi bi-eraser me-1"></i>Limpiar Filtros
                                 </button>
+                                <small class="text-muted ms-3">
+                                    <i class="bi bi-info-circle"></i>
+                                    El filtrado se actualiza automáticamente mientras escribes
+                                </small>
                             </div>
                         </div>
 
