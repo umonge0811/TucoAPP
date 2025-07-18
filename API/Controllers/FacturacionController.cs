@@ -845,25 +845,52 @@ namespace API.Controllers
         [Authorize]
         public async Task<ActionResult<IEnumerable<FacturaDTO>>> ObtenerProformas(
             [FromQuery] string? estado = null,
+            [FromQuery] string? busquedaGeneral = null,
+            [FromQuery] string? busqueda = null,
             [FromQuery] int pagina = 1,
             [FromQuery] int tamano = 20)
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo proformas");
+                _logger.LogInformation("📋 === OBTENIENDO PROFORMAS CON FILTROS ===");
+                _logger.LogInformation("📋 Parámetros recibidos: Estado={Estado}, BusquedaGeneral={BusquedaGeneral}, Busqueda={Busqueda}, Página={Pagina}, Tamaño={Tamano}", 
+                    estado, busquedaGeneral, busqueda, pagina, tamano);
 
                 var query = _context.Facturas
                     .Include(f => f.UsuarioCreador)
                     .Include(f => f.DetallesFactura)
                     .Where(f => f.TipoDocumento == "Proforma");
 
-                // Aplicar filtro de estado si se proporciona
-                if (!string.IsNullOrWhiteSpace(estado))
+                var totalSinFiltros = await query.CountAsync();
+                _logger.LogInformation("📋 Total de proformas sin filtros: {Total}", totalSinFiltros);
+
+                // ✅ APLICAR FILTRO DE ESTADO
+                if (!string.IsNullOrWhiteSpace(estado) && estado != "todos")
                 {
                     query = query.Where(f => f.Estado == estado);
+                    var totalConEstado = await query.CountAsync();
+                    _logger.LogInformation("📋 Después de filtro estado '{Estado}': {Total} proformas", estado, totalConEstado);
+                }
+
+                // ✅ APLICAR FILTRO DE BÚSQUEDA (busquedaGeneral tiene prioridad sobre busqueda)
+                var terminoBusqueda = !string.IsNullOrWhiteSpace(busquedaGeneral) ? busquedaGeneral : busqueda;
+                if (!string.IsNullOrWhiteSpace(terminoBusqueda))
+                {
+                    var termino = terminoBusqueda.Trim().ToLower();
+                    query = query.Where(f => 
+                        f.NumeroFactura.ToLower().Contains(termino) ||
+                        f.NombreCliente.ToLower().Contains(termino) ||
+                        (f.IdentificacionCliente != null && f.IdentificacionCliente.ToLower().Contains(termino)) ||
+                        (f.TelefonoCliente != null && f.TelefonoCliente.ToLower().Contains(termino)) ||
+                        (f.EmailCliente != null && f.EmailCliente.ToLower().Contains(termino)));
+                    
+                    var totalConBusqueda = await query.CountAsync();
+                    _logger.LogInformation("📋 Después de filtro búsqueda '{Termino}': {Total} proformas", termino, totalConBusqueda);
                 }
 
                 var totalRegistros = await query.CountAsync();
+                _logger.LogInformation("📋 Total final después de todos los filtros: {Total}", totalRegistros);
+
                 var proformas = await query
                     .OrderByDescending(f => f.FechaCreacion)
                     .Skip((pagina - 1) * tamano)
@@ -908,7 +935,7 @@ namespace API.Controllers
                     })
                     .ToListAsync();
 
-                _logger.LogInformation("✅ Se encontraron {Count} proformas", proformas.Count);
+                _logger.LogInformation("✅ Se obtuvieron {Count} proformas de {Total} total", proformas.Count, totalRegistros);
 
                 return Ok(new
                 {
