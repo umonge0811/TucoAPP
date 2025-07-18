@@ -355,14 +355,65 @@ function cambiarPaginaProformas(nuevaPagina) {
 }
 
 /**
- * Cargar proformas (función de compatibilidad)
+ * ✅ FUNCIÓN: Cargar proformas con filtros (versión completa y funcional)
  */
-async function cargarProformas(pagina = 1) {
-    console.log('📋 === FUNCIÓN COMPATIBILIDAD: cargarProformas ===');
-    filtroProformas.pagina = pagina;
-    await aplicarFiltrosProformas();
-}
+async function cargarProformas(pagina = 1, filtros = {}) {
+    try {
+        console.log('📋 === CARGANDO PROFORMAS CON FILTROS ===');
+        console.log('📋 Página:', pagina);
+        console.log('📋 Filtros aplicados:', filtros);
 
+        // Mostrar loading
+        $('#proformasLoading').show();
+        $('#proformasContent').hide();
+        $('#proformasEmpty').hide();
+
+        // Construir parámetros de búsqueda
+        const params = new URLSearchParams({
+            pagina: pagina,
+            tamano: 20
+        });
+
+        // Agregar filtros si existen
+        if (filtros.busquedaGeneral && filtros.busquedaGeneral.trim()) {
+            params.append('busquedaGeneral', filtros.busquedaGeneral.trim());
+        }
+
+        if (filtros.estado && filtros.estado !== 'todos') {
+            params.append('estado', filtros.estado);
+        }
+
+        const response = await fetch(`/Facturacion/ObtenerProformas?${params}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 Resultado obtenido:', resultado);
+
+        if (resultado.success && resultado.proformas && resultado.proformas.length > 0) {
+            mostrarProformas(resultado.proformas);
+            mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
+        } else {
+            mostrarProformasVacias();
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando proformas:', error);
+        mostrarProformasVacias();
+        mostrarToast('Error', 'Error al cargar proformas: ' + error.message, 'danger');
+    } finally {
+        $('#proformasLoading').hide();
+    }
+}
 // Exportar funciones para uso global
 window.inicializarFiltrosProformas = inicializarFiltrosProformas;
 window.aplicarFiltrosProformas = aplicarFiltrosProformas;
