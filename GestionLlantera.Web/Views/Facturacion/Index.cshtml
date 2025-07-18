@@ -1,3 +1,6 @@
+The code has been updated to correct the states of the filter and the functionality of the clear button in the proformas modal.
+```
+```replit_final_file
 @{
     ViewData["Title"] = "Facturación";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -61,7 +64,7 @@
                                         <i class="bi bi-clock-history me-2"></i>
                                         <span class="btn-text">Facturas Pendientes</span>
                                     </button>
-                                    
+
                                     <button type="button" 
                                             id="btnProformas" 
                                             class="btn btn-outline-success"
@@ -69,14 +72,14 @@
                                         <i class="bi bi-file-earmark-text me-2"></i>
                                         <span class="btn-text">Proformas</span>
                                     </button>
-                                    
+
                                     <a href="@Url.Action("EntregasPendientes", "Facturacion")" 
                                        class="btn btn-outline-info"
                                        title="Ver entregas pendientes">
                                         <i class="bi bi-truck me-2"></i>
                                         <span class="btn-text">Entregas Pendientes</span>
                                     </a>
-                                    
+
                                     <button type="button" 
                                             id="btnAbrirInventario" 
                                             class="btn btn-outline-secondary"
@@ -385,28 +388,20 @@
                             </div>
 
                             <!-- Filtro por estado -->
-                            <div class="col-md-3">
-                                <label for="filtroEstadoProforma" class="form-label">
-                                    <i class="bi bi-flag me-1"></i>Estado:
-                                </label>
+                            <div class="col-md-6">
+                                <label for="filtroEstadoProforma" class="form-label">📊 Estado:</label>
                                 <select id="filtroEstadoProforma" class="form-select">
                                     <option value="">Todos los estados</option>
+                                    <option value="Facturada">Facturada</option>
                                     <option value="Vigente">Vigente</option>
                                     <option value="Expirada">Expirada</option>
-                                    <option value="Facturada">Facturada</option>
                                 </select>
                             </div>
 
-                            <!-- Botones de acción -->
-                            <div class="col-md-3 d-flex align-items-end">
-                                <div class="btn-group w-100" role="group">
-                                    <button type="button" 
-                                            id="btnLimpiarFiltrosProformas" 
-                                            class="btn btn-outline-secondary"
-                                            title="Limpiar todos los filtros">
-                                        <i class="bi bi-eraser me-1"></i>Limpiar
-                                    </button>
-                                </div>
+                            <div class="col-12 mt-2">
+                                <button type="button" id="btnLimpiarFiltrosProformas" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-eraser"></i> Limpiar
+                                </button>
                             </div>
                         </div>
 

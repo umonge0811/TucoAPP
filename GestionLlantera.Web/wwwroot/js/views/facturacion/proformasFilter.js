@@ -1,4 +1,5 @@
 
+
 /**
  * ========================================
  * MÓDULO DE FILTROS PARA MODAL DE PROFORMAS
@@ -11,6 +12,8 @@ let filtroActual = {
     busqueda: '',
     pagina: 1
 };
+
+let timeoutBusqueda;
 
 /**
  * ✅ FUNCIÓN: Inicializar filtros del modal de proformas
@@ -32,7 +35,9 @@ function inicializarFiltrosProformas() {
 function configurarFiltroEstado() {
     const $filtroEstado = $('#filtroEstadoProforma');
     
+    // Limpiar eventos previos
     $filtroEstado.off('change.filtros');
+    
     $filtroEstado.on('change.filtros', function() {
         filtroActual.estado = $(this).val();
         filtroActual.pagina = 1;
@@ -43,18 +48,18 @@ function configurarFiltroEstado() {
 }
 
 /**
- * ✅ FUNCIÓN: Configurar búsqueda general
+ * ✅ FUNCIÓN: Configurar búsqueda general con debounce
  */
 function configurarBusquedaGeneral() {
     const $inputBusqueda = $('#busquedaProformas');
     const $btnBuscar = $('#btnBuscarProformas');
     
-    $inputBusqueda.off('keyup.filtros input.filtros');
+    // Limpiar eventos previos
+    $inputBusqueda.off('keyup.filtros input.filtros keypress.filtros');
     $btnBuscar.off('click.filtros');
     
-    // Búsqueda en tiempo real con debounce
-    let timeoutBusqueda;
-    $inputBusqueda.on('keyup.filtros input.filtros', function() {
+    // Búsqueda en tiempo real con debounce (como en inventario)
+    $inputBusqueda.on('input.filtros', function() {
         clearTimeout(timeoutBusqueda);
         
         timeoutBusqueda = setTimeout(() => {
@@ -63,11 +68,23 @@ function configurarBusquedaGeneral() {
             
             console.log('🔍 Búsqueda cambiada:', filtroActual.busqueda);
             aplicarFiltros();
-        }, 500);
+        }, 300); // 300ms como en inventario
+    });
+    
+    // También escuchar keyup para retrocompatibilidad
+    $inputBusqueda.on('keyup.filtros', function() {
+        clearTimeout(timeoutBusqueda);
+        
+        timeoutBusqueda = setTimeout(() => {
+            filtroActual.busqueda = $(this).val().trim();
+            filtroActual.pagina = 1;
+            aplicarFiltros();
+        }, 300);
     });
     
     // Botón de búsqueda
     $btnBuscar.on('click.filtros', function() {
+        clearTimeout(timeoutBusqueda);
         filtroActual.busqueda = $inputBusqueda.val().trim();
         filtroActual.pagina = 1;
         aplicarFiltros();
@@ -76,6 +93,7 @@ function configurarBusquedaGeneral() {
     // Enter en el input
     $inputBusqueda.on('keypress.filtros', function(e) {
         if (e.which === 13) {
+            clearTimeout(timeoutBusqueda);
             filtroActual.busqueda = $(this).val().trim();
             filtroActual.pagina = 1;
             aplicarFiltros();
@@ -89,8 +107,14 @@ function configurarBusquedaGeneral() {
 function configurarLimpiarFiltros() {
     const $btnLimpiar = $('#btnLimpiarFiltrosProformas');
     
+    // Limpiar eventos previos
     $btnLimpiar.off('click.filtros');
-    $btnLimpiar.on('click.filtros', function() {
+    
+    $btnLimpiar.on('click.filtros', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('🧹 Botón limpiar presionado');
         limpiarFiltros();
     });
 }
@@ -101,6 +125,9 @@ function configurarLimpiarFiltros() {
 function limpiarFiltros() {
     console.log('🧹 === LIMPIANDO FILTROS ===');
     
+    // Limpiar timeout de búsqueda
+    clearTimeout(timeoutBusqueda);
+    
     // Resetear filtros
     filtroActual = {
         estado: '',
@@ -108,8 +135,13 @@ function limpiarFiltros() {
         pagina: 1
     };
     
-    // Limpiar UI
-    $('#filtroEstadoProforma').val('').trigger('change');
+    // Limpiar UI sin disparar eventos
+    $('#filtroEstadoProforma').off('change.filtros').val('').on('change.filtros', function() {
+        filtroActual.estado = $(this).val();
+        filtroActual.pagina = 1;
+        aplicarFiltros();
+    });
+    
     $('#busquedaProformas').val('');
     
     // Aplicar filtros vacíos
@@ -154,8 +186,27 @@ async function cargarProformasConFiltros(filtros) {
             tamano: 20
         });
 
+        // Mapear estados correctos
         if (filtros.estado && filtros.estado.trim() !== '') {
-            params.append('estado', filtros.estado);
+            let estadoMapeado = filtros.estado;
+            
+            // Mapear estados según los disponibles en el sistema
+            switch (filtros.estado.toLowerCase()) {
+                case 'facturada':
+                    estadoMapeado = 'Facturada';
+                    break;
+                case 'vigente':
+                    estadoMapeado = 'Vigente';
+                    break;
+                case 'expirada':
+                case 'vencida':
+                    estadoMapeado = 'Expirada';
+                    break;
+                default:
+                    estadoMapeado = filtros.estado;
+            }
+            
+            params.append('estado', estadoMapeado);
         }
         
         if (filtros.busqueda && filtros.busqueda.trim() !== '') {
@@ -228,3 +279,4 @@ window.inicializarFiltrosProformas = inicializarFiltrosProformas;
 window.limpiarFiltros = limpiarFiltros;
 window.cambiarPaginaProformas = cambiarPaginaProformas;
 window.obtenerFiltrosActuales = obtenerFiltrosActuales;
+
