@@ -1,11 +1,10 @@
+
 /**
  * ========================================
  * MÓDULO DE FILTROS PARA MODAL DE PROFORMAS
  * ========================================
  */
-```
 
-```javascript
 // Variables globales del módulo
 let filtroActual = {
     estado: '',
@@ -16,7 +15,7 @@ let filtroActual = {
 let timeoutBusqueda;
 
 /**
- * ✅ FUNCIÓN: Inicializar filtros del modal de proformas con verificación
+ * ✅ FUNCIÓN: Inicializar filtros del modal de proformas
  */
 function inicializarFiltrosProformas() {
     console.log('🔍 === INICIALIZANDO FILTROS DE PROFORMAS ===');
@@ -33,15 +32,20 @@ function inicializarFiltrosProformas() {
 
     if ($inputBusqueda.length === 0) {
         console.error('❌ No se encontró el input de búsqueda #busquedaProformas');
+        return;
     }
 
+    if ($filtroEstado.length === 0) {
+        console.error('❌ No se encontró el select de estado #filtroEstadoProforma');
+        return;
+    }
+
+    // Configurar eventos
     configurarFiltroEstado();
     configurarBusquedaGeneral();
     configurarLimpiarFiltros();
 
-    // Cargar proformas iniciales
-    console.log('🔍 Cargando proformas iniciales...');
-    aplicarFiltros();
+    console.log('✅ Filtros de proformas inicializados correctamente');
 }
 
 /**
@@ -51,78 +55,59 @@ function configurarFiltroEstado() {
     const $filtroEstado = $('#filtroEstadoProforma');
 
     // Limpiar eventos previos
-    $filtroEstado.off('change.filtros');
+    $filtroEstado.off('change.filtrosProforma');
 
-    $filtroEstado.on('change.filtros', function() {
-        filtroActual.estado = $(this).val();
+    $filtroEstado.on('change.filtrosProforma', function() {
+        const valorSeleccionado = $(this).val();
+        console.log('🔍 Estado seleccionado:', valorSeleccionado);
+        
+        filtroActual.estado = valorSeleccionado;
         filtroActual.pagina = 1;
 
-        console.log('🔍 Filtro por estado cambiado:', filtroActual.estado);
+        // Aplicar filtros inmediatamente
         aplicarFiltros();
     });
+
+    console.log('✅ Filtro por estado configurado');
 }
 
 /**
- * ✅ FUNCIÓN: Configurar búsqueda general mejorada
+ * ✅ FUNCIÓN: Configurar búsqueda general
  */
 function configurarBusquedaGeneral() {
     const $inputBusqueda = $('#busquedaProformas');
-    const $btnBuscar = $('#btnBuscarProformas');
 
     console.log('🔧 Configurando búsqueda general');
 
     // Limpiar eventos previos
-    $inputBusqueda.off('input.filtros keyup.filtros keypress.filtros');
-    $btnBuscar.off('click.filtros');
+    $inputBusqueda.off('input.filtrosProforma keyup.filtrosProforma');
 
-    // Función de búsqueda mejorada
+    // Función de búsqueda
     function realizarBusqueda() {
         clearTimeout(timeoutBusqueda);
         
         const valorBusqueda = $inputBusqueda.val().trim();
-        console.log('🔍 Valor de búsqueda detectado:', valorBusqueda);
+        console.log('🔍 Valor de búsqueda:', valorBusqueda);
 
         timeoutBusqueda = setTimeout(() => {
             filtroActual.busqueda = valorBusqueda;
             filtroActual.pagina = 1;
 
-            console.log('🔍 Ejecutando búsqueda con:', filtroActual.busqueda);
+            console.log('🔍 Ejecutando búsqueda:', filtroActual);
             aplicarFiltros();
-        }, 300); // Reducido para mayor responsividad
+        }, 500);
     }
 
-    // Evento principal de escritura
-    $inputBusqueda.on('input.filtros', function() {
-        console.log('🔍 Evento input detectado:', $(this).val());
+    // Evento principal - usar input para detectar cambios en tiempo real
+    $inputBusqueda.on('input.filtrosProforma', function() {
+        console.log('🔍 Evento input detectado, valor:', $(this).val());
         realizarBusqueda();
     });
 
-    // Evento adicional para compatibilidad
-    $inputBusqueda.on('keyup.filtros', function() {
-        console.log('🔍 Evento keyup detectado:', $(this).val());
+    // Evento adicional para mayor compatibilidad
+    $inputBusqueda.on('keyup.filtrosProforma', function() {
+        console.log('🔍 Evento keyup detectado, valor:', $(this).val());
         realizarBusqueda();
-    });
-
-    // Evento de Enter
-    $inputBusqueda.on('keypress.filtros', function(e) {
-        if (e.which === 13) {
-            e.preventDefault();
-            clearTimeout(timeoutBusqueda);
-            filtroActual.busqueda = $(this).val().trim();
-            filtroActual.pagina = 1;
-            console.log('🔍 Enter presionado, búsqueda inmediata:', filtroActual.busqueda);
-            aplicarFiltros();
-        }
-    });
-
-    // Botón de búsqueda
-    $btnBuscar.on('click.filtros', function(e) {
-        e.preventDefault();
-        clearTimeout(timeoutBusqueda);
-        filtroActual.busqueda = $inputBusqueda.val().trim();
-        filtroActual.pagina = 1;
-        console.log('🔍 Botón búsqueda presionado:', filtroActual.busqueda);
-        aplicarFiltros();
     });
 
     console.log('✅ Búsqueda general configurada correctamente');
@@ -134,16 +119,23 @@ function configurarBusquedaGeneral() {
 function configurarLimpiarFiltros() {
     const $btnLimpiar = $('#btnLimpiarFiltrosProformas');
 
-    // Limpiar eventos previos
-    $btnLimpiar.off();
+    if ($btnLimpiar.length === 0) {
+        console.error('❌ No se encontró el botón limpiar filtros');
+        return;
+    }
 
-    $btnLimpiar.on('click', function(e) {
+    // Limpiar eventos previos
+    $btnLimpiar.off('click.filtrosProforma');
+
+    $btnLimpiar.on('click.filtrosProforma', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
-        console.log('🧹 Limpiando filtros');
+        console.log('🧹 Botón limpiar presionado');
         limpiarFiltros();
     });
+
+    console.log('✅ Botón limpiar configurado');
 }
 
 /**
@@ -166,44 +158,47 @@ function limpiarFiltros() {
     $('#filtroEstadoProforma').val('');
     $('#busquedaProformas').val('');
 
-    // Aplicar filtros vacíos
+    console.log('🧹 Filtros limpiados, cargando todas las proformas');
+    
+    // Cargar todas las proformas
     aplicarFiltros();
 }
 
 /**
- * ✅ FUNCIÓN: Aplicar filtros y cargar proformas con mejor debugging
+ * ✅ FUNCIÓN: Aplicar filtros y cargar proformas
  */
 async function aplicarFiltros() {
     try {
         console.log('🔍 === APLICANDO FILTROS ===');
-        console.log('🔍 Filtros actuales:', JSON.stringify(filtroActual, null, 2));
+        console.log('🔍 Estado actual del filtro:', filtroActual);
 
         // Mostrar loading
         $('#proformasLoading').show();
         $('#proformasContent').hide();
         $('#proformasEmpty').hide();
 
-        // Construir parámetros
+        // Construir parámetros de consulta
         const params = new URLSearchParams({
-            pagina: filtroActual.pagina || 1,
-            tamano: 20
+            pagina: filtroActual.pagina.toString(),
+            tamano: '20'
         });
 
         // Agregar estado si existe
         if (filtroActual.estado && filtroActual.estado.trim() !== '') {
-            params.append('estado', filtroActual.estado);
-            console.log('🔍 Filtro estado agregado:', filtroActual.estado);
+            params.append('estado', filtroActual.estado.trim());
+            console.log('🔍 Agregando filtro estado:', filtroActual.estado);
         }
 
         // Agregar búsqueda si existe
         if (filtroActual.busqueda && filtroActual.busqueda.trim() !== '') {
-            params.append('busqueda', filtroActual.busqueda);
-            console.log('🔍 Filtro búsqueda agregado:', filtroActual.busqueda);
+            params.append('busqueda', filtroActual.busqueda.trim());
+            console.log('🔍 Agregando filtro búsqueda:', filtroActual.busqueda);
         }
 
         const urlCompleta = `/Facturacion/ObtenerProformas?${params.toString()}`;
-        console.log('📋 URL de consulta completa:', urlCompleta);
+        console.log('📋 URL completa de consulta:', urlCompleta);
 
+        // Realizar petición
         const response = await fetch(urlCompleta, {
             method: 'GET',
             headers: {
@@ -213,41 +208,57 @@ async function aplicarFiltros() {
             credentials: 'include'
         });
 
-        console.log('📋 Status de respuesta:', response.status);
+        console.log('📋 Respuesta recibida, status:', response.status);
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Respuesta de error:', errorText);
-            throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
+            console.error('❌ Error en respuesta:', response.status, errorText);
+            throw new Error(`Error HTTP: ${response.status}`);
         }
 
         const resultado = await response.json();
-        console.log('📋 Resultado completo obtenido:', resultado);
+        console.log('📋 Datos recibidos:', resultado);
 
-        if (resultado.success && resultado.proformas && resultado.proformas.length > 0) {
-            console.log('✅ Proformas encontradas:', resultado.proformas.length);
-            
-            // Usar funciones existentes de facturacion.js
-            if (typeof mostrarProformas === 'function') {
-                mostrarProformas(resultado.proformas);
+        // Procesar resultados
+        if (resultado.success) {
+            if (resultado.proformas && resultado.proformas.length > 0) {
+                console.log('✅ Proformas encontradas:', resultado.proformas.length);
+                
+                // Verificar si la función mostrarProformas existe
+                if (typeof window.mostrarProformas === 'function') {
+                    window.mostrarProformas(resultado.proformas);
+                } else if (typeof mostrarProformas === 'function') {
+                    mostrarProformas(resultado.proformas);
+                } else {
+                    console.error('❌ Función mostrarProformas no encontrada');
+                    mostrarProformasManual(resultado.proformas);
+                }
+                
                 $('#proformasContent').show();
-                console.log('✅ Proformas mostradas correctamente');
+                
+                // Mostrar paginación si existe la función
+                if (typeof window.mostrarPaginacionProformas === 'function') {
+                    window.mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
+                } else if (typeof mostrarPaginacionProformas === 'function') {
+                    mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
+                }
             } else {
-                console.error('❌ Función mostrarProformas no encontrada');
-            }
-            
-            if (typeof mostrarPaginacionProformas === 'function') {
-                mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
+                console.log('ℹ️ No se encontraron proformas');
+                $('#proformasEmpty').show();
+                $('#proformasContent').hide();
             }
         } else {
-            console.log('ℹ️ No se encontraron proformas con los filtros aplicados');
-            // Mostrar mensaje de vacío
+            console.error('❌ Error en resultado:', resultado.message);
             $('#proformasEmpty').show();
             $('#proformasContent').hide();
+            
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Error', resultado.message || 'Error al cargar proformas', 'danger');
+            }
         }
 
     } catch (error) {
-        console.error('❌ Error completo aplicando filtros:', error);
+        console.error('❌ Error completo:', error);
         $('#proformasEmpty').show();
         $('#proformasContent').hide();
 
@@ -261,9 +272,77 @@ async function aplicarFiltros() {
 }
 
 /**
- * ✅ FUNCIÓN: Cambiar página desde paginación
+ * ✅ FUNCIÓN AUXILIAR: Mostrar proformas manualmente si no existe la función principal
+ */
+function mostrarProformasManual(proformas) {
+    console.log('📋 Usando función manual para mostrar proformas');
+    
+    const tbody = $('#proformasTableBody');
+    if (tbody.length === 0) {
+        console.error('❌ No se encontró el tbody de proformas');
+        return;
+    }
+    
+    tbody.empty();
+    
+    proformas.forEach(proforma => {
+        const fecha = new Date(proforma.fechaFactura).toLocaleDateString('es-CR');
+        let estadoBadge = '';
+        
+        switch(proforma.estado) {
+            case 'Vigente':
+                estadoBadge = '<span class="badge bg-success">Vigente</span>';
+                break;
+            case 'Facturada':
+                estadoBadge = '<span class="badge bg-primary">Facturada</span>';
+                break;
+            case 'Expirada':
+                estadoBadge = '<span class="badge bg-danger">Expirada</span>';
+                break;
+            default:
+                estadoBadge = `<span class="badge bg-secondary">${proforma.estado}</span>`;
+        }
+        
+        const fila = `
+            <tr>
+                <td>
+                    <strong>${proforma.numeroFactura}</strong><br>
+                    <small class="text-muted">${proforma.tipoDocumento}</small>
+                </td>
+                <td>
+                    <strong>${proforma.nombreCliente || 'Cliente General'}</strong><br>
+                    <small class="text-muted">${proforma.emailCliente || ''}</small>
+                </td>
+                <td>
+                    <strong>${fecha}</strong><br>
+                    <small class="text-muted">Por: ${proforma.usuarioCreador || 'Sistema'}</small>
+                </td>
+                <td>
+                    <strong class="text-success">₡${Number(proforma.total).toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong>
+                </td>
+                <td>${estadoBadge}</td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-info" title="Ver detalles">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" title="Imprimir">
+                            <i class="bi bi-printer"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        
+        tbody.append(fila);
+    });
+}
+
+/**
+ * ✅ FUNCIÓN: Cambiar página
  */
 function cambiarPaginaProformas(nuevaPagina) {
+    console.log('📄 Cambiando a página:', nuevaPagina);
     filtroActual.pagina = nuevaPagina;
     aplicarFiltros();
 }
@@ -280,3 +359,6 @@ window.inicializarFiltrosProformas = inicializarFiltrosProformas;
 window.limpiarFiltros = limpiarFiltros;
 window.cambiarPaginaProformas = cambiarPaginaProformas;
 window.obtenerFiltrosActuales = obtenerFiltrosActuales;
+window.aplicarFiltros = aplicarFiltros;
+
+console.log('📋 === MÓDULO DE FILTROS DE PROFORMAS CARGADO ===');
