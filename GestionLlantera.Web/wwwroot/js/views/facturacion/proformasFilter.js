@@ -16,16 +16,31 @@ let filtroActual = {
 let timeoutBusqueda;
 
 /**
- * ✅ FUNCIÓN: Inicializar filtros del modal de proformas
+ * ✅ FUNCIÓN: Inicializar filtros del modal de proformas con verificación
  */
 function inicializarFiltrosProformas() {
     console.log('🔍 === INICIALIZANDO FILTROS DE PROFORMAS ===');
+
+    // Verificar que los elementos existen
+    const $inputBusqueda = $('#busquedaProformas');
+    const $filtroEstado = $('#filtroEstadoProforma');
+    const $btnLimpiar = $('#btnLimpiarFiltrosProformas');
+
+    console.log('🔧 Verificando elementos DOM:');
+    console.log('🔧 - Input búsqueda encontrado:', $inputBusqueda.length > 0);
+    console.log('🔧 - Filtro estado encontrado:', $filtroEstado.length > 0);
+    console.log('🔧 - Botón limpiar encontrado:', $btnLimpiar.length > 0);
+
+    if ($inputBusqueda.length === 0) {
+        console.error('❌ No se encontró el input de búsqueda #busquedaProformas');
+    }
 
     configurarFiltroEstado();
     configurarBusquedaGeneral();
     configurarLimpiarFiltros();
 
     // Cargar proformas iniciales
+    console.log('🔍 Cargando proformas iniciales...');
     aplicarFiltros();
 }
 
@@ -48,51 +63,69 @@ function configurarFiltroEstado() {
 }
 
 /**
- * ✅ FUNCIÓN: Configurar búsqueda general simplificada
+ * ✅ FUNCIÓN: Configurar búsqueda general mejorada
  */
 function configurarBusquedaGeneral() {
     const $inputBusqueda = $('#busquedaProformas');
     const $btnBuscar = $('#btnBuscarProformas');
 
-    // Limpiar eventos previos
-    $inputBusqueda.off();
-    $btnBuscar.off();
+    console.log('🔧 Configurando búsqueda general');
 
-    // Función de búsqueda unificada
+    // Limpiar eventos previos
+    $inputBusqueda.off('input.filtros keyup.filtros keypress.filtros');
+    $btnBuscar.off('click.filtros');
+
+    // Función de búsqueda mejorada
     function realizarBusqueda() {
         clearTimeout(timeoutBusqueda);
+        
+        const valorBusqueda = $inputBusqueda.val().trim();
+        console.log('🔍 Valor de búsqueda detectado:', valorBusqueda);
 
         timeoutBusqueda = setTimeout(() => {
-            filtroActual.busqueda = $inputBusqueda.val().trim();
+            filtroActual.busqueda = valorBusqueda;
             filtroActual.pagina = 1;
 
-            console.log('🔍 Búsqueda:', filtroActual.busqueda);
+            console.log('🔍 Ejecutando búsqueda con:', filtroActual.busqueda);
             aplicarFiltros();
-        }, 500); // Aumentado a 500ms para evitar llamadas excesivas
+        }, 300); // Reducido para mayor responsividad
     }
 
-    // Evento de escritura (input)
-    $inputBusqueda.on('input', realizarBusqueda);
+    // Evento principal de escritura
+    $inputBusqueda.on('input.filtros', function() {
+        console.log('🔍 Evento input detectado:', $(this).val());
+        realizarBusqueda();
+    });
+
+    // Evento adicional para compatibilidad
+    $inputBusqueda.on('keyup.filtros', function() {
+        console.log('🔍 Evento keyup detectado:', $(this).val());
+        realizarBusqueda();
+    });
 
     // Evento de Enter
-    $inputBusqueda.on('keypress', function(e) {
+    $inputBusqueda.on('keypress.filtros', function(e) {
         if (e.which === 13) {
             e.preventDefault();
             clearTimeout(timeoutBusqueda);
             filtroActual.busqueda = $(this).val().trim();
             filtroActual.pagina = 1;
+            console.log('🔍 Enter presionado, búsqueda inmediata:', filtroActual.busqueda);
             aplicarFiltros();
         }
     });
 
     // Botón de búsqueda
-    $btnBuscar.on('click', function(e) {
+    $btnBuscar.on('click.filtros', function(e) {
         e.preventDefault();
         clearTimeout(timeoutBusqueda);
         filtroActual.busqueda = $inputBusqueda.val().trim();
         filtroActual.pagina = 1;
+        console.log('🔍 Botón búsqueda presionado:', filtroActual.busqueda);
         aplicarFiltros();
     });
+
+    console.log('✅ Búsqueda general configurada correctamente');
 }
 
 /**
@@ -138,12 +171,12 @@ function limpiarFiltros() {
 }
 
 /**
- * ✅ FUNCIÓN: Aplicar filtros y cargar proformas
+ * ✅ FUNCIÓN: Aplicar filtros y cargar proformas con mejor debugging
  */
 async function aplicarFiltros() {
     try {
         console.log('🔍 === APLICANDO FILTROS ===');
-        console.log('🔍 Filtros actuales:', filtroActual);
+        console.log('🔍 Filtros actuales:', JSON.stringify(filtroActual, null, 2));
 
         // Mostrar loading
         $('#proformasLoading').show();
@@ -159,16 +192,19 @@ async function aplicarFiltros() {
         // Agregar estado si existe
         if (filtroActual.estado && filtroActual.estado.trim() !== '') {
             params.append('estado', filtroActual.estado);
+            console.log('🔍 Filtro estado agregado:', filtroActual.estado);
         }
 
         // Agregar búsqueda si existe
         if (filtroActual.busqueda && filtroActual.busqueda.trim() !== '') {
             params.append('busqueda', filtroActual.busqueda);
+            console.log('🔍 Filtro búsqueda agregado:', filtroActual.busqueda);
         }
 
-        console.log('📋 URL de consulta:', `/Facturacion/ObtenerProformas?${params}`);
+        const urlCompleta = `/Facturacion/ObtenerProformas?${params.toString()}`;
+        console.log('📋 URL de consulta completa:', urlCompleta);
 
-        const response = await fetch(`/Facturacion/ObtenerProformas?${params}`, {
+        const response = await fetch(urlCompleta, {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -177,30 +213,41 @@ async function aplicarFiltros() {
             credentials: 'include'
         });
 
+        console.log('📋 Status de respuesta:', response.status);
+
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Respuesta de error:', errorText);
+            throw new Error(`Error HTTP: ${response.status} - ${errorText}`);
         }
 
         const resultado = await response.json();
-        console.log('📋 Resultado obtenido:', resultado);
+        console.log('📋 Resultado completo obtenido:', resultado);
 
         if (resultado.success && resultado.proformas && resultado.proformas.length > 0) {
+            console.log('✅ Proformas encontradas:', resultado.proformas.length);
+            
             // Usar funciones existentes de facturacion.js
             if (typeof mostrarProformas === 'function') {
                 mostrarProformas(resultado.proformas);
                 $('#proformasContent').show();
+                console.log('✅ Proformas mostradas correctamente');
+            } else {
+                console.error('❌ Función mostrarProformas no encontrada');
             }
+            
             if (typeof mostrarPaginacionProformas === 'function') {
                 mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
             }
         } else {
+            console.log('ℹ️ No se encontraron proformas con los filtros aplicados');
             // Mostrar mensaje de vacío
             $('#proformasEmpty').show();
             $('#proformasContent').hide();
         }
 
     } catch (error) {
-        console.error('❌ Error aplicando filtros:', error);
+        console.error('❌ Error completo aplicando filtros:', error);
         $('#proformasEmpty').show();
         $('#proformasContent').hide();
 
@@ -209,6 +256,7 @@ async function aplicarFiltros() {
         }
     } finally {
         $('#proformasLoading').hide();
+        console.log('🔍 === FIN APLICAR FILTROS ===');
     }
 }
 
