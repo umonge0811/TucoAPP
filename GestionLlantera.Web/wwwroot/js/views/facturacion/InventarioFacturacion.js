@@ -189,7 +189,7 @@ function mostrarProductosInventario(productos) {
     if (!productos || productos.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="7" class="text-center py-4">
+                <td colspan="6" class="text-center py-4">
                     <i class="bi bi-box-seam display-1 text-muted"></i>
                     <p class="mt-2 text-muted">No hay productos disponibles</p>
                 </td>
@@ -209,21 +209,25 @@ function mostrarProductosInventario(productos) {
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
         const descripcion = producto.descripcion || producto.Descripcion || '';
         
-        // Determinar imagen
-        let imagenUrl = '/images/no-image.png';
+        // Determinar si es llanta y extraer medidas
+        let esLlanta = false;
+        let medidaLlanta = 'N/A';
+        
         try {
-            if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-                const primeraImagen = producto.imagenesProductos[0];
-                if (primeraImagen && primeraImagen.Urlimagen) {
-                    imagenUrl = primeraImagen.Urlimagen.startsWith('http') ? 
-                        primeraImagen.Urlimagen : 
-                        `https://localhost:7273${primeraImagen.Urlimagen.startsWith('/') ? '' : '/'}${primeraImagen.Urlimagen}`;
+            if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
+                esLlanta = true;
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+                
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        medidaLlanta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        medidaLlanta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
                 }
-            } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-                imagenUrl = producto.imagenesUrls[0];
             }
         } catch (error) {
-            console.warn('⚠️ Error procesando imagen:', error);
+            console.warn('⚠️ Error procesando información de llanta:', error);
         }
         
         // Calcular precios por método de pago
@@ -262,17 +266,15 @@ function mostrarProductosInventario(productos) {
                 data-descripcion="${descripcion.toLowerCase()}"
                 data-stock="${cantidadInventario}"
                 data-precio-efectivo="${precioEfectivo}"
-                data-precio-tarjeta="${precioTarjeta}">
-                <td class="text-center">
-                    <img src="${imagenUrl}" 
-                         alt="${nombreProducto}" 
-                         class="img-thumbnail" 
-                         style="width: 60px; height: 60px; object-fit: cover;"
-                         onerror="this.onerror=null; this.src='/images/no-image.png';">
-                </td>
+                data-precio-tarjeta="${precioTarjeta}"
+                data-medida="${medidaLlanta.toLowerCase()}">
                 <td>
                     <strong class="d-block">${nombreProducto}</strong>
                     <small class="text-muted">ID: ${productoId}</small>
+                    ${esLlanta ? '<span class="badge bg-primary mt-1">Llanta</span>' : ''}
+                </td>
+                <td class="text-center">
+                    ${esLlanta ? `<span class="fw-bold text-primary">${medidaLlanta}</span>` : '<span class="text-muted">N/A</span>'}
                 </td>
                 <td>
                     <span class="text-muted" title="${descripcion}">
@@ -370,6 +372,10 @@ function configurarOrdenamientoTablaInventario() {
                 case 'nombre':
                     aVal = $(a).data('nombre');
                     bVal = $(b).data('nombre');
+                    break;
+                case 'medida':
+                    aVal = $(a).data('medida');
+                    bVal = $(b).data('medida');
                     break;
                 case 'descripcion':
                     aVal = $(a).data('descripcion');
@@ -565,7 +571,7 @@ function mostrarErrorInventario(mensaje) {
     if (tbody.length) {
         tbody.html(`
             <tr>
-                <td colspan="7" class="text-center py-4">
+                <td colspan="6" class="text-center py-4">
                     <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
                     <p class="mt-2 text-danger">Error cargando inventario</p>
                     <p class="text-muted">${mensaje}</p>
