@@ -1271,7 +1271,8 @@ $(document).ready(function () {
         }
     });
 
-    // ✅ EVENTO MEJORADO PARA BOTÓN OJO -> PÁGINA DE DETALLES
+    // ✅ EVENTO ÚNICO PARA BOTÓN VER DETALLES -> PÁGINA DE DETALLES
+    $(document).off('click', '.ver-detalles-btn'); // Limpiar primero cualquier evento anterior
     $(document).on('click', '.ver-detalles-btn', function (e) {
         console.log('👁️ === CLICK EN BOTÓN VER DETALLES ===');
 
@@ -1285,6 +1286,7 @@ $(document).ready(function () {
 
         if (!productoId) {
             console.error('❌ No se pudo obtener el ProductoId');
+            mostrarAlertaSimple("Error: No se pudo identificar el producto", "danger");
             return;
         }
 
@@ -1297,12 +1299,15 @@ $(document).ready(function () {
 
         } catch (error) {
             console.error('❌ Error en navegación:', error);
+            mostrarAlertaSimple("Error al navegar a los detalles", "danger");
         }
     });
 
-    // ✅ REMOVER CUALQUIER EVENTO MODAL RESIDUAL
+    // ✅ REMOVER CUALQUIER EVENTO MODAL RESIDUAL - LIMPIAR TODO
     $(document).off('click', '.ver-imagenes-btn');
     $(document).off('click', '.ver-detalles-modal-btn');
+    $(document).off('click', '.ver-detalle-modal'); // Posible variación del nombre
+    $(document).off('click', '[data-bs-toggle="modal"]'); // Cualquier elemento que abra modal
 
     // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -1317,35 +1322,7 @@ $(document).ready(function () {
         $("#ajusteStockModal").modal("show");
     });
 
-    $(".ajuste-stock-detalle-btn").click(function () {
-        console.log('📦 === ABRIENDO MODAL AJUSTE DESDE DETALLE ===');
-
-        const productoId = $("#productoId").val() || $(this).data("id");
-        console.log('📦 Producto ID desde detalle:', productoId);
-
-        if (!productoId) {
-            console.error('❌ No se pudo obtener el ProductoId desde detalle');
-            mostrarAlertaSimple("Error: No se pudo identificar el producto", "danger");
-            return;
-        }
-
-        // ✅ ENCONTRAR LA FILA DEL PRODUCTO EN LA TABLA
-        const $fila = $(`tr[data-id="${productoId}"]`);
-
-        if ($fila.length === 0) {
-            console.error('❌ No se encontró la fila del producto en la tabla');
-            mostrarAlertaSimple("Error: No se pudo encontrar el producto en la tabla", "danger");
-            return;
-        }
-
-        // ✅ CARGAR INFORMACIÓN DEL PRODUCTO
-        cargarInformacionProductoEnModal(productoId, $fila);
-
-        $("#detallesProductoModal").modal("hide");
-        setTimeout(() => {
-            $("#ajusteStockModal").modal("show");
-        }, 500);
-    });
+    // Función eliminada - ya no existe modal de detalles
 
     // Evento del botón de ajuste stock desde modal eliminado
 
@@ -1649,8 +1626,8 @@ $(document).ready(function () {
     console.log('✅ Inventario - Sistema completo inicializado correctamente');
 
     // ✅ LIMPIAR CUALQUIER EVENTO MODAL RESIDUAL
-    $('#detallesProductoModal, #imagenModal').off();
-    $('.ver-detalles-modal-btn, .ver-imagenes-btn').off();
+    $('#imagenModal').off();
+    $('.ver-imagenes-btn').off();
 
 
 
