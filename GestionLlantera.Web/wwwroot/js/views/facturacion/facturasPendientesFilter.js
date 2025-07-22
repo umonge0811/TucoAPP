@@ -24,77 +24,63 @@ function inicializarFiltrosFacturasPendientes() {
         return;
     }
 
-    // Esperar un poco para asegurar que el DOM del modal esté completamente cargado
-    setTimeout(() => {
-        console.log('🔍 Configurando eventos de filtrado para facturas pendientes...');
+    // Configurar eventos usando delegación de eventos para asegurar que funcionen
+    configurarEventosFacturasPendientes();
+
+    // Cargar todas las facturas pendientes inicialmente
+    cargarTodasLasFacturasPendientes();
+
+    console.log('✅ Filtros de facturas pendientes inicializados correctamente');
+}
+
+/**
+ * Configurar eventos para facturas pendientes usando delegación
+ */
+function configurarEventosFacturasPendientes() {
+    console.log('🔍 Configurando eventos de filtrado para facturas pendientes...');
+    
+    // Limpiar eventos anteriores
+    $(document).off('.facturasPendientesFilter');
+    
+    // Configurar evento de búsqueda con delegación
+    $(document).on('input.facturasPendientesFilter keyup.facturasPendientesFilter', '#busquedaFacturasPendientes', function() {
+        const termino = $(this).val().trim();
+        console.log('🔍 Término de búsqueda facturas:', termino);
         
-        // Configurar evento de búsqueda con debounce
-        const $inputBusqueda = $('#busquedaFacturasPendientes');
-        if ($inputBusqueda.length) {
-            $inputBusqueda.off('input.facturasPendientesFilter keyup.facturasPendientesFilter').on('input.facturasPendientesFilter keyup.facturasPendientesFilter', function() {
-                const termino = $(this).val().trim();
-                console.log('🔍 Término de búsqueda facturas:', termino);
-                
-                filtrosBusquedaFacturas.texto = termino;
-                aplicarFiltrosLocalmenteFacturas();
-            });
-            console.log('✅ Evento de búsqueda de facturas configurado');
-        } else {
-            console.error('❌ No se encontró el input de búsqueda de facturas');
-        }
+        filtrosBusquedaFacturas.texto = termino;
+        aplicarFiltrosLocalmenteFacturas();
+    });
 
-        // Configurar evento de cambio de estado
-        const $selectEstado = $('#estadoFacturasPendientes');
-        if ($selectEstado.length) {
-            $selectEstado.off('change.facturasPendientesFilter').on('change.facturasPendientesFilter', function() {
-                const estado = $(this).val();
-                console.log('🔍 Estado de facturas seleccionado:', estado);
-                
-                filtrosBusquedaFacturas.estado = estado;
-                aplicarFiltrosLocalmenteFacturas();
-            });
-            console.log('✅ Evento de estado de facturas configurado');
-        } else {
-            console.error('❌ No se encontró el select de estado de facturas');
-        }
-
-        // Configurar filtros de fecha
-        const $fechaDesde = $('#fechaDesdeFacturas');
-        const $fechaHasta = $('#fechaHastaFacturas');
+    // Configurar evento de cambio de estado con delegación
+    $(document).on('change.facturasPendientesFilter', '#estadoFacturasPendientes', function() {
+        const estado = $(this).val();
+        console.log('🔍 Estado de facturas seleccionado:', estado);
         
-        if ($fechaDesde.length) {
-            $fechaDesde.off('change.facturasPendientesFilter').on('change.facturasPendientesFilter', function() {
-                filtrosBusquedaFacturas.fechaDesde = $(this).val();
-                aplicarFiltrosLocalmenteFacturas();
-            });
-        }
-        
-        if ($fechaHasta.length) {
-            $fechaHasta.off('change.facturasPendientesFilter').on('change.facturasPendientesFilter', function() {
-                filtrosBusquedaFacturas.fechaHasta = $(this).val();
-                aplicarFiltrosLocalmenteFacturas();
-            });
-        }
+        filtrosBusquedaFacturas.estado = estado;
+        aplicarFiltrosLocalmenteFacturas();
+    });
 
-        // Configurar botón limpiar
-        const $btnLimpiar = $('#btnLimpiarFiltrosFacturas');
-        if ($btnLimpiar.length) {
-            $btnLimpiar.off('click.facturasPendientesFilter').on('click.facturasPendientesFilter', function(e) {
-                e.preventDefault();
-                console.log('🔍 Limpiando filtros de facturas...');
-                limpiarFiltrosFacturas();
-            });
-            console.log('✅ Botón limpiar facturas configurado');
-        } else {
-            console.error('❌ No se encontró el botón limpiar de facturas');
-        }
+    // Configurar filtros de fecha con delegación
+    $(document).on('change.facturasPendientesFilter', '#fechaDesdeFacturas', function() {
+        filtrosBusquedaFacturas.fechaDesde = $(this).val();
+        console.log('🔍 Fecha desde:', filtrosBusquedaFacturas.fechaDesde);
+        aplicarFiltrosLocalmenteFacturas();
+    });
+    
+    $(document).on('change.facturasPendientesFilter', '#fechaHastaFacturas', function() {
+        filtrosBusquedaFacturas.fechaHasta = $(this).val();
+        console.log('🔍 Fecha hasta:', filtrosBusquedaFacturas.fechaHasta);
+        aplicarFiltrosLocalmenteFacturas();
+    });
 
-        // Cargar todas las facturas pendientes inicialmente
-        cargarTodasLasFacturasPendientes();
+    // Configurar botón limpiar con delegación
+    $(document).on('click.facturasPendientesFilter', '#btnLimpiarFiltrosFacturas', function(e) {
+        e.preventDefault();
+        console.log('🔍 Limpiando filtros de facturas...');
+        limpiarFiltrosFacturas();
+    });
 
-        console.log('✅ Filtros de facturas pendientes inicializados correctamente');
-        
-    }, 100);
+    console.log('✅ Eventos de filtros de facturas configurados con delegación');
 }
 
 /**
@@ -527,6 +513,7 @@ function configurarEventosBotonesFacturas() {
 // Exportar funciones para uso global
 if (typeof window !== 'undefined') {
     window.inicializarFiltrosFacturasPendientes = inicializarFiltrosFacturasPendientes;
+    window.configurarEventosFacturasPendientes = configurarEventosFacturasPendientes;
     window.aplicarFiltrosLocalmenteFacturas = aplicarFiltrosLocalmenteFacturas;
     window.limpiarFiltrosFacturas = limpiarFiltrosFacturas;
     window.cambiarPaginaFacturas = cambiarPaginaFacturas;
