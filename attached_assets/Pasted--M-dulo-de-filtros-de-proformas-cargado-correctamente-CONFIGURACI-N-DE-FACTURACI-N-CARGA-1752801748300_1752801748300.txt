@@ -1,0 +1,287 @@
+ 📋 Módulo de filtros de proformas cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1793
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-17",
+  "horaActual": "19:21",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 5 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 5
+ 🔄 Construyendo HTML para 5 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Test
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🔄 Actualizando DOM (longitud HTML: 23564 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ 📦 Búsqueda inicial ejecutada
+ 📦 === FIN cargarProductosIniciales (exitosa) ===
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO MODAL DE PROFORMAS ===
+ 🔍 === INICIALIZANDO FILTROS DE PROFORMAS ===
+ ✅ Evento de búsqueda configurado
+ ✅ Evento de estado configurado
+ ✅ Botón limpiar configurado
+ ✅ Filtros de proformas inicializados correctamente
+ 📋 === CARGANDO PROFORMAS BÁSICO ===
+ 📋 Resultado obtenido: Object
+ 📋 Mostrando proformas: 12
+ 📋 Configurando paginación - Página: 1 Total: 1
+ 🔍 Término de búsqueda proformas: 2
+ 🔍 Término de búsqueda proformas: 2
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 🔍 Agregando filtro búsqueda: 2
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=2
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 Término de búsqueda proformas: 
+ 🔍 Término de búsqueda proformas: 
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 Término de búsqueda proformas: 0
+ 🔍 Término de búsqueda proformas: 0
+ 🔍 Término de búsqueda proformas: 00
+ 🔍 Término de búsqueda proformas: 00
+ 🔍 Término de búsqueda proformas: 000
+ 🔍 Término de búsqueda proformas: 000
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 🔍 Agregando filtro búsqueda: 000
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=000
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 Término de búsqueda proformas: 0000
+ 🔍 Término de búsqueda proformas: 0000
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 🔍 Agregando filtro búsqueda: 0000
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=0000
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 Término de búsqueda proformas: 00000
+ 🔍 Término de búsqueda proformas: 00000
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 🔍 Agregando filtro búsqueda: 00000
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=00000
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:190 📋 Proformas a mostrar: 12
+proformasFilter.js:258 ✅ Proformas mostradas en tabla
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 000009
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 000009
+proformasFilter.js:89 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+proformasFilter.js:90 🔍 Filtro actual: Object
+proformasFilter.js:114 🔍 Agregando filtro búsqueda: 000009
+proformasFilter.js:118 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=000009
+proformasFilter.js:130 📋 Respuesta recibida, status: 200
+proformasFilter.js:137 📋 Datos recibidos: Object
+proformasFilter.js:153 ✅ Proformas encontradas: 12
+proformasFilter.js:189 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:190 📋 Proformas a mostrar: 12
+proformasFilter.js:258 ✅ Proformas mostradas en tabla
+proformasFilter.js:48 🔍 Estado seleccionado: Facturada
+proformasFilter.js:89 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+proformasFilter.js:90 🔍 Filtro actual: Object
+proformasFilter.js:108 🔍 Agregando filtro estado: Facturada
+proformasFilter.js:114 🔍 Agregando filtro búsqueda: 000009
+proformasFilter.js:118 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&estado=Facturada&busqueda=000009
+proformasFilter.js:130 📋 Respuesta recibida, status: 200
+proformasFilter.js:137 📋 Datos recibidos: Object
+proformasFilter.js:153 ✅ Proformas encontradas: 3
+proformasFilter.js:189 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:190 📋 Proformas a mostrar: 3
+proformasFilter.js:258 ✅ Proformas mostradas en tabla
+proformasFilter.js:48 🔍 Estado seleccionado: Vigente
+proformasFilter.js:89 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+proformasFilter.js:90 🔍 Filtro actual: Object
+proformasFilter.js:108 🔍 Agregando filtro estado: Vigente
+proformasFilter.js:114 🔍 Agregando filtro búsqueda: 000009
+proformasFilter.js:118 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&estado=Vigente&busqueda=000009
+proformasFilter.js:130 📋 Respuesta recibida, status: 200
+proformasFilter.js:137 📋 Datos recibidos: Object
+proformasFilter.js:153 ✅ Proformas encontradas: 3
+proformasFilter.js:189 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:190 📋 Proformas a mostrar: 3
+proformasFilter.js:258 ✅ Proformas mostradas en tabla
+proformasFilter.js:48 🔍 Estado seleccionado: Expirada
+proformasFilter.js:89 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+proformasFilter.js:90 🔍 Filtro actual: Object
+proformasFilter.js:108 🔍 Agregando filtro estado: Expirada
+proformasFilter.js:114 🔍 Agregando filtro búsqueda: 000009
+proformasFilter.js:118 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&estado=Expirada&busqueda=000009
+proformasFilter.js:130 📋 Respuesta recibida, status: 200
+proformasFilter.js:137 📋 Datos recibidos: Object
+proformasFilter.js:153 ✅ Proformas encontradas: 6
+proformasFilter.js:189 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:190 📋 Proformas a mostrar: 6
+proformasFilter.js:258 ✅ Proformas mostradas en tabla
+proformasFilter.js:48 🔍 Estado seleccionado: todos
+proformasFilter.js:89 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+proformasFilter.js:90 🔍 Filtro actual: Object
+proformasFilter.js:114 🔍 Agregando filtro búsqueda: 000009
+proformasFilter.js:118 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=000009
+proformasFilter.js:130 📋 Respuesta recibida, status: 200
+proformasFilter.js:137 📋 Datos recibidos: Object
+proformasFilter.js:153 ✅ Proformas encontradas: 12
+proformasFilter.js:189 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:190 📋 Proformas a mostrar: 12
+proformasFilter.js:258 ✅ Proformas mostradas en tabla
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 
+proformasFilter.js:89 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+proformasFilter.js:90 🔍 Filtro actual: Object
+proformasFilter.js:118 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20
+proformasFilter.js:130 📋 Respuesta recibida, status: 200
+proformasFilter.js:137 📋 Datos recibidos: Object
+proformasFilter.js:153 ✅ Proformas encontradas: 12
+proformasFilter.js:189 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:190 📋 Proformas a mostrar: 12
+proformasFilter.js:258 ✅ Proformas mostradas en tabla
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 2
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 2
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 26
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 26
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 266
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 266
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 2669
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 2669
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 26695
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 26695
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 266951
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 266951
+proformasFilter.js:89 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+proformasFilter.js:90 🔍 Filtro actual: Object
+proformasFilter.js:114 🔍 Agregando filtro búsqueda: 266951
+proformasFilter.js:118 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=266951
+proformasFilter.js:130 📋 Respuesta recibida, status: 200
+proformasFilter.js:137 📋 Datos recibidos: Object
+proformasFilter.js:153 ✅ Proformas encontradas: 12
+proformasFilter.js:189 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:190 📋 Proformas a mostrar: 12
+proformasFilter.js:258 ✅ Proformas mostradas en tabla
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 266951
+proformasFilter.js:84 ⏸️ Búsqueda duplicada del mismo filtro omitida: 266951|todos
+proformasFilter.js:26 🔍 Término de búsqueda proformas: 266951
+proformasFilter.js:84 ⏸️ Búsqueda duplicada del mismo filtro omitida: 266951|todos
