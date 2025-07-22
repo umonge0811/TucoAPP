@@ -1,4 +1,3 @@
-
 // ===== MÓDULO DE FILTROS PARA PROFORMAS =====
 
 let filtroProformas = {
@@ -30,7 +29,7 @@ function inicializarFiltrosProformas() {
                 clearTimeout(timeoutBusquedaProformas);
             }
 
-            // Aplicar filtro después de 300ms (más rápido que el original)
+            // Aplicar filtro después de 300ms
             timeoutBusquedaProformas = setTimeout(() => {
                 filtroProformas.busqueda = termino;
                 filtroProformas.pagina = 1;
@@ -65,6 +64,9 @@ function inicializarFiltrosProformas() {
         console.log('✅ Botón limpiar configurado');
     }
 
+    // Cargar proformas iniciales
+    aplicarFiltrosProformas();
+
     console.log('✅ Filtros de proformas inicializados correctamente');
 }
 
@@ -80,7 +82,7 @@ async function aplicarFiltrosProformas() {
 
     // Prevenir búsquedas duplicadas del mismo término
     const terminoActual = filtroProformas.busqueda + '|' + filtroProformas.estado;
-    if (terminoActual === ultimaBusquedaProformas) {
+    if (terminoActual === ultimaBusquedaProformas && filtroProformas.pagina === 1) {
         console.log('⏸️ Búsqueda duplicada del mismo filtro omitida:', terminoActual);
         return;
     }
@@ -117,7 +119,7 @@ async function aplicarFiltrosProformas() {
         const urlCompleta = `/Facturacion/ObtenerProformas?${params.toString()}`;
         console.log('📋 URL completa de consulta:', urlCompleta);
 
-        // Realizar petición AJAX usando el mismo patrón que facturación
+        // Realizar petición AJAX
         const response = await fetch(urlCompleta, {
             method: 'GET',
             headers: {
@@ -155,8 +157,10 @@ async function aplicarFiltrosProformas() {
                 $('#proformasContent').show();
 
                 // Mostrar paginación si hay datos de paginación
-                if (resultado.totalPaginas > 1) {
+                if (resultado.totalPaginas && resultado.totalPaginas > 1) {
                     mostrarPaginacionProformas(resultado.pagina || filtroProformas.pagina, resultado.totalPaginas);
+                } else {
+                    $('#paginacionProformas').hide();
                 }
             } else {
                 console.log('ℹ️ No se encontraron proformas');
@@ -267,6 +271,7 @@ function mostrarPaginacionProformas(paginaActual, totalPaginas) {
 
     const paginacion = $('#paginacionProformas');
     if (paginacion.length === 0 || totalPaginas <= 1) {
+        paginacion.hide();
         return;
     }
 
@@ -279,8 +284,11 @@ function mostrarPaginacionProformas(paginaActual, totalPaginas) {
                 </li>`;
     }
 
-    // Páginas
-    for (let i = 1; i <= totalPaginas; i++) {
+    // Páginas (mostrar máximo 5 páginas)
+    const iniciarPagina = Math.max(1, paginaActual - 2);
+    const finalizarPagina = Math.min(totalPaginas, iniciarPagina + 4);
+
+    for (let i = iniciarPagina; i <= finalizarPagina; i++) {
         if (i === paginaActual) {
             html += `<li class="page-item active">
                         <span class="page-link">${i}</span>
@@ -354,72 +362,11 @@ function cambiarPaginaProformas(nuevaPagina) {
     }
 }
 
-/**
- * ✅ FUNCIÓN: Cargar proformas con filtros (versión completa y funcional)
- */
-async function cargarProformas(pagina = 1, filtros = {}) {
-    try {
-        console.log('📋 === CARGANDO PROFORMAS CON FILTROS ===');
-        console.log('📋 Página:', pagina);
-        console.log('📋 Filtros aplicados:', filtros);
-
-        // Mostrar loading
-        $('#proformasLoading').show();
-        $('#proformasContent').hide();
-        $('#proformasEmpty').hide();
-
-        // Construir parámetros de búsqueda
-        const params = new URLSearchParams({
-            pagina: pagina,
-            tamano: 20
-        });
-
-        // Agregar filtros si existen
-        if (filtros.busquedaGeneral && filtros.busquedaGeneral.trim()) {
-            params.append('busquedaGeneral', filtros.busquedaGeneral.trim());
-        }
-
-        if (filtros.estado && filtros.estado !== 'todos') {
-            params.append('estado', filtros.estado);
-        }
-
-        const response = await fetch(`/Facturacion/ObtenerProformas?${params}`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const resultado = await response.json();
-        console.log('📋 Resultado obtenido:', resultado);
-
-        if (resultado.success && resultado.proformas && resultado.proformas.length > 0) {
-            mostrarProformas(resultado.proformas);
-            mostrarPaginacionProformas(resultado.pagina, resultado.totalPaginas);
-        } else {
-            mostrarProformasVacias();
-        }
-
-    } catch (error) {
-        console.error('❌ Error cargando proformas:', error);
-        mostrarProformasVacias();
-        mostrarToast('Error', 'Error al cargar proformas: ' + error.message, 'danger');
-    } finally {
-        $('#proformasLoading').hide();
-    }
-}
 // Exportar funciones para uso global
 window.inicializarFiltrosProformas = inicializarFiltrosProformas;
 window.aplicarFiltrosProformas = aplicarFiltrosProformas;
 window.limpiarFiltrosProformas = limpiarFiltrosProformas;
 window.cambiarPaginaProformas = cambiarPaginaProformas;
-window.cargarProformas = cargarProformas;
 window.mostrarProformasEnTabla = mostrarProformasEnTabla;
 
 console.log('📋 Módulo de filtros de proformas cargado correctamente');
