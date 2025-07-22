@@ -728,28 +728,53 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerProformas(int pagina = 1, int tamano = 20, string estado = null, string busqueda = null)
+        public async Task<IActionResult> ObtenerProformas(string estado = null, int pagina = 1, int tamano = 20)
         {
             try
             {
-                _logger.LogInformation($"🔍 === OBTENIENDO PROFORMAS ===");
-                _logger.LogInformation($"🔍 Parámetros recibidos - Página: {pagina}, Tamaño: {tamano}, Estado: {estado ?? "null"}, Búsqueda: {busqueda ?? "null"}");
+                _logger.LogInformation("📋 Solicitud de proformas desde el controlador Web");
+                _logger.LogInformation("📋 Parámetros: Estado={Estado}, Página={Pagina}, Tamaño={Tamano}", estado, pagina, tamano);
 
-                var response = await _facturacionService.ObtenerProformasAsync(pagina, tamano, estado, busqueda);
-
-                if (response.Success)
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogInformation($"✅ Proformas obtenidas exitosamente - Total: {response.Data?.Count() ?? 0}");
-                    return Json(response);
+                    return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                _logger.LogWarning($"⚠️ Error obteniendo proformas: {response.Message}");
-                return Json(new { success = false, message = response.Message });
+                var resultado = await _facturacionService.ObtenerProformasAsync(token, estado, pagina, tamano);
+
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
+                    resultado.success, resultado.message);
+
+                if (resultado.success && resultado.data != null)
+                {
+                    _logger.LogInformation("📋 Procesando respuesta del API de proformas");
+
+                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
+                    return Json(resultado.data);
+                }
+                else
+                {
+                    _logger.LogWarning("📋 No se pudieron obtener las proformas: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message ?? "No se pudieron obtener las proformas",
+                        proformas = new List<object>(),
+                        totalProformas = 0
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo proformas");
-                return Json(new { success = false, message = "Error interno del servidor" });
+                _logger.LogError(ex, "❌ Error crítico obteniendo proformas");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor",
+                    proformas = new List<object>(),
+                    totalProformas = 0
+                });
             }
         }
 

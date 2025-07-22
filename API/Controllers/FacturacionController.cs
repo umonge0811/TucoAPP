@@ -883,7 +883,7 @@ namespace API.Controllers
                         (f.IdentificacionCliente != null && f.IdentificacionCliente.ToLower().Contains(termino)) ||
                         (f.TelefonoCliente != null && f.TelefonoCliente.ToLower().Contains(termino)) ||
                         (f.EmailCliente != null && f.EmailCliente.ToLower().Contains(termino)));
-
+                    
                     var totalConBusqueda = await query.CountAsync();
                     _logger.LogInformation("📋 Después de filtro búsqueda '{Termino}': {Total} proformas", termino, totalConBusqueda);
                 }
@@ -1695,10 +1695,10 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("🧪 === TEST PERMISO ENTREGAR PENDIENTES ===");
-
+                
                 var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
                     "Solo usuarios con permiso 'Entregar Pendientes' pueden marcar productos como entregados");
-
+                
                 var resultado = new
                 {
                     mensaje = "Test de validación del permiso 'Entregar Pendientes'",
@@ -1974,12 +1974,12 @@ namespace API.Controllers
                 {
                     var diasVencida = (DateTime.Now - proforma.FechaVencimiento.Value).Days;
                     var observacionTipo = esVerificacionAutomatica ? "AUTOMÁTICAMENTE" : "MANUALMENTE";
-
+                    
                     proforma.Estado = "Expirada";
                     proforma.FechaActualizacion = DateTime.Now;
                     proforma.Observaciones = (proforma.Observaciones ?? "") + 
                         $" | EXPIRADA {observacionTipo}: {DateTime.Now:dd/MM/yyyy HH:mm} ({diasVencida} días de vencimiento)";
-
+                    
                     cantidadActualizadas++;
 
                     _logger.LogInformation("📅 Proforma expirada {Tipo}: {NumeroFactura} - Vencía: {FechaVencimiento} ({Dias} días)", 
@@ -2016,101 +2016,6 @@ namespace API.Controllers
         // =====================================
         // DTOs PARA COMPLETAR FACTURAS
         // =====================================
-
-        [HttpGet("ObtenerProformas")]
-        public async Task<IActionResult> ObtenerProformas(int pagina = 1, int tamano = 20, string estado = null, string busqueda = null)
-        {
-            try
-            {
-                Console.WriteLine($"🔍 === API - OBTENIENDO PROFORMAS ===");
-                Console.WriteLine($"🔍 Parámetros recibidos:");
-                Console.WriteLine($"🔍   - Página: {pagina}");
-                Console.WriteLine($"🔍   - Tamaño: {tamano}");
-                Console.WriteLine($"🔍   - Estado: '{estado ?? "null"}'");
-                Console.WriteLine($"🔍   - Búsqueda: '{busqueda ?? "null"}'");
-
-                var query = _context.Facturas
-                    .Where(f => f.TipoDocumento == "Proforma")
-                    .Include(f => f.DetallesFactura)
-                    .Include(f => f.DetallesPago);
-
-                Console.WriteLine($"🔍 Query base creada para proformas");
-
-                // Aplicar filtro de estado si se especifica y no es "todos"
-                if (!string.IsNullOrEmpty(estado) && estado.ToLower() != "todos")
-                {
-                    query = query.Where(f => f.Estado == estado);
-                    Console.WriteLine($"🔍 Filtro de estado aplicado: {estado}");
-                }
-
-                // Aplicar filtro de búsqueda si se especifica
-                if (!string.IsNullOrEmpty(busqueda) && busqueda.Trim().Length > 0)
-                {
-                    var busquedaLimpia = busqueda.Trim().ToLower();
-                    query = query.Where(f => 
-                        f.NumeroFactura.ToLower().Contains(busquedaLimpia) ||
-                        f.NombreCliente.ToLower().Contains(busquedaLimpia) ||
-                        (f.EmailCliente != null && f.EmailCliente.ToLower().Contains(busquedaLimpia)) ||
-                        (f.IdentificacionCliente != null && f.IdentificacionCliente.ToLower().Contains(busquedaLimpia))
-                    );
-                    Console.WriteLine($"🔍 Filtro de búsqueda aplicado: '{busquedaLimpia}'");
-                }
-
-                var totalRegistros = await query.CountAsync();
-                var totalPaginas = (int)Math.Ceiling((double)totalRegistros / tamano);
-
-                Console.WriteLine($"🔍 Total registros encontrados: {totalRegistros}");
-                Console.WriteLine($"🔍 Total páginas: {totalPaginas}");
-
-                var proformas = await query
-                    .OrderByDescending(f => f.FechaCreacion)
-                    .Skip((pagina - 1) * tamano)
-                    .Take(tamano)
-                    .Select(f => new
-                    {
-                        facturaId = f.FacturaId,
-                        numeroFactura = f.NumeroFactura,
-                        tipoDocumento = f.TipoDocumento,
-                        nombreCliente = f.NombreCliente,
-                        identificacionCliente = f.IdentificacionCliente,
-                        emailCliente = f.EmailCliente,
-                        fechaFactura = f.FechaFactura,
-                        fechaVencimiento = f.FechaVencimiento,
-                        subtotal = f.Subtotal,
-                        montoImpuesto = f.MontoImpuesto,
-                        total = f.Total,
-                        estado = f.Estado,
-                        metodoPago = f.MetodoPago,
-                        observaciones = f.Observaciones,
-                        usuarioCreadorNombre = f.UsuarioCreadorNombre ?? "Sistema",
-                        detallesFactura = f.DetallesFactura.Select(d => new
-                        {
-                            productoId = d.ProductoId,
-                            nombreProducto = d.NombreProducto,
-                            cantidad = d.Cantidad,
-                            precioUnitario = d.PrecioUnitario,
-                            subtotal = d.Subtotal
-                        }).ToList()
-                    })
-                    .ToListAsync();
-
-                Console.WriteLine($"✅ Proformas obtenidas de BD: {proformas.Count}");
-
-                return Ok(new
-                {
-                    success = true,
-                    proformas = proformas,
-                    pagina = pagina,
-                    totalPaginas = totalPaginas,
-                    totalRegistros = totalRegistros
-                });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error en API ObtenerProformas: {ex.Message}");
-                return BadRequest(new { success = false, message = "Error al obtener proformas: " + ex.Message });
-            }
-        }
     }
 
     public class CrearPendientesEntregaRequest
