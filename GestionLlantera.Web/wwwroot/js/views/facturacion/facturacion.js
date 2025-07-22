@@ -5159,16 +5159,21 @@ function getCampoSelector(nombreCampo) {
 
 // ===== FUNCIÓN CONSULTAR INVENTARIO =====
 function consultarInventario() {
-    console.log('📦 Abriendo consulta de inventario...');
+    console.log('📦 === CONSULTANDO INVENTARIO ===');
 
     if (modalInventario) {
+        // Mostrar el modal
         modalInventario.show();
+
+        // Cargar inventario completo al abrir
+        setTimeout(() => {
+            cargarInventarioCompleto();
+        }, 300);
     } else {
         console.error('❌ Modal de inventario no está inicializado');
         mostrarToast('Error', 'No se pudo abrir el inventario', 'danger');
     }
 }
-
 // ===== FUNCIONES AUXILIARES ADICIONALES =====
 function nuevaVenta() {
     limpiarVenta();
@@ -7333,43 +7338,253 @@ let inventarioFiltros = {
 /**
  * ✅ FUNCIÓN: Inicializar modal de inventario
  */
+// Función para inicializar el modal de inventario
 function inicializarModalInventario() {
-    console.log('📦 Inicializando modal de inventario...');
+    console.log('🚀 === INICIALIZANDO MODAL DE INVENTARIO ===');
 
-    // Configurar eventos de filtros
-    $('#busquedaInventario').on('input', debounce(function () {
-        inventarioFiltros.busqueda = $(this).val();
-        inventarioPaginaActual = 1;
-        cargarInventarioGeneral();
-    }, 500));
-
-    $('#filtroCategoria').on('change', function () {
-        inventarioFiltros.categoria = $(this).val();
-        inventarioPaginaActual = 1;
-        cargarInventarioGeneral();
+    // Configurar evento para abrir modal de inventario
+    $('#btnAbrirInventario, #btnConsultarInventario').on('click', function () {
+        console.log('📋 Abriendo modal de inventario...');
+        consultarInventario();
     });
 
-    $('#filtroStock').on('change', function () {
-        inventarioFiltros.stock = $(this).val();
-        inventarioPaginaActual = 1;
-        cargarInventarioGeneral();
+    // Configurar eventos de búsqueda en el modal
+    let timeoutBusquedaModal = null;
+    $('#busquedaInventarioModal').on('input', function () {
+        const termino = $(this).val().trim();
+
+        clearTimeout(timeoutBusquedaModal);
+        timeoutBusquedaModal = setTimeout(() => {
+            if (termino.length >= 2) {
+                buscarEnModalInventario(termino);
+            } else if (termino.length === 0) {
+                // Mostrar todos los productos
+                cargarInventarioCompleto();
+            }
+        }, 500);
     });
 
-    $('#btnBuscarInventario').on('click', function () {
-        inventarioPaginaActual = 1;
-        cargarInventarioGeneral();
-    });
-
-    $('#btnExportarInventario').on('click', function () {
-        exportarInventarioExcel();
-    });
-
-    // Cargar datos cuando se abre el modal
-    $('#modalInventario').on('shown.bs.modal', function () {
-        cargarInventarioGeneral();
+    // Configurar filtros del modal
+    $('#categoriaInventarioModal, #stockInventarioModal').on('change', function () {
+        aplicarFiltrosModalInventario();
     });
 
     console.log('✅ Modal de inventario inicializado');
+}
+
+// Función para cargar inventario completo en el modal
+async function cargarInventarioCompleto() {
+    try {
+        console.log('📦 Cargando inventario completo para modal...');
+
+        $('#inventarioLoading').show();
+        $('#inventarioContent').hide();
+
+        const response = await fetch('/Facturacion/ObtenerProductosParaFacturacion', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+
+        if (data && data.productos) {
+            mostrarProductosoEnModal(data.productos);
+        } else {
+            mostrarProductosoEnModal([]);
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando inventario completo:', error);
+        $('#inventarioLoading').hide();
+        $('#inventarioContent').show();
+        $('#inventarioTableBody').html(`
+            <tr>
+                <td colspan="7" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle display-4"></i>
+                    <p class="mt-2">Error al cargar el inventario</p>
+                </td>
+            </tr>
+        `);
+        mostrarToast('Error', 'No se pudo cargar el inventario: ' + error.message, 'danger');
+    }
+}
+
+function mostrarProductosoEnModal(productos) {
+    console.log('📋 === MOSTRANDO PRODUCTOS EN MODAL DE CONSULTA ===');
+    console.log('📋 Productos recibidos:', productos);
+    console.log('📋 Cantidad de productos:', productos ? productos.length : 'null/undefined');
+    // Limpiar el contenido anterior
+    $('#inventarioTableBody').empty();
+    $('#inventarioLoading').hide();
+    $('#inventarioContent').show();
+    if (!productos || productos.length === 0) {
+        $('#inventarioTableBody').html(`
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="bi bi-inbox display-4 text-muted"></i>
+                    <p class="text-muted mt-2">No se encontraron productos</p>
+                </td>
+            </tr>
+        `);
+        return;
+    }
+    // Generar las filas de la tabla
+    productos.forEach(producto => {
+        // Mapeo seguro de propiedades con múltiples variaciones posibles
+        const productoId = producto.productoId || producto.ProductoId || producto.id || 'N/A';
+        const nombreProducto = producto.nombreProducto || producto.NombreProducto || producto.nombre || 'Sin nombre';
+        const categoria = producto.categoria || producto.Categoria || 'General';
+        const precio = producto.precio || producto.Precio || 0;
+        const stock = producto.cantidadEnInventario || producto.CantidadEnInventario || producto.stock || producto.Stock || 0;
+        const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
+        const ubicacion = producto.ubicacion || producto.Ubicacion || 'General';
+        // Determinar el estado del stock
+        let estadoStock = '';
+        let claseStock = '';
+        if (stock <= 0) {
+            estadoStock = 'Sin Stock';
+            claseStock = 'text-danger fw-bold';
+        } else if (stock <= stockMinimo) {
+            estadoStock = 'Stock Bajo';
+            claseStock = 'text-warning fw-bold';
+        } else {
+            estadoStock = 'Disponible';
+            claseStock = 'text-success';
+        }
+        // Crear la fila de la tabla
+        const fila = `
+            <tr class="producto-fila" data-producto-id="${productoId}">
+                <td>
+                    <small class="text-muted">#${productoId}</small>
+                </td>
+                <td>
+                    <div class="producto-info">
+                        <strong class="producto-nombre" title="${nombreProducto}">${nombreProducto.length > 30 ? nombreProducto.substring(0, 30) + '...' : nombreProducto}</strong>
+                        <br><small class="text-muted">${categoria}</small>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-primary">${categoria}</span>
+                </td>
+                <td class="text-end">
+                    <span class="fw-bold text-success">₡${formatearMoneda(precio)}</span>
+                </td>
+                <td class="text-center">
+                    <span class="badge ${stock <= 0 ? 'bg-danger' : stock <= stockMinimo ? 'bg-warning' : 'bg-success'} fs-6">
+                        ${stock}
+                    </span>
+                    ${stock <= stockMinimo && stock > 0 ? '<br><small class="text-warning">Mín: ' + stockMinimo + '</small>' : ''}
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-info">${ubicacion}</span>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" 
+                                class="btn btn-outline-info btn-ver-detalle-modal" 
+                                data-producto-id="${productoId}"
+                                title="Ver detalles">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        ${stock > 0 ? `
+                        <button type="button" 
+                                class="btn btn-outline-success btn-agregar-desde-modal" 
+                                data-producto='${JSON.stringify({
+            productoId: productoId,
+            nombreProducto: nombreProducto,
+            precio: precio,
+            cantidadEnInventario: stock,
+            stockMinimo: stockMinimo
+        }).replace(/"/g, '&quot;')}'
+                                title="Agregar a factura">
+                            <i class="bi bi-plus-circle"></i>
+                        </button>
+                        ` : `
+                        <button type="button" 
+                                class="btn btn-outline-secondary" 
+                                disabled
+                                title="Sin stock disponible">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                        `}
+                    </div>
+                </td>
+            </tr>
+        `;
+        $('#inventarioTableBody').append(fila);
+    });
+    // Configurar eventos para los botones
+    configurarEventosModalInventario();
+    // Actualizar estadísticas
+    actualizarEstadisticasModalInventario(productos);
+    console.log('✅ Productos mostrados en modal de consulta:', productos.length);
+}
+
+// Función para configurar eventos del modal de inventario
+function configurarEventosModalInventario() {
+    // Limpiar eventos anteriores
+    $('.btn-ver-detalle-modal').off('click.modalInventario');
+    $('.btn-agregar-desde-modal').off('click.modalInventario');
+    // Configurar evento para ver detalles
+    $('.btn-ver-detalle-modal').on('click.modalInventario', function () {
+        const productoId = $(this).data('producto-id');
+        console.log('👁️ Ver detalle del producto ID:', productoId);
+        // Aquí puedes llamar a la función de detalle que ya tienes
+        if (typeof verDetalleProducto === 'function') {
+            verDetalleProducto({ productoId: productoId });
+        }
+    });
+    // Configurar evento para agregar producto
+    $('.btn-agregar-desde-modal').on('click.modalInventario', function () {
+        try {
+            const productoJson = $(this).attr('data-producto');
+            const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
+
+            console.log('➕ Agregar producto desde modal:', producto);
+
+            // Cerrar modal de inventario
+            if (modalInventario) {
+                modalInventario.hide();
+            }
+
+            // Mostrar modal de selección de producto
+            mostrarModalSeleccionProducto(producto);
+
+        } catch (error) {
+            console.error('❌ Error agregando producto desde modal:', error);
+            mostrarToast('Error', 'No se pudo procesar el producto seleccionado', 'danger');
+        }
+    });
+}
+
+// Función para actualizar estadísticas del modal
+function actualizarEstadisticasModalInventario(productos) {
+    if (!productos || productos.length === 0) return;
+    let disponibles = 0;
+    let stockBajo = 0;
+    let sinStock = 0;
+    productos.forEach(producto => {
+        const stock = producto.cantidadEnInventario || producto.CantidadEnInventario || producto.stock || producto.Stock || 0;
+        const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
+        if (stock <= 0) {
+            sinStock++;
+        } else if (stock <= stockMinimo) {
+            stockBajo++;
+        } else {
+            disponibles++;
+        }
+    });
+    // Actualizar contadores en el modal si existen
+    $('#totalProductosModal').text(productos.length);
+    $('#disponiblesModal').text(disponibles);
+    $('#stockBajoModal').text(stockBajo);
+    $('#sinStockModal').text(sinStock);
 }
 
 /**
@@ -7381,19 +7596,27 @@ async function cargarInventarioGeneral() {
 
         mostrarCargandoInventario(true);
 
-        const response = await fetch('/api/Inventario/productos', {
+        const response = await fetch('/Inventario/ObtenerProductosParaFacturacion', {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
         });
 
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
-        const productos = await response.json();
+        const result = await response.json();
+
+        // Verificar si la respuesta es exitosa
+        if (!result.success) {
+            throw new Error(result.message || 'Error al obtener productos');
+        }
+
+        const productos = result.data; // Los productos están en la propiedad 'data'
 
         console.log(`✅ Productos cargados: ${productos.length}`);
 
