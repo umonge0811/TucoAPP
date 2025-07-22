@@ -804,7 +804,8 @@ namespace API.Controllers
                         Observaciones = f.Observaciones,
                         UsuarioCreadorId = f.UsuarioCreadorId,
                         UsuarioCreadorNombre = f.UsuarioCreador.NombreUsuario,
-                        FechaCreacion = f.FechaCreacion,
+                        FechaCreacion```text
+= f.FechaCreacion,
                         FechaActualizacion = f.FechaActualizacion,
                         DetallesFactura = f.DetallesFactura.Select(d => new DetalleFacturaDTO
                         {

@@ -1,23 +1,20 @@
-// ===== MÓDULO DE FILTROS PARA PROFORMAS =====
 
-let filtroProformas = {
-    busqueda: '',
-    estado: 'todos',
-    pagina: 1,
-    tamano: 20
+// ===== MÓDULO DE FILTROS PARA PROFORMAS (FRONTEND ONLY) =====
+
+let todasLasProformas = []; // Array para almacenar todas las proformas
+let proformasFiltradas = []; // Array para proformas filtradas
+let paginaActual = 1;
+let proformasPorPagina = 20;
+let filtrosBusqueda = {
+    texto: '',
+    estado: 'todos'
 };
-
-let timeoutBusquedaProformas = null;
-let busquedaProformasEnProceso = false;
-let ultimaBusquedaProformas = '';
 
 /**
  * Inicializar filtros de proformas
  */
 function inicializarFiltrosProformas() {
-    console.log('🔍 === INICIALIZANDO FILTROS DE PROFORMAS ===');
-    console.log('🔍 Estado DOM ready:', $(document).ready);
-    console.log('🔍 Modal visible:', $('#proformasModal').is(':visible'));
+    console.log('🔍 === INICIALIZANDO FILTROS DE PROFORMAS (FRONTEND) ===');
 
     // Verificar que jQuery esté disponible
     if (typeof $ === 'undefined') {
@@ -27,153 +24,73 @@ function inicializarFiltrosProformas() {
 
     // Esperar un poco para asegurar que el DOM del modal esté completamente cargado
     setTimeout(() => {
-        console.log('🔍 Buscando elementos del DOM...');
+        console.log('🔍 Configurando eventos de filtrado...');
         
         // Configurar evento de búsqueda con debounce
         const $inputBusqueda = $('#busquedaProformas');
-        console.log('🔍 Input de búsqueda encontrado:', $inputBusqueda.length > 0);
-        console.log('🔍 Input de búsqueda elemento:', $inputBusqueda[0]);
-        
         if ($inputBusqueda.length) {
             $inputBusqueda.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
                 const termino = $(this).val().trim();
-                console.log('🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***');
-                console.log('🔍 Término de búsqueda proformas:', termino);
-                console.log('🔍 Elemento que disparó evento:', this);
-
-                // Limpiar timeout anterior
-                if (timeoutBusquedaProformas) {
-                    clearTimeout(timeoutBusquedaProformas);
-                    console.log('🔍 Timeout anterior limpiado');
-                }
-
-                // Aplicar filtro después de 300ms
-                timeoutBusquedaProformas = setTimeout(() => {
-                    console.log('🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***');
-                    filtroProformas.busqueda = termino;
-                    filtroProformas.pagina = 1;
-                    console.log('🔍 Filtro actualizado:', filtroProformas);
-                    aplicarFiltrosProformas();
-                }, 300);
+                console.log('🔍 Término de búsqueda:', termino);
+                
+                filtrosBusqueda.texto = termino;
+                aplicarFiltrosLocalmenteProformas();
             });
-            console.log('✅ Evento de búsqueda configurado correctamente');
-            
-            // Agregar evento inmediato para testing
-            $inputBusqueda.on('keypress', function(e) {
-                console.log('🔍 *** KEYPRESS DETECTADO ***', e.key, $(this).val());
-            });
-            
-            $inputBusqueda.on('change', function(e) {
-                console.log('🔍 *** CHANGE DETECTADO ***', $(this).val());
-            });
+            console.log('✅ Evento de búsqueda configurado');
         } else {
-            console.error('❌ No se encontró el input de búsqueda #busquedaProformas');
+            console.error('❌ No se encontró el input de búsqueda');
         }
 
         // Configurar evento de cambio de estado
         const $selectEstado = $('#estadoProformas');
-        console.log('🔍 Select de estado encontrado:', $selectEstado.length > 0);
-        
         if ($selectEstado.length) {
             $selectEstado.off('change.proformasFilter').on('change.proformasFilter', function() {
                 const estado = $(this).val();
-                console.log('🔍 *** CAMBIO DE ESTADO DISPARADO ***');
                 console.log('🔍 Estado seleccionado:', estado);
-
-                filtroProformas.estado = estado;
-                filtroProformas.pagina = 1;
-                aplicarFiltrosProformas();
+                
+                filtrosBusqueda.estado = estado;
+                aplicarFiltrosLocalmenteProformas();
             });
             console.log('✅ Evento de estado configurado');
         } else {
-            console.error('❌ No se encontró el select de estado #estadoProformas');
+            console.error('❌ No se encontró el select de estado');
         }
 
         // Configurar botón limpiar
         const $btnLimpiar = $('#btnLimpiarFiltrosProformas');
-        console.log('🔍 Botón limpiar encontrado:', $btnLimpiar.length > 0);
-        
         if ($btnLimpiar.length) {
             $btnLimpiar.off('click.proformasFilter').on('click.proformasFilter', function(e) {
                 e.preventDefault();
-                e.stopPropagation();
-                console.log('🔍 *** BOTÓN LIMPIAR PRESIONADO ***');
+                console.log('🔍 Limpiando filtros...');
                 limpiarFiltrosProformas();
             });
             console.log('✅ Botón limpiar configurado');
         } else {
-            console.error('❌ No se encontró el botón limpiar #btnLimpiarFiltrosProformas');
+            console.error('❌ No se encontró el botón limpiar');
         }
 
-        // Cargar proformas iniciales
-        console.log('🔍 Cargando proformas iniciales...');
-        aplicarFiltrosProformas();
+        // Cargar todas las proformas inicialmente
+        cargarTodasLasProformas();
 
         console.log('✅ Filtros de proformas inicializados correctamente');
         
-    }, 100); // Pequeño delay para asegurar que el DOM esté listo
+    }, 100);
 }
 
 /**
- * Aplicar filtros y cargar proformas
+ * Cargar todas las proformas desde el servidor una sola vez
  */
-async function aplicarFiltrosProformas() {
-    console.log('🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***');
-    console.log('🔍 Filtro actual completo:', JSON.stringify(filtroProformas, null, 2));
-    console.log('🔍 busquedaProformasEnProceso:', busquedaProformasEnProceso);
-    console.log('🔍 ultimaBusquedaProformas:', ultimaBusquedaProformas);
-    
-    // Prevenir múltiples llamadas simultáneas
-    if (busquedaProformasEnProceso) {
-        console.log('⏸️ Búsqueda de proformas ya en proceso, omitiendo llamada duplicada');
-        return;
-    }
-
-    // Prevenir búsquedas duplicadas del mismo término
-    const terminoActual = filtroProformas.busqueda + '|' + filtroProformas.estado;
-    console.log('🔍 Término actual:', terminoActual);
-    console.log('🔍 Última búsqueda:', ultimaBusquedaProformas);
-    console.log('🔍 Página actual:', filtroProformas.pagina);
-    
-    if (terminoActual === ultimaBusquedaProformas && filtroProformas.pagina === 1) {
-        console.log('⏸️ Búsqueda duplicada del mismo filtro omitida:', terminoActual);
-        return;
-    }
-
+async function cargarTodasLasProformas() {
     try {
-        console.log('🔍 === APLICANDO FILTROS DE PROFORMAS ===');
-        console.log('🔍 Filtro actual:', filtroProformas);
-
-        busquedaProformasEnProceso = true;
-        ultimaBusquedaProformas = terminoActual;
+        console.log('📋 === CARGANDO TODAS LAS PROFORMAS ===');
 
         // Mostrar loading
         $('#proformasLoading').show();
         $('#proformasContent').hide();
         $('#proformasEmpty').hide();
 
-        // Construir URL con parámetros
-        const params = new URLSearchParams();
-        params.append('pagina', filtroProformas.pagina);
-        params.append('tamano', filtroProformas.tamano);
-
-        // Agregar estado si no es "todos"
-        if (filtroProformas.estado && filtroProformas.estado !== 'todos') {
-            params.append('estado', filtroProformas.estado);
-            console.log('🔍 Agregando filtro estado:', filtroProformas.estado);
-        }
-
-        // Agregar búsqueda si existe
-        if (filtroProformas.busqueda && filtroProformas.busqueda.trim() !== '') {
-            params.append('busqueda', filtroProformas.busqueda.trim());
-            console.log('🔍 Agregando filtro búsqueda:', filtroProformas.busqueda);
-        }
-
-        const urlCompleta = `/Facturacion/ObtenerProformas?${params.toString()}`;
-        console.log('📋 URL completa de consulta:', urlCompleta);
-
-        // Realizar petición AJAX
-        const response = await fetch(urlCompleta, {
+        // Realizar petición para obtener TODAS las proformas
+        const response = await fetch('/Facturacion/ObtenerProformas?tamano=1000', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -182,20 +99,16 @@ async function aplicarFiltrosProformas() {
             credentials: 'include'
         });
 
-        console.log('📋 Respuesta recibida, status:', response.status);
-
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
         }
 
         const resultado = await response.json();
-        console.log('📋 Datos recibidos:', resultado);
+        console.log('📋 Respuesta del servidor:', resultado);
 
-        // Procesar resultado
         if (resultado.success) {
+            // Extraer proformas del resultado
             let proformas = null;
-
-            // Buscar proformas en diferentes propiedades del resultado
             if (resultado.proformas && Array.isArray(resultado.proformas)) {
                 proformas = resultado.proformas;
             } else if (resultado.data && Array.isArray(resultado.data)) {
@@ -205,22 +118,18 @@ async function aplicarFiltrosProformas() {
             }
 
             if (proformas && proformas.length > 0) {
-                console.log('✅ Proformas encontradas:', proformas.length);
-                mostrarProformasEnTabla(proformas);
-                $('#proformasContent').show();
-
-                // Mostrar paginación si hay datos de paginación
-                if (resultado.totalPaginas && resultado.totalPaginas > 1) {
-                    mostrarPaginacionProformas(resultado.pagina || filtroProformas.pagina, resultado.totalPaginas);
-                } else {
-                    $('#paginacionProformas').hide();
-                }
+                console.log('✅ Proformas cargadas:', proformas.length);
+                todasLasProformas = proformas;
+                
+                // Aplicar filtros iniciales (mostrar todas)
+                aplicarFiltrosLocalmenteProformas();
             } else {
                 console.log('ℹ️ No se encontraron proformas');
+                todasLasProformas = [];
                 mostrarProformasVacias();
             }
         } else {
-            console.log('❌ Respuesta no exitosa:', resultado.message);
+            console.log('❌ Error del servidor:', resultado.message);
             mostrarProformasVacias();
             if (typeof mostrarToast === 'function') {
                 mostrarToast('Error', resultado.message || 'Error al cargar proformas', 'warning');
@@ -228,15 +137,102 @@ async function aplicarFiltrosProformas() {
         }
 
     } catch (error) {
-        console.error('❌ Error aplicando filtros de proformas:', error);
+        console.error('❌ Error cargando proformas:', error);
         mostrarProformasVacias();
         if (typeof mostrarToast === 'function') {
             mostrarToast('Error', 'Error al cargar proformas: ' + error.message, 'danger');
         }
     } finally {
-        busquedaProformasEnProceso = false;
         $('#proformasLoading').hide();
     }
+}
+
+/**
+ * Aplicar filtros localmente (en el frontend)
+ */
+function aplicarFiltrosLocalmenteProformas() {
+    console.log('🔍 === APLICANDO FILTROS LOCALMENTE ===');
+    console.log('🔍 Total proformas:', todasLasProformas.length);
+    console.log('🔍 Filtros:', filtrosBusqueda);
+
+    if (todasLasProformas.length === 0) {
+        mostrarProformasVacias();
+        return;
+    }
+
+    // Filtrar proformas
+    proformasFiltradas = todasLasProformas.filter(proforma => {
+        let cumpleFiltros = true;
+
+        // Filtro por texto (buscar en número, cliente, usuario)
+        if (filtrosBusqueda.texto && filtrosBusqueda.texto.length > 0) {
+            const textoBusqueda = filtrosBusqueda.texto.toLowerCase();
+            const textoProforma = [
+                proforma.numeroFactura || '',
+                proforma.nombreCliente || proforma.clienteNombre || '',
+                proforma.emailCliente || proforma.email || '',
+                proforma.usuarioCreador || proforma.nombreUsuario || ''
+            ].join(' ').toLowerCase();
+
+            if (!textoProforma.includes(textoBusqueda)) {
+                cumpleFiltros = false;
+            }
+        }
+
+        // Filtro por estado
+        if (filtrosBusqueda.estado && filtrosBusqueda.estado !== 'todos') {
+            if (proforma.estado !== filtrosBusqueda.estado) {
+                cumpleFiltros = false;
+            }
+        }
+
+        return cumpleFiltros;
+    });
+
+    console.log('🔍 Proformas filtradas:', proformasFiltradas.length);
+
+    // Resetear paginación
+    paginaActual = 1;
+
+    // Mostrar resultados
+    mostrarProformasPaginadas();
+}
+
+/**
+ * Mostrar proformas con paginación
+ */
+function mostrarProformasPaginadas() {
+    console.log('📋 === MOSTRANDO PROFORMAS PAGINADAS ===');
+    console.log('📋 Página actual:', paginaActual);
+    console.log('📋 Proformas por página:', proformasPorPagina);
+
+    if (proformasFiltradas.length === 0) {
+        mostrarProformasVacias();
+        return;
+    }
+
+    // Calcular paginación
+    const totalPaginas = Math.ceil(proformasFiltradas.length / proformasPorPagina);
+    const inicio = (paginaActual - 1) * proformasPorPagina;
+    const fin = inicio + proformasPorPagina;
+    const proformasParaMostrar = proformasFiltradas.slice(inicio, fin);
+
+    console.log('📋 Total páginas:', totalPaginas);
+    console.log('📋 Mostrando proformas:', inicio, 'a', fin);
+    console.log('📋 Proformas en esta página:', proformasParaMostrar.length);
+
+    // Mostrar proformas en la tabla
+    mostrarProformasEnTabla(proformasParaMostrar);
+
+    // Mostrar controles de paginación si es necesario
+    if (totalPaginas > 1) {
+        mostrarPaginacionProformas(paginaActual, totalPaginas);
+    } else {
+        $('#paginacionProformas').hide();
+    }
+
+    // Mostrar contenido
+    $('#proformasContent').show();
 }
 
 /**
@@ -318,9 +314,9 @@ function mostrarProformasEnTabla(proformas) {
 /**
  * Mostrar paginación
  */
-function mostrarPaginacionProformas(paginaActual, totalPaginas) {
+function mostrarPaginacionProformas(paginaActualParam, totalPaginas) {
     console.log('📄 === MOSTRANDO PAGINACIÓN DE PROFORMAS ===');
-    console.log('📄 Página actual:', paginaActual, 'Total páginas:', totalPaginas);
+    console.log('📄 Página actual:', paginaActualParam, 'Total páginas:', totalPaginas);
 
     const paginacion = $('#paginacionProformas');
     if (paginacion.length === 0 || totalPaginas <= 1) {
@@ -331,18 +327,18 @@ function mostrarPaginacionProformas(paginaActual, totalPaginas) {
     let html = '<ul class="pagination justify-content-center">';
 
     // Botón anterior
-    if (paginaActual > 1) {
+    if (paginaActualParam > 1) {
         html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActual - 1})">Anterior</a>
+                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActualParam - 1})">Anterior</a>
                 </li>`;
     }
 
     // Páginas (mostrar máximo 5 páginas)
-    const iniciarPagina = Math.max(1, paginaActual - 2);
+    const iniciarPagina = Math.max(1, paginaActualParam - 2);
     const finalizarPagina = Math.min(totalPaginas, iniciarPagina + 4);
 
     for (let i = iniciarPagina; i <= finalizarPagina; i++) {
-        if (i === paginaActual) {
+        if (i === paginaActualParam) {
             html += `<li class="page-item active">
                         <span class="page-link">${i}</span>
                     </li>`;
@@ -354,9 +350,9 @@ function mostrarPaginacionProformas(paginaActual, totalPaginas) {
     }
 
     // Botón siguiente
-    if (paginaActual < totalPaginas) {
+    if (paginaActualParam < totalPaginas) {
         html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActual + 1})">Siguiente</a>
+                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActualParam + 1})">Siguiente</a>
                 </li>`;
     }
 
@@ -381,25 +377,22 @@ function limpiarFiltrosProformas() {
     console.log('🧹 === LIMPIANDO FILTROS DE PROFORMAS ===');
 
     // Resetear filtros
-    filtroProformas = {
-        busqueda: '',
-        estado: 'todos',
-        pagina: 1,
-        tamano: 20
+    filtrosBusqueda = {
+        texto: '',
+        estado: 'todos'
     };
 
     // Limpiar campos del formulario
     $('#busquedaProformas').val('');
     $('#estadoProformas').val('todos');
 
-    // Limpiar variables de control
-    ultimaBusquedaProformas = '';
-    busquedaProformasEnProceso = false;
+    // Resetear paginación
+    paginaActual = 1;
 
-    // Recargar proformas
-    aplicarFiltrosProformas();
+    // Aplicar filtros (mostrar todas)
+    aplicarFiltrosLocalmenteProformas();
 
-    console.log('✅ Filtros limpiados y proformas recargadas');
+    console.log('✅ Filtros limpiados');
 }
 
 /**
@@ -410,63 +403,29 @@ function cambiarPaginaProformas(nuevaPagina) {
     console.log('📄 Nueva página:', nuevaPagina);
 
     if (nuevaPagina > 0) {
-        filtroProformas.pagina = nuevaPagina;
-        aplicarFiltrosProformas();
+        paginaActual = nuevaPagina;
+        mostrarProformasPaginadas();
     }
 }
 
 /**
- * Función de inicialización forzada para depuración
+ * Recargar proformas (útil después de crear/editar una proforma)
  */
-function inicializarFiltrosProformasForzado() {
-    console.log('🔍 *** INICIALIZACIÓN FORZADA DE FILTROS ***');
-    console.log('🔍 jQuery disponible:', typeof $ !== 'undefined');
-    console.log('🔍 Modal existe:', $('#proformasModal').length > 0);
-    console.log('🔍 Input búsqueda existe:', $('#busquedaProformas').length > 0);
-    console.log('🔍 Select estado existe:', $('#estadoProformas').length > 0);
-    console.log('🔍 Tabla body existe:', $('#proformasTableBody').length > 0);
-    
-    // Resetear variables de control
-    busquedaProformasEnProceso = false;
-    ultimaBusquedaProformas = '';
-    filtroProformas = {
-        busqueda: '',
-        estado: 'todos',
-        pagina: 1,
-        tamano: 20
-    };
-    
-    console.log('🔍 Variables reseteadas, llamando inicialización normal...');
-    inicializarFiltrosProformas();
-}
-
-/**
- * Test manual de búsqueda
- */
-function testBusquedaManual(termino) {
-    console.log('🔍 *** TEST MANUAL DE BÚSQUEDA ***');
-    console.log('🔍 Término de prueba:', termino);
-    
-    filtroProformas.busqueda = termino;
-    filtroProformas.pagina = 1;
-    
-    console.log('🔍 Filtro configurado:', filtroProformas);
-    aplicarFiltrosProformas();
+function recargarProformas() {
+    console.log('🔄 Recargando proformas...');
+    cargarTodasLasProformas();
 }
 
 // Exportar funciones para uso global
 if (typeof window !== 'undefined') {
     window.inicializarFiltrosProformas = inicializarFiltrosProformas;
-    window.inicializarFiltrosProformasForzado = inicializarFiltrosProformasForzado;
-    window.testBusquedaManual = testBusquedaManual;
-    window.aplicarFiltrosProformas = aplicarFiltrosProformas;
+    window.aplicarFiltrosLocalmenteProformas = aplicarFiltrosLocalmenteProformas;
     window.limpiarFiltrosProformas = limpiarFiltrosProformas;
     window.cambiarPaginaProformas = cambiarPaginaProformas;
     window.mostrarProformasEnTabla = mostrarProformasEnTabla;
+    window.recargarProformas = recargarProformas;
     
-    console.log('📋 Módulo de filtros de proformas cargado correctamente');
-    console.log('📋 Funciones exportadas a window:', Object.keys(window).filter(k => k.includes('Proformas')));
-    console.log('📋 Función inicializarFiltrosProformas disponible:', typeof window.inicializarFiltrosProformas);
+    console.log('📋 Módulo de filtros de proformas (Frontend) cargado correctamente');
 } else {
     console.error('❌ Window no está disponible para exportar funciones');
 }
