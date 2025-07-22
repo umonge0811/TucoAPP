@@ -654,6 +654,257 @@ function formatearMoneda(valor) {
 }
 
 /**
+ * Mostrar detalles del producto en modal
+ * Versión adaptada para el contexto de facturación
+ */
+function verDetalleProducto(producto) {
+    console.log('👁️ === MOSTRANDO DETALLE PRODUCTO ===');
+    console.log('👁️ Producto:', producto);
+
+    try {
+        // Mapear propiedades del producto
+        const nombreProducto = producto.nombreProducto || producto.NombreProducto || 'Producto sin nombre';
+        const productoId = producto.productoId || producto.ProductoId || 0;
+        const precio = producto.precio || producto.Precio || 0;
+        const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
+        const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
+        const descripcion = producto.descripcion || producto.Descripcion || '';
+
+        // Determinar si es llanta y extraer medidas
+        let esLlanta = false;
+        let infoLlanta = null;
+        
+        try {
+            if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
+                esLlanta = true;
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+                
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    let medidaCompleta = '';
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
+                    
+                    infoLlanta = {
+                        medida: medidaCompleta,
+                        marca: llantaInfo.marca || 'N/A',
+                        modelo: llantaInfo.modelo || 'N/A',
+                        ancho: llantaInfo.ancho || 'N/A',
+                        perfil: llantaInfo.perfil || 'N/A',
+                        diametro: llantaInfo.diametro || 'N/A',
+                        indiceVelocidad: llantaInfo.indiceVelocidad || 'N/A',
+                        capas: llantaInfo.capas || 'N/A',
+                        tipoTerreno: llantaInfo.tipoTerreno || 'N/A'
+                    };
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando información de llanta para detalle:', error);
+        }
+
+        // Calcular precios por método de pago
+        const precioEfectivo = precio;
+        const precioTarjeta = precio * 1.05;
+
+        // Construir HTML del modal
+        const modalHtml = `
+            <div class="modal fade" id="modalDetalleProductoInventario" tabindex="-1" aria-labelledby="modalDetalleProductoInventarioLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title" id="modalDetalleProductoInventarioLabel">
+                                <i class="bi bi-info-circle me-2"></i>Detalle del Producto
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <div class="card">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0">
+                                                <i class="bi bi-box-seam me-2"></i>${nombreProducto}
+                                                <small class="text-muted ms-2">ID: ${productoId}</small>
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="text-primary">💰 Precios</h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-borderless">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><strong>Efectivo/SINPE:</strong></td>
+                                                                    <td class="text-success fw-bold">₡${formatearMoneda(precioEfectivo)}</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Tarjeta:</strong></td>
+                                                                    <td class="text-warning fw-bold">₡${formatearMoneda(precioTarjeta)}</td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <h6 class="text-primary">📦 Inventario</h6>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-borderless">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><strong>Stock actual:</strong></td>
+                                                                    <td>
+                                                                        <span class="${cantidadInventario <= stockMinimo ? 'text-danger' : 'text-success'} fw-bold">
+                                                                            ${cantidadInventario} unidades
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Stock mínimo:</strong></td>
+                                                                    <td class="text-muted">${stockMinimo} unidades</td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td><strong>Estado:</strong></td>
+                                                                    <td>
+                                                                        ${cantidadInventario <= 0 ? 
+                                                                            '<span class="badge bg-danger">Sin Stock</span>' :
+                                                                            cantidadInventario <= stockMinimo ?
+                                                                                '<span class="badge bg-warning text-dark">Stock Bajo</span>' :
+                                                                                '<span class="badge bg-success">Disponible</span>'
+                                                                        }
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            ${descripcion ? `
+                                                <div class="mb-3">
+                                                    <h6 class="text-primary">📝 Descripción</h6>
+                                                    <p class="text-muted">${descripcion}</p>
+                                                </div>
+                                            ` : ''}
+                                            
+                                            ${esLlanta && infoLlanta ? `
+                                                <div class="mb-3">
+                                                    <h6 class="text-primary">
+                                                        <i class="bi bi-circle me-2"></i>Especificaciones de Llanta
+                                                    </h6>
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm table-borderless">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td><strong>Medida:</strong></td>
+                                                                            <td class="text-primary fw-bold">${infoLlanta.medida}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><strong>Marca:</strong></td>
+                                                                            <td>${infoLlanta.marca}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><strong>Modelo:</strong></td>
+                                                                            <td>${infoLlanta.modelo}</td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm table-borderless">
+                                                                    <tbody>
+                                                                        <tr>
+                                                                            <td><strong>Índice Velocidad:</strong></td>
+                                                                            <td>${infoLlanta.indiceVelocidad}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><strong>Capas:</strong></td>
+                                                                            <td>${infoLlanta.capas}</td>
+                                                                        </tr>
+                                                                        <tr>
+                                                                            <td><strong>Tipo Terreno:</strong></td>
+                                                                            <td>${infoLlanta.tipoTerreno}</td>
+                                                                        </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Cerrar
+                            </button>
+                            ${cantidadInventario > 0 ? `
+                                <button type="button" class="btn btn-primary" onclick="agregarProductoDesdeDetalle('${JSON.stringify(producto).replace(/'/g, "\\'")}')">
+                                    <i class="bi bi-cart-plus me-1"></i>Agregar al Carrito
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remover modal anterior si existe
+        $('#modalDetalleProductoInventario').remove();
+
+        // Agregar nuevo modal al body
+        $('body').append(modalHtml);
+
+        // Mostrar el modal
+        const modal = new bootstrap.Modal(document.getElementById('modalDetalleProductoInventario'));
+        modal.show();
+
+        console.log('✅ Modal de detalle mostrado correctamente');
+
+    } catch (error) {
+        console.error('❌ Error mostrando detalle del producto:', error);
+        mostrarToast('Error', 'No se pudo mostrar el detalle del producto', 'danger');
+    }
+}
+
+/**
+ * Agregar producto al carrito desde el modal de detalle
+ */
+function agregarProductoDesdeDetalle(productoJson) {
+    try {
+        console.log('🛒 Agregando producto desde detalle...');
+        
+        const producto = typeof productoJson === 'string' ? JSON.parse(productoJson) : productoJson;
+        
+        // Cerrar modal de detalle
+        $('#modalDetalleProductoInventario').modal('hide');
+        
+        // Mostrar modal de selección de producto después de un pequeño delay
+        setTimeout(() => {
+            if (typeof mostrarModalSeleccionProducto === 'function') {
+                mostrarModalSeleccionProducto(producto);
+            } else {
+                console.error('❌ Función mostrarModalSeleccionProducto no disponible');
+                mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
+            }
+        }, 300);
+        
+    } catch (error) {
+        console.error('❌ Error agregando producto desde detalle:', error);
+        mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
+    }
+}
+
+/**
  * Función auxiliar para mostrar toast
  */
 function mostrarToast(titulo, mensaje, tipo = 'info') {
@@ -670,6 +921,8 @@ window.inicializarModalInventario = inicializarModalInventario;
 window.consultarInventario = consultarInventario;
 window.cargarInventarioCompleto = cargarInventarioCompleto;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
+window.verDetalleProducto = verDetalleProducto;
+window.agregarProductoDesdeDetalle = agregarProductoDesdeDetalle;
 
 console.log('📦 Módulo InventarioFacturacion.js cargado correctamente');
 
