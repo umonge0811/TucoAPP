@@ -61,9 +61,41 @@
 
                 <!-- Contenido del modal -->
                 <div id="inventarioModalContent" class="p-3" style="min-height: 400px;">
-                    <!-- Productos -->
-                    <div id="inventarioModalProductos" class="row">
-                        <!-- Los productos se cargarán dinámicamente aquí -->
+                    <!-- Tabla de productos -->
+                    <div class="table-responsive">
+                        <table id="tablaInventarioModal" class="table table-hover table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="sortable" data-column="imagen" style="width: 80px;">
+                                        <i class="bi bi-image"></i>
+                                    </th>
+                                    <th class="sortable" data-column="nombre" style="cursor: pointer;">
+                                        Producto
+                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    </th>
+                                    <th class="sortable" data-column="descripcion" style="cursor: pointer;">
+                                        Descripción
+                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    </th>
+                                    <th class="sortable" data-column="stock" style="cursor: pointer; width: 100px;">
+                                        Stock
+                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    </th>
+                                    <th class="sortable" data-column="precioEfectivo" style="cursor: pointer; width: 120px;">
+                                        Precio Efectivo
+                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    </th>
+                                    <th class="sortable" data-column="precioTarjeta" style="cursor: pointer; width: 120px;">
+                                        Precio Tarjeta
+                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    </th>
+                                    <th style="width: 120px;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventarioModalProductos">
+                                <!-- Los productos se cargarán dinámicamente aquí -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

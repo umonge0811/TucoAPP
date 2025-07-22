@@ -178,20 +178,22 @@ function mostrarProductosInventario(productos) {
     console.log('📦 === MOSTRANDO PRODUCTOS INVENTARIO ===');
     console.log('📦 Productos a mostrar:', productos?.length || 0);
     
-    const container = $('#inventarioModalProductos');
+    const tbody = $('#inventarioModalProductos');
     
-    if (!container.length) {
-        console.error('❌ No se encontró el contenedor #inventarioModalProductos');
+    if (!tbody.length) {
+        console.error('❌ No se encontró el tbody #inventarioModalProductos');
         mostrarErrorInventario('Error en la interfaz del modal');
         return;
     }
     
     if (!productos || productos.length === 0) {
-        container.html(`
-            <div class="col-12 text-center py-4">
-                <i class="bi bi-box-seam display-1 text-muted"></i>
-                <p class="mt-2 text-muted">No hay productos disponibles</p>
-            </div>
+        tbody.html(`
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="bi bi-box-seam display-1 text-muted"></i>
+                    <p class="mt-2 text-muted">No hay productos disponibles</p>
+                </td>
+            </tr>
         `);
         $('#inventarioModalContent').show();
         return;
@@ -228,9 +230,18 @@ function mostrarProductosInventario(productos) {
         const precioEfectivo = precio;
         const precioTarjeta = precio * 1.05;
         
-        // Determinar clase de stock
-        const stockClase = cantidadInventario <= 0 ? 'border-danger' : 
-                          cantidadInventario <= stockMinimo ? 'border-warning' : '';
+        // Determinar clases de fila según stock
+        let rowClass = '';
+        let stockBadge = '';
+        if (cantidadInventario <= 0) {
+            rowClass = 'table-danger';
+            stockBadge = '<span class="badge bg-danger">Sin Stock</span>';
+        } else if (cantidadInventario <= stockMinimo) {
+            rowClass = 'table-warning';
+            stockBadge = '<span class="badge bg-warning text-dark">Stock Bajo</span>';
+        } else {
+            stockBadge = '<span class="badge bg-success">Disponible</span>';
+        }
         
         // Crear objeto producto limpio
         const productoLimpio = {
@@ -245,74 +256,155 @@ function mostrarProductosInventario(productos) {
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
         
         html += `
-            <div class="col-md-6 col-lg-4 mb-3">
-                <div class="card h-100 ${stockClase}" data-producto-id="${productoId}">
-                    <div class="card-img-container" style="height: 150px; overflow: hidden; position: relative;">
-                        <img src="${imagenUrl}" 
-                             alt="${nombreProducto}" 
-                             class="card-img-top" 
-                             style="height: 100%; width: 100%; object-fit: cover;"
-                             onerror="this.onerror=null; this.src='/images/no-image.png';">
-                        ${cantidadInventario <= 0 ? '<div class="stock-badge badge bg-danger position-absolute top-0 end-0 m-2">Sin Stock</div>' : 
-                          cantidadInventario <= stockMinimo ? '<div class="stock-badge badge bg-warning position-absolute top-0 end-0 m-2">Stock Bajo</div>' : ''}
+            <tr class="${rowClass}" 
+                data-producto-id="${productoId}"
+                data-nombre="${nombreProducto.toLowerCase()}"
+                data-descripcion="${descripcion.toLowerCase()}"
+                data-stock="${cantidadInventario}"
+                data-precio-efectivo="${precioEfectivo}"
+                data-precio-tarjeta="${precioTarjeta}">
+                <td class="text-center">
+                    <img src="${imagenUrl}" 
+                         alt="${nombreProducto}" 
+                         class="img-thumbnail" 
+                         style="width: 60px; height: 60px; object-fit: cover;"
+                         onerror="this.onerror=null; this.src='/images/no-image.png';">
+                </td>
+                <td>
+                    <strong class="d-block">${nombreProducto}</strong>
+                    <small class="text-muted">ID: ${productoId}</small>
+                </td>
+                <td>
+                    <span class="text-muted" title="${descripcion}">
+                        ${descripcion ? (descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion) : 'Sin descripción'}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <div class="d-flex flex-column align-items-center">
+                        <strong class="text-primary">${cantidadInventario}</strong>
+                        <small class="text-muted">Mín: ${stockMinimo}</small>
+                        ${stockBadge}
                     </div>
-                    <div class="card-body d-flex flex-column">
-                        <h6 class="card-title text-truncate" title="${nombreProducto}">${nombreProducto}</h6>
-                        <p class="card-text small text-muted flex-grow-1" style="font-size: 0.8rem;">
-                            ${descripcion ? descripcion.substring(0, 60) + (descripcion.length > 60 ? '...' : '') : 'Sin descripción'}
-                        </p>
-                        
-                        <div class="mb-2">
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <small class="text-muted d-block">Efectivo</small>
-                                    <span class="text-success fw-bold small">₡${formatearMoneda(precioEfectivo)}</span>
-                                </div>
-                                <div class="col-6">
-                                    <small class="text-muted d-block">Tarjeta</small>
-                                    <span class="text-warning fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-primary fw-bold">Stock: ${cantidadInventario}</small>
-                            <small class="text-muted">Mín: ${stockMinimo}</small>
-                        </div>
-                        
-                        <div class="mt-auto">
-                            <div class="btn-group w-100" role="group">
-                                ${cantidadInventario > 0 ? `
-                                    <button type="button" 
-                                            class="btn btn-sm btn-primary btn-agregar-desde-inventario"
-                                            data-producto="${productoJson}">
-                                        <i class="bi bi-cart-plus me-1"></i>Agregar
-                                    </button>
-                                ` : `
-                                    <button type="button" class="btn btn-sm btn-secondary" disabled>
-                                        <i class="bi bi-x-circle me-1"></i>Sin Stock
-                                    </button>
-                                `}
-                                <button type="button" 
-                                        class="btn btn-sm btn-outline-info btn-ver-detalle-inventario"
-                                        data-producto="${productoJson}">
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </div>
-                        </div>
+                </td>
+                <td class="text-end">
+                    <span class="text-success fw-bold">₡${formatearMoneda(precioEfectivo)}</span>
+                </td>
+                <td class="text-end">
+                    <span class="text-warning fw-bold">₡${formatearMoneda(precioTarjeta)}</span>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group-vertical btn-group-sm">
+                        ${cantidadInventario > 0 ? `
+                            <button type="button" 
+                                    class="btn btn-primary btn-sm btn-agregar-desde-inventario mb-1"
+                                    data-producto="${productoJson}"
+                                    title="Agregar al carrito">
+                                <i class="bi bi-cart-plus"></i>
+                            </button>
+                        ` : `
+                            <button type="button" 
+                                    class="btn btn-secondary btn-sm mb-1" 
+                                    disabled
+                                    title="Sin stock disponible">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        `}
+                        <button type="button" 
+                                class="btn btn-outline-info btn-sm btn-ver-detalle-inventario"
+                                data-producto="${productoJson}"
+                                title="Ver detalles">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
-                </div>
-            </div>
+                </td>
+            </tr>
         `;
     });
     
-    container.html(html);
+    tbody.html(html);
     
     // Configurar eventos de los botones
     configurarEventosProductosInventario();
     
+    // Configurar ordenamiento de tabla
+    configurarOrdenamientoTablaInventario();
+    
     $('#inventarioModalContent').show();
-    console.log('✅ Productos de inventario mostrados correctamente');
+    console.log('✅ Productos de inventario mostrados correctamente en formato tabla');
+}
+
+/**
+ * Configurar ordenamiento de la tabla de inventario
+ */
+function configurarOrdenamientoTablaInventario() {
+    console.log('📦 Configurando ordenamiento de tabla...');
+    
+    $('.sortable').off('click').on('click', function() {
+        const column = $(this).data('column');
+        const $table = $('#tablaInventarioModal');
+        const $tbody = $table.find('tbody');
+        const rows = $tbody.find('tr').toArray();
+        
+        // Determinar dirección de ordenamiento
+        let ascending = true;
+        if ($(this).hasClass('sorted-asc')) {
+            ascending = false;
+            $(this).removeClass('sorted-asc').addClass('sorted-desc');
+        } else {
+            $(this).removeClass('sorted-desc').addClass('sorted-asc');
+            ascending = true;
+        }
+        
+        // Limpiar iconos de otras columnas
+        $('.sortable').not(this).removeClass('sorted-asc sorted-desc');
+        
+        // Actualizar icono
+        $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
+        $(this).find('i').removeClass('bi-arrow-down-up').addClass(ascending ? 'bi-arrow-up' : 'bi-arrow-down');
+        
+        // Ordenar filas
+        rows.sort(function(a, b) {
+            let aVal, bVal;
+            
+            switch(column) {
+                case 'nombre':
+                    aVal = $(a).data('nombre');
+                    bVal = $(b).data('nombre');
+                    break;
+                case 'descripcion':
+                    aVal = $(a).data('descripcion');
+                    bVal = $(b).data('descripcion');
+                    break;
+                case 'stock':
+                    aVal = parseInt($(a).data('stock')) || 0;
+                    bVal = parseInt($(b).data('stock')) || 0;
+                    break;
+                case 'precioEfectivo':
+                    aVal = parseFloat($(a).data('precio-efectivo')) || 0;
+                    bVal = parseFloat($(b).data('precio-efectivo')) || 0;
+                    break;
+                case 'precioTarjeta':
+                    aVal = parseFloat($(a).data('precio-tarjeta')) || 0;
+                    bVal = parseFloat($(b).data('precio-tarjeta')) || 0;
+                    break;
+                default:
+                    return 0;
+            }
+            
+            if (typeof aVal === 'string') {
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
+                return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            } else {
+                return ascending ? aVal - bVal : bVal - aVal;
+            }
+        });
+        
+        // Reordenar filas en el DOM
+        $tbody.empty().append(rows);
+        
+        console.log(`📦 Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
+    });
 }
 
 /**
@@ -451,6 +543,11 @@ function limpiarInventarioModal() {
     
     $('#inventarioModalProductos').empty();
     productosInventarioCompleto = [];
+    
+    // Limpiar ordenamiento
+    $('.sortable').removeClass('sorted-asc sorted-desc');
+    $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
+    
     limpiarFiltrosInventario();
 }
 
@@ -459,22 +556,24 @@ function limpiarInventarioModal() {
  */
 function mostrarErrorInventario(mensaje) {
     const contentElement = $('#inventarioModalContent');
-    const containerElement = $('#inventarioModalProductos');
+    const tbody = $('#inventarioModalProductos');
     
     if (contentElement.length) {
         contentElement.show();
     }
     
-    if (containerElement.length) {
-        containerElement.html(`
-            <div class="col-12 text-center py-4">
-                <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
-                <p class="mt-2 text-danger">Error cargando inventario</p>
-                <p class="text-muted">${mensaje}</p>
-                <button class="btn btn-outline-primary" onclick="cargarInventarioCompleto()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
-                </button>
-            </div>
+    if (tbody.length) {
+        tbody.html(`
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
+                    <p class="mt-2 text-danger">Error cargando inventario</p>
+                    <p class="text-muted">${mensaje}</p>
+                    <button class="btn btn-outline-primary" onclick="cargarInventarioCompleto()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+                    </button>
+                </td>
+            </tr>
         `);
     } else {
         console.error('❌ No se encontró contenedor para mostrar error');
