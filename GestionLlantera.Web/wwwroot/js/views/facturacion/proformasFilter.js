@@ -19,6 +19,12 @@ function inicializarFiltrosProformas() {
     console.log('🔍 Estado DOM ready:', $(document).ready);
     console.log('🔍 Modal visible:', $('#proformasModal').is(':visible'));
 
+    // Verificar que jQuery esté disponible
+    if (typeof $ === 'undefined') {
+        console.error('❌ jQuery no está disponible');
+        return;
+    }
+
     // Esperar un poco para asegurar que el DOM del modal esté completamente cargado
     setTimeout(() => {
         console.log('🔍 Buscando elementos del DOM...');
@@ -449,13 +455,18 @@ function testBusquedaManual(termino) {
 }
 
 // Exportar funciones para uso global
-window.inicializarFiltrosProformas = inicializarFiltrosProformas;
-window.inicializarFiltrosProformasForzado = inicializarFiltrosProformasForzado;
-window.testBusquedaManual = testBusquedaManual;
-window.aplicarFiltrosProformas = aplicarFiltrosProformas;
-window.limpiarFiltrosProformas = limpiarFiltrosProformas;
-window.cambiarPaginaProformas = cambiarPaginaProformas;
-window.mostrarProformasEnTabla = mostrarProformasEnTabla;
-
-console.log('📋 Módulo de filtros de proformas cargado correctamente');
-console.log('📋 Funciones exportadas a window:', Object.keys(window).filter(k => k.includes('Proformas')));
+if (typeof window !== 'undefined') {
+    window.inicializarFiltrosProformas = inicializarFiltrosProformas;
+    window.inicializarFiltrosProformasForzado = inicializarFiltrosProformasForzado;
+    window.testBusquedaManual = testBusquedaManual;
+    window.aplicarFiltrosProformas = aplicarFiltrosProformas;
+    window.limpiarFiltrosProformas = limpiarFiltrosProformas;
+    window.cambiarPaginaProformas = cambiarPaginaProformas;
+    window.mostrarProformasEnTabla = mostrarProformasEnTabla;
+    
+    console.log('📋 Módulo de filtros de proformas cargado correctamente');
+    console.log('📋 Funciones exportadas a window:', Object.keys(window).filter(k => k.includes('Proformas')));
+    console.log('📋 Función inicializarFiltrosProformas disponible:', typeof window.inicializarFiltrosProformas);
+} else {
+    console.error('❌ Window no está disponible para exportar funciones');
+}

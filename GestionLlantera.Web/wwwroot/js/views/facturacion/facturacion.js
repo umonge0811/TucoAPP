@@ -2579,15 +2579,29 @@ async function abrirProformas() {
         console.log('📋 === ABRIENDO MODAL DE PROFORMAS ===');
 
         const modal = new bootstrap.Modal(document.getElementById('proformasModal'));
+        
+        // Configurar evento para cuando el modal sea completamente visible
+        $('#proformasModal').on('shown.bs.modal', function() {
+            console.log('📋 *** MODAL DE PROFORMAS COMPLETAMENTE VISIBLE ***');
+            console.log('📋 Elementos disponibles en el DOM:');
+            console.log('📋 - Input búsqueda:', $('#busquedaProformas').length);
+            console.log('📋 - Select estado:', $('#estadoProformas').length);
+            console.log('📋 - Tabla body:', $('#proformasTableBody').length);
+            console.log('📋 - Loading:', $('#proformasLoading').length);
+            console.log('📋 - Content:', $('#proformasContent').length);
+            
+            // Inicializar filtros usando el módulo dedicado
+            if (typeof inicializarFiltrosProformas === 'function') {
+                console.log('✅ Inicializando filtros de proformas...');
+                inicializarFiltrosProformas();
+            } else {
+                console.error('❌ Función inicializarFiltrosProformas no está disponible');
+                // Cargar proformas básicas como fallback
+                cargarProformasBasico();
+            }
+        });
+        
         modal.show();
-
-        // Inicializar filtros usando el módulo dedicado
-        if (typeof inicializarFiltrosProformas === 'function') {
-            inicializarFiltrosProformas();
-        }
-
-        // Cargar proformas iniciales usando función básica
-        await cargarProformasBasico();
 
     } catch (error) {
         console.error('❌ Error abriendo modal de proformas:', error);
