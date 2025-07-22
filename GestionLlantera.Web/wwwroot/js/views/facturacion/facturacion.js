@@ -1361,6 +1361,18 @@ async function limpiarVenta() {
 
 // ===== FINALIZACIÓN DE VENTA =====
 function mostrarModalFinalizarVenta() {
+
+    // ✅ CERRAR MODAL DE FACTURAS PENDIENTES SI ESTÁ ABIERTO
+    const modalFacturasPendientes = bootstrap.Modal.getInstance(document.getElementById('facturasPendientesModal'));
+    if (modalFacturasPendientes) {
+        modalFacturasPendientes.hide();
+        console.log('🚪 Modal de facturas pendientes cerrado antes de abrir modal finalizar');
+    }
+    if (productosEnVenta.length === 0) {
+        mostrarToast('Venta vacía', 'Agrega productos antes de finalizar la venta', 'warning');
+        return;
+    }
+
     if (productosEnVenta.length === 0) {
         mostrarToast('Venta vacía', 'Agrega productos antes de finalizar la venta', 'warning');
         return;
@@ -6858,10 +6870,19 @@ async function procesarFacturaPendiente(facturaEscapada) {
         actualizarTotales();
         actualizarEstadoBotonFinalizar();
 
+        // Al final, antes de mostrar el modal de finalizar
+        // ✅ CERRAR MODAL DE FACTURAS PENDIENTES ANTES DE ABRIR FINALIZAR
+        const modalFacturasPendientes = bootstrap.Modal.getInstance(document.getElementById('facturasPendientesModal'));
+        if (modalFacturasPendientes) {
+            modalFacturasPendientes.hide();
+        }
+
+
         // Mostrar modal de finalizar venta directamente
         setTimeout(() => {
             mostrarModalFinalizarVenta();
         }, 500);
+       
 
     } catch (error) {
         console.error('❌ Error procesando factura pendiente:', error);
