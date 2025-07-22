@@ -758,8 +758,8 @@ async function cargarImagenesDetallesProducto(producto) {
         console.log('🖼️ PASO 4: URLs extraídas del servidor:', urlsImagenes);
 
         // 🔥 PASO 5: SI NO HAY IMÁGENES DEL SERVIDOR, USAR DATOS LOCALES
-        // 🔥 PASO 5: SI NO HAY IMÁGENES DEL SERVIDOR, USAR DATOS LOCALES
-        console.log('🖼️ PASO 5: No hay imágenes del servidor, intentando datos locales...');
+        if (urlsImagenes.length === 0) {
+            console.log('🖼️ PASO 5: No hay imágenes del servidor, intentando datos locales...');
 
         // Intentar obtener imágenes de diferentes propiedades del producto
         const propiedadesImagen = ['imagenesProductos', 'imagenes', 'imagenesUrls', 'ImagenesProductos', 'Imagenes', 'ImagenesUrls'];
@@ -810,6 +810,9 @@ async function cargarImagenesDetallesProducto(producto) {
                 }
             }
         }
+        } else {
+            console.log('🖼️ PASO 5: Usando imágenes del servidor, saltando datos locales');
+        }
 
         console.log('🖼️ PASO 6: Array final de URLs de imágenes:', urlsImagenes);
         console.log('🖼️ PASO 6: Cantidad de imágenes encontradas:', urlsImagenes.length);
@@ -836,8 +839,9 @@ async function cargarImagenesDetallesProducto(producto) {
 
                 slidesHtml += `
                     <div class="carousel-item ${activeClass}">
-                        <img src="${url}" class="d-block imagen-producto-detalle" 
+                        <img src="${url}" class="d-block w-100 imagen-producto-detalle" 
                              alt="Imagen ${index + 1}" 
+                             style="max-height: 300px; object-fit: contain; background-color: white;"
                              onerror="this.onerror=null; this.src='/images/no-image.png'; console.error('❌ Error cargando imagen: ${url}');"
                              onload="console.log('✅ Imagen cargada exitosamente: ${url}');">
                     </div>
@@ -846,9 +850,11 @@ async function cargarImagenesDetallesProducto(producto) {
 
             const carruselHtml = `
                 <div id="carruselImagenesDetalle" class="carousel slide" data-bs-ride="false">
-                    <div class="carousel-indicators">
-                        ${indicadoresHtml}
-                    </div>
+                    ${urlsImagenes.length > 1 ? `
+                        <div class="carousel-indicators">
+                            ${indicadoresHtml}
+                        </div>
+                    ` : ''}
                     <div class="carousel-inner">
                         ${slidesHtml}
                     </div>
@@ -865,15 +871,16 @@ async function cargarImagenesDetallesProducto(producto) {
                 </div>
             `;
 
-            $('#contenedorImagenesDetalles').html(carruselHtml);
-            console.log('🖼️ PASO 7A: Carrusel construido exitosamente');
+            console.log('🖼️ PASO 7A: Insertando carrusel en el DOM...');
+            contenedor.html(carruselHtml);
+            console.log('🖼️ PASO 7A: Carrusel construido e insertado exitosamente');
             console.log('🖼️ PASO 7A: HTML del carrusel:', carruselHtml);
         } else {
             console.log('⚠️ PASO 7B: No hay imágenes disponibles');
-            $('#contenedorImagenesDetalles').html(`
-                <div class="sin-imagenes">
-                    <i class="fas fa-image"></i>
-                    <p>Sin imágenes disponibles</p>
+            contenedor.html(`
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-image fs-1"></i>
+                    <p class="mt-2">Sin imágenes disponibles</p>
                 </div>
             `);
         }
