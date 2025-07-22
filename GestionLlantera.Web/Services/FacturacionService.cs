@@ -1424,6 +1424,47 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<(bool success, object? data, string? message, string? details)> ObtenerFacturaPorIdAsync(int facturaId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("📋 === OBTENIENDO FACTURA/PROFORMA POR ID DESDE SERVICIO ===");
+                _logger.LogInformation("📋 Factura ID: {FacturaId}", facturaId);
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.GetAsync($"api/Facturacion/facturas/{facturaId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("📋 Respuesta del API recibida exitosamente");
+
+                    var factura = System.Text.Json.JsonSerializer.Deserialize<object>(jsonContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    return (success: true, data: factura, message: "Factura obtenida exitosamente", details: null);
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("📋 Error HTTP del API: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                    return (success: false, data: null, message: $"Error HTTP {response.StatusCode}", details: errorContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo factura por ID desde servicio");
+                return (success: false, data: null, message: "Error interno del servicio", details: ex.Message);
+            }
+        }
+
         public async Task<(bool success, object? data, string? message, string? details)> MarcarProductosEntregadosAsync(object request, string jwtToken = null)
         {
             try

@@ -864,6 +864,38 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFacturaPorId(int id)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo factura/proforma por ID: {Id}", id);
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _facturacionService.ObtenerFacturaPorIdAsync(id, token);
+
+                if (resultado.success)
+                {
+                    return Json(new { success = true, data = resultado.data });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del servicio obteniendo factura: {Message}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo factura por ID: {Id}", id);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> CompletarFactura([FromBody] CompletarFacturaWebRequest request)
         {
@@ -959,7 +991,6 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
-
 
         [HttpPost]
         public async Task<IActionResult> CompletarFacturaPendiente([FromBody] CompletarFacturaRequest request)

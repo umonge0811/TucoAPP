@@ -289,14 +289,14 @@ function mostrarProformasEnTabla(proformas) {
                 <td>${estadoBadge}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-info" title="Ver detalles" onclick="verDetalleProforma(${proforma.facturaId || proforma.id})">
+                        <button type="button" class="btn btn-outline-info" title="Ver detalles" data-proforma-id="${proforma.facturaId || proforma.id}">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" title="Imprimir" onclick="imprimirProforma(${proforma.facturaId || proforma.id})">
+                        <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-proforma-id="${proforma.facturaId || proforma.id}">
                             <i class="bi bi-printer"></i>
                         </button>
                         ${proforma.estado === 'Vigente' ? `
-                        <button type="button" class="btn btn-outline-success" title="Convertir a Factura" onclick="convertirProformaAFactura(${proforma.facturaId || proforma.id})">
+                        <button type="button" class="btn btn-outline-success" title="Convertir a Factura" data-proforma-data='${JSON.stringify(proforma).replace(/'/g, "&#39;")}'>
                             <i class="bi bi-arrow-up-circle"></i>
                         </button>
                         ` : ''}
@@ -307,6 +307,9 @@ function mostrarProformasEnTabla(proformas) {
 
         tbody.append(fila);
     });
+
+    // Configurar eventos para los botones
+    configurarEventosBotonesProformas();
 
     console.log('✅ Proformas mostradas en tabla');
 }
@@ -416,6 +419,65 @@ function recargarProformas() {
     cargarTodasLasProformas();
 }
 
+/**
+ * Configurar eventos para los botones de la tabla de proformas
+ */
+function configurarEventosBotonesProformas() {
+    console.log('🔧 Configurando eventos de botones de proformas...');
+
+    // Limpiar eventos anteriores
+    $('.btn-outline-info[data-proforma-id]').off('click.proformaVer');
+    $('.btn-outline-secondary[data-proforma-id]').off('click.proformaImprimir');
+    $('.btn-outline-success[data-proforma-data]').off('click.proformaConvertir');
+
+    // Ver detalles de proforma
+    $('.btn-outline-info[data-proforma-id]').on('click.proformaVer', function() {
+        const proformaId = $(this).data('proforma-id');
+        console.log('👁️ Ver detalles de proforma:', proformaId);
+        
+        if (typeof verDetalleProforma === 'function') {
+            verDetalleProforma(proformaId);
+        } else {
+            console.error('❌ Función verDetalleProforma no está disponible');
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Error', 'Función de visualización no disponible', 'danger');
+            }
+        }
+    });
+
+    // Imprimir proforma
+    $('.btn-outline-secondary[data-proforma-id]').on('click.proformaImprimir', function() {
+        const proformaId = $(this).data('proforma-id');
+        console.log('🖨️ Imprimir proforma:', proformaId);
+        
+        if (typeof imprimirProforma === 'function') {
+            imprimirProforma(proformaId);
+        } else {
+            console.error('❌ Función imprimirProforma no está disponible');
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Info', 'Función de impresión en desarrollo', 'info');
+            }
+        }
+    });
+
+    // Convertir proforma
+    $('.btn-outline-success[data-proforma-data]').on('click.proformaConvertir', function() {
+        const proformaData = $(this).data('proforma-data');
+        console.log('🔄 Convertir proforma:', proformaData);
+        
+        if (typeof convertirProformaAFactura === 'function') {
+            convertirProformaAFactura(proformaData);
+        } else {
+            console.error('❌ Función convertirProformaAFactura no está disponible');
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Error', 'Función de conversión no disponible', 'danger');
+            }
+        }
+    });
+
+    console.log('✅ Eventos de botones configurados');
+}
+
 // Exportar funciones para uso global
 if (typeof window !== 'undefined') {
     window.inicializarFiltrosProformas = inicializarFiltrosProformas;
@@ -424,6 +486,7 @@ if (typeof window !== 'undefined') {
     window.cambiarPaginaProformas = cambiarPaginaProformas;
     window.mostrarProformasEnTabla = mostrarProformasEnTabla;
     window.recargarProformas = recargarProformas;
+    window.configurarEventosBotonesProformas = configurarEventosBotonesProformas;
     
     console.log('📋 Módulo de filtros de proformas (Frontend) cargado correctamente');
 } else {
