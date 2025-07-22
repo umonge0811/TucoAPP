@@ -1,0 +1,207 @@
+ 📋 Módulo de filtros de proformas (Frontend) cargado correctamente
+ 📋 Módulo de filtros de facturas pendientes (Frontend) cargado correctamente
+ 📋 Funciones de proformas exportadas globalmente
+ 📦 Módulo InventarioFacturacion.js cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1864
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-22",
+  "horaActual": "17:14",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 6 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 6
+ 🔄 Construyendo HTML para 6 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Kumho Miller
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp
+facturacion.js:730 🔄 Actualizando DOM (longitud HTML: 28392 caracteres)
+facturacion.js:763 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:508 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:511 📦 Productos mostrados exitosamente
+facturacion.js:524 🔍 === FIN buscarProductos ===
+facturacion.js:5381 📦 Búsqueda inicial ejecutada
+facturacion.js:5383 📦 === FIN cargarProductosIniciales (exitosa) ===
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:393 🔍 Botón inventario clickeado - llamando consultarInventario()
+InventarioFacturacion.js:97 📦 === ABRIENDO MODAL INVENTARIO ===
+InventarioFacturacion.js:110 📦 Modal mostrado exitosamente
+InventarioFacturacion.js:48 📦 Modal inventario mostrado - cargando productos
+InventarioFacturacion.js:122 📦 === CARGANDO INVENTARIO COMPLETO ===
+InventarioFacturacion.js:135 📦 Realizando petición al servidor...
+InventarioFacturacion.js:151 📦 Respuesta del servidor: Object
+InventarioFacturacion.js:155 📦 Productos cargados: 6
+InventarioFacturacion.js:176 📦 === MOSTRANDO PRODUCTOS INVENTARIO ===
+InventarioFacturacion.js:177 📦 Productos a mostrar: 6
+InventarioFacturacion.js:423 📦 Configurando eventos de productos...
+InventarioFacturacion.js:345 📦 Configurando ordenamiento de tabla...
+InventarioFacturacion.js:338 ✅ Productos de inventario mostrados correctamente en formato tabla
+InventarioFacturacion.js:941 👁️ === MOSTRANDO DETALLE PRODUCTO ===
+InventarioFacturacion.js:942 👁️ Producto: Object
+InventarioFacturacion.js:676 🖼️ === INICIANDO CARGA DE IMÁGENES ===
+InventarioFacturacion.js:677 🖼️ Producto ID: 1016
+InventarioFacturacion.js:678 🖼️ Producto completo recibido: Object
+InventarioFacturacion.js:693 🖼️ PASO 1: Consultando endpoint de imágenes...
+InventarioFacturacion.js:694 🖼️ URL: /Inventario/ObtenerImagenesProducto/1016
+InventarioFacturacion.js:1206 ✅ Modal de detalle mostrado correctamente con carrusel de imágenes
+InventarioFacturacion.js:706 🖼️ Response status: 200
+InventarioFacturacion.js:707 🖼️ Response headers: Headers
+InventarioFacturacion.js:714 🖼️ PASO 2: Respuesta cruda del servidor: Array(1)
+InventarioFacturacion.js:715 🖼️ Tipo de respuesta: object
+InventarioFacturacion.js:716 🖼️ Es array?: true
+InventarioFacturacion.js:726 🖼️ PASO 3A: Procesando array de imágenes...
+InventarioFacturacion.js:729 🖼️ Imagen 0: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+InventarioFacturacion.js:749 🖼️ URL extraída 0: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+InventarioFacturacion.js:758 🖼️ PASO 4: URLs extraídas del servidor: Array(1)
+InventarioFacturacion.js:762 🖼️ PASO 5: No hay imágenes del servidor, intentando datos locales...
+InventarioFacturacion.js:768 🖼️ Intentando propiedad: imagenesProductos
+InventarioFacturacion.js:769 🖼️ Valor de imagenesProductos: undefined
+InventarioFacturacion.js:768 🖼️ Intentando propiedad: imagenes
+InventarioFacturacion.js:769 🖼️ Valor de imagenes: undefined
+InventarioFacturacion.js:768 🖼️ Intentando propiedad: imagenesUrls
+InventarioFacturacion.js:769 🖼️ Valor de imagenesUrls: undefined
+InventarioFacturacion.js:768 🖼️ Intentando propiedad: ImagenesProductos
+InventarioFacturacion.js:769 🖼️ Valor de ImagenesProductos: undefined
+InventarioFacturacion.js:768 🖼️ Intentando propiedad: Imagenes
+InventarioFacturacion.js:769 🖼️ Valor de Imagenes: undefined
+InventarioFacturacion.js:768 🖼️ Intentando propiedad: ImagenesUrls
+InventarioFacturacion.js:769 🖼️ Valor de ImagenesUrls: undefined
+InventarioFacturacion.js:814 🖼️ PASO 6: Array final de URLs de imágenes: Array(1)
+InventarioFacturacion.js:815 🖼️ PASO 6: Cantidad de imágenes encontradas: 1
+InventarioFacturacion.js:819 🖼️ PASO 7A: Construyendo carrusel con imágenes...
+InventarioFacturacion.js:820 🖼️ PASO 7A: URLs a usar en carrusel: Array(1)
+InventarioFacturacion.js:829 🖼️ PASO 7A: Procesando imagen 1: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+InventarioFacturacion.js:869 🖼️ PASO 7A: Carrusel construido exitosamente
+InventarioFacturacion.js:870 🖼️ PASO 7A: HTML del carrusel: 
+                <div id="carruselImagenesDetalle" class="carousel slide" data-bs-ride="false">
+                    <div class="carousel-indicators">
+                        
+                    <button type="button" data-bs-target="#carruselImagenesDetalle" 
+                            data-bs-slide-to="0" class="active" 
+                            aria-current="true" aria-label="Slide 1"></button>
+                
+                    </div>
+                    <div class="carousel-inner">
+                        
+                    <div class="carousel-item active">
+                        <img src="https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png" class="d-block imagen-producto-detalle" 
+                             alt="Imagen 1" 
+                             onerror="this.onerror=null; this.src='/images/no-image.png'; console.error('❌ Error cargando imagen: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png');"
+                             onload="console.log('✅ Imagen cargada exitosamente: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png');">
+                    </div>
+                
+                    </div>
+                    
+                </div>
+            
+Facturacion:1 ✅ Imagen cargada exitosamente: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
