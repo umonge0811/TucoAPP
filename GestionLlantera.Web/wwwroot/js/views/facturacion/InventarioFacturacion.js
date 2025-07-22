@@ -1,4 +1,5 @@
 
+
 // ===== MÓDULO DE INVENTARIO PARA FACTURACIÓN =====
 
 let modalInventarioFacturacion = null;
@@ -25,9 +26,12 @@ function inicializarModalInventario() {
             configurarEventosModalInventario();
         } else {
             console.error('❌ No se encontró el elemento #modalInventario');
+            return false;
         }
+        return true;
     } catch (error) {
         console.error('❌ Error inicializando modal inventario:', error);
+        return false;
     }
 }
 
@@ -35,18 +39,20 @@ function inicializarModalInventario() {
  * Configurar eventos del modal de inventario
  */
 function configurarEventosModalInventario() {
+    console.log('📦 Configurando eventos del modal inventario...');
+    
     // Limpiar eventos anteriores
-    $('#modalInventario').off('shown.bs.modal.inventarioFacturacion');
-    $('#modalInventario').off('hidden.bs.modal.inventarioFacturacion');
+    $('#modalInventario').off('shown.bs.modal');
+    $('#modalInventario').off('hidden.bs.modal');
     
     // Evento cuando se muestra el modal
-    $('#modalInventario').on('shown.bs.modal.inventarioFacturacion', function() {
+    $('#modalInventario').on('shown.bs.modal', function() {
         console.log('📦 Modal inventario mostrado - cargando productos');
         cargarInventarioCompleto();
     });
     
     // Evento cuando se oculta el modal
-    $('#modalInventario').on('hidden.bs.modal.inventarioFacturacion', function() {
+    $('#modalInventario').on('hidden.bs.modal', function() {
         console.log('📦 Modal inventario ocultado - limpiando datos');
         limpiarInventarioModal();
     });
@@ -59,27 +65,29 @@ function configurarEventosModalInventario() {
  * Configurar filtros de inventario
  */
 function configurarFiltrosInventario() {
+    console.log('📦 Configurando filtros de inventario...');
+    
     // Búsqueda por texto
-    $('#busquedaInventarioModal').off('input.inventario').on('input.inventario', function() {
+    $('#busquedaInventarioModal').off('input').on('input', function() {
         const termino = $(this).val().trim();
         filtrosInventarioActivos.busqueda = termino;
         aplicarFiltrosInventario();
     });
     
     // Filtro por categoría
-    $('#categoriaInventarioModal').off('change.inventario').on('change.inventario', function() {
+    $('#categoriaInventarioModal').off('change').on('change', function() {
         filtrosInventarioActivos.categoria = $(this).val();
         aplicarFiltrosInventario();
     });
     
     // Filtro por stock
-    $('#stockInventarioModal').off('change.inventario').on('change.inventario', function() {
+    $('#stockInventarioModal').off('change').on('change', function() {
         filtrosInventarioActivos.stock = $(this).val();
         aplicarFiltrosInventario();
     });
     
     // Botón de limpiar filtros
-    $('#btnLimpiarFiltrosInventario').off('click.inventario').on('click.inventario', function() {
+    $('#btnLimpiarFiltrosInventario').off('click').on('click', function() {
         limpiarFiltrosInventario();
     });
 }
@@ -90,10 +98,20 @@ function configurarFiltrosInventario() {
 function consultarInventario() {
     console.log('📦 === ABRIENDO MODAL INVENTARIO ===');
     
-    if (modalInventarioFacturacion) {
+    if (!modalInventarioFacturacion) {
+        console.log('📦 Modal no inicializado, inicializando...');
+        if (!inicializarModalInventario()) {
+            console.error('❌ No se pudo inicializar el modal');
+            mostrarToast('Error', 'No se pudo abrir el inventario', 'danger');
+            return;
+        }
+    }
+    
+    try {
         modalInventarioFacturacion.show();
-    } else {
-        console.error('❌ Modal de inventario no inicializado');
+        console.log('📦 Modal mostrado exitosamente');
+    } catch (error) {
+        console.error('❌ Error mostrando modal:', error);
         mostrarToast('Error', 'No se pudo abrir el inventario', 'danger');
     }
 }
@@ -106,8 +124,17 @@ async function cargarInventarioCompleto() {
         console.log('📦 === CARGANDO INVENTARIO COMPLETO ===');
         
         // Mostrar loading
-        $('#inventarioModalLoading').show();
-        $('#inventarioModalContent').hide();
+        const loadingElement = $('#inventarioModalLoading');
+        const contentElement = $('#inventarioModalContent');
+        
+        if (loadingElement.length) {
+            loadingElement.show();
+        }
+        if (contentElement.length) {
+            contentElement.hide();
+        }
+        
+        console.log('📦 Realizando petición al servidor...');
         
         const response = await fetch('/Facturacion/ObtenerProductosParaFacturacion', {
             method: 'GET',
@@ -130,14 +157,17 @@ async function cargarInventarioCompleto() {
             console.log(`📦 Productos cargados: ${productosInventarioCompleto.length}`);
             mostrarProductosInventario(productosInventarioCompleto);
         } else {
-            throw new Error('No se encontraron productos');
+            throw new Error('No se encontraron productos en la respuesta');
         }
         
     } catch (error) {
         console.error('❌ Error cargando inventario:', error);
         mostrarErrorInventario(error.message);
     } finally {
-        $('#inventarioModalLoading').hide();
+        const loadingElement = $('#inventarioModalLoading');
+        if (loadingElement.length) {
+            loadingElement.hide();
+        }
     }
 }
 
@@ -149,6 +179,12 @@ function mostrarProductosInventario(productos) {
     console.log('📦 Productos a mostrar:', productos?.length || 0);
     
     const container = $('#inventarioModalProductos');
+    
+    if (!container.length) {
+        console.error('❌ No se encontró el contenedor #inventarioModalProductos');
+        mostrarErrorInventario('Error en la interfaz del modal');
+        return;
+    }
     
     if (!productos || productos.length === 0) {
         container.html(`
@@ -283,8 +319,10 @@ function mostrarProductosInventario(productos) {
  * Configurar eventos de los productos en el inventario
  */
 function configurarEventosProductosInventario() {
+    console.log('📦 Configurando eventos de productos...');
+    
     // Botón agregar producto
-    $('.btn-agregar-desde-inventario').off('click.inventarioModal').on('click.inventarioModal', function(e) {
+    $('.btn-agregar-desde-inventario').off('click').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -292,12 +330,21 @@ function configurarEventosProductosInventario() {
             const productoJson = $(this).attr('data-producto');
             const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
             
+            console.log('📦 Agregando producto desde inventario:', producto.nombreProducto);
+            
             // Cerrar modal de inventario
-            modalInventarioFacturacion.hide();
+            if (modalInventarioFacturacion) {
+                modalInventarioFacturacion.hide();
+            }
             
             // Mostrar modal de selección de producto
             setTimeout(() => {
-                mostrarModalSeleccionProducto(producto);
+                if (typeof mostrarModalSeleccionProducto === 'function') {
+                    mostrarModalSeleccionProducto(producto);
+                } else {
+                    console.error('❌ Función mostrarModalSeleccionProducto no disponible');
+                    mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
+                }
             }, 300);
             
         } catch (error) {
@@ -307,14 +354,20 @@ function configurarEventosProductosInventario() {
     });
     
     // Botón ver detalle
-    $('.btn-ver-detalle-inventario').off('click.inventarioModal').on('click.inventarioModal', function(e) {
+    $('.btn-ver-detalle-inventario').off('click').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         
         try {
             const productoJson = $(this).attr('data-producto');
             const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
-            verDetalleProducto(producto);
+            
+            if (typeof verDetalleProducto === 'function') {
+                verDetalleProducto(producto);
+            } else {
+                console.error('❌ Función verDetalleProducto no disponible');
+                mostrarToast('Error', 'No se pudo mostrar el detalle', 'danger');
+            }
         } catch (error) {
             console.error('❌ Error mostrando detalle desde inventario:', error);
             mostrarToast('Error', 'No se pudo mostrar el detalle', 'danger');
@@ -405,17 +458,27 @@ function limpiarInventarioModal() {
  * Mostrar error en el modal de inventario
  */
 function mostrarErrorInventario(mensaje) {
-    $('#inventarioModalContent').show();
-    $('#inventarioModalProductos').html(`
-        <div class="col-12 text-center py-4">
-            <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
-            <p class="mt-2 text-danger">Error cargando inventario</p>
-            <p class="text-muted">${mensaje}</p>
-            <button class="btn btn-outline-primary" onclick="cargarInventarioCompleto()">
-                <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
-            </button>
-        </div>
-    `);
+    const contentElement = $('#inventarioModalContent');
+    const containerElement = $('#inventarioModalProductos');
+    
+    if (contentElement.length) {
+        contentElement.show();
+    }
+    
+    if (containerElement.length) {
+        containerElement.html(`
+            <div class="col-12 text-center py-4">
+                <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
+                <p class="mt-2 text-danger">Error cargando inventario</p>
+                <p class="text-muted">${mensaje}</p>
+                <button class="btn btn-outline-primary" onclick="cargarInventarioCompleto()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Reintentar
+                </button>
+            </div>
+        `);
+    } else {
+        console.error('❌ No se encontró contenedor para mostrar error');
+    }
 }
 
 /**
@@ -446,6 +509,31 @@ async function actualizarVistaProductosPostAjuste() {
     }
 }
 
+/**
+ * Función auxiliar para formatear moneda
+ */
+function formatearMoneda(valor) {
+    if (typeof valor !== 'number') {
+        valor = parseFloat(valor) || 0;
+    }
+    return new Intl.NumberFormat('es-CR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(valor);
+}
+
+/**
+ * Función auxiliar para mostrar toast
+ */
+function mostrarToast(titulo, mensaje, tipo = 'info') {
+    if (typeof window.mostrarToast === 'function') {
+        window.mostrarToast(titulo, mensaje, tipo);
+    } else {
+        console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
+        alert(`${titulo}: ${mensaje}`);
+    }
+}
+
 // ===== EXPORTAR FUNCIONES GLOBALMENTE =====
 window.inicializarModalInventario = inicializarModalInventario;
 window.consultarInventario = consultarInventario;
@@ -453,3 +541,4 @@ window.cargarInventarioCompleto = cargarInventarioCompleto;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
 
 console.log('📦 Módulo InventarioFacturacion.js cargado correctamente');
+

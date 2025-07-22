@@ -390,9 +390,8 @@ function configurarEventos() {
 
     // ===== BOTONES PRINCIPALES =====
     $('#btnAbrirInventario').on('click', function() {
-        if (modalInventario) {
-            modalInventario.show();
-        }
+        console.log('🔍 Botón inventario clickeado - llamando consultarInventario()');
+        consultarInventario();
     });
 
     $('#btnLimpiarVenta').on('click', function() {
