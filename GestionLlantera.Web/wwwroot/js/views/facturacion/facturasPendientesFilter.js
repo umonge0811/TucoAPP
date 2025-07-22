@@ -463,10 +463,10 @@ function configurarEventosBotonesFacturas() {
     $('.btn-outline-success[data-factura-escapada]').off('click.facturaProcesar');
 
     // Ver detalles de factura
-    $('.btn-outline-info[data-factura-id]').on('click.facturaVer', function() {
+    $('.btn-outline-info[data-factura-id]').on('click.facturaVer', function () {
         const facturaId = $(this).data('factura-id');
         console.log('👁️ Ver detalles de factura:', facturaId);
-        
+
         if (typeof verDetalleFactura === 'function') {
             verDetalleFactura(facturaId);
         } else {
@@ -478,10 +478,10 @@ function configurarEventosBotonesFacturas() {
     });
 
     // Imprimir factura
-    $('.btn-outline-secondary[data-factura-id]').on('click.facturaImprimir', function() {
+    $('.btn-outline-secondary[data-factura-id]').on('click.facturaImprimir', function () {
         const facturaId = $(this).data('factura-id');
         console.log('🖨️ Imprimir factura:', facturaId);
-        
+
         if (typeof imprimirFactura === 'function') {
             imprimirFactura(facturaId);
         } else {
@@ -493,12 +493,13 @@ function configurarEventosBotonesFacturas() {
     });
 
     // Procesar factura pendiente
-    $('.btn-outline-success[data-factura-escapada]').on('click.facturaProcesar', function() {
-        const facturaData = $(this).data('factura-escapada');
-        console.log('✅ Procesar factura pendiente:', facturaData);
-        
+    $('.btn-outline-success[data-factura-escapada]').on('click.facturaProcesar', function () {
+        const facturaEscapada = $(this).data('factura-escapada');
+        console.log('✅ Procesar factura pendiente:', facturaEscapada);
+
         if (typeof procesarFacturaPendiente === 'function') {
-            procesarFacturaPendiente(facturaData);
+            // Pasar el objeto directamente ya que viene como objeto desde data()
+            procesarFacturaPendiente(facturaEscapada);
         } else {
             console.error('❌ Función procesarFacturaPendiente no está disponible');
             if (typeof mostrarToast === 'function') {
@@ -509,6 +510,7 @@ function configurarEventosBotonesFacturas() {
 
     console.log('✅ Eventos de botones de facturas configurados');
 }
+
 
 // Exportar funciones para uso global
 if (typeof window !== 'undefined') {

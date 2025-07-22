@@ -292,39 +292,48 @@
             <div class="modal-body">
                 <!-- Filtros de Búsqueda -->
                 <div class="row mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label for="busquedaFacturasPendientes" class="form-label">
                             <i class="bi bi-search me-1"></i>Buscar
                         </label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="busquedaFacturasPendientes" 
+                        <input type="text"
+                               class="form-control"
+                               id="busquedaFacturasPendientes"
                                placeholder="Buscar por número, cliente...">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="estadoFacturasPendientes" class="form-label">
                             <i class="bi bi-funnel me-1"></i>Estado
                         </label>
                         <select class="form-select" id="estadoFacturasPendientes">
-                            <option value="">Todos los estados</option>
+                            <option value="todos">Todos los estados</option>
                             <option value="Pendiente">Pendiente</option>
-                            <option value="En Proceso">En Proceso</option>
+                            <option value="Pagada">Pagada</option>
+                            <option value="Anulada">Anulada</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="fechaDesdeFacturasPendientes" class="form-label">
+                    <div class="col-md-2">
+                        <label for="fechaDesdeFacturas" class="form-label">
                             <i class="bi bi-calendar me-1"></i>Desde
                         </label>
-                        <input type="date" class="form-control" id="fechaDesdeFacturasPendientes">
+                        <input type="date" class="form-control" id="fechaDesdeFacturas">
                     </div>
                     <div class="col-md-2">
-                        <label for="limpiarFiltrosFacturasPendientes" class="form-label text-white">.</label>
-                        <button type="button" 
-                                class="btn btn-outline-secondary w-100" 
-                                id="limpiarFiltrosFacturasPendientes"
-                                title="Limpiar filtros">
-                            <i class="bi bi-x-circle"></i>
-                        </button>
+                        <label for="fechaHastaFacturas" class="form-label">
+                            <i class="bi bi-calendar me-1"></i>Hasta
+                        </label>
+                        <input type="date" class="form-control" id="fechaHastaFacturas">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white">.</label>
+                        <div class="d-flex gap-2">
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    id="btnLimpiarFiltrosFacturas"
+                                    title="Limpiar filtros">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -358,7 +367,7 @@
                     </div>
 
                     <!-- Paginación -->
-                    <nav id="paginacionFacturasPendientes" style="display: none;">
+                    <nav id="paginacionFacturas" style="display: none;">
                         <ul class="pagination justify-content-center">
                             <!-- Se genera dinámicamente -->
                         </ul>
