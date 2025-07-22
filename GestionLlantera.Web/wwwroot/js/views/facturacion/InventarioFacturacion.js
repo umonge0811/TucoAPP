@@ -669,122 +669,145 @@ function verDetalleProductoInventario(producto) {
 
 /**
  * ✅ FUNCIÓN: Cargar imágenes en modal de detalles de producto
- * Replicando la lógica exacta de detalleProducto.cshtml que funciona correctamente
+ * Replicando EXACTAMENTE la lógica de detalleProducto.cshtml que funciona correctamente
  */
 async function cargarImagenesDetallesProducto(producto) {
     try {
-        console.log('🖼️ === CARGANDO IMÁGENES EN MODAL DE DETALLES ===');
-        console.log('🖼️ Producto:', producto.nombreProducto);
-        console.log('🖼️ Datos completos del producto:', producto);
+        console.log('🖼️ === INICIANDO CARGA DE IMÁGENES ===');
+        console.log('🖼️ Producto ID:', producto.productoId);
+        console.log('🖼️ Producto completo recibido:', producto);
 
         const contenedor = $('#contenedorImagenesDetalles');
 
         // Mostrar loading inicial
         contenedor.html(`
-            <div class="text-center text-muted">
+            <div class="text-center text-muted py-4">
                 <div class="spinner-border spinner-border-sm me-2" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
-                Cargando imágenes...
+                <p class="mb-0">Obteniendo imágenes del servidor...</p>
             </div>
         `);
 
-        // 🔥 HACER PETICIÓN AL ENDPOINT PARA OBTENER IMÁGENES ACTUALIZADAS
-        console.log('🖼️ Obteniendo imágenes del servidor para producto ID:', producto.productoId);
+        // 🔥 PASO 1: OBTENER IMÁGENES DIRECTAMENTE DEL SERVIDOR (como hace detalleProducto.cshtml)
+        console.log('🖼️ PASO 1: Consultando endpoint de imágenes...');
+        console.log(`🖼️ URL: /Inventario/ObtenerImagenesProducto/${producto.productoId}`);
 
         const response = await fetch(`/Inventario/ObtenerImagenesProducto/${producto.productoId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Cache-Control': 'no-cache'
             },
             credentials: 'include'
         });
 
+        console.log('🖼️ Response status:', response.status);
+        console.log('🖼️ Response headers:', response.headers);
+
         if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const imagenesData = await response.json();
-        console.log('🖼️ Respuesta del servidor:', imagenesData);
+        const imagenesDelServidor = await response.json();
+        console.log('🖼️ PASO 2: Respuesta cruda del servidor:', imagenesDelServidor);
+        console.log('🖼️ Tipo de respuesta:', typeof imagenesDelServidor);
+        console.log('🖼️ Es array?:', Array.isArray(imagenesDelServidor));
 
-        let imagenesArray = [];
+        // 🔥 PASO 3: PROCESAR RESPUESTA IGUAL QUE EN DETALLEPRODUCTO.CSHTML
+        let imagenesProcesadas = [];
 
-        // Procesar las imágenes de la respuesta del servidor
-        if (imagenesData && Array.isArray(imagenesData) && imagenesData.length > 0) {
-            imagenesArray = imagenesData
-                .map(img => img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen)
-                .filter(url => url && url.trim() !== '');
-            console.log('🖼️ URLs de imágenes desde servidor:', imagenesArray);
-        }
-
-        // Si no hay imágenes desde el servidor, intentar con datos del producto
-        if (imagenesArray.length === 0) {
-            console.log('🖼️ No hay imágenes del servidor, intentando con datos locales...');
-
-            // Probar diferentes propiedades del producto
-            if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-                imagenesArray = producto.imagenesProductos
-                    .map(img => img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen)
+        if (imagenesDelServidor) {
+            if (Array.isArray(imagenesDelServidor)) {
+                console.log('🖼️ PASO 3A: Procesando array de imágenes...');
+                imagenesProcesadas = imagenesDelServidor
+                    .map((img, index) => {
+                        console.log(`🖼️ Imagen ${index}:`, img);
+                        // Replicar exactamente como accede detalleProducto.cshtml: @imagen.UrlImagen
+                        const url = img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen || img.url || img.Url;
+                        console.log(`🖼️ URL extraída ${index}:`, url);
+                        return url;
+                    })
                     .filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-            } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-                imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
-            } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-                imagenesArray = producto.imagenes
-                    .map(img => img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen)
+            } else if (imagenesDelServidor.data && Array.isArray(imagenesDelServidor.data)) {
+                console.log('🖼️ PASO 3B: Procesando respuesta con propiedad data...');
+                imagenesProcesadas = imagenesDelServidor.data
+                    .map((img, index) => {
+                        console.log(`🖼️ Imagen data ${index}:`, img);
+                        const url = img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen || img.url || img.Url;
+                        console.log(`🖼️ URL extraída data ${index}:`, url);
+                        return url;
+                    })
                     .filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
             }
         }
 
-        console.log('🖼️ Total de imágenes encontradas:', imagenesArray.length);
+        console.log('🖼️ PASO 4: URLs procesadas desde servidor:', imagenesProcesadas);
 
-        if (imagenesArray.length === 0) {
-            // No hay imágenes
-            console.log('🖼️ No hay imágenes disponibles');
-            contenedor.html(`
-                <div class="sin-imagenes text-center text-muted py-4">
-                    <i class="bi bi-image fs-1 mb-3"></i>
-                    <p>No hay imágenes disponibles</p>
-                </div>
-            `);
-            return;
+        // 🔥 PASO 5: SI NO HAY IMÁGENES DEL SERVIDOR, USAR DATOS LOCALES
+        if (imagenesProcesadas.length === 0) {
+            console.log('🖼️ PASO 5: No hay imágenes del servidor, intentando datos locales...');
+
+            // Intentar con diferentes propiedades del producto (como backup)
+            const propiedadesAIntentar = [
+                'imagenesProductos',
+                'imagenes', 
+                'imagenesUrls',
+                'ImagenesProductos',
+                'Imagenes'
+            ];
+
+            for (const propiedad of propiedadesAIntentar) {
+                console.log(`🖼️ Intentando propiedad: ${propiedad}`);
+                const valor = producto[propiedad];
+                console.log(`🖼️ Valor de ${propiedad}:`, valor);
+
+                if (valor && Array.isArray(valor) && valor.length > 0) {
+                    imagenesProcesadas = valor
+                        .map((img, index) => {
+                            console.log(`🖼️ Item ${index} de ${propiedad}:`, img);
+                            const url = typeof img === 'string' ? img : 
+                                       (img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen || img.url || img.Url);
+                            console.log(`🖼️ URL extraída de ${propiedad} ${index}:`, url);
+                            return url;
+                        })
+                        .filter(url => url && url.trim() !== '');
+
+                    if (imagenesProcesadas.length > 0) {
+                        console.log(`🖼️ ✅ Encontradas imágenes en ${propiedad}:`, imagenesProcesadas);
+                        break;
+                    }
+                }
+            }
         }
 
-        if (imagenesArray.length === 1) {
-            // Una sola imagen - replicar estructura de detalleProducto.cshtml
-            const urlImagen = imagenesArray[0];
-            console.log('🖼️ Mostrando imagen única:', urlImagen);
+        console.log('🖼️ PASO 6: Array final de URLs de imágenes:', imagenesProcesadas);
 
-            contenedor.html(`
-                <img src="${urlImagen}" 
-                     class="imagen-producto-detalle d-block w-100 img-fluid rounded" 
-                     alt="${producto.nombreProducto}"
-                     onerror="console.error('Error cargando imagen:', this.src); this.style.border='3px solid red';"
-                     onload="console.log('✅ Imagen cargada correctamente:', this.src);">
-            `);
-        } else {
-            // Múltiples imágenes - crear carrusel igual que en detalleProducto.cshtml
-            console.log('🖼️ Creando carrusel con', imagenesArray.length, 'imágenes');
+        // 🔥 PASO 7: CONSTRUIR HTML EXACTAMENTE COMO DETALLEPRODUCTO.CSHTML
+        if (imagenesProcesadas.length > 0) {
+            console.log('🖼️ PASO 7: Construyendo carrusel de imágenes...');
 
-            const carruselId = 'carruselImagenesDetalles';
-
+            // Replicar exactamente la estructura de detalleProducto.cshtml
             let carruselHtml = `
-                <div id="${carruselId}" class="carousel slide" data-bs-ride="carousel">
+                <div id="carruselImagenesDetalles" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-inner">
             `;
 
-            // Agregar imágenes al carrusel (igual que en detalleProducto.cshtml)
-            imagenesArray.forEach((url, index) => {
+            // Generar items del carrusel (igual que el @for de detalleProducto.cshtml)
+            imagenesProcesadas.forEach((urlImagen, index) => {
+                // Construir URL completa (replicando @imagen.UrlImagen)
+                const urlCompleta = construirUrlImagenCompleta(urlImagen);
+                console.log(`🖼️ Generando item ${index}: ${urlCompleta}`);
+
                 carruselHtml += `
                     <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                        <img src="${url}" 
-                             class="d-block w-100 img-fluid rounded imagen-producto-detalle" 
+                        <img src="${urlCompleta}" 
+                             class="d-block w-100 img-fluid rounded imagen-producto-detalle"
                              alt="${producto.nombreProducto}"
-                             onerror="console.error('Error cargando imagen:', this.src); this.style.border='3px solid red';"
-                             onload="console.log('✅ Imagen cargada OK:', this.src);">
+                             onerror="console.error('❌ Error cargando imagen ${index}:', this.src); this.style.border='3px solid red'; this.style.background='#f8d7da';"
+                             onload="console.log('✅ Imagen ${index} cargada OK:', this.src);"
+                             style="max-height: 300px; object-fit: contain;">
                     </div>
                 `;
             });
@@ -793,82 +816,125 @@ async function cargarImagenesDetallesProducto(producto) {
                     </div>
             `;
 
-            // Agregar controles solo si hay más de una imagen
-            if (imagenesArray.length > 1) {
+            // Agregar controles solo si hay más de una imagen (igual que detalleProducto.cshtml)
+            if (imagenesProcesadas.length > 1) {
                 carruselHtml += `
-                    <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carruselImagenesDetalles" data-bs-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Anterior</span>
                     </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
+                    <button class="carousel-control-next" type="button" data-bs-target="#carruselImagenesDetalles" data-bs-slide="next">
                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Siguiente</span>
                     </button>
                 `;
+
+                // Agregar indicadores
+                carruselHtml += `
+                    <div class="carousel-indicators">
+                `;
+                imagenesProcesadas.forEach((_, index) => {
+                    carruselHtml += `
+                        <button type="button" data-bs-target="#carruselImagenesDetalles" data-bs-slide-to="${index}" 
+                                ${index === 0 ? 'class="active" aria-current="true"' : ''} 
+                                aria-label="Slide ${index + 1}"></button>
+                    `;
+                });
+                carruselHtml += `
+                    </div>
+                `;
             }
 
-            carruselHtml += `</div>`;
+            carruselHtml += `
+                </div>
+            `;
 
-            // Agregar miniaturas si hay más de una imagen
-            if (imagenesArray.length > 1) {
+            // Agregar miniaturas si hay más de una imagen (igual que detalleProducto.cshtml)
+            if (imagenesProcesadas.length > 1) {
                 carruselHtml += `
                     <div class="row mt-2 g-2">
                 `;
-
-                imagenesArray.forEach((url, index) => {
+                imagenesProcesadas.forEach((urlImagen, index) => {
+                    const urlCompleta = construirUrlImagenCompleta(urlImagen);
                     carruselHtml += `
                         <div class="col-3">
-                            <img src="${url}" class="img-thumbnail cursor-pointer"
-                                 onclick="$('#${carruselId}').carousel(${index})"
-                                 alt="${producto.nombreProducto} - Miniatura ${index + 1}">
+                            <img src="${urlCompleta}" class="img-thumbnail cursor-pointer"
+onclick="$('#carruselImagenesDetalles').carousel(${index})"
+                                 alt="${producto.nombreProducto} - Miniatura"
+                                 style="height: 60px; object-fit: cover;">
                         </div>
                     `;
                 });
-
-                carruselHtml += `</div>`;
+                carruselHtml += `
+                    </div>
+                `;
             }
 
+            // Mostrar el carrusel
             contenedor.html(carruselHtml);
+            console.log('✅ CARRUSEL DE IMÁGENES CONSTRUIDO EXITOSAMENTE');
+            console.log('✅ Total de imágenes mostradas:', imagenesProcesadas.length);
+
+        } else {
+            // Sin imágenes disponibles (igual que detalleProducto.cshtml)
+            console.log('⚠️ PASO 7B: No hay imágenes disponibles');
+            contenedor.html(`
+                <div class="sin-imagenes text-center py-4">
+                    <i class="bi bi-image fs-1 text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No hay imágenes disponibles</p>
+                </div>
+            `);
         }
 
-        console.log('✅ Imágenes cargadas correctamente en modal');
-
     } catch (error) {
-        console.error('❌ Error cargando imágenes:', error);
-        $('#contenedorImagenesDetalles').html(`
-            <div class="sin-imagenes text-center text-danger py-4">
+        console.error('❌ ERROR CRÍTICO cargando imágenes:', error);
+        console.error('❌ Stack trace:', error.stack);
+
+        contenedor.html(`
+            <div class="text-center text-danger py-4">
                 <i class="bi bi-exclamation-triangle-fill fs-1 mb-3"></i>
-                <p>Error cargando imágenes: ${error.message}</p>
+                <p class="mb-1"><strong>Error cargando imágenes</strong></p>
+                <small class="text-muted">${error.message}</small>
             </div>
         `);
     }
 }
 
 /**
- * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
+ * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen completa
+ * Replicando exactamente como se construyen las URLs en detalleProducto.cshtml
  */
-function construirUrlImagen(urlOriginal) {
+function construirUrlImagenCompleta(urlOriginal) {
+    console.log('🔗 Construyendo URL para:', urlOriginal);
+
     if (!urlOriginal || urlOriginal.trim() === '') {
+        console.log('🔗 URL vacía, usando imagen por defecto');
         return '/images/no-image.png';
     }
 
     const url = urlOriginal.trim();
+    console.log('🔗 URL limpia:', url);
 
     // Si ya es una URL completa, usarla directamente
     if (url.startsWith('http://') || url.startsWith('https://')) {
+        console.log('🔗 URL completa detectada:', url);
         return url;
     }
 
-    // Construir URL para el servidor API
+    // Construir URL para el servidor API (igual que funciona en detalleProducto.cshtml)
+    let urlCompleta;
     if (url.startsWith('/uploads/productos/')) {
-        return `https://localhost:7273${url}`;
+        urlCompleta = `https://localhost:7273${url}`;
     } else if (url.startsWith('uploads/productos/')) {
-        return `https://localhost:7273/${url}`;
+        urlCompleta = `https://localhost:7273/${url}`;
     } else if (url.startsWith('/')) {
-        return `https://localhost:7273${url}`;
+        urlCompleta = `https://localhost:7273${url}`;
     } else {
-        return `https://localhost:7273/${url}`;
+        urlCompleta = `https://localhost:7273/uploads/productos/${url}`;
     }
+
+    console.log('🔗 URL construida:', urlCompleta);
+    return urlCompleta;
 }
 
 // Exportar funciones al objeto global para que facturacion.js pueda usarlas
