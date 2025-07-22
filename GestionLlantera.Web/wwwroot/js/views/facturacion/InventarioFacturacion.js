@@ -716,164 +716,172 @@ async function cargarImagenesDetallesProducto(producto) {
         console.log('🖼️ Es array?:', Array.isArray(imagenesDelServidor));
 
         // 🔥 PASO 3: PROCESAR RESPUESTA IGUAL QUE EN DETALLEPRODUCTO.CSHTML
-        let urlsImagenes = [];
+        let imagenesProcesadas = [];
 
         if (imagenesDelServidor) {
-            const datosImagenes = imagenesDelServidor;
-
-            // PASO 3A: Si la respuesta es un array, procesarlo
-        if (Array.isArray(datosImagenes)) {
-            console.log('🖼️ PASO 3A: Procesando array de imágenes...');
-
-            datosImagenes.forEach((imagen, index) => {
-                console.log(`🖼️ Imagen ${index}:`, imagen);
-
-                // Intentar extraer la URL de diferentes formas
-                let urlExtraida = null;
-
-                if (typeof imagen === 'string') {
-                    // Si la imagen es directamente una string URL
-                    urlExtraida = imagen;
-                } else if (imagen && typeof imagen === 'object') {
-                    // Si es un objeto, intentar diferentes propiedades
-                    urlExtraida = imagen.url || imagen.UrlCompleta || imagen.urlCompleta || 
-                                  imagen.UrlImagen || imagen.urlImagen ||
-                                  imagen.nombreArchivo || imagen.NombreArchivo;
-
-                    // Si obtuvimos solo el nombre del archivo, construir la URL completa
-                    if (urlExtraida && !urlExtraida.startsWith('http')) {
-                        urlExtraida = `https://localhost:7273/uploads/productos/${urlExtraida}`;
-                    }
-                }
-
-                console.log(`🖼️ URL extraída ${index}:`, urlExtraida);
-
-                if (urlExtraida && typeof urlExtraida === 'string' && urlExtraida.length > 0) {
-                    urlsImagenes.push(urlExtraida);
-                }
-            });
-        }
+            if (Array.isArray(imagenesDelServidor)) {
+                console.log('🖼️ PASO 3A: Procesando array de imágenes...');
+                imagenesProcesadas = imagenesDelServidor
+                    .map((img, index) => {
+                        console.log(`🖼️ Imagen ${index}:`, img);
+                        // Replicar exactamente como accede detalleProducto.cshtml: @imagen.UrlImagen
+                        const url = img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen || img.url || img.Url;
+                        console.log(`🖼️ URL extraída ${index}:`, url);
+                        return url;
+                    })
+                    .filter(url => url && url.trim() !== '');
+            } else if (imagenesDelServidor.data && Array.isArray(imagenesDelServidor.data)) {
+                console.log('🖼️ PASO 3B: Procesando respuesta con propiedad data...');
+                imagenesProcesadas = imagenesDelServidor.data
+                    .map((img, index) => {
+                        console.log(`🖼️ Imagen data ${index}:`, img);
+                        const url = img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen || img.url || img.Url;
+                        console.log(`🖼️ URL extraída data ${index}:`, url);
+                        return url;
+                    })
+                    .filter(url => url && url.trim() !== '');
+            }
         }
 
-        console.log('🖼️ PASO 4: URLs extraídas del servidor:', urlsImagenes);
+        console.log('🖼️ PASO 4: URLs procesadas desde servidor:', imagenesProcesadas);
 
         // 🔥 PASO 5: SI NO HAY IMÁGENES DEL SERVIDOR, USAR DATOS LOCALES
-        // 🔥 PASO 5: SI NO HAY IMÁGENES DEL SERVIDOR, USAR DATOS LOCALES
-        console.log('🖼️ PASO 5: No hay imágenes del servidor, intentando datos locales...');
+        if (imagenesProcesadas.length === 0) {
+            console.log('🖼️ PASO 5: No hay imágenes del servidor, intentando datos locales...');
 
-        // Intentar obtener imágenes de diferentes propiedades del producto
-        const propiedadesImagen = ['imagenesProductos', 'imagenes', 'imagenesUrls', 'ImagenesProductos', 'Imagenes', 'ImagenesUrls'];
+            // Intentar con diferentes propiedades del producto (como backup)
+            const propiedadesAIntentar = [
+                'imagenesProductos',
+                'imagenes', 
+                'imagenesUrls',
+                'ImagenesProductos',
+                'Imagenes'
+            ];
 
-        for (const propiedad of propiedadesImagen) {
-            console.log(`🖼️ Intentando propiedad: ${propiedad}`);
-            console.log(`🖼️ Valor de ${propiedad}:`, producto[propiedad]);
+            for (const propiedad of propiedadesAIntentar) {
+                console.log(`🖼️ Intentando propiedad: ${propiedad}`);
+                const valor = producto[propiedad];
+                console.log(`🖼️ Valor de ${propiedad}:`, valor);
 
-            const valorPropiedad = producto[propiedad];
+                if (valor && Array.isArray(valor) && valor.length > 0) {
+                    imagenesProcesadas = valor
+                        .map((img, index) => {
+                            console.log(`🖼️ Item ${index} de ${propiedad}:`, img);
+                            const url = typeof img === 'string' ? img : 
+                                       (img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen || img.url || img.Url);
+                            console.log(`🖼️ URL extraída de ${propiedad} ${index}:`, url);
+                            return url;
+                        })
+                        .filter(url => url && url.trim() !== '');
 
-            if (valorPropiedad) {
-                if (Array.isArray(valorPropiedad)) {
-                    // Si es array, procesarlo
-                    valorPropiedad.forEach((imgLocal, index) => {
-                        console.log(`🖼️ Imagen local ${index}:`, imgLocal);
-
-                        let urlLocal = null;
-                        if (typeof imgLocal === 'string') {
-                            urlLocal = imgLocal;
-                        } else if (imgLocal && typeof imgLocal === 'object') {
-                            urlLocal = imgLocal.url || imgLocal.UrlCompleta || imgLocal.urlCompleta || 
-                                      imgLocal.nombreArchivo || imgLocal.NombreArchivo ||
-                                      imgLocal.UrlImagen || imgLocal.urlImagen;
-                        }
-
-                        // Construir URL completa si es necesario
-                        if (urlLocal && typeof urlLocal === 'string') {
-                            if (!urlLocal.startsWith('http')) {
-                                urlLocal = `https://localhost:7273/uploads/productos/${urlLocal}`;
-                            }
-                            urlsImagenes.push(urlLocal);
-                            console.log(`🖼️ URL local agregada: ${urlLocal}`);
-                        }
-                    });
-                } else if (typeof valorPropiedad === 'string') {
-                    // Si es string directo
-                    let urlLocal = valorPropiedad;
-                    if (!urlLocal.startsWith('http')) {
-                        urlLocal = `https://localhost:7273/uploads/productos/${urlLocal}`;
+                    if (imagenesProcesadas.length > 0) {
+                        console.log(`🖼️ ✅ Encontradas imágenes en ${propiedad}:`, imagenesProcesadas);
+                        break;
                     }
-                    urlsImagenes.push(urlLocal);
-                    console.log(`🖼️ URL string local agregada: ${urlLocal}`);
-                }
-
-                if (urlsImagenes.length > 0) {
-                    console.log(`🖼️ Encontradas ${urlsImagenes.length} imágenes en propiedad: ${propiedad}`);
-                    break; // Si encontramos imágenes, salir del bucle
                 }
             }
         }
 
-        console.log('🖼️ PASO 6: Array final de URLs de imágenes:', urlsImagenes);
-        console.log('🖼️ PASO 6: Cantidad de imágenes encontradas:', urlsImagenes.length);
+        console.log('🖼️ PASO 6: Array final de URLs de imágenes:', imagenesProcesadas);
 
-        // PASO 7: Construir el carrusel
-        if (urlsImagenes.length > 0) {
-            console.log('🖼️ PASO 7A: Construyendo carrusel con imágenes...');
-            console.log('🖼️ PASO 7A: URLs a usar en carrusel:', urlsImagenes);
+        // 🔥 PASO 7: CONSTRUIR HTML EXACTAMENTE COMO DETALLEPRODUCTO.CSHTML
+        if (imagenesProcesadas.length > 0) {
+            console.log('🖼️ PASO 7: Construyendo carrusel de imágenes...');
 
-            let indicadoresHtml = '';
-            let slidesHtml = '';
+            // Replicar exactamente la estructura de detalleProducto.cshtml
+            let carruselHtml = `
+                <div id="carruselImagenesDetalles" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+            `;
 
-            urlsImagenes.forEach((url, index) => {
-                const activeClass = index === 0 ? 'active' : '';
-                const ariaCurrent = index === 0 ? 'aria-current="true"' : '';
+            // Generar items del carrusel (igual que el @for de detalleProducto.cshtml)
+            imagenesProcesadas.forEach((urlImagen, index) => {
+                // Construir URL completa (replicando @imagen.UrlImagen)
+                const urlCompleta = construirUrlImagenCompleta(urlImagen);
+                console.log(`🖼️ Generando item ${index}: ${urlCompleta}`);
 
-                console.log(`🖼️ PASO 7A: Procesando imagen ${index + 1}: ${url}`);
-
-                indicadoresHtml += `
-                    <button type="button" data-bs-target="#carruselImagenesDetalle" 
-                            data-bs-slide-to="${index}" class="${activeClass}" 
-                            ${ariaCurrent} aria-label="Slide ${index + 1}"></button>
-                `;
-
-                slidesHtml += `
-                    <div class="carousel-item ${activeClass}">
-                        <img src="${url}" class="d-block imagen-producto-detalle" 
-                             alt="Imagen ${index + 1}" 
-                             onerror="this.onerror=null; this.src='/images/no-image.png'; console.error('❌ Error cargando imagen: ${url}');"
-                             onload="console.log('✅ Imagen cargada exitosamente: ${url}');">
+                carruselHtml += `
+                    <div class="carousel-item ${index === 0 ? 'active' : ''}">
+                        <img src="${urlCompleta}" 
+                             class="d-block w-100 img-fluid rounded imagen-producto-detalle"
+                             alt="${producto.nombreProducto}"
+                             onerror="console.error('❌ Error cargando imagen ${index}:', this.src); this.style.border='3px solid red'; this.style.background='#f8d7da';"
+                             onload="console.log('✅ Imagen ${index} cargada OK:', this.src);"
+                             style="max-height: 300px; object-fit: contain;">
                     </div>
                 `;
             });
 
-            const carruselHtml = `
-                <div id="carruselImagenesDetalle" class="carousel slide" data-bs-ride="false">
+            carruselHtml += `
+                    </div>
+            `;
+
+            // Agregar controles solo si hay más de una imagen (igual que detalleProducto.cshtml)
+            if (imagenesProcesadas.length > 1) {
+                carruselHtml += `
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carruselImagenesDetalles" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carruselImagenesDetalles" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Siguiente</span>
+                    </button>
+                `;
+
+                // Agregar indicadores
+                carruselHtml += `
                     <div class="carousel-indicators">
-                        ${indicadoresHtml}
+                `;
+                imagenesProcesadas.forEach((_, index) => {
+                    carruselHtml += `
+                        <button type="button" data-bs-target="#carruselImagenesDetalles" data-bs-slide-to="${index}" 
+                                ${index === 0 ? 'class="active" aria-current="true"' : ''} 
+                                aria-label="Slide ${index + 1}"></button>
+                    `;
+                });
+                carruselHtml += `
                     </div>
-                    <div class="carousel-inner">
-                        ${slidesHtml}
-                    </div>
-                    ${urlsImagenes.length > 1 ? `
-                        <button class="carousel-control-prev" type="button" data-bs-target="#carruselImagenesDetalle" data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Anterior</span>
-                        </button>
-                        <button class="carousel-control-next" type="button" data-bs-target="#carruselImagenesDetalle" data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Siguiente</span>
-                        </button>
-                    ` : ''}
+                `;
+            }
+
+            carruselHtml += `
                 </div>
             `;
 
-            $('#contenedorImagenesDetalles').html(carruselHtml);
-            console.log('🖼️ PASO 7A: Carrusel construido exitosamente');
-            console.log('🖼️ PASO 7A: HTML del carrusel:', carruselHtml);
+            // Agregar miniaturas si hay más de una imagen (igual que detalleProducto.cshtml)
+            if (imagenesProcesadas.length > 1) {
+                carruselHtml += `
+                    <div class="row mt-2 g-2">
+                `;
+                imagenesProcesadas.forEach((urlImagen, index) => {
+                    const urlCompleta = construirUrlImagenCompleta(urlImagen);
+                    carruselHtml += `
+                        <div class="col-3">
+                            <img src="${urlCompleta}" class="img-thumbnail cursor-pointer"
+onclick="$('#carruselImagenesDetalles').carousel(${index})"
+                                 alt="${producto.nombreProducto} - Miniatura"
+                                 style="height: 60px; object-fit: cover;">
+                        </div>
+                    `;
+                });
+                carruselHtml += `
+                    </div>
+                `;
+            }
+
+            // Mostrar el carrusel
+            contenedor.html(carruselHtml);
+            console.log('✅ CARRUSEL DE IMÁGENES CONSTRUIDO EXITOSAMENTE');
+            console.log('✅ Total de imágenes mostradas:', imagenesProcesadas.length);
+
         } else {
+            // Sin imágenes disponibles (igual que detalleProducto.cshtml)
             console.log('⚠️ PASO 7B: No hay imágenes disponibles');
-            $('#contenedorImagenesDetalles').html(`
-                <div class="sin-imagenes">
-                    <i class="fas fa-image"></i>
-                    <p>Sin imágenes disponibles</p>
+            contenedor.html(`
+                <div class="sin-imagenes text-center py-4">
+                    <i class="bi bi-image fs-1 text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No hay imágenes disponibles</p>
                 </div>
             `);
         }
