@@ -213,6 +213,16 @@ function configurarInterfazSegunPermisos() {
     }, 100);
 }
 
+// ===== EXPORTAR FUNCIONES GLOBALMENTE =====
+if (typeof window !== 'undefined') {
+    window.verDetalleProforma = verDetalleProforma;
+    window.imprimirProforma = imprimirProforma;
+    window.convertirProformaAFactura = convertirProformaAFactura;
+    window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
+    
+    console.log('📋 Funciones de proformas exportadas globalmente');
+}
+
 // ===== INICIALIZACIÓN =====
 $(document).ready(function() {
     console.log('🚀 Inicializando módulo de facturación');
