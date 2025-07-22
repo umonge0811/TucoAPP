@@ -4915,6 +4915,153 @@ function verDetalleProducto(producto) {
     modal.show();
 }
 
+/**
+ * ✅ FUNCIÓN: Cargar imágenes en modal de detalles de producto
+ */
+async function cargarImagenesDetallesProducto(producto) {
+    try {
+        console.log('🖼️ === CARGANDO IMÁGENES EN MODAL DE DETALLES ===');
+        console.log('🖼️ Producto:', producto.nombreProducto);
+        console.log('🖼️ Datos del producto:', producto);
+
+        const contenedor = $('#contenedorImagenesDetalles');
+        
+        // Mostrar loading inicial
+        contenedor.html(`
+            <div class="text-center text-muted">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                Cargando imágenes...
+            </div>
+        `);
+
+        let imagenesArray = [];
+
+        // Usar la misma lógica que en otros modales para obtener imágenes
+        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+            imagenesArray = producto.imagenesProductos
+                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                .filter(url => url && url.trim() !== '');
+        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
+        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+            imagenesArray = producto.imagenes
+                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                .filter(url => url && url.trim() !== '');
+        }
+
+        console.log('🖼️ Imágenes encontradas:', imagenesArray.length);
+
+        if (imagenesArray.length === 0) {
+            // No hay imágenes
+            contenedor.html(`
+                <div class="sin-imagenes">
+                    <i class="bi bi-image-fill"></i>
+                    <span>No hay imágenes disponibles</span>
+                </div>
+            `);
+            return;
+        }
+
+        if (imagenesArray.length === 1) {
+            // Una sola imagen
+            const urlImagen = construirUrlImagen(imagenesArray[0]);
+            contenedor.html(`
+                <img src="${urlImagen}" 
+                     class="imagen-producto-detalle" 
+                     alt="${producto.nombreProducto}"
+                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
+            `);
+        } else {
+            // Múltiples imágenes - crear carrusel
+            const carruselId = 'carruselImagenesDetalles';
+            let htmlCarrusel = `
+                <div id="${carruselId}" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+            `;
+
+            imagenesArray.forEach((url, index) => {
+                const urlImagen = construirUrlImagen(url);
+                const activa = index === 0 ? 'active' : '';
+                htmlCarrusel += `
+                    <div class="carousel-item ${activa}">
+                        <img src="${urlImagen}" 
+                             class="imagen-producto-detalle" 
+                             alt="${producto.nombreProducto}"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
+                    </div>
+                `;
+            });
+
+            htmlCarrusel += `
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Siguiente</span>
+                    </button>
+                    <div class="carousel-indicators">
+            `;
+
+            imagenesArray.forEach((_, index) => {
+                const activa = index === 0 ? 'active' : '';
+                htmlCarrusel += `
+                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" ${activa ? 'class="active" aria-current="true"' : ''}></button>
+                `;
+            });
+
+            htmlCarrusel += `
+                    </div>
+                </div>
+            `;
+
+            contenedor.html(htmlCarrusel);
+        }
+
+        console.log('✅ Imágenes cargadas exitosamente en modal de detalles');
+
+    } catch (error) {
+        console.error('❌ Error cargando imágenes en modal de detalles:', error);
+        $('#contenedorImagenesDetalles').html(`
+            <div class="sin-imagenes">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Error cargando imágenes</span>
+            </div>
+        `);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
+ */
+function construirUrlImagen(urlOriginal) {
+    if (!urlOriginal || urlOriginal.trim() === '') {
+        return '/images/no-image.png';
+    }
+
+    const url = urlOriginal.trim();
+
+    // Si ya es una URL completa, usarla directamente
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+
+    // Construir URL para el servidor API
+    if (url.startsWith('/uploads/productos/')) {
+        return `https://localhost:7273${url}`;
+    } else if (url.startsWith('uploads/productos/')) {
+        return `https://localhost:7273/${url}`;
+    } else if (url.startsWith('/')) {
+        return `https://localhost:7273${url}`;
+    } else {
+        return `https://localhost:7273/${url}`;
+    }
+}
+
 // ===== GESTIÓN DE CLIENTES =====
 function abrirModalNuevoCliente() {
     // Crear el modal dinámicamente
