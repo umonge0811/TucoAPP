@@ -6,6 +6,11 @@ let pendientesData = [];
 let modalMarcarEntregado;
 let modalDetallesPendiente;
 
+// Variables de paginación
+let paginaActualEntregas = 1;
+let entregasPorPagina = 10;
+let pendientesFiltrados = [];
+
 // =========================================
 // INICIALIZACIÓN
 // =========================================
@@ -38,6 +43,16 @@ function configurarEventos() {
     $('#filtroCodigo').on('input', function() {
         clearTimeout(window.filtroTimeout);
         window.filtroTimeout = setTimeout(aplicarFiltros, 300);
+    });
+
+    // Cambio de elementos por página
+    $('#entregasPorPagina').on('change', function () {
+        entregasPorPagina = parseInt($(this).val());
+        paginaActualEntregas = 1; // Resetear a la primera página
+        console.log('📄 Elementos por página cambiado a:', entregasPorPagina);
+
+        // Volver a mostrar con la nueva paginación
+        mostrarPendientes(pendientesFiltrados.length > 0 ? pendientesFiltrados : pendientesData);
     });
 
     // Filtro por estado
@@ -168,13 +183,17 @@ async function cargarPendientes() {
 // =========================================
 
 function mostrarPendientes(pendientes) {
-    const tbody = $('#bodyPendientes');
-    tbody.empty();
+    console.log('📋 === MOSTRANDO PENDIENTES CON PAGINACIÓN ===');
+    console.log('📋 Total pendientes:', pendientes.length);
+
+    // Guardar pendientes filtrados
+    pendientesFiltrados = pendientes;
 
     if (!pendientes || pendientes.length === 0) {
         $('#sinResultados').show();
         $('#tablaPendientes').hide();
         $('#contadorResultados').hide();
+        $('#paginacionEntregas').hide();
         return;
     }
 
@@ -182,16 +201,145 @@ function mostrarPendientes(pendientes) {
     $('#tablaPendientes').show();
     $('#contadorResultados').show();
 
-    pendientes.forEach(pendiente => {
+    // Calcular paginación
+    const totalPaginas = Math.ceil(pendientes.length / entregasPorPagina);
+    const inicio = (paginaActualEntregas - 1) * entregasPorPagina;
+    const fin = inicio + entregasPorPagina;
+    const pendientesPagina = pendientes.slice(inicio, fin);
+
+    console.log('📋 Mostrando página:', paginaActualEntregas, 'de', totalPaginas);
+    console.log('📋 Pendientes en esta página:', pendientesPagina.length);
+
+    // Mostrar pendientes de la página actual
+    const tbody = $('#bodyPendientes');
+    tbody.empty();
+
+    pendientesPagina.forEach(pendiente => {
         const fila = crearFilaPendiente(pendiente);
         tbody.append(fila);
     });
+
+    // Actualizar contador
+    actualizarContadorResultados(pendientes.length, pendientesData.length);
+
+    // Mostrar paginación si hay más de una página
+    if (totalPaginas > 1) {
+        mostrarPaginacionEntregas(paginaActualEntregas, totalPaginas);
+    } else {
+        $('#paginacionEntregas').hide();
+    }
 
     // Resaltar términos de búsqueda si hay filtro de código
     const filtroCodigo = $('#filtroCodigo').val().trim();
     if (filtroCodigo) {
         resaltarTerminoBusqueda(filtroCodigo);
     }
+}
+
+/**
+ * Mostrar controles de paginación
+ */
+function mostrarPaginacionEntregas(paginaActual, totalPaginas) {
+    console.log('📄 === MOSTRANDO PAGINACIÓN DE ENTREGAS ===');
+    console.log('📄 Página actual:', paginaActual, 'Total páginas:', totalPaginas);
+
+    const paginacion = $('#paginacionEntregas');
+    if (paginacion.length === 0) {
+        console.error('❌ No se encontró el contenedor de paginación');
+        return;
+    }
+
+    let html = '<nav aria-label="Paginación de entregas pendientes"><ul class="pagination justify-content-center mb-0">';
+
+    // Botón anterior
+    if (paginaActual > 1) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaEntregas(${paginaActual - 1})">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </a>
+                </li>`;
+    } else {
+        html += `<li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </span>
+                </li>`;
+    }
+
+    // Páginas (mostrar máximo 5 páginas)
+    const iniciarPagina = Math.max(1, paginaActual - 2);
+    const finalizarPagina = Math.min(totalPaginas, iniciarPagina + 4);
+
+    if (iniciarPagina > 1) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaEntregas(1)">1</a>
+                </li>`;
+        if (iniciarPagina > 2) {
+            html += `<li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>`;
+        }
+    }
+
+    for (let i = iniciarPagina; i <= finalizarPagina; i++) {
+        if (i === paginaActual) {
+            html += `<li class="page-item active">
+                        <span class="page-link">${i}</span>
+                    </li>`;
+        } else {
+            html += `<li class="page-item">
+                        <a class="page-link" href="#" onclick="cambiarPaginaEntregas(${i})">${i}</a>
+                    </li>`;
+        }
+    }
+
+    if (finalizarPagina < totalPaginas) {
+        if (finalizarPagina < totalPaginas - 1) {
+            html += `<li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>`;
+        }
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaEntregas(${totalPaginas})">${totalPaginas}</a>
+                </li>`;
+    }
+
+    // Botón siguiente
+    if (paginaActual < totalPaginas) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaEntregas(${paginaActual + 1})">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>`;
+    } else {
+        html += `<li class="page-item disabled">
+                    <span class="page-link">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </span>
+                </li>`;
+    }
+
+    html += '</ul></nav>';
+
+    paginacion.html(html).show();
+}
+
+/**
+ * Cambiar página de entregas pendientes
+ */
+function cambiarPaginaEntregas(nuevaPagina) {
+    console.log('📄 Cambiando a página:', nuevaPagina);
+
+    paginaActualEntregas = nuevaPagina;
+
+    // Mostrar pendientes filtrados con la nueva página
+    mostrarPendientes(pendientesFiltrados);
+
+    // Scroll suave hacia la tabla
+    document.getElementById('tablaPendientes').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
 }
 
 function crearFilaPendiente(pendiente) {
@@ -482,7 +630,10 @@ function generarContenidoDetalles(pendiente) {
 
 function aplicarFiltros() {
     console.log('🔍 Aplicando filtros a entregas pendientes...');
-    
+
+    // Resetear paginación al aplicar filtros
+    paginaActualEntregas = 1;
+
     // Obtener valores de filtros
     const filtroEstado = $('#filtroEstado').val().toLowerCase().trim();
     const filtroCodigo = $('#filtroCodigo').val().toLowerCase().trim();
@@ -540,7 +691,10 @@ function aplicarFiltros() {
 
 function limpiarFiltros() {
     console.log('🧹 Limpiando filtros...');
-    
+
+    // Resetear paginación al limpiar filtros
+    paginaActualEntregas = 1;
+
     $('#filtroEstado').val('');
     $('#filtroCodigo').val('');
     $('#filtroFechaDesde').val('');
@@ -548,14 +702,22 @@ function limpiarFiltros() {
 
     // Mostrar todos los pendientes
     mostrarPendientes(pendientesData);
-    actualizarContadorResultados(pendientesData.length, pendientesData.length);
 }
-
 function actualizarContadorResultados(mostrados, total) {
-    const texto = mostrados === total 
-        ? `Mostrando ${total} entregas pendientes`
-        : `Mostrando ${mostrados} de ${total} entregas pendientes`;
-    
+    const inicioRango = (paginaActualEntregas - 1) * entregasPorPagina + 1;
+    const finRango = Math.min(paginaActualEntregas * entregasPorPagina, mostrados);
+
+    let texto = '';
+    if (mostrados === total) {
+        if (mostrados <= entregasPorPagina) {
+            texto = `Mostrando ${mostrados} entregas pendientes`;
+        } else {
+            texto = `Mostrando ${inicioRango}-${finRango} de ${total} entregas pendientes`;
+        }
+    } else {
+        texto = `Mostrando ${inicioRango}-${finRango} de ${mostrados} entregas filtradas (${total} total)`;
+    }
+
     // Actualizar texto si existe el elemento
     if ($('#contadorResultados').length) {
         $('#contadorResultados').text(texto);
@@ -565,7 +727,6 @@ function actualizarContadorResultados(mostrados, total) {
         $('#tablaPendientes').before(contador);
     }
 }
-
 // =========================================
 // UTILIDADES
 // =========================================
