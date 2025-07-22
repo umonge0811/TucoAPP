@@ -3046,13 +3046,101 @@ function mostrarDetalleProformaModal(proforma) {
  */
 async function imprimirProforma(proformaId) {
     try {
-        console.log('🖨️ Imprimiendo proforma:', proformaId);
-        // Implementar lógica para imprimir proforma
-        // Por ahora solo mostrar un mensaje
-        mostrarToast('Información', 'Funcionalidad de imprimir en desarrollo', 'info');
+        console.log('🖨️ === IMPRIMIENDO PROFORMA ===');
+        console.log('🖨️ Proforma ID:', proformaId);
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Preparando impresión...',
+            text: 'Obteniendo datos de la proforma',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Obtener datos completos de la proforma
+        const response = await fetch(`/Facturacion/ObtenerFacturaPorId/${proformaId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('🖨️ Datos de proforma obtenidos:', resultado);
+
+        let proforma;
+        if (resultado.success && resultado.data) {
+            proforma = resultado.data;
+        } else if (resultado.facturaId) {
+            proforma = resultado;
+        } else {
+            throw new Error(resultado.message || 'No se pudieron obtener los datos de la proforma');
+        }
+
+        // Cerrar loading
+        Swal.close();
+
+        // Preparar datos para el recibo
+        const productosParaRecibo = proforma.detallesFactura ? proforma.detallesFactura.map(detalle => ({
+            nombreProducto: detalle.nombreProducto || 'Producto',
+            cantidad: detalle.cantidad || 1,
+            precioUnitario: detalle.precioUnitario || 0
+        })) : [];
+
+        const totalesRecibo = {
+            subtotal: proforma.subtotal || 0,
+            iva: proforma.montoImpuesto || 0,
+            total: proforma.total || 0,
+            metodoPago: 'Proforma',
+            cliente: {
+                nombre: proforma.nombreCliente || 'Cliente General',
+                nombreCliente: proforma.nombreCliente || 'Cliente General'
+            },
+            usuario: {
+                nombre: proforma.usuarioCreadorNombre || 'Sistema',
+                nombreUsuario: proforma.usuarioCreadorNombre || 'Sistema'
+            }
+        };
+
+        const datosProforma = {
+            numeroFactura: proforma.numeroFactura || 'PROF-001',
+            nombreCliente: proforma.nombreCliente || 'Cliente General',
+            usuarioCreadorNombre: proforma.usuarioCreadorNombre || 'Sistema'
+        };
+
+        console.log('🖨️ Generando recibo de proforma...');
+        console.log('🖨️ Productos:', productosParaRecibo.length);
+        console.log('🖨️ Total:', totalesRecibo.total);
+
+        // Generar recibo usando la función existente
+        generarRecibo(datosProforma, productosParaRecibo, totalesRecibo);
+
+        // Mostrar confirmación
+        setTimeout(() => {
+            mostrarToast('Impresión', `Proforma ${proforma.numeroFactura} enviada a impresión`, 'success');
+        }, 1000);
+
     } catch (error) {
         console.error('❌ Error imprimiendo proforma:', error);
-        mostrarToast('Error', 'Error al imprimir proforma', 'danger');
+        
+        Swal.close();
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de impresión',
+            text: 'No se pudo imprimir la proforma: ' + (error.message || 'Error desconocido'),
+            confirmButtonColor: '#dc3545'
+        });
     }
 }
 
