@@ -16,64 +16,107 @@ let ultimaBusquedaProformas = '';
  */
 function inicializarFiltrosProformas() {
     console.log('🔍 === INICIALIZANDO FILTROS DE PROFORMAS ===');
+    console.log('🔍 Estado DOM ready:', $(document).ready);
+    console.log('🔍 Modal visible:', $('#proformasModal').is(':visible'));
 
-    // Configurar evento de búsqueda con debounce
-    const $inputBusqueda = $('#busquedaProformas');
-    if ($inputBusqueda.length) {
-        $inputBusqueda.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
-            const termino = $(this).val().trim();
-            console.log('🔍 Término de búsqueda proformas:', termino);
+    // Esperar un poco para asegurar que el DOM del modal esté completamente cargado
+    setTimeout(() => {
+        console.log('🔍 Buscando elementos del DOM...');
+        
+        // Configurar evento de búsqueda con debounce
+        const $inputBusqueda = $('#busquedaProformas');
+        console.log('🔍 Input de búsqueda encontrado:', $inputBusqueda.length > 0);
+        console.log('🔍 Input de búsqueda elemento:', $inputBusqueda[0]);
+        
+        if ($inputBusqueda.length) {
+            $inputBusqueda.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
+                const termino = $(this).val().trim();
+                console.log('🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***');
+                console.log('🔍 Término de búsqueda proformas:', termino);
+                console.log('🔍 Elemento que disparó evento:', this);
 
-            // Limpiar timeout anterior
-            if (timeoutBusquedaProformas) {
-                clearTimeout(timeoutBusquedaProformas);
-            }
+                // Limpiar timeout anterior
+                if (timeoutBusquedaProformas) {
+                    clearTimeout(timeoutBusquedaProformas);
+                    console.log('🔍 Timeout anterior limpiado');
+                }
 
-            // Aplicar filtro después de 300ms
-            timeoutBusquedaProformas = setTimeout(() => {
-                filtroProformas.busqueda = termino;
+                // Aplicar filtro después de 300ms
+                timeoutBusquedaProformas = setTimeout(() => {
+                    console.log('🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***');
+                    filtroProformas.busqueda = termino;
+                    filtroProformas.pagina = 1;
+                    console.log('🔍 Filtro actualizado:', filtroProformas);
+                    aplicarFiltrosProformas();
+                }, 300);
+            });
+            console.log('✅ Evento de búsqueda configurado correctamente');
+            
+            // Agregar evento inmediato para testing
+            $inputBusqueda.on('keypress', function(e) {
+                console.log('🔍 *** KEYPRESS DETECTADO ***', e.key, $(this).val());
+            });
+            
+            $inputBusqueda.on('change', function(e) {
+                console.log('🔍 *** CHANGE DETECTADO ***', $(this).val());
+            });
+        } else {
+            console.error('❌ No se encontró el input de búsqueda #busquedaProformas');
+        }
+
+        // Configurar evento de cambio de estado
+        const $selectEstado = $('#estadoProformas');
+        console.log('🔍 Select de estado encontrado:', $selectEstado.length > 0);
+        
+        if ($selectEstado.length) {
+            $selectEstado.off('change.proformasFilter').on('change.proformasFilter', function() {
+                const estado = $(this).val();
+                console.log('🔍 *** CAMBIO DE ESTADO DISPARADO ***');
+                console.log('🔍 Estado seleccionado:', estado);
+
+                filtroProformas.estado = estado;
                 filtroProformas.pagina = 1;
                 aplicarFiltrosProformas();
-            }, 300);
-        });
-        console.log('✅ Evento de búsqueda configurado');
-    }
+            });
+            console.log('✅ Evento de estado configurado');
+        } else {
+            console.error('❌ No se encontró el select de estado #estadoProformas');
+        }
 
-    // Configurar evento de cambio de estado
-    const $selectEstado = $('#estadoProformas');
-    if ($selectEstado.length) {
-        $selectEstado.off('change.proformasFilter').on('change.proformasFilter', function() {
-            const estado = $(this).val();
-            console.log('🔍 Estado seleccionado:', estado);
+        // Configurar botón limpiar
+        const $btnLimpiar = $('#btnLimpiarFiltrosProformas');
+        console.log('🔍 Botón limpiar encontrado:', $btnLimpiar.length > 0);
+        
+        if ($btnLimpiar.length) {
+            $btnLimpiar.off('click.proformasFilter').on('click.proformasFilter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔍 *** BOTÓN LIMPIAR PRESIONADO ***');
+                limpiarFiltrosProformas();
+            });
+            console.log('✅ Botón limpiar configurado');
+        } else {
+            console.error('❌ No se encontró el botón limpiar #btnLimpiarFiltrosProformas');
+        }
 
-            filtroProformas.estado = estado;
-            filtroProformas.pagina = 1;
-            aplicarFiltrosProformas();
-        });
-        console.log('✅ Evento de estado configurado');
-    }
+        // Cargar proformas iniciales
+        console.log('🔍 Cargando proformas iniciales...');
+        aplicarFiltrosProformas();
 
-    // Configurar botón limpiar
-    const $btnLimpiar = $('#btnLimpiarFiltrosProformas');
-    if ($btnLimpiar.length) {
-        $btnLimpiar.off('click.proformasFilter').on('click.proformasFilter', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            limpiarFiltrosProformas();
-        });
-        console.log('✅ Botón limpiar configurado');
-    }
-
-    // Cargar proformas iniciales
-    aplicarFiltrosProformas();
-
-    console.log('✅ Filtros de proformas inicializados correctamente');
+        console.log('✅ Filtros de proformas inicializados correctamente');
+        
+    }, 100); // Pequeño delay para asegurar que el DOM esté listo
 }
 
 /**
  * Aplicar filtros y cargar proformas
  */
 async function aplicarFiltrosProformas() {
+    console.log('🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***');
+    console.log('🔍 Filtro actual completo:', JSON.stringify(filtroProformas, null, 2));
+    console.log('🔍 busquedaProformasEnProceso:', busquedaProformasEnProceso);
+    console.log('🔍 ultimaBusquedaProformas:', ultimaBusquedaProformas);
+    
     // Prevenir múltiples llamadas simultáneas
     if (busquedaProformasEnProceso) {
         console.log('⏸️ Búsqueda de proformas ya en proceso, omitiendo llamada duplicada');
@@ -82,6 +125,10 @@ async function aplicarFiltrosProformas() {
 
     // Prevenir búsquedas duplicadas del mismo término
     const terminoActual = filtroProformas.busqueda + '|' + filtroProformas.estado;
+    console.log('🔍 Término actual:', terminoActual);
+    console.log('🔍 Última búsqueda:', ultimaBusquedaProformas);
+    console.log('🔍 Página actual:', filtroProformas.pagina);
+    
     if (terminoActual === ultimaBusquedaProformas && filtroProformas.pagina === 1) {
         console.log('⏸️ Búsqueda duplicada del mismo filtro omitida:', terminoActual);
         return;
@@ -362,11 +409,53 @@ function cambiarPaginaProformas(nuevaPagina) {
     }
 }
 
+/**
+ * Función de inicialización forzada para depuración
+ */
+function inicializarFiltrosProformasForzado() {
+    console.log('🔍 *** INICIALIZACIÓN FORZADA DE FILTROS ***');
+    console.log('🔍 jQuery disponible:', typeof $ !== 'undefined');
+    console.log('🔍 Modal existe:', $('#proformasModal').length > 0);
+    console.log('🔍 Input búsqueda existe:', $('#busquedaProformas').length > 0);
+    console.log('🔍 Select estado existe:', $('#estadoProformas').length > 0);
+    console.log('🔍 Tabla body existe:', $('#proformasTableBody').length > 0);
+    
+    // Resetear variables de control
+    busquedaProformasEnProceso = false;
+    ultimaBusquedaProformas = '';
+    filtroProformas = {
+        busqueda: '',
+        estado: 'todos',
+        pagina: 1,
+        tamano: 20
+    };
+    
+    console.log('🔍 Variables reseteadas, llamando inicialización normal...');
+    inicializarFiltrosProformas();
+}
+
+/**
+ * Test manual de búsqueda
+ */
+function testBusquedaManual(termino) {
+    console.log('🔍 *** TEST MANUAL DE BÚSQUEDA ***');
+    console.log('🔍 Término de prueba:', termino);
+    
+    filtroProformas.busqueda = termino;
+    filtroProformas.pagina = 1;
+    
+    console.log('🔍 Filtro configurado:', filtroProformas);
+    aplicarFiltrosProformas();
+}
+
 // Exportar funciones para uso global
 window.inicializarFiltrosProformas = inicializarFiltrosProformas;
+window.inicializarFiltrosProformasForzado = inicializarFiltrosProformasForzado;
+window.testBusquedaManual = testBusquedaManual;
 window.aplicarFiltrosProformas = aplicarFiltrosProformas;
 window.limpiarFiltrosProformas = limpiarFiltrosProformas;
 window.cambiarPaginaProformas = cambiarPaginaProformas;
 window.mostrarProformasEnTabla = mostrarProformasEnTabla;
 
 console.log('📋 Módulo de filtros de proformas cargado correctamente');
+console.log('📋 Funciones exportadas a window:', Object.keys(window).filter(k => k.includes('Proformas')));
