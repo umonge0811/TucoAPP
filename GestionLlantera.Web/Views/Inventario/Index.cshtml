@@ -1,4 +1,4 @@
-@model List<Tuco.Clases.DTOs.Inventario.ProductoDTO>
+﻿@model List<Tuco.Clases.DTOs.Inventario.ProductoDTO>
 @{
     ViewData["Title"] = "Inventario de Productos";
     Layout = "_AdminLayout";
@@ -979,7 +979,152 @@
 </div>
 
 
-<!-- Modal de vista rápida eliminado - ahora se redirige directamente a la página de detalles -->
+<!-- Modal para vista rápida del producto -->
+<div class="modal fade" id="detallesProductoModal" tabindex="-1" aria-labelledby="detallesProductoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="detallesProductoModalLabel">
+                    <i class="bi bi-eye me-2 text-primary"></i>Vista Rápida
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="row g-0">
+
+                    <!-- Carrusel de Imágenes -->
+                    <div class="col-md-7 bg-light">
+                        <div id="carruselImagenesModal" class="carousel slide h-100" data-bs-ride="false">
+                            <div class="carousel-inner h-100" id="contenedorImagenesModal">
+
+                                <!-- Las imágenes se cargarán dinámicamente aquí -->
+                                <div class="carousel-item active d-flex align-items-center justify-content-center" style="min-height: 400px;">
+                                    <div class="text-center">
+                                        <div class="spinner-border text-primary mb-3" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                        <p class="text-muted">Cargando imágenes...</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Controles del carrusel (se mostrarán solo si hay múltiples imágenes) -->
+                            <button class="carousel-control-prev" type="button" data-bs-target="#carruselImagenesModal" data-bs-slide="prev" id="btnPrevModal" style="display: none;">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Anterior</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#carruselImagenesModal" data-bs-slide="next" id="btnNextModal" style="display: none;">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Siguiente</span>
+                            </button>
+
+                            <!-- Indicadores (se mostrarán solo si hay múltiples imágenes) -->
+                            <div class="carousel-indicators" id="indicadoresModal" style="display: none;">
+                                <!-- Los indicadores se generarán dinámicamente -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información del Producto -->
+                    <div class="col-md-5">
+                        <div class="p-4">
+                            <!-- Nombre del producto -->
+                            <h4 class="mb-3" id="nombreProductoVistaRapida">Producto</h4>
+
+                            <!-- Precio destacado -->
+                            <div class="mb-4">
+                                <h3 class="text-primary mb-1" id="precioProductoVistaRapida">₡0</h3>
+                                <small class="text-muted" id="tipoPrecioVistaRapida">Cargando...</small>
+                            </div>
+
+                            <!-- Stock -->
+                            <div class="mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-box-seam me-2"></i>
+                                    <span class="fw-bold">Stock Disponible</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <span class="fs-5 me-2" id="stockProductoVistaRapida">0</span>
+                                    <span class="text-muted">unidades</span>
+                                    <span class="ms-2 text-danger" id="alertaStockBajo" style="display: none;">
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                        Stock bajo
+                                    </span>
+                                </div>
+                                <div class="progress mt-2" style="height: 8px;">
+                                    <div class="progress-bar" role="progressbar" id="barraProgresoStock" style="width: 0%"></div>
+                                </div>
+                                <small class="text-muted">Mínimo: <span id="stockMinimoVistaRapida">0</span> unidades</small>
+                            </div>
+
+                            <!-- Información de llanta (solo si aplica) -->
+                            <div class="mb-4" id="infoLlantaVistaRapida" style="display: none;">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title mb-2">
+                                            <i class="bi bi-car-front me-1"></i>Especificaciones
+                                        </h6>
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Medidas:</small><br>
+                                                <span id="medidasVistaRapida">-</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Marca:</small><br>
+                                                <span id="marcaVistaRapida">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Descripción corta -->
+                            <div class="mb-4">
+                                <small class="text-muted">Descripción:</small>
+                                <p class="mb-0" id="descripcionVistaRapida">Cargando...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <div class="d-flex w-100 justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg me-1"></i>Cerrar
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-success" id="btnAjustarStockVistaRapida">
+                            <i class="bi bi-plus-slash-minus me-1"></i>Ajustar Stock
+                        </button>
+
+                        <!-- Botones de compartir -->
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-share me-1"></i>Compartir
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="#" id="btnCompartirWhatsApp">
+                                        <i class="bi bi-whatsapp text-success me-2"></i>WhatsApp
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#" id="btnCompartirEmail">
+                                        <i class="bi bi-envelope text-primary me-2"></i>Email
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <a href="#" class="btn btn-primary" id="btnVerDetallesCompletos">
+                            <i class="bi bi-info-circle me-1"></i>Ver Detalles Completos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <!-- Modal para visualizar imágenes -->
