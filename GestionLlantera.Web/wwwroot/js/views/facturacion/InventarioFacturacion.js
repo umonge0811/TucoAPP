@@ -681,7 +681,7 @@ async function cargarImagenesDetallesProducto(producto) {
 
         // Mostrar loading inicial
         contenedor.html(`
-            <div id="loadingImagenes" class="text-center text-muted py-4">
+            <div class="text-center text-muted py-4">
                 <div class="spinner-border spinner-border-sm me-2" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
@@ -872,53 +872,23 @@ async function cargarImagenesDetallesProducto(producto) {
             `;
 
             console.log('🖼️ PASO 7A: Insertando carrusel en el DOM...');
-            
-            // Ocultar el loading primero
-            contenedor.find('#loadingImagenes').remove();
-            
-            // Insertar el carrusel
             contenedor.html(carruselHtml);
-            
-            // Asegurar que el carrusel sea visible
-            contenedor.show();
-            
             console.log('🖼️ PASO 7A: Carrusel construido e insertado exitosamente');
             console.log('🖼️ PASO 7A: HTML del carrusel:', carruselHtml);
-            
-            // Verificar que el carrusel esté en el DOM
-            setTimeout(() => {
-                const carruselEnDom = $('#carruselImagenesDetalle');
-                console.log('🖼️ VERIFICACIÓN: Carrusel en DOM:', carruselEnDom.length > 0);
-                if (carruselEnDom.length === 0) {
-                    console.error('❌ El carrusel no se insertó correctamente en el DOM');
-                }
-            }, 100);
         } else {
             console.log('⚠️ PASO 7B: No hay imágenes disponibles');
-            
-            // Ocultar loading
-            contenedor.find('#loadingImagenes').remove();
-            
-            // Mostrar mensaje sin imágenes
             contenedor.html(`
                 <div class="text-center text-muted py-4">
                     <i class="bi bi-image fs-1"></i>
                     <p class="mt-2">Sin imágenes disponibles</p>
                 </div>
             `);
-            
-            // Asegurar visibilidad
-            contenedor.show();
         }
 
     } catch (error) {
         console.error('❌ ERROR CRÍTICO cargando imágenes:', error);
         console.error('❌ Stack trace:', error.stack);
 
-        // Ocultar loading
-        contenedor.find('#loadingImagenes').remove();
-
-        // Mostrar error
         contenedor.html(`
             <div class="text-center text-danger py-4">
                 <i class="bi bi-exclamation-triangle-fill fs-1 mb-3"></i>
@@ -926,9 +896,6 @@ async function cargarImagenesDetallesProducto(producto) {
                 <small class="text-muted">${error.message}</small>
             </div>
         `);
-        
-        // Asegurar visibilidad
-        contenedor.show();
     }
 }
 
@@ -1074,8 +1041,13 @@ function verDetalleProducto(producto) {
                                     <h6 class="text-primary mb-3">
                                         <i class="bi bi-images me-2"></i>Imágenes del Producto
                                     </h6>
-                                    <div id="contenedorImagenesDetalles" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
-                                        <!-- El contenido se cargará dinámicamente -->
+                                    <div id="contenedorImagenesDetalles">
+                                        <div class="text-center text-muted">
+                                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            Cargando imágenes...
+                                        </div>
                                     </div>
                                 </div>
 
