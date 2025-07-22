@@ -1300,10 +1300,6 @@ $(document).ready(function () {
         }
     });
 
-    // ✅ REMOVER CUALQUIER EVENTO MODAL RESIDUAL
-    $(document).off('click', '.ver-imagenes-btn');
-    $(document).off('click', '.ver-detalles-modal-btn');
-
     // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -1647,10 +1643,6 @@ $(document).ready(function () {
     inicializarPaginacion();
 
     console.log('✅ Inventario - Sistema completo inicializado correctamente');
-
-    // ✅ LIMPIAR CUALQUIER EVENTO MODAL RESIDUAL
-    $('#detallesProductoModal, #imagenModal').off();
-    $('.ver-detalles-modal-btn, .ver-imagenes-btn').off();
 
 
 
