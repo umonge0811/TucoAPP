@@ -669,13 +669,12 @@ function verDetalleProductoInventario(producto) {
 
 /**
  * ✅ FUNCIÓN: Cargar imágenes en modal de detalles de producto
- * Replicando la lógica exacta de detalleProducto.cshtml que funciona correctamente
  */
 async function cargarImagenesDetallesProducto(producto) {
     try {
         console.log('🖼️ === CARGANDO IMÁGENES EN MODAL DE DETALLES ===');
         console.log('🖼️ Producto:', producto.nombreProducto);
-        console.log('🖼️ Datos completos del producto:', producto);
+        console.log('🖼️ Datos del producto:', producto);
 
         const contenedor = $('#contenedorImagenesDetalles');
 
@@ -689,113 +688,66 @@ async function cargarImagenesDetallesProducto(producto) {
             </div>
         `);
 
-        // 🔥 HACER PETICIÓN AL ENDPOINT PARA OBTENER IMÁGENES ACTUALIZADAS
-        console.log('🖼️ Obteniendo imágenes del servidor para producto ID:', producto.productoId);
-
-        const response = await fetch(`/Inventario/ObtenerImagenesProducto/${producto.productoId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const imagenesData = await response.json();
-        console.log('🖼️ Respuesta del servidor:', imagenesData);
-
         let imagenesArray = [];
 
-        // Procesar las imágenes de la respuesta del servidor
-        if (imagenesData && Array.isArray(imagenesData) && imagenesData.length > 0) {
-            imagenesArray = imagenesData
-                .map(img => img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen)
+        // Usar la misma lógica que en otros modales para obtener imágenes
+        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+            imagenesArray = producto.imagenesProductos
+                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
                 .filter(url => url && url.trim() !== '');
-            console.log('🖼️ URLs de imágenes desde servidor:', imagenesArray);
+        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
+        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+            imagenesArray = producto.imagenes
+                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                .filter(url => url && url.trim() !== '');
         }
 
-        // Si no hay imágenes desde el servidor, intentar con datos del producto
-        if (imagenesArray.length === 0) {
-            console.log('🖼️ No hay imágenes del servidor, intentando con datos locales...');
-
-            // Probar diferentes propiedades del producto
-            if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-                imagenesArray = producto.imagenesProductos
-                    .map(img => img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen)
-                    .filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-            } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-                imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
-            } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-                imagenesArray = producto.imagenes
-                    .map(img => img.urlImagen || img.UrlImagen || img.urlimagen || img.Urlimagen)
-                    .filter(url => url && url.trim() !== '');
-                console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
-            }
-        }
-
-        console.log('🖼️ Total de imágenes encontradas:', imagenesArray.length);
+        console.log('🖼️ Imágenes encontradas:', imagenesArray.length);
 
         if (imagenesArray.length === 0) {
             // No hay imágenes
-            console.log('🖼️ No hay imágenes disponibles');
             contenedor.html(`
-                <div class="sin-imagenes text-center text-muted py-4">
-                    <i class="bi bi-image fs-1 mb-3"></i>
-                    <p>No hay imágenes disponibles</p>
+                <div class="sin-imagenes">
+                    <i class="bi bi-image-fill"></i>
+                    <span>No hay imágenes disponibles</span>
                 </div>
             `);
             return;
         }
 
         if (imagenesArray.length === 1) {
-            // Una sola imagen - replicar estructura de detalleProducto.cshtml
-            const urlImagen = imagenesArray[0];
-            console.log('🖼️ Mostrando imagen única:', urlImagen);
-
+            // Una sola imagen
+            const urlImagen = construirUrlImagen(imagenesArray[0]);
             contenedor.html(`
                 <img src="${urlImagen}" 
-                     class="imagen-producto-detalle d-block w-100 img-fluid rounded" 
+                     class="imagen-producto-detalle" 
                      alt="${producto.nombreProducto}"
-                     onerror="console.error('Error cargando imagen:', this.src); this.style.border='3px solid red';"
-                     onload="console.log('✅ Imagen cargada correctamente:', this.src);">
+                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
             `);
         } else {
-            // Múltiples imágenes - crear carrusel igual que en detalleProducto.cshtml
-            console.log('🖼️ Creando carrusel con', imagenesArray.length, 'imágenes');
-
+            // Múltiples imágenes - crear carrusel
             const carruselId = 'carruselImagenesDetalles';
-
-            let carruselHtml = `
+            let htmlCarrusel = `
                 <div id="${carruselId}" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-inner">
             `;
 
-            // Agregar imágenes al carrusel (igual que en detalleProducto.cshtml)
             imagenesArray.forEach((url, index) => {
-                carruselHtml += `
-                    <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                        <img src="${url}" 
-                             class="d-block w-100 img-fluid rounded imagen-producto-detalle" 
+                const urlImagen = construirUrlImagen(url);
+                const activa = index === 0 ? 'active' : '';
+                htmlCarrusel += `
+                    <div class="carousel-item ${activa}">
+                        <img src="${urlImagen}" 
+                             class="imagen-producto-detalle" 
                              alt="${producto.nombreProducto}"
-                             onerror="console.error('Error cargando imagen:', this.src); this.style.border='3px solid red';"
-                             onload="console.log('✅ Imagen cargada OK:', this.src);">
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
                     </div>
                 `;
             });
 
-            carruselHtml += `
+            htmlCarrusel += `
                     </div>
-            `;
-
-            // Agregar controles solo si hay más de una imagen
-            if (imagenesArray.length > 1) {
-                carruselHtml += `
                     <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Anterior</span>
@@ -804,41 +756,32 @@ async function cargarImagenesDetallesProducto(producto) {
                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
                         <span class="visually-hidden">Siguiente</span>
                     </button>
+                    <div class="carousel-indicators">
+            `;
+
+            imagenesArray.forEach((_, index) => {
+                const activa = index === 0 ? 'active' : '';
+                htmlCarrusel += `
+                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" ${activa ? 'class="active" aria-current="true"' : ''}></button>
                 `;
-            }
+            });
 
-            carruselHtml += `</div>`;
+            htmlCarrusel += `
+                    </div>
+                </div>
+            `;
 
-            // Agregar miniaturas si hay más de una imagen
-            if (imagenesArray.length > 1) {
-                carruselHtml += `
-                    <div class="row mt-2 g-2">
-                `;
-
-                imagenesArray.forEach((url, index) => {
-                    carruselHtml += `
-                        <div class="col-3">
-                            <img src="${url}" class="img-thumbnail cursor-pointer"
-                                 onclick="$('#${carruselId}').carousel(${index})"
-                                 alt="${producto.nombreProducto} - Miniatura ${index + 1}">
-                        </div>
-                    `;
-                });
-
-                carruselHtml += `</div>`;
-            }
-
-            contenedor.html(carruselHtml);
+            contenedor.html(htmlCarrusel);
         }
 
-        console.log('✅ Imágenes cargadas correctamente en modal');
+        console.log('✅ Imágenes cargadas exitosamente en modal de detalles');
 
     } catch (error) {
-        console.error('❌ Error cargando imágenes:', error);
+        console.error('❌ Error cargando imágenes en modal de detalles:', error);
         $('#contenedorImagenesDetalles').html(`
-            <div class="sin-imagenes text-center text-danger py-4">
-                <i class="bi bi-exclamation-triangle-fill fs-1 mb-3"></i>
-                <p>Error cargando imágenes: ${error.message}</p>
+            <div class="sin-imagenes">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Error cargando imágenes</span>
             </div>
         `);
     }
