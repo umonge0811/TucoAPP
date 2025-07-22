@@ -7164,7 +7164,6 @@ window.seleccionarCliente = seleccionarCliente;
 window.limpiarVenta = limpiarVenta;
 window.mostrarModalFinalizarVenta = mostrarModalFinalizarVenta;
 window.verDetalleProducto = verDetalleProducto;
-window.consultarInventario = consultarInventario;
 window.nuevaVenta = nuevaVenta;
 window.agregarProducto = agregarProducto;
 window.finalizarVenta = finalizarVenta;
