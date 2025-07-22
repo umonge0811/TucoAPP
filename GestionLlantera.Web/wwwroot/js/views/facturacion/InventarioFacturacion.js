@@ -1,3 +1,5 @@
+
+
 // ===== MÓDULO DE INVENTARIO PARA FACTURACIÓN =====
 
 let modalInventarioFacturacion = null;
@@ -13,13 +15,13 @@ let filtrosInventarioActivos = {
  */
 function inicializarModalInventario() {
     console.log('📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===');
-
+    
     try {
         const modalElement = document.getElementById('modalInventario');
         if (modalElement) {
             modalInventarioFacturacion = new bootstrap.Modal(modalElement);
             console.log('✅ Modal de inventario inicializado correctamente');
-
+            
             // Configurar eventos del modal
             configurarEventosModalInventario();
         } else {
@@ -38,23 +40,23 @@ function inicializarModalInventario() {
  */
 function configurarEventosModalInventario() {
     console.log('📦 Configurando eventos del modal inventario...');
-
+    
     // Limpiar eventos anteriores
     $('#modalInventario').off('shown.bs.modal');
     $('#modalInventario').off('hidden.bs.modal');
-
+    
     // Evento cuando se muestra el modal
     $('#modalInventario').on('shown.bs.modal', function() {
         console.log('📦 Modal inventario mostrado - cargando productos');
         cargarInventarioCompleto();
     });
-
+    
     // Evento cuando se oculta el modal
     $('#modalInventario').on('hidden.bs.modal', function() {
         console.log('📦 Modal inventario ocultado - limpiando datos');
         limpiarInventarioModal();
     });
-
+    
     // Configurar filtros
     configurarFiltrosInventario();
 }
@@ -64,26 +66,26 @@ function configurarEventosModalInventario() {
  */
 function configurarFiltrosInventario() {
     console.log('📦 Configurando filtros de inventario...');
-
+    
     // Búsqueda por texto
     $('#busquedaInventarioModal').off('input').on('input', function() {
         const termino = $(this).val().trim();
         filtrosInventarioActivos.busqueda = termino;
         aplicarFiltrosInventario();
     });
-
+    
     // Filtro por categoría
     $('#categoriaInventarioModal').off('change').on('change', function() {
         filtrosInventarioActivos.categoria = $(this).val();
         aplicarFiltrosInventario();
     });
-
+    
     // Filtro por stock
     $('#stockInventarioModal').off('change').on('change', function() {
         filtrosInventarioActivos.stock = $(this).val();
         aplicarFiltrosInventario();
     });
-
+    
     // Botón de limpiar filtros
     $('#btnLimpiarFiltrosInventario').off('click').on('click', function() {
         limpiarFiltrosInventario();
@@ -95,7 +97,7 @@ function configurarFiltrosInventario() {
  */
 function consultarInventario() {
     console.log('📦 === ABRIENDO MODAL INVENTARIO ===');
-
+    
     if (!modalInventarioFacturacion) {
         console.log('📦 Modal no inicializado, inicializando...');
         if (!inicializarModalInventario()) {
@@ -104,7 +106,7 @@ function consultarInventario() {
             return;
         }
     }
-
+    
     try {
         modalInventarioFacturacion.show();
         console.log('📦 Modal mostrado exitosamente');
@@ -120,20 +122,20 @@ function consultarInventario() {
 async function cargarInventarioCompleto() {
     try {
         console.log('📦 === CARGANDO INVENTARIO COMPLETO ===');
-
+        
         // Mostrar loading
         const loadingElement = $('#inventarioModalLoading');
         const contentElement = $('#inventarioModalContent');
-
+        
         if (loadingElement.length) {
             loadingElement.show();
         }
         if (contentElement.length) {
             contentElement.hide();
         }
-
+        
         console.log('📦 Realizando petición al servidor...');
-
+        
         const response = await fetch('/Facturacion/ObtenerProductosParaFacturacion', {
             method: 'GET',
             headers: {
@@ -142,14 +144,14 @@ async function cargarInventarioCompleto() {
             },
             credentials: 'include'
         });
-
+        
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-
+        
         const data = await response.json();
         console.log('📦 Respuesta del servidor:', data);
-
+        
         if (data && data.productos) {
             productosInventarioCompleto = data.productos;
             console.log(`📦 Productos cargados: ${productosInventarioCompleto.length}`);
@@ -157,7 +159,7 @@ async function cargarInventarioCompleto() {
         } else {
             throw new Error('No se encontraron productos en la respuesta');
         }
-
+        
     } catch (error) {
         console.error('❌ Error cargando inventario:', error);
         mostrarErrorInventario(error.message);
@@ -175,15 +177,15 @@ async function cargarInventarioCompleto() {
 function mostrarProductosInventario(productos) {
     console.log('📦 === MOSTRANDO PRODUCTOS INVENTARIO ===');
     console.log('📦 Productos a mostrar:', productos?.length || 0);
-
+    
     const tbody = $('#inventarioModalProductos');
-
+    
     if (!tbody.length) {
         console.error('❌ No se encontró el tbody #inventarioModalProductos');
         mostrarErrorInventario('Error en la interfaz del modal');
         return;
     }
-
+    
     if (!productos || productos.length === 0) {
         tbody.html(`
             <tr>
@@ -196,7 +198,7 @@ function mostrarProductosInventario(productos) {
         $('#inventarioModalContent').show();
         return;
     }
-
+    
     let html = '';
     productos.forEach(producto => {
         // Mapear propiedades del producto
@@ -206,17 +208,17 @@ function mostrarProductosInventario(productos) {
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
         const descripcion = producto.descripcion || producto.Descripcion || '';
-
+        
         // Determinar si es llanta y extraer medidas
         let esLlanta = false;
         let medidaLlanta = 'N/A';
         let medidaParaBusqueda = 'n/a';
-
+        
         try {
             if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
                 esLlanta = true;
                 const llantaInfo = producto.llanta || producto.Llanta[0];
-
+                
                 if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
                         medidaLlanta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
@@ -232,11 +234,11 @@ function mostrarProductosInventario(productos) {
         } catch (error) {
             console.warn('⚠️ Error procesando información de llanta:', error);
         }
-
+        
         // Calcular precios por método de pago
         const precioEfectivo = precio;
         const precioTarjeta = precio * 1.05;
-
+        
         // Determinar clases de fila según stock
         let rowClass = '';
         let stockBadge = '';
@@ -249,7 +251,7 @@ function mostrarProductosInventario(productos) {
         } else {
             stockBadge = '<span class="badge bg-success">Disponible</span>';
         }
-
+        
         // Crear objeto producto limpio
         const productoLimpio = {
             productoId: productoId,
@@ -259,9 +261,9 @@ function mostrarProductosInventario(productos) {
             stockMinimo: stockMinimo,
             descripcion: descripcion
         };
-
+        
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
-
+        
         html += `
             <tr class="${rowClass}" 
                 data-producto-id="${productoId}"
@@ -325,15 +327,15 @@ function mostrarProductosInventario(productos) {
             </tr>
         `;
     });
-
+    
     tbody.html(html);
-
+    
     // Configurar eventos de los botones
     configurarEventosProductosInventario();
-
+    
     // Configurar ordenamiento de tabla
     configurarOrdenamientoTablaInventario();
-
+    
     $('#inventarioModalContent').show();
     console.log('✅ Productos de inventario mostrados correctamente en formato tabla');
 }
@@ -343,13 +345,13 @@ function mostrarProductosInventario(productos) {
  */
 function configurarOrdenamientoTablaInventario() {
     console.log('📦 Configurando ordenamiento de tabla...');
-
+    
     $('.sortable').off('click').on('click', function() {
         const column = $(this).data('column');
         const $table = $('#tablaInventarioModal');
         const $tbody = $table.find('tbody');
         const rows = $tbody.find('tr').toArray();
-
+        
         // Determinar dirección de ordenamiento
         let ascending = true;
         if ($(this).hasClass('sorted-asc')) {
@@ -359,18 +361,18 @@ function configurarOrdenamientoTablaInventario() {
             $(this).removeClass('sorted-desc').addClass('sorted-asc');
             ascending = true;
         }
-
+        
         // Limpiar iconos de otras columnas
         $('.sortable').not(this).removeClass('sorted-asc sorted-desc');
-
+        
         // Actualizar icono
         $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
         $(this).find('i').removeClass('bi-arrow-down-up').addClass(ascending ? 'bi-arrow-up' : 'bi-arrow-down');
-
+        
         // Ordenar filas
         rows.sort(function(a, b) {
             let aVal, bVal;
-
+            
             switch(column) {
                 case 'nombre':
                     aVal = $(a).data('nombre');
@@ -399,7 +401,7 @@ function configurarOrdenamientoTablaInventario() {
                 default:
                     return 0;
             }
-
+            
             if (typeof aVal === 'string') {
                 aVal = aVal.toLowerCase();
                 bVal = bVal.toLowerCase();
@@ -408,10 +410,10 @@ function configurarOrdenamientoTablaInventario() {
                 return ascending ? aVal - bVal : bVal - aVal;
             }
         });
-
+        
         // Reordenar filas en el DOM
         $tbody.empty().append(rows);
-
+        
         console.log(`📦 Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
     });
 }
@@ -421,23 +423,23 @@ function configurarOrdenamientoTablaInventario() {
  */
 function configurarEventosProductosInventario() {
     console.log('📦 Configurando eventos de productos...');
-
+    
     // Botón agregar producto
     $('.btn-agregar-desde-inventario').off('click').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-
+        
         try {
             const productoJson = $(this).attr('data-producto');
             const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
-
+            
             console.log('📦 Agregando producto desde inventario:', producto.nombreProducto);
-
+            
             // Cerrar modal de inventario
             if (modalInventarioFacturacion) {
                 modalInventarioFacturacion.hide();
             }
-
+            
             // Mostrar modal de selección de producto
             setTimeout(() => {
                 if (typeof mostrarModalSeleccionProducto === 'function') {
@@ -447,22 +449,22 @@ function configurarEventosProductosInventario() {
                     mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
                 }
             }, 300);
-
+            
         } catch (error) {
             console.error('❌ Error agregando producto desde inventario:', error);
             mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
         }
     });
-
+    
     // Botón ver detalle
     $('.btn-ver-detalle-inventario').off('click').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-
+        
         try {
             const productoJson = $(this).attr('data-producto');
             const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
-
+            
             if (typeof verDetalleProducto === 'function') {
                 verDetalleProducto(producto);
             } else {
@@ -483,22 +485,22 @@ function aplicarFiltrosInventario() {
     if (!productosInventarioCompleto || productosInventarioCompleto.length === 0) {
         return;
     }
-
+    
     let productosFiltrados = [...productosInventarioCompleto];
-
+    
     // Filtro por texto de búsqueda
     if (filtrosInventarioActivos.busqueda) {
         const termino = filtrosInventarioActivos.busqueda.toLowerCase();
         productosFiltrados = productosFiltrados.filter(producto => {
             const nombre = (producto.nombreProducto || '').toLowerCase();
             const descripcion = (producto.descripcion || '').toLowerCase();
-
+            
             // Buscar también en medidas de llantas
             let medidaTexto = '';
             try {
                 if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
                     const llantaInfo = producto.llanta || producto.Llanta[0];
-
+                    
                     if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                         if (llantaInfo.perfil && llantaInfo.perfil > 0) {
                             medidaTexto = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`.toLowerCase();
@@ -510,20 +512,20 @@ function aplicarFiltrosInventario() {
             } catch (error) {
                 console.warn('⚠️ Error procesando medida para filtro:', error);
             }
-
+            
             return nombre.includes(termino) || 
                    descripcion.includes(termino) || 
                    medidaTexto.includes(termino);
         });
     }
-
+    
     // Filtro por categoría
     if (filtrosInventarioActivos.categoria && filtrosInventarioActivos.categoria !== 'todas') {
         productosFiltrados = productosFiltrados.filter(producto => {
             return (producto.categoria || '').toLowerCase() === filtrosInventarioActivos.categoria.toLowerCase();
         });
     }
-
+    
     // Filtro por stock
     if (filtrosInventarioActivos.stock) {
         switch (filtrosInventarioActivos.stock) {
@@ -541,7 +543,7 @@ function aplicarFiltrosInventario() {
                 break;
         }
     }
-
+    
     console.log(`🔍 Filtros aplicados: ${productosFiltrados.length} de ${productosInventarioCompleto.length} productos`);
     mostrarProductosInventario(productosFiltrados);
 }
@@ -551,17 +553,17 @@ function aplicarFiltrosInventario() {
  */
 function limpiarFiltrosInventario() {
     console.log('🧹 Limpiando filtros de inventario');
-
+    
     filtrosInventarioActivos = {
         busqueda: '',
         categoria: '',
         stock: ''
     };
-
+    
     $('#busquedaInventarioModal').val('');
     $('#categoriaInventarioModal').val('todas');
     $('#stockInventarioModal').val('');
-
+    
     mostrarProductosInventario(productosInventarioCompleto);
 }
 
@@ -570,14 +572,14 @@ function limpiarFiltrosInventario() {
  */
 function limpiarInventarioModal() {
     console.log('🧹 Limpiando modal de inventario');
-
+    
     $('#inventarioModalProductos').empty();
     productosInventarioCompleto = [];
-
+    
     // Limpiar ordenamiento
     $('.sortable').removeClass('sorted-asc sorted-desc');
     $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
-
+    
     limpiarFiltrosInventario();
 }
 
@@ -587,11 +589,11 @@ function limpiarInventarioModal() {
 function mostrarErrorInventario(mensaje) {
     const contentElement = $('#inventarioModalContent');
     const tbody = $('#inventarioModalProductos');
-
+    
     if (contentElement.length) {
         contentElement.show();
     }
-
+    
     if (tbody.length) {
         tbody.html(`
             <tr>
@@ -616,13 +618,13 @@ function mostrarErrorInventario(mensaje) {
 async function actualizarVistaProductosPostAjuste() {
     try {
         console.log('📦 === ACTUALIZANDO VISTA POST-AJUSTE ===');
-
+        
         // Solo actualizar si el modal está abierto
         if (modalInventarioFacturacion && $('#modalInventario').hasClass('show')) {
             await cargarInventarioCompleto();
             console.log('✅ Vista de inventario actualizada después del ajuste');
         }
-
+        
         // También actualizar la búsqueda principal si hay productos cargados
         if (typeof cargarProductosIniciales === 'function') {
             // Limpiar estado de búsqueda para forzar actualización
@@ -632,7 +634,7 @@ async function actualizarVistaProductosPostAjuste() {
             await cargarProductosIniciales();
             console.log('✅ Vista principal de productos actualizada');
         }
-
+        
     } catch (error) {
         console.error('❌ Error actualizando vista post-ajuste:', error);
     }
@@ -671,12 +673,12 @@ function verDetalleProducto(producto) {
         // Determinar si es llanta y extraer medidas
         let esLlanta = false;
         let infoLlanta = null;
-
+        
         try {
             if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
                 esLlanta = true;
                 const llantaInfo = producto.llanta || producto.Llanta[0];
-
+                
                 if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                     let medidaCompleta = '';
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
@@ -684,7 +686,7 @@ function verDetalleProducto(producto) {
                     } else {
                         medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
                     }
-
+                    
                     infoLlanta = {
                         medida: medidaCompleta,
                         marca: llantaInfo.marca || 'N/A',
@@ -779,14 +781,14 @@ function verDetalleProducto(producto) {
                                                     </div>
                                                 </div>
                                             </div>
-
+                                            
                                             ${descripcion ? `
                                                 <div class="mb-3">
                                                     <h6 class="text-primary">📝 Descripción</h6>
                                                     <p class="text-muted">${descripcion}</p>
                                                 </div>
                                             ` : ''}
-
+                                            
                                             ${esLlanta && infoLlanta ? `
                                                 <div class="mb-3">
                                                     <h6 class="text-primary">
@@ -880,12 +882,12 @@ function verDetalleProducto(producto) {
 function agregarProductoDesdeDetalle(productoJson) {
     try {
         console.log('🛒 Agregando producto desde detalle...');
-
+        
         const producto = typeof productoJson === 'string' ? JSON.parse(productoJson) : productoJson;
-
+        
         // Cerrar modal de detalle
         $('#modalDetalleProductoInventario').modal('hide');
-
+        
         // Mostrar modal de selección de producto después de un pequeño delay
         setTimeout(() => {
             if (typeof mostrarModalSeleccionProducto === 'function') {
@@ -895,7 +897,7 @@ function agregarProductoDesdeDetalle(productoJson) {
                 mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
             }
         }, 300);
-
+        
     } catch (error) {
         console.error('❌ Error agregando producto desde detalle:', error);
         mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
@@ -924,196 +926,3 @@ window.agregarProductoDesdeDetalle = agregarProductoDesdeDetalle;
 
 console.log('📦 Módulo InventarioFacturacion.js cargado correctamente');
 
-// Event listener para el botón "Ver detalles"
-        $(document).on('click', '.ver-detalles-btn', function() {
-            const productoId = $(this).data('producto-id');
-            const fila = $(this).closest('tr');
-
-            // Obtener datos del producto desde la fila
-            const producto = {
-                productoId: productoId,
-                nombreProducto: fila.find('td:eq(0) strong').text(),
-                descripcion: fila.find('td:eq(0) small').text().replace('ID: ', ''),
-                precioEfectivo: fila.data('precio-efectivo'),
-                precioTarjeta: fila.data('precio-tarjeta'),
-                stock: fila.data('stock'),
-                esLlanta: fila.find('td:eq(2)').text() !== 'N/A',
-                medida: fila.find('td:eq(2)').text()
-            };
-
-            console.log('🔍 Ver detalles del producto:', producto);
-            mostrarModalDetalleProducto(producto, fila);
-        });
-}
-
-// ===================================
-// MODAL DE DETALLES DEL PRODUCTO
-// ===================================
-
-function mostrarModalDetalleProducto(producto, fila) {
-    console.log('🖼️ Mostrando modal de detalles para:', producto.nombreProducto);
-
-    // Llenar información básica
-    $('#detalleProductoId').text(producto.productoId);
-    $('#detalleNombreProducto').text(producto.nombreProducto);
-    $('#detalleDescripcion').text(producto.descripcion || 'Sin descripción');
-    $('#detallePrecioEfectivo').text(`$${parseFloat(producto.precioEfectivo || 0).toLocaleString('es-ES', {minimumFractionDigits: 2})}`);
-    $('#detallePrecioTarjeta').text(`$${parseFloat(producto.precioTarjeta || 0).toLocaleString('es-ES', {minimumFractionDigits: 2})}`);
-    $('#detalleStock').text(producto.stock || 0);
-
-    // Mostrar medida si es llanta
-    if (producto.esLlanta && producto.medida !== 'N/A') {
-        $('#contenedorMedidaDetalle').show();
-        $('#detalleMedida').text(producto.medida);
-    } else {
-        $('#contenedorMedidaDetalle').hide();
-    }
-
-    // Determinar estado del stock
-    const stock = parseInt(producto.stock || 0);
-    const $estadoStock = $('#detalleEstadoStock');
-
-    if (stock === 0) {
-        $estadoStock.text('Sin Stock').removeClass().addClass('badge bg-danger');
-    } else if (stock <= 5) {
-        $estadoStock.text('Stock Bajo').removeClass().addClass('badge bg-warning');
-    } else {
-        $estadoStock.text('Stock Normal').removeClass().addClass('badge bg-success');
-    }
-
-    // Cargar imágenes
-    cargarImagenesModalDetalle(producto.productoId);
-
-    // Mostrar modal
-    $('#modalDetalleProductoInventario').modal('show');
-}
-
-function cargarImagenesModalDetalle(productoId) {
-    console.log('🖼️ Cargando imágenes para producto ID:', productoId);
-
-    const $contenedorImagenes = $("#contenedorImagenesDetalle");
-    const $indicadores = $("#indicadoresDetalle");
-    const $btnPrev = $("#btnPrevDetalle");
-    const $btnNext = $("#btnNextDetalle");
-
-    // Limpiar contenido previo
-    $contenedorImagenes.empty();
-    $indicadores.empty();
-    $btnPrev.hide();
-    $btnNext.hide();
-    $indicadores.hide();
-
-    // Mostrar loading
-    $contenedorImagenes.html(`
-        <div class="carousel-item active d-flex align-items-center justify-content-center">
-            <div class="text-center">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-                <p class="mt-2">Cargando imágenes...</p>
-            </div>
-        </div>
-    `);
-
-    // Hacer petición para obtener imágenes
-    $.ajax({
-        url: `/Inventario/ObtenerImagenesProducto/${productoId}`,
-        type: "GET",
-        success: function (imagenes) {
-            console.log('🖼️ Imágenes recibidas para detalle:', imagenes);
-            procesarImagenesModalDetalle(imagenes);
-        },
-        error: function (xhr, status, error) {
-            console.warn('⚠️ Error al cargar imágenes para detalle:', error);
-            // Mostrar imagen por defecto
-            procesarImagenesModalDetalle(['/images/no-image.png']);
-        }
-    });
-}
-
-function procesarImagenesModalDetalle(imagenes) {
-    console.log('🖼️ Procesando imágenes para modal detalle:', imagenes);
-
-    const $contenedorImagenes = $("#contenedorImagenesDetalle");
-    const $indicadores = $("#indicadoresDetalle");
-    const $btnPrev = $("#btnPrevDetalle");
-    const $btnNext = $("#btnNextDetalle");
-
-    // Limpiar contenido
-    $contenedorImagenes.empty();
-    $indicadores.empty();
-
-    // Si no hay imágenes válidas, mostrar imagen por defecto
-    const imagenesValidas = Array.isArray(imagenes) && imagenes.length > 0 
-        ? imagenes.filter(img => img && img.trim() !== '') 
-        : ['/images/no-image.png'];
-
-    console.log('🖼️ Imágenes válidas para procesar:', imagenesValidas);
-
-    // Crear elementos del carrusel
-    imagenesValidas.forEach((imagenUrl, index) => {
-        const isActive = index === 0 ? 'active' : '';
-
-        // Construir URL completa si es necesaria
-        let urlFinal = imagenUrl;
-        if (imagenUrl && !imagenUrl.startsWith('http') && !imagenUrl.startsWith('/images/no-image.png')) {
-            urlFinal = imagenUrl.startsWith('/') ? 
-                `https://localhost:7273${imagenUrl}` : 
-                `https://localhost:7273/${imagenUrl}`;
-        }
-
-        // Crear item del carrusel
-        const carouselItem = `
-            <div class="carousel-item ${isActive}">
-                <img src="${urlFinal}" 
-                     alt="Imagen del producto ${index + 1}" 
-                     class="d-block"
-                     onerror="this.src='/images/no-image.png'">
-            </div>
-        `;
-        $contenedorImagenes.append(carouselItem);
-
-        // Crear indicador si hay más de una imagen
-        if (imagenesValidas.length > 1) {
-            const indicador = `
-                <button type="button" 
-                        data-bs-target="#carouselImagenesDetalle" 
-                        data-bs-slide-to="${index}" 
-                        class="${isActive ? 'active' : ''}" 
-                        aria-current="${isActive ? 'true' : 'false'}" 
-                        aria-label="Imagen ${index + 1}">
-                </button>
-            `;
-            $indicadores.append(indicador);
-        }
-    });
-
-    // Mostrar controles solo si hay más de una imagen
-    if (imagenesValidas.length > 1) {
-        $btnPrev.show();
-        $btnNext.show();
-        $indicadores.show();
-
-        console.log('🖼️ Carrusel activado con', imagenesValidas.length, 'imágenes');
-    } else {
-        $btnPrev.hide();
-        $btnNext.hide();
-        $indicadores.hide();
-
-        console.log('🖼️ Solo una imagen, carrusel desactivado');
-    }
-
-    // Inicializar el carrusel de Bootstrap
-    const carouselElement = document.getElementById('carouselImagenesDetalle');
-    if (carouselElement && imagenesValidas.length > 1) {
-        new bootstrap.Carousel(carouselElement, {
-            interval: false, // No auto-play
-            wrap: true
-        });
-    }
-}
-
-// Inicializar el modal cuando el documento esté listo
-$(document).ready(function() {
-    inicializarModalInventario();
-});
