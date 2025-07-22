@@ -1,0 +1,218 @@
+ 📋 Módulo de filtros de proformas (Frontend) cargado correctamente
+ 📋 Módulo de filtros de facturas pendientes (Frontend) cargado correctamente
+ 📋 Funciones de proformas exportadas globalmente
+ 📦 Módulo InventarioFacturacion.js cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1848
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-22",
+  "horaActual": "15:26",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+facturacion.js:193 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+facturacion.js:241 🚀 Inicializando modales...
+InventarioFacturacion.js:17 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+InventarioFacturacion.js:23 ✅ Modal de inventario inicializado correctamente
+InventarioFacturacion.js:42 📦 Configurando eventos del modal inventario...
+InventarioFacturacion.js:68 📦 Configurando filtros de inventario...
+facturacion.js:246 🚀 Configurando eventos...
+facturacion.js:250 🚀 Actualizando totales...
+facturacion.js:5422 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:257 🚀 Iniciando carga de productos iniciales...
+facturacion.js:5200 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:5201 📦 cargaInicialCompletada: false
+facturacion.js:5217 📦 Iniciando carga de productos iniciales...
+facturacion.js:447 🔍 === INICIO buscarProductos ===
+facturacion.js:448 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:449 🔍 Término recibido: ""
+facturacion.js:450 🔍 busquedaEnProceso: false
+facturacion.js:451 🔍 ultimaBusqueda: ""
+facturacion.js:466 🔍 Iniciando búsqueda válida...
+facturacion.js:260 ✅ Facturación inicializada correctamente
+facturacion.js:261 🚀 === FIN inicializarFacturacion ===
+InventarioFacturacion.js:17 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+InventarioFacturacion.js:23 ✅ Modal de inventario inicializado correctamente
+InventarioFacturacion.js:42 📦 Configurando eventos del modal inventario...
+InventarioFacturacion.js:68 📦 Configurando filtros de inventario...
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:207 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:208 🎯 Clases CSS: btn w-100 btn-outline-secondary
+facturacion.js:209 🎯 Deshabilitado: true
+facturacion.js:210 🎯 Texto: Completar Venta
+facturacion.js:211 🎯 Título: Agrega productos y selecciona un cliente
+facturacion.js:212 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+facturacion.js:488 📋 Respuesta del servidor recibida
+facturacion.js:491 ✅ Se encontraron 5 productos disponibles
+facturacion.js:530 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:531 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:532 🔄 Productos recibidos: 5
+facturacion.js:567 🔄 Construyendo HTML para 5 productos
+facturacion.js:581 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:581 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:730 🔄 Actualizando DOM (longitud HTML: 23564 caracteres)
+facturacion.js:763 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:508 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:511 📦 Productos mostrados exitosamente
+facturacion.js:524 🔍 === FIN buscarProductos ===
+facturacion.js:5233 📦 Búsqueda inicial ejecutada
+facturacion.js:5235 📦 === FIN cargarProductosIniciales (exitosa) ===
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:393 🔍 Botón inventario clickeado - llamando consultarInventario()
+InventarioFacturacion.js:99 📦 === ABRIENDO MODAL INVENTARIO ===
+InventarioFacturacion.js:112 📦 Modal mostrado exitosamente
+InventarioFacturacion.js:50 📦 Modal inventario mostrado - cargando productos
+InventarioFacturacion.js:124 📦 === CARGANDO INVENTARIO COMPLETO ===
+InventarioFacturacion.js:137 📦 Realizando petición al servidor...
+InventarioFacturacion.js:153 📦 Respuesta del servidor: Object
+InventarioFacturacion.js:157 📦 Productos cargados: 5
+InventarioFacturacion.js:178 📦 === MOSTRANDO PRODUCTOS INVENTARIO ===
+InventarioFacturacion.js:179 📦 Productos a mostrar: 5
+InventarioFacturacion.js:184 ❌ No se encontró el contenedor #inventarioModalProductos
+mostrarProductosInventario @ InventarioFacturacion.js:184
+cargarInventarioCompleto @ InventarioFacturacion.js:158
+await in cargarInventarioCompleto
+(anonymous) @ InventarioFacturacion.js:51
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+trigger @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+each @ jquery.min.js:2
+each @ jquery.min.js:2
+trigger @ jquery.min.js:2
+trigger @ event-handler.js:306
+(anonymous) @ modal.js:245
+g @ index.js:251
+r @ index.js:273
+n @ index.js:100
+(anonymous) @ index.js:279
+setTimeout
+_ @ index.js:277
+_queueCallback @ base-component.js:45
+_showElement @ modal.js:250
+(anonymous) @ modal.js:142
+g @ index.js:251
+(anonymous) @ backdrop.js:54
+g @ index.js:251
+r @ index.js:273
+n @ index.js:100
+(anonymous) @ index.js:279
+setTimeout
+_ @ index.js:277
+_emulateAnimation @ backdrop.js:126
+show @ backdrop.js:53
+_showBackdrop @ modal.js:308
+show @ modal.js:142
+consultarInventario @ InventarioFacturacion.js:111
+(anonymous) @ facturacion.js:394
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+InventarioFacturacion.js:480 ❌ No se encontró contenedor para mostrar error
+mostrarErrorInventario @ InventarioFacturacion.js:480
+mostrarProductosInventario @ InventarioFacturacion.js:185
+cargarInventarioCompleto @ InventarioFacturacion.js:158
+await in cargarInventarioCompleto
+(anonymous) @ InventarioFacturacion.js:51
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+trigger @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+each @ jquery.min.js:2
+each @ jquery.min.js:2
+trigger @ jquery.min.js:2
+trigger @ event-handler.js:306
+(anonymous) @ modal.js:245
+g @ index.js:251
+r @ index.js:273
+n @ index.js:100
+(anonymous) @ index.js:279
+setTimeout
+_ @ index.js:277
+_queueCallback @ base-component.js:45
+_showElement @ modal.js:250
+(anonymous) @ modal.js:142
+g @ index.js:251
+(anonymous) @ backdrop.js:54
+g @ index.js:251
+r @ index.js:273
+n @ index.js:100
+(anonymous) @ index.js:279
+setTimeout
+_ @ index.js:277
+_emulateAnimation @ backdrop.js:126
+show @ backdrop.js:53
+_showBackdrop @ modal.js:308
+show @ modal.js:142
+consultarInventario @ InventarioFacturacion.js:111
+(anonymous) @ facturacion.js:394
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
