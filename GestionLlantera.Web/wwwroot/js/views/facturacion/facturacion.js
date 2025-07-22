@@ -227,6 +227,7 @@ if (typeof window !== 'undefined') {
 $(document).ready(function() {
     console.log('🚀 Inicializando módulo de facturación');
     inicializarFacturacion();
+    inicializarModalInventario();
 });
 
 function inicializarFacturacion() {
@@ -7315,3 +7316,468 @@ const styleSheet = document.createElement("style");
 styleSheet.type = "text/css";
 styleSheet.innerText = estilosCSS;
 document.head.appendChild(styleSheet);
+
+// =====================================
+// MODAL DE INVENTARIO GENERAL
+// =====================================
+
+let inventarioData = [];
+let inventarioPaginaActual = 1;
+let inventarioTamano = 20;
+let inventarioFiltros = {
+    busqueda: '',
+    categoria: '',
+    stock: ''
+};
+
+/**
+ * ✅ FUNCIÓN: Inicializar modal de inventario
+ */
+function inicializarModalInventario() {
+    console.log('📦 Inicializando modal de inventario...');
+
+    // Configurar eventos de filtros
+    $('#busquedaInventario').on('input', debounce(function () {
+        inventarioFiltros.busqueda = $(this).val();
+        inventarioPaginaActual = 1;
+        cargarInventarioGeneral();
+    }, 500));
+
+    $('#filtroCategoria').on('change', function () {
+        inventarioFiltros.categoria = $(this).val();
+        inventarioPaginaActual = 1;
+        cargarInventarioGeneral();
+    });
+
+    $('#filtroStock').on('change', function () {
+        inventarioFiltros.stock = $(this).val();
+        inventarioPaginaActual = 1;
+        cargarInventarioGeneral();
+    });
+
+    $('#btnBuscarInventario').on('click', function () {
+        inventarioPaginaActual = 1;
+        cargarInventarioGeneral();
+    });
+
+    $('#btnExportarInventario').on('click', function () {
+        exportarInventarioExcel();
+    });
+
+    // Cargar datos cuando se abre el modal
+    $('#modalInventario').on('shown.bs.modal', function () {
+        cargarInventarioGeneral();
+    });
+
+    console.log('✅ Modal de inventario inicializado');
+}
+
+/**
+ * ✅ FUNCIÓN: Cargar inventario general
+ */
+async function cargarInventarioGeneral() {
+    try {
+        console.log('📦 Cargando inventario general...');
+
+        mostrarCargandoInventario(true);
+
+        const response = await fetch('/api/Inventario/productos', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const productos = await response.json();
+
+        console.log(`✅ Productos cargados: ${productos.length}`);
+
+        inventarioData = productos;
+        procesarYMostrarInventario();
+
+    } catch (error) {
+        console.error('❌ Error cargando inventario:', error);
+        mostrarErrorInventario('Error al cargar el inventario');
+    } finally {
+        mostrarCargandoInventario(false);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Procesar y mostrar inventario
+ */
+function procesarYMostrarInventario() {
+    try {
+        // Aplicar filtros
+        let productosFiltrados = [...inventarioData];
+
+        // Filtro de búsqueda
+        if (inventarioFiltros.busqueda) {
+            const busqueda = inventarioFiltros.busqueda.toLowerCase();
+            productosFiltrados = productosFiltrados.filter(p =>
+                p.nombreProducto.toLowerCase().includes(busqueda) ||
+                p.descripcion?.toLowerCase().includes(busqueda) ||
+                (p.llanta?.marca?.toLowerCase().includes(busqueda)) ||
+                (p.llanta?.modelo?.toLowerCase().includes(busqueda)) ||
+                p.productoId.toString().includes(busqueda)
+            );
+        }
+
+        // Filtro de categoría
+        if (inventarioFiltros.categoria) {
+            switch (inventarioFiltros.categoria) {
+                case 'llantas':
+                    productosFiltrados = productosFiltrados.filter(p => p.llanta);
+                    break;
+                case 'accesorios':
+                    productosFiltrados = productosFiltrados.filter(p => !p.llanta);
+                    break;
+                // Agregar más categorías según necesites
+            }
+        }
+
+        // Filtro de stock
+        if (inventarioFiltros.stock) {
+            switch (inventarioFiltros.stock) {
+                case 'disponible':
+                    productosFiltrados = productosFiltrados.filter(p => p.cantidadEnInventario > 0);
+                    break;
+                case 'bajo':
+                    productosFiltrados = productosFiltrados.filter(p =>
+                        p.cantidadEnInventario <= p.stockMinimo && p.cantidadEnInventario > 0
+                    );
+                    break;
+                case 'agotado':
+                    productosFiltrados = productosFiltrados.filter(p => p.cantidadEnInventario === 0);
+                    break;
+            }
+        }
+
+        // Paginación
+        const totalProductos = productosFiltrados.length;
+        const inicio = (inventarioPaginaActual - 1) * inventarioTamano;
+        const fin = inicio + inventarioTamano;
+        const productosPagina = productosFiltrados.slice(inicio, fin);
+
+        // Renderizar tabla
+        renderizarTablaInventario(productosPagina);
+
+        // Actualizar paginación
+        actualizarPaginacionInventario(totalProductos);
+
+        // Actualizar estadísticas
+        actualizarEstadisticasInventario(productosFiltrados);
+
+    } catch (error) {
+        console.error('❌ Error procesando inventario:', error);
+        mostrarErrorInventario('Error al procesar los datos del inventario');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Renderizar tabla de inventario
+ */
+function renderizarTablaInventario(productos) {
+    const tbody = $('#tablaInventario tbody');
+    tbody.empty();
+
+    if (!productos.length) {
+        tbody.append(`
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                    No se encontraron productos
+                </td>
+            </tr>
+        `);
+        return;
+    }
+
+    productos.forEach(producto => {
+        const fila = crearFilaInventario(producto);
+        tbody.append(fila);
+    });
+}
+
+/**
+ * ✅ FUNCIÓN: Crear fila de inventario
+ */
+function crearFilaInventario(producto) {
+    const stockClase = producto.cantidadEnInventario === 0 ? 'text-danger' :
+        producto.cantidadEnInventario <= producto.stockMinimo ? 'text-warning' :
+            'text-success';
+
+    const categoria = producto.llanta ? 'Llanta' : 'Accesorio';
+    const descripcion = producto.llanta ?
+        `${producto.llanta.marca} ${producto.llanta.modelo} - ${producto.llanta.ancho}/${producto.llanta.perfil}R${producto.llanta.diametro}` :
+        (producto.descripcion || '');
+
+    const precio = formatearMoneda(producto.precio || 0);
+
+    return `
+        <tr>
+            <td>
+                <small class="text-muted">#${producto.productoId}</small>
+            </td>
+            <td>
+                <div>
+                    <strong>${producto.nombreProducto}</strong>
+                    ${descripcion ? `<br><small class="text-muted">${descripcion}</small>` : ''}
+                </div>
+            </td>
+            <td class="d-none d-md-table-cell">
+                <span class="badge ${producto.llanta ? 'bg-info' : 'bg-secondary'}">${categoria}</span>
+            </td>
+            <td>
+                <strong>${precio}</strong>
+                ${producto.permisos?.puedeVerCostos && producto.costo ?
+            `<br><small class="text-muted">Costo: ${formatearMoneda(producto.costo)}</small>` : ''}
+            </td>
+            <td>
+                <span class="${stockClase}">
+                    <strong>${producto.cantidadEnInventario || 0}</strong>
+                </span>
+                <br>
+                <small class="text-muted">Min: ${producto.stockMinimo || 0}</small>
+            </td>
+            <td class="d-none d-lg-table-cell">
+                <small class="text-muted">General</small>
+            </td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                            onclick="verDetalleProductoInventario(${producto.productoId})"
+                            title="Ver detalle">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm" 
+                            onclick="agregarProductoDesdeInventario(${producto.productoId})"
+                            title="Agregar a factura"
+                            ${producto.cantidadEnInventario === 0 ? 'disabled' : ''}>
+                        <i class="bi bi-plus-circle"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+/**
+ * ✅ FUNCIÓN: Actualizar paginación del inventario
+ */
+function actualizarPaginacionInventario(totalProductos) {
+    const totalPaginas = Math.ceil(totalProductos / inventarioTamano);
+    const paginacion = $('#paginacionInventario');
+    paginacion.empty();
+
+    if (totalPaginas <= 1) return;
+
+    // Botón anterior
+    paginacion.append(`
+        <li class="page-item ${inventarioPaginaActual === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="cambiarPaginaInventario(${inventarioPaginaActual - 1})">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        </li>
+    `);
+
+    // Páginas
+    const inicio = Math.max(1, inventarioPaginaActual - 2);
+    const fin = Math.min(totalPaginas, inventarioPaginaActual + 2);
+
+    if (inicio > 1) {
+        paginacion.append(`<li class="page-item"><a class="page-link" href="#" onclick="cambiarPaginaInventario(1)">1</a></li>`);
+        if (inicio > 2) paginacion.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
+    }
+
+    for (let i = inicio; i <= fin; i++) {
+        paginacion.append(`
+            <li class="page-item ${i === inventarioPaginaActual ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="cambiarPaginaInventario(${i})">${i}</a>
+            </li>
+        `);
+    }
+
+    if (fin < totalPaginas) {
+        if (fin < totalPaginas - 1) paginacion.append(`<li class="page-item disabled"><span class="page-link">...</span></li>`);
+        paginacion.append(`<li class="page-item"><a class="page-link" href="#" onclick="cambiarPaginaInventario(${totalPaginas})">${totalPaginas}</a></li>`);
+    }
+
+    // Botón siguiente
+    paginacion.append(`
+        <li class="page-item ${inventarioPaginaActual === totalPaginas ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="cambiarPaginaInventario(${inventarioPaginaActual + 1})">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+        </li>
+    `);
+}
+
+/**
+ * ✅ FUNCIÓN: Cambiar página del inventario
+ */
+function cambiarPaginaInventario(nuevaPagina) {
+    const totalPaginas = Math.ceil(inventarioData.length / inventarioTamano);
+
+    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
+        inventarioPaginaActual = nuevaPagina;
+        procesarYMostrarInventario();
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Actualizar estadísticas del inventario
+ */
+function actualizarEstadisticasInventario(productos) {
+    const total = productos.length;
+    const disponibles = productos.filter(p => p.cantidadEnInventario > 0).length;
+    const bajoStock = productos.filter(p => p.cantidadEnInventario <= p.stockMinimo && p.cantidadEnInventario > 0).length;
+    const agotados = productos.filter(p => p.cantidadEnInventario === 0).length;
+
+    $('#totalProductos').text(total);
+    $('#productosDisponibles').text(disponibles);
+    $('#productosBajoStock').text(bajoStock);
+    $('#productosAgotados').text(agotados);
+}
+
+/**
+ * ✅ FUNCIÓN: Ver detalle de producto desde inventario
+ */
+async function verDetalleProductoInventario(productoId) {
+    try {
+        console.log(`👁️ Viendo detalle del producto: ${productoId}`);
+
+        // Buscar producto en los datos cargados
+        const producto = inventarioData.find(p => p.productoId === productoId);
+
+        if (!producto) {
+            mostrarError('Producto no encontrado');
+            return;
+        }
+
+        // Mostrar modal de detalle (reutilizar el existente)
+        mostrarDetalleProducto(producto);
+
+    } catch (error) {
+        console.error('❌ Error viendo detalle:', error);
+        mostrarError('Error al mostrar el detalle del producto');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Agregar producto desde inventario
+ */
+async function agregarProductoDesdeInventario(productoId) {
+    try {
+        console.log(`➕ Agregando producto desde inventario: ${productoId}`);
+
+        // Buscar producto en los datos cargados
+        const producto = inventarioData.find(p => p.productoId === productoId);
+
+        if (!producto) {
+            mostrarError('Producto no encontrado');
+            return;
+        }
+
+        if (producto.cantidadEnInventario === 0) {
+            mostrarError('No hay stock disponible para este producto');
+            return;
+        }
+
+        // Agregar al carrito (reutilizar función existente)
+        await agregarProductoAlCarrito(producto);
+
+        // Cerrar modal de inventario
+        $('#modalInventario').modal('hide');
+
+        mostrarToast('Producto agregado', `${producto.nombreProducto} fue agregado a la factura`, 'success');
+
+    } catch (error) {
+        console.error('❌ Error agregando producto:', error);
+        mostrarError('Error al agregar el producto a la factura');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Exportar inventario a Excel
+ */
+async function exportarInventarioExcel() {
+    try {
+        console.log('📊 Exportando inventario a Excel...');
+
+        // Implementar exportación usando reportesUtils si está disponible
+        if (typeof mostrarOpcionesDescarga === 'function') {
+            // Usar utilidad global de reportes si está disponible
+            console.log('Usando utilidad global de reportes...');
+        } else {
+            // Implementación básica
+            mostrarToast('Exportación', 'Función de exportación en desarrollo', 'info');
+        }
+
+    } catch (error) {
+        console.error('❌ Error exportando:', error);
+        mostrarError('Error al exportar el inventario');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar/ocultar carga del inventario
+ */
+function mostrarCargandoInventario(mostrar) {
+    const tbody = $('#tablaInventario tbody');
+
+    if (mostrar) {
+        tbody.html(`
+            <tr>
+                <td colspan="7" class="text-center py-4">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="spinner-border text-primary me-2" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <span>Cargando inventario...</span>
+                    </div>
+                </td>
+            </tr>
+        `);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar error del inventario
+ */
+function mostrarErrorInventario(mensaje) {
+    const tbody = $('#tablaInventario tbody');
+    tbody.html(`
+        <tr>
+            <td colspan="7" class="text-center text-danger py-4">
+                <i class="bi bi-exclamation-triangle display-4 d-block mb-2"></i>
+                ${mensaje}
+                <br>
+                <button class="btn btn-outline-primary btn-sm mt-2" onclick="cargarInventarioGeneral()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    Reintentar
+                </button>
+            </td>
+        </tr>
+    `);
+}
+
+// =====================================
+// FUNCIÓN DEBOUNCE PARA BÚSQUEDA
+// =====================================
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
