@@ -227,7 +227,22 @@ if (typeof window !== 'undefined') {
 $(document).ready(function() {
     console.log('🚀 Inicializando módulo de facturación');
     inicializarFacturacion();
-    inicializarModalInventario();
+    
+    // Verificar que la función esté disponible antes de llamarla
+    if (typeof inicializarModalInventario === 'function') {
+        inicializarModalInventario();
+    } else {
+        console.warn('⚠️ inicializarModalInventario no está disponible, intentando después...');
+        // Intentar nuevamente después de un breve delay
+        setTimeout(() => {
+            if (typeof inicializarModalInventario === 'function') {
+                inicializarModalInventario();
+                console.log('✅ inicializarModalInventario ejecutado con delay');
+            } else {
+                console.error('❌ inicializarModalInventario sigue sin estar disponible');
+            }
+        }, 100);
+    }
 });
 
 function inicializarFacturacion() {

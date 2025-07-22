@@ -1,6 +1,15 @@
 // ===== MÓDULO DE INVENTARIO PARA FACTURACIÓN =====
 
 let modalInventarioFacturacion = null;
+
+// ===== DECLARAR FUNCIONES GLOBALMENTE DESDE EL INICIO =====
+window.inicializarModalInventario = function() {
+    console.log('📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===');
+    return _inicializarModalInventario();
+};
+
+// Función interna
+function _inicializarModalInventario() {
 let productosInventarioCompleto = [];
 let filtrosInventarioActivos = {
     busqueda: '',
@@ -9,9 +18,8 @@ let filtrosInventarioActivos = {
 };
 
 /**
- * Inicializar modal de inventario para facturación
+ * Inicializar modal de inventario para facturación (función interna)
  */
-function inicializarModalInventario() {
     console.log('📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===');
 
     try {
@@ -915,7 +923,7 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
 }
 
 // ===== EXPORTAR FUNCIONES GLOBALMENTE =====
-window.inicializarModalInventario = inicializarModalInventario;
+// inicializarModalInventario ya está exportada al inicio del archivo
 window.consultarInventario = consultarInventario;
 window.cargarInventarioCompleto = cargarInventarioCompleto;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
