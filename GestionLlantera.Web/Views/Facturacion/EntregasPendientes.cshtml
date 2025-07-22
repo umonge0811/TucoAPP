@@ -90,10 +90,19 @@
                         Lista de Entregas Pendientes
                     </h5>
                     <div class="card-actions">
-                        <button type="button" id="btnRefrescar" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-arrow-clockwise me-1"></i>
-                            Refrescar
-                        </button>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="entregasPorPagina" class="form-label mb-0 small text-muted">Mostrar:</label>
+                            <select id="entregasPorPagina" class="form-select form-select-sm" style="width: 80px;">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                            <button type="button" id="btnRefrescar" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Refrescar
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -123,6 +132,11 @@
                                 <!-- Se llenará dinámicamente -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Paginación -->
+                    <div id="paginacionEntregas" class="d-flex justify-content-center mt-3" style="display: none;">
+                        <!-- Se llenará dinámicamente -->
                     </div>
 
                     <div id="sinResultados" class="text-center py-4" style="display: none;">

@@ -1354,7 +1354,7 @@ async function limpiarVenta() {
 
         // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
         actualizarEstadoBotonFinalizar();
-
+        $('#btnGuardarProforma').show();
         mostrarToast('Venta limpiada', 'Se han removido todos los productos', 'info');
     }
 }
@@ -1582,6 +1582,7 @@ function configurarModalSegunPermisos() {
     const $btnConfirmar = $('#btnConfirmarVenta');
     const $textoBoton = $('#textoBotonConfirmar');
     const $tituloModal = $('#modalFinalizarVentaLabel');
+    const $btnGuardarProforma = $('#btnGuardarProforma'); // ✅ AGREGAR ESTA LÍNEA
 
     console.log('🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===');
     console.log('🎯 Permisos del usuario:', permisosUsuario);
@@ -1589,14 +1590,28 @@ function configurarModalSegunPermisos() {
     console.log('🎯 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
     console.log('🎯 esAdmin:', permisosUsuario.esAdmin);
     console.log('🎯 Es conversión de proforma:', !!window.proformaOriginalParaConversion);
+    console.log('🎯 Es factura pendiente:', !!(facturaPendienteActual && facturaPendienteActual.esFacturaPendiente)); // ✅ AGREGAR ESTA LÍNEA
 
     // Resetear el botón completamente
     $btnConfirmar.removeClass('btn-warning btn-secondary btn-info btn-success btn-primary').prop('disabled', false);
+
+    // ✅ AGREGAR LÓGICA PARA OCULTAR BOTÓN DE PROFORMA
+    if (facturaPendienteActual && facturaPendienteActual.esFacturaPendiente) {
+        // Si es una factura pendiente, ocultar botón de proforma
+        $btnGuardarProforma.hide();
+        console.log('🎯 Botón de proforma ocultado - Es factura pendiente');
+    } else {
+        // Si no es factura pendiente, mostrar botón de proforma
+        $btnGuardarProforma.show();
+        console.log('🎯 Botón de proforma mostrado - No es factura pendiente');
+    }
 
     // ===== DETERMINAR TÍTULO Y COMPORTAMIENTO SEGÚN EL CONTEXTO =====
     if (window.proformaOriginalParaConversion) {
         // ✅ CONVERSIÓN DE PROFORMA A FACTURA
         $tituloModal.html('<i class="bi bi-file-earmark-arrow-up me-2"></i>Convertir Proforma a Factura');
+        // Ocultar botón de proforma también en conversiones
+        $btnGuardarProforma.hide();
 
         if (permisosUsuario.puedeCompletarFacturas || permisosUsuario.esAdmin) {
             $btnConfirmar.addClass('btn-success');
@@ -1651,14 +1666,25 @@ function configurarModalSegunPermisos() {
         console.log('🔒 Modal configurado sin permisos');
     }
 
-    console.log('🎯 Estado final del modal:', {
-        titulo: $tituloModal.html(),
-        disabled: $btnConfirmar.prop('disabled'),
-        classes: $btnConfirmar.attr('class'),
-        texto: $textoBoton.text(),
-        permisos: permisosUsuario
-    });
+    // ✅ VERIFICACIÓN FINAL DEL ESTADO DEL BOTÓN
+    setTimeout(() => {
+        const estadoFinal = {
+            classes: $btnConfirmar.attr('class'),
+            disabled: $btnConfirmar.prop('disabled'),
+            text: $btnConfirmar.text(),
+            title: $btnConfirmar.attr('title'),
+            proformaVisible: $btnGuardarProforma.is(':visible') // ✅ AGREGAR ESTA LÍNEA
+        };
+        console.log('🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===');
+        console.log('🎯 Clases CSS:', estadoFinal.classes);
+        console.log('🎯 Deshabilitado:', estadoFinal.disabled);
+        console.log('🎯 Texto:', estadoFinal.text);
+        console.log('🎯 Título:', estadoFinal.title);
+        console.log('🎯 Botón Proforma Visible:', estadoFinal.proformaVisible); // ✅ AGREGAR ESTA LÍNEA
+        console.log('🎯 === FIN CONFIGURACIÓN INTERFAZ ===');
+    }, 100);
 }
+
 
 function calcularCambio() {
     const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0) * 1.13;
@@ -6750,6 +6776,12 @@ async function procesarFacturaPendiente(facturaEscapada) {
         }
 
         console.log('💰 Factura deserializada:', factura);
+
+        // ✅ MARCAR COMO FACTURA PENDIENTE PARA EL MODAL
+        facturaPendienteActual = {
+            ...factura,
+            esFacturaPendiente: true  // ✅ AGREGAR ESTA PROPIEDAD
+        };
 
         // Verificar permisos
         if (!permisosUsuario.puedeCompletarFacturas) {
