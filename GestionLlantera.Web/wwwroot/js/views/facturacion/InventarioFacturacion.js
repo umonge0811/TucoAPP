@@ -212,6 +212,7 @@ function mostrarProductosInventario(productos) {
         // Determinar si es llanta y extraer medidas
         let esLlanta = false;
         let medidaLlanta = 'N/A';
+        let medidaParaBusqueda = 'n/a';
         
         try {
             if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
@@ -221,8 +222,12 @@ function mostrarProductosInventario(productos) {
                 if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
                         medidaLlanta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                        // Crear múltiples formatos para búsqueda
+                        medidaParaBusqueda = `${medidaLlanta} ${llantaInfo.ancho}/${llantaInfo.perfil} ${llantaInfo.ancho}x${llantaInfo.perfil}x${llantaInfo.diametro} ${llantaInfo.ancho} ${llantaInfo.perfil} ${llantaInfo.diametro}`.toLowerCase();
                     } else {
                         medidaLlanta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                        // Crear múltiples formatos para búsqueda
+                        medidaParaBusqueda = `${medidaLlanta} ${llantaInfo.ancho} R${llantaInfo.diametro} ${llantaInfo.diametro}`.toLowerCase();
                     }
                 }
             }
@@ -267,7 +272,7 @@ function mostrarProductosInventario(productos) {
                 data-stock="${cantidadInventario}"
                 data-precio-efectivo="${precioEfectivo}"
                 data-precio-tarjeta="${precioTarjeta}"
-                data-medida="${medidaLlanta.toLowerCase()}">
+                data-medida="${medidaParaBusqueda}">
                 <td>
                     <strong class="d-block">${nombreProducto}</strong>
                     <small class="text-muted">ID: ${productoId}</small>
@@ -489,7 +494,28 @@ function aplicarFiltrosInventario() {
         productosFiltrados = productosFiltrados.filter(producto => {
             const nombre = (producto.nombreProducto || '').toLowerCase();
             const descripcion = (producto.descripcion || '').toLowerCase();
-            return nombre.includes(termino) || descripcion.includes(termino);
+            
+            // Buscar también en medidas de llantas
+            let medidaTexto = '';
+            try {
+                if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
+                    const llantaInfo = producto.llanta || producto.Llanta[0];
+                    
+                    if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                        if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                            medidaTexto = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`.toLowerCase();
+                        } else {
+                            medidaTexto = `${llantaInfo.ancho}/R${llantaInfo.diametro}`.toLowerCase();
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Error procesando medida para filtro:', error);
+            }
+            
+            return nombre.includes(termino) || 
+                   descripcion.includes(termino) || 
+                   medidaTexto.includes(termino);
         });
     }
     
