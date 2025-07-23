@@ -583,14 +583,25 @@ input[type=number] {
 }
 
 /* ===== ESTILOS PARA MODAL DE ZOOM MEJORADO ===== */
+#modalZoomSimple {
+    z-index: 99999 !important;
+}
+
+#modalZoomSimple .modal-backdrop {
+    z-index: 99998 !important;
+}
+
 #modalZoomSimple .modal-content {
-    background: rgba(0, 0, 0, 0.95) !important;
-    border: none;
+    background: rgba(0, 0, 0, 0.98) !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 #modalZoomSimple .modal-header {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    z-index: 100000 !important;
+    position: relative;
 }
 
 #modalZoomSimple .modal-body .zoom-image {
@@ -602,9 +613,26 @@ input[type=number] {
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
 }
 
+#modalZoomSimple .btn-close {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid white !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+    position: relative !important;
+    z-index: 100001 !important;
+    opacity: 1 !important;
+}
+
 #modalZoomSimple .btn-close:hover {
     background: rgba(255, 255, 255, 1) !important;
     transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7) !important;
+}
+
+#modalZoomSimple .btn-close:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.5) !important;
 }
 
 /* ===== CONTENEDORES DE IMÁGENES UNIFORMES ===== */

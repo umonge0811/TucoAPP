@@ -6,12 +6,18 @@
 function abrirZoomImagen(urlImagen, nombreProducto) {
     console.log('🔍 Abriendo zoom:', urlImagen);
 
-    // Crear modal mejorado
+    // Ocultar modal de detalles temporalmente
+    const modalDetalles = $('#modalDetalleProducto, #modalSeleccionProducto');
+    if (modalDetalles.length) {
+        modalDetalles.css('opacity', '0');
+    }
+
+    // Crear modal mejorado con z-index muy alto
     const modalHTML = `
-        <div class="modal fade" id="modalZoomSimple" tabindex="-1" style="z-index: 9999;">
+        <div class="modal fade" id="modalZoomSimple" tabindex="-1" style="z-index: 99999;">
             <div class="modal-dialog modal-fullscreen">
-                <div class="modal-content" style="background: rgba(0, 0, 0, 0.95);">
-                    <div class="modal-header" style="background: rgba(0, 0, 0, 0.8); border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 1.5rem;">
+                <div class="modal-content" style="background: rgba(0, 0, 0, 0.98); border: none;">
+                    <div class="modal-header" style="background: rgba(0, 0, 0, 0.9); border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 1.5rem; position: relative; z-index: 100000;">
                         <h5 class="modal-title text-white d-flex align-items-center" style="font-size: 1.2rem; font-weight: 600;">
                             <i class="bi bi-zoom-in me-2" style="color: #17a2b8;"></i>
                             <span>${nombreProducto || 'Imagen Ampliada'}</span>
@@ -19,7 +25,7 @@ function abrirZoomImagen(urlImagen, nombreProducto) {
                         <button type="button" 
                                 class="btn-close btn-close-white" 
                                 data-bs-dismiss="modal"
-                                style="background: rgba(255, 255, 255, 0.8); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                style="background: rgba(255, 255, 255, 0.9) !important; border-radius: 50% !important; width: 40px !important; height: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; z-index: 100001 !important; border: 2px solid rgba(255, 255, 255, 1) !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;">
                         </button>
                     </div>
                     <div class="modal-body d-flex justify-content-center align-items-center" style="padding: 2rem; height: calc(100vh - 80px);">
@@ -40,6 +46,18 @@ function abrirZoomImagen(urlImagen, nombreProducto) {
 
     // Agregar y mostrar nuevo modal
     $('body').append(modalHTML);
+    
+    // Configurar eventos del modal de zoom
+    $('#modalZoomSimple').on('hidden.bs.modal', function() {
+        // Restaurar visibilidad del modal de detalles cuando se cierre el zoom
+        const modalDetalles = $('#modalDetalleProducto, #modalSeleccionProducto');
+        if (modalDetalles.length) {
+            modalDetalles.css('opacity', '1');
+        }
+        // Remover el modal de zoom del DOM
+        $(this).remove();
+    });
+
     $('#modalZoomSimple').modal('show');
 }
 
