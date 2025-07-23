@@ -7157,38 +7157,60 @@ async function cargarImagenesDetallesProducto(producto) {
         }
 
         if (imagenesArray.length === 1) {
-            // Una sola imagen
+            // Una sola imagen con zoom mejorado
             const urlImagen = construirUrlImagen(imagenesArray[0]);
             contenedor.html(`
-                <img src="${urlImagen}" 
-                     class="imagen-producto-detalle" 
-                     alt="${producto.nombreProducto}"
-                     style="cursor: pointer;"
-                     onclick="abrirImagenEnModal(this.src, '${producto.nombreProducto}')"
-                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
+                <div class="imagen-container-zoom">
+                    <img src="${urlImagen}" 
+                         class="imagen-producto-detalle-zoom" 
+                         alt="${producto.nombreProducto}"
+                         onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
+                         onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
+                    <div class="overlay-zoom">
+                        <i class="bi bi-zoom-in"></i>
+                        <span>Click para ampliar</span>
+                    </div>
+                </div>
             `);
         } else {
-            // Múltiples imágenes - crear carrusel
+            // Múltiples imágenes - crear carrusel mejorado
             const carruselId = 'carruselImagenesDetalles';
             let htmlCarrusel = `
-                <div id="${carruselId}" class="carousel slide" data-bs-ride="carousel">
+                <div id="${carruselId}" class="carousel slide carousel-zoom" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+            `;
+
+            // Indicadores
+            imagenesArray.forEach((url, index) => {
+                const activa = index === 0 ? 'active' : '';
+                htmlCarrusel += `
+                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" 
+                            class="${activa}" aria-current="${index === 0 ? 'true' : 'false'}" 
+                            aria-label="Imagen ${index + 1}"></button>
+                `;
+            });
+
+            htmlCarrusel += `
+                    </div>
                     <div class="carousel-inner">
             `;
 
+            // Slides
             imagenesArray.forEach((url, index) => {
                 const urlImagen = construirUrlImagen(url);
                 const activa = index === 0 ? 'active' : '';
                 htmlCarrusel += `
                     <div class="carousel-item ${activa}">
-                        <img src="${urlImagen}" 
-                             class="imagen-producto-detalle" 
-                             alt="${producto.nombreProducto}"
-                             style="cursor: pointer;"
-                             onclick="abrirImagenEnModal(this.src, '${producto.nombreProducto}')"
-                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="imagen-error" style="display:none;">
-                            <i class="bi bi-image-fill"></i>
-                            <span>Error cargando imagen</span>
+                        <div class="imagen-container-zoom">
+                            <img src="${urlImagen}" 
+                                 class="imagen-producto-detalle-zoom" 
+                                 alt="${producto.nombreProducto}"
+                                 onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
+                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
+                            <div class="overlay-zoom">
+                                <i class="bi bi-zoom-in"></i>
+                                <span>Click para ampliar</span>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -7197,10 +7219,12 @@ async function cargarImagenesDetallesProducto(producto) {
             htmlCarrusel += `
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon"></span>
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Anterior</span>
                     </button>
                     <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon"></span>
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Siguiente</span>
                     </button>
                 </div>
             `;
@@ -7210,51 +7234,137 @@ async function cargarImagenesDetallesProducto(producto) {
 
     } catch (error) {
         console.error('❌ Error cargando imágenes:', error);
-        $('#contenedorImagenesDetalles').html(`
+        contenedor.html(`
             <div class="sin-imagenes">
-                <i class="bi bi-exclamation-triangle"></i>
-                <span>Error al cargar imágenes</span>
+                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                <span>Error cargando imágenes</span>
             </div>
         `);
     }
 }
 
 /**
- * ✅ FUNCIÓN: Abrir imagen en modal de zoom
+ * ✅ FUNCIÓN MEJORADA: Abrir zoom de imagen con mejor estilo
  */
-function abrirImagenEnModal(imagenUrl, nombreProducto) {
-    console.log('🔍 Abriendo imagen en modal:', imagenUrl);
+function abrirZoomImagenMejorado(urlImagen, nombreProducto) {
+    console.log('🔍 Abriendo zoom mejorado:', urlImagen);
 
-    const modalHtml = `
-        <div class="modal fade" id="modalImagenZoom" tabindex="-1" style="z-index: 9999;">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+    // Ocultar modal de detalles temporalmente
+    const modalDetalles = $('#modalDetalleProducto, #modalSeleccionProducto');
+    if (modalDetalles.length) {
+        modalDetalles.css('opacity', '0');
+    }
+
+    // Crear modal mejorado
+    const modalHTML = `
+        <div class="modal fade" id="modalZoomMejorado" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
+            <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content bg-dark">
                     <div class="modal-header border-0">
-                        <h6 class="modal-title text-white">${nombreProducto}</h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title text-white d-flex align-items-center">
+                            <i class="bi bi-arrows-fullscreen me-2 text-info"></i>
+                            <span>${nombreProducto || 'Imagen Ampliada'}</span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
-                    <div class="modal-body text-center p-0">
-                        <img src="${imagenUrl}" 
-                             class="img-fluid" 
-                             alt="${nombreProducto}"
-                             style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+                    <div class="modal-body d-flex justify-content-center align-items-center p-4">
+                        <div class="zoom-image-container">
+                            <img src="${urlImagen}" 
+                                 alt="${nombreProducto}" 
+                                 class="zoom-image-mejorada"
+                                 onload="this.style.opacity='1'"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="error-load-zoom" style="display: none;">
+                                <i class="bi bi-exclamation-triangle text-warning"></i>
+                                <p class="text-white mt-2">Error al cargar la imagen</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center">
+                        <div class="zoom-controls">
+                            <button type="button" class="btn btn-outline-light me-2" onclick="descargarImagen('${urlImagen}', '${nombreProducto}')">
+                                <i class="bi bi-download me-1"></i>Descargar
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Cerrar
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     `;
 
-    // Remover modal anterior si existe
-    $('#modalImagenZoom').remove();
+    // Remover modal anterior
+    $('#modalZoomMejorado').remove();
 
-    // Agregar nuevo modal al DOM
-    $('body').append(modalHtml);
+    // Agregar nuevo modal
+    $('body').append(modalHTML);
+
+    // Configurar eventos
+    $('#modalZoomMejorado').on('hidden.bs.modal', function () {
+        // Restaurar visibilidad del modal de detalles
+        const modalDetalles = $('#modalDetalleProducto, #modalSeleccionProducto');
+        if (modalDetalles.length) {
+            modalDetalles.css('opacity', '1');
+        }
+        // Remover del DOM
+        $(this).remove();
+    });
 
     // Mostrar modal
-    const modal = new bootstrap.Modal(document.getElementById('modalImagenZoom'));
-    modal.show();
+    $('#modalZoomMejorado').modal('show');
 }
 
+/**
+ * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen
+ */
+function construirUrlImagen(url) {
+    if (!url) return '/images/no-image.png';
+
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+
+    if (url.startsWith('/uploads/productos/')) {
+        return `https://localhost:7273${url}`;
+    } else if (url.startsWith('uploads/productos/')) {
+        return `https://localhost:7273/${url}`;
+    } else if (url.startsWith('/')) {
+        return `https://localhost:7273${url}`;
+    } else {
+        return `https://localhost:7273/${url}`;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN AUXILIAR: Descargar imagen
+ */
+function descargarImagen(urlImagen, nombreProducto) {
+    try {
+        const nombreArchivo = `${nombreProducto.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_imagen.jpg`;
+
+        const link = document.createElement('a');
+        link.href = urlImagen;
+        link.download = nombreArchivo;
+        link.target = '_blank';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        mostrarToast('Descarga', 'Imagen descargada correctamente', 'success');
+    } catch (error) {
+        console.error('Error descargando imagen:', error);
+        mostrarToast('Error', 'No se pudo descargar la imagen', 'danger');
+    }
+}
+
+// Exportar funciones globalmente
+window.cargarImagenesDetallesProducto = cargarImagenesDetallesProducto;
+window.abrirZoomImagenMejorado = abrirZoomImagenMejorado;
+window.construirUrlImagen = construirUrlImagen;
+window.descargarImagen = descargarImagen;
 
 /**
  * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
