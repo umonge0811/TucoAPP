@@ -4800,15 +4800,12 @@ function verDetalleProducto(producto) {
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <img src="${imagenUrl}" 
-                                     class="img-fluid rounded shadow-sm" 
-                                     alt="${producto.nombreProducto}"
-                                     onerror="this.onerror=null; this.src='/images/no-image.png';"">
+                                <div id="contenedorImagenesDetalles"></div>
 
                                 <!-- Información de stock -->
                                 <div class="mt-3">
-                                    <div class="alert ${producto.cantidadEnInventario <= 0 ? 'alert-danger' : 
-                                        producto.cantidadEnInventario <= producto.stockMinimo ? 'alert-warning' : 'alert-success'}">
+                                    <div class="alert ${producto.cantidadEnInventario <= 0 ? 'alert-danger' :
+            producto.cantidadEnInventario <= producto.stockMinimo ? 'alert-warning' : 'alert-success'}">
                                         <div class="text-center">
                                             <i class="bi bi-box-seam display-6"></i>
                                             <h5 class="mt-2">Stock: ${producto.cantidadEnInventario}</h5>
@@ -4840,8 +4837,8 @@ function verDetalleProducto(producto) {
                                             </thead>
                                             <tbody>
                                                 ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
-                                                    const precio = (producto.precio || 0) * config.multiplicador;
-                                                    return `
+                const precio = (producto.precio || 0) * config.multiplicador;
+                return `
                                                         <tr>
                                                             <td>
                                                                 <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : 'cash'} me-2"></i>
@@ -4851,7 +4848,7 @@ function verDetalleProducto(producto) {
                                                             <td class="text-end fw-bold">₡${formatearMoneda(precio)}</td>
                                                         </tr>
                                                     `;
-                                                }).join('')}
+            }).join('')}
                                             </tbody>
                                         </table>
                                     </div>
@@ -4885,9 +4882,9 @@ function verDetalleProducto(producto) {
                                 <!-- Información del sistema -->
                                 <div class="text-muted small">
                                     <p class="mb-1"><strong>ID:</strong> ${producto.productoId}</p>
-                                    ${producto.fechaUltimaActualizacion ? 
-                                        `<p class="mb-0"><strong>Última actualización:</strong> ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}</p>` 
-                                        : ''}
+                                    ${producto.fechaUltimaActualizacion ?
+            `<p class="mb-0"><strong>Última actualización:</strong> ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}</p>`
+            : ''}
                                 </div>
                             </div>
                         </div>
@@ -4912,8 +4909,12 @@ function verDetalleProducto(producto) {
     $('body').append(modalHtml);
 
     const modal = new bootstrap.Modal(document.getElementById('modalDetalleProducto'));
-    cargarImagenesDetallesProducto(producto);
     modal.show();
+
+    // ✅ CARGAR IMÁGENES DESPUÉS DE MOSTRAR EL MODAL
+    setTimeout(() => {
+        cargarImagenesDetallesProducto(producto);
+    }, 100);
 }
 
 /**
