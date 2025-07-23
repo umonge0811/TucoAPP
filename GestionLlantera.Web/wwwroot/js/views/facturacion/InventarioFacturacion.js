@@ -250,24 +250,19 @@ function mostrarProductosInventario(productos) {
             stockBadge = '<span class="badge bg-success">Disponible</span>';
         }
 
-        // OBJETO PRODUCTO LIMPIO CON IMÁGENES COMPLETAS (EXACTAMENTE IGUAL QUE EN FACTURACION.JS)
+        // OBJETO PRODUCTO LIMPIO EXACTAMENTE IGUAL AL INDEX DE FACTURACIÓN
         const productoLimpio = {
             productoId: productoId,
             nombreProducto: nombreProducto,
             precio: precio,
             cantidadEnInventario: cantidadInventario,
             stockMinimo: stockMinimo,
-            // ✅ INCLUIR TODAS LAS PROPIEDADES DE IMÁGENES IGUAL QUE EN FACTURACION.JS
-            imagenesProductos: producto.imagenesProductos || [],
             imagenesUrls: producto.imagenesUrls || [],
-            imagenes: producto.imagenes || [],
             descripcion: descripcion,
             esLlanta: esLlanta || false,
             marca: producto.marca || null,
             modelo: producto.modelo || null,
-            medidaCompleta: medidaLlanta || null,
-            // ✅ AGREGAR INFORMACIÓN DE LLANTA SI EXISTE
-            llanta: producto.llanta || (producto.Llanta && producto.Llanta.length > 0 ? producto.Llanta[0] : null)
+            medidaCompleta: medidaLlanta || null
         };
 
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
@@ -698,7 +693,7 @@ function construirUrlImagen(urlOriginal) {
 
 
 
-// Función verDetalleProducto se usa la de facturacion.js principal
+// ✅ NO NECESITAMOS FUNCIÓN DUPLICADA - SE USA LA DE FACTURACION.JS PRINCIPAL
 
 /**
  * Función auxiliar para mostrar toast
@@ -717,5 +712,12 @@ window.inicializarModalInventario = inicializarModalInventario;
 window.consultarInventario = consultarInventario;
 window.cargarInventarioCompleto = cargarInventarioCompleto;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
+
+// ✅ VERIFICAR QUE verDetalleProducto ESTÉ DISPONIBLE DESDE FACTURACION.JS
+if (typeof window.verDetalleProducto !== 'function') {
+    console.warn('⚠️ verDetalleProducto no está disponible desde facturacion.js');
+} else {
+    console.log('✅ verDetalleProducto disponible desde facturacion.js');
+}
 
 console.log('📦 Módulo InventarioFacturacion.js cargado correctamente');
