@@ -7157,60 +7157,38 @@ async function cargarImagenesDetallesProducto(producto) {
         }
 
         if (imagenesArray.length === 1) {
-            // Una sola imagen con zoom mejorado
+            // Una sola imagen
             const urlImagen = construirUrlImagen(imagenesArray[0]);
             contenedor.html(`
-                <div class="imagen-container-zoom">
-                    <img src="${urlImagen}" 
-                         class="imagen-producto-detalle-zoom" 
-                         alt="${producto.nombreProducto}"
-                         onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
-                         onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
-                    <div class="overlay-zoom">
-                        <i class="bi bi-zoom-in"></i>
-                        <span>Click para ampliar</span>
-                    </div>
-                </div>
+                <img src="${urlImagen}" 
+                     class="imagen-producto-detalle" 
+                     alt="${producto.nombreProducto}"
+                     style="cursor: pointer;"
+                     onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
+                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
             `);
         } else {
-            // Múltiples imágenes - crear carrusel mejorado
+            // Múltiples imágenes - crear carrusel
             const carruselId = 'carruselImagenesDetalles';
             let htmlCarrusel = `
-                <div id="${carruselId}" class="carousel slide carousel-zoom" data-bs-ride="carousel">
-                    <div class="carousel-indicators">
-            `;
-
-            // Indicadores
-            imagenesArray.forEach((url, index) => {
-                const activa = index === 0 ? 'active' : '';
-                htmlCarrusel += `
-                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" 
-                            class="${activa}" aria-current="${index === 0 ? 'true' : 'false'}" 
-                            aria-label="Imagen ${index + 1}"></button>
-                `;
-            });
-
-            htmlCarrusel += `
-                    </div>
+                <div id="${carruselId}" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-inner">
             `;
 
-            // Slides
             imagenesArray.forEach((url, index) => {
                 const urlImagen = construirUrlImagen(url);
                 const activa = index === 0 ? 'active' : '';
                 htmlCarrusel += `
                     <div class="carousel-item ${activa}">
-                        <div class="imagen-container-zoom">
-                            <img src="${urlImagen}" 
-                                 class="imagen-producto-detalle-zoom" 
-                                 alt="${producto.nombreProducto}"
-                                 onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
-                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
-                            <div class="overlay-zoom">
-                                <i class="bi bi-zoom-in"></i>
-                                <span>Click para ampliar</span>
-                            </div>
+                        <img src="${urlImagen}" 
+                             class="imagen-producto-detalle" 
+                             alt="${producto.nombreProducto}"
+                             style="cursor: pointer;"
+                             onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="imagen-error" style="display:none;">
+                            <i class="bi bi-image-fill"></i>
+                            <span>Error cargando imagen</span>
                         </div>
                     </div>
                 `;
@@ -7219,12 +7197,10 @@ async function cargarImagenesDetallesProducto(producto) {
             htmlCarrusel += `
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
+                        <span class="carousel-control-prev-icon"></span>
                     </button>
                     <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
+                        <span class="carousel-control-next-icon"></span>
                     </button>
                 </div>
             `;
@@ -7234,10 +7210,10 @@ async function cargarImagenesDetallesProducto(producto) {
 
     } catch (error) {
         console.error('❌ Error cargando imágenes:', error);
-        contenedor.html(`
+        $('#contenedorImagenesDetalles').html(`
             <div class="sin-imagenes">
-                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                <span>Error cargando imágenes</span>
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Error al cargar imágenes</span>
             </div>
         `);
     }
