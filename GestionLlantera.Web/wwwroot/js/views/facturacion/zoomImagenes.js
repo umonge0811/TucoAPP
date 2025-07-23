@@ -6,22 +6,29 @@
 function abrirZoomImagen(urlImagen, nombreProducto) {
     console.log('🔍 Abriendo zoom:', urlImagen);
 
-    // Crear modal simple
+    // Crear modal mejorado
     const modalHTML = `
         <div class="modal fade" id="modalZoomSimple" tabindex="-1" style="z-index: 9999;">
             <div class="modal-dialog modal-fullscreen">
-                <div class="modal-content bg-dark">
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title text-white">
-                            <i class="bi bi-zoom-in me-2"></i>${nombreProducto || 'Imagen Ampliada'}
+                <div class="modal-content" style="background: rgba(0, 0, 0, 0.95);">
+                    <div class="modal-header" style="background: rgba(0, 0, 0, 0.8); border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 1.5rem;">
+                        <h5 class="modal-title text-white d-flex align-items-center" style="font-size: 1.2rem; font-weight: 600;">
+                            <i class="bi bi-zoom-in me-2" style="color: #17a2b8;"></i>
+                            <span>${nombreProducto || 'Imagen Ampliada'}</span>
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" 
+                                class="btn-close btn-close-white" 
+                                data-bs-dismiss="modal"
+                                style="background: rgba(255, 255, 255, 0.8); border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                        </button>
                     </div>
-                    <div class="modal-body d-flex justify-content-center align-items-center p-0">
-                        <img src="${urlImagen}" 
-                             alt="${nombreProducto}" 
-                             class="img-fluid" 
-                             style="max-height: 95vh; max-width: 95vw; object-fit: contain; min-height: 70vh; min-width: 70vw;">
+                    <div class="modal-body d-flex justify-content-center align-items-center" style="padding: 2rem; height: calc(100vh - 80px);">
+                        <div class="image-container" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+                            <img src="${urlImagen}" 
+                                 alt="${nombreProducto}" 
+                                 class="img-fluid zoom-image" 
+                                 style="width: 85%; height: 85%; object-fit: contain; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); transition: transform 0.3s ease;">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -79,20 +86,24 @@ function cargarImagenesDetallesProducto(producto) {
         
         htmlImagenes = `
             <div class="text-center">
-                <img src="${urlCompleta}" 
-                     class="img-fluid rounded mb-3" 
-                     alt="${producto.nombreProducto}"
-                     style="max-height: 300px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                     data-url="${urlCompleta}" 
-                     data-nombre="${nombreEscapado}"
-                     onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))">
-                <br>
+                <div class="imagen-container" style="width: 100%; height: 320px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 12px; overflow: hidden; margin-bottom: 1rem;">
+                    <img src="${urlCompleta}" 
+                         class="img-fluid" 
+                         alt="${producto.nombreProducto}"
+                         style="width: 100%; height: 100%; object-fit: contain; cursor: pointer; transition: transform 0.3s ease;"
+                         data-url="${urlCompleta}" 
+                         data-nombre="${nombreEscapado}"
+                         onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))"
+                         onmouseover="this.style.transform='scale(1.02)'"
+                         onmouseout="this.style.transform='scale(1)'">
+                </div>
                 <button type="button" 
                         class="btn btn-primary btn-sm"
                         data-url="${urlCompleta}" 
                         data-nombre="${nombreEscapado}"
-                        onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))">
-                    <i class="bi bi-zoom-in me-1"></i>Ampliar
+                        onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))"
+                        style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500;">
+                    <i class="bi bi-zoom-in me-1"></i>Ampliar Imagen
                 </button>
             </div>
         `;
@@ -111,20 +122,24 @@ function cargarImagenesDetallesProducto(producto) {
             slides += `
                 <div class="carousel-item ${activa}">
                     <div class="text-center">
-                        <img src="${urlCompleta}" 
-                             class="img-fluid rounded" 
-                             alt="${producto.nombreProducto}"
-                             style="max-height: 300px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                             data-url="${urlCompleta}" 
-                             data-nombre="${nombreEscapado}"
-                             onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))">
-                        <br><br>
+                        <div class="imagen-container" style="width: 100%; height: 320px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 12px; overflow: hidden; margin-bottom: 1rem;">
+                            <img src="${urlCompleta}" 
+                                 class="img-fluid" 
+                                 alt="${producto.nombreProducto}"
+                                 style="width: 100%; height: 100%; object-fit: contain; cursor: pointer; transition: transform 0.3s ease;"
+                                 data-url="${urlCompleta}" 
+                                 data-nombre="${nombreEscapado}"
+                                 onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))"
+                                 onmouseover="this.style.transform='scale(1.02)'"
+                                 onmouseout="this.style.transform='scale(1)'">
+                        </div>
                         <button type="button" 
                                 class="btn btn-primary btn-sm"
                                 data-url="${urlCompleta}" 
                                 data-nombre="${nombreEscapado}"
-                                onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))">
-                            <i class="bi bi-zoom-in me-1"></i>Ampliar
+                                onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))"
+                                style="padding: 0.5rem 1rem; border-radius: 8px; font-weight: 500;">
+                            <i class="bi bi-zoom-in me-1"></i>Ampliar Imagen
                         </button>
                     </div>
                 </div>

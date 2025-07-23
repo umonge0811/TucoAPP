@@ -582,14 +582,79 @@ input[type=number] {
     transform: scale(1.1);
 }
 
-/* Estilos para zoom simplificado */
+/* ===== ESTILOS PARA MODAL DE ZOOM MEJORADO ===== */
 #modalZoomSimple .modal-content {
     background: rgba(0, 0, 0, 0.95) !important;
+    border: none;
 }
 
-#modalZoomSimple .modal-body img {
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
+#modalZoomSimple .modal-header {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+#modalZoomSimple .modal-body .zoom-image {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#modalZoomSimple .modal-body .zoom-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+}
+
+#modalZoomSimple .btn-close:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    transform: scale(1.1);
+}
+
+/* ===== CONTENEDORES DE IMÁGENES UNIFORMES ===== */
+.imagen-container {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.imagen-container:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+/* ===== CARRUSEL MEJORADO ===== */
+#carruselProducto .carousel-control-prev,
+#carruselProducto .carousel-control-next {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 123, 255, 0.8);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+#carruselProducto .carousel-control-prev:hover,
+#carruselProducto .carousel-control-next:hover {
+    background: rgba(0, 123, 255, 1);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+#carruselProducto .carousel-indicators {
+    bottom: -40px;
+}
+
+#carruselProducto .carousel-indicators [data-bs-target] {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(0, 123, 255, 0.6);
+    border: 2px solid rgba(0, 123, 255, 0.8);
+    margin: 0 4px;
+    transition: all 0.3s ease;
+}
+
+#carruselProducto .carousel-indicators [data-bs-target].active {
+    background: rgba(0, 123, 255, 1);
+    transform: scale(1.2);
 }
 
 #contenedorImagenesDetalles img:hover {
