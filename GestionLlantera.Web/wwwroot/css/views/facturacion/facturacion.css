@@ -519,7 +519,8 @@ input[type=number] {
 #contenedorImagenesDetalles .imagen-producto-detalle {
     width: 100%;
     height: auto;
-    max-height: 400px;
+    max-height: 500px;
+    min-height: 300px;
     object-fit: contain;
     border-radius: 8px;
     transition: transform 0.2s ease;

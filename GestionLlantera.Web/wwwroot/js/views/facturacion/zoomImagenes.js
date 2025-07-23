@@ -21,7 +21,7 @@ function abrirZoomImagen(urlImagen, nombreProducto) {
                         <img src="${urlImagen}" 
                              alt="${nombreProducto}" 
                              class="img-fluid" 
-                             style="max-height: 90vh; max-width: 90vw; object-fit: contain;">
+                             style="max-height: 95vh; max-width: 95vw; object-fit: contain; min-height: 70vh; min-width: 70vw;">
                     </div>
                 </div>
             </div>
