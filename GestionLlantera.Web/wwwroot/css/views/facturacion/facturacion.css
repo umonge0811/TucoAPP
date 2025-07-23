@@ -514,8 +514,9 @@ input[type=number] {
 #contenedorImagenesDetalles .carousel-control-next {
     width: 45px;
     height: 45px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: auto;
+    bottom: 50px;
+    transform: none;
     background-color: rgba(0, 0, 0, 0.8);
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.9);
@@ -529,15 +530,17 @@ input[type=number] {
     background-color: rgba(0, 0, 0, 0.95);
     border-color: white;
     opacity: 1;
-    transform: translateY(-50%) scale(1.1);
+    transform: scale(1.1);
 }
 
 #contenedorImagenesDetalles .carousel-control-prev {
-    left: 10px;
+    left: 50%;
+    margin-left: -65px;
 }
 
 #contenedorImagenesDetalles .carousel-control-next {
-    right: 10px;
+    right: 50%;
+    margin-right: -65px;
 }
 
 #contenedorImagenesDetalles .carousel-control-prev-icon,
@@ -547,7 +550,7 @@ input[type=number] {
 }
 
 #contenedorImagenesDetalles .carousel-indicators {
-    bottom: 5px;
+    bottom: 15px;
 }
 
 #contenedorImagenesDetalles .carousel-indicators [data-bs-target] {
