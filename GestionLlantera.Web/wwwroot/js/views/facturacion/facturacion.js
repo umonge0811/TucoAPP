@@ -5007,7 +5007,7 @@ async function cargarImagenesDetallesProducto(producto) {
  * @param {string} urlImagen - URL de la imagen a mostrar
  * @param {string} nombreProducto - Nombre del producto para el alt
  */
-function abrirZoomImagen(urlImagen, nombreProducto) {
+function abrirZoomImagen(urlImagen, nombreProducto = 'Imagen del producto') {
     console.log('🔍 === ABRIENDO ZOOM DE IMAGEN ===');
     console.log('🔍 URL:', urlImagen);
     console.log('🔍 Producto:', nombreProducto);
@@ -5019,9 +5019,9 @@ function abrirZoomImagen(urlImagen, nombreProducto) {
             <div class="modal fade" id="modalZoomImagen" tabindex="-1" aria-labelledby="modalZoomImagenLabel" aria-hidden="true">
                 <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content">
-                        <div class="modal-body position-relative">
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                            <img id="imagenZoom" src="" alt="" class="imagen-zoom">
+                        <div class="modal-body position-relative text-center p-0">
+                            <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Cerrar" style="z-index: 1050;"></button>
+                            <img id="imagenZoom" src="" alt="" class="img-fluid" style="max-height: 90vh; max-width: 100%; object-fit: contain;">
                         </div>
                     </div>
                 </div>
@@ -5042,6 +5042,9 @@ function abrirZoomImagen(urlImagen, nombreProducto) {
 
     console.log('✅ Modal de zoom mostrado');
 }
+
+// Exportar función globalmente para que esté disponible desde HTML onclick
+window.abrirZoomImagen = abrirZoomImagen;
 
 /**
  * Cerrar modal de zoom con tecla Escape
