@@ -65,22 +65,33 @@ function cargarImagenesDetallesProducto(producto) {
         return url.startsWith('/') ? `https://localhost:7273${url}` : `https://localhost:7273/${url}`;
     }
 
+    // Función para escapar caracteres especiales
+    function escaparTexto(texto) {
+        return texto.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
     // Generar HTML para las imágenes
     let htmlImagenes = '';
 
     if (imagenesArray.length === 1) {
         const urlCompleta = construirUrl(imagenesArray[0]);
+        const nombreEscapado = escaparTexto(producto.nombreProducto);
+        
         htmlImagenes = `
             <div class="text-center">
                 <img src="${urlCompleta}" 
                      class="img-fluid rounded mb-3" 
                      alt="${producto.nombreProducto}"
                      style="max-height: 300px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                     onclick="abrirZoomImagen('${urlCompleta}', '${producto.nombreProducto}')">
+                     data-url="${urlCompleta}" 
+                     data-nombre="${nombreEscapado}"
+                     onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))">
                 <br>
                 <button type="button" 
                         class="btn btn-primary btn-sm"
-                        onclick="abrirZoomImagen('${urlCompleta}', '${producto.nombreProducto}')">
+                        data-url="${urlCompleta}" 
+                        data-nombre="${nombreEscapado}"
+                        onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))">
                     <i class="bi bi-zoom-in me-1"></i>Ampliar
                 </button>
             </div>
@@ -92,6 +103,7 @@ function cargarImagenesDetallesProducto(producto) {
 
         imagenesArray.forEach((url, index) => {
             const urlCompleta = construirUrl(url);
+            const nombreEscapado = escaparTexto(producto.nombreProducto);
             const activa = index === 0 ? 'active' : '';
 
             indicators += `<button type="button" data-bs-target="#carruselProducto" data-bs-slide-to="${index}" class="${activa}"></button>`;
@@ -103,11 +115,15 @@ function cargarImagenesDetallesProducto(producto) {
                              class="img-fluid rounded" 
                              alt="${producto.nombreProducto}"
                              style="max-height: 300px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                             onclick="abrirZoomImagen('${urlCompleta}', '${producto.nombreProducto}')">
+                             data-url="${urlCompleta}" 
+                             data-nombre="${nombreEscapado}"
+                             onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))">
                         <br><br>
                         <button type="button" 
                                 class="btn btn-primary btn-sm"
-                                onclick="abrirZoomImagen('${urlCompleta}', '${producto.nombreProducto}')">
+                                data-url="${urlCompleta}" 
+                                data-nombre="${nombreEscapado}"
+                                onclick="window.abrirZoomImagen(this.getAttribute('data-url'), this.getAttribute('data-nombre'))">
                             <i class="bi bi-zoom-in me-1"></i>Ampliar
                         </button>
                     </div>
