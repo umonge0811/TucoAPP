@@ -9,7 +9,7 @@ function abrirZoomImagen(urlImagen, nombreProducto) {
     console.log('🔍 Producto:', nombreProducto);
 
     try {
-        // Verificar si el modal de zoom ya existe, si no, crearlo
+        // Verificar si el modal de zoom ya existe, si no, crearlo.
         let modalZoom = document.getElementById('modalZoomImagen');
         if (!modalZoom) {
             const modalHtml = `
