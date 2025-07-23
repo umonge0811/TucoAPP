@@ -456,7 +456,7 @@ function configurarEventosProductosInventario() {
         }
     });
     
-    // Botón ver detalle
+    // Botón ver detalle - Redirigir a DetalleProducto
     $('.btn-ver-detalle-inventario').off('click').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -465,15 +465,23 @@ function configurarEventosProductosInventario() {
             const productoJson = $(this).attr('data-producto');
             const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
             
-            if (typeof verDetalleProducto === 'function') {
-                verDetalleProducto(producto);
-            } else {
-                console.error('❌ Función verDetalleProducto no disponible');
-                mostrarToast('Error', 'No se pudo mostrar el detalle', 'danger');
+            const productoId = producto.productoId || producto.ProductoId;
+            
+            if (!productoId) {
+                console.error('❌ No se pudo obtener el ProductoId');
+                mostrarToast('Error', 'No se pudo identificar el producto', 'danger');
+                return;
             }
+            
+            const url = `/Inventario/DetalleProducto/${productoId}`;
+            console.log('🌐 Navegando desde inventario facturación a:', url);
+            
+            // Navegación directa a la vista de detalles
+            window.location.href = url;
+            
         } catch (error) {
-            console.error('❌ Error mostrando detalle desde inventario:', error);
-            mostrarToast('Error', 'No se pudo mostrar el detalle', 'danger');
+            console.error('❌ Error navegando a detalle desde inventario:', error);
+            mostrarToast('Error', 'No se pudo navegar al detalle del producto', 'danger');
         }
     });
 }
@@ -680,431 +688,11 @@ function construirUrlImagen(urlOriginal) {
     }
 }
 
-/**
- * ✅ FUNCIÓN: Cargar imágenes en modal de detalles de producto
- */
-async function cargarImagenesDetallesProducto(producto) {
-    try {
-        console.log('🖼️ === CARGANDO IMÁGENES EN MODAL DE DETALLES ===');
-        console.log('🖼️ Producto:', producto.nombreProducto);
-        console.log('🖼️ Datos del producto:', producto);
 
-        const contenedor = $('#contenedorImagenesDetalles');
-        
-        // Mostrar loading inicial
-        contenedor.html(`
-            <div class="text-center text-muted">
-                <div class="spinner-border spinner-border-sm me-2" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-                Cargando imágenes...
-            </div>
-        `);
 
-        let imagenesArray = [];
 
-        // Usar la misma lógica que en otros modales para obtener imágenes
-        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-            imagenesArray = producto.imagenesProductos
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-            imagenesArray = producto.imagenes
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-        }
 
-        console.log('🖼️ Imágenes encontradas:', imagenesArray.length);
 
-        if (imagenesArray.length === 0) {
-            // No hay imágenes
-            contenedor.html(`
-                <div class="sin-imagenes">
-                    <i class="bi bi-image-fill"></i>
-                    <span>No hay imágenes disponibles</span>
-                </div>
-            `);
-            return;
-        }
-
-        if (imagenesArray.length === 1) {
-            // Una sola imagen
-            const urlImagen = construirUrlImagen(imagenesArray[0]);
-            contenedor.html(`
-                <img src="${urlImagen}" 
-                     class="imagen-producto-detalle" 
-                     alt="${producto.nombreProducto}"
-                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
-            `);
-        } else {
-            // Múltiples imágenes - crear carrusel
-            const carruselId = 'carruselImagenesDetalles';
-            let htmlCarrusel = `
-                <div id="${carruselId}" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-            `;
-
-            imagenesArray.forEach((url, index) => {
-                const urlImagen = construirUrlImagen(url);
-                const activa = index === 0 ? 'active' : '';
-                htmlCarrusel += `
-                    <div class="carousel-item ${activa}">
-                        <img src="${urlImagen}" 
-                             class="imagen-producto-detalle" 
-                             alt="${producto.nombreProducto}"
-                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
-                    </div>
-                `;
-            });
-
-            htmlCarrusel += `
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
-                    </button>
-                    <div class="carousel-indicators">
-            `;
-
-            imagenesArray.forEach((_, index) => {
-                const activa = index === 0 ? 'active' : '';
-                htmlCarrusel += `
-                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" ${activa ? 'class="active" aria-current="true"' : ''}></button>
-                `;
-            });
-
-            htmlCarrusel += `
-                    </div>
-                </div>
-            `;
-
-            contenedor.html(htmlCarrusel);
-        }
-
-        console.log('✅ Imágenes cargadas exitosamente en modal de detalles');
-
-    } catch (error) {
-        console.error('❌ Error cargando imágenes en modal de detalles:', error);
-        $('#contenedorImagenesDetalles').html(`
-            <div class="sin-imagenes">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>Error cargando imágenes</span>
-            </div>
-        `);
-    }
-}
-
-/**
- * Mostrar detalles del producto en modal mejorado con carrusel de imágenes
- * Versión completa adaptada para el contexto de facturación
- */
-function verDetalleProducto(producto) {
-    console.log('👁️ === MOSTRANDO DETALLE PRODUCTO ===');
-    console.log('👁️ Producto:', producto);
-
-    try {
-        // Mapear propiedades del producto
-        const nombreProducto = producto.nombreProducto || producto.NombreProducto || 'Producto sin nombre';
-        const productoId = producto.productoId || producto.ProductoId || 0;
-        const precio = producto.precio || producto.Precio || 0;
-        const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
-        const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
-        const descripcion = producto.descripcion || producto.Descripcion || '';
-
-        // Determinar si es llanta y extraer medidas
-        let esLlanta = false;
-        let infoLlanta = null;
-        
-        try {
-            if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
-                esLlanta = true;
-                const llantaInfo = producto.llanta || producto.Llanta[0];
-                
-                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
-                    let medidaCompleta = '';
-                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
-                        medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
-                    } else {
-                        medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
-                    }
-                    
-                    infoLlanta = {
-                        medida: medidaCompleta,
-                        marca: llantaInfo.marca || 'N/A',
-                        modelo: llantaInfo.modelo || 'N/A',
-                        ancho: llantaInfo.ancho || 'N/A',
-                        perfil: llantaInfo.perfil || 'N/A',
-                        diametro: llantaInfo.diametro || 'N/A',
-                        indiceVelocidad: llantaInfo.indiceVelocidad || 'N/A',
-                        capas: llantaInfo.capas || 'N/A',
-                        tipoTerreno: llantaInfo.tipoTerreno || 'N/A'
-                    };
-                }
-            }
-        } catch (error) {
-            console.warn('⚠️ Error procesando información de llanta para detalle:', error);
-        }
-
-        // Calcular precios por método de pago usando CONFIGURACION_PRECIOS del archivo principal
-        let preciosHtml = '';
-        if (typeof CONFIGURACION_PRECIOS !== 'undefined') {
-            preciosHtml = Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
-                const precioCalculado = precio * config.multiplicador;
-                return `
-                    <tr>
-                        <td>
-                            <i class="bi ${config.icono} me-2"></i>
-                            ${config.nombre}
-                            ${metodo === 'tarjeta' ? '<span class="text-muted">(+5%)</span>' : ''}
-                        </td>
-                        <td class="text-end fw-bold">₡${formatearMoneda(precioCalculado)}</td>
-                    </tr>
-                `;
-            }).join('');
-        } else {
-            // Fallback básico
-            const precioEfectivo = precio;
-            const precioTarjeta = precio * 1.05;
-            preciosHtml = `
-                <tr>
-                    <td><i class="bi bi-cash me-2"></i>Efectivo/SINPE</td>
-                    <td class="text-end fw-bold text-success">₡${formatearMoneda(precioEfectivo)}</td>
-                </tr>
-                <tr>
-                    <td><i class="bi bi-credit-card me-2"></i>Tarjeta <span class="text-muted">(+5%)</span></td>
-                    <td class="text-end fw-bold text-warning">₡${formatearMoneda(precioTarjeta)}</td>
-                </tr>
-            `;
-        }
-
-        // Construir HTML del modal con sección de imágenes
-        const modalHtml = `
-            <div class="modal fade" id="modalDetalleProductoInventario" tabindex="-1" aria-labelledby="modalDetalleProductoInventarioLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header bg-info text-white">
-                            <h5 class="modal-title" id="modalDetalleProductoInventarioLabel">
-                                <i class="bi bi-info-circle me-2"></i>Detalle del Producto
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row">
-                                <!-- Sección de imágenes -->
-                                <div class="col-md-5 mb-3">
-                                    <h6 class="text-primary mb-3">
-                                        <i class="bi bi-images me-2"></i>Imágenes del Producto
-                                    </h6>
-                                    <div id="contenedorImagenesDetalles">
-                                        <div class="text-center text-muted">
-                                            <div class="spinner-border spinner-border-sm me-2" role="status">
-                                                <span class="visually-hidden">Cargando...</span>
-                                            </div>
-                                            Cargando imágenes...
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Información del producto -->
-                                <div class="col-md-7 mb-3">
-                                    <div class="card">
-                                        <div class="card-header bg-light">
-                                            <h6 class="mb-0">
-                                                <i class="bi bi-box-seam me-2"></i>${nombreProducto}
-                                                <small class="text-muted ms-2">ID: ${productoId}</small>
-                                            </h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <!-- Precios -->
-                                            <div class="mb-3">
-                                                <h6 class="text-primary">💰 Precios por método de pago</h6>
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-striped">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Método de Pago</th>
-                                                                <th class="text-end">Precio</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            ${preciosHtml}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Inventario -->
-                                            <div class="mb-3">
-                                                <h6 class="text-primary">📦 Información de Stock</h6>
-                                                <div class="alert ${cantidadInventario <= 0 ? 'alert-danger' : 
-                                                    cantidadInventario <= stockMinimo ? 'alert-warning' : 'alert-success'}">
-                                                    <div class="row text-center">
-                                                        <div class="col-4">
-                                                            <i class="bi bi-box-seam display-6"></i>
-                                                            <h5 class="mt-2">${cantidadInventario}</h5>
-                                                            <small>Stock Actual</small>
-                                                        </div>
-                                                        <div class="col-4">
-                                                            <i class="bi bi-exclamation-triangle display-6"></i>
-                                                            <h5 class="mt-2">${stockMinimo}</h5>
-                                                            <small>Stock Mínimo</small>
-                                                        </div>
-                                                        <div class="col-4">
-                                                            <i class="bi bi-check-circle display-6"></i>
-                                                            <h5 class="mt-2">
-                                                                ${cantidadInventario <= 0 ? 
-                                                                    '<span class="badge bg-danger">Sin Stock</span>' :
-                                                                    cantidadInventario <= stockMinimo ?
-                                                                        '<span class="badge bg-warning text-dark">Stock Bajo</span>' :
-                                                                        '<span class="badge bg-success">Disponible</span>'
-                                                                }
-                                                            </h5>
-                                                            <small>Estado</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Descripción -->
-                            ${descripcion ? `
-                                <div class="row">
-                                    <div class="col-12 mb-3">
-                                        <h6 class="text-primary">📝 Descripción</h6>
-                                        <p class="text-muted">${descripcion}</p>
-                                    </div>
-                                </div>
-                            ` : ''}
-                            
-                            <!-- Información de llanta -->
-                            ${esLlanta && infoLlanta ? `
-                                <div class="row">
-                                    <div class="col-12 mb-3">
-                                        <h6 class="text-primary">
-                                            <i class="bi bi-circle me-2"></i>Especificaciones de Llanta
-                                        </h6>
-                                        <div class="card bg-light">
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-md-6">
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-borderless mb-0">
-                                                                <tbody>
-                                                                    <tr>
-                                                                        <td><strong>Medida:</strong></td>
-                                                                        <td class="text-primary fw-bold">${infoLlanta.medida}</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><strong>Marca:</strong></td>
-                                                                        <td>${infoLlanta.marca}</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><strong>Modelo:</strong></td>
-                                                                        <td>${infoLlanta.modelo}</td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-borderless mb-0">
-                                                                <tbody>
-                                                                    <tr>
-                                                                        <td><strong>Índice Velocidad:</strong></td>
-                                                                        <td>${infoLlanta.indiceVelocidad}</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><strong>Capas:</strong></td>
-                                                                        <td>${infoLlanta.capas}</td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td><strong>Tipo Terreno:</strong></td>
-                                                                        <td>${infoLlanta.tipoTerreno}</td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-1"></i>Cerrar
-                            </button>
-                            ${cantidadInventario > 0 ? `
-                                <button type="button" class="btn btn-primary" onclick="agregarProductoDesdeDetalle('${JSON.stringify(producto).replace(/'/g, "\\'")}')">
-                                    <i class="bi bi-cart-plus me-1"></i>Agregar al Carrito
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Remover modal anterior si existe
-        $('#modalDetalleProductoInventario').remove();
-
-        // Agregar nuevo modal al body
-        $('body').append(modalHtml);
-
-        // Mostrar el modal
-        const modal = new bootstrap.Modal(document.getElementById('modalDetalleProductoInventario'));
-        modal.show();
-
-        // Cargar imágenes después de mostrar el modal
-        cargarImagenesDetallesProducto(producto);
-
-        console.log('✅ Modal de detalle mostrado correctamente con carrusel de imágenes');
-
-    } catch (error) {
-        console.error('❌ Error mostrando detalle del producto:', error);
-        mostrarToast('Error', 'No se pudo mostrar el detalle del producto', 'danger');
-    }
-}
-
-/**
- * Agregar producto al carrito desde el modal de detalle
- */
-function agregarProductoDesdeDetalle(productoJson) {
-    try {
-        console.log('🛒 Agregando producto desde detalle...');
-        
-        const producto = typeof productoJson === 'string' ? JSON.parse(productoJson) : productoJson;
-        
-        // Cerrar modal de detalle
-        $('#modalDetalleProductoInventario').modal('hide');
-        
-        // Mostrar modal de selección de producto después de un pequeño delay
-        setTimeout(() => {
-            if (typeof mostrarModalSeleccionProducto === 'function') {
-                mostrarModalSeleccionProducto(producto);
-            } else {
-                console.error('❌ Función mostrarModalSeleccionProducto no disponible');
-                mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
-            }
-        }, 300);
-        
-    } catch (error) {
-        console.error('❌ Error agregando producto desde detalle:', error);
-        mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
-    }
-}
 
 /**
  * Función auxiliar para mostrar toast
@@ -1123,8 +711,6 @@ window.inicializarModalInventario = inicializarModalInventario;
 window.consultarInventario = consultarInventario;
 window.cargarInventarioCompleto = cargarInventarioCompleto;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
-window.verDetalleProducto = verDetalleProducto;
-window.agregarProductoDesdeDetalle = agregarProductoDesdeDetalle;
 
 console.log('📦 Módulo InventarioFacturacion.js cargado correctamente');
 
