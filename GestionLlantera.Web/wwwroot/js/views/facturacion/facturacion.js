@@ -4736,57 +4736,6 @@ function cerrarToastModerno(toastId) {
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
-    // Validación robusta para imágenes con URL de la API (lógica consistente)
-    let imagenUrl = '/images/no-image.png';
-    try {
-        console.log('🖼️ Procesando imágenes para detalle de producto:', producto.nombreProducto);
-        console.log('🖼️ Datos del producto completos:', producto);
-
-        let imagenesArray = [];
-
-        // Usar múltiples fuentes de imágenes como fallback
-        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-            imagenesArray = producto.imagenesProductos
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
-        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-            imagenesArray = producto.imagenes
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
-        }
-
-        if (imagenesArray.length > 0) {
-            let urlImagen = imagenesArray[0];
-            console.log('🖼️ URL original en detalle:', urlImagen);
-
-            if (urlImagen && urlImagen.trim() !== '') {
-                // Construir URL correcta para el servidor API (puerto 7273 HTTPS)
-                if (urlImagen.startsWith('/uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else if (urlImagen.startsWith('uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
-                    imagenUrl = urlImagen; // URL completa
-                } else if (urlImagen.startsWith('/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                }
-                console.log('🖼️ URL final en detalle:', imagenUrl);
-            }
-        } else {
-            console.log('🖼️ No se encontraron imágenes válidas para detalle');
-        }
-    } catch (error) {
-        console.warn('⚠️ Error procesando imágenes en detalle del producto:', error);
-        imagenUrl = '/images/no-image.png';
-    }
-
     const modalHtml = `
         <div class="modal fade" id="modalDetalleProducto" tabindex="-1">
             <div class="modal-dialog modal-lg">
@@ -4800,15 +4749,12 @@ function verDetalleProducto(producto) {
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <img src="${imagenUrl}" 
-                                     class="img-fluid rounded shadow-sm" 
-                                     alt="${producto.nombreProducto}"
-                                     onerror="this.onerror=null; this.src='/images/no-image.png';"">
+                                <div id="contenedorImagenesDetalles"></div>
 
                                 <!-- Información de stock -->
                                 <div class="mt-3">
-                                    <div class="alert ${producto.cantidadEnInventario <= 0 ? 'alert-danger' : 
-                                        producto.cantidadEnInventario <= producto.stockMinimo ? 'alert-warning' : 'alert-success'}">
+                                    <div class="alert ${producto.cantidadEnInventario <= 0 ? 'alert-danger' :
+            producto.cantidadEnInventario <= producto.stockMinimo ? 'alert-warning' : 'alert-success'}">
                                         <div class="text-center">
                                             <i class="bi bi-box-seam display-6"></i>
                                             <h5 class="mt-2">Stock: ${producto.cantidadEnInventario}</h5>
@@ -4840,8 +4786,8 @@ function verDetalleProducto(producto) {
                                             </thead>
                                             <tbody>
                                                 ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
-                                                    const precio = (producto.precio || 0) * config.multiplicador;
-                                                    return `
+                const precio = (producto.precio || 0) * config.multiplicador;
+                return `
                                                         <tr>
                                                             <td>
                                                                 <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : 'cash'} me-2"></i>
@@ -4851,7 +4797,7 @@ function verDetalleProducto(producto) {
                                                             <td class="text-end fw-bold">₡${formatearMoneda(precio)}</td>
                                                         </tr>
                                                     `;
-                                                }).join('')}
+            }).join('')}
                                             </tbody>
                                         </table>
                                     </div>
@@ -4885,9 +4831,9 @@ function verDetalleProducto(producto) {
                                 <!-- Información del sistema -->
                                 <div class="text-muted small">
                                     <p class="mb-1"><strong>ID:</strong> ${producto.productoId}</p>
-                                    ${producto.fechaUltimaActualizacion ? 
-                                        `<p class="mb-0"><strong>Última actualización:</strong> ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}</p>` 
-                                        : ''}
+                                    ${producto.fechaUltimaActualizacion ?
+            `<p class="mb-0"><strong>Última actualización:</strong> ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}</p>`
+            : ''}
                                 </div>
                             </div>
                         </div>
@@ -4912,155 +4858,16 @@ function verDetalleProducto(producto) {
     $('body').append(modalHtml);
 
     const modal = new bootstrap.Modal(document.getElementById('modalDetalleProducto'));
-    cargarImagenesDetallesProducto(producto);
     modal.show();
-}
 
-/**
- * ✅ FUNCIÓN: Cargar imágenes en modal de detalles de producto
- */
-async function cargarImagenesDetallesProducto(producto) {
-    try {
-        console.log('🖼️ === CARGANDO IMÁGENES EN MODAL DE DETALLES ===');
-        console.log('🖼️ Producto:', producto.nombreProducto);
-        console.log('🖼️ Datos del producto:', producto);
-
-        const contenedor = $('#contenedorImagenesDetalles');
-        
-        // Mostrar loading inicial
-        contenedor.html(`
-            <div class="text-center text-muted">
-                <div class="spinner-border spinner-border-sm me-2" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-                Cargando imágenes...
-            </div>
-        `);
-
-        let imagenesArray = [];
-
-        // Usar la misma lógica que en otros modales para obtener imágenes
-        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-            imagenesArray = producto.imagenesProductos
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-            imagenesArray = producto.imagenes
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-        }
-
-        console.log('🖼️ Imágenes encontradas:', imagenesArray.length);
-
-        if (imagenesArray.length === 0) {
-            // No hay imágenes
-            contenedor.html(`
-                <div class="sin-imagenes">
-                    <i class="bi bi-image-fill"></i>
-                    <span>No hay imágenes disponibles</span>
-                </div>
-            `);
-            return;
-        }
-
-        if (imagenesArray.length === 1) {
-            // Una sola imagen
-            const urlImagen = construirUrlImagen(imagenesArray[0]);
-            contenedor.html(`
-                <img src="${urlImagen}" 
-                     class="imagen-producto-detalle" 
-                     alt="${producto.nombreProducto}"
-                     onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
-            `);
+    // Cargar imágenes después de mostrar el modal usando la función del módulo zoomImagenes.js
+    setTimeout(() => {
+        if (typeof window.cargarImagenesDetallesProducto === 'function') {
+            window.cargarImagenesDetallesProducto(producto);
         } else {
-            // Múltiples imágenes - crear carrusel
-            const carruselId = 'carruselImagenesDetalles';
-            let htmlCarrusel = `
-                <div id="${carruselId}" class="carousel slide" data-bs-ride="carousel">
-                    <div class="carousel-inner">
-            `;
-
-            imagenesArray.forEach((url, index) => {
-                const urlImagen = construirUrlImagen(url);
-                const activa = index === 0 ? 'active' : '';
-                htmlCarrusel += `
-                    <div class="carousel-item ${activa}">
-                        <img src="${urlImagen}" 
-                             class="imagen-producto-detalle" 
-                             alt="${producto.nombreProducto}"
-                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
-                    </div>
-                `;
-            });
-
-            htmlCarrusel += `
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
-                    </button>
-                    <div class="carousel-indicators">
-            `;
-
-            imagenesArray.forEach((_, index) => {
-                const activa = index === 0 ? 'active' : '';
-                htmlCarrusel += `
-                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" ${activa ? 'class="active" aria-current="true"' : ''}></button>
-                `;
-            });
-
-            htmlCarrusel += `
-                    </div>
-                </div>
-            `;
-
-            contenedor.html(htmlCarrusel);
+            console.error('❌ Función cargarImagenesDetallesProducto no disponible desde zoomImagenes.js');
         }
-
-        console.log('✅ Imágenes cargadas exitosamente en modal de detalles');
-
-    } catch (error) {
-        console.error('❌ Error cargando imágenes en modal de detalles:', error);
-        $('#contenedorImagenesDetalles').html(`
-            <div class="sin-imagenes">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>Error cargando imágenes</span>
-            </div>
-        `);
-    }
-}
-
-/**
- * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
- */
-function construirUrlImagen(urlOriginal) {
-    if (!urlOriginal || urlOriginal.trim() === '') {
-        return '/images/no-image.png';
-    }
-
-    const url = urlOriginal.trim();
-
-    // Si ya es una URL completa, usarla directamente
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-        return url;
-    }
-
-    // Construir URL para el servidor API
-    if (url.startsWith('/uploads/productos/')) {
-        return `https://localhost:7273${url}`;
-    } else if (url.startsWith('uploads/productos/')) {
-        return `https://localhost:7273/${url}`;
-    } else if (url.startsWith('/')) {
-        return `https://localhost:7273${url}`;
-    } else {
-        return `https://localhost:7273/${url}`;
-    }
+    }, 100);
 }
 
 // ===== GESTIÓN DE CLIENTES =====
@@ -7312,7 +7119,7 @@ async function cargarImagenesDetallesProducto(producto) {
         console.log('🖼️ Datos del producto:', producto);
 
         const contenedor = $('#contenedorImagenesDetalles');
-        
+
         // Mostrar loading inicial
         contenedor.html(`
             <div class="text-center text-muted">
@@ -7358,6 +7165,8 @@ async function cargarImagenesDetallesProducto(producto) {
                 <img src="${urlImagen}" 
                      class="imagen-producto-detalle" 
                      alt="${producto.nombreProducto}"
+                     style="cursor: pointer;"
+                     onclick="abrirImagenEnModal(this.src, '${producto.nombreProducto}')"
                      onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
             `);
         } else {
@@ -7376,7 +7185,13 @@ async function cargarImagenesDetallesProducto(producto) {
                         <img src="${urlImagen}" 
                              class="imagen-producto-detalle" 
                              alt="${producto.nombreProducto}"
-                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
+                             style="cursor: pointer;"
+                             onclick="abrirImagenEnModal(this.src, '${producto.nombreProducto}')"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="imagen-error" style="display:none;">
+                            <i class="bi bi-image-fill"></i>
+                            <span>Error cargando imagen</span>
+                        </div>
                     </div>
                 `;
             });
@@ -7384,43 +7199,64 @@ async function cargarImagenesDetallesProducto(producto) {
             htmlCarrusel += `
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
+                        <span class="carousel-control-prev-icon"></span>
                     </button>
                     <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
+                        <span class="carousel-control-next-icon"></span>
                     </button>
-                    <div class="carousel-indicators">
-            `;
-
-            imagenesArray.forEach((_, index) => {
-                const activa = index === 0 ? 'active' : '';
-                htmlCarrusel += `
-                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" ${activa ? 'class="active" aria-current="true"' : ''}></button>
-                `;
-            });
-
-            htmlCarrusel += `
-                    </div>
                 </div>
             `;
 
             contenedor.html(htmlCarrusel);
         }
 
-        console.log('✅ Imágenes cargadas exitosamente en modal de detalles');
-
     } catch (error) {
-        console.error('❌ Error cargando imágenes en modal de detalles:', error);
+        console.error('❌ Error cargando imágenes:', error);
         $('#contenedorImagenesDetalles').html(`
             <div class="sin-imagenes">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>Error cargando imágenes</span>
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Error al cargar imágenes</span>
             </div>
         `);
     }
 }
+
+/**
+ * ✅ FUNCIÓN: Abrir imagen en modal de zoom
+ */
+function abrirImagenEnModal(imagenUrl, nombreProducto) {
+    console.log('🔍 Abriendo imagen en modal:', imagenUrl);
+
+    const modalHtml = `
+        <div class="modal fade" id="modalImagenZoom" tabindex="-1" style="z-index: 9999;">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header border-0">
+                        <h6 class="modal-title text-white">${nombreProducto}</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-0">
+                        <img src="${imagenUrl}" 
+                             class="img-fluid" 
+                             alt="${nombreProducto}"
+                             style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalImagenZoom').remove();
+
+    // Agregar nuevo modal al DOM
+    $('body').append(modalHtml);
+
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalImagenZoom'));
+    modal.show();
+}
+
 
 /**
  * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
