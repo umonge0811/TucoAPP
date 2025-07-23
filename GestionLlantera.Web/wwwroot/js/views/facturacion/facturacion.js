@@ -33,8 +33,6 @@ const CONFIGURACION_PRECIOS = {
     transferencia: { multiplicador: 1.0, nombre: 'Transferencia', icono: 'bi-bank' },
     sinpe: { multiplicador: 1.0, nombre: 'SINPE Móvil', icono: 'bi-phone' },
     tarjeta: { multiplicador: 1.05, nombre: 'Tarjeta', icono: 'bi-credit-card' }, // 5% adicional para tarjeta
-    multiple: { multiplicador: 1.0, nombre: 'Múltiple', icono: 'bi-credit-card-2-front' },
-    'Múltiple': { multiplicador: 1.0, nombre: 'Múltiple', icono: 'bi-credit-card-2-front' } // Soporte para mayúscula desde servidor
 };
 
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
