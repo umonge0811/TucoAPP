@@ -529,17 +529,15 @@ input[type=number] {
     background-color: rgba(0, 0, 0, 0.95);
     border-color: white;
     opacity: 1;
-    transform: scale(1.1);
+    transform: translateY(-50%) scale(1.1);
 }
 
 #contenedorImagenesDetalles .carousel-control-prev {
-    left: 20%;
-    transform: translateX(-50%);
+    left: 10px;
 }
 
 #contenedorImagenesDetalles .carousel-control-next {
-    right: 20%;
-    transform: translateX(50%);
+    right: 10px;
 }
 
 #contenedorImagenesDetalles .carousel-control-prev-icon,
