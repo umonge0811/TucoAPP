@@ -512,13 +512,24 @@ input[type=number] {
 
 #contenedorImagenesDetalles .carousel-control-prev,
 #contenedorImagenesDetalles .carousel-control-next {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     top: 50%;
     transform: translateY(-50%);
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.8);
     border-radius: 50%;
-    border: none;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+#contenedorImagenesDetalles .carousel-control-prev:hover,
+#contenedorImagenesDetalles .carousel-control-next:hover {
+    background-color: rgba(0, 0, 0, 0.95);
+    border-color: white;
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
 }
 
 #contenedorImagenesDetalles .carousel-control-prev {
@@ -527,6 +538,12 @@ input[type=number] {
 
 #contenedorImagenesDetalles .carousel-control-next {
     right: 10px;
+}
+
+#contenedorImagenesDetalles .carousel-control-prev-icon,
+#contenedorImagenesDetalles .carousel-control-next-icon {
+    background-size: 20px 20px;
+    filter: brightness(0) invert(1);
 }
 
 #contenedorImagenesDetalles .carousel-indicators {
