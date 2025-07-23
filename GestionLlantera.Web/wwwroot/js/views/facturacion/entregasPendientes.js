@@ -72,7 +72,7 @@ function configurarEventos() {
         if (cantidad < 1) {
             $(this).val(1);
         }
-        
+
         // ✅ ACTUALIZAR ESTADO DEL BOTÓN SEGÚN DISPONIBILIDAD
         const btnConfirmar = $('#btnConfirmarEntrega');
         if (cantidad > 0 && cantidad <= max) {
@@ -162,7 +162,7 @@ async function cargarPendientes() {
         // Aplicar filtros si hay alguno activo, sino mostrar todos
         const hayFiltrosActivos = $('#filtroEstado').val() || $('#filtroCodigo').val() || 
                                  $('#filtroFechaDesde').val() || $('#filtroFechaHasta').val();
-        
+
         if (hayFiltrosActivos) {
             aplicarFiltros();
         } else {
@@ -348,12 +348,12 @@ function crearFilaPendiente(pendiente) {
 
     // Usar directamente el código de seguimiento de la base de datos
     const codigoSeguimiento = pendiente.codigoSeguimiento || 'Sin código';
-    
+
     // ✅ VALIDAR STOCK DISPONIBLE
     const stockActual = pendiente.stockActual || 0;
     const cantidadPendiente = pendiente.cantidadPendiente || 0;
     const stockSuficiente = stockActual >= cantidadPendiente;
-    
+
     // Determinar clase CSS para el stock
     const stockClass = stockSuficiente ? 'bg-success' : 'bg-danger';
     const stockTitle = stockSuficiente ? 'Stock suficiente' : 'Stock insuficiente para completar la entrega';
@@ -419,7 +419,7 @@ function abrirModalEntrega(pendienteId) {
     // ✅ VALIDAR STOCK ANTES DE ABRIR MODAL
     const stockActual = pendiente.stockActual || 0;
     const cantidadPendiente = pendiente.cantidadPendiente || 0;
-    
+
     if (stockActual < cantidadPendiente) {
         mostrarError(`❌ STOCK INSUFICIENTE: El producto "${pendiente.nombreProducto}" tiene ${stockActual} unidades disponibles, pero se requieren ${cantidadPendiente} unidades para completar la entrega.`);
         return;
@@ -456,7 +456,7 @@ async function confirmarEntrega() {
             return;
         }
 
-       
+
 
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
@@ -487,10 +487,10 @@ async function confirmarEntrega() {
 
         console.log('🌐 Respuesta HTTP status:', response.status);
         console.log('🌐 Respuesta HTTP headers:', response.headers);
-        
+
         const textoRespuesta = await response.text();
         console.log('🌐 Respuesta como texto:', textoRespuesta);
-        
+
         let resultado;
         try {
             resultado = JSON.parse(textoRespuesta);
@@ -543,7 +543,11 @@ function verDetalles(pendienteId) {
     const contenido = generarContenidoDetalles(pendiente);
     $('#detallesPendienteContent').html(contenido);
 
-    modalDetallesPendiente.show();
+    if (modalDetallesPendiente) {
+        modalDetallesPendiente.show();
+    } else {
+        mostrarError('Modal de detalles no está disponible');
+    }
 }
 
 function generarContenidoDetalles(pendiente) {
@@ -651,7 +655,7 @@ function aplicarFiltros() {
         if (filtroCodigo) {
             const codigo = (pendiente.codigoSeguimiento || '').toLowerCase();
             const numeroFactura = (pendiente.numeroFactura || '').toLowerCase();
-            
+
             // Buscar en código de seguimiento o número de factura
             if (!codigo.includes(filtroCodigo) && !numeroFactura.includes(filtroCodigo)) {
                 return false;
@@ -681,10 +685,10 @@ function aplicarFiltros() {
     });
 
     console.log(`🔍 Filtros aplicados: ${pendientesFiltrados.length} de ${pendientesData.length} pendientes mostrados`);
-    
+
     // Mostrar resultados filtrados
     mostrarPendientes(pendientesFiltrados);
-    
+
     // Actualizar contador de resultados
     actualizarContadorResultados(pendientesFiltrados.length, pendientesData.length);
 }
@@ -753,12 +757,12 @@ function obtenerUsuarioActual() {
 
 function resaltarTerminoBusqueda(termino) {
     if (!termino) return;
-    
+
     const regex = new RegExp(`(${termino.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    
+
     $('#bodyPendientes tr').each(function() {
         const $fila = $(this);
-        
+
         // Resaltar en código de seguimiento y número de factura
         $fila.find('td:first-child code, td:nth-child(2) strong').each(function() {
             const $elemento = $(this);
