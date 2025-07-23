@@ -32,7 +32,7 @@ const CONFIGURACION_PRECIOS = {
     efectivo: { multiplicador: 1.0, nombre: 'Efectivo', icono: 'bi-cash' },
     transferencia: { multiplicador: 1.0, nombre: 'Transferencia', icono: 'bi-bank' },
     sinpe: { multiplicador: 1.0, nombre: 'SINPE Móvil', icono: 'bi-phone' },
-    tarjeta: { multiplicador: 1.05, nombre: 'Tarjeta', icono: 'bi-credit-card' }, // 5% adicional para tarjeta
+    tarjeta: { multiplicador: 1.09, nombre: 'Tarjeta', icono: 'bi-credit-card' }, // 8% adicional para tarjeta
 };
 
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
