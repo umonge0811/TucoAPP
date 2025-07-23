@@ -250,18 +250,24 @@ function mostrarProductosInventario(productos) {
             stockBadge = '<span class="badge bg-success">Disponible</span>';
         }
 
-        // OBJETO PRODUCTO LIMPIO CON IMÁGENES
+        // OBJETO PRODUCTO LIMPIO CON IMÁGENES COMPLETAS (EXACTAMENTE IGUAL QUE EN FACTURACION.JS)
         const productoLimpio = {
             productoId: productoId,
             nombreProducto: nombreProducto,
             precio: precio,
             cantidadEnInventario: cantidadInventario,
             stockMinimo: stockMinimo,
-            descripcion: descripcion,
-            // ✅ AGREGAR PROPIEDADES DE IMÁGENES PARA EL MODAL DE DETALLES
+            // ✅ INCLUIR TODAS LAS PROPIEDADES DE IMÁGENES IGUAL QUE EN FACTURACION.JS
             imagenesProductos: producto.imagenesProductos || [],
             imagenesUrls: producto.imagenesUrls || [],
-            imagenes: producto.imagenes || []
+            imagenes: producto.imagenes || [],
+            descripcion: descripcion,
+            esLlanta: esLlanta || false,
+            marca: producto.marca || null,
+            modelo: producto.modelo || null,
+            medidaCompleta: medidaLlanta || null,
+            // ✅ AGREGAR INFORMACIÓN DE LLANTA SI EXISTE
+            llanta: producto.llanta || (producto.Llanta && producto.Llanta.length > 0 ? producto.Llanta[0] : null)
         };
 
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
