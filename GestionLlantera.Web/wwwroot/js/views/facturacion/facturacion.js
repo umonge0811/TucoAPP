@@ -5043,7 +5043,7 @@ function abrirZoomImagen(urlImagen, nombreProducto = 'Imagen del producto') {
     console.log('✅ Modal de zoom mostrado');
 }
 
-// Exportar función globalmente para que esté disponible desde HTML onclick
+// Exportar función globalmente para que esté disponible desde HTML onclick,
 window.abrirZoomImagen = abrirZoomImagen;
 
 /**
