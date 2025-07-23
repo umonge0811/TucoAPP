@@ -222,6 +222,7 @@ if (typeof window !== 'undefined') {
     window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
     
     console.log('📋 Funciones de proformas y detalles exportadas globalmente');
+    console.log('📋 verDetalleProducto exportada:', typeof window.verDetalleProducto);
 }
 
 // ===== INICIALIZACIÓN =====

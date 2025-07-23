@@ -698,7 +698,7 @@ function construirUrlImagen(urlOriginal) {
 
 
 
-// Función verDetalleProducto se usa la de facturacion.js principal
+// ✅ NO NECESITAMOS FUNCIÓN DUPLICADA - SE USA LA DE FACTURACION.JS PRINCIPAL
 
 /**
  * Función auxiliar para mostrar toast
@@ -717,5 +717,12 @@ window.inicializarModalInventario = inicializarModalInventario;
 window.consultarInventario = consultarInventario;
 window.cargarInventarioCompleto = cargarInventarioCompleto;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
+
+// ✅ VERIFICAR QUE verDetalleProducto ESTÉ DISPONIBLE DESDE FACTURACION.JS
+if (typeof window.verDetalleProducto !== 'function') {
+    console.warn('⚠️ verDetalleProducto no está disponible desde facturacion.js');
+} else {
+    console.log('✅ verDetalleProducto disponible desde facturacion.js');
+}
 
 console.log('📦 Módulo InventarioFacturacion.js cargado correctamente');
