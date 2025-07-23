@@ -4731,6 +4731,29 @@ function cerrarToastModerno(toastId) {
     }
 }
 
+// ===== FUNCIÓN AUXILIAR PARA CONSTRUIR URLs DE IMÁGENES =====
+function construirUrlImagen(urlImagen) {
+    if (!urlImagen || urlImagen.trim() === '') {
+        return '/images/no-image.png';
+    }
+
+    // Si ya es una URL completa, usarla directamente
+    if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
+        return urlImagen;
+    }
+
+    // Si es una ruta relativa, construir URL completa
+    if (urlImagen.startsWith('/uploads/productos/')) {
+        return `https://localhost:7273${urlImagen}`;
+    } else if (urlImagen.startsWith('uploads/productos/')) {
+        return `https://localhost:7273/${urlImagen}`;
+    } else if (urlImagen.startsWith('/')) {
+        return `https://localhost:7273${urlImagen}`;
+    } else {
+        return `https://localhost:7273/${urlImagen}`;
+    }
+}
+
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
@@ -4862,8 +4885,34 @@ function verDetalleProducto(producto) {
     setTimeout(() => {
         if (typeof window.cargarImagenesDetallesProducto === 'function') {
             window.cargarImagenesDetallesProducto(producto);
+        } else if (typeof cargarImagenesDetallesProducto === 'function') {
+            cargarImagenesDetallesProducto(producto);
         } else {
-            console.error('❌ Función cargarImagenesDetallesProducto no disponible desde zoomImagenes.js');
+            console.error('❌ Función cargarImagenesDetallesProducto no disponible');
+            // Cargar imagen básica como fallback
+            const contenedor = $('#contenedorImagenesDetalles');
+            let imagenUrl = '/images/no-image.png';
+            
+            // Intentar obtener al menos una imagen
+            if (producto.imagenesProductos && producto.imagenesProductos.length > 0) {
+                imagenUrl = construirUrlImagen(producto.imagenesProductos[0].Urlimagen || producto.imagenesProductos[0].urlImagen);
+            } else if (producto.imagenesUrls && producto.imagenesUrls.length > 0) {
+                imagenUrl = construirUrlImagen(producto.imagenesUrls[0]);
+            }
+            
+            contenedor.html(`
+                <div class="imagen-container-zoom" onclick="abrirImagenEnModal('${imagenUrl}', '${producto.nombreProducto}')">
+                    <img src="${imagenUrl}" 
+                         class="imagen-producto-detalle-zoom" 
+                         alt="${producto.nombreProducto}"
+                         onload="this.style.opacity='1'"
+                         style="opacity: 0; transition: opacity 0.3s ease;">
+                    <div class="overlay-zoom">
+                        <i class="bi bi-zoom-in"></i>
+                        <span>Click para ampliar</span>
+                    </div>
+                </div>
+            `);
         }
     }, 100);
 }
