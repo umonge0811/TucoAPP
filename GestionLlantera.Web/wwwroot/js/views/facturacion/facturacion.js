@@ -4736,57 +4736,6 @@ function cerrarToastModerno(toastId) {
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
-    // Validación robusta para imágenes con URL de la API (lógica consistente)
-    let imagenUrl = '/images/no-image.png';
-    try {
-        console.log('🖼️ Procesando imágenes para detalle de producto:', producto.nombreProducto);
-        console.log('🖼️ Datos del producto completos:', producto);
-
-        let imagenesArray = [];
-
-        // Usar múltiples fuentes de imágenes como fallback
-        if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-            imagenesArray = producto.imagenesProductos
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-        } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-            imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
-        } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
-            imagenesArray = producto.imagenes
-                .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');
-            console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
-        }
-
-        if (imagenesArray.length > 0) {
-            let urlImagen = imagenesArray[0];
-            console.log('🖼️ URL original en detalle:', urlImagen);
-
-            if (urlImagen && urlImagen.trim() !== '') {
-                // Construir URL correcta para el servidor API (puerto 7273 HTTPS)
-                if (urlImagen.startsWith('/uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else if (urlImagen.startsWith('uploads/productos/')) {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                } else if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
-                    imagenUrl = urlImagen; // URL completa
-                } else if (urlImagen.startsWith('/')) {
-                    imagenUrl = `https://localhost:7273${urlImagen}`;
-                } else {
-                    imagenUrl = `https://localhost:7273/${urlImagen}`;
-                }
-                console.log('🖼️ URL final en detalle:', imagenUrl);
-            }
-        } else {
-            console.log('🖼️ No se encontraron imágenes válidas para detalle');
-        }
-    } catch (error) {
-        console.warn('⚠️ Error procesando imágenes en detalle del producto:', error);
-        imagenUrl = '/images/no-image.png';
-    }
-
     const modalHtml = `
         <div class="modal fade" id="modalDetalleProducto" tabindex="-1">
             <div class="modal-dialog modal-lg">
@@ -4902,23 +4851,37 @@ function verDetalleProducto(producto) {
                 </div>
             </div>
         </div>
+
+        <!-- Modal para zoom de imagen -->
+        <div class="modal fade" id="modalZoomImagen" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-content bg-transparent border-0">
+                    <div class="modal-header border-0 bg-dark bg-opacity-75">
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-0">
+                        <img id="imagenZoom" src="" alt="Imagen ampliada" class="img-fluid" style="max-height: 80vh;">
+                    </div>
+                </div>
+            </div>
+        </div>
     `;
 
     // Remover modal anterior si existe
-    $('#modalDetalleProducto').remove();
+    $('#modalDetalleProducto, #modalZoomImagen').remove();
     $('body').append(modalHtml);
 
     const modal = new bootstrap.Modal(document.getElementById('modalDetalleProducto'));
     modal.show();
 
-    // ✅ CARGAR IMÁGENES DESPUÉS DE MOSTRAR EL MODAL
+    // Cargar imágenes después de mostrar el modal
     setTimeout(() => {
         cargarImagenesDetallesProducto(producto);
     }, 100);
 }
 
 /**
- * ✅ FUNCIÓN: Cargar imágenes en modal de detalles de producto
+ * Función para cargar imágenes en modal de detalles de producto
  */
 async function cargarImagenesDetallesProducto(producto) {
     try {
@@ -4927,7 +4890,7 @@ async function cargarImagenesDetallesProducto(producto) {
         console.log('🖼️ Datos del producto:', producto);
 
         const contenedor = $('#contenedorImagenesDetalles');
-        
+
         // Mostrar loading inicial
         contenedor.html(`
             <div class="text-center text-muted">
@@ -4940,7 +4903,7 @@ async function cargarImagenesDetallesProducto(producto) {
 
         let imagenesArray = [];
 
-        // Usar la misma lógica que en otros modales para obtener imágenes
+        // Obtener todas las imágenes disponibles
         if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
             imagenesArray = producto.imagenesProductos
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
@@ -4967,19 +4930,20 @@ async function cargarImagenesDetallesProducto(producto) {
         }
 
         if (imagenesArray.length === 1) {
-            // Una sola imagen
+            // Una sola imagen con zoom
             const urlImagen = construirUrlImagen(imagenesArray[0]);
             contenedor.html(`
                 <img src="${urlImagen}" 
-                     class="imagen-producto-detalle" 
+                     class="imagen-producto-detalle cursor-pointer" 
                      alt="${producto.nombreProducto}"
+                     onclick="abrirZoomImagen('${urlImagen}')"
                      onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
             `);
         } else {
-            // Múltiples imágenes - crear carrusel
+            // Múltiples imágenes - crear carrusel con zoom
             const carruselId = 'carruselImagenesDetalles';
             let htmlCarrusel = `
-                <div id="${carruselId}" class="carousel slide" data-bs-ride="carousel">
+                <div id="${carruselId}" class="carousel slide" data-bs-ride="false">
                     <div class="carousel-inner">
             `;
 
@@ -4989,8 +4953,9 @@ async function cargarImagenesDetallesProducto(producto) {
                 htmlCarrusel += `
                     <div class="carousel-item ${activa}">
                         <img src="${urlImagen}" 
-                             class="imagen-producto-detalle" 
+                             class="imagen-producto-detalle cursor-pointer" 
                              alt="${producto.nombreProducto}"
+                             onclick="abrirZoomImagen('${urlImagen}')"
                              onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
                     </div>
                 `;
@@ -5035,6 +5000,18 @@ async function cargarImagenesDetallesProducto(producto) {
             </div>
         `);
     }
+}
+
+/**
+ * Función para abrir zoom de imagen
+ */
+function abrirZoomImagen(urlImagen) {
+    console.log('🔍 Abriendo zoom para imagen:', urlImagen);
+
+    $('#imagenZoom').attr('src', urlImagen);
+
+    const modalZoom = new bootstrap.Modal(document.getElementById('modalZoomImagen'));
+    modalZoom.show();
 }
 
 /**

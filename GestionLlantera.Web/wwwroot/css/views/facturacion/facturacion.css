@@ -459,6 +459,26 @@ input[type=number] {
     color: #1e40af;
 }
 
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.imagen-producto-detalle {
+    transition: transform 0.2s ease;
+}
+
+    .imagen-producto-detalle:hover {
+        transform: scale(1.05);
+    }
+
+#modalZoomImagen .modal-dialog {
+    max-width: 90vw;
+}
+
+#modalZoomImagen .modal-content {
+    background: transparent !important;
+}
+
 /* Animación para elementos críticos */
 .text-danger .bi-exclamation-triangle-fill,
 .text-warning .bi-clock-fill {
