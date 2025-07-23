@@ -581,6 +581,21 @@ input[type=number] {
     transform: scale(1.1);
 }
 
+/* Estilos para zoom simplificado */
+#modalZoomSimple .modal-content {
+    background: rgba(0, 0, 0, 0.95) !important;
+}
+
+#modalZoomSimple .modal-body img {
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
+}
+
+#contenedorImagenesDetalles img:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
 #contenedorImagenesDetalles .carousel-item {
     text-align: center;
     padding: 10px;
