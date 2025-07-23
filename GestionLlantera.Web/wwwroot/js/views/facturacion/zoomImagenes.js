@@ -1,363 +1,310 @@
+// ===== MÓDULO DE ZOOM DE IMÁGENES PARA FACTURACIÓN =====
 
 /**
- * MÓDULO DE ZOOM DE IMÁGENES
- * Gestiona la funcionalidad de zoom para imágenes de productos
- * Fecha: 2025
+ * ✅ FUNCIÓN: Abrir modal de zoom para imagen
  */
-
-console.log('📸 Módulo de zoom de imágenes cargado');
-
-/**
- * Función principal para abrir modal de zoom de imagen
- * @param {string} urlImagen - URL de la imagen a mostrar
- * @param {string} nombreProducto - Nombre del producto para el alt
- */
-function abrirZoomImagen(urlImagen, nombreProducto = 'Imagen del producto') {
+function abrirZoomImagen(urlImagen, nombreProducto) {
     console.log('🔍 === ABRIENDO ZOOM DE IMAGEN ===');
     console.log('🔍 URL:', urlImagen);
     console.log('🔍 Producto:', nombreProducto);
 
     try {
-        // Verificar que tenemos una URL válida
-        if (!urlImagen || urlImagen.trim() === '') {
-            console.error('❌ URL de imagen no válida');
-            mostrarToast('Error', 'No se puede mostrar la imagen', 'warning');
-            return;
-        }
-
-        // Crear o obtener el modal de zoom
+        // Verificar si el modal de zoom ya existe, si no, crearlo
         let modalZoom = document.getElementById('modalZoomImagen');
-        
         if (!modalZoom) {
-            console.log('🔍 Creando modal de zoom dinámicamente...');
             const modalHtml = `
                 <div class="modal fade" id="modalZoomImagen" tabindex="-1" aria-labelledby="modalZoomImagenLabel" aria-hidden="true">
                     <div class="modal-dialog modal-xl modal-dialog-centered">
                         <div class="modal-content bg-transparent border-0">
-                            <div class="modal-header border-0 bg-dark bg-opacity-75 position-relative">
-                                <h5 class="modal-title text-white" id="modalZoomImagenLabel">Vista ampliada</h5>
+                            <div class="modal-header border-0 bg-dark bg-opacity-75">
+                                <h5 class="modal-title text-white" id="modalZoomImagenLabel">
+                                    <i class="bi bi-zoom-in me-2"></i>Vista Ampliada
+                                </h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                             </div>
-                            <div class="modal-body text-center p-0 bg-dark bg-opacity-75">
-                                <div class="position-relative">
-                                    <img id="imagenZoom" 
-                                         src="" 
-                                         alt="" 
-                                         class="img-fluid" 
-                                         style="max-height: 80vh; max-width: 100%; object-fit: contain; cursor: zoom-out;" 
-                                         onclick="cerrarModalZoom()">
-                                    <div id="loadingImagenZoom" class="position-absolute top-50 start-50 translate-middle text-white">
-                                        <div class="spinner-border" role="status">
-                                            <span class="visually-hidden">Cargando imagen...</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-white-50">Click en la imagen o presiona ESC para cerrar</small>
+                            <div class="modal-body text-center p-0" style="background: rgba(0,0,0,0.8);">
+                                <img id="imagenZoomDetalle" 
+                                     src="" 
+                                     alt="" 
+                                     class="img-fluid" 
+                                     style="max-height: 85vh; max-width: 100%; object-fit: contain;">
+                                <div class="p-3">
+                                    <h6 class="text-white mb-0" id="nombreProductoZoom"></h6>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             modalZoom = document.getElementById('modalZoomImagen');
-            
-            // Agregar evento para cerrar con ESC
-            modalZoom.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    cerrarModalZoom();
-                }
-            });
         }
 
-        // Configurar la imagen
-        const imagenZoom = document.getElementById('imagenZoom');
-        const loadingZoom = document.getElementById('loadingImagenZoom');
-        
-        if (imagenZoom && loadingZoom) {
-            // Mostrar loading
-            loadingZoom.style.display = 'block';
-            imagenZoom.style.opacity = '0';
-            
-            // Configurar la imagen
-            imagenZoom.onload = function() {
-                console.log('✅ Imagen cargada exitosamente en zoom');
-                loadingZoom.style.display = 'none';
-                imagenZoom.style.opacity = '1';
-            };
-            
-            imagenZoom.onerror = function() {
-                console.error('❌ Error cargando imagen en zoom');
-                loadingZoom.innerHTML = '<div class="text-danger"><i class="bi bi-exclamation-triangle"></i><br>Error cargando imagen</div>';
-            };
-            
+        // Actualizar contenido del modal
+        const imagenZoom = document.getElementById('imagenZoomDetalle');
+        const nombreZoom = document.getElementById('nombreProductoZoom');
+        const tituloModal = document.getElementById('modalZoomImagenLabel');
+
+        if (imagenZoom) {
             imagenZoom.src = urlImagen;
-            imagenZoom.alt = `Imagen ampliada de ${nombreProducto}`;
+            imagenZoom.alt = nombreProducto || 'Imagen del producto';
         }
 
-        // Mostrar el modal
-        const modal = new bootstrap.Modal(modalZoom, {
-            backdrop: true,
-            keyboard: true,
-            focus: true
-        });
-        
-        modal.show();
-        
-        // Enfocar el modal para que funcionen las teclas
-        modalZoom.focus();
-        
+        if (nombreZoom) {
+            nombreZoom.textContent = nombreProducto || 'Producto';
+        }
+
+        if (tituloModal) {
+            tituloModal.innerHTML = `<i class="bi bi-zoom-in me-2"></i>${nombreProducto || 'Vista Ampliada'}`;
+        }
+
+        // Mostrar modal
+        const bsModal = new bootstrap.Modal(modalZoom);
+        bsModal.show();
+
         console.log('✅ Modal de zoom mostrado correctamente');
 
     } catch (error) {
         console.error('❌ Error abriendo zoom de imagen:', error);
         if (typeof mostrarToast === 'function') {
-            mostrarToast('Error', 'No se pudo abrir la imagen en zoom', 'danger');
+            mostrarToast('Error', 'No se pudo abrir la imagen ampliada', 'danger');
         } else {
-            alert('Error: No se pudo abrir la imagen en zoom');
+            alert('Error: No se pudo abrir la imagen ampliada');
         }
     }
 }
 
 /**
- * Función para cerrar el modal de zoom
+ * ✅ FUNCIÓN: Cerrar modal de zoom
  */
 function cerrarModalZoom() {
-    console.log('🔍 Cerrando modal de zoom...');
+    console.log('❌ Cerrando modal de zoom');
     const modalZoom = document.getElementById('modalZoomImagen');
     if (modalZoom) {
-        const modal = bootstrap.Modal.getInstance(modalZoom);
-        if (modal) {
-            modal.hide();
+        const bsModal = bootstrap.Modal.getInstance(modalZoom);
+        if (bsModal) {
+            bsModal.hide();
         }
     }
 }
 
 /**
- * Función auxiliar para construir URL de imagen correcta
- * @param {string} urlOriginal - URL original de la imagen
- * @returns {string} URL construida correctamente
- */
-function construirUrlImagen(urlOriginal) {
-    if (!urlOriginal || urlOriginal.trim() === '') {
-        return '/images/no-image.png';
-    }
-
-    const url = urlOriginal.trim();
-
-    // Si ya es una URL completa, usarla directamente
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-        return url;
-    }
-
-    // Construir URL para el servidor API
-    if (url.startsWith('/uploads/productos/')) {
-        return `https://localhost:7273${url}`;
-    } else if (url.startsWith('uploads/productos/')) {
-        return `https://localhost:7273/${url}`;
-    } else if (url.startsWith('/')) {
-        return `https://localhost:7273${url}`;
-    } else {
-        return `https://localhost:7273/${url}`;
-    }
-}
-
-/**
- * Función para cargar imágenes en modal de detalles de producto
- * @param {object} producto - Objeto del producto con información de imágenes
+ * ✅ FUNCIÓN: Cargar imágenes en modal de detalles del producto
  */
 function cargarImagenesDetallesProducto(producto) {
+    console.log('🖼️ === CARGANDO IMÁGENES DE PRODUCTO ===');
+    console.log('🖼️ Producto recibido:', producto);
+
+    const contenedor = $('#contenedorImagenesDetalles');
+    if (!contenedor.length) {
+        console.error('❌ Contenedor de imágenes no encontrado');
+        return;
+    }
+
     try {
-        console.log('🖼️ === CARGANDO IMÁGENES EN MODAL DE DETALLES ===');
-        console.log('🖼️ Producto:', producto.nombreProducto);
-        console.log('🖼️ Datos del producto:', producto);
-
-        const contenedor = $('#contenedorImagenesDetalles');
-
-        // Mostrar loading inicial
-        contenedor.html(`
-            <div class="text-center text-muted">
-                <div class="spinner-border spinner-border-sm me-2" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-                Cargando imágenes...
-            </div>
-        `);
-
         let imagenesArray = [];
 
-        // Obtener todas las imágenes disponibles
+        // Verificar diferentes fuentes de imágenes
         if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
             imagenesArray = producto.imagenesProductos
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
                 .filter(url => url && url.trim() !== '');
+            console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
         } else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
             imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
+            console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
         } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
                 .filter(url => url && url.trim() !== '');
+            console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
         }
 
-        console.log('🖼️ Imágenes encontradas:', imagenesArray.length);
-
         if (imagenesArray.length === 0) {
-            // No hay imágenes
+            console.log('🖼️ No se encontraron imágenes, mostrando imagen por defecto');
             contenedor.html(`
-                <div class="sin-imagenes text-center text-muted p-4">
-                    <i class="bi bi-image-fill display-1"></i>
-                    <p class="mt-2">No hay imágenes disponibles</p>
+                <div class="text-center">
+                    <div class="sin-imagenes p-4">
+                        <i class="bi bi-image-fill display-1 text-muted"></i>
+                        <p class="mt-2 text-muted">Sin imágenes disponibles</p>
+                    </div>
                 </div>
             `);
             return;
         }
 
         if (imagenesArray.length === 1) {
-            // Una sola imagen con zoom
-            const urlImagen = construirUrlImagen(imagenesArray[0]);
+            // Una sola imagen
+            const urlImagen = imagenesArray[0];
+            const imagenCompleta = construirUrlCompleta(urlImagen);
+
             contenedor.html(`
                 <div class="imagen-container text-center">
-                    <img src="${urlImagen}" 
-                         class="imagen-producto-detalle img-fluid rounded cursor-pointer imagen-zoom-click" 
+                    <img src="${imagenCompleta}" 
+                         class="imagen-producto-detalle img-fluid rounded cursor-pointer" 
                          alt="${producto.nombreProducto}"
                          style="max-height: 300px; transition: transform 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer;"
-                         data-url-imagen="${urlImagen}"
-                         data-nombre-producto="${producto.nombreProducto}"
+                         onclick="abrirZoomImagen('${imagenCompleta}', '${producto.nombreProducto}')"
                          onmouseover="this.style.transform='scale(1.05)'"
                          onmouseout="this.style.transform='scale(1)'"
                          onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes text-center text-muted p-4\\'><i class=\\'bi bi-image-fill display-1\\'></i><p class=\\'mt-2\\'>Error cargando imagen</p></div>';">
-                    <p class="mt-2 small text-muted">Click para ampliar</p>
+                    <div class="mt-2">
+                        <button type="button" 
+                                class="btn btn-primary btn-sm" 
+                                onclick="abrirZoomImagen('${imagenCompleta}', '${producto.nombreProducto}')"
+                                title="Ver imagen ampliada">
+                            <i class="bi bi-zoom-in me-1"></i>
+                            Ampliar Imagen
+                        </button>
+                    </div>
                 </div>
             `);
         } else {
-            // Múltiples imágenes - crear carrusel con zoom
-            const carruselId = 'carruselImagenesDetalles';
-            let htmlCarrusel = `
-                <div id="${carruselId}" class="carousel slide" data-bs-ride="false">
-                    <div class="carousel-inner">
-            `;
+            // Múltiples imágenes con carrusel
+            let htmlCarrusel = '';
+            let indicadores = '';
 
-            imagenesArray.forEach((url, index) => {
-                const urlImagen = construirUrlImagen(url);
+            imagenesArray.forEach((urlImagen, index) => {
+                const imagenCompleta = construirUrlCompleta(urlImagen);
                 const activa = index === 0 ? 'active' : '';
+
+                indicadores += `
+                    <button type="button" 
+                            data-bs-target="#carruselImagenesProducto" 
+                            data-bs-slide-to="${index}" 
+                            class="${activa}" 
+                            aria-label="Imagen ${index + 1}"></button>
+                `;
+
                 htmlCarrusel += `
                     <div class="carousel-item ${activa}">
                         <div class="text-center">
-                            <img src="${urlImagen}" 
-                                 class="imagen-producto-detalle img-fluid rounded cursor-pointer imagen-zoom-click" 
+                            <img src="${imagenCompleta}" 
+                                 class="imagen-producto-detalle img-fluid rounded cursor-pointer" 
                                  alt="${producto.nombreProducto}"
                                  style="max-height: 300px; transition: transform 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer;"
-                                 data-url-imagen="${urlImagen}"
-                                 data-nombre-producto="${producto.nombreProducto}"
+                                 onclick="abrirZoomImagen('${imagenCompleta}', '${producto.nombreProducto}')"
                                  onmouseover="this.style.transform='scale(1.05)'"
                                  onmouseout="this.style.transform='scale(1)'"
                                  onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes text-center text-muted p-4\\'><i class=\\'bi bi-image-fill display-1\\'></i><p class=\\'mt-2\\'>Error cargando imagen</p></div>';">
+                            <div class="mt-2">
+                                <button type="button" 
+                                        class="btn btn-primary btn-sm" 
+                                        onclick="abrirZoomImagen('${imagenCompleta}', '${producto.nombreProducto}')"
+                                        title="Ver imagen ampliada">
+                                    <i class="bi bi-zoom-in me-1"></i>
+                                    Ampliar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
             });
 
-            htmlCarrusel += `
-                    </div>
-                    <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
-                    </button>
+            contenedor.html(`
+                <div id="carruselImagenesProducto" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-indicators">
-            `;
-
-            imagenesArray.forEach((_, index) => {
-                const activa = index === 0 ? 'active' : '';
-                htmlCarrusel += `
-                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" ${activa ? 'class="active" aria-current="true"' : ''}></button>
-                `;
-            });
-
-            htmlCarrusel += `
+                        ${indicadores}
                     </div>
-                    <p class="mt-2 small text-muted text-center">Click en las imágenes para ampliar</p>
+                    <div class="carousel-inner">
+                        ${htmlCarrusel}
+                    </div>
+                    ${imagenesArray.length > 1 ? `
+                        <button class="carousel-control-prev" type="button" data-bs-target="#carruselImagenesProducto" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Anterior</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#carruselImagenesProducto" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Siguiente</span>
+                        </button>
+                    ` : ''}
                 </div>
-            `;
-
-            contenedor.html(htmlCarrusel);
+            `);
         }
 
-        // ✅ CONFIGURAR EVENTOS DE CLICK DESPUÉS DE CREAR EL HTML
-        setTimeout(() => {
-            configurarEventosZoomImagenes();
-        }, 100);
-
-        console.log('✅ Imágenes cargadas exitosamente en modal de detalles');
+        console.log('✅ Imágenes cargadas exitosamente');
 
     } catch (error) {
-        console.error('❌ Error cargando imágenes en modal de detalles:', error);
-        $('#contenedorImagenesDetalles').html(`
-            <div class="sin-imagenes text-center text-muted p-4">
-                <i class="bi bi-exclamation-triangle-fill display-1 text-danger"></i>
-                <p class="mt-2">Error cargando imágenes</p>
+        console.error('❌ Error cargando imágenes:', error);
+        contenedor.html(`
+            <div class="text-center">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Error cargando imágenes del producto
+                </div>
             </div>
         `);
     }
 }
 
-// Cerrar modal de zoom con tecla Escape
-document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-        const modalZoom = document.getElementById('modalZoomImagen');
-        if (modalZoom && modalZoom.classList.contains('show')) {
-            cerrarModalZoom();
-        }
+/**
+ * ✅ FUNCIÓN AUXILIAR: Construir URL completa para imágenes
+ */
+function construirUrlCompleta(urlImagen) {
+    if (!urlImagen) return '/images/no-image.png';
+
+    // Si ya es una URL completa, devolverla tal como está
+    if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
+        return urlImagen;
     }
-});
+
+    // Construir URL completa para el servidor API
+    if (urlImagen.startsWith('/uploads/productos/')) {
+        return `https://localhost:7273${urlImagen}`;
+    } else if (urlImagen.startsWith('uploads/productos/')) {
+        return `https://localhost:7273/${urlImagen}`;
+    } else if (urlImagen.startsWith('/')) {
+        return `https://localhost:7273${urlImagen}`;
+    } else {
+        return `https://localhost:7273/${urlImagen}`;
+    }
+}
 
 /**
  * ✅ FUNCIÓN: Configurar eventos de zoom para imágenes
  */
 function configurarEventosZoomImagenes() {
     console.log('🔧 === CONFIGURANDO EVENTOS DE ZOOM ===');
-    
+
     // Limpiar eventos anteriores
     $(document).off('click.zoom', '.imagen-zoom-click');
-    
+
     // Configurar eventos con delegación
     $(document).on('click.zoom', '.imagen-zoom-click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         console.log('🖱️ Click detectado en imagen para zoom');
-        
+
         const urlImagen = $(this).attr('data-url-imagen') || $(this).attr('src');
         const nombreProducto = $(this).attr('data-nombre-producto') || $(this).attr('alt') || 'Producto';
-        
+
         console.log('🔍 Abriendo zoom:', { urlImagen, nombreProducto });
-        
+
         if (urlImagen && urlImagen !== '/images/no-image.png') {
             abrirZoomImagen(urlImagen, nombreProducto);
         } else {
             console.warn('⚠️ URL de imagen no válida para zoom:', urlImagen);
         }
     });
-    
+
     console.log('✅ Eventos de zoom configurados correctamente');
 }
+
+// Inicializar eventos cuando el DOM esté listo
+$(document).ready(function() {
+    console.log('🖼️ === INICIALIZANDO MÓDULO DE ZOOM DE IMÁGENES ===');
+    configurarEventosZoomImagenes();
+    console.log('✅ Módulo de zoom de imágenes inicializado');
+});
 
 // Exportar funciones globalmente para uso desde HTML
 window.abrirZoomImagen = abrirZoomImagen;
 window.cerrarModalZoom = cerrarModalZoom;
 window.cargarImagenesDetallesProducto = cargarImagenesDetallesProducto;
-window.construirUrlImagen = construirUrlImagen;
+window.construirUrlCompleta = construirUrlCompleta;
 window.configurarEventosZoomImagenes = configurarEventosZoomImagenes;
 
-// ✅ CONFIGURAR EVENTOS GLOBALES AL CARGAR EL MÓDULO
-$(document).ready(function() {
-    console.log('📸 Configurando eventos de zoom al cargar página...');
-    configurarEventosZoomImagenes();
-});
-
-console.log('✅ Módulo de zoom de imágenes inicializado correctamente');
-console.log('📸 Funciones exportadas:', ['abrirZoomImagen', 'cerrarModalZoom', 'cargarImagenesDetallesProducto', 'construirUrlImagen', 'configurarEventosZoomImagenes']);
+console.log('📦 Módulo zoomImagenes.js cargado correctamente');
