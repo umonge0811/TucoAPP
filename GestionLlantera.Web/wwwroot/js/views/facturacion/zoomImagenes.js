@@ -12,28 +12,23 @@ function abrirZoomImagen(urlImagen, nombreProducto) {
         modalDetalles.css('opacity', '0');
     }
 
-    // Crear modal mejorado con z-index muy alto
+    // Crear modal mejorado con estructura corregida
     const modalHTML = `
-        <div class="modal fade" id="modalZoomSimple" tabindex="-1" style="z-index: 99999;">
+        <div class="modal fade" id="modalZoomSimple" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
             <div class="modal-dialog modal-fullscreen">
-                <div class="modal-content" style="background: rgba(0, 0, 0, 0.98); border: none;">
-                    <div class="modal-header" style="background: rgba(0, 0, 0, 0.9); border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 1.5rem; position: relative; z-index: 100000;">
-                        <h5 class="modal-title text-white d-flex align-items-center" style="font-size: 1.2rem; font-weight: 600;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-white d-flex align-items-center">
                             <i class="bi bi-zoom-in me-2" style="color: #17a2b8;"></i>
                             <span>${nombreProducto || 'Imagen Ampliada'}</span>
                         </h5>
-                        <button type="button" 
-                                class="btn-close btn-close-white" 
-                                data-bs-dismiss="modal"
-                                style="background: rgba(255, 255, 255, 0.9) !important; border-radius: 50% !important; width: 40px !important; height: 40px !important; display: flex !important; align-items: center !important; justify-content: center !important; position: relative !important; z-index: 100001 !important; border: 2px solid rgba(255, 255, 255, 1) !important; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;">
-                        </button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
-                    <div class="modal-body d-flex justify-content-center align-items-center" style="padding: 2rem; height: calc(100vh - 80px);">
-                        <div class="image-container" style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;">
+                    <div class="modal-body d-flex justify-content-center align-items-center">
+                        <div class="image-container">
                             <img src="${urlImagen}" 
                                  alt="${nombreProducto}" 
-                                 class="img-fluid zoom-image" 
-                                 style="width: 85%; height: 85%; object-fit: contain; border-radius: 12px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); transition: transform 0.3s ease;">
+                                 class="img-fluid zoom-image">
                         </div>
                     </div>
                 </div>
