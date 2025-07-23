@@ -7119,7 +7119,7 @@ async function cargarImagenesDetallesProducto(producto) {
         console.log('🖼️ Datos del producto:', producto);
 
         const contenedor = $('#contenedorImagenesDetalles');
-        
+
         // Mostrar loading inicial
         contenedor.html(`
             <div class="text-center text-muted">
@@ -7165,6 +7165,8 @@ async function cargarImagenesDetallesProducto(producto) {
                 <img src="${urlImagen}" 
                      class="imagen-producto-detalle" 
                      alt="${producto.nombreProducto}"
+                     style="cursor: pointer;"
+                     onclick="abrirImagenEnModal(this.src, '${producto.nombreProducto}')"
                      onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
             `);
         } else {
@@ -7183,7 +7185,13 @@ async function cargarImagenesDetallesProducto(producto) {
                         <img src="${urlImagen}" 
                              class="imagen-producto-detalle" 
                              alt="${producto.nombreProducto}"
-                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
+                             style="cursor: pointer;"
+                             onclick="abrirImagenEnModal(this.src, '${producto.nombreProducto}')"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="imagen-error" style="display:none;">
+                            <i class="bi bi-image-fill"></i>
+                            <span>Error cargando imagen</span>
+                        </div>
                     </div>
                 `;
             });
@@ -7191,43 +7199,64 @@ async function cargarImagenesDetallesProducto(producto) {
             htmlCarrusel += `
                     </div>
                     <button class="carousel-control-prev" type="button" data-bs-target="#${carruselId}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Anterior</span>
+                        <span class="carousel-control-prev-icon"></span>
                     </button>
                     <button class="carousel-control-next" type="button" data-bs-target="#${carruselId}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Siguiente</span>
+                        <span class="carousel-control-next-icon"></span>
                     </button>
-                    <div class="carousel-indicators">
-            `;
-
-            imagenesArray.forEach((_, index) => {
-                const activa = index === 0 ? 'active' : '';
-                htmlCarrusel += `
-                    <button type="button" data-bs-target="#${carruselId}" data-bs-slide-to="${index}" ${activa ? 'class="active" aria-current="true"' : ''}></button>
-                `;
-            });
-
-            htmlCarrusel += `
-                    </div>
                 </div>
             `;
 
             contenedor.html(htmlCarrusel);
         }
 
-        console.log('✅ Imágenes cargadas exitosamente en modal de detalles');
-
     } catch (error) {
-        console.error('❌ Error cargando imágenes en modal de detalles:', error);
+        console.error('❌ Error cargando imágenes:', error);
         $('#contenedorImagenesDetalles').html(`
             <div class="sin-imagenes">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>Error cargando imágenes</span>
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>Error al cargar imágenes</span>
             </div>
         `);
     }
 }
+
+/**
+ * ✅ FUNCIÓN: Abrir imagen en modal de zoom
+ */
+function abrirImagenEnModal(imagenUrl, nombreProducto) {
+    console.log('🔍 Abriendo imagen en modal:', imagenUrl);
+
+    const modalHtml = `
+        <div class="modal fade" id="modalImagenZoom" tabindex="-1" style="z-index: 9999;">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header border-0">
+                        <h6 class="modal-title text-white">${nombreProducto}</h6>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-0">
+                        <img src="${imagenUrl}" 
+                             class="img-fluid" 
+                             alt="${nombreProducto}"
+                             style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalImagenZoom').remove();
+
+    // Agregar nuevo modal al DOM
+    $('body').append(modalHtml);
+
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalImagenZoom'));
+    modal.show();
+}
+
 
 /**
  * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
