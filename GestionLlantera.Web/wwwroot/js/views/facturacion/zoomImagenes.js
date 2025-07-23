@@ -219,10 +219,11 @@ function cargarImagenesDetallesProducto(producto) {
             contenedor.html(`
                 <div class="imagen-container text-center">
                     <img src="${urlImagen}" 
-                         class="imagen-producto-detalle img-fluid rounded cursor-pointer" 
+                         class="imagen-producto-detalle img-fluid rounded cursor-pointer imagen-zoom-click" 
                          alt="${producto.nombreProducto}"
-                         style="max-height: 300px; transition: transform 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                         onclick="abrirZoomImagen('${urlImagen}', '${producto.nombreProducto}')"
+                         style="max-height: 300px; transition: transform 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer;"
+                         data-url-imagen="${urlImagen}"
+                         data-nombre-producto="${producto.nombreProducto}"
                          onmouseover="this.style.transform='scale(1.05)'"
                          onmouseout="this.style.transform='scale(1)'"
                          onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes text-center text-muted p-4\\'><i class=\\'bi bi-image-fill display-1\\'></i><p class=\\'mt-2\\'>Error cargando imagen</p></div>';">
@@ -244,10 +245,11 @@ function cargarImagenesDetallesProducto(producto) {
                     <div class="carousel-item ${activa}">
                         <div class="text-center">
                             <img src="${urlImagen}" 
-                                 class="imagen-producto-detalle img-fluid rounded cursor-pointer" 
+                                 class="imagen-producto-detalle img-fluid rounded cursor-pointer imagen-zoom-click" 
                                  alt="${producto.nombreProducto}"
-                                 style="max-height: 300px; transition: transform 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                                 onclick="abrirZoomImagen('${urlImagen}', '${producto.nombreProducto}')"
+                                 style="max-height: 300px; transition: transform 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer;"
+                                 data-url-imagen="${urlImagen}"
+                                 data-nombre-producto="${producto.nombreProducto}"
                                  onmouseover="this.style.transform='scale(1.05)'"
                                  onmouseout="this.style.transform='scale(1)'"
                                  onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes text-center text-muted p-4\\'><i class=\\'bi bi-image-fill display-1\\'></i><p class=\\'mt-2\\'>Error cargando imagen</p></div>';">
@@ -285,6 +287,11 @@ function cargarImagenesDetallesProducto(producto) {
             contenedor.html(htmlCarrusel);
         }
 
+        // ✅ CONFIGURAR EVENTOS DE CLICK DESPUÉS DE CREAR EL HTML
+        setTimeout(() => {
+            configurarEventosZoomImagenes();
+        }, 100);
+
         console.log('✅ Imágenes cargadas exitosamente en modal de detalles');
 
     } catch (error) {
@@ -308,11 +315,49 @@ document.addEventListener('keydown', function (e) {
     }
 });
 
+/**
+ * ✅ FUNCIÓN: Configurar eventos de zoom para imágenes
+ */
+function configurarEventosZoomImagenes() {
+    console.log('🔧 === CONFIGURANDO EVENTOS DE ZOOM ===');
+    
+    // Limpiar eventos anteriores
+    $(document).off('click.zoom', '.imagen-zoom-click');
+    
+    // Configurar eventos con delegación
+    $(document).on('click.zoom', '.imagen-zoom-click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('🖱️ Click detectado en imagen para zoom');
+        
+        const urlImagen = $(this).attr('data-url-imagen') || $(this).attr('src');
+        const nombreProducto = $(this).attr('data-nombre-producto') || $(this).attr('alt') || 'Producto';
+        
+        console.log('🔍 Abriendo zoom:', { urlImagen, nombreProducto });
+        
+        if (urlImagen && urlImagen !== '/images/no-image.png') {
+            abrirZoomImagen(urlImagen, nombreProducto);
+        } else {
+            console.warn('⚠️ URL de imagen no válida para zoom:', urlImagen);
+        }
+    });
+    
+    console.log('✅ Eventos de zoom configurados correctamente');
+}
+
 // Exportar funciones globalmente para uso desde HTML
 window.abrirZoomImagen = abrirZoomImagen;
 window.cerrarModalZoom = cerrarModalZoom;
 window.cargarImagenesDetallesProducto = cargarImagenesDetallesProducto;
 window.construirUrlImagen = construirUrlImagen;
+window.configurarEventosZoomImagenes = configurarEventosZoomImagenes;
+
+// ✅ CONFIGURAR EVENTOS GLOBALES AL CARGAR EL MÓDULO
+$(document).ready(function() {
+    console.log('📸 Configurando eventos de zoom al cargar página...');
+    configurarEventosZoomImagenes();
+});
 
 console.log('✅ Módulo de zoom de imágenes inicializado correctamente');
-console.log('📸 Funciones exportadas:', ['abrirZoomImagen', 'cerrarModalZoom', 'cargarImagenesDetallesProducto', 'construirUrlImagen']);
+console.log('📸 Funciones exportadas:', ['abrirZoomImagen', 'cerrarModalZoom', 'cargarImagenesDetallesProducto', 'construirUrlImagen', 'configurarEventosZoomImagenes']);
