@@ -456,7 +456,7 @@ function configurarEventosProductosInventario() {
         }
     });
     
-    // Botón ver detalle - Redirigir a DetalleProducto
+    // Botón ver detalle - Abrir modal de detalles existente
     $('.btn-ver-detalle-inventario').off('click').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -465,23 +465,19 @@ function configurarEventosProductosInventario() {
             const productoJson = $(this).attr('data-producto');
             const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
             
-            const productoId = producto.productoId || producto.ProductoId;
+            console.log('👁️ Abriendo modal de detalles para producto:', producto.nombreProducto);
             
-            if (!productoId) {
-                console.error('❌ No se pudo obtener el ProductoId');
-                mostrarToast('Error', 'No se pudo identificar el producto', 'danger');
-                return;
+            // Usar la función existente de verDetalleProducto
+            if (typeof verDetalleProducto === 'function') {
+                verDetalleProducto(producto);
+            } else {
+                console.error('❌ Función verDetalleProducto no disponible');
+                mostrarToast('Error', 'No se pudo abrir el modal de detalles', 'danger');
             }
             
-            const url = `/Inventario/DetalleProducto/${productoId}`;
-            console.log('🌐 Navegando desde inventario facturación a:', url);
-            
-            // Navegación directa a la vista de detalles
-            window.location.href = url;
-            
         } catch (error) {
-            console.error('❌ Error navegando a detalle desde inventario:', error);
-            mostrarToast('Error', 'No se pudo navegar al detalle del producto', 'danger');
+            console.error('❌ Error abriendo modal de detalles desde inventario:', error);
+            mostrarToast('Error', 'No se pudo abrir el modal de detalles', 'danger');
         }
     });
 }
