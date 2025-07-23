@@ -4851,36 +4851,24 @@ function verDetalleProducto(producto) {
                 </div>
             </div>
         </div>
-
-        <!-- Modal para zoom de imagen -->
-        <div class="modal fade" id="modalZoomImagen" tabindex="-1">
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-                <div class="modal-content bg-transparent border-0">
-                    <div class="modal-header border-0 bg-dark bg-opacity-75">
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body text-center p-0">
-                        <img id="imagenZoom" src="" alt="Imagen ampliada" class="img-fluid" style="max-height: 80vh;">
-                    </div>
-                </div>
-            </div>
-        </div>
     `;
 
     // Remover modal anterior si existe
-    $('#modalDetalleProducto, #modalZoomImagen').remove();
+    $('#modalDetalleProducto').remove();
     $('body').append(modalHtml);
 
     const modal = new bootstrap.Modal(document.getElementById('modalDetalleProducto'));
     modal.show();
 
-    // Cargar imágenes después de mostrar el modal
+    // Cargar imágenes después de mostrar el modal usando la función del módulo zoomImagenes.js
     setTimeout(() => {
-        cargarImagenesDetallesProducto(producto);
+        if (typeof window.cargarImagenesDetallesProducto === 'function') {
+            window.cargarImagenesDetallesProducto(producto);
+        } else {
+            console.error('❌ Función cargarImagenesDetallesProducto no disponible desde zoomImagenes.js');
+        }
     }, 100);
 }
-
-// Las funciones de zoom de imágenes se han movido a zoomImagenes.js
 
 // ===== GESTIÓN DE CLIENTES =====
 function abrirModalNuevoCliente() {
