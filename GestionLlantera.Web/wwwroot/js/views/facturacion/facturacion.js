@@ -5003,16 +5003,60 @@ async function cargarImagenesDetallesProducto(producto) {
 }
 
 /**
- * Función para abrir zoom de imagen
+ * Función para abrir modal de zoom de imagen
+ * @param {string} urlImagen - URL de la imagen a mostrar
+ * @param {string} nombreProducto - Nombre del producto para el alt
  */
-function abrirZoomImagen(urlImagen) {
-    console.log('🔍 Abriendo zoom para imagen:', urlImagen);
+function abrirZoomImagen(urlImagen, nombreProducto) {
+    console.log('🔍 === ABRIENDO ZOOM DE IMAGEN ===');
+    console.log('🔍 URL:', urlImagen);
+    console.log('🔍 Producto:', nombreProducto);
 
-    $('#imagenZoom').attr('src', urlImagen);
+    // Crear modal si no existe
+    let modalZoom = document.getElementById('modalZoomImagen');
+    if (!modalZoom) {
+        const modalHtml = `
+            <div class="modal fade" id="modalZoomImagen" tabindex="-1" aria-labelledby="modalZoomImagenLabel" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body position-relative">
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            <img id="imagenZoom" src="" alt="" class="imagen-zoom">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modalZoom = document.getElementById('modalZoomImagen');
+    }
 
-    const modalZoom = new bootstrap.Modal(document.getElementById('modalZoomImagen'));
-    modalZoom.show();
+    // Configurar imagen
+    const imagenZoom = document.getElementById('imagenZoom');
+    imagenZoom.src = urlImagen;
+    imagenZoom.alt = `Imagen ampliada de ${nombreProducto}`;
+
+    // Mostrar modal
+    const modal = new bootstrap.Modal(modalZoom);
+    modal.show();
+
+    console.log('✅ Modal de zoom mostrado');
 }
+
+/**
+ * Cerrar modal de zoom con tecla Escape
+ */
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        const modalZoom = document.getElementById('modalZoomImagen');
+        if (modalZoom && modalZoom.classList.contains('show')) {
+            const modal = bootstrap.Modal.getInstance(modalZoom);
+            if (modal) {
+                modal.hide();
+            }
+        }
+    }
+});
 
 /**
  * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
