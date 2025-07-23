@@ -219,8 +219,9 @@ if (typeof window !== 'undefined') {
     window.imprimirProforma = imprimirProforma;
     window.convertirProformaAFactura = convertirProformaAFactura;
     window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
+    window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
     
-    console.log('📋 Funciones de proformas exportadas globalmente');
+    console.log('📋 Funciones de proformas y detalles exportadas globalmente');
 }
 
 // ===== INICIALIZACIÓN =====
