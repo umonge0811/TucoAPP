@@ -25,13 +25,17 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo todos los proveedores activos");
+                _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
 
                 var proveedores = await _context.Proveedores
-                    .Where(p => p.Activo)
                     .Include(p => p.PedidosProveedors)
                     .OrderBy(p => p.NombreProveedor)
                     .ToListAsync();
+
+                _logger.LogInformation("✅ Proveedores encontrados: {Total} (Activos: {Activos}, Inactivos: {Inactivos})", 
+                    proveedores.Count,
+                    proveedores.Count(p => p.Activo),
+                    proveedores.Count(p => !p.Activo));
 
                 return Ok(proveedores);
             }
@@ -225,6 +229,30 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error desactivando proveedor {Id}", id);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpGet("activos")]
+        public async Task<ActionResult<IEnumerable<Proveedore>>> GetProveedoresActivos()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo solo proveedores ACTIVOS");
+
+                var proveedores = await _context.Proveedores
+                    .Where(p => p.Activo)
+                    .Include(p => p.PedidosProveedors)
+                    .OrderBy(p => p.NombreProveedor)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Proveedores activos encontrados: {Count}", proveedores.Count);
+
+                return Ok(proveedores);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo proveedores activos");
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }

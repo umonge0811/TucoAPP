@@ -53,33 +53,45 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
+                _logger.LogInformation("📋 Obteniendo TODOS los proveedores para la vista");
 
-                var jwtToken = this.ObtenerTokenJWT();
-                var proveedores = await _proveedoresService.ObtenerTodosProveedoresAsync(jwtToken);
+                var token = Request.Cookies["AuthToken"];
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación requerido" });
+                }
 
-                var resultado = proveedores.Select(p => new {
+                // 🔄 CAMBIO: Usar ObtenerTodosProveedoresAsync para obtener activos e inactivos
+                var proveedores = await _proveedoresService.ObtenerTodosProveedoresAsync(token);
+
+                // Convertir a formato esperado por el frontend
+                var proveedoresFormateados = proveedores.Select(p => new
+                {
                     id = p.ProveedorId,
                     nombre = p.NombreProveedor,
                     contacto = p.Contacto,
                     telefono = p.Telefono,
                     direccion = p.Direccion,
-                    activo = p.Activo
+                    activo = p.Activo,
+                    pedidosProveedors = p.PedidosProveedors?.ToList() ?? new List<PedidosProveedor>()
                 }).ToList();
 
-                _logger.LogInformation("📋 Enviando {Count} proveedores al cliente", resultado.Count);
-                foreach (var prov in resultado)
-                {
-                    _logger.LogInformation("📋 Proveedor: ID={Id}, Nombre='{Nombre}', Contacto='{Contacto}'", 
-                        prov.id, prov.nombre ?? "NULL", prov.contacto ?? "NULL");
-                }
+                _logger.LogInformation("✅ Proveedores obtenidos: {Total} (Activos: {Activos}, Inactivos: {Inactivos})", 
+                    proveedoresFormateados.Count,
+                    proveedoresFormateados.Count(p => p.activo),
+                    proveedoresFormateados.Count(p => !p.activo));
 
-                return Json(new { success = true, data = resultado });
+                return Json(new 
+                { 
+                    success = true, 
+                    data = proveedoresFormateados,
+                    message = $"Se obtuvieron {proveedoresFormateados.Count} proveedores (activos e inactivos)"
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo proveedores");
-                return Json(new { success = false, message = "Error al obtener proveedores" });
+                return Json(new { success = false, message = "Error obteniendo proveedores" });
             }
         }
 
