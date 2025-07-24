@@ -48,11 +48,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        public IActionResult PedidosProveedor(int proveedorId)
-        {
-            ViewBag.ProveedorId = proveedorId;
-            return View();
-        }
 
         [HttpGet]
         public async Task<IActionResult> ObtenerProveedores()

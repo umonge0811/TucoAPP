@@ -124,9 +124,9 @@ function mostrarProveedores() {
 
         return `
             <tr>
-                <td>${proveedor.proveedorId}</td>
+                <td>${proveedor.id}</td>
                 <td>
-                    <strong>${proveedor.nombreProveedor || 'Sin nombre'}</strong>
+                    <strong>${proveedor.nombre || 'Sin nombre'}</strong>
                 </td>
                 <td>${proveedor.contacto || '-'}</td>
                 <td>${proveedor.telefono || '-'}</td>
@@ -216,8 +216,8 @@ function editarProveedor(id) {
     $('#btnGuardarProveedor').html('<i class="bi bi-save me-1"></i>Actualizar Proveedor');
 
     // Llenar formulario
-    $('#proveedorId').val(proveedor.proveedorId);
-    $('#nombreProveedor').val(proveedor.nombreProveedor);
+    $('#proveedorId').val(proveedor.id);
+    $('#nombreProveedor').val(proveedor.nombre);
     $('#contacto').val(proveedor.contacto || '');
     $('#telefono').val(proveedor.telefono || '');
     $('#direccion').val(proveedor.direccion || '');
