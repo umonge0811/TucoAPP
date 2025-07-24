@@ -83,15 +83,27 @@ async function cargarProveedores() {
             credentials: 'include'
         });
 
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log('📋 Respuesta del servidor:', data);
 
         if (data.success && data.data) {
-            proveedoresDisponibles = data.data;
+            proveedoresDisponibles = Array.isArray(data.data) ? data.data : [];
             llenarSelectProveedores();
             console.log(`✅ ${proveedoresDisponibles.length} proveedores cargados`);
+        } else {
+            throw new Error(data.message || 'Error obteniendo proveedores');
         }
     } catch (error) {
         console.error('❌ Error cargando proveedores:', error);
+        proveedoresDisponibles = [];
+        llenarSelectProveedores(); // Llenar con array vacío para limpiar los selects
+        if (typeof mostrarError === 'function') {
+            mostrarError('Error cargando proveedores: ' + error.message);
+        }
     }
 }
 
@@ -177,11 +189,23 @@ function llenarSelectProveedores() {
     select.html('<option value="">Seleccione un proveedor...</option>');
     filtro.html('<option value="">Todos los proveedores</option>');
 
+    if (!proveedoresDisponibles || proveedoresDisponibles.length === 0) {
+        console.warn('⚠️ No hay proveedores disponibles para llenar los selects');
+        return;
+    }
+
     proveedoresDisponibles.forEach(proveedor => {
-        const option = `<option value="${proveedor.proveedorId}">${proveedor.nombreProveedor}</option>`;
-        select.append(option);
-        filtro.append(option);
+        if (proveedor && proveedor.proveedorId && proveedor.nombreProveedor) {
+            const nombreProveedor = proveedor.nombreProveedor || 'Sin nombre';
+            const option = `<option value="${proveedor.proveedorId}">${nombreProveedor}</option>`;
+            select.append(option);
+            filtro.append(option);
+        } else {
+            console.warn('⚠️ Proveedor con datos incompletos:', proveedor);
+        }
     });
+
+    console.log(`✅ ${proveedoresDisponibles.length} proveedores cargados en los selects`);
 }
 
 /**
@@ -312,7 +336,12 @@ function seleccionarProveedor() {
  * Mostrar información del proveedor seleccionado
  */
 function mostrarInfoProveedor(proveedor) {
-    $('#infoNombreProveedor').text(proveedor.nombreProveedor);
+    if (!proveedor) {
+        console.error('❌ Proveedor no válido para mostrar información');
+        return;
+    }
+
+    $('#infoNombreProveedor').text(proveedor.nombreProveedor || 'Sin nombre');
     $('#infoContactoProveedor').text(proveedor.contacto || 'No especificado');
     $('#infoTelefonoProveedor').text(proveedor.telefono || 'No especificado');
     $('#infoDireccionProveedor').text(proveedor.direccion || 'No especificada');
