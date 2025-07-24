@@ -291,5 +291,51 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
+
+        /// <summary>
+        /// Obtiene el ID del usuario desde el token JWT
+        /// </summary>
+        private int? ObtenerUsuarioIdDelToken()
+        {
+            try
+            {
+                // Intentar obtener el ID directamente del claim
+                var userIdClaim = User.FindFirst("UserId")?.Value ?? User.FindFirst("userid")?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogInformation("Usuario ID obtenido del claim UserId: {UserId}", userId);
+                    return userId;
+                }
+
+                // Intentar con el claim "sub" (subject)
+                var subClaim = User.FindFirst("sub")?.Value;
+                if (!string.IsNullOrEmpty(subClaim) && int.TryParse(subClaim, out int subId))
+                {
+                    _logger.LogInformation("Usuario ID obtenido del claim sub: {UserId}", subId);
+                    return subId;
+                }
+
+                // Como último recurso, buscar por email
+                var emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+                if (!string.IsNullOrEmpty(emailClaim))
+                {
+                    _logger.LogInformation("Buscando usuario por email: {Email}", emailClaim);
+                    var usuario = _context.Usuarios.FirstOrDefault(u => u.Email == emailClaim);
+                    if (usuario != null)
+                    {
+                        _logger.LogInformation("Usuario encontrado por email. ID: {UserId}", usuario.UsuarioId);
+                        return usuario.UsuarioId;
+                    }
+                }
+
+                _logger.LogWarning("No se pudo obtener el ID del usuario de ningún claim");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener ID del usuario del token");
+                return null;
+            }
+        }
     }
 }
