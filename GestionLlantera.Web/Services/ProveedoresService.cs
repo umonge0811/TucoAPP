@@ -1,6 +1,7 @@
 
 using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Text;
 using tuco.Clases.Models;
 
@@ -53,12 +54,23 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string message)> CrearProveedorAsync(Proveedore proveedor, string token)
+        public async Task<(bool success, object data, string message)> CrearProveedorAsync(Proveedore proveedor, string jwtToken)
         {
             try
             {
                 _logger.LogInformation("➕ Creando proveedor: {Nombre}", proveedor.NombreProveedor);
-                ConfigurarAutenticacion(token);
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para la petición");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT - la petición podría fallar");
+                }
 
                 var json = JsonConvert.SerializeObject(proveedor);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");

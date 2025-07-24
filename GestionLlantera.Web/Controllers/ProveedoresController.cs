@@ -111,10 +111,12 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos del proveedor requeridos" });
                 }
 
-                var token = HttpContext.Session.GetString("JWTToken");
+                // ✅ OBTENER TOKEN - ESTO FALTABA
+                var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
-                    return Json(new { success = false, message = "Sesión expirada" });
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
                 }
 
                 // Validaciones
@@ -163,6 +165,24 @@ namespace GestionLlantera.Web.Controllers
                     message = "Error al crear proveedor: " + ex.Message
                 });
             }
+        }
+
+        private string? ObtenerTokenJWT()
+        {
+            var token = User.FindFirst("JwtToken")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+            }
+            else
+            {
+                _logger.LogDebug("✅ Token JWT obtenido correctamente para usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+            }
+
+            return token;
         }
 
         [HttpPut]
