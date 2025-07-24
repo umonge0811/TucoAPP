@@ -27,8 +27,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("📋 Obteniendo todos los proveedores activos");
 
-                var proveedores = await _context.Proveedores
-                    .Where(p => p.Activo)
+                var proveedores = await _context.Proveedores                    
                     .Include(p => p.PedidosProveedors)
                     .OrderBy(p => p.NombreProveedor)
                     .ToListAsync();
