@@ -325,6 +325,7 @@ function editarProveedor(id) {
     $('#proveedorId').val(proveedor.id);
     $('#nombreProveedor').val(proveedor.nombre);
     $('#contactoProveedor').val(proveedor.contacto || '');
+    $('#emailProveedor').val(proveedor.email || "");
     $('#telefonoProveedor').val(proveedor.telefono || '');
     $('#direccionProveedor').val(proveedor.direccion || '');
 
@@ -1007,6 +1008,5 @@ window.limpiarFiltros = limpiarFiltros;
 window.cambiarEstadoProveedor = cambiarEstadoProveedor;
 window.confirmarCambiarEstadoProveedor = confirmarCambiarEstadoProveedor;
 window.alternarVistaProveedores = alternarVistaProveedores;
-window.crearProveedorInactivoTemporal = crearProveedorInactivoTemporal;
 
 console.log('✅ Módulo de gestión de proveedores cargado completamente');
