@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
@@ -58,16 +59,33 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("📋 Solicitando lista de proveedores");
 
-                var proveedores = await _proveedoresService.ObtenerProveedoresAsync();
-
-                _logger.LogInformation("✅ {Count} proveedores obtenidos exitosamente", proveedores?.Count() ?? 0);
-
-                return Json(new
+                var token = HttpContext.Session.GetString("JWTToken");
+                if (string.IsNullOrEmpty(token))
                 {
-                    success = true,
-                    data = proveedores,
-                    message = "Proveedores obtenidos exitosamente"
-                });
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _proveedoresService.ObtenerProveedoresAsync(token);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Proveedores obtenidos exitosamente");
+                    return Json(new
+                    {
+                        success = true,
+                        data = resultado.data,
+                        message = resultado.message
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error obteniendo proveedores: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -92,22 +110,31 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos del proveedor requeridos" });
                 }
 
-                // Extraer datos del objeto dinámico
-                var nombreProveedor = (string)proveedorData.nombreProveedor;
-                var contacto = (string)proveedorData.contacto;
-                var telefono = (string)proveedorData.telefono;
-                var direccion = (string)proveedorData.direccion;
+                var token = HttpContext.Session.GetString("JWTToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
 
-                if (string.IsNullOrWhiteSpace(nombreProveedor))
+                // Crear objeto Proveedore
+                var proveedor = new Proveedore
+                {
+                    NombreProveedor = (string)proveedorData.nombreProveedor,
+                    Contacto = (string)proveedorData.contacto,
+                    Telefono = (string)proveedorData.telefono,
+                    Direccion = (string)proveedorData.direccion
+                };
+
+                if (string.IsNullOrWhiteSpace(proveedor.NombreProveedor))
                 {
                     return Json(new { success = false, message = "El nombre del proveedor es requerido" });
                 }
 
-                var resultado = await _proveedoresService.CrearProveedorAsync(nombreProveedor, contacto, telefono, direccion);
+                var resultado = await _proveedoresService.CrearProveedorAsync(proveedor, token);
 
                 if (resultado.success)
                 {
-                    _logger.LogInformation("✅ Proveedor creado exitosamente: {Nombre}", nombreProveedor);
+                    _logger.LogInformation("✅ Proveedor creado exitosamente: {Nombre}", proveedor.NombreProveedor);
                     return Json(new
                     {
                         success = true,
@@ -148,27 +175,37 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos del proveedor requeridos" });
                 }
 
-                var proveedorId = (int)proveedorData.proveedorId;
-                var nombreProveedor = (string)proveedorData.nombreProveedor;
-                var contacto = (string)proveedorData.contacto;
-                var telefono = (string)proveedorData.telefono;
-                var direccion = (string)proveedorData.direccion;
+                var token = HttpContext.Session.GetString("JWTToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
 
-                if (proveedorId <= 0)
+                // Crear objeto Proveedore
+                var proveedor = new Proveedore
+                {
+                    ProveedorId = (int)proveedorData.proveedorId,
+                    NombreProveedor = (string)proveedorData.nombreProveedor,
+                    Contacto = (string)proveedorData.contacto,
+                    Telefono = (string)proveedorData.telefono,
+                    Direccion = (string)proveedorData.direccion
+                };
+
+                if (proveedor.ProveedorId <= 0)
                 {
                     return Json(new { success = false, message = "ID del proveedor inválido" });
                 }
 
-                if (string.IsNullOrWhiteSpace(nombreProveedor))
+                if (string.IsNullOrWhiteSpace(proveedor.NombreProveedor))
                 {
                     return Json(new { success = false, message = "El nombre del proveedor es requerido" });
                 }
 
-                var resultado = await _proveedoresService.ActualizarProveedorAsync(proveedorId, nombreProveedor, contacto, telefono, direccion);
+                var resultado = await _proveedoresService.ActualizarProveedorAsync(proveedor, token);
 
                 if (resultado.success)
                 {
-                    _logger.LogInformation("✅ Proveedor actualizado exitosamente: {Id}", proveedorId);
+                    _logger.LogInformation("✅ Proveedor actualizado exitosamente: {Id}", proveedor.ProveedorId);
                     return Json(new
                     {
                         success = true,
@@ -209,7 +246,13 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "ID del proveedor inválido" });
                 }
 
-                var resultado = await _proveedoresService.EliminarProveedorAsync(id);
+                var token = HttpContext.Session.GetString("JWTToken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _proveedoresService.EliminarProveedorAsync(id, token);
 
                 if (resultado.success)
                 {
