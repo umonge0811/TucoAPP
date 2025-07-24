@@ -139,12 +139,20 @@ function mostrarProveedores() {
                     <span class="badge bg-info">${cantidadPedidos}</span>
                 </td>
                 <td class="text-center">
+                    <span class="badge ${proveedor.activo ? 'bg-success' : 'bg-secondary'}">
+                        ${proveedor.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                </td>
+                <td class="text-center">
                     <div class="btn-group" role="group">
                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarProveedor(${proveedor.proveedorId})" title="Editar">
                             <i class="bi bi-pencil"></i>
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-info" onclick="verPedidosProveedor(${proveedor.proveedorId})" title="Ver Pedidos">
                             <i class="bi bi-box-seam"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm ${proveedor.activo ? 'btn-outline-warning' : 'btn-outline-success'}" onclick="cambiarEstadoProveedor(${proveedor.proveedorId}, ${!proveedor.activo}, '${(proveedor.nombreProveedor || '').replace(/'/g, "\\'")}')" title="${proveedor.activo ? 'Desactivar' : 'Activar'}">
+                            <i class="bi ${proveedor.activo ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
                         </button>
                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${proveedor.proveedorId}, '${(proveedor.nombreProveedor || '').replace(/'/g, "\\'")}')" title="Eliminar">
                             <i class="bi bi-trash"></i>
@@ -184,6 +192,70 @@ function filtrarProveedores() {
 function limpiarFiltros() {
     $('#buscarProveedor').val('');
     filtrarProveedores();
+}
+
+/**
+ * Cargar todos los proveedores (incluyendo inactivos)
+ */
+async function cargarTodosProveedores() {
+    try {
+        console.log('📋 Cargando TODOS los proveedores (incluyendo inactivos)...');
+        mostrarLoading(true);
+
+        const response = await fetch('/Proveedores/ObtenerTodosProveedores', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('📋 Respuesta del servidor (todos):', data);
+
+        if (data.success && data.data) {
+            proveedoresData = data.data;
+            proveedoresFiltrados = [...proveedoresData];
+            mostrarProveedores();
+            actualizarContador();
+            console.log(`✅ ${proveedoresData.length} proveedores cargados (incluyendo inactivos)`);
+        } else {
+            throw new Error(data.message || 'Error obteniendo todos los proveedores');
+        }
+    } catch (error) {
+        console.error('❌ Error cargando todos los proveedores:', error);
+        mostrarToast('Error', 'Error cargando todos los proveedores: ' + error.message, 'danger');
+        mostrarSinDatos(true);
+    } finally {
+        mostrarLoading(false);
+    }
+}
+
+/**
+ * Alternar entre mostrar solo activos o todos los proveedores
+ */
+function alternarVistaProveedores() {
+    const btn = $('#btnToggleProveedores');
+    const mostrandoTodos = btn.data('mostrandoTodos') || false;
+    
+    if (mostrandoTodos) {
+        // Cambiar a mostrar solo activos
+        cargarProveedores();
+        btn.html('<i class="bi bi-eye me-1"></i>Ver Todos');
+        btn.removeClass('btn-secondary').addClass('btn-outline-secondary');
+        btn.data('mostrandoTodos', false);
+    } else {
+        // Cambiar a mostrar todos
+        cargarTodosProveedores();
+        btn.html('<i class="bi bi-eye-slash me-1"></i>Solo Activos');
+        btn.removeClass('btn-outline-secondary').addClass('btn-secondary');
+        btn.data('mostrandoTodos', true);
+    }
 }
 
 // =====================================
@@ -502,6 +574,108 @@ function verPedidosProveedor(proveedorId) {
     window.location.href = `/Proveedores/PedidosProveedor?proveedorId=${proveedorId}`;
 }
 
+/**
+ * Cambiar estado de un proveedor (activar/desactivar)
+ */
+async function cambiarEstadoProveedor(id, nuevoEstado, nombre) {
+    try {
+        const accion = nuevoEstado ? 'activar' : 'desactivar';
+        const confirmacion = await Swal.fire({
+            title: `¿${accion.charAt(0).toUpperCase() + accion.slice(1)} proveedor?`,
+            html: `
+                <div class="text-start">
+                    <p><strong>Proveedor:</strong> ${nombre}</p>
+                    <hr>
+                    <p class="text-info"><strong>ℹ️ Información:</strong></p>
+                    <ul class="text-muted">
+                        <li>El proveedor será ${nuevoEstado ? 'activado' : 'desactivado'}</li>
+                        <li>${nuevoEstado ? 'Podrá ser utilizado en nuevos pedidos' : 'No aparecerá en la lista de proveedores activos'}</li>
+                        <li>Los pedidos existentes no se verán afectados</li>
+                    </ul>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: nuevoEstado ? '#28a745' : '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, ${accion}`,
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        });
+
+        if (confirmacion.isConfirmed) {
+            await confirmarCambiarEstadoProveedor(id, nuevoEstado, nombre);
+        }
+    } catch (error) {
+        console.error('❌ Error en confirmación de cambio de estado:', error);
+        mostrarToast('Error', 'Error en la confirmación', 'danger');
+    }
+}
+
+/**
+ * Confirmar cambio de estado del proveedor
+ */
+async function confirmarCambiarEstadoProveedor(id, nuevoEstado, nombre) {
+    try {
+        const accion = nuevoEstado ? 'Activando' : 'Desactivando';
+        
+        // Mostrar loading
+        Swal.fire({
+            title: `${accion}...`,
+            text: `${accion} proveedor ${nombre}`,
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const response = await fetch(`/Proveedores/CambiarEstadoProveedor/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ activo: nuevoEstado }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Error ${response.status}: ${errorText}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Estado cambiado!',
+                text: resultado.message || `Proveedor ${nuevoEstado ? 'activado' : 'desactivado'} exitosamente`,
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#28a745',
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            await cargarProveedores(); // Recargar lista
+        } else {
+            throw new Error(resultado.message || 'Error cambiando estado del proveedor');
+        }
+    } catch (error) {
+        console.error('❌ Error cambiando estado del proveedor:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al cambiar estado',
+            text: error.message,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
 // =====================================
 // FUNCIONES DE UI
 // =====================================
@@ -645,5 +819,9 @@ window.eliminarProveedor = eliminarProveedor;
 window.confirmarEliminarProveedor = confirmarEliminarProveedor;
 window.verPedidosProveedor = verPedidosProveedor;
 window.limpiarFiltros = limpiarFiltros;
+window.cambiarEstadoProveedor = cambiarEstadoProveedor;
+window.confirmarCambiarEstadoProveedor = confirmarCambiarEstadoProveedor;
+window.cargarTodosProveedores = cargarTodosProveedores;
+window.alternarVistaProveedores = alternarVistaProveedores;
 
 console.log('✅ Módulo de gestión de proveedores cargado completamente');
