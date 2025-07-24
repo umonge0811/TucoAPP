@@ -47,9 +47,15 @@ function configurarEventListeners() {
     $('#formProveedor').on('submit', function(e) {
         e.preventDefault();
 
+        console.log('🔍 Submit formulario - proveedorEditando:', proveedorEditando);
+        console.log('🔍 Tipo de proveedorEditando:', typeof proveedorEditando);
+        console.log('🔍 Valor booleano:', !!proveedorEditando);
+
         if (proveedorEditando) {
+            console.log('✅ Llamando a actualizarProveedor()');
             actualizarProveedor();
         } else {
+            console.log('✅ Llamando a crearProveedor()');
             crearProveedor();
         }
     });
@@ -301,6 +307,7 @@ function alternarVistaProveedores() {
  */
 function abrirModalProveedor() {
     proveedorEditando = null;
+    console.log('🆕 Abriendo modal para NUEVO proveedor - proveedorEditando:', proveedorEditando);
     $('#tituloModalProveedor').html('<i class="bi bi-truck me-2"></i>Nuevo Proveedor');
     $('#btnGuardarProveedor').html('<i class="bi bi-plus me-1"></i>Crear Proveedor');
     limpiarFormularioProveedor();
@@ -318,6 +325,7 @@ function editarProveedor(id) {
     }
 
     proveedorEditando = proveedor;
+    console.log('✏️ Editando proveedor - ID:', id, 'proveedorEditando:', proveedorEditando);
     $('#tituloModalProveedor').html('<i class="bi bi-pencil me-2"></i>Editar Proveedor');
     $('#btnGuardarProveedor').html('<i class="bi bi-save me-1"></i>Actualizar Proveedor');
 
@@ -423,6 +431,7 @@ async function actualizarProveedor() {
             nombreProveedor: $('#nombreProveedor').val().trim(),
             contacto: $('#contactoProveedor').val().trim() || null,
             telefono: $('#telefonoProveedor').val().trim() || null,
+            email: $('#emailProveedor').val().trim() || null,
             direccion: $('#direccionProveedor').val().trim() || null
         };
 
@@ -590,6 +599,7 @@ function limpiarFormularioProveedor() {
     $('.form-control').removeClass('is-invalid is-valid');
     $('.invalid-feedback').text('');
     proveedorEditando = null;
+    console.log('🧹 Formulario limpiado - proveedorEditando:', proveedorEditando);
 }
 
 /**
