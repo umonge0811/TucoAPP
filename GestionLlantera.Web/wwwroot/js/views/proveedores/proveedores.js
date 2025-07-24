@@ -126,6 +126,7 @@ function mostrarProveedores() {
 
     const html = proveedoresFiltrados.map(proveedor => {
         const cantidadPedidos = proveedor.pedidosProveedors ? proveedor.pedidosProveedors.length : 0;
+        const tieneRegistros = cantidadPedidos > 0;
 
         return `
             <tr>
@@ -159,7 +160,11 @@ function mostrarProveedores() {
                         <button type="button" class="btn btn-sm ${proveedor.activo ? 'btn-outline-warning' : 'btn-outline-success'}" onclick="cambiarEstadoProveedor(${proveedor.id}, ${!proveedor.activo}, '${(proveedor.nombre || '').replace(/'/g, "\\'")}')" title="${proveedor.activo ? 'Desactivar' : 'Activar'}">
                             <i class="bi ${proveedor.activo ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${proveedor.id}, '${(proveedor.nombre || '').replace(/'/g, "\\'")}')" title="Eliminar">
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-danger ${tieneRegistros ? 'disabled' : ''}" 
+                                onclick="${tieneRegistros ? '' : `eliminarProveedor(${proveedor.id}, '${(proveedor.nombre || '').replace(/'/g, "\\'")}')`}" 
+                                title="${tieneRegistros ? 'No se puede eliminar: tiene pedidos asociados' : 'Eliminar'}"
+                                ${tieneRegistros ? 'disabled' : ''}>
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -581,6 +586,42 @@ function limpiarFormulario() {
  */
 async function eliminarProveedor(id, nombre) {
     try {
+        // Buscar el proveedor para verificar si tiene registros
+        const proveedor = proveedoresData.find(p => p.id === id);
+        if (!proveedor) {
+            mostrarToast('Error', 'Proveedor no encontrado', 'danger');
+            return;
+        }
+
+        const cantidadPedidos = proveedor.pedidosProveedors ? proveedor.pedidosProveedors.length : 0;
+        
+        // Si tiene registros, mostrar mensaje informativo y sugerir desactivar
+        if (cantidadPedidos > 0) {
+            Swal.fire({
+                title: 'No se puede eliminar',
+                html: `
+                    <div class="text-start">
+                        <p><strong>Proveedor:</strong> ${nombre}</p>
+                        <p><strong>Pedidos asociados:</strong> ${cantidadPedidos}</p>
+                        <hr>
+                        <p class="text-info"><strong>ℹ️ Información:</strong></p>
+                        <ul class="text-muted">
+                            <li>Este proveedor tiene pedidos registrados</li>
+                            <li>No se puede eliminar para mantener la integridad de los datos</li>
+                            <li>Puedes desactivarlo si ya no lo necesitas</li>
+                        </ul>
+                        <hr>
+                        <p class="text-success"><strong>💡 Sugerencia:</strong> Usa el botón <i class="bi bi-pause-circle"></i> para desactivar el proveedor</p>
+                    </div>
+                `,
+                icon: 'info',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#007bff'
+            });
+            return;
+        }
+
+        // Si no tiene registros, proceder con la confirmación normal
         const confirmacion = await Swal.fire({
             title: '¿Eliminar proveedor?',
             html: `
@@ -591,7 +632,7 @@ async function eliminarProveedor(id, nombre) {
                     <ul class="text-muted">
                         <li>Esta acción no se puede deshacer</li>
                         <li>Se eliminará toda la información del proveedor</li>
-                        <li>Los pedidos asociados podrían verse afectados</li>
+                        <li>Este proveedor no tiene pedidos asociados</li>
                     </ul>
                 </div>
             `,
