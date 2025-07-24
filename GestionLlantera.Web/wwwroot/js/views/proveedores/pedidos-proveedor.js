@@ -366,7 +366,7 @@ function seleccionarProveedor() {
     if (!proveedorId) {
         proveedorSeleccionado = null;
         $('#infoProveedorSeleccionado').hide();
-        $('#btnSiguientePaso').prop('disabled', true);
+        $('#btnSiguientePaso').prop('disabled', false);
         return;
     }
 
@@ -391,7 +391,8 @@ function mostrarInfoProveedor(proveedor) {
         return;
     }
 
-    $('#infoNombreProveedor').text(proveedor.nombreProveedor || 'Sin nombre');
+    const nombre = proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre';
+    $('#infoNombreProveedor').text(nombre);
     $('#infoContactoProveedor').text(proveedor.contacto || 'No especificado');
     $('#infoTelefonoProveedor').text(proveedor.telefono || 'No especificado');
     $('#infoDireccionProveedor').text(proveedor.direccion || 'No especificada');
@@ -600,7 +601,7 @@ async function finalizarPedido() {
         btnFinalizar.html('<i class="bi bi-hourglass-split me-1"></i>Creando Pedido...').prop('disabled', true);
 
         const datosPedido = {
-            proveedorId: proveedorSeleccionado.proveedorId,
+            proveedorId: proveedorSeleccionado.id || proveedorSeleccionado.proveedorId,
             productos: productosSeleccionados.map(p => ({
                 productoId: p.productoId,
                 cantidad: p.cantidad,
@@ -836,7 +837,17 @@ function actualizarContadorPedidos() {
  */
 function mostrarExito(mensaje) {
     console.log('✅ Éxito:', mensaje);
-    if (typeof mostrarToast === 'function') {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: mensaje,
+            confirmButtonText: 'Continuar',
+            confirmButtonColor: '#28a745',
+            timer: 3000,
+            timerProgressBar: true
+        });
+    } else if (typeof mostrarToast === 'function') {
         mostrarToast('Éxito', mensaje, 'success');
     } else {
         alert('Éxito: ' + mensaje);
@@ -848,7 +859,15 @@ function mostrarExito(mensaje) {
  */
 function mostrarError(mensaje) {
     console.error('❌ Error:', mensaje);
-    if (typeof mostrarToast === 'function') {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: mensaje,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#dc3545'
+        });
+    } else if (typeof mostrarToast === 'function') {
         mostrarToast('Error', mensaje, 'danger');
     } else {
         alert('Error: ' + mensaje);

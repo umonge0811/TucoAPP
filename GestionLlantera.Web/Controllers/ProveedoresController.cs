@@ -398,13 +398,8 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var jwtToken = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(jwtToken))
-                {
-                    return Json(new { success = false, message = "Sesión expirada" });
-                }
-
-                var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
+                var token = HttpContext.Session.GetString("JWTToken");
+                var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, token);
                 return Json(resultado);
             }
             catch (Exception ex)

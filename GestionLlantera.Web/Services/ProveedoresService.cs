@@ -174,7 +174,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
+                _logger.LogInformation("📋 Obteniendo pedidos de proveedores");
 
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
