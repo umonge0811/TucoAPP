@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
 using tuco.Clases.Models;
+using System.Text.Json;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -99,13 +100,13 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearProveedor([FromBody] dynamic proveedorData)
+        public async Task<IActionResult> CrearProveedor([FromBody] CreateProveedorRequest request)
         {
             try
             {
-                _logger.LogInformation("📋 Creando nuevo proveedor");
+                _logger.LogInformation("📋 Creando nuevo proveedor: {Nombre}", request?.NombreProveedor);
 
-                if (proveedorData == null)
+                if (request == null)
                 {
                     return Json(new { success = false, message = "Datos del proveedor requeridos" });
                 }
@@ -116,19 +117,20 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                // Crear objeto Proveedore
-                var proveedor = new Proveedore
-                {
-                    NombreProveedor = (string)proveedorData.nombreProveedor,
-                    Contacto = (string)proveedorData.contacto,
-                    Telefono = (string)proveedorData.telefono,
-                    Direccion = (string)proveedorData.direccion
-                };
-
-                if (string.IsNullOrWhiteSpace(proveedor.NombreProveedor))
+                // Validaciones
+                if (string.IsNullOrWhiteSpace(request.NombreProveedor))
                 {
                     return Json(new { success = false, message = "El nombre del proveedor es requerido" });
                 }
+
+                // Crear objeto Proveedore
+                var proveedor = new Proveedore
+                {
+                    NombreProveedor = request.NombreProveedor.Trim(),
+                    Contacto = string.IsNullOrWhiteSpace(request.Contacto) ? null : request.Contacto.Trim(),
+                    Telefono = string.IsNullOrWhiteSpace(request.Telefono) ? null : request.Telefono.Trim(),
+                    Direccion = string.IsNullOrWhiteSpace(request.Direccion) ? null : request.Direccion.Trim()
+                };
 
                 var resultado = await _proveedoresService.CrearProveedorAsync(proveedor, token);
 
@@ -138,7 +140,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new
                     {
                         success = true,
-                        message = resultado.message,
+                        message = resultado.message ?? "Proveedor creado exitosamente",
                         data = resultado.data
                     });
                 }
@@ -148,7 +150,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new
                     {
                         success = false,
-                        message = resultado.message
+                        message = resultado.message ?? "Error al crear proveedor"
                     });
                 }
             }
@@ -164,13 +166,13 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> ActualizarProveedor([FromBody] dynamic proveedorData)
+        public async Task<IActionResult> ActualizarProveedor([FromBody] UpdateProveedorRequest request)
         {
             try
             {
-                _logger.LogInformation("📋 Actualizando proveedor");
+                _logger.LogInformation("📋 Actualizando proveedor ID: {Id}", request?.ProveedorId);
 
-                if (proveedorData == null)
+                if (request == null)
                 {
                     return Json(new { success = false, message = "Datos del proveedor requeridos" });
                 }
@@ -181,25 +183,26 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                // Crear objeto Proveedore
-                var proveedor = new Proveedore
-                {
-                    ProveedorId = (int)proveedorData.proveedorId,
-                    NombreProveedor = (string)proveedorData.nombreProveedor,
-                    Contacto = (string)proveedorData.contacto,
-                    Telefono = (string)proveedorData.telefono,
-                    Direccion = (string)proveedorData.direccion
-                };
-
-                if (proveedor.ProveedorId <= 0)
+                // Validaciones
+                if (request.ProveedorId <= 0)
                 {
                     return Json(new { success = false, message = "ID del proveedor inválido" });
                 }
 
-                if (string.IsNullOrWhiteSpace(proveedor.NombreProveedor))
+                if (string.IsNullOrWhiteSpace(request.NombreProveedor))
                 {
                     return Json(new { success = false, message = "El nombre del proveedor es requerido" });
                 }
+
+                // Crear objeto Proveedore
+                var proveedor = new Proveedore
+                {
+                    ProveedorId = request.ProveedorId,
+                    NombreProveedor = request.NombreProveedor.Trim(),
+                    Contacto = string.IsNullOrWhiteSpace(request.Contacto) ? null : request.Contacto.Trim(),
+                    Telefono = string.IsNullOrWhiteSpace(request.Telefono) ? null : request.Telefono.Trim(),
+                    Direccion = string.IsNullOrWhiteSpace(request.Direccion) ? null : request.Direccion.Trim()
+                };
 
                 var resultado = await _proveedoresService.ActualizarProveedorAsync(proveedor, token);
 
@@ -209,7 +212,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new
                     {
                         success = true,
-                        message = resultado.message,
+                        message = resultado.message ?? "Proveedor actualizado exitosamente",
                         data = resultado.data
                     });
                 }
@@ -219,7 +222,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new
                     {
                         success = false,
-                        message = resultado.message
+                        message = resultado.message ?? "Error al actualizar proveedor"
                     });
                 }
             }
@@ -260,7 +263,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new
                     {
                         success = true,
-                        message = resultado.message
+                        message = resultado.message ?? "Proveedor eliminado exitosamente"
                     });
                 }
                 else
@@ -269,7 +272,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new
                     {
                         success = false,
-                        message = resultado.message
+                        message = resultado.message ?? "Error al eliminar proveedor"
                     });
                 }
             }
@@ -325,5 +328,23 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = "Error creando pedido" });
             }
         }
+    }
+
+    // DTOs para las requests
+    public class CreateProveedorRequest
+    {
+        public string NombreProveedor { get; set; } = string.Empty;
+        public string? Contacto { get; set; }
+        public string? Telefono { get; set; }
+        public string? Direccion { get; set; }
+    }
+
+    public class UpdateProveedorRequest
+    {
+        public int ProveedorId { get; set; }
+        public string NombreProveedor { get; set; } = string.Empty;
+        public string? Contacto { get; set; }
+        public string? Telefono { get; set; }
+        public string? Direccion { get; set; }
     }
 }

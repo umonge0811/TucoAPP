@@ -44,10 +44,15 @@ function configurarEventListeners() {
         filtrarProveedores();
     });
 
-    // Validación del formulario
+    // Validación del formulario - separar crear de editar
     $('#formProveedor').on('submit', function(e) {
         e.preventDefault();
-        guardarProveedor();
+        
+        if (proveedorEditando) {
+            actualizarProveedor();
+        } else {
+            crearProveedor();
+        }
     });
 
     // Limpiar formulario al cerrar modal
@@ -192,6 +197,7 @@ function limpiarFiltros() {
 function abrirModalProveedor() {
     proveedorEditando = null;
     $('#tituloModalProveedor').html('<i class="bi bi-truck me-2"></i>Nuevo Proveedor');
+    $('#btnGuardarProveedor').html('<i class="bi bi-plus me-1"></i>Crear Proveedor');
     limpiarFormularioProveedor();
     $('#modalProveedor').modal('show');
 }
@@ -202,12 +208,13 @@ function abrirModalProveedor() {
 function editarProveedor(id) {
     const proveedor = proveedoresData.find(p => p.proveedorId === id);
     if (!proveedor) {
-        mostrarError('Proveedor no encontrado');
+        mostrarAlerta('Proveedor no encontrado', 'error');
         return;
     }
 
     proveedorEditando = proveedor;
     $('#tituloModalProveedor').html('<i class="bi bi-pencil me-2"></i>Editar Proveedor');
+    $('#btnGuardarProveedor').html('<i class="bi bi-save me-1"></i>Actualizar Proveedor');
     
     // Llenar formulario
     $('#proveedorId').val(proveedor.proveedorId);
@@ -219,10 +226,14 @@ function editarProveedor(id) {
     $('#modalProveedor').modal('show');
 }
 
+// =====================================
+// FUNCIONES DE CREACIÓN
+// =====================================
+
 /**
- * Guardar proveedor (crear o actualizar)
+ * Crear nuevo proveedor
  */
-async function guardarProveedor() {
+async function crearProveedor() {
     try {
         if (!validarFormularioProveedor()) {
             return;
@@ -230,24 +241,19 @@ async function guardarProveedor() {
 
         const btnGuardar = $('#btnGuardarProveedor');
         const textoOriginal = btnGuardar.html();
-        btnGuardar.html('<i class="bi bi-hourglass-split me-1"></i>Guardando...').prop('disabled', true);
+        btnGuardar.html('<i class="bi bi-hourglass-split me-1"></i>Creando...').prop('disabled', true);
 
         const datosProveedor = {
-            proveedorId: $('#proveedorId').val() || 0,
             nombreProveedor: $('#nombreProveedor').val().trim(),
             contacto: $('#contacto').val().trim() || null,
             telefono: $('#telefono').val().trim() || null,
             direccion: $('#direccion').val().trim() || null
         };
 
-        console.log('📋 Datos a enviar:', datosProveedor);
+        console.log('📋 Datos a crear:', datosProveedor);
 
-        const esEdicion = proveedorEditando !== null;
-        const url = esEdicion ? '/Proveedores/ActualizarProveedor' : '/Proveedores/CrearProveedor';
-        const metodo = esEdicion ? 'PUT' : 'POST';
-
-        const response = await fetch(url, {
-            method: metodo,
+        const response = await fetch('/Proveedores/CrearProveedor', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
@@ -265,21 +271,90 @@ async function guardarProveedor() {
         }
 
         const resultado = await response.json();
-        console.log('📋 Resultado:', resultado);
+        console.log('📋 Resultado crear:', resultado);
 
         if (resultado.success) {
-            mostrarToast('Éxito', resultado.message || (esEdicion ? 'Proveedor actualizado exitosamente' : 'Proveedor creado exitosamente'), 'success');
+            mostrarToast('Éxito', resultado.message || 'Proveedor creado exitosamente', 'success');
             $('#modalProveedor').modal('hide');
             await cargarProveedores(); // Recargar lista
         } else {
-            mostrarToast('Error', resultado.message || 'Error procesando la solicitud', 'danger');
+            mostrarToast('Error', resultado.message || 'Error creando proveedor', 'danger');
         }
     } catch (error) {
-        console.error('❌ Error guardando proveedor:', error);
-        mostrarToast('Error', 'Error guardando proveedor: ' + error.message, 'danger');
+        console.error('❌ Error creando proveedor:', error);
+        mostrarToast('Error', 'Error creando proveedor: ' + error.message, 'danger');
     } finally {
         const btnGuardar = $('#btnGuardarProveedor');
-        btnGuardar.html('<i class="bi bi-save me-1"></i>Guardar').prop('disabled', false);
+        btnGuardar.html('<i class="bi bi-plus me-1"></i>Crear Proveedor').prop('disabled', false);
+    }
+}
+
+// =====================================
+// FUNCIONES DE ACTUALIZACIÓN
+// =====================================
+
+/**
+ * Actualizar proveedor existente
+ */
+async function actualizarProveedor() {
+    try {
+        if (!validarFormularioProveedor()) {
+            return;
+        }
+
+        if (!proveedorEditando) {
+            mostrarAlerta('Error: No hay proveedor seleccionado para editar', 'error');
+            return;
+        }
+
+        const btnGuardar = $('#btnGuardarProveedor');
+        const textoOriginal = btnGuardar.html();
+        btnGuardar.html('<i class="bi bi-hourglass-split me-1"></i>Actualizando...').prop('disabled', true);
+
+        const datosProveedor = {
+            proveedorId: proveedorEditando.proveedorId,
+            nombreProveedor: $('#nombreProveedor').val().trim(),
+            contacto: $('#contacto').val().trim() || null,
+            telefono: $('#telefono').val().trim() || null,
+            direccion: $('#direccion').val().trim() || null
+        };
+
+        console.log('📋 Datos a actualizar:', datosProveedor);
+
+        const response = await fetch('/Proveedores/ActualizarProveedor', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(datosProveedor),
+            credentials: 'include'
+        });
+
+        console.log('📋 Respuesta HTTP:', response.status, response.statusText);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${errorText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 Resultado actualizar:', resultado);
+
+        if (resultado.success) {
+            mostrarToast('Éxito', resultado.message || 'Proveedor actualizado exitosamente', 'success');
+            $('#modalProveedor').modal('hide');
+            await cargarProveedores(); // Recargar lista
+        } else {
+            mostrarToast('Error', resultado.message || 'Error actualizando proveedor', 'danger');
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando proveedor:', error);
+        mostrarToast('Error', 'Error actualizando proveedor: ' + error.message, 'danger');
+    } finally {
+        const btnGuardar = $('#btnGuardarProveedor');
+        btnGuardar.html('<i class="bi bi-save me-1"></i>Actualizar Proveedor').prop('disabled', false);
     }
 }
 
@@ -290,13 +365,13 @@ function validarFormularioProveedor() {
     const nombre = $('#nombreProveedor').val().trim();
 
     if (!nombre) {
-        mostrarError('El nombre del proveedor es requerido');
+        mostrarAlerta('El nombre del proveedor es requerido', 'warning');
         $('#nombreProveedor').focus();
         return false;
     }
 
     if (nombre.length < 2) {
-        mostrarError('El nombre del proveedor debe tener al menos 2 caracteres');
+        mostrarAlerta('El nombre del proveedor debe tener al menos 2 caracteres', 'warning');
         $('#nombreProveedor').focus();
         return false;
     }
@@ -312,6 +387,7 @@ function limpiarFormularioProveedor() {
     $('#proveedorId').val('');
     $('.is-invalid').removeClass('is-invalid');
     $('.invalid-feedback').remove();
+    proveedorEditando = null;
 }
 
 // =====================================
@@ -564,7 +640,8 @@ function mostrarAlerta(mensaje, tipo = 'info', titulo = null) {
 
 window.abrirModalProveedor = abrirModalProveedor;
 window.editarProveedor = editarProveedor;
-window.guardarProveedor = guardarProveedor;
+window.crearProveedor = crearProveedor;
+window.actualizarProveedor = actualizarProveedor;
 window.eliminarProveedor = eliminarProveedor;
 window.confirmarEliminarProveedor = confirmarEliminarProveedor;
 window.verPedidosProveedor = verPedidosProveedor;
