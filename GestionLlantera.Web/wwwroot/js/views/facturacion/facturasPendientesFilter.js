@@ -79,6 +79,14 @@ function configurarEventosFacturasPendientes() {
         limpiarFiltrosFacturas();
     });
 
+    // Configurar cambio de productos por página
+    $(document).on('change.facturasPendientesFilter', '#facturasPendientesPorPagina', function() {
+        facturasPorPagina = parseInt($(this).val());
+        paginaActualFacturas = 1;
+        console.log('📄 Cambiando facturas por página a:', facturasPorPagina);
+        mostrarFacturasPendientesPaginadas();
+    });
+
     console.log('✅ Eventos de filtros de facturas configurados con delegación');
 }
 
@@ -579,12 +587,10 @@ function configurarEventosBotonesFacturas() {
  * Actualizar el contador de resultados de facturas
  */
 function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
-    let contador = $('#contadorResultadosFacturas');
-    if (contador.length === 0) {
-        contador = $('<div id="contadorResultadosFacturas" class="mt-2 text-muted"></div>');
-        $('#facturasPendientesContent').before(contador);  // Insertar antes de la tabla
-    }
-    contador.text(`Mostrando ${conteoActual} de ${conteoTotal} facturas pendientes`);
+    const inicio = ((paginaActualFacturas - 1) * facturasPorPagina) + 1;
+    const fin = Math.min(paginaActualFacturas * facturasPorPagina, conteoActual);
+    
+    $('#facturasPendientesInfo').text(`Mostrando ${inicio}-${fin} de ${conteoActual} facturas`);
 }
 
 /**
