@@ -100,6 +100,26 @@
                     </div>
                 </div>
             </div>
+            <!-- Después de la tabla, antes del footer del modal -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div id="infoPaginacionInventario">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted">Productos por página:</small>
+                    <select class="form-select form-select-sm" style="width: auto;" onchange="cambiarProductosPorPagina(this.value)">
+                        <option value="10">10</option>
+                        <option value="20" selected>20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="paginacionInventarioModal" class="mt-3" style="display: none;">
+                <!-- Se llena dinámicamente -->
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x-circle me-1"></i>Cerrar
