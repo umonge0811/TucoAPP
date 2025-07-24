@@ -238,25 +238,54 @@ function alternarVistaProveedores() {
     const btn = $('#btnToggleProveedores');
     const mostrandoSoloActivos = btn.data('mostrandoSoloActivos') || false;
 
-    console.log('🔄 Alternando vista de proveedores. Estado actual mostrandoSoloActivos:', mostrandoSoloActivos);
+    console.log('🔄 🎯 ALTERNANDO VISTA DE PROVEEDORES');
+    console.log('   📊 Estado actual mostrandoSoloActivos:', mostrandoSoloActivos);
+    console.log('   📋 Total proveedores disponibles:', proveedoresData.length);
+
+    // Log detallado de cada proveedor y su estado
+    console.log('   🔍 ANÁLISIS DETALLADO DE PROVEEDORES:');
+    proveedoresData.forEach((proveedor, index) => {
+        console.log(`   🏪 Proveedor ${index + 1}:`, {
+            id: proveedor.id,
+            nombre: proveedor.nombre,
+            activo: proveedor.activo,
+            tipo_activo: typeof proveedor.activo
+        });
+    });
 
     if (mostrandoSoloActivos) {
         // Cambiar a mostrar TODOS
-        console.log('📋 Cambiando a mostrar TODOS los proveedores');
+        console.log('   ➡️ Cambiando a mostrar TODOS los proveedores');
         proveedoresFiltrados = [...proveedoresData];
         btn.html('<i class="bi bi-eye-slash me-1"></i>Solo Activos');
         btn.removeClass('btn-outline-secondary').addClass('btn-secondary');
         btn.data('mostrandoSoloActivos', false);
+        console.log('   ✅ Ahora mostrando: TODOS');
     } else {
         // Cambiar a mostrar solo activos
-        console.log('📋 Cambiando a mostrar solo proveedores ACTIVOS');
-        proveedoresFiltrados = proveedoresData.filter(p => p.activo === true);
+        console.log('   ➡️ Cambiando a mostrar solo proveedores ACTIVOS');
+        
+        // Verificar diferentes formas de filtrar
+        const activosTrue = proveedoresData.filter(p => p.activo === true);
+        const activosString = proveedoresData.filter(p => p.activo === 'true');
+        const activosBoolean = proveedoresData.filter(p => !!p.activo);
+        
+        console.log('   🔍 Filtros aplicados:');
+        console.log('     === true:', activosTrue.length);
+        console.log('     === "true":', activosString.length);
+        console.log('     !!activo:', activosBoolean.length);
+        
+        proveedoresFiltrados = activosTrue;
         btn.html('<i class="bi bi-eye me-1"></i>Ver Todos');
         btn.removeClass('btn-secondary').addClass('btn-outline-secondary');
         btn.data('mostrandoSoloActivos', true);
+        console.log('   ✅ Ahora mostrando: SOLO ACTIVOS');
     }
 
-    console.log('📊 Proveedores después del filtro:', proveedoresFiltrados.length);
+    console.log('   📊 Resultado final:');
+    console.log('     🔢 Proveedores filtrados:', proveedoresFiltrados.length);
+    console.log('     📋 IDs filtrados:', proveedoresFiltrados.map(p => `${p.id}(${p.activo})`));
+
     mostrarProveedores();
     actualizarContador();
 }
@@ -960,6 +989,37 @@ function mostrarAlerta(mensaje, tipo = 'info', titulo = null) {
 }
 
 // =====================================
+// FUNCIÓN TEMPORAL PARA PROBAR FILTROS
+// =====================================
+
+/**
+ * FUNCIÓN TEMPORAL: Crear un proveedor inactivo para probar filtros
+ */
+function crearProveedorInactivoTemporal() {
+    console.log('🧪 Creando proveedor inactivo temporal para pruebas...');
+    
+    const proveedorTemporal = {
+        id: 999,
+        nombre: 'PROVEEDOR INACTIVO - TEMPORAL',
+        contacto: 'Contacto Temporal',
+        telefono: '000-000-0000',
+        direccion: 'Dirección Temporal',
+        activo: false,
+        pedidosProveedors: []
+    };
+    
+    // Agregar al inicio del array
+    proveedoresData.unshift(proveedorTemporal);
+    proveedoresFiltrados = [...proveedoresData];
+    
+    console.log('✅ Proveedor temporal agregado:', proveedorTemporal);
+    console.log('📊 Total proveedores ahora:', proveedoresData.length);
+    
+    mostrarProveedores();
+    actualizarContador();
+}
+
+// =====================================
 // EXPORTAR FUNCIONES GLOBALMENTE
 // =====================================
 
@@ -974,5 +1034,6 @@ window.limpiarFiltros = limpiarFiltros;
 window.cambiarEstadoProveedor = cambiarEstadoProveedor;
 window.confirmarCambiarEstadoProveedor = confirmarCambiarEstadoProveedor;
 window.alternarVistaProveedores = alternarVistaProveedores;
+window.crearProveedorInactivoTemporal = crearProveedorInactivoTemporal;
 
 console.log('✅ Módulo de gestión de proveedores cargado completamente');
