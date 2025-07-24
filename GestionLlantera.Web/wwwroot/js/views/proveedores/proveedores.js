@@ -798,32 +798,40 @@ async function confirmarCambiarEstadoProveedor(id, nuevoEstado, nombre) {
         }
 
         const resultado = await response.json();
+        console.log('📋 Resultado cambio estado:', resultado);
 
         if (resultado.success) {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Estado cambiado!',
-                text: resultado.message || `Proveedor ${nuevoEstado ? 'activado' : 'desactivado'} exitosamente`,
-                confirmButtonText: 'Continuar',
-                confirmButtonColor: '#28a745',
-                timer: 3000,
-                timerProgressBar: true
-            });
+            // Actualizar datos locales inmediatamente
+            const proveedor = proveedoresData.find(p => p.id === id);
+            if (proveedor) {
+                proveedor.activo = nuevoEstado;
+            }
+            
+            // Actualizar datos filtrados también
+            const proveedorFiltrado = proveedoresFiltrados.find(p => p.id === id);
+            if (proveedorFiltrado) {
+                proveedorFiltrado.activo = nuevoEstado;
+            }
 
-            await cargarProveedores(); // Recargar lista
+            // Mostrar mensaje de éxito
+            mostrarToast('Éxito', resultado.message || `Proveedor ${nuevoEstado ? 'activado' : 'desactivado'} exitosamente`, 'success');
+            
+            // Cerrar cualquier modal de SweetAlert abierto
+            Swal.close();
+
+            // Actualizar vista inmediatamente
+            mostrarProveedores();
         } else {
             throw new Error(resultado.message || 'Error cambiando estado del proveedor');
         }
     } catch (error) {
         console.error('❌ Error cambiando estado del proveedor:', error);
 
-        Swal.fire({
-            icon: 'error',
-            title: 'Error al cambiar estado',
-            text: error.message,
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: '#dc3545'
-        });
+        // Cerrar loading si está abierto
+        Swal.close();
+
+        // Mostrar error con toast
+        mostrarToast('Error', 'Error al cambiar estado: ' + error.message, 'danger');
     }
 }
 

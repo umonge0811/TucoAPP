@@ -181,8 +181,9 @@ namespace API.Controllers
                 _logger.LogInformation("✅ Estado del proveedor cambiado exitosamente: {Id} -> {Estado}", id, request.Activo ? "Activo" : "Inactivo");
 
                 return Ok(new { 
+                    success = true,
                     message = $"Proveedor {(request.Activo ? "activado" : "desactivado")} exitosamente",
-                    proveedor = new {
+                    data = new {
                         id = proveedor.ProveedorId,
                         nombre = proveedor.NombreProveedor,
                         activo = proveedor.Activo
@@ -192,7 +193,10 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error cambiando estado del proveedor {Id}", id);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                return StatusCode(500, new { 
+                    success = false,
+                    message = "Error interno del servidor" 
+                });
             }
         }
 
