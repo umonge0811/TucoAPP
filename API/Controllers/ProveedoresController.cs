@@ -236,9 +236,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
 
-                using var context = new TucoContext();
-
-                var proveedores = await context.Proveedores
+                var proveedores = await _context.Proveedores
                     .Include(p => p.PedidosProveedors)
                     .OrderBy(p => p.NombreProveedor)
                     .ToListAsync();
