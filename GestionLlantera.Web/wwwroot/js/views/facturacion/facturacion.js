@@ -5158,10 +5158,34 @@ function validarFormularioNuevoCliente() {
         esValido = false;
     }
 
-    // Validar email (formato si se proporciona)
+    // Validar identificación (requerida)
+    const contacto = $('#contactoClienteFacturacion').val().trim();
+    if (!contacto) {
+        mostrarErrorCampoFacturacion('#contactoClienteFacturacion', 'La identificación es requerida');
+        esValido = false;
+    }
+
+    // Validar email (requerido y formato)
     const email = $('#emailClienteFacturacion').val().trim();
-    if (email && !validarEmailFacturacion(email)) {
+    if (!email) {
+        mostrarErrorCampoFacturacion('#emailClienteFacturacion', 'El email es requerido');
+        esValido = false;
+    } else if (!validarEmailFacturacion(email)) {
         mostrarErrorCampoFacturacion('#emailClienteFacturacion', 'El formato del email no es válido');
+        esValido = false;
+    }
+
+    // Validar teléfono (requerido)
+    const telefono = $('#telefonoClienteFacturacion').val().trim();
+    if (!telefono) {
+        mostrarErrorCampoFacturacion('#telefonoClienteFacturacion', 'El teléfono es requerido');
+        esValido = false;
+    }
+
+    // Validar dirección (requerida)
+    const direccion = $('#direccionClienteFacturacion').val().trim();
+    if (!direccion) {
+        mostrarErrorCampoFacturacion('#direccionClienteFacturacion', 'La dirección es requerida');
         esValido = false;
     }
 
