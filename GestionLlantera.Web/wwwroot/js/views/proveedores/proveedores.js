@@ -28,7 +28,7 @@ $(document).ready(function () {
         console.log('✅ Módulo de gestión de proveedores inicializado correctamente');
     } catch (error) {
         console.error('❌ Error inicializando módulo de proveedores:', error);
-        mostrarError('Error al inicializar la página');
+        mostrarAlerta('Error al inicializar la página', 'error');
     }
 });
 
@@ -73,10 +73,16 @@ async function cargarProveedores() {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            credentials: 'include'
         });
 
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
         const data = await response.json();
+        console.log('📋 Respuesta del servidor:', data);
 
         if (data.success && data.data) {
             proveedoresData = data.data;
@@ -89,7 +95,7 @@ async function cargarProveedores() {
         }
     } catch (error) {
         console.error('❌ Error cargando proveedores:', error);
-        mostrarError('Error cargando proveedores: ' + error.message);
+        mostrarToast('Error', 'Error cargando proveedores: ' + error.message, 'danger');
         mostrarSinDatos(true);
     } finally {
         mostrarLoading(false);
@@ -234,6 +240,8 @@ async function guardarProveedor() {
             direccion: $('#direccion').val().trim() || null
         };
 
+        console.log('📋 Datos a enviar:', datosProveedor);
+
         const esEdicion = proveedorEditando !== null;
         const url = esEdicion ? '/Proveedores/ActualizarProveedor' : '/Proveedores/CrearProveedor';
         const metodo = esEdicion ? 'PUT' : 'POST';
@@ -244,21 +252,31 @@ async function guardarProveedor() {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify(datosProveedor)
+            body: JSON.stringify(datosProveedor),
+            credentials: 'include'
         });
 
+        console.log('📋 Respuesta HTTP:', response.status, response.statusText);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${errorText}`);
+        }
+
         const resultado = await response.json();
+        console.log('📋 Resultado:', resultado);
 
         if (resultado.success) {
-            mostrarExito(resultado.message);
+            mostrarToast('Éxito', resultado.message || (esEdicion ? 'Proveedor actualizado exitosamente' : 'Proveedor creado exitosamente'), 'success');
             $('#modalProveedor').modal('hide');
             await cargarProveedores(); // Recargar lista
         } else {
-            mostrarError(resultado.message);
+            mostrarToast('Error', resultado.message || 'Error procesando la solicitud', 'danger');
         }
     } catch (error) {
         console.error('❌ Error guardando proveedor:', error);
-        mostrarError('Error guardando proveedor: ' + error.message);
+        mostrarToast('Error', 'Error guardando proveedor: ' + error.message, 'danger');
     } finally {
         const btnGuardar = $('#btnGuardarProveedor');
         btnGuardar.html('<i class="bi bi-save me-1"></i>Guardar').prop('disabled', false);
@@ -301,48 +319,100 @@ function limpiarFormularioProveedor() {
 // =====================================
 
 /**
- * Mostrar modal de confirmación para eliminar
+ * Mostrar confirmación para eliminar proveedor
  */
-function eliminarProveedor(id, nombre) {
-    $('#nombreProveedorEliminar').text(nombre);
-    $('#btnConfirmarEliminar').data('proveedor-id', id);
-    $('#modalEliminarProveedor').modal('show');
+async function eliminarProveedor(id, nombre) {
+    try {
+        const confirmacion = await Swal.fire({
+            title: '¿Eliminar proveedor?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Proveedor:</strong> ${nombre}</p>
+                    <hr>
+                    <p class="text-warning"><strong>⚠️ Advertencia:</strong></p>
+                    <ul class="text-muted">
+                        <li>Esta acción no se puede deshacer</li>
+                        <li>Se eliminará toda la información del proveedor</li>
+                        <li>Los pedidos asociados podrían verse afectados</li>
+                    </ul>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true
+        });
+
+        if (confirmacion.isConfirmed) {
+            await confirmarEliminarProveedor(id, nombre);
+        }
+    } catch (error) {
+        console.error('❌ Error en confirmación de eliminación:', error);
+        mostrarToast('Error', 'Error en la confirmación', 'danger');
+    }
 }
 
 /**
  * Confirmar eliminación de proveedor
  */
-async function confirmarEliminarProveedor() {
+async function confirmarEliminarProveedor(id, nombre) {
     try {
-        const id = $('#btnConfirmarEliminar').data('proveedor-id');
-        const btnEliminar = $('#btnConfirmarEliminar');
-        const textoOriginal = btnEliminar.html();
-        
-        btnEliminar.html('<i class="bi bi-hourglass-split me-1"></i>Eliminando...').prop('disabled', true);
+        // Mostrar loading
+        Swal.fire({
+            title: 'Eliminando...',
+            text: `Eliminando proveedor ${nombre}`,
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
 
         const response = await fetch(`/Proveedores/EliminarProveedor?id=${id}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            credentials: 'include'
         });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Error ${response.status}: ${errorText}`);
+        }
 
         const resultado = await response.json();
 
         if (resultado.success) {
-            mostrarExito(resultado.message);
-            $('#modalEliminarProveedor').modal('hide');
+            Swal.fire({
+                icon: 'success',
+                title: '¡Eliminado!',
+                text: resultado.message || 'Proveedor eliminado exitosamente',
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#28a745',
+                timer: 3000,
+                timerProgressBar: true
+            });
+
             await cargarProveedores(); // Recargar lista
         } else {
-            mostrarError(resultado.message);
+            throw new Error(resultado.message || 'Error eliminando proveedor');
         }
     } catch (error) {
         console.error('❌ Error eliminando proveedor:', error);
-        mostrarError('Error eliminando proveedor: ' + error.message);
-    } finally {
-        const btnEliminar = $('#btnConfirmarEliminar');
-        btnEliminar.html('<i class="bi bi-trash me-1"></i>Eliminar').prop('disabled', false);
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al eliminar',
+            text: error.message,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#dc3545'
+        });
     }
 }
 
@@ -389,28 +459,102 @@ function actualizarContador() {
 // =====================================
 
 /**
- * Mostrar mensaje de éxito
+ * Mostrar toast usando toastr (consistente con facturación)
  */
-function mostrarExito(mensaje) {
-    // Implementar toast de éxito
-    console.log('✅ Éxito:', mensaje);
-    if (typeof mostrarToast === 'function') {
-        mostrarToast('Éxito', mensaje, 'success');
-    } else {
-        alert('Éxito: ' + mensaje);
+function mostrarToast(titulo, mensaje, tipo = 'info') {
+    console.log(`🔔 Toast: [${tipo}] ${titulo} - ${mensaje}`);
+
+    // Verificar si toastr está disponible
+    if (typeof toastr !== 'undefined') {
+        console.log('✅ Usando toastr para mostrar notificación');
+
+        // Configuración moderna de toastr
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": tipo === 'success' ? "4000" : "3000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut",
+            "tapToDismiss": true,
+            "escapeHtml": false
+        };
+
+        // Iconos para diferentes tipos
+        const iconos = {
+            'success': '✅ ',
+            'danger': '❌ ',
+            'warning': '⚠️ ',
+            'info': 'ℹ️ '
+        };
+
+        const tipoToastr = tipo === 'danger' ? 'error' : tipo;
+        const icono = iconos[tipo] || iconos[tipoToastr] || '';
+        const mensajeConIcono = icono + mensaje;
+
+        // Mostrar toastr
+        if (titulo) {
+            toastr[tipoToastr](mensajeConIcono, titulo);
+        } else {
+            toastr[tipoToastr](mensajeConIcono);
+        }
+
+        return;
     }
+
+    // Fallback con SweetAlert
+    if (typeof Swal !== 'undefined') {
+        console.log('✅ Usando SweetAlert como fallback');
+        const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
+        
+        Swal.fire({
+            icon: iconoSwal,
+            title: titulo,
+            text: mensaje,
+            confirmButtonText: 'Entendido',
+            timer: tipo === 'success' ? 4000 : 3000,
+            timerProgressBar: true
+        });
+        return;
+    }
+
+    // Último recurso: alert nativo
+    console.warn('⚠️ Ni toastr ni SweetAlert disponibles, usando alert nativo');
+    alert((titulo ? titulo + ': ' : '') + mensaje);
 }
 
 /**
- * Mostrar mensaje de error
+ * Mostrar alerta con SweetAlert
  */
-function mostrarError(mensaje) {
-    // Implementar toast de error
-    console.error('❌ Error:', mensaje);
-    if (typeof mostrarToast === 'function') {
-        mostrarToast('Error', mensaje, 'danger');
+function mostrarAlerta(mensaje, tipo = 'info', titulo = null) {
+    console.log(`🚨 Alerta: [${tipo}] ${titulo || 'Alerta'} - ${mensaje}`);
+
+    if (typeof Swal !== 'undefined') {
+        const iconoSwal = tipo === 'danger' || tipo === 'error' ? 'error' : 
+                         tipo === 'warning' ? 'warning' : 
+                         tipo === 'success' ? 'success' : 'info';
+        
+        const tituloFinal = titulo || (tipo === 'error' ? 'Error' : tipo === 'success' ? 'Éxito' : tipo === 'warning' ? 'Advertencia' : 'Información');
+
+        Swal.fire({
+            icon: iconoSwal,
+            title: tituloFinal,
+            text: mensaje,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: tipo === 'error' ? '#dc3545' : tipo === 'success' ? '#28a745' : '#007bff'
+        });
     } else {
-        alert('Error: ' + mensaje);
+        // Fallback
+        alert((titulo ? titulo + ': ' : '') + mensaje);
     }
 }
 
