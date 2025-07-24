@@ -1,4 +1,3 @@
-
 // ========================================
 // MÓDULO DE GESTIÓN DE PROVEEDORES
 // Ubicación: /js/views/proveedores/proveedores.js
@@ -47,7 +46,7 @@ function configurarEventListeners() {
     // Validación del formulario - separar crear de editar
     $('#formProveedor').on('submit', function(e) {
         e.preventDefault();
-        
+
         if (proveedorEditando) {
             actualizarProveedor();
         } else {
@@ -112,7 +111,7 @@ async function cargarProveedores() {
  */
 function mostrarProveedores() {
     const tbody = $('#cuerpoTablaProveedores');
-    
+
     if (proveedoresFiltrados.length === 0) {
         mostrarSinDatos(true);
         return;
@@ -122,7 +121,7 @@ function mostrarProveedores() {
 
     const html = proveedoresFiltrados.map(proveedor => {
         const cantidadPedidos = proveedor.pedidosProveedors ? proveedor.pedidosProveedors.length : 0;
-        
+
         return `
             <tr>
                 <td>${proveedor.proveedorId}</td>
@@ -215,7 +214,7 @@ function editarProveedor(id) {
     proveedorEditando = proveedor;
     $('#tituloModalProveedor').html('<i class="bi bi-pencil me-2"></i>Editar Proveedor');
     $('#btnGuardarProveedor').html('<i class="bi bi-save me-1"></i>Actualizar Proveedor');
-    
+
     // Llenar formulario
     $('#proveedorId').val(proveedor.proveedorId);
     $('#nombreProveedor').val(proveedor.nombreProveedor);
@@ -481,7 +480,7 @@ async function confirmarEliminarProveedor(id, nombre) {
         }
     } catch (error) {
         console.error('❌ Error eliminando proveedor:', error);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error al eliminar',
@@ -591,7 +590,7 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
     if (typeof Swal !== 'undefined') {
         console.log('✅ Usando SweetAlert como fallback');
         const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
-        
+
         Swal.fire({
             icon: iconoSwal,
             title: titulo,
@@ -618,7 +617,7 @@ function mostrarAlerta(mensaje, tipo = 'info', titulo = null) {
         const iconoSwal = tipo === 'danger' || tipo === 'error' ? 'error' : 
                          tipo === 'warning' ? 'warning' : 
                          tipo === 'success' ? 'success' : 'info';
-        
+
         const tituloFinal = titulo || (tipo === 'error' ? 'Error' : tipo === 'success' ? 'Éxito' : tipo === 'warning' ? 'Advertencia' : 'Información');
 
         Swal.fire({
