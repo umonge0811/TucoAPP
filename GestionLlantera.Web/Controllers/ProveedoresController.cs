@@ -286,10 +286,15 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "ID del proveedor inválido" });
                 }
 
-                var token = HttpContext.Session.GetString("JWTToken");
+                var token = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
                     return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                if (!await this.TienePermisoAsync("Eliminar Proveedores"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para eliminar proveedores" });
                 }
 
                 var resultado = await _proveedoresService.EliminarProveedorAsync(id, token);

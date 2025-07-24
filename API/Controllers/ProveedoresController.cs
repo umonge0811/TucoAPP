@@ -203,28 +203,57 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("🗑️ Desactivando proveedor {Id}", id);
+                _logger.LogInformation("🗑️ Intentando eliminar proveedor {Id}", id);
 
                 var proveedor = await _context.Proveedores
-                    .FirstOrDefaultAsync(p => p.ProveedorId == id && p.Activo);
+                    .Include(p => p.PedidosProveedors)
+                    .FirstOrDefaultAsync(p => p.ProveedorId == id);
 
                 if (proveedor == null)
                 {
-                    return NotFound(new { message = "Proveedor no encontrado o ya está inactivo" });
+                    return NotFound(new { 
+                        success = false, 
+                        message = "Proveedor no encontrado" 
+                    });
                 }
 
-                // Marcar como inactivo en lugar de eliminar físicamente
-                proveedor.Activo = false;
-                await _context.SaveChangesAsync();
+                // Verificar si tiene pedidos asociados
+                var cantidadPedidos = proveedor.PedidosProveedors?.Count ?? 0;
+                
+                if (cantidadPedidos > 0)
+                {
+                    // No se puede eliminar físicamente, solo desactivar
+                    proveedor.Activo = false;
+                    await _context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Proveedor desactivado exitosamente: {Id}", id);
+                    _logger.LogInformation("✅ Proveedor desactivado (tiene pedidos): {Id}", id);
 
-                return Ok(new { message = "Proveedor desactivado exitosamente" });
+                    return Ok(new { 
+                        success = true, 
+                        message = $"Proveedor desactivado porque tiene {cantidadPedidos} pedido(s) asociado(s)" 
+                    });
+                }
+                else
+                {
+                    // Eliminación física segura
+                    _context.Proveedores.Remove(proveedor);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("✅ Proveedor eliminado físicamente: {Id}", id);
+
+                    return Ok(new { 
+                        success = true, 
+                        message = "Proveedor eliminado exitosamente" 
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error desactivando proveedor {Id}", id);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                _logger.LogError(ex, "❌ Error eliminando proveedor {Id}", id);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno del servidor" 
+                });
             }
         }
 
