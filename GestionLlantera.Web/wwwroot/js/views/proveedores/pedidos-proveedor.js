@@ -59,11 +59,25 @@ function configurarEventListeners() {
  * Cargar datos iniciales
  */
 async function cargarDatosIniciales() {
-    await Promise.all([
-        cargarProveedores(),
-        cargarPedidos(),
-        cargarProductosInventario()
-    ]);
+    // Verificar si viene un proveedor específico desde la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const proveedorIdParam = urlParams.get('proveedorId');
+
+    if (proveedorIdParam) {
+        console.log(`🔗 Parámetro proveedorId detectado: ${proveedorIdParam}`);
+        await Promise.all([
+            cargarProveedores(),
+            cargarPedidosDeProveedor(proveedorIdParam),
+            cargarProductosInventario()
+        ]);
+    } else {
+        console.log('📋 Cargando datos iniciales completos...');
+        await Promise.all([
+            cargarProveedores(),
+            cargarPedidos(),
+            cargarProductosInventario()
+        ]);
+    }
 }
 
 /**
@@ -107,38 +121,34 @@ async function cargarProveedores() {
 }
 
 /**
- * Cargar todos los pedidos
+ * Cargar todos los pedidos (sin filtro por proveedor)
  */
 async function cargarPedidos() {
     try {
-        console.log('📦 Cargando pedidos...');
+        console.log('📦 Cargando TODOS los pedidos...');
         mostrarLoadingPedidos(true);
 
-        // Obtener parámetro de proveedor de la URL si existe
-        const urlParams = new URLSearchParams(window.location.search);
-        const proveedorId = urlParams.get('proveedorId');
-
-        let url = '/Proveedores/ObtenerPedidosProveedor';
-        if (proveedorId) {
-            url += `?proveedorId=${proveedorId}`;
-        }
-
-        const response = await fetch(url, {
+        const response = await fetch('/Proveedores/ObtenerPedidosProveedor', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            credentials: 'include'
         });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
 
         const data = await response.json();
 
         if (data.success && data.data) {
-            pedidosData = data.data;
+            pedidosData = Array.isArray(data.data) ? data.data : [];
             pedidosFiltrados = [...pedidosData];
             mostrarPedidos();
             actualizarContadorPedidos();
-            console.log(`✅ ${pedidosData.length} pedidos cargados`);
+            console.log(`✅ ${pedidosData.length} pedidos cargados exitosamente`);
         } else {
             throw new Error(data.message || 'Error obteniendo pedidos');
         }
@@ -146,6 +156,52 @@ async function cargarPedidos() {
         console.error('❌ Error cargando pedidos:', error);
         mostrarError('Error cargando pedidos: ' + error.message);
         mostrarSinDatosPedidos(true);
+        // Inicializar arrays vacíos para evitar errores
+        pedidosData = [];
+        pedidosFiltrados = [];
+    } finally {
+        mostrarLoadingPedidos(false);
+    }
+}
+
+/**
+ * Cargar pedidos de un proveedor específico (para cuando viene desde la vista de proveedores)
+ */
+async function cargarPedidosDeProveedor(proveedorId) {
+    try {
+        console.log(`📦 Cargando pedidos del proveedor ${proveedorId}...`);
+        mostrarLoadingPedidos(true);
+
+        const response = await fetch(`/Proveedores/ObtenerPedidosProveedor?proveedorId=${proveedorId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.data) {
+            pedidosData = Array.isArray(data.data) ? data.data : [];
+            pedidosFiltrados = [...pedidosData];
+            mostrarPedidos();
+            actualizarContadorPedidos();
+            console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
+        } else {
+            throw new Error(data.message || 'Error obteniendo pedidos del proveedor');
+        }
+    } catch (error) {
+        console.error('❌ Error cargando pedidos del proveedor:', error);
+        mostrarError('Error cargando pedidos del proveedor: ' + error.message);
+        mostrarSinDatosPedidos(true);
+        pedidosData = [];
+        pedidosFiltrados = [];
     } finally {
         mostrarLoadingPedidos(false);
     }
@@ -893,5 +949,6 @@ window.guardarProveedorRapido = guardarProveedorRapido;
 window.verDetallePedido = verDetallePedido;
 window.cambiarEstadoPedido = cambiarEstadoPedido;
 window.aplicarFiltros = aplicarFiltros;
+window.cargarPedidosDeProveedor = cargarPedidosDeProveedor;
 
 console.log('✅ Módulo de pedidos a proveedores cargado completamente');
