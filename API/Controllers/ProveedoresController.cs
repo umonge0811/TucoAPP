@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +26,7 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("📋 Obteniendo todos los proveedores activos");
-                
+
                 var proveedores = await _context.Proveedores
                     .Where(p => p.Activo)
                     .Include(p => p.PedidosProveedors)
@@ -49,7 +48,7 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("🔍 Obteniendo proveedor {Id}", id);
-                
+
                 var proveedor = await _context.Proveedores
                     .Include(p => p.PedidosProveedors)
                         .ThenInclude(pp => pp.DetallePedidos)
@@ -229,11 +228,38 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
-    }
 
-    // DTO para cambio de estado
-    public class CambiarEstadoRequest
-    {
-        public bool Activo { get; set; }
+        [HttpGet("todos")]
+        public async Task<IActionResult> ObtenerTodosProveedores()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
+
+                using var context = new TucoContext();
+
+                var proveedores = await context.Proveedores
+                    .Include(p => p.PedidosProveedors)
+                    .OrderBy(p => p.NombreProveedor)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} proveedores en total", proveedores.Count);
+
+                return Ok(new { 
+                    success = true, 
+                    data = proveedores,
+                    message = $"Se obtuvieron {proveedores.Count} proveedores (activos e inactivos)"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo todos los proveedores");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno del servidor al obtener proveedores" 
+                });
+            }
+        }
+
     }
 }

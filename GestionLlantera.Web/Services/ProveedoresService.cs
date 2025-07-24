@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -53,10 +52,10 @@ namespace GestionLlantera.Web.Services
 
                 var content = await response.Content.ReadAsStringAsync();
                 var todosProveedores = JsonConvert.DeserializeObject<List<Proveedore>>(content) ?? new List<Proveedore>();
-                
+
                 // Filtrar solo proveedores activos
                 var proveedores = todosProveedores.Where(p => p.Activo == true).ToList();
-                
+
                 _logger.LogInformation($"📋 Total proveedores: {todosProveedores.Count}, Activos: {proveedores.Count}");
 
                 return proveedores;
@@ -74,7 +73,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("➕ Creando proveedor: {Nombre}", proveedor.NombreProveedor);
-                
+
                 // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
@@ -209,7 +208,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
-                
+
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
                     _httpClient.DefaultRequestHeaders.Clear();

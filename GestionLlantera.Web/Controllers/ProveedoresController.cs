@@ -107,10 +107,11 @@ namespace GestionLlantera.Web.Controllers
                     contacto = p.Contacto,
                     telefono = p.Telefono,
                     direccion = p.Direccion,
-                    activo = p.Activo
+                    activo = p.Activo,
+                    pedidosProveedors = p.PedidosProveedors // Incluir pedidos para verificar si tiene registros
                 }).ToList();
 
-                _logger.LogInformation("📋 Enviando TODOS los {Count} proveedores al cliente", resultado.Count);
+                _logger.LogInformation("📋 Enviando TODOS los {Count} proveedores al cliente (activos e inactivos)", resultado.Count);
                 return Json(new { success = true, data = resultado });
             }
             catch (Exception ex)
