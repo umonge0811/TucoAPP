@@ -195,9 +195,8 @@ function llenarSelectProveedores() {
     }
 
     proveedoresDisponibles.forEach(proveedor => {
-        if (proveedor && proveedor.proveedorId && proveedor.nombreProveedor) {
-            const nombreProveedor = proveedor.nombreProveedor || 'Sin nombre';
-            const option = `<option value="${proveedor.proveedorId}">${nombreProveedor}</option>`;
+        if (proveedor && proveedor.id && proveedor.nombre) {
+            const option = `<option value="${proveedor.id}">${proveedor.nombre}</option>`;
             select.append(option);
             filtro.append(option);
         } else {
