@@ -44,14 +44,14 @@ function configurarEventListeners() {
     });
 
     // Validación del formulario - separar crear de editar
-    $('#formProveedor').on('submit', function(e) {
+    $('#formProveedor').off('submit').on('submit', function(e) {
         e.preventDefault();
 
         console.log('🔍 Submit formulario - proveedorEditando:', proveedorEditando);
         console.log('🔍 Tipo de proveedorEditando:', typeof proveedorEditando);
         console.log('🔍 Valor booleano:', !!proveedorEditando);
 
-        if (proveedorEditando) {
+        if (proveedorEditando && proveedorEditando.id) {
             console.log('✅ Llamando a actualizarProveedor()');
             actualizarProveedor();
         } else {
@@ -308,8 +308,14 @@ function alternarVistaProveedores() {
 function abrirModalProveedor() {
     proveedorEditando = null;
     console.log('🆕 Abriendo modal para NUEVO proveedor - proveedorEditando:', proveedorEditando);
+    
+    // Cambiar título y botón para nuevo proveedor
     $('#tituloModalProveedor').html('<i class="bi bi-truck me-2"></i>Nuevo Proveedor');
     $('#btnGuardarProveedor').html('<i class="bi bi-plus me-1"></i>Crear Proveedor');
+    
+    // Asegurar que el botón tiene la clase correcta para crear
+    $('#btnGuardarProveedor').removeClass('btn-warning').addClass('btn-primary');
+    
     limpiarFormularioProveedor();
     $('#modalProveedor').modal('show');
 }
@@ -326,8 +332,13 @@ function editarProveedor(id) {
 
     proveedorEditando = proveedor;
     console.log('✏️ Editando proveedor - ID:', id, 'proveedorEditando:', proveedorEditando);
+    
+    // Cambiar título y botón
     $('#tituloModalProveedor').html('<i class="bi bi-pencil me-2"></i>Editar Proveedor');
     $('#btnGuardarProveedor').html('<i class="bi bi-save me-1"></i>Actualizar Proveedor');
+    
+    // Asegurar que el botón tiene la clase correcta
+    $('#btnGuardarProveedor').removeClass('btn-primary').addClass('btn-warning');
 
     // Llenar formulario
     $('#proveedorId').val(proveedor.id);
@@ -400,7 +411,11 @@ async function crearProveedor() {
         mostrarToast('Error', 'Error creando proveedor: ' + error.message, 'danger');
     } finally {
         const btnGuardar = $('#btnGuardarProveedor');
-        btnGuardar.html('<i class="bi bi-plus me-1"></i>Crear Proveedor').prop('disabled', false);
+        if (proveedorEditando && proveedorEditando.id) {
+            btnGuardar.html('<i class="bi bi-save me-1"></i>Actualizar Proveedor').prop('disabled', false);
+        } else {
+            btnGuardar.html('<i class="bi bi-plus me-1"></i>Crear Proveedor').prop('disabled', false);
+        }
     }
 }
 
