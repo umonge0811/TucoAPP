@@ -1,0 +1,57 @@
+proveedores.js:6 🚀 Inicializando módulo de gestión de proveedores...
+proveedores.js:1145 ✅ Módulo de gestión de proveedores cargado completamente
+proveedores.js:21 📚 DOM cargado, inicializando gestión de proveedores...
+proveedores.js:39 🔧 Configurando event listeners...
+proveedores.js:124 📋 🔄 INICIANDO CARGA DE TODOS LOS PROVEEDORES...
+proveedores.js:128 🌐 URL a consultar: /Proveedores/ObtenerProveedores
+proveedores.js:27 ✅ Módulo de gestión de proveedores inicializado correctamente
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+proveedores.js:139 📡 Status de respuesta: 200 
+proveedores.js:146 📋 📊 RESPUESTA COMPLETA DEL SERVIDOR:
+proveedores.js:147    ✅ Success: true
+proveedores.js:148    📦 Data type: object
+proveedores.js:149    📊 Data length: 3
+proveedores.js:150    📋 Data content: Array(3)
+proveedores.js:156 🔍 ANÁLISIS DE DATOS RECIBIDOS:
+proveedores.js:157    📦 proveedoresData length: 3
+proveedores.js:158    📦 proveedoresFiltrados length: 3
+proveedores.js:162    🏪 Proveedor 1: Object
+proveedores.js:162    🏪 Proveedor 2: Object
+proveedores.js:162    🏪 Proveedor 3: Object
+proveedores.js:172 ✅ ✨ 3 PROVEEDORES CARGADOS EXITOSAMENTE
+proveedores.js:184 🏁 Finalizando carga de proveedores
+proveedores.js:387 ✏️ ========== ABRIENDO MODAL PARA EDITAR PROVEEDOR ==========
+proveedores.js:388 🔍 ID a editar: 1007 Tipo: number
+proveedores.js:397 📋 Proveedor encontrado: {
+  "id": 1007,
+  "nombre": "Distribuidora  Tuco",
+  "contacto": "Ulises Monge Aguilar",
+  "email": "a@R.com",
+  "telefono": "35872471",
+  "direccion": "asdr",
+  "activo": true
+}
+proveedores.js:402 🔍 proveedorEditando asignado: Object
+proveedores.js:403 🔍 proveedorEditando.id: 1007
+proveedores.js:404 🔍 Tipo de proveedorEditando.id: number
+proveedores.js:696 🧹 ========== LIMPIANDO FORMULARIO ==========
+proveedores.js:719 🧹 Manteniendo proveedorEditando (modo edición): Object
+proveedores.js:722 🧹 Estado después de limpiar:
+proveedores.js:723    🔍 proveedorEditando: Object
+proveedores.js:724    🔍 proveedorId input: 0
+proveedores.js:725 🧹 ========================================
+proveedores.js:425 ✅ CONFIGURACIÓN FINAL PARA EDICIÓN:
+proveedores.js:426    🔍 proveedorEditando: Object
+proveedores.js:427    🔍 proveedorEditando.id: 1007
+proveedores.js:428    🔍 proveedorId input: 1007
+proveedores.js:429    🔘 Título modal: Editar Proveedor
+proveedores.js:430    🔘 Texto botón: Actualizar Proveedor
+proveedores.js:431    🎨 Clases botón: btn btn-warning
+proveedores.js:432    📝 Nombre cargado: Distribuidora  Tuco
+proveedores.js:433 ✏️ =======================================================
+proveedores.js:463 📋 Datos a crear: Object
+proveedores.js:475 📋 Respuesta HTTP: 200 
+proveedores.js:484 📋 Resultado crear: Object
+proveedores.js:1032 🔔 Toast: [danger] Error - Error creando proveedor
+proveedores.js:1036 ✅ Usando toastr para mostrar notificación

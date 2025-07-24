@@ -1,0 +1,37 @@
+proveedores.js:6 🚀 Inicializando módulo de gestión de proveedores...
+proveedores.js:1039 ✅ Módulo de gestión de proveedores cargado completamente
+proveedores.js:21 📚 DOM cargado, inicializando gestión de proveedores...
+proveedores.js:39 🔧 Configurando event listeners...
+proveedores.js:77 📋 🔄 INICIANDO CARGA DE TODOS LOS PROVEEDORES...
+proveedores.js:81 🌐 URL a consultar: /Proveedores/ObtenerProveedores
+proveedores.js:27 ✅ Módulo de gestión de proveedores inicializado correctamente
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+proveedores.js:92 📡 Status de respuesta: 200 
+proveedores.js:99 📋 📊 RESPUESTA COMPLETA DEL SERVIDOR:
+proveedores.js:100    ✅ Success: true
+proveedores.js:101    📦 Data type: object
+proveedores.js:102    📊 Data length: 2
+proveedores.js:103    📋 Data content: Array(2)
+proveedores.js:109 🔍 ANÁLISIS DE DATOS RECIBIDOS:
+proveedores.js:110    📦 proveedoresData length: 2
+proveedores.js:111    📦 proveedoresFiltrados length: 2
+proveedores.js:115    🏪 Proveedor 1: Object
+proveedores.js:115    🏪 Proveedor 2: Object
+proveedores.js:125 ✅ ✨ 2 PROVEEDORES CARGADOS EXITOSAMENTE
+proveedores.js:137 🏁 Finalizando carga de proveedores
+proveedores.js:241 🔄 🎯 ALTERNANDO VISTA DE PROVEEDORES
+proveedores.js:242    📊 Estado actual mostrandoSoloActivos: false
+proveedores.js:243    📋 Total proveedores disponibles: 2
+proveedores.js:246    🔍 ANÁLISIS DETALLADO DE PROVEEDORES:
+proveedores.js:248    🏪 Proveedor 1: Object
+proveedores.js:248    🏪 Proveedor 2: Object
+proveedores.js:266    ➡️ Cambiando a mostrar solo proveedores ACTIVOS
+proveedores.js:273    🔍 Filtros aplicados:
+proveedores.js:274      === true: 2
+proveedores.js:275      === "true": 0
+proveedores.js:276      !!activo: 2
+proveedores.js:282    ✅ Ahora mostrando: SOLO ACTIVOS
+proveedores.js:285    📊 Resultado final:
+proveedores.js:286      🔢 Proveedores filtrados: 2
+proveedores.js:287      📋 IDs filtrados: Array(2)

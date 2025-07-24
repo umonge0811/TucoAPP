@@ -1,4 +1,4 @@
-﻿/* ========================================
+/* ========================================
    BREADCRUMBS GLOBALES - DISEÑO UNIFORME
    ======================================== */
 
@@ -267,23 +267,23 @@
    ======================================== */
 
 /* Contenedor base del breadcrumb */
-/*.breadcrumb {
+.breadcrumb {
     background-color: #f8f9fa;
     padding: 0.75rem 1rem;
     border-radius: 6px;
     margin-bottom: 1.5rem;
     border: 1px solid #e9ecef;
     font-size: 0.9rem;
-}*/
+}
 
 /* Elementos del breadcrumb */
-/*.breadcrumb-item {
+.breadcrumb-item {
     display: flex;
     align-items: center;
-}*/
+}
 
     /* Enlaces en el breadcrumb */
-    /*.breadcrumb-item a {
+    .breadcrumb-item a {
         color: #6c757d;
         text-decoration: none;
         transition: color 0.2s ease;
@@ -293,30 +293,32 @@
 
         .breadcrumb-item a:hover {
             color: #0d6efd;
-        }*/
+        }
 
     /* Iconos en breadcrumb */
-    /*.breadcrumb-item i {
+    .breadcrumb-item i {
         font-size: 0.9rem;
-        margin-right: 0.4rem;
+        margin-right: 0.4rem;em;
     }*/
 
+    }
+
     /* Separadores - usar el estilo por defecto de Bootstrap */
-    /*.breadcrumb-item + .breadcrumb-item::before {
+    .breadcrumb-item + .breadcrumb-item::before {
         content: var(--bs-breadcrumb-divider, "/");
         color: #6c757d;
         margin: 0 0.5rem;
-    }*/
+    }
 
     /* Elemento activo (página actual) */
-    /*.breadcrumb-item.active {
+    .breadcrumb-item.active {
         color: #495057;
         font-weight: 500;
     }
 
         .breadcrumb-item.active i {
             color: #0d6efd;
-        }*/
+        }
 
 /* Responsive - móvil */
 /*@media (max-width: 768px) {

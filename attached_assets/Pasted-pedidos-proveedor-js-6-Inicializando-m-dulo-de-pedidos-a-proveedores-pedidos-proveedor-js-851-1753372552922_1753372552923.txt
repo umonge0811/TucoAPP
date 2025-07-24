@@ -1,0 +1,51 @@
+pedidos-proveedor.js:6 🚀 Inicializando módulo de pedidos a proveedores...
+pedidos-proveedor.js:851 ✅ Módulo de pedidos a proveedores cargado completamente
+pedidos-proveedor.js:24 📚 DOM cargado, inicializando pedidos a proveedores...
+pedidos-proveedor.js:42 🔧 Configurando event listeners...
+pedidos-proveedor.js:74 👥 Cargando proveedores...
+pedidos-proveedor.js:114 📦 Cargando pedidos...
+pedidos-proveedor.js:159 📦 Cargando productos del inventario...
+pedidos-proveedor.js:30 ✅ Módulo de pedidos a proveedores inicializado correctamente
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+pedidos-proveedor.js:90 📋 Respuesta del servidor: Object
+pedidos-proveedor.js:184 🔄 Iniciando llenarSelectProveedores...
+pedidos-proveedor.js:185 📋 proveedoresDisponibles: Array(2)
+pedidos-proveedor.js:199 🔢 Total proveedores a procesar: 2
+pedidos-proveedor.js:206 🔍 Procesando proveedor 1: Object
+pedidos-proveedor.js:212 ➕ Agregando opción: <option value="1">Llantas Firestone</option>
+pedidos-proveedor.js:206 🔍 Procesando proveedor 2: Object
+pedidos-proveedor.js:217 ⚠️ Proveedor con datos incompletos: Object
+llenarSelectProveedores @ pedidos-proveedor.js:217
+cargarProveedores @ pedidos-proveedor.js:94
+await in cargarProveedores
+cargarDatosIniciales @ pedidos-proveedor.js:63
+(anonymous) @ pedidos-proveedor.js:28
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+pedidos-proveedor.js:218 📋 Estructura del proveedor: Object
+llenarSelectProveedores @ pedidos-proveedor.js:218
+cargarProveedores @ pedidos-proveedor.js:94
+await in cargarProveedores
+cargarDatosIniciales @ pedidos-proveedor.js:63
+(anonymous) @ pedidos-proveedor.js:28
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
