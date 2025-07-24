@@ -221,7 +221,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // Validaciones
-                if (request.ProveedorId <= 0)
+                if (request.ProveedorId < 0)
                 {
                     return Json(new { success = false, message = "ID del proveedor inválido" });
                 }
@@ -281,7 +281,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("📋 Eliminando proveedor {Id}", id);
 
-                if (id <= 0)
+                if (id < 0)
                 {
                     return Json(new { success = false, message = "ID del proveedor inválido" });
                 }
@@ -336,7 +336,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔄 Cambiando estado de proveedor {Id} a {Estado}", id, request?.Activo == true ? "Activo" : "Inactivo");
 
-                if (id <= 0)
+                if (id < 0)
                 {
                     return Json(new { success = false, message = "ID del proveedor inválido" });
                 }

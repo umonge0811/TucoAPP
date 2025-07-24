@@ -105,11 +105,11 @@ async function cargarProveedores() {
         if (data.success && data.data) {
             proveedoresData = Array.isArray(data.data) ? data.data : [];
             proveedoresFiltrados = [...proveedoresData];
-            
+
             console.log('🔍 ANÁLISIS DE DATOS RECIBIDOS:');
             console.log('   📦 proveedoresData length:', proveedoresData.length);
             console.log('   📦 proveedoresFiltrados length:', proveedoresFiltrados.length);
-            
+
             // Log detallado de cada proveedor
             proveedoresData.forEach((proveedor, index) => {
                 console.log(`   🏪 Proveedor ${index + 1}:`, {
@@ -119,7 +119,7 @@ async function cargarProveedores() {
                     pedidos: proveedor.pedidosProveedors?.length || 0
                 });
             });
-            
+
             mostrarProveedores();
             actualizarContador();
             console.log(`✅ ✨ ${proveedoresData.length} PROVEEDORES CARGADOS EXITOSAMENTE`);
@@ -264,17 +264,17 @@ function alternarVistaProveedores() {
     } else {
         // Cambiar a mostrar solo activos
         console.log('   ➡️ Cambiando a mostrar solo proveedores ACTIVOS');
-        
+
         // Verificar diferentes formas de filtrar
         const activosTrue = proveedoresData.filter(p => p.activo === true);
         const activosString = proveedoresData.filter(p => p.activo === 'true');
         const activosBoolean = proveedoresData.filter(p => !!p.activo);
-        
+
         console.log('   🔍 Filtros aplicados:');
         console.log('     === true:', activosTrue.length);
         console.log('     === "true":', activosString.length);
         console.log('     !!activo:', activosBoolean.length);
-        
+
         proveedoresFiltrados = activosTrue;
         btn.html('<i class="bi bi-eye me-1"></i>Ver Todos');
         btn.removeClass('btn-secondary').addClass('btn-outline-secondary');
@@ -616,7 +616,7 @@ async function eliminarProveedor(id, nombre) {
         }
 
         const cantidadPedidos = proveedor.pedidosProveedors ? proveedor.pedidosProveedors.length : 0;
-        
+
         // Si tiene registros, mostrar mensaje informativo y sugerir desactivar
         if (cantidadPedidos > 0) {
             Swal.fire({
@@ -828,7 +828,7 @@ async function confirmarCambiarEstadoProveedor(id, nuevoEstado, nombre) {
             if (proveedor) {
                 proveedor.activo = nuevoEstado;
             }
-            
+
             // Actualizar datos filtrados también
             const proveedorFiltrado = proveedoresFiltrados.find(p => p.id === id);
             if (proveedorFiltrado) {
@@ -837,7 +837,7 @@ async function confirmarCambiarEstadoProveedor(id, nuevoEstado, nombre) {
 
             // Mostrar mensaje de éxito
             mostrarToast('Éxito', resultado.message || `Proveedor ${nuevoEstado ? 'activado' : 'desactivado'} exitosamente`, 'success');
-            
+
             // Cerrar cualquier modal de SweetAlert abierto
             Swal.close();
 
@@ -944,7 +944,7 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
     // Fallback con SweetAlert
     if (typeof Swal !== 'undefined') {
         console.log('✅ Usando SweetAlert como fallback');
-        const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
+        const iconoSwal = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo=== 'success' ? 'success' : 'info';
 
         Swal.fire({
             icon: iconoSwal,
@@ -997,7 +997,7 @@ function mostrarAlerta(mensaje, tipo = 'info', titulo = null) {
  */
 function crearProveedorInactivoTemporal() {
     console.log('🧪 Creando proveedor inactivo temporal para pruebas...');
-    
+
     const proveedorTemporal = {
         id: 999,
         nombre: 'PROVEEDOR INACTIVO - TEMPORAL',
@@ -1007,14 +1007,14 @@ function crearProveedorInactivoTemporal() {
         activo: false,
         pedidosProveedors: []
     };
-    
+
     // Agregar al inicio del array
     proveedoresData.unshift(proveedorTemporal);
     proveedoresFiltrados = [...proveedoresData];
-    
+
     console.log('✅ Proveedor temporal agregado:', proveedorTemporal);
     console.log('📊 Total proveedores ahora:', proveedoresData.length);
-    
+
     mostrarProveedores();
     actualizarContador();
 }

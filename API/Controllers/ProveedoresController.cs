@@ -205,6 +205,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🗑️ Intentando eliminar proveedor {Id}", id);
 
+                // Permitir ID 0 ya que es un valor válido en la base de datos
                 var proveedor = await _context.Proveedores
                     .Include(p => p.PedidosProveedors)
                     .FirstOrDefaultAsync(p => p.ProveedorId == id);
