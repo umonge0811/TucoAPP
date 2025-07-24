@@ -170,12 +170,18 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string message)> ObtenerPedidosProveedorAsync(int? proveedorId, string token)
+        public async Task<(bool success, object data, string message)> ObtenerPedidosProveedorAsync(int? proveedorId, string jwtToken)
         {
             try
             {
-                _logger.LogInformation("📦 Obteniendo pedidos de proveedor: {ProveedorId}", proveedorId);
-                ConfigurarAutenticacion(token);
+                _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
 
                 string url = "api/PedidosProveedor";
                 if (proveedorId.HasValue)
