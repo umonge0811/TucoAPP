@@ -434,9 +434,7 @@ async function actualizarProveedor() {
     }
 }
 
-/**
- * Validar campo en tiempo real
- */
+// Función para validar campos en tiempo real
 function validarCampoEnTiempoReal(campo) {
     const valor = campo.val().trim();
     const id = campo.attr('id');
@@ -455,12 +453,9 @@ function validarCampoEnTiempoReal(campo) {
             } else if (valor.length < 2) {
                 esValido = false;
                 mensaje = 'El nombre debe tener al menos 2 caracteres';
-            } else if (valor.length > 100) {
+            } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s\.\-&]+$/.test(valor)) {
                 esValido = false;
-                mensaje = 'El nombre no puede exceder 100 caracteres';
-            } else if (!/^[a-zA-ZÀ-ÿ0-9\s\.\-&]+$/.test(valor)) {
-                esValido = false;
-                mensaje = 'El nombre contiene caracteres no válidos';
+                mensaje = 'El nombre solo puede contener letras, números, espacios, puntos, guiones y &';
             }
             break;
 
@@ -471,40 +466,31 @@ function validarCampoEnTiempoReal(campo) {
             } else if (valor.length < 2) {
                 esValido = false;
                 mensaje = 'El contacto debe tener al menos 2 caracteres';
-            } else if (valor.length > 100) {
+            } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) {
                 esValido = false;
-                mensaje = 'El contacto no puede exceder 100 caracteres';
+                mensaje = 'El contacto solo puede contener letras y espacios';
             }
             break;
 
         case 'emailProveedor':
-            if (!valor) {
-                esValido = false;
-                mensaje = 'El email es obligatorio';
-            } else if (!validarEmail(valor)) {
+            if (valor && !validarEmail(valor)) {
                 esValido = false;
                 mensaje = 'Ingrese un email válido (ejemplo: proveedor@ejemplo.com)';
             }
             break;
 
         case 'telefonoProveedor':
-            if (!valor) {
-                esValido = false;
-                mensaje = 'El teléfono es obligatorio';
-            } else if (!/^[\d\-\s\+\(\)]+$/.test(valor)) {
+            if (valor && !/^[\d\-\s\+\(\)]+$/.test(valor)) {
                 esValido = false;
                 mensaje = 'El teléfono solo puede contener números, espacios y guiones';
-            } else if (valor.replace(/[\D]/g, '').length < 8) {
+            } else if (valor && valor.replace(/[\D]/g, '').length < 8) {
                 esValido = false;
                 mensaje = 'El teléfono debe tener al menos 8 dígitos';
             }
             break;
 
         case 'direccionProveedor':
-            if (!valor) {
-                esValido = false;
-                mensaje = 'La dirección es obligatoria';
-            } else if (valor.length > 500) {
+            if (valor && valor.length > 500) {
                 esValido = false;
                 mensaje = 'La dirección no puede exceder 500 caracteres';
             }
@@ -521,29 +507,17 @@ function validarCampoEnTiempoReal(campo) {
     return esValido;
 }
 
-/**
- * Validar formulario de proveedor
- */
 function validarFormularioProveedor() {
     let esValido = true;
 
     // Limpiar validaciones previas
-    $('#modalProveedor .form-control').removeClass('is-invalid is-valid');
+    $('#modalProveedor .form-control').removeClass('is-invalid');
     $('#modalProveedor .invalid-feedback').text('');
 
     // Validar nombre (obligatorio)
     const nombre = $('#nombreProveedor').val().trim();
     if (!nombre) {
         mostrarErrorCampo('#nombreProveedor', 'El nombre del proveedor es obligatorio');
-        esValido = false;
-    } else if (nombre.length < 2) {
-        mostrarErrorCampo('#nombreProveedor', 'El nombre debe tener al menos 2 caracteres');
-        esValido = false;
-    } else if (nombre.length > 100) {
-        mostrarErrorCampo('#nombreProveedor', 'El nombre no puede exceder 100 caracteres');
-        esValido = false;
-    } else if (!/^[a-zA-ZÀ-ÿ0-9\s\.\-&]+$/.test(nombre)) {
-        mostrarErrorCampo('#nombreProveedor', 'El nombre contiene caracteres no válidos');
         esValido = false;
     }
 
@@ -552,44 +526,12 @@ function validarFormularioProveedor() {
     if (!contacto) {
         mostrarErrorCampo('#contactoProveedor', 'El contacto es obligatorio');
         esValido = false;
-    } else if (contacto.length < 2) {
-        mostrarErrorCampo('#contactoProveedor', 'El contacto debe tener al menos 2 caracteres');
-        esValido = false;
-    } else if (contacto.length > 100) {
-        mostrarErrorCampo('#contactoProveedor', 'El contacto no puede exceder 100 caracteres');
-        esValido = false;
     }
 
-    // Validar email (obligatorio y formato)
+    // Validar email (opcional pero formato válido)
     const email = $('#emailProveedor').val().trim();
-    if (!email) {
-        mostrarErrorCampo('#emailProveedor', 'El email es obligatorio');
-        esValido = false;
-    } else if (!validarEmail(email)) {
+    if (email && !validarEmail(email)) {
         mostrarErrorCampo('#emailProveedor', 'El formato del email no es válido');
-        esValido = false;
-    }
-
-    // Validar teléfono (obligatorio)
-    const telefono = $('#telefonoProveedor').val().trim();
-    if (!telefono) {
-        mostrarErrorCampo('#telefonoProveedor', 'El teléfono es obligatorio');
-        esValido = false;
-    } else if (!/^[\d\-\s\+\(\)]+$/.test(telefono)) {
-        mostrarErrorCampo('#telefonoProveedor', 'El teléfono solo puede contener números, espacios y guiones');
-        esValido = false;
-    } else if (telefono.replace(/[\D]/g, '').length < 8) {
-        mostrarErrorCampo('#telefonoProveedor', 'El teléfono debe tener al menos 8 dígitos');
-        esValido = false;
-    }
-
-    // Validar dirección (obligatoria)
-    const direccion = $('#direccionProveedor').val().trim();
-    if (!direccion) {
-        mostrarErrorCampo('#direccionProveedor', 'La dirección es obligatoria');
-        esValido = false;
-    } else if (direccion.length > 500) {
-        mostrarErrorCampo('#direccionProveedor', 'La dirección no puede exceder 500 caracteres');
         esValido = false;
     }
 
@@ -601,20 +543,21 @@ function mostrarErrorCampo(selector, mensaje) {
     $(selector).siblings('.invalid-feedback').text(mensaje);
 }
 
+function limpiarValidacion(elemento) {
+    elemento.removeClass('is-invalid');
+    elemento.siblings('.invalid-feedback').text('');
+}
+
 function validarEmail(email) {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
 }
 
-/**
- * Limpiar formulario de proveedor
- */
 function limpiarFormularioProveedor() {
     $('#formProveedor')[0].reset();
-    $('#proveedorId').val('');
-    $('.is-invalid').removeClass('is-invalid');
-    $('.is-valid').removeClass('is-valid');
-    $('.invalid-feedback').remove();
+    $('#proveedorId').val('0');
+    $('.form-control').removeClass('is-invalid is-valid');
+    $('.invalid-feedback').text('');
     proveedorEditando = null;
 }
 

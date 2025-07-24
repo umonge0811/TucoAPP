@@ -110,66 +110,92 @@
             </div>
             <div class="modal-body">
                 <form id="formProveedor">
-                    <input type="hidden" id="proveedorId" name="proveedorId">
+                    <input type="hidden" id="proveedorId" value="0">
 
-                    <div class="mb-3">
-                        <label for="nombreProveedor" class="form-label">Nombre del Proveedor *</label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="nombreProveedor" 
-                               name="nombreProveedor" 
-                               placeholder="Ej: Distribuidora Nacional de Llantas S.A."
-                               required 
-                               minlength="2" 
-                               maxlength="100"
-                               pattern="[a-zA-ZÀ-ÿ0-9\s\.\-&]+"
-                               title="Solo letras, números, espacios, puntos, guiones y ampersand">
-                        <div class="invalid-feedback">
-                            El nombre del proveedor es requerido (2-100 caracteres, solo letras, números y caracteres básicos).
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nombreProveedor" class="form-label">
+                                <i class="bi bi-building me-1"></i>Nombre del Proveedor
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nombreProveedor" 
+                                   name="nombre"
+                                   placeholder="Ej: Distribuidora XYZ"
+                                   maxlength="100">
+                            <div class="invalid-feedback"></div>
+                            <small class="form-text text-muted">Nombre comercial del proveedor</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="contactoProveedor" class="form-label">
+                                <i class="bi bi-person me-1"></i>Contacto Principal
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="contactoProveedor" 
+                                   name="contacto"
+                                   placeholder="Ej: Juan Pérez"
+                                   maxlength="100">
+                            <div class="invalid-feedback"></div>
+                            <small class="form-text text-muted">Nombre del contacto principal</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="emailProveedor" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>Email
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="emailProveedor" 
+                                   name="email"
+                                   placeholder="proveedor@ejemplo.com">
+                            <div class="invalid-feedback"></div>
+                            <small class="form-text text-muted">Correo electrónico de contacto</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="telefonoProveedor" class="form-label">
+                                <i class="bi bi-telephone me-1"></i>Teléfono
+                            </label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="telefonoProveedor" 
+                                   name="telefono"
+                                   placeholder="8888-8888"
+                                   maxlength="15">
+                            <div class="invalid-feedback"></div>
+                            <small class="form-text text-muted">Número de teléfono</small>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="contacto" class="form-label">Persona de Contacto</label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="contacto" 
-                               name="contacto"
-                               placeholder="Ej: Juan Pérez García"
-                               maxlength="80"
-                               pattern="[a-zA-ZÀ-ÿ\s\.]+"
-                               title="Solo letras, espacios y puntos">
-                        <div class="invalid-feedback">
-                            Solo se permiten letras, espacios y puntos (máximo 80 caracteres).
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="telefono" class="form-label">Teléfono</label>
-                        <input type="tel" 
-                               class="form-control" 
-                               id="telefono" 
-                               name="telefono"
-                               placeholder="Ej: 2234-5678 o 8888-9999"
-                               maxlength="20"
-                               pattern="[\d\s\-\+\(\)]+"
-                               title="Solo números, espacios, guiones, paréntesis y signo más">
-                        <div class="invalid-feedback">
-                            Formato de teléfono inválido. Use números, espacios, guiones y paréntesis.
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="direccion" class="form-label">Dirección</label>
+                        <label for="direccionProveedor" class="form-label">
+                            <i class="bi bi-geo-alt me-1"></i>Dirección
+                        </label>
                         <textarea class="form-control" 
-                                  id="direccion" 
+                                  id="direccionProveedor" 
                                   name="direccion" 
                                   rows="3"
-                                  placeholder="Ej: De la iglesia de San Pedro, 200m este y 100m sur, San José, Costa Rica"
-                                  maxlength="250"></textarea>
-                        <div class="form-text">Máximo 250 caracteres</div>
-                        <div class="invalid-feedback">
-                            La dirección no puede exceder 250 caracteres.
+                                  placeholder="Dirección completa del proveedor"
+                                  maxlength="500"></textarea>
+                        <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Dirección física del proveedor</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="activoProveedor" 
+                                       name="activo" 
+                                       checked>
+                                <label class="form-check-label" for="activoProveedor">
+                                    <i class="bi bi-check-circle me-1"></i>Proveedor Activo
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">Solo proveedores activos aparecen en pedidos</small>
                         </div>
                     </div>
                 </form>
