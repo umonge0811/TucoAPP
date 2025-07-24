@@ -71,6 +71,13 @@ namespace GestionLlantera.Web.Controllers
                     direccion = p.Direccion
                 }).ToList();
 
+                _logger.LogInformation("📋 Enviando {Count} proveedores al cliente", resultado.Count);
+                foreach (var prov in resultado)
+                {
+                    _logger.LogInformation("📋 Proveedor: ID={Id}, Nombre='{Nombre}', Contacto='{Contacto}'", 
+                        prov.id, prov.nombre ?? "NULL", prov.contacto ?? "NULL");
+                }
+
                 return Json(new { success = true, data = resultado });
             }
             catch (Exception ex)

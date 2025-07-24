@@ -204,10 +204,28 @@ function llenarSelectProveedores() {
     for (let i = 0; i < proveedoresDisponibles.length; i++) {
         const proveedor = proveedoresDisponibles[i];
         console.log(`🔍 Procesando proveedor ${i + 1}:`, proveedor);
+        
+        // Log detallado de las propiedades del proveedor
+        console.log('📊 Propiedades del proveedor:', {
+            id: proveedor?.id,
+            nombre: proveedor?.nombre,
+            proveedorId: proveedor?.proveedorId,
+            nombreProveedor: proveedor?.nombreProveedor,
+            contacto: proveedor?.contacto,
+            telefono: proveedor?.telefono,
+            direccion: proveedor?.direccion
+        });
 
-        if (proveedor && proveedor.id && proveedor.nombre) {
-            const nombreProveedor = proveedor.nombre || 'Sin nombre';
-            const option = `<option value="${proveedor.id}">${nombreProveedor}</option>`;
+        // Verificar si tiene los datos mínimos necesarios
+        const tieneId = proveedor && (proveedor.id || proveedor.proveedorId);
+        const tieneNombre = proveedor && (proveedor.nombre || proveedor.nombreProveedor);
+        
+        if (tieneId && tieneNombre) {
+            // Usar la propiedad correcta según lo que esté disponible
+            const proveedorId = proveedor.id || proveedor.proveedorId;
+            const nombreProveedor = proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre';
+            
+            const option = `<option value="${proveedorId}">${nombreProveedor}</option>`;
 
             console.log(`➕ Agregando opción: ${option}`);
             select.append(option);
@@ -215,11 +233,11 @@ function llenarSelectProveedores() {
             proveedoresAgregados++;
         } else {
             console.warn('⚠️ Proveedor con datos incompletos:', proveedor);
-            console.warn('📋 Estructura del proveedor:', {
-                hasId: !!proveedor?.proveedorId,
-                hasNombre: !!proveedor?.nombreProveedor,
-                id: proveedor?.proveedorId,
-                nombre: proveedor?.nombreProveedor
+            console.warn('📋 Validación fallida:', {
+                tieneId: tieneId,
+                tieneNombre: tieneNombre,
+                valorId: proveedor?.id || proveedor?.proveedorId,
+                valorNombre: proveedor?.nombre || proveedor?.nombreProveedor
             });
         }
     }
