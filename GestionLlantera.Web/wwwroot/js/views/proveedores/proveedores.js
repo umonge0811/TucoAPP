@@ -163,6 +163,8 @@ function mostrarProveedores() {
                 </td>
                 <td>${proveedor.contacto || '-'}</td>
                 <td>${proveedor.telefono || '-'}</td>
+                <td>${proveedor.email || '-'}</td>
+
                 <td>
                     <span title="${proveedor.direccion || '-'}">
                         ${proveedor.direccion ? (proveedor.direccion.length > 50 ? proveedor.direccion.substring(0, 50) + '...' : proveedor.direccion) : '-'}
@@ -350,6 +352,7 @@ async function crearProveedor() {
             nombreProveedor: $('#nombreProveedor').val().trim(),
             contacto: $('#contactoProveedor').val().trim() || null,
             telefono: $('#telefonoProveedor').val().trim() || null,
+            email: $('#emailProveedor').val().trim()||null,
             direccion: $('#direccionProveedor').val().trim() || null
         };
 
@@ -988,36 +991,6 @@ function mostrarAlerta(mensaje, tipo = 'info', titulo = null) {
     }
 }
 
-// =====================================
-// FUNCIÓN TEMPORAL PARA PROBAR FILTROS
-// =====================================
-
-/**
- * FUNCIÓN TEMPORAL: Crear un proveedor inactivo para probar filtros
- */
-function crearProveedorInactivoTemporal() {
-    console.log('🧪 Creando proveedor inactivo temporal para pruebas...');
-
-    const proveedorTemporal = {
-        id: 999,
-        nombre: 'PROVEEDOR INACTIVO - TEMPORAL',
-        contacto: 'Contacto Temporal',
-        telefono: '000-000-0000',
-        direccion: 'Dirección Temporal',
-        activo: false,
-        pedidosProveedors: []
-    };
-
-    // Agregar al inicio del array
-    proveedoresData.unshift(proveedorTemporal);
-    proveedoresFiltrados = [...proveedoresData];
-
-    console.log('✅ Proveedor temporal agregado:', proveedorTemporal);
-    console.log('📊 Total proveedores ahora:', proveedoresData.length);
-
-    mostrarProveedores();
-    actualizarContador();
-}
 
 // =====================================
 // EXPORTAR FUNCIONES GLOBALMENTE

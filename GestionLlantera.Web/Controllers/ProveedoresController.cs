@@ -62,6 +62,7 @@ namespace GestionLlantera.Web.Controllers
                     id = p.ProveedorId,
                     nombre = p.NombreProveedor,
                     contacto = p.Contacto,
+                    email = p.Email,
                     telefono = p.Telefono,
                     direccion = p.Direccion,
                     activo = p.Activo
@@ -148,6 +149,7 @@ namespace GestionLlantera.Web.Controllers
                     NombreProveedor = request.NombreProveedor.Trim(),
                     Contacto = string.IsNullOrWhiteSpace(request.Contacto) ? null : request.Contacto.Trim(),
                     Telefono = string.IsNullOrWhiteSpace(request.Telefono) ? null : request.Telefono.Trim(),
+                    Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
                     Direccion = string.IsNullOrWhiteSpace(request.Direccion) ? null : request.Direccion.Trim()
                 };
 
@@ -438,6 +440,7 @@ namespace GestionLlantera.Web.Controllers
     {
         public string NombreProveedor { get; set; } = string.Empty;
         public string? Contacto { get; set; }
+        public string? Email { get; set; }
         public string? Telefono { get; set; }
         public string? Direccion { get; set; }
     }
@@ -447,6 +450,7 @@ namespace GestionLlantera.Web.Controllers
         public int ProveedorId { get; set; }
         public string NombreProveedor { get; set; } = string.Empty;
         public string? Contacto { get; set; }
+        public string? Email { get; set; }
         public string? Telefono { get; set; }
         public string? Direccion { get; set; }
     }

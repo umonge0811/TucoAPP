@@ -497,6 +497,9 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.Telefono)
                 .HasMaxLength(15)
                 .IsUnicode(false);
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .IsUnicode(false);
             entity.Property(e => e.Activo)
                 .HasDefaultValue(true);
         });
