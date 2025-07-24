@@ -68,7 +68,8 @@ namespace GestionLlantera.Web.Controllers
                     nombre = p.NombreProveedor,
                     contacto = p.Contacto,
                     telefono = p.Telefono,
-                    direccion = p.Direccion
+                    direccion = p.Direccion,
+                    activo = p.Activo
                 }).ToList();
 
                 _logger.LogInformation("📋 Enviando {Count} proveedores al cliente", resultado.Count);
@@ -84,6 +85,38 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogError(ex, "❌ Error obteniendo proveedores");
                 return Json(new { success = false, message = "Error al obtener proveedores" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerTodosProveedores()
+        {
+            try
+            {
+                if (!await this.TienePermisoAsync("Ver Proveedores"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para consultar proveedores" });
+                }
+
+                var jwtToken = this.ObtenerTokenJWT();
+                var proveedores = await _proveedoresService.ObtenerTodosProveedoresAsync(jwtToken);
+
+                var resultado = proveedores.Select(p => new {
+                    id = p.ProveedorId,
+                    nombre = p.NombreProveedor,
+                    contacto = p.Contacto,
+                    telefono = p.Telefono,
+                    direccion = p.Direccion,
+                    activo = p.Activo
+                }).ToList();
+
+                _logger.LogInformation("📋 Enviando TODOS los {Count} proveedores al cliente", resultado.Count);
+                return Json(new { success = true, data = resultado });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo todos los proveedores");
+                return Json(new { success = false, message = "Error al obtener todos los proveedores" });
             }
         }
 
@@ -295,6 +328,67 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpPatch]
+        public async Task<IActionResult> CambiarEstadoProveedor(int id, [FromBody] CambiarEstadoProveedorRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Cambiando estado de proveedor {Id} a {Estado}", id, request?.Activo == true ? "Activo" : "Inactivo");
+
+                if (id <= 0)
+                {
+                    return Json(new { success = false, message = "ID del proveedor inválido" });
+                }
+
+                if (request == null)
+                {
+                    return Json(new { success = false, message = "Datos requeridos para cambiar estado" });
+                }
+
+                if (!await this.TienePermisoAsync("Modificar Proveedores"))
+                {
+                    return Json(new { success = false, message = "Sin permisos para modificar proveedores" });
+                }
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _proveedoresService.CambiarEstadoProveedorAsync(id, request.Activo, token);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Estado del proveedor cambiado exitosamente: {Id} -> {Estado}", id, request.Activo ? "Activo" : "Inactivo");
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message ?? $"Proveedor {(request.Activo ? "activado" : "desactivado")} exitosamente",
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error cambiando estado del proveedor: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message ?? "Error al cambiar estado del proveedor"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error cambiando estado del proveedor");
+                return Json(new
+                {
+                    success = false,
+                    message = "Error al cambiar estado del proveedor: " + ex.Message
+                });
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> ObtenerPedidosProveedor(int? proveedorId = null)
         {
@@ -354,5 +448,10 @@ namespace GestionLlantera.Web.Controllers
         public string? Contacto { get; set; }
         public string? Telefono { get; set; }
         public string? Direccion { get; set; }
+    }
+
+    public class CambiarEstadoProveedorRequest
+    {
+        public bool Activo { get; set; }
     }
 }
