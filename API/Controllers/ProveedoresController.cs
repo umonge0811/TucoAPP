@@ -26,9 +26,10 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo todos los proveedores");
+                _logger.LogInformation("📋 Obteniendo todos los proveedores activos");
                 
                 var proveedores = await _context.Proveedores
+                    .Where(p => p.Activo)
                     .Include(p => p.PedidosProveedors)
                     .OrderBy(p => p.NombreProveedor)
                     .ToListAsync();
@@ -53,11 +54,11 @@ namespace API.Controllers
                     .Include(p => p.PedidosProveedors)
                         .ThenInclude(pp => pp.DetallePedidos)
                             .ThenInclude(dp => dp.Producto)
-                    .FirstOrDefaultAsync(p => p.ProveedorId == id);
+                    .FirstOrDefaultAsync(p => p.ProveedorId == id && p.Activo);
 
                 if (proveedor == null)
                 {
-                    return NotFound(new { message = "Proveedor no encontrado" });
+                    return NotFound(new { message = "Proveedor no encontrado o inactivo" });
                 }
 
                 return Ok(proveedor);
@@ -82,9 +83,9 @@ namespace API.Controllers
                     return BadRequest(new { message = "El nombre del proveedor es requerido" });
                 }
 
-                // Verificar si ya existe un proveedor con el mismo nombre
+                // Verificar si ya existe un proveedor activo con el mismo nombre
                 var existeProveedor = await _context.Proveedores
-                    .AnyAsync(p => p.NombreProveedor.ToLower() == proveedor.NombreProveedor.ToLower());
+                    .AnyAsync(p => p.NombreProveedor.ToLower() == proveedor.NombreProveedor.ToLower() && p.Activo);
 
                 if (existeProveedor)
                 {
@@ -124,10 +125,10 @@ namespace API.Controllers
                     return NotFound(new { message = "Proveedor no encontrado" });
                 }
 
-                // Verificar nombre duplicado (excluyendo el actual)
+                // Verificar nombre duplicado (excluyendo el actual y solo proveedores activos)
                 var existeNombre = await _context.Proveedores
                     .AnyAsync(p => p.NombreProveedor.ToLower() == proveedor.NombreProveedor.ToLower() 
-                                  && p.ProveedorId != id);
+                                  && p.ProveedorId != id && p.Activo);
 
                 if (existeNombre)
                 {
@@ -139,6 +140,7 @@ namespace API.Controllers
                 proveedorExistente.Contacto = proveedor.Contacto;
                 proveedorExistente.Telefono = proveedor.Telefono;
                 proveedorExistente.Direccion = proveedor.Direccion;
+                proveedorExistente.Activo = proveedor.Activo;
 
                 await _context.SaveChangesAsync();
 
@@ -158,33 +160,27 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("🗑️ Eliminando proveedor {Id}", id);
+                _logger.LogInformation("🗑️ Desactivando proveedor {Id}", id);
 
                 var proveedor = await _context.Proveedores
-                    .Include(p => p.PedidosProveedors)
-                    .FirstOrDefaultAsync(p => p.ProveedorId == id);
+                    .FirstOrDefaultAsync(p => p.ProveedorId == id && p.Activo);
 
                 if (proveedor == null)
                 {
-                    return NotFound(new { message = "Proveedor no encontrado" });
+                    return NotFound(new { message = "Proveedor no encontrado o ya está inactivo" });
                 }
 
-                // Verificar si tiene pedidos asociados
-                if (proveedor.PedidosProveedors.Any())
-                {
-                    return BadRequest(new { message = "No se puede eliminar el proveedor porque tiene pedidos asociados" });
-                }
-
-                _context.Proveedores.Remove(proveedor);
+                // Marcar como inactivo en lugar de eliminar físicamente
+                proveedor.Activo = false;
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Proveedor eliminado exitosamente: {Id}", id);
+                _logger.LogInformation("✅ Proveedor desactivado exitosamente: {Id}", id);
 
-                return Ok(new { message = "Proveedor eliminado exitosamente" });
+                return Ok(new { message = "Proveedor desactivado exitosamente" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error eliminando proveedor {Id}", id);
+                _logger.LogError(ex, "❌ Error desactivando proveedor {Id}", id);
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
