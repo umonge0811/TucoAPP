@@ -155,6 +155,47 @@ namespace API.Controllers
             }
         }
 
+        [HttpPatch("{id}/estado")]
+        public async Task<IActionResult> CambiarEstadoProveedor(int id, [FromBody] CambiarEstadoRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Cambiando estado de proveedor {Id} a {Estado}", id, request?.Activo == true ? "Activo" : "Inactivo");
+
+                if (request == null)
+                {
+                    return BadRequest(new { message = "Datos requeridos para cambiar estado" });
+                }
+
+                var proveedor = await _context.Proveedores
+                    .FirstOrDefaultAsync(p => p.ProveedorId == id);
+
+                if (proveedor == null)
+                {
+                    return NotFound(new { message = "Proveedor no encontrado" });
+                }
+
+                proveedor.Activo = request.Activo;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Estado del proveedor cambiado exitosamente: {Id} -> {Estado}", id, request.Activo ? "Activo" : "Inactivo");
+
+                return Ok(new { 
+                    message = $"Proveedor {(request.Activo ? "activado" : "desactivado")} exitosamente",
+                    proveedor = new {
+                        id = proveedor.ProveedorId,
+                        nombre = proveedor.NombreProveedor,
+                        activo = proveedor.Activo
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error cambiando estado del proveedor {Id}", id);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProveedor(int id)
         {
@@ -184,5 +225,11 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
+    }
+
+    // DTO para cambio de estado
+    public class CambiarEstadoRequest
+    {
+        public bool Activo { get; set; }
     }
 }

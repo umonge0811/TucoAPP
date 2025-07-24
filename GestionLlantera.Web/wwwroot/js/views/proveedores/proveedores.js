@@ -783,14 +783,13 @@ async function confirmarCambiarEstadoProveedor(id, nuevoEstado, nombre) {
             }
         });
 
-        const response = await fetch(`/Proveedores/CambiarEstadoProveedor/${id}`, {
+        const response = await fetch(`/api/Proveedores/${id}/estado`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ activo: nuevoEstado }),
-            credentials: 'include'
+            body: JSON.stringify({ activo: nuevoEstado })
         });
 
         if (!response.ok) {
