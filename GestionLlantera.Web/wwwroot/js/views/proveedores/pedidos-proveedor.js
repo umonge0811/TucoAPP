@@ -205,9 +205,9 @@ function llenarSelectProveedores() {
         const proveedor = proveedoresDisponibles[i];
         console.log(`🔍 Procesando proveedor ${i + 1}:`, proveedor);
 
-        if (proveedor && proveedor.proveedorId && proveedor.nombreProveedor) {
-            const nombreProveedor = proveedor.nombreProveedor || 'Sin nombre';
-            const option = `<option value="${proveedor.proveedorId}">${nombreProveedor}</option>`;
+        if (proveedor && proveedor.id && proveedor.nombre) {
+            const nombreProveedor = proveedor.nombre || 'Sin nombre';
+            const option = `<option value="${proveedor.id}">${nombreProveedor}</option>`;
 
             console.log(`➕ Agregando opción: ${option}`);
             select.append(option);
