@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
 using tuco.Clases.Models;
 using System.Text.Json;
+using GestionLlantera.Web.Extensions;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -58,44 +59,29 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Solicitando lista de proveedores");
 
-                var token = HttpContext.Session.GetString("JWTToken");
-                if (string.IsNullOrEmpty(token))
+                if (!await this.TienePermisoAsync("Ver Proveedores"))
                 {
-                    return Json(new { success = false, message = "Sesión expirada" });
+                    return Json(new { success = false, message = "Sin permisos para consultar clientes" });
                 }
 
-                var resultado = await _proveedoresService.ObtenerProveedoresAsync(token);
+                var jwtToken = this.ObtenerTokenJWT();
+                var proveedores = await _proveedoresService.ObtenerProveedoresAsync(jwtToken);
 
-                if (resultado.success)
-                {
-                    _logger.LogInformation("✅ Proveedores obtenidos exitosamente");
-                    return Json(new
-                    {
-                        success = true,
-                        data = resultado.data,
-                        message = resultado.message
-                    });
-                }
-                else
-                {
-                    _logger.LogWarning("⚠️ Error obteniendo proveedores: {Message}", resultado.message);
-                    return Json(new
-                    {
-                        success = false,
-                        message = resultado.message
-                    });
-                }
+                var resultado = proveedores.Select(p => new {
+                    id = p.ProveedorId,
+                    nombre = p.NombreProveedor,
+                    contacto = p.Contacto,
+                    telefono = p.Telefono,
+                    direccion = p.Direccion
+                }).ToList();
+
+                return Json(new { success = true, data = resultado });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo proveedores");
-                return Json(new
-                {
-                    success = false,
-                    message = "Error al obtener proveedores: " + ex.Message
-                });
+                return Json(new { success = false, message = "Error al obtener proveedores" });
             }
         }
 

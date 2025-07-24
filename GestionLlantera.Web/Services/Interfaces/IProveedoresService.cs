@@ -5,7 +5,7 @@ namespace GestionLlantera.Web.Services.Interfaces
 {
     public interface IProveedoresService
     {
-        Task<(bool success, object data, string message)> ObtenerProveedoresAsync(string token);
+        Task<List<Proveedore>> ObtenerProveedoresAsync(string token);
         Task<(bool success, object data, string message)> CrearProveedorAsync(Proveedore proveedor, string token);
         Task<(bool success, object data, string message)> ActualizarProveedorAsync(Proveedore proveedor, string token);
         Task<(bool success, object data, string message)> EliminarProveedorAsync(int id, string token);

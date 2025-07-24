@@ -30,31 +30,37 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string message)> ObtenerProveedoresAsync(string token)
+        public async Task<List<Proveedore>> ObtenerProveedoresAsync(string jwtToken)
         {
             try
             {
                 _logger.LogInformation("📋 Obteniendo proveedores desde API");
-                ConfigurarAutenticacion(token);
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
 
                 var response = await _httpClient.GetAsync("api/Proveedores");
-                var content = await response.Content.ReadAsStringAsync();
 
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    var proveedores = JsonConvert.DeserializeObject<List<Proveedore>>(content);
-                    return (true, proveedores, "Proveedores obtenidos exitosamente");
+                    _logger.LogError("Error obteniendo clientes: {StatusCode}", response.StatusCode);
+                    return new List<Proveedore>();
                 }
-                else
-                {
-                    _logger.LogError("❌ Error en API: {StatusCode} - {Content}", response.StatusCode, content);
-                    return (false, null, "Error obteniendo proveedores");
-                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var proveedores = JsonConvert.DeserializeObject<List<Proveedore>>(content) ?? new List<Proveedore>();
+
+                return proveedores;
+
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo proveedores");
-                return (false, null, "Error interno del servidor");
+                return new List<Proveedore>();
             }
         }
 
