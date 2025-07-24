@@ -1,4 +1,3 @@
-
 // ===== MÓDULO DE FILTROS PARA FACTURAS PENDIENTES (FRONTEND ONLY) =====
 
 let todasLasFacturasPendientes = []; // Array para almacenar todas las facturas pendientes
@@ -38,15 +37,15 @@ function inicializarFiltrosFacturasPendientes() {
  */
 function configurarEventosFacturasPendientes() {
     console.log('🔍 Configurando eventos de filtrado para facturas pendientes...');
-    
+
     // Limpiar eventos anteriores
     $(document).off('.facturasPendientesFilter');
-    
+
     // Configurar evento de búsqueda con delegación
     $(document).on('input.facturasPendientesFilter keyup.facturasPendientesFilter', '#busquedaFacturasPendientes', function() {
         const termino = $(this).val().trim();
         console.log('🔍 Término de búsqueda facturas:', termino);
-        
+
         filtrosBusquedaFacturas.texto = termino;
         aplicarFiltrosLocalmenteFacturas();
     });
@@ -55,7 +54,7 @@ function configurarEventosFacturasPendientes() {
     $(document).on('change.facturasPendientesFilter', '#estadoFacturasPendientes', function() {
         const estado = $(this).val();
         console.log('🔍 Estado de facturas seleccionado:', estado);
-        
+
         filtrosBusquedaFacturas.estado = estado;
         aplicarFiltrosLocalmenteFacturas();
     });
@@ -66,7 +65,7 @@ function configurarEventosFacturasPendientes() {
         console.log('🔍 Fecha desde:', filtrosBusquedaFacturas.fechaDesde);
         aplicarFiltrosLocalmenteFacturas();
     });
-    
+
     $(document).on('change.facturasPendientesFilter', '#fechaHastaFacturas', function() {
         filtrosBusquedaFacturas.fechaHasta = $(this).val();
         console.log('🔍 Fecha hasta:', filtrosBusquedaFacturas.fechaHasta);
@@ -78,6 +77,14 @@ function configurarEventosFacturasPendientes() {
         e.preventDefault();
         console.log('🔍 Limpiando filtros de facturas...');
         limpiarFiltrosFacturas();
+    });
+
+    // Configurar cambio de productos por página
+    $(document).on('change.facturasPendientesFilter', '#facturasPendientesPorPagina', function() {
+        facturasPorPagina = parseInt($(this).val());
+        paginaActualFacturas = 1;
+        console.log('📄 Cambiando facturas por página a:', facturasPorPagina);
+        mostrarFacturasPendientesPaginadas();
     });
 
     console.log('✅ Eventos de filtros de facturas configurados con delegación');
@@ -126,7 +133,7 @@ async function cargarTodasLasFacturasPendientes() {
             if (facturas && facturas.length > 0) {
                 console.log('✅ Facturas pendientes cargadas:', facturas.length);
                 todasLasFacturasPendientes = facturas;
-                
+
                 // Aplicar filtros iniciales (mostrar todas)
                 aplicarFiltrosLocalmenteFacturas();
             } else {
@@ -228,36 +235,53 @@ function aplicarFiltrosLocalmenteFacturas() {
  */
 function mostrarFacturasPendientesPaginadas() {
     console.log('📋 === MOSTRANDO FACTURAS PENDIENTES PAGINADAS ===');
-    console.log('📋 Página actual:', paginaActualFacturas);
-    console.log('📋 Facturas por página:', facturasPorPagina);
 
-    if (facturasPendientesFiltradas.length === 0) {
+    const facturasAMostrar = facturasPendientesFiltradas.length > 0 ? facturasPendientesFiltradas : todasLasFacturasPendientes;
+
+    if (!facturasAMostrar || facturasAMostrar.length === 0) {
         mostrarFacturasPendientesVacias();
+        $('#contadorResultadosFacturas').remove();
         return;
     }
 
+    console.log('📋 Total facturas a paginar:', facturasAMostrar.length);
+    console.log('📋 Facturas por página:', facturasPorPagina);
+    console.log('📋 Página actual:', paginaActualFacturas);
+
     // Calcular paginación
-    const totalPaginas = Math.ceil(facturasPendientesFiltradas.length / facturasPorPagina);
+    const totalPaginas = Math.ceil(facturasAMostrar.length / facturasPorPagina);
     const inicio = (paginaActualFacturas - 1) * facturasPorPagina;
     const fin = inicio + facturasPorPagina;
-    const facturasParaMostrar = facturasPendientesFiltradas.slice(inicio, fin);
+    const facturasPagina = facturasAMostrar.slice(inicio, fin);
 
-    console.log('📋 Total páginas:', totalPaginas);
-    console.log('📋 Mostrando facturas:', inicio, 'a', fin);
-    console.log('📋 Facturas en esta página:', facturasParaMostrar.length);
+    console.log('📋 Facturas en esta página:', facturasPagina.length);
 
-    // Mostrar facturas en la tabla
-    mostrarFacturasPendientesEnTabla(facturasParaMostrar);
+    // Mostrar facturas de la página actual
+    const tbody = $('#facturasPendientesTableBody');
+    tbody.empty();
 
-    // Mostrar controles de paginación si es necesario
+    facturasPagina.forEach(factura => {
+        const fila = crearFilaFacturaPendiente(factura);
+        tbody.append(fila);
+    });
+
+    // Configurar eventos para los botones
+    configurarEventosBotonesFacturas();
+
+    $('#facturasPendientesContent').show();
+    $('#facturasPendientesEmpty').hide();
+
+    // Actualizar contador de resultados
+    actualizarContadorResultadosFacturas(facturasAMostrar.length, todasLasFacturasPendientes.length);
+
+    // Mostrar paginación si hay más de una página
     if (totalPaginas > 1) {
         mostrarPaginacionFacturas(paginaActualFacturas, totalPaginas);
     } else {
         $('#paginacionFacturas').hide();
     }
 
-    // Mostrar contenido
-    $('#facturasPendientesContent').show();
+    console.log('✅ Facturas pendientes mostradas en tabla');
 }
 
 /**
@@ -350,17 +374,31 @@ function mostrarPaginacionFacturas(paginaActualParam, totalPaginas) {
     console.log('📄 Página actual:', paginaActualParam, 'Total páginas:', totalPaginas);
 
     const paginacion = $('#paginacionFacturas');
-    if (paginacion.length === 0 || totalPaginas <= 1) {
+    if (paginacion.length === 0) {
+        console.error('❌ No se encontró el contenedor de paginación');
+        return;
+    }
+
+    // Ocultar si solo hay una página o menos
+    if (totalPaginas <= 1) {
         paginacion.hide();
         return;
     }
 
-    let html = '<ul class="pagination justify-content-center">';
+    let html = '<nav aria-label="Paginación de facturas pendientes"><ul class="pagination justify-content-center mb-0">';
 
     // Botón anterior
     if (paginaActualParam > 1) {
         html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="cambiarPaginaFacturas(${paginaActualParam - 1})">Anterior</a>
+                    <a class="page-link" href="#" onclick="cambiarPaginaFacturas(${paginaActualParam - 1})">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </a>
+                </li>`;
+    } else {
+        html += `<li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </span>
                 </li>`;
     }
 
@@ -368,6 +406,19 @@ function mostrarPaginacionFacturas(paginaActualParam, totalPaginas) {
     const iniciarPagina = Math.max(1, paginaActualParam - 2);
     const finalizarPagina = Math.min(totalPaginas, iniciarPagina + 4);
 
+    // Primera página si no está en el rango
+    if (iniciarPagina > 1) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaFacturas(1)">1</a>
+                </li>`;
+        if (iniciarPagina > 2) {
+            html += `<li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>`;
+        }
+    }
+
+    // Páginas del rango
     for (let i = iniciarPagina; i <= finalizarPagina; i++) {
         if (i === paginaActualParam) {
             html += `<li class="page-item active">
@@ -380,14 +431,35 @@ function mostrarPaginacionFacturas(paginaActualParam, totalPaginas) {
         }
     }
 
-    // Botón siguiente
-    if (paginaActualParam < totalPaginas) {
+    // Última página si no está en el rango
+    if (finalizarPagina < totalPaginas) {
+        if (finalizarPagina < totalPaginas - 1) {
+            html += `<li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>`;
+        }
         html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="cambiarPaginaFacturas(${paginaActualParam + 1})">Siguiente</a>
+                    <a class="page-link" href="#" onclick="cambiarPaginaFacturas(${totalPaginas})">${totalPaginas}</a>
                 </li>`;
     }
 
-    html += '</ul>';
+    // Botón siguiente
+    if (paginaActualParam < totalPaginas) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaFacturas(${paginaActualParam + 1})">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>`;
+    } else {
+        html += `<li class="page-item disabled">
+                    <span class="page-link">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </span>
+                </li>`;
+    }
+
+    html += '</ul></nav>';
+
     paginacion.html(html).show();
 }
 
@@ -511,6 +583,80 @@ function configurarEventosBotonesFacturas() {
     console.log('✅ Eventos de botones de facturas configurados');
 }
 
+/**
+ * Actualizar el contador de resultados de facturas
+ */
+function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
+    const inicio = ((paginaActualFacturas - 1) * facturasPorPagina) + 1;
+    const fin = Math.min(paginaActualFacturas * facturasPorPagina, conteoActual);
+    
+    $('#facturasPendientesInfo').text(`Mostrando ${inicio}-${fin} de ${conteoActual} facturas`);
+}
+
+/**
+ * Crear una fila de factura pendiente para la tabla
+ */
+function crearFilaFacturaPendiente(factura) {
+    const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
+    let estadoBadge = '';
+
+    // Asignar badge según el estado
+    switch (factura.estado) {
+        case 'Pendiente':
+            estadoBadge = '<span class="badge bg-warning">Pendiente</span>';
+            break;
+        case 'Pagada':
+            estadoBadge = '<span class="badge bg-success">Pagada</span>';
+            break;
+        case 'Anulada':
+            estadoBadge = '<span class="badge bg-danger">Anulada</span>';
+            break;
+        default:
+            estadoBadge = `<span class="badge bg-secondary">${factura.estado || 'Sin Estado'}</span>`;
+    }
+
+    // ✅ ESCAPAR DATOS DE LA FACTURA PENDIENTE
+    const facturaEscapada = JSON.stringify(factura).replace(/"/g, '&quot;');
+
+    const fila = `
+        <tr data-factura-id="${factura.facturaId || factura.id}">
+            <td>
+                <strong>${factura.numeroFactura || 'N/A'}</strong><br>
+                <small class="text-muted">${factura.tipoDocumento || 'Factura'}</small>
+            </td>
+            <td>
+                <strong>${factura.nombreCliente || factura.clienteNombre || 'Cliente General'}</strong><br>
+                <small class="text-muted">${factura.emailCliente || factura.email || ''}</small>
+            </td>
+            <td>
+                <strong>${fecha}</strong><br>
+                <small class="text-muted">Por: ${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
+            </td>
+            <td>
+                <strong class="text-success">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong>
+            </td>
+            <td>${estadoBadge}</td>
+            <td class="text-center">
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                        <i class="bi bi-printer"></i>
+                    </button>
+                    ${factura.estado === 'Pendiente' ? `
+                    <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
+                        <i class="bi bi-check-circle"></i>
+                    </button>
+                    ` : ''}
+                </div>
+            </td>
+        </tr>
+    `;
+
+    return fila;
+}
+
 
 // Exportar funciones para uso global
 if (typeof window !== 'undefined') {
@@ -522,7 +668,7 @@ if (typeof window !== 'undefined') {
     window.mostrarFacturasPendientesEnTabla = mostrarFacturasPendientesEnTabla;
     window.recargarFacturasPendientes = recargarFacturasPendientes;
     window.configurarEventosBotonesFacturas = configurarEventosBotonesFacturas;
-    
+
     console.log('📋 Módulo de filtros de facturas pendientes (Frontend) cargado correctamente');
 } else {
     console.error('❌ Window no está disponible para exportar funciones');

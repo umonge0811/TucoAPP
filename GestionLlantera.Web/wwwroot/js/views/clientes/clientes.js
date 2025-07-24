@@ -61,9 +61,9 @@ function configurarEventos() {
         limpiarFormularioCliente();
     });
 
-    // Validación en tiempo real
-    $('#nombreCliente, #emailCliente, #telefonoCliente').on('input', function() {
-        limpiarValidacion($(this));
+    // Validación en tiempo real mejorada
+    $('#nombreCliente, #emailCliente, #telefonoCliente, #contactoCliente, #direccionCliente').on('input blur', function() {
+        validarCampoEnTiempoReal($(this));
     });
 }
 
@@ -333,24 +333,127 @@ async function eliminarCliente(clienteId) {
 }
 
 // ===== VALIDACIÓN =====
+// Función para validar campos en tiempo real
+function validarCampoEnTiempoReal(campo) {
+    const valor = campo.val().trim();
+    const id = campo.attr('id');
+    let esValido = true;
+    let mensaje = '';
+
+    // Limpiar validación previa
+    campo.removeClass('is-invalid is-valid');
+    campo.siblings('.invalid-feedback').text('');
+
+    switch (id) {
+        case 'nombreCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El nombre del cliente es obligatorio';
+            } else if (valor.length < 2) {
+                esValido = false;
+                mensaje = 'El nombre debe tener al menos 2 caracteres';
+            } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El nombre solo puede contener letras y espacios';
+            }
+            break;
+
+        case 'contactoCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'La identificación es obligatoria';
+            } else if (!/^[\d\-\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'La identificación solo puede contener números y guiones';
+            }
+            break;
+
+        case 'emailCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El email es obligatorio';
+            } else if (!validarEmail(valor)) {
+                esValido = false;
+                mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
+            }
+            break;
+
+        case 'telefonoCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El teléfono es obligatorio';
+            } else if (!/^[\d\-\s\+\(\)]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El teléfono solo puede contener números, espacios y guiones';
+            } else if (valor.replace(/[\D]/g, '').length < 8) {
+                esValido = false;
+                mensaje = 'El teléfono debe tener al menos 8 dígitos';
+            }
+            break;
+
+        case 'direccionCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'La dirección es obligatoria';
+            } else if (valor.length > 500) {
+                esValido = false;
+                mensaje = 'La dirección no puede exceder 500 caracteres';
+            }
+            break;
+    }
+
+    if (!esValido) {
+        campo.addClass('is-invalid');
+        campo.siblings('.invalid-feedback').text(mensaje);
+    } else if (valor) {
+        campo.addClass('is-valid');
+    }
+
+    return esValido;
+}
+
 function validarFormularioCliente() {
     let esValido = true;
 
     // Limpiar validaciones previas
-    $('.form-control').removeClass('is-invalid');
-    $('.invalid-feedback').text('');
+    $('#modalCliente .form-control').removeClass('is-invalid');
+    $('#modalCliente .invalid-feedback').text('');
 
-    // Validar nombre (requerido)
+    // Validar nombre (obligatorio)
     const nombre = $('#nombreCliente').val().trim();
     if (!nombre) {
-        mostrarErrorCampo('#nombreCliente', 'El nombre del cliente es requerido');
+        mostrarErrorCampo('#nombreCliente', 'El nombre del cliente es obligatorio');
         esValido = false;
     }
 
-    // Validar email (formato)
+    // Validar identificación (obligatoria)
+    const contacto = $('#contactoCliente').val().trim();
+    if (!contacto) {
+        mostrarErrorCampo('#contactoCliente', 'La identificación es obligatoria');
+        esValido = false;
+    }
+
+    // Validar email (obligatorio y formato)
     const email = $('#emailCliente').val().trim();
-    if (email && !validarEmail(email)) {
+    if (!email) {
+        mostrarErrorCampo('#emailCliente', 'El email es obligatorio');
+        esValido = false;
+    } else if (!validarEmail(email)) {
         mostrarErrorCampo('#emailCliente', 'El formato del email no es válido');
+        esValido = false;
+    }
+
+    // Validar teléfono (obligatorio)
+    const telefono = $('#telefonoCliente').val().trim();
+    if (!telefono) {
+        mostrarErrorCampo('#telefonoCliente', 'El teléfono es obligatorio');
+        esValido = false;
+    }
+
+    // Validar dirección (obligatoria)
+    const direccion = $('#direccionCliente').val().trim();
+    if (!direccion) {
+        mostrarErrorCampo('#direccionCliente', 'La dirección es obligatoria');
         esValido = false;
     }
 

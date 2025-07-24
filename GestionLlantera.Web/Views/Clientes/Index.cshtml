@@ -112,33 +112,67 @@
                     <input type="hidden" id="clienteId" value="0">
                     
                     <div class="mb-3">
-                        <label for="nombreCliente" class="form-label">Nombre Completo *</label>
-                        <input type="text" class="form-control" id="nombreCliente" required>
+                        <label for="nombreCliente" class="form-label">
+                            <i class="bi bi-person me-1"></i>Nombre Completo *
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="nombreCliente" 
+                               placeholder="Juan Pérez González"
+                               required>
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Ingrese el nombre completo del cliente</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="contactoCliente" class="form-label">Identificación</label>
-                        <input type="text" class="form-control" id="contactoCliente">
+                        <label for="contactoCliente" class="form-label">
+                            <i class="bi bi-person-badge me-1"></i>Identificación
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="contactoCliente"
+                               placeholder="1-2345-6789"
+                               maxlength="20">
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Cédula o documento de identidad</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="emailCliente" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="emailCliente">
+                        <label for="emailCliente" class="form-label">
+                            <i class="bi bi-envelope me-1"></i>Email
+                        </label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="emailCliente"
+                               placeholder="cliente@ejemplo.com">
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Correo electrónico válido</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="telefonoCliente" class="form-label">Teléfono</label>
-                        <input type="text" class="form-control" id="telefonoCliente">
+                        <label for="telefonoCliente" class="form-label">
+                            <i class="bi bi-telephone me-1"></i>Teléfono
+                        </label>
+                        <input type="tel" 
+                               class="form-control" 
+                               id="telefonoCliente"
+                               placeholder="8888-8888"
+                               maxlength="15">
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Número de teléfono (8 dígitos)</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="direccionCliente" class="form-label">Dirección</label>
-                        <textarea class="form-control" id="direccionCliente" rows="3"></textarea>
+                        <label for="direccionCliente" class="form-label">
+                            <i class="bi bi-geo-alt me-1"></i>Dirección
+                        </label>
+                        <textarea class="form-control" 
+                                  id="direccionCliente" 
+                                  rows="3"
+                                  placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
+                                  maxlength="500"></textarea>
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Dirección completa del cliente</small>
                     </div>
                 </form>
             </div>

@@ -582,14 +582,143 @@ input[type=number] {
     transform: scale(1.1);
 }
 
-/* Estilos para zoom simplificado */
-#modalZoomSimple .modal-content {
-    background: rgba(0, 0, 0, 0.95) !important;
+/* ===== ESTILOS PARA MODAL DE ZOOM MEJORADO ===== */
+#modalZoomSimple {
+    z-index: 99999 !important;
 }
 
-#modalZoomSimple .modal-body img {
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.1);
+#modalZoomSimple + .modal-backdrop {
+    z-index: 99998 !important;
+    background-color: rgba(0, 0, 0, 0.95) !important;
+}
+
+#modalZoomSimple .modal-content {
+    background: rgba(0, 0, 0, 0.98) !important;
+    border: none !important;
+    box-shadow: none !important;
+    height: 100vh !important;
+}
+
+#modalZoomSimple .modal-header {
+    background: rgba(0, 0, 0, 0.9) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    padding: 1rem 1.5rem !important;
+    position: relative !important;
+    z-index: 100000 !important;
+    flex-shrink: 0 !important;
+}
+
+#modalZoomSimple .modal-header .modal-title {
+    font-size: 1.2rem !important;
+    font-weight: 600 !important;
+    color: white !important;
+}
+
+#modalZoomSimple .modal-body {
+    padding: 2rem !important;
+    height: calc(100vh - 80px) !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+#modalZoomSimple .modal-body .image-container {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+#modalZoomSimple .modal-body .zoom-image {
+    max-width: 90% !important;
+    max-height: 90% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+#modalZoomSimple .modal-body .zoom-image:hover {
+    transform: scale(1.02) !important;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7) !important;
+}
+
+#modalZoomSimple .btn-close {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 50% !important;
+    width: 40px !important;
+    height: 40px !important;
+    border: 2px solid white !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+    position: relative !important;
+    z-index: 100001 !important;
+    opacity: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+#modalZoomSimple .btn-close:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7) !important;
+}
+
+#modalZoomSimple .btn-close:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.5) !important;
+}
+
+/* ===== CONTENEDORES DE IMÁGENES UNIFORMES ===== */
+.imagen-container {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.imagen-container:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+/* ===== CARRUSEL MEJORADO ===== */
+#carruselProducto .carousel-control-prev,
+#carruselProducto .carousel-control-next {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 123, 255, 0.8);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.9);
+}
+
+#carruselProducto .carousel-control-prev:hover,
+#carruselProducto .carousel-control-next:hover {
+    background: rgba(0, 123, 255, 1);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+#carruselProducto .carousel-indicators {
+    bottom: -40px;
+}
+
+#carruselProducto .carousel-indicators [data-bs-target] {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(0, 123, 255, 0.6);
+    border: 2px solid rgba(0, 123, 255, 0.8);
+    margin: 0 4px;
+    transition: all 0.3s ease;
+}
+
+#carruselProducto .carousel-indicators [data-bs-target].active {
+    background: rgba(0, 123, 255, 1);
+    transform: scale(1.2);
 }
 
 #contenedorImagenesDetalles img:hover {
@@ -714,6 +843,68 @@ input[type=number] {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+
+
+/* ===== ESTILOS PARA PAGINACIÓN DEL MODAL INVENTARIO ===== */
+#paginacionInventarioModal .pagination {
+    margin-bottom: 0;
+    justify-content: center;
+}
+
+#paginacionInventarioModal .page-link {
+    border: 1px solid #dee2e6;
+    color: #495057;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+#paginacionInventarioModal .page-link:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#paginacionInventarioModal .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+#paginacionInventarioModal .page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #fff;
+    border-color: #dee2e6;
+    opacity: 0.6;
+}
+
+#infoPaginacionInventario {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+/* Responsive para paginación en móviles */
+@media (max-width: 768px) {
+    #paginacionInventarioModal .page-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    #infoPaginacionInventario {
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .col-md-6:last-child .d-flex {
+        justify-content: center !important;
+    }
 }
 
 /* ===== ESTILOS PARA MODAL DE FACTURA PENDIENTE ===== */

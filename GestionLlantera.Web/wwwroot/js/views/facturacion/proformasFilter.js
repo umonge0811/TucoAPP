@@ -69,6 +69,20 @@ function inicializarFiltrosProformas() {
             console.error('❌ No se encontró el botón limpiar');
         }
 
+        // Configurar cambio de proformas por página
+        const $selectProformasPorPagina = $('#proformasPorPagina');
+        if ($selectProformasPorPagina.length) {
+            $selectProformasPorPagina.off('change.proformasFilter').on('change.proformasFilter', function() {
+                proformasPorPagina = parseInt($(this).val());
+                paginaActual = 1;
+                console.log('📄 Cambiando proformas por página a:', proformasPorPagina);
+                mostrarProformasPaginadas();
+            });
+            console.log('✅ Evento de proformas por página configurado');
+        } else {
+            console.error('❌ No se encontró el select de proformas por página');
+        }
+
         // Cargar todas las proformas inicialmente
         cargarTodasLasProformas();
 
@@ -224,6 +238,9 @@ function mostrarProformasPaginadas() {
     // Mostrar proformas en la tabla
     mostrarProformasEnTabla(proformasParaMostrar);
 
+    // Actualizar contador de información
+    actualizarContadorResultadosProformas(proformasParaMostrar.length, proformasFiltradas.length);
+
     // Mostrar controles de paginación si es necesario
     if (totalPaginas > 1) {
         mostrarPaginacionProformas(paginaActual, totalPaginas);
@@ -321,19 +338,21 @@ function mostrarPaginacionProformas(paginaActualParam, totalPaginas) {
     console.log('📄 === MOSTRANDO PAGINACIÓN DE PROFORMAS ===');
     console.log('📄 Página actual:', paginaActualParam, 'Total páginas:', totalPaginas);
 
-    const paginacion = $('#paginacionProformas');
+    const paginacion = $('#paginacionProformas ul');
     if (paginacion.length === 0 || totalPaginas <= 1) {
-        paginacion.hide();
+        $('#paginacionProformas').hide();
         return;
     }
 
-    let html = '<ul class="pagination justify-content-center">';
+    paginacion.empty();
 
     // Botón anterior
     if (paginaActualParam > 1) {
-        html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActualParam - 1})">Anterior</a>
-                </li>`;
+        paginacion.append(`
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActualParam - 1})">Anterior</a>
+            </li>
+        `);
     }
 
     // Páginas (mostrar máximo 5 páginas)
@@ -342,25 +361,40 @@ function mostrarPaginacionProformas(paginaActualParam, totalPaginas) {
 
     for (let i = iniciarPagina; i <= finalizarPagina; i++) {
         if (i === paginaActualParam) {
-            html += `<li class="page-item active">
-                        <span class="page-link">${i}</span>
-                    </li>`;
+            paginacion.append(`
+                <li class="page-item active">
+                    <span class="page-link">${i}</span>
+                </li>
+            `);
         } else {
-            html += `<li class="page-item">
-                        <a class="page-link" href="#" onclick="cambiarPaginaProformas(${i})">${i}</a>
-                    </li>`;
+            paginacion.append(`
+                <li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${i})">${i}</a>
+                </li>
+            `);
         }
     }
 
     // Botón siguiente
     if (paginaActualParam < totalPaginas) {
-        html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActualParam + 1})">Siguiente</a>
-                </li>`;
+        paginacion.append(`
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="cambiarPaginaProformas(${paginaActualParam + 1})">Siguiente</a>
+            </li>
+        `);
     }
 
-    html += '</ul>';
-    paginacion.html(html).show();
+    $('#paginacionProformas').show();
+}
+
+/**
+ * Actualizar el contador de resultados de proformas
+ */
+function actualizarContadorResultadosProformas(conteoActual, conteoTotal) {
+    const inicio = ((paginaActual - 1) * proformasPorPagina) + 1;
+    const fin = Math.min(paginaActual * proformasPorPagina, conteoTotal);
+    
+    $('#proformasInfo').text(`Mostrando ${inicio}-${fin} de ${conteoTotal} proformas`);
 }
 
 /**
@@ -368,6 +402,7 @@ function mostrarPaginacionProformas(paginaActualParam, totalPaginas) {
  */
 function mostrarProformasVacias() {
     console.log('ℹ️ Mostrando mensaje de proformas vacías');
+    $('#proformasInfo').text('Mostrando 0 proformas');
     $('#proformasEmpty').show();
     $('#proformasContent').hide();
     $('#paginacionProformas').hide();

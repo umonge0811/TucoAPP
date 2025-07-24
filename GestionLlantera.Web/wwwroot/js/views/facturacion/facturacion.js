@@ -32,9 +32,7 @@ const CONFIGURACION_PRECIOS = {
     efectivo: { multiplicador: 1.0, nombre: 'Efectivo', icono: 'bi-cash' },
     transferencia: { multiplicador: 1.0, nombre: 'Transferencia', icono: 'bi-bank' },
     sinpe: { multiplicador: 1.0, nombre: 'SINPE Móvil', icono: 'bi-phone' },
-    tarjeta: { multiplicador: 1.05, nombre: 'Tarjeta', icono: 'bi-credit-card' }, // 5% adicional para tarjeta
-    multiple: { multiplicador: 1.0, nombre: 'Múltiple', icono: 'bi-credit-card-2-front' },
-    'Múltiple': { multiplicador: 1.0, nombre: 'Múltiple', icono: 'bi-credit-card-2-front' } // Soporte para mayúscula desde servidor
+    tarjeta: { multiplicador: 1.09, nombre: 'Tarjeta', icono: 'bi-credit-card' }, // 8% adicional para tarjeta
 };
 
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
@@ -4894,8 +4892,10 @@ function abrirModalNuevoCliente() {
                                            class="form-control" 
                                            id="nombreClienteFacturacion" 
                                            name="nombre" 
+                                           placeholder="Juan Pérez González"
                                            required>
                                     <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">Ingrese el nombre completo del cliente</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="contactoClienteFacturacion" class="form-label">
@@ -4904,8 +4904,11 @@ function abrirModalNuevoCliente() {
                                     <input type="text" 
                                            class="form-control" 
                                            id="contactoClienteFacturacion" 
-                                           name="contacto">
+                                           name="contacto"
+                                           placeholder="1-2345-6789"
+                                           maxlength="20">
                                     <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">Cédula o documento de identidad</small>
                                 </div>
                             </div>
                             <div class="row">
@@ -4916,8 +4919,10 @@ function abrirModalNuevoCliente() {
                                     <input type="email" 
                                            class="form-control" 
                                            id="emailClienteFacturacion" 
-                                           name="email">
+                                           name="email"
+                                           placeholder="cliente@ejemplo.com">
                                     <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">Correo electrónico válido</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="telefonoClienteFacturacion" class="form-label">
@@ -4926,8 +4931,11 @@ function abrirModalNuevoCliente() {
                                     <input type="tel" 
                                            class="form-control" 
                                            id="telefonoClienteFacturacion" 
-                                           name="telefono">
+                                           name="telefono"
+                                           placeholder="8888-8888"
+                                           maxlength="15">
                                     <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">Número de teléfono (8 dígitos)</small>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -4937,8 +4945,11 @@ function abrirModalNuevoCliente() {
                                 <textarea class="form-control" 
                                           id="direccionClienteFacturacion" 
                                           name="direccion" 
-                                          rows="3"></textarea>
+                                          rows="3"
+                                          placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
+                                          maxlength="500"></textarea>
                                 <div class="invalid-feedback"></div>
+                                <small class="form-text text-muted">Dirección completa del cliente</small>
                             </div>
                         </form>
                     </div>
@@ -4959,27 +4970,98 @@ function abrirModalNuevoCliente() {
             </div>
         </div>
     `;
-
     // Remover modal anterior si existe
     $('#modalNuevoClienteFacturacion').remove();
-
     // Agregar modal al DOM
     $('body').append(modalHtml);
-
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById('modalNuevoClienteFacturacion'));
     modal.show();
-
     // Configurar evento para guardar
-    $('#btnGuardarClienteFacturacion').on('click', function() {
+    $('#btnGuardarClienteFacturacion').on('click', function () {
         guardarNuevoCliente();
     });
-
-    // Limpiar validaciones en tiempo real
-    $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea').on('input', function() {
-        $(this).removeClass('is-invalid');
-        $(this).siblings('.invalid-feedback').text('');
+    // Limpiar validaciones y validar en tiempo real
+    $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea').on('input blur', function () {
+        validarCampoEnTiempoReal($(this));
     });
+}
+// Función para validar campos en tiempo real
+function validarCampoEnTiempoReal(campo) {
+    const valor = campo.val().trim();
+    const tipo = campo.attr('type') || campo.prop('tagName').toLowerCase();
+    const id = campo.attr('id');
+    let esValido = true;
+    let mensaje = '';
+    // Limpiar validación previa
+    campo.removeClass('is-invalid is-valid');
+    campo.siblings('.invalid-feedback').text('');
+    switch (id) {
+        case 'nombreClienteFacturacion':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El nombre del cliente es obligatorio';
+            } else if (valor.length < 2) {
+                esValido = false;
+                mensaje = 'El nombre debe tener al menos 2 caracteres';
+            } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El nombre solo puede contener letras y espacios';
+            }
+            break;
+        case 'contactoClienteFacturacion':
+            if (valor && !/^[\d\-\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'La identificación solo puede contener números y guiones';
+            }
+            break;
+        case 'emailClienteFacturacion':
+            if (valor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
+            }
+            break;
+        case 'telefonoClienteFacturacion':
+            if (valor && !/^[\d\-\s\+\(\)]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El teléfono solo puede contener números, espacios y guiones';
+            } else if (valor && valor.replace(/[\D]/g, '').length < 8) {
+                esValido = false;
+                mensaje = 'El teléfono debe tener al menos 8 dígitos';
+            }
+            break;
+        case 'direccionClienteFacturacion':
+            if (valor && valor.length > 500) {
+                esValido = false;
+                mensaje = 'La dirección no puede exceder 500 caracteres';
+            }
+            break;
+    }
+    if (!esValido) {
+        campo.addClass('is-invalid');
+        campo.siblings('.invalid-feedback').text(mensaje);
+    } else if (valor) {
+        campo.addClass('is-valid');
+    }
+    return esValido;
+}
+// Función mejorada para validar formulario completo
+function validarFormularioNuevoCliente() {
+    let esValido = true;
+    const campos = $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea');
+    campos.each(function () {
+        if (!validarCampoEnTiempoReal($(this))) {
+            esValido = false;
+        }
+    });
+    // Validación especial para nombre (obligatorio)
+    const nombre = $('#nombreClienteFacturacion').val().trim();
+    if (!nombre) {
+        $('#nombreClienteFacturacion').addClass('is-invalid');
+        $('#nombreClienteFacturacion').siblings('.invalid-feedback').text('El nombre del cliente es obligatorio');
+        esValido = false;
+    }
+    return esValido;
 }
 
 async function guardarNuevoCliente() {
@@ -5076,10 +5158,34 @@ function validarFormularioNuevoCliente() {
         esValido = false;
     }
 
-    // Validar email (formato si se proporciona)
+    // Validar identificación (requerida)
+    const contacto = $('#contactoClienteFacturacion').val().trim();
+    if (!contacto) {
+        mostrarErrorCampoFacturacion('#contactoClienteFacturacion', 'La identificación es requerida');
+        esValido = false;
+    }
+
+    // Validar email (requerido y formato)
     const email = $('#emailClienteFacturacion').val().trim();
-    if (email && !validarEmailFacturacion(email)) {
+    if (!email) {
+        mostrarErrorCampoFacturacion('#emailClienteFacturacion', 'El email es requerido');
+        esValido = false;
+    } else if (!validarEmailFacturacion(email)) {
         mostrarErrorCampoFacturacion('#emailClienteFacturacion', 'El formato del email no es válido');
+        esValido = false;
+    }
+
+    // Validar teléfono (requerido)
+    const telefono = $('#telefonoClienteFacturacion').val().trim();
+    if (!telefono) {
+        mostrarErrorCampoFacturacion('#telefonoClienteFacturacion', 'El teléfono es requerido');
+        esValido = false;
+    }
+
+    // Validar dirección (requerida)
+    const direccion = $('#direccionClienteFacturacion').val().trim();
+    if (!direccion) {
+        mostrarErrorCampoFacturacion('#direccionClienteFacturacion', 'La dirección es requerida');
         esValido = false;
     }
 
@@ -7166,7 +7272,7 @@ async function cargarImagenesDetallesProducto(producto) {
                      class="imagen-producto-detalle" 
                      alt="${producto.nombreProducto}"
                      style="cursor: pointer;"
-                     onclick="abrirImagenEnModal(this.src, '${producto.nombreProducto}')"
+                     onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
                      onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'sin-imagenes\\'><i class=\\'bi bi-image-fill\\'></i><span>Error cargando imagen</span></div>';">
             `);
         } else {
@@ -7186,7 +7292,7 @@ async function cargarImagenesDetallesProducto(producto) {
                              class="imagen-producto-detalle" 
                              alt="${producto.nombreProducto}"
                              style="cursor: pointer;"
-                             onclick="abrirImagenEnModal(this.src, '${producto.nombreProducto}')"
+                             onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <div class="imagen-error" style="display:none;">
                             <i class="bi bi-image-fill"></i>
@@ -7222,41 +7328,127 @@ async function cargarImagenesDetallesProducto(producto) {
 }
 
 /**
- * ✅ FUNCIÓN: Abrir imagen en modal de zoom
+ * ✅ FUNCIÓN MEJORADA: Abrir zoom de imagen con mejor estilo
  */
-function abrirImagenEnModal(imagenUrl, nombreProducto) {
-    console.log('🔍 Abriendo imagen en modal:', imagenUrl);
+function abrirZoomImagenMejorado(urlImagen, nombreProducto) {
+    console.log('🔍 Abriendo zoom mejorado:', urlImagen);
 
-    const modalHtml = `
-        <div class="modal fade" id="modalImagenZoom" tabindex="-1" style="z-index: 9999;">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+    // Ocultar modal de detalles temporalmente
+    const modalDetalles = $('#modalDetalleProducto, #modalSeleccionProducto');
+    if (modalDetalles.length) {
+        modalDetalles.css('opacity', '0');
+    }
+
+    // Crear modal mejorado
+    const modalHTML = `
+        <div class="modal fade" id="modalZoomMejorado" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
+            <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content bg-dark">
                     <div class="modal-header border-0">
-                        <h6 class="modal-title text-white">${nombreProducto}</h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <h5 class="modal-title text-white d-flex align-items-center">
+                            <i class="bi bi-arrows-fullscreen me-2 text-info"></i>
+                            <span>${nombreProducto || 'Imagen Ampliada'}</span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
-                    <div class="modal-body text-center p-0">
-                        <img src="${imagenUrl}" 
-                             class="img-fluid" 
-                             alt="${nombreProducto}"
-                             style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+                    <div class="modal-body d-flex justify-content-center align-items-center p-4">
+                        <div class="zoom-image-container">
+                            <img src="${urlImagen}" 
+                                 alt="${nombreProducto}" 
+                                 class="zoom-image-mejorada"
+                                 onload="this.style.opacity='1'"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="error-load-zoom" style="display: none;">
+                                <i class="bi bi-exclamation-triangle text-warning"></i>
+                                <p class="text-white mt-2">Error al cargar la imagen</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center">
+                        <div class="zoom-controls">
+                            <button type="button" class="btn btn-outline-light me-2" onclick="descargarImagen('${urlImagen}', '${nombreProducto}')">
+                                <i class="bi bi-download me-1"></i>Descargar
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="bi bi-x-circle me-1"></i>Cerrar
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     `;
 
-    // Remover modal anterior si existe
-    $('#modalImagenZoom').remove();
+    // Remover modal anterior
+    $('#modalZoomMejorado').remove();
 
-    // Agregar nuevo modal al DOM
-    $('body').append(modalHtml);
+    // Agregar nuevo modal
+    $('body').append(modalHTML);
+
+    // Configurar eventos
+    $('#modalZoomMejorado').on('hidden.bs.modal', function () {
+        // Restaurar visibilidad del modal de detalles
+        const modalDetalles = $('#modalDetalleProducto, #modalSeleccionProducto');
+        if (modalDetalles.length) {
+            modalDetalles.css('opacity', '1');
+        }
+        // Remover del DOM
+        $(this).remove();
+    });
 
     // Mostrar modal
-    const modal = new bootstrap.Modal(document.getElementById('modalImagenZoom'));
-    modal.show();
+    $('#modalZoomMejorado').modal('show');
 }
 
+/**
+ * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen
+ */
+function construirUrlImagen(url) {
+    if (!url) return '/images/no-image.png';
+
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
+    }
+
+    if (url.startsWith('/uploads/productos/')) {
+        return `https://localhost:7273${url}`;
+    } else if (url.startsWith('uploads/productos/')) {
+        return `https://localhost:7273/${url}`;
+    } else if (url.startsWith('/')) {
+        return `https://localhost:7273${url}`;
+    } else {
+        return `https://localhost:7273/${url}`;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN AUXILIAR: Descargar imagen
+ */
+function descargarImagen(urlImagen, nombreProducto) {
+    try {
+        const nombreArchivo = `${nombreProducto.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_imagen.jpg`;
+
+        const link = document.createElement('a');
+        link.href = urlImagen;
+        link.download = nombreArchivo;
+        link.target = '_blank';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        mostrarToast('Descarga', 'Imagen descargada correctamente', 'success');
+    } catch (error) {
+        console.error('Error descargando imagen:', error);
+        mostrarToast('Error', 'No se pudo descargar la imagen', 'danger');
+    }
+}
+
+// Exportar funciones globalmente
+window.cargarImagenesDetallesProducto = cargarImagenesDetallesProducto;
+window.abrirZoomImagenMejorado = abrirZoomImagenMejorado;
+window.construirUrlImagen = construirUrlImagen;
+window.descargarImagen = descargarImagen;
 
 /**
  * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
