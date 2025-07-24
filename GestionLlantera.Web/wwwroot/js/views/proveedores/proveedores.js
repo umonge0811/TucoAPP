@@ -58,6 +58,35 @@ function configurarEventListeners() {
     $('#modalProveedor').on('hidden.bs.modal', function() {
         limpiarFormularioProveedor();
     });
+
+    // Validación en tiempo real para campos
+    $('#nombreProveedor').on('blur input', function() {
+        validarCampoIndividual($(this), 'nombre');
+    });
+
+    $('#contacto').on('blur input', function() {
+        if ($(this).val().trim()) {
+            validarCampoIndividual($(this), 'contacto');
+        } else {
+            $(this).removeClass('is-invalid is-valid');
+        }
+    });
+
+    $('#telefono').on('blur input', function() {
+        if ($(this).val().trim()) {
+            validarCampoIndividual($(this), 'telefono');
+        } else {
+            $(this).removeClass('is-invalid is-valid');
+        }
+    });
+
+    $('#direccion').on('blur input', function() {
+        if ($(this).val().trim()) {
+            validarCampoIndividual($(this), 'direccion');
+        } else {
+            $(this).removeClass('is-invalid is-valid');
+        }
+    });
 }
 
 // =====================================
@@ -433,21 +462,142 @@ async function actualizarProveedor() {
  * Validar formulario de proveedor
  */
 function validarFormularioProveedor() {
+    let esValido = true;
+    
+    // Limpiar validaciones previas
+    $('.is-invalid').removeClass('is-invalid');
+    $('.is-valid').removeClass('is-valid');
+
+    // Validar nombre del proveedor
     const nombre = $('#nombreProveedor').val().trim();
-
+    const $nombreInput = $('#nombreProveedor');
+    
     if (!nombre) {
+        $nombreInput.addClass('is-invalid');
         mostrarAlerta('El nombre del proveedor es requerido', 'warning');
-        $('#nombreProveedor').focus();
-        return false;
-    }
-
-    if (nombre.length < 2) {
+        $nombreInput.focus();
+        esValido = false;
+    } else if (nombre.length < 2) {
+        $nombreInput.addClass('is-invalid');
         mostrarAlerta('El nombre del proveedor debe tener al menos 2 caracteres', 'warning');
-        $('#nombreProveedor').focus();
-        return false;
+        $nombreInput.focus();
+        esValido = false;
+    } else if (nombre.length > 100) {
+        $nombreInput.addClass('is-invalid');
+        mostrarAlerta('El nombre del proveedor no puede exceder 100 caracteres', 'warning');
+        $nombreInput.focus();
+        esValido = false;
+    } else if (!/^[a-zA-ZÀ-ÿ0-9\s\.\-&]+$/.test(nombre)) {
+        $nombreInput.addClass('is-invalid');
+        mostrarAlerta('El nombre del proveedor contiene caracteres no válidos', 'warning');
+        $nombreInput.focus();
+        esValido = false;
+    } else {
+        $nombreInput.addClass('is-valid');
     }
 
-    return true;
+    // Validar contacto (opcional)
+    const contacto = $('#contacto').val().trim();
+    const $contactoInput = $('#contacto');
+    
+    if (contacto) {
+        if (contacto.length > 80) {
+            $contactoInput.addClass('is-invalid');
+            mostrarAlerta('El nombre del contacto no puede exceder 80 caracteres', 'warning');
+            esValido = false;
+        } else if (!/^[a-zA-ZÀ-ÿ\s\.]+$/.test(contacto)) {
+            $contactoInput.addClass('is-invalid');
+            mostrarAlerta('El nombre del contacto solo puede contener letras, espacios y puntos', 'warning');
+            esValido = false;
+        } else {
+            $contactoInput.addClass('is-valid');
+        }
+    }
+
+    // Validar teléfono (opcional)
+    const telefono = $('#telefono').val().trim();
+    const $telefonoInput = $('#telefono');
+    
+    if (telefono) {
+        if (telefono.length > 20) {
+            $telefonoInput.addClass('is-invalid');
+            mostrarAlerta('El teléfono no puede exceder 20 caracteres', 'warning');
+            esValido = false;
+        } else if (!/^[\d\s\-\+\(\)]+$/.test(telefono)) {
+            $telefonoInput.addClass('is-invalid');
+            mostrarAlerta('El teléfono contiene caracteres no válidos', 'warning');
+            esValido = false;
+        } else {
+            $telefonoInput.addClass('is-valid');
+        }
+    }
+
+    // Validar dirección (opcional)
+    const direccion = $('#direccion').val().trim();
+    const $direccionInput = $('#direccion');
+    
+    if (direccion) {
+        if (direccion.length > 250) {
+            $direccionInput.addClass('is-invalid');
+            mostrarAlerta('La dirección no puede exceder 250 caracteres', 'warning');
+            esValido = false;
+        } else {
+            $direccionInput.addClass('is-valid');
+        }
+    }
+
+    return esValido;
+}
+
+/**
+ * Validar campo individual para feedback inmediato
+ */
+function validarCampoIndividual($campo, tipo) {
+    const valor = $campo.val().trim();
+    
+    $campo.removeClass('is-invalid is-valid');
+    
+    switch (tipo) {
+        case 'nombre':
+            if (!valor) {
+                $campo.addClass('is-invalid');
+            } else if (valor.length < 2 || valor.length > 100) {
+                $campo.addClass('is-invalid');
+            } else if (!/^[a-zA-ZÀ-ÿ0-9\s\.\-&]+$/.test(valor)) {
+                $campo.addClass('is-invalid');
+            } else {
+                $campo.addClass('is-valid');
+            }
+            break;
+            
+        case 'contacto':
+            if (valor.length > 80) {
+                $campo.addClass('is-invalid');
+            } else if (!/^[a-zA-ZÀ-ÿ\s\.]+$/.test(valor)) {
+                $campo.addClass('is-invalid');
+            } else {
+                $campo.addClass('is-valid');
+            }
+            break;
+            
+        case 'telefono':
+            if (valor.length > 20) {
+                $campo.addClass('is-invalid');
+            } else if (!/^[\d\s\-\+\(\)]+$/.test(valor)) {
+                $campo.addClass('is-invalid');
+            } else {
+                $campo.addClass('is-valid');
+            }
+            break;
+            
+        case 'direccion':
+            if (valor.length > 250) {
+                $campo.addClass('is-invalid');
+            } else {
+                $campo.addClass('is-valid');
+            }
+            break;
+    }
 }
 
 /**
@@ -457,6 +607,7 @@ function limpiarFormularioProveedor() {
     $('#formProveedor')[0].reset();
     $('#proveedorId').val('');
     $('.is-invalid').removeClass('is-invalid');
+    $('.is-valid').removeClass('is-valid');
     $('.invalid-feedback').remove();
     proveedorEditando = null;
 }

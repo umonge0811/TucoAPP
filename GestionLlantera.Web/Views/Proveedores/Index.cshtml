@@ -115,22 +115,63 @@
                     
                     <div class="mb-3">
                         <label for="nombreProveedor" class="form-label">Nombre del Proveedor *</label>
-                        <input type="text" class="form-control" id="nombreProveedor" name="nombreProveedor" required>
+                        <input type="text" 
+                               class="form-control" 
+                               id="nombreProveedor" 
+                               name="nombreProveedor" 
+                               placeholder="Ej: Distribuidora Nacional de Llantas S.A."
+                               required 
+                               minlength="2" 
+                               maxlength="100"
+                               pattern="[a-zA-ZÀ-ÿ0-9\s\.\-&]+"
+                               title="Solo letras, números, espacios, puntos, guiones y ampersand">
+                        <div class="invalid-feedback">
+                            El nombre del proveedor es requerido (2-100 caracteres, solo letras, números y caracteres básicos).
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="contacto" class="form-label">Persona de Contacto</label>
-                        <input type="text" class="form-control" id="contacto" name="contacto">
+                        <input type="text" 
+                               class="form-control" 
+                               id="contacto" 
+                               name="contacto"
+                               placeholder="Ej: Juan Pérez García"
+                               maxlength="80"
+                               pattern="[a-zA-ZÀ-ÿ\s\.]+"
+                               title="Solo letras, espacios y puntos">
+                        <div class="invalid-feedback">
+                            Solo se permiten letras, espacios y puntos (máximo 80 caracteres).
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="telefono" class="form-label">Teléfono</label>
-                        <input type="tel" class="form-control" id="telefono" name="telefono">
+                        <input type="tel" 
+                               class="form-control" 
+                               id="telefono" 
+                               name="telefono"
+                               placeholder="Ej: 2234-5678 o 8888-9999"
+                               maxlength="20"
+                               pattern="[\d\s\-\+\(\)]+"
+                               title="Solo números, espacios, guiones, paréntesis y signo más">
+                        <div class="invalid-feedback">
+                            Formato de teléfono inválido. Use números, espacios, guiones y paréntesis.
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="direccion" class="form-label">Dirección</label>
-                        <textarea class="form-control" id="direccion" name="direccion" rows="3"></textarea>
+                        <textarea class="form-control" 
+                                  id="direccion" 
+                                  name="direccion" 
+                                  rows="3"
+                                  placeholder="Ej: De la iglesia de San Pedro, 200m este y 100m sur, San José, Costa Rica"
+                                  maxlength="250"></textarea>
+                        <div class="form-text">Máximo 250 caracteres</div>
+                        <div class="invalid-feedback">
+                            La dirección no puede exceder 250 caracteres.
+                        </div>
                     </div>
                 </form>
             </div>
