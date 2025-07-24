@@ -145,16 +145,16 @@ function mostrarProveedores() {
                 </td>
                 <td class="text-center">
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarProveedor(${proveedor.proveedorId})" title="Editar">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="editarProveedor(${proveedor.id})" title="Editar">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-info" onclick="verPedidosProveedor(${proveedor.proveedorId})" title="Ver Pedidos">
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="verPedidosProveedor(${proveedor.id})" title="Ver Pedidos">
                             <i class="bi bi-box-seam"></i>
                         </button>
-                        <button type="button" class="btn btn-sm ${proveedor.activo ? 'btn-outline-warning' : 'btn-outline-success'}" onclick="cambiarEstadoProveedor(${proveedor.proveedorId}, ${!proveedor.activo}, '${(proveedor.nombreProveedor || '').replace(/'/g, "\\'")}')" title="${proveedor.activo ? 'Desactivar' : 'Activar'}">
+                        <button type="button" class="btn btn-sm ${proveedor.activo ? 'btn-outline-warning' : 'btn-outline-success'}" onclick="cambiarEstadoProveedor(${proveedor.id}, ${!proveedor.activo}, '${(proveedor.nombre || '').replace(/'/g, "\\'")}')" title="${proveedor.activo ? 'Desactivar' : 'Activar'}">
                             <i class="bi ${proveedor.activo ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${proveedor.proveedorId}, '${(proveedor.nombreProveedor || '').replace(/'/g, "\\'")}')" title="Eliminar">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${proveedor.id}, '${(proveedor.nombre || '').replace(/'/g, "\\'")}')" title="Eliminar">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -176,7 +176,7 @@ function filtrarProveedores() {
         proveedoresFiltrados = [...proveedoresData];
     } else {
         proveedoresFiltrados = proveedoresData.filter(proveedor => 
-            proveedor.nombreProveedor.toLowerCase().includes(termino) ||
+            proveedor.nombre.toLowerCase().includes(termino) ||
             (proveedor.contacto && proveedor.contacto.toLowerCase().includes(termino)) ||
             (proveedor.telefono && proveedor.telefono.toLowerCase().includes(termino))
         );
@@ -277,7 +277,7 @@ function abrirModalProveedor() {
  * Editar proveedor
  */
 function editarProveedor(id) {
-    const proveedor = proveedoresData.find(p => p.proveedorId === id);
+    const proveedor = proveedoresData.find(p => p.id === id);
     if (!proveedor) {
         mostrarAlerta('Proveedor no encontrado', 'error');
         return;
@@ -383,7 +383,7 @@ async function actualizarProveedor() {
         btnGuardar.html('<i class="bi bi-hourglass-split me-1"></i>Actualizando...').prop('disabled', true);
 
         const datosProveedor = {
-            proveedorId: proveedorEditando.proveedorId,
+            proveedorId: proveedorEditando.id,
             nombreProveedor: $('#nombreProveedor').val().trim(),
             contacto: $('#contacto').val().trim() || null,
             telefono: $('#telefono').val().trim() || null,
