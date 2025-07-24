@@ -48,15 +48,37 @@ function configurarEventListeners() {
         e.preventDefault();
         e.stopPropagation();
 
-        console.log('🔍 Click botón guardar - proveedorEditando:', proveedorEditando);
+        console.log('🔍 ========== DEBUG VALIDACIÓN ==========');
+        console.log('🔍 proveedorEditando:', proveedorEditando);
         console.log('🔍 Tipo de proveedorEditando:', typeof proveedorEditando);
-        console.log('🔍 Valor booleano:', !!proveedorEditando);
+        console.log('🔍 proveedorEditando === null:', proveedorEditando === null);
+        console.log('🔍 proveedorEditando === undefined:', proveedorEditando === undefined);
+        console.log('🔍 !!proveedorEditando:', !!proveedorEditando);
+        
+        if (proveedorEditando) {
+            console.log('🔍 proveedorEditando.id:', proveedorEditando.id);
+            console.log('🔍 Tipo de id:', typeof proveedorEditando.id);
+        }
 
-        if (proveedorEditando && proveedorEditando.id) {
-            console.log('✅ Llamando a actualizarProveedor()');
+        // Obtener el valor del campo oculto como validación adicional
+        const proveedorIdInput = $('#proveedorId').val();
+        console.log('🔍 proveedorId del input:', proveedorIdInput);
+        console.log('🔍 Tipo del input:', typeof proveedorIdInput);
+
+        // Validación más estricta para determinar si es edición
+        const esEdicion = proveedorEditando && 
+                          proveedorEditando.id && 
+                          proveedorEditando.id > 0 && 
+                          parseInt(proveedorIdInput) > 0;
+
+        console.log('🔍 ¿Es edición?:', esEdicion);
+        console.log('🔍 ==========================================');
+
+        if (esEdicion) {
+            console.log('✅ MODO: EDICIÓN - Llamando a actualizarProveedor()');
             actualizarProveedor();
         } else {
-            console.log('✅ Llamando a crearProveedor()');
+            console.log('✅ MODO: CREACIÓN - Llamando a crearProveedor()');
             crearProveedor();
         }
     });
@@ -325,10 +347,19 @@ function alternarVistaProveedores() {
  * Abrir modal para nuevo proveedor
  */
 function abrirModalProveedor() {
+    console.log('🆕 ========== ABRIENDO MODAL PARA NUEVO PROVEEDOR ==========');
+    
+    // FORZAR reset completo
     proveedorEditando = null;
-    console.log('🆕 Abriendo modal para NUEVO proveedor');
-    console.log('🔍 proveedorEditando establecido a:', proveedorEditando);
+    
+    console.log('🔍 proveedorEditando FORZADO a null:', proveedorEditando);
     console.log('🔍 Tipo de proveedorEditando:', typeof proveedorEditando);
+    
+    // Limpiar formulario ANTES de configurar
+    limpiarFormularioProveedor();
+    
+    // Forzar que el campo oculto sea 0 para nuevo
+    $('#proveedorId').val('0');
     
     // Cambiar título y botón para nuevo proveedor
     $('#tituloModalProveedor').html('<i class="bi bi-truck me-2"></i>Nuevo Proveedor');
@@ -337,11 +368,14 @@ function abrirModalProveedor() {
     // Asegurar que el botón tiene la clase correcta para crear
     $('#btnGuardarProveedor').removeClass('btn-warning').addClass('btn-primary');
     
-    limpiarFormularioProveedor();
-    
-    // Log adicional para verificar configuración
-    console.log('✅ Modal configurado para CREACIÓN');
-    console.log('🔘 Botón configurado:', $('#btnGuardarProveedor').text());
+    // Verificación final
+    console.log('✅ CONFIGURACIÓN FINAL PARA CREACIÓN:');
+    console.log('   🔍 proveedorEditando:', proveedorEditando);
+    console.log('   🔍 proveedorId input:', $('#proveedorId').val());
+    console.log('   🔘 Título modal:', $('#tituloModalProveedor').text());
+    console.log('   🔘 Texto botón:', $('#btnGuardarProveedor').text());
+    console.log('   🎨 Clases botón:', $('#btnGuardarProveedor').attr('class'));
+    console.log('🆕 =======================================================');
     
     $('#modalProveedor').modal('show');
 }
@@ -350,37 +384,53 @@ function abrirModalProveedor() {
  * Editar proveedor
  */
 function editarProveedor(id) {
+    console.log('✏️ ========== ABRIENDO MODAL PARA EDITAR PROVEEDOR ==========');
+    console.log('🔍 ID a editar:', id, 'Tipo:', typeof id);
+    
     const proveedor = proveedoresData.find(p => p.id === id);
     if (!proveedor) {
+        console.error('❌ Proveedor no encontrado con ID:', id);
         mostrarAlerta('Proveedor no encontrado', 'error');
         return;
     }
 
+    console.log('📋 Proveedor encontrado:', JSON.stringify(proveedor, null, 2));
+
+    // ASIGNAR proveedorEditando ANTES de cualquier otra cosa
     proveedorEditando = proveedor;
-    console.log('✏️ Editando proveedor - ID:', id);
-    console.log('📋 Datos del proveedor:', JSON.stringify(proveedor, null, 2));
+    
     console.log('🔍 proveedorEditando asignado:', proveedorEditando);
     console.log('🔍 proveedorEditando.id:', proveedorEditando.id);
+    console.log('🔍 Tipo de proveedorEditando.id:', typeof proveedorEditando.id);
     
-    // Cambiar título y botón
+    // Limpiar formulario primero
+    limpiarFormularioProveedor();
+    
+    // Cambiar título y botón ANTES de llenar datos
     $('#tituloModalProveedor').html('<i class="bi bi-pencil me-2"></i>Editar Proveedor');
     $('#btnGuardarProveedor').html('<i class="bi bi-save me-1"></i>Actualizar Proveedor');
     
     // Asegurar que el botón tiene la clase correcta
     $('#btnGuardarProveedor').removeClass('btn-primary').addClass('btn-warning');
 
-    // Llenar formulario
+    // Llenar formulario CON DATOS DEL PROVEEDOR
     $('#proveedorId').val(proveedor.id);
-    $('#nombreProveedor').val(proveedor.nombre);
+    $('#nombreProveedor').val(proveedor.nombre || '');
     $('#contactoProveedor').val(proveedor.contacto || '');
-    $('#emailProveedor').val(proveedor.email || "");
+    $('#emailProveedor').val(proveedor.email || '');
     $('#telefonoProveedor').val(proveedor.telefono || '');
     $('#direccionProveedor').val(proveedor.direccion || '');
 
-    // Log adicional para verificar que todo esté correcto antes de mostrar el modal
-    console.log('✅ Modal configurado para EDICIÓN');
-    console.log('📝 Valores del formulario cargados');
-    console.log('🔘 Botón configurado:', $('#btnGuardarProveedor').text());
+    // Verificación FINAL antes de mostrar modal
+    console.log('✅ CONFIGURACIÓN FINAL PARA EDICIÓN:');
+    console.log('   🔍 proveedorEditando:', proveedorEditando);
+    console.log('   🔍 proveedorEditando.id:', proveedorEditando.id);
+    console.log('   🔍 proveedorId input:', $('#proveedorId').val());
+    console.log('   🔘 Título modal:', $('#tituloModalProveedor').text());
+    console.log('   🔘 Texto botón:', $('#btnGuardarProveedor').text());
+    console.log('   🎨 Clases botón:', $('#btnGuardarProveedor').attr('class'));
+    console.log('   📝 Nombre cargado:', $('#nombreProveedor').val());
+    console.log('✏️ =======================================================');
 
     $('#modalProveedor').modal('show');
 }
@@ -643,12 +693,36 @@ function validarEmail(email) {
 }
 
 function limpiarFormularioProveedor() {
+    console.log('🧹 ========== LIMPIANDO FORMULARIO ==========');
+    
+    // Reset completo del formulario
     $('#formProveedor')[0].reset();
+    
+    // Forzar valores específicos
     $('#proveedorId').val('0');
+    $('#nombreProveedor').val('');
+    $('#contactoProveedor').val('');
+    $('#emailProveedor').val('');
+    $('#telefonoProveedor').val('');
+    $('#direccionProveedor').val('');
+    
+    // Limpiar validaciones visuales
     $('.form-control').removeClass('is-invalid is-valid');
     $('.invalid-feedback').text('');
-    proveedorEditando = null;
-    console.log('🧹 Formulario limpiado - proveedorEditando:', proveedorEditando);
+    
+    // FORZAR proveedorEditando a null solo si estamos creando
+    const esLimpiezaParaCrear = !proveedorEditando || proveedorEditando === null;
+    if (esLimpiezaParaCrear) {
+        proveedorEditando = null;
+        console.log('🧹 proveedorEditando FORZADO a null (modo creación)');
+    } else {
+        console.log('🧹 Manteniendo proveedorEditando (modo edición):', proveedorEditando);
+    }
+    
+    console.log('🧹 Estado después de limpiar:');
+    console.log('   🔍 proveedorEditando:', proveedorEditando);
+    console.log('   🔍 proveedorId input:', $('#proveedorId').val());
+    console.log('🧹 ========================================');
 }
 
 /**
