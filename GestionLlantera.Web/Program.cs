@@ -24,6 +24,7 @@ builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>(
 // ✅ AGREGAR SERVICIO DE REPORTES
 builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IFacturacionService, FacturacionService>();
+builder.Services.AddScoped<IProveedoresService, ProveedoresService>();
 
 // ✅ SOLO EL SERVICIO DIRECTO (sin HTTP)
 builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
