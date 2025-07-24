@@ -850,17 +850,16 @@ input[type=number] {
 /* ===== ESTILOS PARA PAGINACIÓN DEL MODAL INVENTARIO ===== */
 #paginacionInventarioModal .pagination {
     margin-bottom: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    justify-content: center;
 }
 
 #paginacionInventarioModal .page-link {
     border: 1px solid #dee2e6;
     color: #495057;
     padding: 0.5rem 0.75rem;
-    margin: 0 2px;
-    border-radius: 6px;
     transition: all 0.2s ease;
     font-weight: 500;
+    font-size: 0.9rem;
 }
 
 #paginacionInventarioModal .page-link:hover {
@@ -886,38 +885,24 @@ input[type=number] {
 }
 
 #infoPaginacionInventario {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
-}
-
-/* Contenedor de paginación con fondo */
-.bg-light.border-top {
-    background-color: #f8f9fa !important;
-    border-radius: 0 0 0.5rem 0.5rem;
-    margin-left: -1.5rem !important;
-    margin-right: -1.5rem !important;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    color: #6c757d;
 }
 
 /* Responsive para paginación en móviles */
 @media (max-width: 768px) {
     #paginacionInventarioModal .page-link {
         padding: 0.4rem 0.6rem;
-        font-size: 0.875rem;
-        margin: 0 1px;
+        font-size: 0.8rem;
     }
     
-    .bg-light.border-top .row {
-        margin-bottom: 1rem;
-    }
-    
-    .bg-light.border-top .col-md-6:first-child {
-        margin-bottom: 0.5rem;
+    #infoPaginacionInventario {
         text-align: center;
+        margin-bottom: 0.5rem;
     }
     
-    .bg-light.border-top .col-md-6:last-child .d-flex {
+    .col-md-6:last-child .d-flex {
         justify-content: center !important;
     }
 }
