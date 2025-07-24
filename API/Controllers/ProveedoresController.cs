@@ -137,6 +137,7 @@ namespace API.Controllers
                 proveedorExistente.NombreProveedor = proveedor.NombreProveedor;
                 proveedorExistente.Contacto = proveedor.Contacto;
                 proveedorExistente.Telefono = proveedor.Telefono;
+                proveedorExistente.Email = proveedor.Email;
                 proveedorExistente.Direccion = proveedor.Direccion;
                 proveedorExistente.Activo = proveedor.Activo;
 

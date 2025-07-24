@@ -130,6 +130,7 @@ namespace GestionLlantera.Web.Services
                     return (true, resultado, "Proveedor actualizado exitosamente");
                 }
                 else
+
                 {
                     _logger.LogError("❌ Error actualizando proveedor: {StatusCode} - {Content}", response.StatusCode, responseContent);
                     return (false, null, "Error actualizando proveedor");

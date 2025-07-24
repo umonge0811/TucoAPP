@@ -216,8 +216,8 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos del proveedor requeridos" });
                 }
 
-                var token = HttpContext.Session.GetString("JWTToken");
-                if (string.IsNullOrEmpty(token))
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
                 {
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
@@ -239,11 +239,12 @@ namespace GestionLlantera.Web.Controllers
                     ProveedorId = request.ProveedorId,
                     NombreProveedor = request.NombreProveedor.Trim(),
                     Contacto = string.IsNullOrWhiteSpace(request.Contacto) ? null : request.Contacto.Trim(),
+                    Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
                     Telefono = string.IsNullOrWhiteSpace(request.Telefono) ? null : request.Telefono.Trim(),
                     Direccion = string.IsNullOrWhiteSpace(request.Direccion) ? null : request.Direccion.Trim()
                 };
 
-                var resultado = await _proveedoresService.ActualizarProveedorAsync(proveedor, token);
+                var resultado = await _proveedoresService.ActualizarProveedorAsync(proveedor, jwtToken);
 
                 if (resultado.success)
                 {
