@@ -1,4 +1,3 @@
-
 // ========================================
 // MÓDULO DE PEDIDOS A PROVEEDORES
 // Ubicación: /js/views/proveedores/pedidos-proveedor.js
@@ -182,9 +181,12 @@ async function cargarProductosInventario() {
  * Llenar select de proveedores
  */
 function llenarSelectProveedores() {
+    console.log('🔄 Iniciando llenarSelectProveedores...');
+    console.log('📋 proveedoresDisponibles:', proveedoresDisponibles);
+
     const select = $('#selectProveedor');
     const filtro = $('#filtroProveedor');
-    
+
     // Limpiar opciones existentes
     select.html('<option value="">Seleccione un proveedor...</option>');
     filtro.html('<option value="">Todos los proveedores</option>');
@@ -194,17 +196,39 @@ function llenarSelectProveedores() {
         return;
     }
 
-    proveedoresDisponibles.forEach(proveedor => {
-        if (proveedor && proveedor.id && proveedor.nombre) {
-            const option = `<option value="${proveedor.id}">${proveedor.nombre}</option>`;
+    console.log(`🔢 Total proveedores a procesar: ${proveedoresDisponibles.length}`);
+
+    let proveedoresAgregados = 0;
+
+    // Usar for loop clásico en lugar de forEach para mejor control
+    for (let i = 0; i < proveedoresDisponibles.length; i++) {
+        const proveedor = proveedoresDisponibles[i];
+        console.log(`🔍 Procesando proveedor ${i + 1}:`, proveedor);
+
+        if (proveedor && proveedor.proveedorId && proveedor.nombreProveedor) {
+            const nombreProveedor = proveedor.nombreProveedor || 'Sin nombre';
+            const option = `<option value="${proveedor.proveedorId}">${nombreProveedor}</option>`;
+
+            console.log(`➕ Agregando opción: ${option}`);
             select.append(option);
             filtro.append(option);
+            proveedoresAgregados++;
         } else {
             console.warn('⚠️ Proveedor con datos incompletos:', proveedor);
+            console.warn('📋 Estructura del proveedor:', {
+                hasId: !!proveedor?.proveedorId,
+                hasNombre: !!proveedor?.nombreProveedor,
+                id: proveedor?.proveedorId,
+                nombre: proveedor?.nombreProveedor
+            });
         }
-    });
+    }
 
-    console.log(`✅ ${proveedoresDisponibles.length} proveedores cargados en los selects`);
+    console.log(`✅ ${proveedoresAgregados} de ${proveedoresDisponibles.length} proveedores agregados a los selects`);
+
+    // Verificar que las opciones se agregaron correctamente
+    console.log(`📊 Opciones en select: ${select.find('option').length}`);
+    console.log(`📊 Opciones en filtro: ${filtro.find('option').length}`);
 }
 
 /**
@@ -212,7 +236,7 @@ function llenarSelectProveedores() {
  */
 function mostrarPedidos() {
     const tbody = $('#cuerpoTablaPedidos');
-    
+
     if (pedidosFiltrados.length === 0) {
         mostrarSinDatosPedidos(true);
         return;
@@ -223,7 +247,7 @@ function mostrarPedidos() {
     const html = pedidosFiltrados.map(pedido => {
         const fecha = new Date(pedido.fechaPedido).toLocaleDateString('es-ES');
         const estadoBadge = obtenerBadgeEstado(pedido.estado);
-        
+
         return `
             <tr>
                 <td>${pedido.pedidoId}</td>
@@ -266,7 +290,7 @@ function obtenerBadgeEstado(estado) {
         'Recibido': 'bg-success',
         'Cancelado': 'bg-danger'
     };
-    
+
     const clase = badges[estado] || 'bg-secondary';
     return `<span class="badge ${clase}">${estado}</span>`;
 }
@@ -315,7 +339,7 @@ function abrirModalNuevoPedido() {
  */
 function seleccionarProveedor() {
     const proveedorId = $('#selectProveedor').val();
-    
+
     if (!proveedorId) {
         proveedorSeleccionado = null;
         $('#infoProveedorSeleccionado').hide();
@@ -324,7 +348,7 @@ function seleccionarProveedor() {
     }
 
     proveedorSeleccionado = proveedoresDisponibles.find(p => p.proveedorId.toString() === proveedorId);
-    
+
     if (proveedorSeleccionado) {
         mostrarInfoProveedor(proveedorSeleccionado);
         $('#btnSiguientePaso').prop('disabled', false);
@@ -369,7 +393,7 @@ function anteriorPaso() {
  */
 function cargarProductosEnTabla() {
     const tbody = $('#cuerpoTablaProductosPedido');
-    
+
     if (productosInventario.length === 0) {
         tbody.html(`
             <tr>
@@ -433,14 +457,14 @@ function toggleProductoSeleccionado(productoId) {
             cantidad: 1,
             precioUnitario: 0.00
         });
-        
+
         cantidadInput.prop('disabled', false);
         precioInput.prop('disabled', false);
         fila.addClass('table-success');
     } else {
         // Remover producto
         productosSeleccionados = productosSeleccionados.filter(p => p.productoId !== productoId);
-        
+
         cantidadInput.prop('disabled', true).val(1);
         precioInput.prop('disabled', true).val('0.00');
         fila.removeClass('table-success');
@@ -496,7 +520,7 @@ function filtrarProductosPedido() {
         const fila = $(this);
         const productoId = parseInt(fila.data('producto-id'));
         const producto = productosInventario.find(p => p.productoId === productoId);
-        
+
         if (!producto) return;
 
         const cumpleBusqueda = !busqueda || 
@@ -514,11 +538,11 @@ function filtrarProductosPedido() {
  */
 function seleccionarTodosProductos() {
     const seleccionarTodos = $('#seleccionarTodosProductos').is(':checked');
-    
+
     $('tr[data-producto-id]:visible .producto-checkbox').each(function() {
         const checkbox = $(this);
         const productoId = parseInt(checkbox.val());
-        
+
         if (seleccionarTodos && !checkbox.is(':checked')) {
             checkbox.prop('checked', true);
             toggleProductoSeleccionado(productoId);
@@ -590,18 +614,18 @@ async function finalizarPedido() {
 function resetearFormularioPedido() {
     proveedorSeleccionado = null;
     productosSeleccionados = [];
-    
+
     $('#selectProveedor').val('');
     $('#infoProveedorSeleccionado').hide();
     $('#btnSiguientePaso').prop('disabled', true);
-    
+
     $('#pasoSeleccionarProveedor').show();
     $('#pasoSeleccionarProductos').hide();
-    
+
     $('#buscarProductoPedido').val('');
     $('#filtroCategoriaPedido').val('');
     $('#seleccionarTodosProductos').prop('checked', false);
-    
+
     actualizarResumenPedido();
 }
 
@@ -623,7 +647,7 @@ function abrirModalProveedorRapido() {
 async function guardarProveedorRapido() {
     try {
         const nombre = $('#nombreProveedorRapido').val().trim();
-        
+
         if (!nombre) {
             mostrarError('El nombre del proveedor es requerido');
             return;
@@ -650,7 +674,7 @@ async function guardarProveedorRapido() {
         if (resultado.success) {
             mostrarExito('Proveedor creado exitosamente');
             $('#modalProveedorRapido').modal('hide');
-            
+
             // Recargar proveedores y seleccionar el nuevo
             await cargarProveedores();
             $('#selectProveedor').val(resultado.data.proveedorId);
@@ -674,10 +698,10 @@ async function guardarProveedorRapido() {
 async function verDetallePedido(pedidoId) {
     try {
         console.log('👁️ Viendo detalle del pedido:', pedidoId);
-        
+
         // Buscar pedido en los datos locales
         const pedido = pedidosData.find(p => p.pedidoId === pedidoId);
-        
+
         if (!pedido) {
             mostrarError('Pedido no encontrado');
             return;
@@ -700,7 +724,7 @@ async function verDetallePedido(pedidoId) {
                     <p><strong>Nombre:</strong> ${pedido.proveedorNombre}</p>
                 </div>
             </div>
-            
+
             <h6 class="mt-3">Productos del Pedido</h6>
             <div class="table-responsive">
                 <table class="table table-sm">
