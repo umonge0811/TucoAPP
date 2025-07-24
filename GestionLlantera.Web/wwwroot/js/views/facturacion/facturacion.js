@@ -4892,8 +4892,10 @@ function abrirModalNuevoCliente() {
                                            class="form-control" 
                                            id="nombreClienteFacturacion" 
                                            name="nombre" 
+                                           placeholder="Juan Pérez González"
                                            required>
                                     <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">Ingrese el nombre completo del cliente</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="contactoClienteFacturacion" class="form-label">
@@ -4902,8 +4904,11 @@ function abrirModalNuevoCliente() {
                                     <input type="text" 
                                            class="form-control" 
                                            id="contactoClienteFacturacion" 
-                                           name="contacto">
+                                           name="contacto"
+                                           placeholder="1-2345-6789"
+                                           maxlength="20">
                                     <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">Cédula o documento de identidad</small>
                                 </div>
                             </div>
                             <div class="row">
@@ -4914,8 +4919,10 @@ function abrirModalNuevoCliente() {
                                     <input type="email" 
                                            class="form-control" 
                                            id="emailClienteFacturacion" 
-                                           name="email">
+                                           name="email"
+                                           placeholder="cliente@ejemplo.com">
                                     <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">Correo electrónico válido</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="telefonoClienteFacturacion" class="form-label">
@@ -4924,8 +4931,11 @@ function abrirModalNuevoCliente() {
                                     <input type="tel" 
                                            class="form-control" 
                                            id="telefonoClienteFacturacion" 
-                                           name="telefono">
+                                           name="telefono"
+                                           placeholder="8888-8888"
+                                           maxlength="15">
                                     <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">Número de teléfono (8 dígitos)</small>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -4935,8 +4945,11 @@ function abrirModalNuevoCliente() {
                                 <textarea class="form-control" 
                                           id="direccionClienteFacturacion" 
                                           name="direccion" 
-                                          rows="3"></textarea>
+                                          rows="3"
+                                          placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
+                                          maxlength="500"></textarea>
                                 <div class="invalid-feedback"></div>
+                                <small class="form-text text-muted">Dirección completa del cliente</small>
                             </div>
                         </form>
                     </div>
@@ -4957,27 +4970,98 @@ function abrirModalNuevoCliente() {
             </div>
         </div>
     `;
-
     // Remover modal anterior si existe
     $('#modalNuevoClienteFacturacion').remove();
-
     // Agregar modal al DOM
     $('body').append(modalHtml);
-
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById('modalNuevoClienteFacturacion'));
     modal.show();
-
     // Configurar evento para guardar
-    $('#btnGuardarClienteFacturacion').on('click', function() {
+    $('#btnGuardarClienteFacturacion').on('click', function () {
         guardarNuevoCliente();
     });
-
-    // Limpiar validaciones en tiempo real
-    $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea').on('input', function() {
-        $(this).removeClass('is-invalid');
-        $(this).siblings('.invalid-feedback').text('');
+    // Limpiar validaciones y validar en tiempo real
+    $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea').on('input blur', function () {
+        validarCampoEnTiempoReal($(this));
     });
+}
+// Función para validar campos en tiempo real
+function validarCampoEnTiempoReal(campo) {
+    const valor = campo.val().trim();
+    const tipo = campo.attr('type') || campo.prop('tagName').toLowerCase();
+    const id = campo.attr('id');
+    let esValido = true;
+    let mensaje = '';
+    // Limpiar validación previa
+    campo.removeClass('is-invalid is-valid');
+    campo.siblings('.invalid-feedback').text('');
+    switch (id) {
+        case 'nombreClienteFacturacion':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El nombre del cliente es obligatorio';
+            } else if (valor.length < 2) {
+                esValido = false;
+                mensaje = 'El nombre debe tener al menos 2 caracteres';
+            } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El nombre solo puede contener letras y espacios';
+            }
+            break;
+        case 'contactoClienteFacturacion':
+            if (valor && !/^[\d\-\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'La identificación solo puede contener números y guiones';
+            }
+            break;
+        case 'emailClienteFacturacion':
+            if (valor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
+            }
+            break;
+        case 'telefonoClienteFacturacion':
+            if (valor && !/^[\d\-\s\+\(\)]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El teléfono solo puede contener números, espacios y guiones';
+            } else if (valor && valor.replace(/[\D]/g, '').length < 8) {
+                esValido = false;
+                mensaje = 'El teléfono debe tener al menos 8 dígitos';
+            }
+            break;
+        case 'direccionClienteFacturacion':
+            if (valor && valor.length > 500) {
+                esValido = false;
+                mensaje = 'La dirección no puede exceder 500 caracteres';
+            }
+            break;
+    }
+    if (!esValido) {
+        campo.addClass('is-invalid');
+        campo.siblings('.invalid-feedback').text(mensaje);
+    } else if (valor) {
+        campo.addClass('is-valid');
+    }
+    return esValido;
+}
+// Función mejorada para validar formulario completo
+function validarFormularioNuevoCliente() {
+    let esValido = true;
+    const campos = $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea');
+    campos.each(function () {
+        if (!validarCampoEnTiempoReal($(this))) {
+            esValido = false;
+        }
+    });
+    // Validación especial para nombre (obligatorio)
+    const nombre = $('#nombreClienteFacturacion').val().trim();
+    if (!nombre) {
+        $('#nombreClienteFacturacion').addClass('is-invalid');
+        $('#nombreClienteFacturacion').siblings('.invalid-feedback').text('El nombre del cliente es obligatorio');
+        esValido = false;
+    }
+    return esValido;
 }
 
 async function guardarNuevoCliente() {
