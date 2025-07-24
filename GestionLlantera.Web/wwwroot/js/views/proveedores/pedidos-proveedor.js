@@ -79,7 +79,8 @@ async function cargarProveedores() {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            credentials: 'include'
         });
 
         const data = await response.json();
