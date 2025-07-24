@@ -2,10 +2,19 @@
 
 let modalInventarioFacturacion = null;
 let productosInventarioCompleto = [];
+let productosFiltrados = [];
 let filtrosInventarioActivos = {
     busqueda: '',
     categoria: '',
     stock: ''
+};
+
+// Variables de paginación
+let paginacionConfig = {
+    paginaActual: 1,
+    productosPorPagina: 20,
+    totalPaginas: 1,
+    totalProductos: 0
 };
 
 /**
@@ -170,11 +179,11 @@ async function cargarInventarioCompleto() {
 }
 
 /**
- * Mostrar productos en el modal de inventario
+ * Mostrar productos en el modal de inventario con paginación
  */
 function mostrarProductosInventario(productos) {
-    console.log('📦 === MOSTRANDO PRODUCTOS INVENTARIO ===');
-    console.log('📦 Productos a mostrar:', productos?.length || 0);
+    console.log('📦 === MOSTRANDO PRODUCTOS INVENTARIO CON PAGINACIÓN ===');
+    console.log('📦 Productos totales:', productos?.length || 0);
 
     const tbody = $('#inventarioModalProductos');
 
@@ -187,15 +196,53 @@ function mostrarProductosInventario(productos) {
     if (!productos || productos.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="6" class="text-center py-4">
+                <td colspan="7" class="text-center py-4">
                     <i class="bi bi-box-seam display-1 text-muted"></i>
                     <p class="mt-2 text-muted">No hay productos disponibles</p>
                 </td>
             </tr>
         `);
+        actualizarInfoPaginacion(0, 0);
+        ocultarControlsPaginacion();
         $('#inventarioModalContent').show();
         return;
     }
+
+    // Actualizar productos filtrados globalmente
+    productosFiltrados = productos;
+    
+    // Calcular paginación
+    paginacionConfig.totalProductos = productos.length;
+    paginacionConfig.totalPaginas = Math.ceil(productos.length / paginacionConfig.productosPorPagina);
+    
+    // Validar página actual
+    if (paginacionConfig.paginaActual > paginacionConfig.totalPaginas) {
+        paginacionConfig.paginaActual = 1;
+    }
+
+    // Obtener productos de la página actual
+    const inicio = (paginacionConfig.paginaActual - 1) * paginacionConfig.productosPorPagina;
+    const fin = inicio + paginacionConfig.productosPorPagina;
+    const productosPagina = productos.slice(inicio, fin);
+
+    console.log(`📦 Mostrando página ${paginacionConfig.paginaActual} de ${paginacionConfig.totalPaginas}`);
+    console.log(`📦 Productos en esta página: ${productosPagina.length}`);
+
+    // Generar HTML solo para los productos de la página actual
+    generarHTMLProductos(productosPagina, tbody);
+    
+    // Actualizar controles de paginación
+    actualizarControlsPaginacion();
+    actualizarInfoPaginacion(productosPagina.length, productos.length);
+
+    $('#inventarioModalContent').show();
+    console.log('✅ Productos de inventario mostrados con paginación');
+}
+
+/**
+ * Generar HTML de productos
+ */
+function generarHTMLProductos(productos, tbody) {
 
     let html = '';
     productos.forEach(producto => {
@@ -338,9 +385,160 @@ function mostrarProductosInventario(productos) {
 
     // Configurar ordenamiento de tabla
     configurarOrdenamientoTablaInventario();
+}
 
-    $('#inventarioModalContent').show();
-    console.log('✅ Productos de inventario mostrados correctamente en formato tabla');
+/**
+ * Actualizar controles de paginación
+ */
+function actualizarControlsPaginacion() {
+    const paginacionContainer = $('#paginacionInventarioModal');
+    
+    if (paginacionConfig.totalPaginas <= 1) {
+        paginacionContainer.hide();
+        return;
+    }
+
+    paginacionContainer.show();
+
+    let html = `
+        <nav aria-label="Paginación de inventario">
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+    `;
+
+    // Botón anterior
+    html += `
+        <li class="page-item ${paginacionConfig.paginaActual === 1 ? 'disabled' : ''}">
+            <button class="page-link btn-pagina-inventario" data-pagina="${paginacionConfig.paginaActual - 1}" ${paginacionConfig.paginaActual === 1 ? 'disabled' : ''}>
+                <i class="bi bi-chevron-left"></i>
+            </button>
+        </li>
+    `;
+
+    // Páginas
+    const maxPaginasVisibles = 5;
+    let inicio = Math.max(1, paginacionConfig.paginaActual - Math.floor(maxPaginasVisibles / 2));
+    let fin = Math.min(paginacionConfig.totalPaginas, inicio + maxPaginasVisibles - 1);
+
+    if (fin - inicio + 1 < maxPaginasVisibles) {
+        inicio = Math.max(1, fin - maxPaginasVisibles + 1);
+    }
+
+    // Primera página si no está visible
+    if (inicio > 1) {
+        html += `
+            <li class="page-item">
+                <button class="page-link btn-pagina-inventario" data-pagina="1">1</button>
+            </li>
+        `;
+        if (inicio > 2) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+    }
+
+    // Páginas visibles
+    for (let i = inicio; i <= fin; i++) {
+        html += `
+            <li class="page-item ${i === paginacionConfig.paginaActual ? 'active' : ''}">
+                <button class="page-link btn-pagina-inventario" data-pagina="${i}">${i}</button>
+            </li>
+        `;
+    }
+
+    // Última página si no está visible
+    if (fin < paginacionConfig.totalPaginas) {
+        if (fin < paginacionConfig.totalPaginas - 1) {
+            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+        }
+        html += `
+            <li class="page-item">
+                <button class="page-link btn-pagina-inventario" data-pagina="${paginacionConfig.totalPaginas}">${paginacionConfig.totalPaginas}</button>
+            </li>
+        `;
+    }
+
+    // Botón siguiente
+    html += `
+        <li class="page-item ${paginacionConfig.paginaActual === paginacionConfig.totalPaginas ? 'disabled' : ''}">
+            <button class="page-link btn-pagina-inventario" data-pagina="${paginacionConfig.paginaActual + 1}" ${paginacionConfig.paginaActual === paginacionConfig.totalPaginas ? 'disabled' : ''}>
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </li>
+    `;
+
+    html += `
+            </ul>
+        </nav>
+    `;
+
+    paginacionContainer.html(html);
+
+    // Configurar eventos de paginación
+    configurarEventosPaginacion();
+}
+
+/**
+ * Configurar eventos de paginación
+ */
+function configurarEventosPaginacion() {
+    $('.btn-pagina-inventario').off('click').on('click', function(e) {
+        e.preventDefault();
+        
+        if ($(this).prop('disabled')) {
+            return;
+        }
+
+        const nuevaPagina = parseInt($(this).data('pagina'));
+        
+        if (nuevaPagina >= 1 && nuevaPagina <= paginacionConfig.totalPaginas && nuevaPagina !== paginacionConfig.paginaActual) {
+            paginacionConfig.paginaActual = nuevaPagina;
+            mostrarProductosInventario(productosFiltrados);
+            console.log(`📦 Navegando a página ${nuevaPagina}`);
+        }
+    });
+}
+
+/**
+ * Actualizar información de paginación
+ */
+function actualizarInfoPaginacion(productosPagina, totalProductos) {
+    const infoContainer = $('#infoPaginacionInventario');
+    
+    if (totalProductos === 0) {
+        infoContainer.html('<small class="text-muted">No hay productos para mostrar</small>');
+        return;
+    }
+
+    if (paginacionConfig.totalPaginas <= 1) {
+        infoContainer.html(`<small class="text-muted">Mostrando ${totalProductos} producto${totalProductos !== 1 ? 's' : ''}</small>`);
+        return;
+    }
+
+    const inicio = (paginacionConfig.paginaActual - 1) * paginacionConfig.productosPorPagina + 1;
+    const fin = Math.min(inicio + productosPagina - 1, totalProductos);
+
+    infoContainer.html(`
+        <small class="text-muted">
+            Mostrando ${inicio}-${fin} de ${totalProductos} productos 
+            (Página ${paginacionConfig.paginaActual} de ${paginacionConfig.totalPaginas})
+        </small>
+    `);
+}
+
+/**
+ * Ocultar controles de paginación
+ */
+function ocultarControlsPaginacion() {
+    $('#paginacionInventarioModal').hide();
+}
+
+/**
+ * Cambiar productos por página
+ */
+function cambiarProductosPorPagina(cantidad) {
+    paginacionConfig.productosPorPagina = cantidad;
+    paginacionConfig.paginaActual = 1; // Volver a la primera página
+    mostrarProductosInventario(productosFiltrados);
+    console.log(`📦 Productos por página cambiado a: ${cantidad}`);
 }
 
 /**
@@ -493,12 +691,12 @@ function aplicarFiltrosInventario() {
         return;
     }
 
-    let productosFiltrados = [...productosInventarioCompleto];
+    let productosFiltradosTemp = [...productosInventarioCompleto];
 
     // Filtro por texto de búsqueda
     if (filtrosInventarioActivos.busqueda) {
         const termino = filtrosInventarioActivos.busqueda.toLowerCase();
-        productosFiltrados = productosFiltrados.filter(producto => {
+        productosFiltradosTemp = productosFiltradosTemp.filter(producto => {
             const nombre = (producto.nombreProducto || '').toLowerCase();
             const descripcion = (producto.descripcion || '').toLowerCase();
 
@@ -528,7 +726,7 @@ function aplicarFiltrosInventario() {
 
     // Filtro por categoría
     if (filtrosInventarioActivos.categoria && filtrosInventarioActivos.categoria !== 'todas') {
-        productosFiltrados = productosFiltrados.filter(producto => {
+        productosFiltradosTemp = productosFiltradosTemp.filter(producto => {
             return (producto.categoria || '').toLowerCase() === filtrosInventarioActivos.categoria.toLowerCase();
         });
     }
@@ -537,13 +735,13 @@ function aplicarFiltrosInventario() {
     if (filtrosInventarioActivos.stock) {
         switch (filtrosInventarioActivos.stock) {
             case 'disponible':
-                productosFiltrados = productosFiltrados.filter(p => (p.cantidadEnInventario || 0) > 0);
+                productosFiltradosTemp = productosFiltradosTemp.filter(p => (p.cantidadEnInventario || 0) > 0);
                 break;
             case 'agotado':
-                productosFiltrados = productosFiltrados.filter(p => (p.cantidadEnInventario || 0) === 0);
+                productosFiltradosTemp = productosFiltradosTemp.filter(p => (p.cantidadEnInventario || 0) === 0);
                 break;
             case 'bajo':
-                productosFiltrados = productosFiltrados.filter(p => 
+                productosFiltradosTemp = productosFiltradosTemp.filter(p => 
                     (p.cantidadEnInventario || 0) > 0 && 
                     (p.cantidadEnInventario || 0) <= (p.stockMinimo || 0)
                 );
@@ -551,8 +749,12 @@ function aplicarFiltrosInventario() {
         }
     }
 
-    console.log(`🔍 Filtros aplicados: ${productosFiltrados.length} de ${productosInventarioCompleto.length} productos`);
-    mostrarProductosInventario(productosFiltrados);
+    console.log(`🔍 Filtros aplicados: ${productosFiltradosTemp.length} de ${productosInventarioCompleto.length} productos`);
+    
+    // Reiniciar a la primera página cuando se aplican filtros
+    paginacionConfig.paginaActual = 1;
+    
+    mostrarProductosInventario(productosFiltradosTemp);
 }
 
 /**
@@ -571,6 +773,9 @@ function limpiarFiltrosInventario() {
     $('#categoriaInventarioModal').val('todas');
     $('#stockInventarioModal').val('');
 
+    // Reiniciar a la primera página
+    paginacionConfig.paginaActual = 1;
+
     mostrarProductosInventario(productosInventarioCompleto);
 }
 
@@ -582,10 +787,22 @@ function limpiarInventarioModal() {
 
     $('#inventarioModalProductos').empty();
     productosInventarioCompleto = [];
+    productosFiltrados = [];
+
+    // Reiniciar paginación
+    paginacionConfig = {
+        paginaActual: 1,
+        productosPorPagina: 20,
+        totalPaginas: 1,
+        totalProductos: 0
+    };
 
     // Limpiar ordenamiento
     $('.sortable').removeClass('sorted-asc sorted-desc');
     $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
+
+    // Ocultar controles de paginación
+    ocultarControlsPaginacion();
 
     limpiarFiltrosInventario();
 }
@@ -712,6 +929,7 @@ window.inicializarModalInventario = inicializarModalInventario;
 window.consultarInventario = consultarInventario;
 window.cargarInventarioCompleto = cargarInventarioCompleto;
 window.actualizarVistaProductosPostAjuste = actualizarVistaProductosPostAjuste;
+window.cambiarProductosPorPagina = cambiarProductosPorPagina;
 
 // ✅ VERIFICAR QUE verDetalleProducto ESTÉ DISPONIBLE DESDE FACTURACION.JS
 if (typeof window.verDetalleProducto !== 'function') {
