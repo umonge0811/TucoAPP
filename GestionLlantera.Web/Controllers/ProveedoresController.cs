@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
@@ -54,14 +53,10 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-
-                if (!await this.TienePermisoAsync("Ver Proveedores"))
-                {
-                    return Json(new { success = false, message = "Sin permisos para consultar clientes" });
-                }
+                _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
 
                 var jwtToken = this.ObtenerTokenJWT();
-                var proveedores = await _proveedoresService.ObtenerProveedoresAsync(jwtToken);
+                var proveedores = await _proveedoresService.ObtenerTodosProveedoresAsync(jwtToken);
 
                 var resultado = proveedores.Select(p => new {
                     id = p.ProveedorId,

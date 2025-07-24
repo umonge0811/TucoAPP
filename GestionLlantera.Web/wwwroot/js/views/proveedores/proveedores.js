@@ -70,14 +70,17 @@ function configurarEventListeners() {
 // =====================================
 
 /**
- * Cargar todos los proveedores
+ * Cargar TODOS los proveedores (activos e inactivos)
  */
 async function cargarProveedores() {
     try {
-        console.log('📋 Cargando proveedores...');
+        console.log('📋 🔄 INICIANDO CARGA DE TODOS LOS PROVEEDORES...');
         mostrarLoading(true);
 
-        const response = await fetch('/Proveedores/ObtenerTodosProveedores', {
+        const url = '/Proveedores/ObtenerProveedores';
+        console.log('🌐 URL a consultar:', url);
+
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -86,28 +89,52 @@ async function cargarProveedores() {
             credentials: 'include'
         });
 
+        console.log('📡 Status de respuesta:', response.status, response.statusText);
+
         if (!response.ok) {
             throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
         }
 
         const data = await response.json();
-        console.log('📋 Respuesta del servidor:', data);
+        console.log('📋 📊 RESPUESTA COMPLETA DEL SERVIDOR:');
+        console.log('   ✅ Success:', data.success);
+        console.log('   📦 Data type:', typeof data.data);
+        console.log('   📊 Data length:', data.data ? data.data.length : 'null/undefined');
+        console.log('   📋 Data content:', data.data);
 
         if (data.success && data.data) {
-            proveedoresData = data.data;
+            proveedoresData = Array.isArray(data.data) ? data.data : [];
             proveedoresFiltrados = [...proveedoresData];
+            
+            console.log('🔍 ANÁLISIS DE DATOS RECIBIDOS:');
+            console.log('   📦 proveedoresData length:', proveedoresData.length);
+            console.log('   📦 proveedoresFiltrados length:', proveedoresFiltrados.length);
+            
+            // Log detallado de cada proveedor
+            proveedoresData.forEach((proveedor, index) => {
+                console.log(`   🏪 Proveedor ${index + 1}:`, {
+                    id: proveedor.proveedorId || proveedor.id,
+                    nombre: proveedor.nombreProveedor || proveedor.nombre,
+                    activo: proveedor.activo,
+                    pedidos: proveedor.pedidosProveedors?.length || 0
+                });
+            });
+            
             mostrarProveedores();
             actualizarContador();
-            console.log(`✅ ${proveedoresData.length} proveedores cargados`);
+            console.log(`✅ ✨ ${proveedoresData.length} PROVEEDORES CARGADOS EXITOSAMENTE`);
         } else {
+            console.error('❌ Respuesta no exitosa:', data);
             throw new Error(data.message || 'Error obteniendo proveedores');
         }
     } catch (error) {
-        console.error('❌ Error cargando proveedores:', error);
+        console.error('❌ 💥 ERROR CRÍTICO CARGANDO PROVEEDORES:', error);
+        console.error('   📍 Stack trace:', error.stack);
         mostrarToast('Error', 'Error cargando proveedores: ' + error.message, 'danger');
         mostrarSinDatos(true);
     } finally {
         mostrarLoading(false);
+        console.log('🏁 Finalizando carga de proveedores');
     }
 }
 
@@ -205,67 +232,33 @@ function limpiarFiltros() {
 }
 
 /**
- * Cargar todos los proveedores (incluyendo inactivos)
- */
-async function cargarTodosProveedores() {
-    try {
-        console.log('📋 Cargando TODOS los proveedores (incluyendo inactivos)...');
-        mostrarLoading(true);
-
-        const response = await fetch('/Proveedores/ObtenerTodosProveedores', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log('📋 Respuesta del servidor (todos):', data);
-
-        if (data.success && data.data) {
-            proveedoresData = data.data;
-            proveedoresFiltrados = [...proveedoresData];
-            mostrarProveedores();
-            actualizarContador();
-            console.log(`✅ ${proveedoresData.length} proveedores cargados (incluyendo inactivos)`);
-        } else {
-            throw new Error(data.message || 'Error obteniendo todos los proveedores');
-        }
-    } catch (error) {
-        console.error('❌ Error cargando todos los proveedores:', error);
-        mostrarToast('Error', 'Error cargando todos los proveedores: ' + error.message, 'danger');
-        mostrarSinDatos(true);
-    } finally {
-        mostrarLoading(false);
-    }
-}
-
-/**
- * Alternar entre mostrar solo activos o todos los proveedores
+ * Filtrar proveedores por estado (activos/todos)
  */
 function alternarVistaProveedores() {
     const btn = $('#btnToggleProveedores');
-    const mostrandoTodos = btn.data('mostrandoTodos') || false;
+    const mostrandoSoloActivos = btn.data('mostrandoSoloActivos') || false;
 
-    if (mostrandoTodos) {
-        // Cambiar a mostrar solo activos
-        cargarProveedores();
-        btn.html('<i class="bi bi-eye me-1"></i>Ver Todos');
-        btn.removeClass('btn-secondary').addClass('btn-outline-secondary');
-        btn.data('mostrandoTodos', false);
-    } else {
-        // Cambiar a mostrar todos
-        cargarTodosProveedores();
+    console.log('🔄 Alternando vista de proveedores. Estado actual mostrandoSoloActivos:', mostrandoSoloActivos);
+
+    if (mostrandoSoloActivos) {
+        // Cambiar a mostrar TODOS
+        console.log('📋 Cambiando a mostrar TODOS los proveedores');
+        proveedoresFiltrados = [...proveedoresData];
         btn.html('<i class="bi bi-eye-slash me-1"></i>Solo Activos');
         btn.removeClass('btn-outline-secondary').addClass('btn-secondary');
-        btn.data('mostrandoTodos', true);
+        btn.data('mostrandoSoloActivos', false);
+    } else {
+        // Cambiar a mostrar solo activos
+        console.log('📋 Cambiando a mostrar solo proveedores ACTIVOS');
+        proveedoresFiltrados = proveedoresData.filter(p => p.activo === true);
+        btn.html('<i class="bi bi-eye me-1"></i>Ver Todos');
+        btn.removeClass('btn-secondary').addClass('btn-outline-secondary');
+        btn.data('mostrandoSoloActivos', true);
     }
+
+    console.log('📊 Proveedores después del filtro:', proveedoresFiltrados.length);
+    mostrarProveedores();
+    actualizarContador();
 }
 
 // =====================================
@@ -980,7 +973,6 @@ window.verPedidosProveedor = verPedidosProveedor;
 window.limpiarFiltros = limpiarFiltros;
 window.cambiarEstadoProveedor = cambiarEstadoProveedor;
 window.confirmarCambiarEstadoProveedor = confirmarCambiarEstadoProveedor;
-window.cargarTodosProveedores = cargarTodosProveedores;
 window.alternarVistaProveedores = alternarVistaProveedores;
 
 console.log('✅ Módulo de gestión de proveedores cargado completamente');
