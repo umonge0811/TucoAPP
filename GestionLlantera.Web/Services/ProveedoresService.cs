@@ -13,17 +13,21 @@ namespace GestionLlantera.Web.Services
         private readonly ILogger<ProveedoresService> _logger;
         private readonly IConfiguration _configuration;
 
-        public ProveedoresService(HttpClient httpClient, ILogger<ProveedoresService> logger, IConfiguration configuration)
+        public ProveedoresService(IHttpClientFactory httpClientFactory, ILogger<ProveedoresService> logger, IConfiguration configuration)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
             _configuration = configuration;
         }
 
         private void ConfigurarAutenticacion(string token)
         {
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+            if (!string.IsNullOrEmpty(token))
+            {
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
         }
 
         public async Task<(bool success, object data, string message)> ObtenerProveedoresAsync(string token)
@@ -59,6 +63,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("➕ Creando proveedor: {Nombre}", proveedor.NombreProveedor);
+                
                 // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
