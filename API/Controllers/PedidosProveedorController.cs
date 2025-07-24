@@ -29,7 +29,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("📦 Obteniendo pedidos de proveedores");
 
-                var query = _context.PedidosProveedors
+                var query = _context.PedidosProveedores
                     .Include(pp => pp.Proveedor)
                     .Include(pp => pp.Usuario)
                     .Include(pp => pp.DetallePedidos)
@@ -82,7 +82,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🔍 Obteniendo pedido {Id}", id);
 
-                var pedido = await _context.PedidosProveedors
+                var pedido = await _context.PedidosProveedores
                     .Include(pp => pp.Proveedor)
                     .Include(pp => pp.Usuario)
                     .Include(pp => pp.DetallePedidos)
@@ -181,7 +181,7 @@ namespace API.Controllers
                     UsuarioId = usuarioId.Value
                 };
 
-                _context.PedidosProveedors.Add(nuevoPedido);
+                _context.PedidosProveedores.Add(nuevoPedido);
                 await _context.SaveChangesAsync();
 
                 // Agregar detalles del pedido
@@ -204,7 +204,7 @@ namespace API.Controllers
                 _logger.LogInformation("✅ Pedido creado exitosamente: {PedidoId}", nuevoPedido.PedidoId);
 
                 // Cargar el pedido completo para retornar
-                var pedidoCompleto = await _context.PedidosProveedors
+                var pedidoCompleto = await _context.PedidosProveedores
                     .Include(pp => pp.Proveedor)
                     .Include(pp => pp.Usuario)
                     .Include(pp => pp.DetallePedidos)
@@ -234,7 +234,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("📝 Actualizando estado del pedido {Id}", id);
 
-                var pedido = await _context.PedidosProveedors.FindAsync(id);
+                var pedido = await _context.PedidosProveedores.FindAsync(id);
                 if (pedido == null)
                 {
                     return NotFound(new { message = "Pedido no encontrado" });
@@ -264,7 +264,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🗑️ Eliminando pedido {Id}", id);
 
-                var pedido = await _context.PedidosProveedors
+                var pedido = await _context.PedidosProveedores
                     .Include(pp => pp.DetallePedidos)
                     .FirstOrDefaultAsync(pp => pp.PedidoId == id);
 
@@ -277,7 +277,7 @@ namespace API.Controllers
                 _context.DetallePedidos.RemoveRange(pedido.DetallePedidos);
                 
                 // Eliminar pedido
-                _context.PedidosProveedors.Remove(pedido);
+                _context.PedidosProveedores.Remove(pedido);
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
