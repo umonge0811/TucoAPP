@@ -126,7 +126,7 @@ function mostrarProveedores() {
             <tr>
                 <td>${proveedor.proveedorId}</td>
                 <td>
-                    <strong>${proveedor.nombreProveedor}</strong>
+                    <strong>${proveedor.nombreProveedor || 'Sin nombre'}</strong>
                 </td>
                 <td>${proveedor.contacto || '-'}</td>
                 <td>${proveedor.telefono || '-'}</td>
@@ -146,7 +146,7 @@ function mostrarProveedores() {
                         <button type="button" class="btn btn-sm btn-outline-info" onclick="verPedidosProveedor(${proveedor.proveedorId})" title="Ver Pedidos">
                             <i class="bi bi-box-seam"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${proveedor.proveedorId}, '${proveedor.nombreProveedor.replace(/'/g, "\\'")}')" title="Eliminar">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarProveedor(${proveedor.proveedorId}, '${(proveedor.nombreProveedor || '').replace(/'/g, "\\'")}')" title="Eliminar">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
