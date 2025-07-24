@@ -52,7 +52,12 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
-                var proveedores = JsonConvert.DeserializeObject<List<Proveedore>>(content) ?? new List<Proveedore>();
+                var todosProveedores = JsonConvert.DeserializeObject<List<Proveedore>>(content) ?? new List<Proveedore>();
+                
+                // Filtrar solo proveedores activos
+                var proveedores = todosProveedores.Where(p => p.Activo == true).ToList();
+                
+                _logger.LogInformation($"📋 Total proveedores: {todosProveedores.Count}, Activos: {proveedores.Count}");
 
                 return proveedores;
 
@@ -195,6 +200,73 @@ namespace GestionLlantera.Web.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo pedidos");
+                return (false, null, "Error interno del servidor");
+            }
+        }
+
+        public async Task<List<Proveedore>> ObtenerTodosProveedoresAsync(string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
+                
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.GetAsync("api/Proveedores");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Error obteniendo todos los proveedores: {StatusCode}", response.StatusCode);
+                    return new List<Proveedore>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                var proveedores = JsonConvert.DeserializeObject<List<Proveedore>>(content) ?? new List<Proveedore>();
+
+                _logger.LogInformation($"📋 Total proveedores obtenidos: {proveedores.Count}");
+                return proveedores;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo todos los proveedores");
+                return new List<Proveedore>();
+            }
+        }
+
+        public async Task<(bool success, object data, string message)> CambiarEstadoProveedorAsync(int proveedorId, bool activo, string token)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Cambiando estado de proveedor {ProveedorId} a {Estado}", proveedorId, activo ? "Activo" : "Inactivo");
+                ConfigurarAutenticacion(token);
+
+                var estadoData = new { activo = activo };
+                var json = JsonConvert.SerializeObject(estadoData);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PatchAsync($"api/Proveedores/{proveedorId}/estado", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    return (true, resultado, $"Proveedor {(activo ? "activado" : "desactivado")} exitosamente");
+                }
+                else
+                {
+                    _logger.LogError("❌ Error cambiando estado: {StatusCode} - {Content}", response.StatusCode, responseContent);
+                    return (false, null, "Error cambiando estado del proveedor");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error cambiando estado del proveedor");
                 return (false, null, "Error interno del servidor");
             }
         }
