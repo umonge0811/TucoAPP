@@ -295,9 +295,9 @@ function editarProveedor(id) {
     // Llenar formulario
     $('#proveedorId').val(proveedor.id);
     $('#nombreProveedor').val(proveedor.nombre);
-    $('#contacto').val(proveedor.contacto || '');
-    $('#telefono').val(proveedor.telefono || '');
-    $('#direccion').val(proveedor.direccion || '');
+    $('#contactoProveedor').val(proveedor.contacto || '');
+    $('#telefonoProveedor').val(proveedor.telefono || '');
+    $('#direccionProveedor').val(proveedor.direccion || '');
 
     $('#modalProveedor').modal('show');
 }
@@ -321,9 +321,9 @@ async function crearProveedor() {
 
         const datosProveedor = {
             nombreProveedor: $('#nombreProveedor').val().trim(),
-            contacto: $('#contacto').val().trim() || null,
-            telefono: $('#telefono').val().trim() || null,
-            direccion: $('#direccion').val().trim() || null
+            contacto: $('#contactoProveedor').val().trim() || null,
+            telefono: $('#telefonoProveedor').val().trim() || null,
+            direccion: $('#direccionProveedor').val().trim() || null
         };
 
         console.log('📋 Datos a crear:', datosProveedor);
@@ -390,9 +390,9 @@ async function actualizarProveedor() {
         const datosProveedor = {
             proveedorId: proveedorEditando.id,
             nombreProveedor: $('#nombreProveedor').val().trim(),
-            contacto: $('#contacto').val().trim() || null,
-            telefono: $('#telefono').val().trim() || null,
-            direccion: $('#direccion').val().trim() || null
+            contacto: $('#contactoProveedor').val().trim() || null,
+            telefono: $('#telefonoProveedor').val().trim() || null,
+            direccion: $('#direccionProveedor').val().trim() || null
         };
 
         console.log('📋 Datos a actualizar:', datosProveedor);
