@@ -3,6 +3,36 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
+<!-- ✅ BREADCRUMBS -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a asp-controller="Dashboard" asp-action="Index">
+                <i class="bi bi-house"></i> Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <i class="bi bi-truck"></i> Proveedores y Pedidos
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-building"></i> Gestión de Proveedores
+        </li>
+    </ol>
+</nav>
+
+<!-- ✅ HEADER PRINCIPAL -->
+<div class="admin-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="admin-title">
+                <i class="bi bi-truck me-2"></i>
+                Gestión de Proveedores
+            </h1>
+            <p class="admin-subtitle">Administra información de proveedores y sus datos de contacto</p>
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid mt-4">
     <!-- Header -->
     <div class="row mb-4">

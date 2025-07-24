@@ -117,9 +117,25 @@
                                         <i class="bi bi-truck"></i> Entregas Pendientes
                                     </a>
                                 </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <!-- ✅ PROVEEDORES Y PEDIDOS - Módulo separado -->
+                    <li class="nav-item" asp-permiso="Ver Facturación">
+                        <a class="nav-link" data-bs-toggle="collapse" href="#proveedoresMenu">
+                            <i class="bi bi-truck"></i> Proveedores y Pedidos
+                        </a>
+                        <div class="collapse submenu" id="proveedoresMenu">
+                            <ul class="nav flex-column">
                                 <li class="nav-item">
                                     <a class="nav-link" asp-controller="Proveedores" asp-action="Index">
-                                        <i class="bi bi-truck me-2"></i>Proveedores
+                                        <i class="bi bi-building"></i> Gestión de Proveedores
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Proveedores" asp-action="PedidosProveedor">
+                                        <i class="bi bi-box-arrow-in-down"></i> Pedidos a Proveedores
                                     </a>
                                 </li>
                             </ul>
@@ -360,6 +376,51 @@
                             </ul>
                         </div>
                     </li>
+                    <!-- VENTAS MÓVIL -->
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="collapse" href="#ventasMenuMobile">
+                            <i class="bi bi-cart"></i> Ventas
+                        </a>
+                        <div class="collapse submenu" id="ventasMenuMobile">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Clientes" asp-action="Index">
+                                        <i class="bi bi-people"></i> Clientes
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Facturacion" asp-action="Index">
+                                        <i class="bi bi-receipt-cutoff"></i> Facturación
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Facturacion" asp-action="EntregasPendientes">
+                                        <i class="bi bi-truck"></i> Entregas Pendientes
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <!-- PROVEEDORES Y PEDIDOS MÓVIL -->
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="collapse" href="#proveedoresMenuMobile">
+                            <i class="bi bi-truck"></i> Proveedores y Pedidos
+                        </a>
+                        <div class="collapse submenu" id="proveedoresMenuMobile">
+                            <ul class="nav flex-column">
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Proveedores" asp-action="Index">
+                                        <i class="bi bi-building"></i> Gestión de Proveedores
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Proveedores" asp-action="PedidosProveedor">
+                                        <i class="bi bi-box-arrow-in-down"></i> Pedidos a Proveedores
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
                     <!-- En _AdminLayout.cshtml, en la sección del mobileSidebar -->
                     <li class="nav-item">
                         @if (User.IsInRole("Administrador"))
@@ -377,7 +438,7 @@
                                     <li class="nav-item">
                                         <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
                                             <i class="bi bi-people"></i> Gestión de Usuarios
-                                        </a>
+                                    </a>
                                     </li>
                                 </ul>
                             </div>
