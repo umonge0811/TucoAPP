@@ -217,7 +217,11 @@ function llenarSelectProveedores() {
         });
 
         // Verificar si tiene los datos mínimos necesarios
-        const tieneId = proveedor && (proveedor.id || proveedor.proveedorId);
+        // Nota: Usar !== undefined y !== null para aceptar ID = 0
+        const tieneId = proveedor && (
+            (proveedor.id !== undefined && proveedor.id !== null) || 
+            (proveedor.proveedorId !== undefined && proveedor.proveedorId !== null)
+        );
         const tieneNombre = proveedor && (proveedor.nombre || proveedor.nombreProveedor);
         
         if (tieneId && tieneNombre) {
@@ -236,8 +240,9 @@ function llenarSelectProveedores() {
             console.warn('📋 Validación fallida:', {
                 tieneId: tieneId,
                 tieneNombre: tieneNombre,
-                valorId: proveedor?.id || proveedor?.proveedorId,
-                valorNombre: proveedor?.nombre || proveedor?.nombreProveedor
+                valorId: proveedor?.id !== undefined ? proveedor.id : proveedor?.proveedorId,
+                valorNombre: proveedor?.nombre || proveedor?.nombreProveedor,
+                idEsCero: (proveedor?.id === 0 || proveedor?.proveedorId === 0)
             });
         }
     }
@@ -365,7 +370,11 @@ function seleccionarProveedor() {
         return;
     }
 
-    proveedorSeleccionado = proveedoresDisponibles.find(p => p.proveedorId.toString() === proveedorId);
+    // Usar la propiedad correcta para buscar (id o proveedorId)
+    proveedorSeleccionado = proveedoresDisponibles.find(p => {
+        const id = p.id !== undefined ? p.id : p.proveedorId;
+        return id.toString() === proveedorId;
+    });
 
     if (proveedorSeleccionado) {
         mostrarInfoProveedor(proveedorSeleccionado);
