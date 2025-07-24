@@ -205,9 +205,9 @@ function llenarSelectProveedores() {
         const proveedor = proveedoresDisponibles[i];
         console.log(`🔍 Procesando proveedor ${i + 1}:`, proveedor);
 
-        if (proveedor && proveedor.id && proveedor.nombre) {
-            const nombreProveedor = proveedor.nombre || 'Sin nombre';
-            const option = `<option value="${proveedor.id}">${nombreProveedor}</option>`;
+        if (proveedor && proveedor.proveedorId && proveedor.nombreProveedor) {
+            const nombreProveedor = proveedor.nombreProveedor || 'Sin nombre';
+            const option = `<option value="${proveedor.proveedorId}">${nombreProveedor}</option>`;
 
             console.log(`➕ Agregando opción: ${option}`);
             select.append(option);
@@ -216,10 +216,10 @@ function llenarSelectProveedores() {
         } else {
             console.warn('⚠️ Proveedor con datos incompletos:', proveedor);
             console.warn('📋 Estructura del proveedor:', {
-                hasId: !!proveedor?.proveedorId,
-                hasNombre: !!proveedor?.nombreProveedor,
-                id: proveedor?.proveedorId,
-                nombre: proveedor?.nombreProveedor
+                hasProveedorId: !!proveedor?.proveedorId,
+                hasNombreProveedor: !!proveedor?.nombreProveedor,
+                proveedorId: proveedor?.proveedorId,
+                nombreProveedor: proveedor?.nombreProveedor
             });
         }
     }
