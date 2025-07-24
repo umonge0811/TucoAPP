@@ -77,7 +77,7 @@ async function cargarProveedores() {
         console.log('📋 Cargando proveedores...');
         mostrarLoading(true);
 
-        const response = await fetch('/Proveedores/ObtenerProveedores', {
+        const response = await fetch('/Proveedores/ObtenerTodosProveedores', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
