@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -116,9 +115,8 @@ namespace API.Controllers
                             {
                                 dp.Producto.ProductoId,
                                 dp.Producto.NombreProducto,
-                                dp.Producto.Marca,
-                                dp.Producto.Modelo,
-                                dp.Producto.Stock
+                                dp.Producto.Descripcion,
+                                dp.Producto.CantidadEnInventario
                             },
                             dp.Cantidad,
                             dp.PrecioUnitario,
@@ -275,7 +273,7 @@ namespace API.Controllers
 
                 // Eliminar detalles primero
                 _context.DetallePedidos.RemoveRange(pedido.DetallePedidos);
-                
+
                 // Eliminar pedido
                 _context.PedidosProveedores.Remove(pedido);
 
