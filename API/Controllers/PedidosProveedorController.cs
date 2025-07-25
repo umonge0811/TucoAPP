@@ -229,9 +229,9 @@ namespace API.Controllers
                     }
 
                     decimal? precioUnitario = null;
-                    if (producto.precioUnitario != null && decimal.TryParse(producto.precioUnitario.ToString(), out decimal precio))
+                    if (producto.precioUnitario != null && decimal.TryParse(producto.precioUnitario.ToString(), out decimal precioTemporal))
                     {
-                        precioUnitario = precio;
+                        precioUnitario = precioTemporal;
                     }
 
                     var detalle = new DetallePedido
@@ -244,7 +244,7 @@ namespace API.Controllers
 
                     _context.DetallePedidos.Add(detalle);
                     _logger.LogInformation("📦 Detalle agregado: ProductoId={ProductoId}, Cantidad={Cantidad}, Precio={Precio}", 
-                        (object)productoId, (object)cantidad, (object?)precioUnitario);
+                        productoId, cantidad, precioUnitario);
                 }
 
                 await _context.SaveChangesAsync();
