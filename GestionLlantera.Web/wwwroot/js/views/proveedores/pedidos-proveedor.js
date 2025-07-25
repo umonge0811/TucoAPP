@@ -730,8 +730,10 @@ function cargarProductosEnTabla() {
 
     tbody.html(html);
 
-    // Configurar ordenamiento - CRÍTICO PARA QUE FUNCIONE
-    configurarOrdenamientoTablaProductos();
+    // Configurar ordenamiento después de cargar el HTML - CRÍTICO PARA QUE FUNCIONE
+    setTimeout(() => {
+        configurarOrdenamientoTablaProductos();
+    }, 100);
 }
 
 /**
