@@ -16,6 +16,12 @@ let productosInventario = [];
 let productosSeleccionados = [];
 let proveedorSeleccionado = null;
 
+// Variables para ordenamiento de productos
+let estadoOrdenamientoProductos = {
+    columna: null,
+    direccion: 'asc'
+};
+
 // =====================================
 // INICIALIZACIÓN
 // =====================================
@@ -49,6 +55,9 @@ function configurarEventListeners() {
     $('#modalNuevoPedido').on('hidden.bs.modal', function() {
         resetearFormularioPedido();
     });
+
+    // Configurar ordenamiento de tabla de productos
+    configurarOrdenamientoTablaProductos();
 }
 
 // =====================================
@@ -495,6 +504,138 @@ function siguientePaso() {
 function anteriorPaso() {
     $('#pasoSeleccionarProductos').hide();
     $('#pasoSeleccionarProveedor').show();
+}
+
+/**
+ * Configurar ordenamiento de la tabla de productos
+ */
+function configurarOrdenamientoTablaProductos() {
+    console.log('🔧 Configurando ordenamiento de tabla de productos...');
+
+    $(document).on('click', '#tablaProductosPedido .sortable', function() {
+        const columna = $(this).data('column');
+        
+        // Determinar dirección de ordenamiento
+        if (estadoOrdenamientoProductos.columna === columna) {
+            estadoOrdenamientoProductos.direccion = estadoOrdenamientoProductos.direccion === 'asc' ? 'desc' : 'asc';
+        } else {
+            estadoOrdenamientoProductos.columna = columna;
+            estadoOrdenamientoProductos.direccion = 'asc';
+        }
+
+        // Actualizar indicadores visuales
+        actualizarIndicadoresOrdenamientoProductos(columna);
+
+        // Ordenar productos
+        ordenarProductosTabla(columna, estadoOrdenamientoProductos.direccion);
+    });
+}
+
+/**
+ * Actualizar indicadores visuales de ordenamiento
+ */
+function actualizarIndicadoresOrdenamientoProductos(columnaActiva) {
+    $('#tablaProductosPedido .sortable').removeClass('sorted-asc sorted-desc');
+    $('#tablaProductosPedido .sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up text-muted');
+
+    const $columnaActiva = $(`#tablaProductosPedido .sortable[data-column="${columnaActiva}"]`);
+    const iconoClase = estadoOrdenamientoProductos.direccion === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down';
+    
+    $columnaActiva.addClass(`sorted-${estadoOrdenamientoProductos.direccion}`);
+    $columnaActiva.find('i').removeClass('bi-arrow-down-up text-muted').addClass(`${iconoClase} text-primary`);
+}
+
+/**
+ * Ordenar productos en la tabla
+ */
+function ordenarProductosTabla(columna, direccion) {
+    const tbody = $('#cuerpoTablaProductosPedido');
+    const filas = tbody.find('tr').toArray();
+
+    filas.sort(function(a, b) {
+        let valorA, valorB;
+        const filaA = $(a);
+        const filaB = $(b);
+        const productoIdA = parseInt(filaA.data('producto-id'));
+        const productoIdB = parseInt(filaB.data('producto-id'));
+        const productoA = productosInventario.find(p => p.productoId === productoIdA);
+        const productoB = productosInventario.find(p => p.productoId === productoIdB);
+
+        switch(columna) {
+            case 'id':
+                valorA = productoA?.productoId || 0;
+                valorB = productoB?.productoId || 0;
+                break;
+            case 'nombre':
+                valorA = (productoA?.nombreProducto || '').toLowerCase();
+                valorB = (productoB?.nombreProducto || '').toLowerCase();
+                break;
+            case 'marca':
+                // Para llantas, usar marca de llanta; para otros, marca del producto
+                if (productoA?.llanta || (productoA?.Llanta && productoA.Llanta.length > 0)) {
+                    const llantaA = productoA.llanta || productoA.Llanta[0];
+                    valorA = (llantaA?.marca || productoA?.marca || '').toLowerCase();
+                } else {
+                    valorA = (productoA?.marca || '').toLowerCase();
+                }
+                
+                if (productoB?.llanta || (productoB?.Llanta && productoB.Llanta.length > 0)) {
+                    const llantaB = productoB.llanta || productoB.Llanta[0];
+                    valorB = (llantaB?.marca || productoB?.marca || '').toLowerCase();
+                } else {
+                    valorB = (productoB?.marca || '').toLowerCase();
+                }
+                break;
+            case 'medida':
+                // Extraer medidas para ordenamiento
+                valorA = extraerMedidaParaOrdenamiento(productoA);
+                valorB = extraerMedidaParaOrdenamiento(productoB);
+                break;
+            case 'stock':
+                valorA = productoA?.cantidadEnInventario || productoA?.stock || 0;
+                valorB = productoB?.cantidadEnInventario || productoB?.stock || 0;
+                break;
+            default:
+                valorA = 0;
+                valorB = 0;
+        }
+
+        // Comparar valores
+        if (typeof valorA === 'string' && typeof valorB === 'string') {
+            return direccion === 'asc' ? valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
+        } else {
+            return direccion === 'asc' ? valorA - valorB : valorB - valorA;
+        }
+    });
+
+    // Reordenar filas en el DOM
+    tbody.empty().append(filas);
+
+    console.log(`✅ Tabla de productos ordenada: ${columna} ${direccion}`);
+}
+
+/**
+ * Extraer medida para ordenamiento
+ */
+function extraerMedidaParaOrdenamiento(producto) {
+    if (!producto) return 'zzz'; // Valores sin datos van al final
+
+    try {
+        if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
+            const llantaInfo = producto.llanta || producto.Llanta[0];
+            
+            if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                // Crear un valor numérico para ordenamiento: ancho * 1000 + diametro
+                const ancho = parseInt(llantaInfo.ancho) || 0;
+                const diametro = parseInt(llantaInfo.diametro) || 0;
+                return ancho * 1000 + diametro;
+            }
+        }
+    } catch (error) {
+        console.warn('⚠️ Error extrayendo medida para ordenamiento:', error);
+    }
+
+    return 999999; // Productos sin medida van al final
 }
 
 /**
