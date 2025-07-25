@@ -529,22 +529,34 @@ function cargarProductosEnTabla() {
             llanta: producto.llanta
         });
 
-        // Determinar si es llanta y extraer información
-        const esLlanta = producto.esLlanta || (producto.llanta && producto.llanta.length > 0);
+        // Determinar si es llanta y extraer medidas IGUAL QUE EN INVENTARIO FACTURACIÓN
+        let esLlanta = false;
+        let medidaLlanta = 'N/A';
         let marcaInfo = producto.marca || '';
         let modeloInfo = producto.modelo || '';
-        let medidasInfo = '';
 
-        // Si es llanta, extraer información específica
-        if (esLlanta && producto.llanta && producto.llanta.length > 0) {
-            const llantaData = producto.llanta[0];
-            marcaInfo = llantaData.marca || marcaInfo || 'Sin marca';
-            modeloInfo = llantaData.modelo || modeloInfo || '';
-            
-            // Construir medidas
-            if (llantaData.ancho && llantaData.perfil && llantaData.diametro) {
-                medidasInfo = `${llantaData.ancho}/${llantaData.perfil}/R${llantaData.diametro}`;
+        try {
+            // Verificar si es llanta usando la misma lógica del modal de inventario
+            if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
+                esLlanta = true;
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        // Formato completo con perfil
+                        medidaLlanta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        // Formato sin perfil
+                        medidaLlanta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
+                }
+
+                // Usar marca y modelo de la llanta si están disponibles
+                marcaInfo = llantaInfo.marca || marcaInfo || 'Sin marca';
+                modeloInfo = llantaInfo.modelo || modeloInfo || '';
             }
+        } catch (error) {
+            console.warn('⚠️ Error procesando información de llanta:', error);
         }
 
         // Si no es llanta, usar marca/modelo del producto general
@@ -553,8 +565,8 @@ function cargarProductosEnTabla() {
             modeloInfo = modeloInfo || '';
         }
 
-        // Determinar stock
-        const stockDisponible = producto.stock || producto.cantidadEnInventario || 0;
+        // Determinar stock usando la misma lógica del inventario
+        const stockDisponible = producto.cantidadEnInventario || producto.stock || 0;
 
         return `
             <tr data-producto-id="${producto.productoId}">
@@ -580,7 +592,7 @@ function cargarProductosEnTabla() {
                     </div>
                 </td>
                 <td class="text-center">
-                    ${medidasInfo ? `<span class="text-primary fw-bold"><i class="bi bi-rulers me-1"></i>${medidasInfo}</span>` : '<span class="text-muted">N/A</span>'}
+                    ${medidaLlanta !== 'N/A' ? `<span class="text-primary fw-bold"><i class="bi bi-rulers me-1"></i>${medidaLlanta}</span>` : '<span class="text-muted">N/A</span>'}
                 </td>
                 <td class="text-center">
                     <span class="badge ${stockDisponible > 0 ? 'bg-success' : 'bg-danger'}">${stockDisponible}</span>
@@ -700,24 +712,40 @@ function filtrarProductosPedido() {
             cumpleBusqueda = producto.modelo.toLowerCase().includes(busqueda);
         }
 
-        // Si es llanta, buscar en datos específicos de llanta
-        if (!cumpleBusqueda && producto.esLlanta && producto.llanta && producto.llanta.length > 0) {
-            const llantaData = producto.llanta[0];
-            
-            // Buscar en marca de llanta
-            if (llantaData.marca) {
-                cumpleBusqueda = llantaData.marca.toLowerCase().includes(busqueda);
-            }
-            
-            // Buscar en modelo de llanta
-            if (!cumpleBusqueda && llantaData.modelo) {
-                cumpleBusqueda = llantaData.modelo.toLowerCase().includes(busqueda);
-            }
-            
-            // Buscar en medidas
-            if (!cumpleBusqueda && llantaData.ancho && llantaData.perfil && llantaData.diametro) {
-                const medidas = `${llantaData.ancho}/${llantaData.perfil}/R${llantaData.diametro}`;
-                cumpleBusqueda = medidas.includes(busqueda);
+        // Buscar en medidas de llantas usando la misma lógica del modal de inventario
+        if (!cumpleBusqueda) {
+            try {
+                if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
+                    const llantaInfo = producto.llanta || producto.Llanta[0];
+                    
+                    // Buscar en marca de llanta
+                    if (llantaInfo.marca) {
+                        cumpleBusqueda = llantaInfo.marca.toLowerCase().includes(busqueda);
+                    }
+                    
+                    // Buscar en modelo de llanta
+                    if (!cumpleBusqueda && llantaInfo.modelo) {
+                        cumpleBusqueda = llantaInfo.modelo.toLowerCase().includes(busqueda);
+                    }
+                    
+                    // Buscar en medidas completas
+                    if (!cumpleBusqueda && llantaInfo.ancho && llantaInfo.diametro) {
+                        let medidas = '';
+                        if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                            medidas = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                        } else {
+                            medidas = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                        }
+                        
+                        // Buscar en formato completo y en componentes individuales
+                        cumpleBusqueda = medidas.toLowerCase().includes(busqueda) ||
+                                       llantaInfo.ancho.toString().includes(busqueda) ||
+                                       (llantaInfo.perfil && llantaInfo.perfil.toString().includes(busqueda)) ||
+                                       llantaInfo.diametro.toString().includes(busqueda);
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Error en búsqueda de llanta:', error);
             }
         }
 
