@@ -569,10 +569,12 @@ function cargarProductosEnTabla() {
                         ${esLlanta ? '<span class="badge bg-info ms-2">Llanta</span>' : ''}
                     </div>
                     ${modeloInfo ? `<small class="text-muted">Modelo: ${modeloInfo}</small>` : ''}
-                    ${medidasInfo ? `<br><small class="text-primary"><i class="bi bi-rulers me-1"></i>${medidasInfo}</small>` : ''}
                 </td>
                 <td>
-                    <span class="badge bg-light text-dark">${marcaInfo}</span>
+                    <div>
+                        <span class="badge bg-light text-dark">${marcaInfo}</span>
+                        ${medidasInfo ? `<br><small class="text-primary fw-bold"><i class="bi bi-rulers me-1"></i>${medidasInfo}</small>` : ''}
+                    </div>
                 </td>
                 <td>
                     <span class="badge ${stockDisponible > 0 ? 'bg-success' : 'bg-danger'}">${stockDisponible}</span>
