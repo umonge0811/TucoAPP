@@ -1,0 +1,65 @@
+
+/* Estilos para pedidos de proveedores */
+.card-stats {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.card-stats .card-body {
+    color: white;
+}
+
+.card-stats .card-title {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.card-stats .card-text {
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+}
+
+.modal-lg {
+    max-width: 90%;
+}
+
+/* Estilos para ordenamiento de tabla */
+.sortable {
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.sortable:hover {
+    background-color: rgba(0,0,0,0.05) !important;
+}
+
+.sortable.sorted-asc,
+.sortable.sorted-desc {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+.sortable i {
+    font-size: 0.8rem;
+    transition: color 0.2s ease;
+}
+
+@media (max-width: 768px) {
+    .modal-lg {
+        max-width: 95%;
+        margin: 10px;
+    }
+}
