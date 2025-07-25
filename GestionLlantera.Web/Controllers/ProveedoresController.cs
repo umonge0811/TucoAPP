@@ -395,18 +395,50 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                _logger.LogInformation("📦 Solicitando pedidos - ProveedorId: {ProveedorId}", proveedorId?.ToString() ?? "TODOS");
+                
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado");
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
+
                 var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
-                return Json(resultado);
+                
+                _logger.LogInformation("📦 Resultado del servicio: Success={Success}, DataType={DataType}, Message={Message}", 
+                    resultado.success, 
+                    resultado.data?.GetType().Name ?? "null",
+                    resultado.message);
+
+                // Asegurar que la respuesta sea consistente
+                if (resultado.success)
+                {
+                    return Json(new 
+                    { 
+                        success = true, 
+                        data = resultado.data ?? new List<object>(),
+                        message = resultado.message ?? "Pedidos obtenidos exitosamente"
+                    });
+                }
+                else
+                {
+                    return Json(new 
+                    { 
+                        success = false, 
+                        data = new List<object>(),
+                        message = resultado.message ?? "No se encontraron pedidos"
+                    });
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo pedidos");
-                return Json(new { success = false, message = "Error obteniendo pedidos" });
+                return Json(new { 
+                    success = false, 
+                    data = new List<object>(),
+                    message = "Error interno del servidor" 
+                });
             }
         }
 

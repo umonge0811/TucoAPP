@@ -26,7 +26,8 @@ namespace API.Controllers
         {
             try
             {
-                _logger.LogInformation("📦 Obteniendo pedidos de proveedores");
+                _logger.LogInformation("📦 Obteniendo pedidos de proveedores - ProveedorId: {ProveedorId}", 
+                    proveedorId?.ToString() ?? "TODOS");
 
                 var query = _context.PedidosProveedores
                     .Include(pp => pp.Proveedor)
@@ -37,6 +38,7 @@ namespace API.Controllers
 
                 if (proveedorId.HasValue)
                 {
+                    _logger.LogInformation("📦 Filtrando por proveedor ID: {ProveedorId}", proveedorId.Value);
                     query = query.Where(pp => pp.ProveedorId == proveedorId);
                 }
 
@@ -44,26 +46,42 @@ namespace API.Controllers
                     .OrderByDescending(pp => pp.FechaPedido)
                     .Select(pp => new
                     {
-                        pp.PedidoId,
-                        pp.ProveedorId,
-                        ProveedorNombre = pp.Proveedor.NombreProveedor,
-                        pp.FechaPedido,
-                        pp.Estado,
-                        pp.UsuarioId,
-                        UsuarioNombre = pp.Usuario.NombreUsuario,
-                        TotalProductos = pp.DetallePedidos.Count(),
-                        MontoTotal = pp.DetallePedidos.Sum(dp => dp.Cantidad * (dp.PrecioUnitario ?? 0)),
-                        DetallePedidos = pp.DetallePedidos.Select(dp => new
+                        pedidoId = pp.PedidoId,
+                        proveedorId = pp.ProveedorId,
+                        proveedorNombre = pp.Proveedor.NombreProveedor ?? "Sin nombre",
+                        fechaPedido = pp.FechaPedido,
+                        estado = pp.Estado ?? "Pendiente",
+                        usuarioId = pp.UsuarioId,
+                        usuarioNombre = pp.Usuario.NombreUsuario ?? "Sin usuario",
+                        totalProductos = pp.DetallePedidos.Count(),
+                        montoTotal = pp.DetallePedidos.Sum(dp => dp.Cantidad * (dp.PrecioUnitario ?? 0)),
+                        detallePedidos = pp.DetallePedidos.Select(dp => new
                         {
-                            dp.DetalleId,
-                            dp.ProductoId,
-                            ProductoNombre = dp.Producto.NombreProducto,
-                            dp.Cantidad,
-                            dp.PrecioUnitario,
-                            Subtotal = dp.Cantidad * (dp.PrecioUnitario ?? 0)
+                            detalleId = dp.DetalleId,
+                            productoId = dp.ProductoId,
+                            productoNombre = dp.Producto.NombreProducto ?? "Sin nombre",
+                            cantidad = dp.Cantidad,
+                            precioUnitario = dp.PrecioUnitario ?? 0,
+                            subtotal = dp.Cantidad * (dp.PrecioUnitario ?? 0)
                         }).ToList()
                     })
                     .ToListAsync();
+
+                _logger.LogInformation("📦 ✅ {Count} pedidos encontrados", pedidos.Count);
+
+                if (pedidos.Count == 0)
+                {
+                    _logger.LogInformation("📦 No se encontraron pedidos");
+                }
+                else
+                {
+                    // Log de algunos pedidos para debug
+                    foreach (var pedido in pedidos.Take(3))
+                    {
+                        _logger.LogInformation("📦 Pedido: ID={PedidoId}, Proveedor={Proveedor}, Productos={Productos}, Monto=${Monto}", 
+                            pedido.pedidoId, pedido.proveedorNombre, pedido.totalProductos, pedido.montoTotal);
+                    }
+                }
 
                 return Ok(pedidos);
             }

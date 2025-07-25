@@ -175,7 +175,8 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo pedidos de proveedores");
+                _logger.LogInformation("📋 Obteniendo pedidos de proveedores - ProveedorId: {ProveedorId}", 
+                    proveedorId?.ToString() ?? "TODOS");
 
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
@@ -190,27 +191,60 @@ namespace GestionLlantera.Web.Services
                     url += $"?proveedorId={proveedorId}";
                 }
 
+                _logger.LogInformation("📋 Llamando a API: {Url}", url);
+
                 var response = await _httpClient.GetAsync(url);
                 var content = await response.Content.ReadAsStringAsync();
 
+                _logger.LogInformation("📋 Respuesta API: StatusCode={StatusCode}, ContentLength={ContentLength}", 
+                    response.StatusCode, content?.Length ?? 0);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    // Intentar deserializar, si falla o está vacío, devolver array vacío
+                    _logger.LogInformation("📋 Contenido de respuesta: {Content}", 
+                        content.Length > 500 ? content.Substring(0, 500) + "..." : content);
+
+                    // Intentar deserializar la respuesta
+                    if (string.IsNullOrWhiteSpace(content))
+                    {
+                        _logger.LogInformation("📋 Respuesta vacía - no hay pedidos");
+                        return (true, new List<object>(), "No hay pedidos disponibles");
+                    }
+
                     try
                     {
-                        var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
-                        return (true, pedidos ?? new List<object>(), "Pedidos obtenidos exitosamente");
+                        var pedidos = JsonConvert.DeserializeObject<List<dynamic>>(content);
+                        if (pedidos == null)
+                        {
+                            _logger.LogInformation("📋 Deserialización resultó en null");
+                            return (true, new List<object>(), "No hay pedidos disponibles");
+                        }
+
+                        _logger.LogInformation("📋 ✅ {Count} pedidos deserializados exitosamente", pedidos.Count);
+                        return (true, pedidos, $"{pedidos.Count} pedidos obtenidos exitosamente");
                     }
-                    catch
+                    catch (JsonException ex)
                     {
-                        _logger.LogInformation("📋 No hay pedidos disponibles o respuesta vacía");
-                        return (true, new List<object>(), "No hay pedidos disponibles");
+                        _logger.LogError(ex, "❌ Error deserializando respuesta JSON");
+                        _logger.LogError("📋 Contenido que falló al deserializar: {Content}", content);
+                        return (false, new List<object>(), "Error procesando respuesta del servidor");
                     }
                 }
                 else
                 {
-                    _logger.LogError("❌ Error obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
-                    return (false, new List<object>(), "Error obteniendo pedidos");
+                    _logger.LogError("❌ Error HTTP obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
+                    
+                    // Intentar extraer mensaje de error del contenido
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(content);
+                        var errorMessage = errorResponse?.message?.ToString() ?? "Error obteniendo pedidos";
+                        return (false, new List<object>(), errorMessage);
+                    }
+                    catch
+                    {
+                        return (false, new List<object>(), $"Error HTTP {response.StatusCode}");
+                    }
                 }
             }
             catch (Exception ex)

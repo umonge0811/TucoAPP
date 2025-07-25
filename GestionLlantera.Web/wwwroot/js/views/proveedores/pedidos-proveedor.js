@@ -151,23 +151,43 @@ async function cargarPedidos() {
         }
 
         const data = await response.json();
+        console.log('📦 Respuesta completa del servidor:', data);
 
-        if (data.success) {
-            // Si success es true pero no hay data, inicializar como array vacío
-            pedidosData = Array.isArray(data.data) ? data.data : [];
-            pedidosFiltrados = [...pedidosData];
-            mostrarPedidos();
-            actualizarContadorPedidos();
-            console.log(`✅ ${pedidosData.length} pedidos cargados exitosamente`);
+        // La respuesta puede venir en diferentes formatos, vamos a manejar todos
+        let pedidos = [];
+        
+        if (data.success && data.data) {
+            // Formato: { success: true, data: [...] }
+            pedidos = Array.isArray(data.data) ? data.data : [];
+        } else if (Array.isArray(data)) {
+            // Formato directo: [...]
+            pedidos = data;
+        } else if (data.success === false && data.message) {
+            // Error del servidor
+            console.log(`ℹ️ ${data.message}`);
+            pedidos = [];
         } else {
-            // Si no hay pedidos, mostrar mensaje informativo en lugar de error
-            const mensaje = data.message || 'No hay pedidos disponibles';
-            console.log(`ℹ️ ${mensaje}`);
-            pedidosData = [];
-            pedidosFiltrados = [];
-            mostrarSinDatosPedidos(true);
-            actualizarContadorPedidos();
+            // Otros casos, asumir que no hay datos
+            console.log('ℹ️ No se encontraron pedidos');
+            pedidos = [];
         }
+
+        pedidosData = pedidos;
+        pedidosFiltrados = [...pedidosData];
+
+        console.log(`📊 Total de pedidos procesados: ${pedidosData.length}`);
+        
+        if (pedidosData.length === 0) {
+            console.log('ℹ️ No hay pedidos disponibles');
+            mostrarSinDatosPedidos(true);
+        } else {
+            console.log('✅ Mostrando pedidos en la tabla');
+            mostrarPedidos();
+        }
+        
+        actualizarContadorPedidos();
+        console.log(`✅ ${pedidosData.length} pedidos cargados exitosamente`);
+
     } catch (error) {
         console.error('❌ Error cargando pedidos:', error);
         mostrarError('Error cargando pedidos: ' + error.message);
@@ -175,6 +195,7 @@ async function cargarPedidos() {
         // Inicializar arrays vacíos para evitar errores
         pedidosData = [];
         pedidosFiltrados = [];
+        actualizarContadorPedidos();
     } finally {
         mostrarLoadingPedidos(false);
     }
@@ -202,27 +223,44 @@ async function cargarPedidosDeProveedor(proveedorId) {
         }
 
         const data = await response.json();
+        console.log(`📦 Respuesta para proveedor ${proveedorId}:`, data);
 
-        if (data.success) {
-            pedidosData = Array.isArray(data.data) ? data.data : [];
-            pedidosFiltrados = [...pedidosData];
-            mostrarPedidos();
-            actualizarContadorPedidos();
-            console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
+        // Manejar diferentes formatos de respuesta
+        let pedidos = [];
+        
+        if (data.success && data.data) {
+            pedidos = Array.isArray(data.data) ? data.data : [];
+        } else if (Array.isArray(data)) {
+            pedidos = data;
+        } else if (data.success === false && data.message) {
+            console.log(`ℹ️ ${data.message}`);
+            pedidos = [];
         } else {
-            const mensaje = data.message || `No hay pedidos para el proveedor ${proveedorId}`;
-            console.log(`ℹ️ ${mensaje}`);
-            pedidosData = [];
-            pedidosFiltrados = [];
-            mostrarSinDatosPedidos(true);
-            actualizarContadorPedidos();
+            console.log(`ℹ️ No hay pedidos para el proveedor ${proveedorId}`);
+            pedidos = [];
         }
+
+        pedidosData = pedidos;
+        pedidosFiltrados = [...pedidosData];
+
+        console.log(`📊 Pedidos del proveedor ${proveedorId}: ${pedidosData.length}`);
+        
+        if (pedidosData.length === 0) {
+            mostrarSinDatosPedidos(true);
+        } else {
+            mostrarPedidos();
+        }
+        
+        actualizarContadorPedidos();
+        console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
+
     } catch (error) {
         console.error('❌ Error cargando pedidos del proveedor:', error);
         mostrarError('Error cargando pedidos del proveedor: ' + error.message);
         mostrarSinDatosPedidos(true);
         pedidosData = [];
         pedidosFiltrados = [];
+        actualizarContadorPedidos();
     } finally {
         mostrarLoadingPedidos(false);
     }
@@ -335,40 +373,56 @@ function llenarSelectProveedores() {
  * Mostrar pedidos en la tabla
  */
 function mostrarPedidos() {
+    console.log('📋 Iniciando mostrarPedidos...');
+    console.log('📊 pedidosFiltrados:', pedidosFiltrados);
+    
     const tbody = $('#cuerpoTablaPedidos');
 
-    if (pedidosFiltrados.length === 0) {
+    if (!pedidosFiltrados || pedidosFiltrados.length === 0) {
+        console.log('📋 No hay pedidos para mostrar');
         mostrarSinDatosPedidos(true);
         return;
     }
 
+    console.log(`📋 Renderizando ${pedidosFiltrados.length} pedidos en la tabla`);
     mostrarSinDatosPedidos(false);
 
-    const html = pedidosFiltrados.map(pedido => {
-        const fecha = new Date(pedido.fechaPedido).toLocaleDateString('es-ES');
-        const estadoBadge = obtenerBadgeEstado(pedido.estado);
+    const html = pedidosFiltrados.map((pedido, index) => {
+        console.log(`📦 Procesando pedido ${index + 1}:`, pedido);
+        
+        // Validar datos del pedido y usar valores por defecto si faltan
+        const pedidoId = pedido.pedidoId || pedido.PedidoId || 'N/A';
+        const proveedorNombre = pedido.proveedorNombre || pedido.ProveedorNombre || 'Sin nombre';
+        const fechaPedido = pedido.fechaPedido || pedido.FechaPedido || new Date();
+        const estado = pedido.estado || pedido.Estado || 'Pendiente';
+        const totalProductos = pedido.totalProductos || pedido.TotalProductos || 0;
+        const montoTotal = pedido.montoTotal || pedido.MontoTotal || 0;
+        const usuarioNombre = pedido.usuarioNombre || pedido.UsuarioNombre || 'Sin usuario';
+        
+        const fecha = new Date(fechaPedido).toLocaleDateString('es-ES');
+        const estadoBadge = obtenerBadgeEstado(estado);
 
         return `
             <tr>
-                <td>${pedido.pedidoId}</td>
+                <td>${pedidoId}</td>
                 <td>
-                    <strong>${pedido.proveedorNombre}</strong>
+                    <strong>${proveedorNombre}</strong>
                 </td>
                 <td>${fecha}</td>
                 <td>${estadoBadge}</td>
                 <td>
-                    <span class="badge bg-info">${pedido.totalProductos}</span>
+                    <span class="badge bg-info">${totalProductos}</span>
                 </td>
                 <td>
-                    <strong>$${pedido.montoTotal.toFixed(2)}</strong>
+                    <strong>$${parseFloat(montoTotal).toFixed(2)}</strong>
                 </td>
-                <td>${pedido.usuarioNombre}</td>
+                <td>${usuarioNombre}</td>
                 <td class="text-center">
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-info" onclick="verDetallePedido(${pedido.pedidoId})" title="Ver Detalle">
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="verDetallePedido(${pedidoId})" title="Ver Detalle">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="cambiarEstadoPedido(${pedido.pedidoId}, '${pedido.estado}')" title="Cambiar Estado">
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="cambiarEstadoPedido(${pedidoId}, '${estado}')" title="Cambiar Estado">
                             <i class="bi bi-arrow-repeat"></i>
                         </button>
                     </div>
@@ -378,6 +432,7 @@ function mostrarPedidos() {
     }).join('');
 
     tbody.html(html);
+    console.log(`✅ ${pedidosFiltrados.length} pedidos renderizados en la tabla`);
 }
 
 /**
