@@ -530,6 +530,27 @@ function configurarOrdenamientoTablaProductos() {
             allDataAttributes: Object.assign({}, this.dataset)
         });
 
+        // DIAGNÓSTICO DETALLADO
+        console.log('🔍 === DIAGNÓSTICO DETALLADO ===');
+        console.log('📋 ID de tabla buscada: tablaProductosPedido');
+        console.log('📋 Tabla encontrada:', $table[0]);
+        console.log('📋 TBody encontrado:', $tbody[0]);
+        console.log('📋 HTML de tabla:', $table.length > 0 ? $table[0].outerHTML.substring(0, 200) + '...' : 'NO ENCONTRADA');
+        console.log('📋 Contenido de tbody:', $tbody.html());
+        console.log('📋 Todos los tr en tbody:', $tbody.find('tr'));
+        console.log('📋 Cantidad de tr encontrados:', $tbody.find('tr').length);
+        
+        // Verificar si existe alguna tabla con productos
+        const todasLasTablas = $('table');
+        console.log('📋 Total de tablas en la página:', todasLasTablas.length);
+        todasLasTablas.each(function(index) {
+            console.log(`📋 Tabla ${index + 1}:`, {
+                id: this.id,
+                clases: this.className,
+                filas: $(this).find('tr').length
+            });
+        });
+
         if (!column) {
             console.error('❌ NO SE DETECTÓ COLUMNA - data-column está vacío o indefinido');
             return;
@@ -537,107 +558,27 @@ function configurarOrdenamientoTablaProductos() {
 
         if (rows.length === 0) {
             console.warn('⚠️ NO HAY FILAS PARA ORDENAR');
+            console.warn('🔍 Intentando buscar filas con selectores alternativos...');
+            
+            // Buscar filas con data-producto-id
+            const filasConData = $('tr[data-producto-id]');
+            console.log('📋 Filas con data-producto-id encontradas:', filasConData.length);
+            
+            if (filasConData.length > 0) {
+                console.log('✅ Usando filas encontradas con data-producto-id');
+                // Usar estas filas en lugar de las del tbody
+                const filasArray = filasConData.toArray();
+                console.log('📋 Filas a ordenar:', filasArray.length);
+                
+                // Continuar con el ordenamiento usando filasArray
+                ordenarFilas(filasArray, column, $(this));
+                return;
+            }
+            
             return;
         }
 
-        console.log(`🔄 Ordenando por columna: ${column}`);
-
-        // Determinar dirección de ordenamiento
-        let ascending = true;
-        if ($(this).hasClass('sorted-asc')) {
-            ascending = false;
-            $(this).removeClass('sorted-asc').addClass('sorted-desc');
-        } else {
-            $(this).removeClass('sorted-desc').addClass('sorted-asc');
-            ascending = true;
-        }
-
-        console.log(`📈 Dirección de ordenamiento: ${ascending ? 'ascendente' : 'descendente'}`);
-
-        // Limpiar iconos de otras columnas
-        $('.sortable').not(this).removeClass('sorted-asc sorted-desc');
-
-        // Actualizar icono
-        $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
-        $(this).find('i').removeClass('bi-arrow-down-up').addClass(ascending ? 'bi-arrow-up' : 'bi-arrow-down');
-
-        // Ordenar filas - USANDO .data() IGUAL QUE EN INVENTARIO FACTURACIÓN
-        console.log('🔄 === INICIANDO FUNCIÓN SORT ===');
-        
-        rows.sort(function(a, b) {
-            console.log('🚀 === DENTRO DE SORT FUNCTION ===');
-            console.log('📋 Parámetros recibidos:', {
-                a: a,
-                b: b,
-                column: column,
-                aElement: $(a)[0],
-                bElement: $(b)[0]
-            });
-
-            let aVal, bVal;
-
-            console.log(`🔍 Entrando al switch con columna: "${column}"`);
-
-            switch(column) {
-                case 'id':
-                    console.log('✅ CASE ID - Obteniendo valores de producto-id');
-                    aVal = parseInt($(a).data('producto-id')) || 0;
-                    bVal = parseInt($(b).data('producto-id')) || 0;
-                    console.log('📊 ID Values:', { aVal, bVal });
-                    break;
-                case 'nombre':
-                    console.log('✅ CASE NOMBRE - Obteniendo valores de nombre');
-                    aVal = $(a).data('nombre') || '';
-                    bVal = $(b).data('nombre') || '';
-                    console.log('📊 Nombre Values:', { aVal, bVal });
-                    break;
-                case 'marca':
-                    console.log('✅ CASE MARCA - Obteniendo valores de marca');
-                    aVal = $(a).data('marca') || '';
-                    bVal = $(b).data('marca') || '';
-                    console.log('📊 Marca Values:', { aVal, bVal });
-                    break;
-                case 'medida':
-                    console.log('✅ CASE MEDIDA - Obteniendo valores de medida');
-                    aVal = $(a).data('medida') || 'zzz';
-                    bVal = $(b).data('medida') || 'zzz';
-                    console.log('📊 Medida Values:', { aVal, bVal });
-                    break;
-                case 'stock':
-                    console.log('✅ CASE STOCK - Obteniendo valores de stock');
-                    aVal = parseInt($(a).data('stock')) || 0;
-                    bVal = parseInt($(b).data('stock')) || 0;
-                    console.log('📊 Stock Values:', { aVal, bVal });
-                    break;
-                default:
-                    console.error(`❌ DEFAULT CASE - Columna no reconocida: "${column}"`);
-                    console.log('📋 Todos los data attributes de A:', $(a).data());
-                    console.log('📋 Todos los data attributes de B:', $(b).data());
-                    return 0;
-            }
-
-            console.log('📊 Valores finales antes de comparar:', { aVal, bVal, tipo: typeof aVal });
-
-            if (typeof aVal === 'string') {
-                aVal = aVal.toLowerCase();
-                bVal = bVal.toLowerCase();
-                const result = ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-                console.log('📊 Resultado comparación string:', result);
-                return result;
-            } else {
-                const result = ascending ? aVal - bVal : bVal - aVal;
-                console.log('📊 Resultado comparación numérica:', result);
-                return result;
-            }
-        });
-
-        console.log('✅ SORT FUNCTION COMPLETADA');
-
-        // Reordenar filas en el DOM
-        $tbody.empty().append(rows);
-
-        console.log(`✅ Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
-        console.log('🏁 === FIN FUNCIÓN DE ORDENAMIENTO ===');
+        ordenarFilas(rows, column, $(this));
     });
 }
 
@@ -1268,6 +1209,123 @@ function mostrarError(mensaje) {
     } else {
         alert('Error: ' + mensaje);
     }
+}
+
+/**
+ * Función para ordenar filas de tabla
+ */
+function ordenarFilas(rows, column, $elementoClick) {
+    console.log(`🔄 Ordenando por columna: ${column}`);
+    console.log('📋 Filas recibidas para ordenar:', rows.length);
+
+    // Determinar dirección de ordenamiento
+    let ascending = true;
+    if ($elementoClick.hasClass('sorted-asc')) {
+        ascending = false;
+        $elementoClick.removeClass('sorted-asc').addClass('sorted-desc');
+    } else {
+        $elementoClick.removeClass('sorted-desc').addClass('sorted-asc');
+        ascending = true;
+    }
+
+    console.log(`📈 Dirección de ordenamiento: ${ascending ? 'ascendente' : 'descendente'}`);
+
+    // Limpiar iconos de otras columnas
+    $('.sortable').not($elementoClick).removeClass('sorted-asc sorted-desc');
+
+    // Actualizar icono
+    $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
+    $elementoClick.find('i').removeClass('bi-arrow-down-up').addClass(ascending ? 'bi-arrow-up' : 'bi-arrow-down');
+
+    // Ordenar filas - USANDO .data() IGUAL QUE EN INVENTARIO FACTURACIÓN
+    console.log('🔄 === INICIANDO FUNCIÓN SORT ===');
+    
+    rows.sort(function(a, b) {
+        console.log('🚀 === DENTRO DE SORT FUNCTION ===');
+        console.log('📋 Parámetros recibidos:', {
+            a: a,
+            b: b,
+            column: column,
+            aElement: $(a)[0],
+            bElement: $(b)[0]
+        });
+
+        let aVal, bVal;
+
+        console.log(`🔍 Entrando al switch con columna: "${column}"`);
+
+        switch(column) {
+            case 'id':
+                console.log('✅ CASE ID - Obteniendo valores de producto-id');
+                aVal = parseInt($(a).data('producto-id')) || 0;
+                bVal = parseInt($(b).data('producto-id')) || 0;
+                console.log('📊 ID Values:', { aVal, bVal });
+                break;
+            case 'nombre':
+                console.log('✅ CASE NOMBRE - Obteniendo valores de nombre');
+                aVal = $(a).data('nombre') || '';
+                bVal = $(b).data('nombre') || '';
+                console.log('📊 Nombre Values:', { aVal, bVal });
+                break;
+            case 'marca':
+                console.log('✅ CASE MARCA - Obteniendo valores de marca');
+                aVal = $(a).data('marca') || '';
+                bVal = $(b).data('marca') || '';
+                console.log('📊 Marca Values:', { aVal, bVal });
+                break;
+            case 'medida':
+                console.log('✅ CASE MEDIDA - Obteniendo valores de medida');
+                aVal = $(a).data('medida') || 'zzz';
+                bVal = $(b).data('medida') || 'zzz';
+                console.log('📊 Medida Values:', { aVal, bVal });
+                break;
+            case 'stock':
+                console.log('✅ CASE STOCK - Obteniendo valores de stock');
+                aVal = parseInt($(a).data('stock')) || 0;
+                bVal = parseInt($(b).data('stock')) || 0;
+                console.log('📊 Stock Values:', { aVal, bVal });
+                break;
+            default:
+                console.error(`❌ DEFAULT CASE - Columna no reconocida: "${column}"`);
+                console.log('📋 Todos los data attributes de A:', $(a).data());
+                console.log('📋 Todos los data attributes de B:', $(b).data());
+                return 0;
+        }
+
+        console.log('📊 Valores finales antes de comparar:', { aVal, bVal, tipo: typeof aVal });
+
+        if (typeof aVal === 'string') {
+            aVal = aVal.toLowerCase();
+            bVal = bVal.toLowerCase();
+            const result = ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            console.log('📊 Resultado comparación string:', result);
+            return result;
+        } else {
+            const result = ascending ? aVal - bVal : bVal - aVal;
+            console.log('📊 Resultado comparación numérica:', result);
+            return result;
+        }
+    });
+
+    console.log('✅ SORT FUNCTION COMPLETADA');
+
+    // Determinar dónde colocar las filas ordenadas
+    const $tabla = $('#tablaProductosPedido');
+    const $tbody = $tabla.find('tbody');
+    
+    if ($tbody.length > 0) {
+        console.log('📋 Reordenando en tbody de tablaProductosPedido');
+        $tbody.empty().append(rows);
+    } else {
+        // Si no hay tbody específico, buscar el contenedor padre común
+        console.log('📋 No se encontró tbody, buscando contenedor padre...');
+        const $contenedorPadre = $(rows[0]).parent();
+        console.log('📋 Contenedor padre encontrado:', $contenedorPadre[0]);
+        $contenedorPadre.empty().append(rows);
+    }
+
+    console.log(`✅ Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
+    console.log('🏁 === FIN FUNCIÓN DE ORDENAMIENTO ===');
 }
 
 // =====================================
