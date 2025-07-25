@@ -418,10 +418,12 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var token = HttpContext.Session.GetString("JWTToken");
+                // ✅ OBTENER TOKEN - ESTO FALTABA
+                var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
-                    return Json(new { success = false, message = "Sesión expirada" });
+                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
+                    return RedirectToAction("Login", "Account");
                 }
 
                 var resultado = await _proveedoresService.CrearPedidoProveedorAsync(pedidoData, token);
