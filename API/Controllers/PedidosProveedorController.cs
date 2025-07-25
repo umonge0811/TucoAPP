@@ -265,7 +265,8 @@ namespace API.Controllers
                 {
                     success = true,
                     message = "Pedido creado exitosamente",
-                    data = pedidoCompleto
+                    data = pedidoCompleto,
+                    pedidoId = nuevoPedido.PedidoId
                 });
             }
             catch (Exception ex)
