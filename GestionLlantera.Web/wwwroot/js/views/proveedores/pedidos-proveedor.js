@@ -576,23 +576,22 @@ function cargarProductosEnTabla() {
                            onchange="toggleProductoSeleccionado(${producto.productoId})">
                 </td>
                 <td class="text-center">
-                    <span class="badge bg-primary">${producto.productoId}</span>
+                    ${producto.productoId}
                 </td>
                 <td>
                     <div>
                         <strong>${producto.nombreProducto}</strong>
-                        ${esLlanta ? '<span class="badge bg-info ms-2">Llanta</span>' : ''}
                     </div>
                     ${modeloInfo ? `<small class="text-muted">Modelo: ${modeloInfo}</small>` : ''}
                 </td>
                 <td>
                     <div>
-                        <span class="badge bg-light text-dark">${marcaInfo}</span>
+                        ${marcaInfo}
                         ${modeloInfo && !esLlanta ? `<br><small class="text-muted">${modeloInfo}</small>` : ''}
                     </div>
                 </td>
                 <td class="text-center">
-                    ${medidaLlanta !== 'N/A' ? `<span class="text-primary fw-bold"><i class="bi bi-rulers me-1"></i>${medidaLlanta}</span>` : '<span class="text-muted">N/A</span>'}
+                    ${medidaLlanta !== 'N/A' ? `<span class="text-primary fw-bold">${medidaLlanta}</span>` : '<span class="text-muted">N/A</span>'}
                 </td>
                 <td class="text-center">
                     <span class="badge ${stockDisponible > 0 ? 'bg-success' : 'bg-danger'}">${stockDisponible}</span>
