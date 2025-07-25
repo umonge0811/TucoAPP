@@ -194,19 +194,28 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
-                    return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    // Intentar deserializar, si falla o está vacío, devolver array vacío
+                    try
+                    {
+                        var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
+                        return (true, pedidos ?? new List<object>(), "Pedidos obtenidos exitosamente");
+                    }
+                    catch
+                    {
+                        _logger.LogInformation("📋 No hay pedidos disponibles o respuesta vacía");
+                        return (true, new List<object>(), "No hay pedidos disponibles");
+                    }
                 }
                 else
                 {
                     _logger.LogError("❌ Error obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
-                    return (false, null, "Error obteniendo pedidos");
+                    return (false, new List<object>(), "Error obteniendo pedidos");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo pedidos");
-                return (false, null, "Error interno del servidor");
+                return (false, new List<object>(), "Error interno del servidor");
             }
         }
 

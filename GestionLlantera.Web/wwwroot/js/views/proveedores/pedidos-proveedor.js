@@ -143,14 +143,21 @@ async function cargarPedidos() {
 
         const data = await response.json();
 
-        if (data.success && data.data) {
+        if (data.success) {
+            // Si success es true pero no hay data, inicializar como array vacío
             pedidosData = Array.isArray(data.data) ? data.data : [];
             pedidosFiltrados = [...pedidosData];
             mostrarPedidos();
             actualizarContadorPedidos();
             console.log(`✅ ${pedidosData.length} pedidos cargados exitosamente`);
         } else {
-            throw new Error(data.message || 'Error obteniendo pedidos');
+            // Si no hay pedidos, mostrar mensaje informativo en lugar de error
+            const mensaje = data.message || 'No hay pedidos disponibles';
+            console.log(`ℹ️ ${mensaje}`);
+            pedidosData = [];
+            pedidosFiltrados = [];
+            mostrarSinDatosPedidos(true);
+            actualizarContadorPedidos();
         }
     } catch (error) {
         console.error('❌ Error cargando pedidos:', error);
@@ -187,14 +194,19 @@ async function cargarPedidosDeProveedor(proveedorId) {
 
         const data = await response.json();
 
-        if (data.success && data.data) {
+        if (data.success) {
             pedidosData = Array.isArray(data.data) ? data.data : [];
             pedidosFiltrados = [...pedidosData];
             mostrarPedidos();
             actualizarContadorPedidos();
             console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
         } else {
-            throw new Error(data.message || 'Error obteniendo pedidos del proveedor');
+            const mensaje = data.message || `No hay pedidos para el proveedor ${proveedorId}`;
+            console.log(`ℹ️ ${mensaje}`);
+            pedidosData = [];
+            pedidosFiltrados = [];
+            mostrarSinDatosPedidos(true);
+            actualizarContadorPedidos();
         }
     } catch (error) {
         console.error('❌ Error cargando pedidos del proveedor:', error);
@@ -450,6 +462,7 @@ function mostrarInfoProveedor(proveedor) {
     const nombre = proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre';
     $('#infoNombreProveedor').text(nombre);
     $('#infoContactoProveedor').text(proveedor.contacto || 'No especificado');
+    $('#infoEmailProveedor').text(proveedor.email || 'No especificado');
     $('#infoTelefonoProveedor').text(proveedor.telefono || 'No especificado');
     $('#infoDireccionProveedor').text(proveedor.direccion || 'No especificada');
     $('#infoProveedorSeleccionado').show();
