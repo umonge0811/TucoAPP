@@ -286,34 +286,64 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string message)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token)
+        public async Task<(bool success, object? data, string? message, string? details)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token)
         {
             try
             {
-                _logger.LogInformation("📦 Creando pedido para proveedor");
-                ConfigurarAutenticacion(token);
+                _logger.LogInformation("📦 Enviando pedido al API para proveedor {ProveedorId}", pedidoData.ProveedorId);
 
-                var json = JsonConvert.SerializeObject(pedidoData);
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var json = JsonConvert.SerializeObject(pedidoData, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                });
+
+                _logger.LogInformation("📦 JSON enviado: {Json}", json);
+
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-
                 var response = await _httpClient.PostAsync("api/PedidosProveedor", content);
+
                 var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📦 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    if (string.IsNullOrWhiteSpace(responseContent))
+                    {
+                        _logger.LogWarning("📦 Respuesta vacía del API");
+                        return (success: false, data: null, message: "Respuesta vacía del servidor", details: null);
+                    }
+
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                    return (true, "Pedido creado exitosamente", resultado);
+                    var mensaje = resultado?.message?.ToString() ?? "Pedido creado exitosamente";
+
+                    return (success: true, data: resultado?.data, message: mensaje, details: null);
                 }
                 else
                 {
-                    _logger.LogError("❌ Error creando pedido: {StatusCode} - {Content}", response.StatusCode, responseContent);
-                    return (false, "Error creando pedido", null);
+                    _logger.LogError("❌ Error del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    // Intentar obtener el mensaje de error del API
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorResponse?.message?.ToString() ?? "Error desconocido del servidor";
+                        return (success: false, data: null, message: errorMessage, details: responseContent);
+                    }
+                    catch
+                    {
+                        return (success: false, data: null, message: "Error del servidor", details: responseContent);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error creando pedido");
-                return (false, "Error interno del servidor", null);
+                _logger.LogError(ex, "❌ Error creando pedido a proveedor");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
             }
         }
 
