@@ -320,15 +320,8 @@ namespace GestionLlantera.Web.Services
 
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
                     var mensaje = resultado?.message?.ToString() ?? "Pedido creado exitosamente";
-                    
-                    // Incluir el pedidoId en el objeto de datos para facilitar el acceso posterior
-                    var dataConPedidoId = new
-                    {
-                        pedidoCompleto = resultado?.data,
-                        pedidoId = resultado?.pedidoId
-                    };
 
-                    return (success: true, data: dataConPedidoId, message: mensaje, details: null);
+                    return (success: true, data: resultado?.data, message: mensaje, details: null);
                 }
                 else
                 {
