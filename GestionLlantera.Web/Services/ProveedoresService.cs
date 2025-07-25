@@ -286,7 +286,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object? data, string? message, string? details)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token)
+        public async Task<(bool success, object? data, string? message)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token)
         {
             try
             {
@@ -315,13 +315,13 @@ namespace GestionLlantera.Web.Services
                     if (string.IsNullOrWhiteSpace(responseContent))
                     {
                         _logger.LogWarning("📦 Respuesta vacía del API");
-                        return (success: false, data: null, message: "Respuesta vacía del servidor", details: null);
+                        return (success: false, data: null, message: "Respuesta vacía del servidor");
                     }
 
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
                     var mensaje = resultado?.message?.ToString() ?? "Pedido creado exitosamente";
 
-                    return (success: true, data: resultado?.data, message: mensaje, details: null);
+                    return (success: true, data: resultado?.data, message: mensaje);
                 }
                 else
                 {
@@ -332,18 +332,18 @@ namespace GestionLlantera.Web.Services
                     {
                         var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
                         var errorMessage = errorResponse?.message?.ToString() ?? "Error desconocido del servidor";
-                        return (success: false, data: null, message: errorMessage, details: responseContent);
+                        return (success: false, data: null, message: errorMessage);
                     }
                     catch
                     {
-                        return (success: false, data: null, message: "Error del servidor", details: responseContent);
+                        return (success: false, data: null, message: "Error del servidor");
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error creando pedido a proveedor");
-                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+                return (success: false, data: null, message: "Error interno: " );
             }
         }
 
