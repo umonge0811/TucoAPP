@@ -396,7 +396,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("📦 Solicitando pedidos - ProveedorId: {ProveedorId}", proveedorId?.ToString() ?? "TODOS");
-                
+
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
@@ -405,22 +405,30 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
-                
-                _logger.LogInformation("📦 Resultado del servicio: Success={Success}, DataType={DataType}, Message={Message}", 
-                    resultado.success, 
-                    resultado.data?.GetType().Name ?? "null",
-                    resultado.message);
 
-                // Devolver directamente la respuesta del API sin envolver
+                _logger.LogInformation($"📦 Resultado del servicio: Success={resultado.success}, DataType={resultado.data?.GetType()}, Message={resultado.message}");
+
                 if (resultado.success)
                 {
-                    // Si resultado.data ya es un array de pedidos, devolverlo directamente
-                    return Json(resultado.data ?? new List<object>());
+                    // Asegurarnos de que la respuesta sea JSON válido
+                    var jsonResponse = new
+                    {
+                        success = true,
+                        data = resultado.data,
+                        message = resultado.message
+                    };
+
+                    _logger.LogInformation($"📦 Enviando respuesta estructurada: {System.Text.Json.JsonSerializer.Serialize(jsonResponse)}");
+
+                    return Ok(jsonResponse);
                 }
                 else
                 {
-                    _logger.LogWarning("📦 No se encontraron pedidos: {Message}", resultado.message);
-                    return Json(new List<object>());
+                    return BadRequest(new { 
+                        success = false, 
+                        message = resultado.message,
+                        data = (object)null
+                    });
                 }
             }
             catch (Exception ex)
@@ -558,5 +566,3 @@ namespace GestionLlantera.Web.Controllers
         public bool Activo { get; set; }
     }
 }
-
-    

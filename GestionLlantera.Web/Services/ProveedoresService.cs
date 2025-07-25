@@ -2,6 +2,8 @@ using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Net.Http.Headers;
 using tuco.Clases.Models;
 using GestionLlantera.Web.Models.DTOs;
 

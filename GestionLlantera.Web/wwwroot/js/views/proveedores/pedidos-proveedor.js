@@ -155,25 +155,26 @@ async function cargarPedidos() {
         console.log('📦 Tipo de data:', typeof data);
         console.log('📦 Es array:', Array.isArray(data));
         console.log('📦 Tiene success:', data.hasOwnProperty('success'));
+        console.log('📦 Estructura de data:', JSON.stringify(data, null, 2));
 
-        // La respuesta puede venir en diferentes formatos, vamos a manejar todos
+        // La respuesta debe venir en formato estructurado: { success: true, data: [...], message: "..." }
         let pedidos = [];
         
-        if (data.success && data.data) {
-            // Formato: { success: true, data: [...] }
+        if (data.success === true && data.data) {
+            // Formato esperado: { success: true, data: [...] }
             pedidos = Array.isArray(data.data) ? data.data : [];
-            console.log('📦 Usando data.data, cantidad:', pedidos.length);
-        } else if (Array.isArray(data)) {
-            // Formato directo: [...]
-            pedidos = data;
-            console.log('📦 Usando data directo, cantidad:', pedidos.length);
-        } else if (data.success === false && data.message) {
+            console.log('📦 Usando data.data (formato estructurado), cantidad:', pedidos.length);
+        } else if (data.success === false) {
             // Error del servidor
-            console.log(`ℹ️ ${data.message}`);
+            console.log(`ℹ️ Error del servidor: ${data.message}`);
             pedidos = [];
+        } else if (Array.isArray(data)) {
+            // Formato directo: [...] (por compatibilidad)
+            pedidos = data;
+            console.log('📦 Usando data directo (formato legacy), cantidad:', pedidos.length);
         } else {
-            // Otros casos, asumir que no hay datos
-            console.log('ℹ️ No se encontraron pedidos');
+            // Casos no manejados
+            console.warn('⚠️ Formato de respuesta no reconocido:', data);
             pedidos = [];
         }
 
@@ -235,17 +236,21 @@ async function cargarPedidosDeProveedor(proveedorId) {
 
         const data = await response.json();
         console.log(`📦 Respuesta para proveedor ${proveedorId}:`, data);
+        console.log(`📦 Estructura de respuesta:`, JSON.stringify(data, null, 2));
 
-        // Manejar diferentes formatos de respuesta
+        // Manejar formato estructurado de respuesta
         let pedidos = [];
         
-        if (data.success && data.data) {
+        if (data.success === true && data.data) {
             pedidos = Array.isArray(data.data) ? data.data : [];
-        } else if (Array.isArray(data)) {
-            pedidos = data;
-        } else if (data.success === false && data.message) {
-            console.log(`ℹ️ ${data.message}`);
+            console.log(`📦 Usando data.data para proveedor ${proveedorId}, cantidad:`, pedidos.length);
+        } else if (data.success === false) {
+            console.log(`ℹ️ Error para proveedor ${proveedorId}: ${data.message}`);
             pedidos = [];
+        } else if (Array.isArray(data)) {
+            // Formato directo por compatibilidad
+            pedidos = data;
+            console.log(`📦 Usando data directo para proveedor ${proveedorId}, cantidad:`, pedidos.length);
         } else {
             console.log(`ℹ️ No hay pedidos para el proveedor ${proveedorId}`);
             pedidos = [];
