@@ -58,7 +58,8 @@ namespace GestionLlantera.Web.Controllers
                 var jwtToken = this.ObtenerTokenJWT();
                 var proveedores = await _proveedoresService.ObtenerTodosProveedoresAsync(jwtToken);
 
-                var resultado = proveedores.Select(p => new {
+                var resultado = proveedores.Select(p => new
+                {
                     id = p.ProveedorId,
                     nombre = p.NombreProveedor,
                     contacto = p.Contacto,
@@ -71,7 +72,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("📋 Enviando {Count} proveedores al cliente", resultado.Count);
                 foreach (var prov in resultado)
                 {
-                    _logger.LogInformation("📋 Proveedor: ID={Id}, Nombre='{Nombre}', Contacto='{Contacto}'", 
+                    _logger.LogInformation("📋 Proveedor: ID={Id}, Nombre='{Nombre}', Contacto='{Contacto}'",
                         prov.id, prov.nombre ?? "NULL", prov.contacto ?? "NULL");
                 }
 
@@ -97,7 +98,8 @@ namespace GestionLlantera.Web.Controllers
                 var jwtToken = this.ObtenerTokenJWT();
                 var proveedores = await _proveedoresService.ObtenerTodosProveedoresAsync(jwtToken);
 
-                var resultado = proveedores.Select(p => new {
+                var resultado = proveedores.Select(p => new
+                {
                     id = p.ProveedorId,
                     nombre = p.NombreProveedor,
                     contacto = p.Contacto,
@@ -413,7 +415,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📦 Creando pedido para proveedor {ProveedorId} con {CantidadProductos} productos", 
+                _logger.LogInformation("📦 Creando pedido para proveedor {ProveedorId} con {CantidadProductos} productos",
                     request?.ProveedorId, request?.Productos?.Count ?? 0);
 
                 if (request == null)
@@ -469,16 +471,16 @@ namespace GestionLlantera.Web.Controllers
 
                 var resultado = await _proveedoresService.CrearPedidoProveedorAsync(pedidoData, token);
 
-                _logger.LogInformation("📦 Resultado del servicio: Success={Success}, Message={Message}", 
+                _logger.LogInformation("📦 Resultado del servicio: Success={Success}, Message={Message}",
                     resultado.success, resultado.message);
 
                 if (resultado.success)
                 {
                     _logger.LogInformation("✅ Pedido creado exitosamente para proveedor {ProveedorId}", request.ProveedorId);
 
-                    return Json(new 
-                    { 
-                        success = true, 
+                    return Json(new
+                    {
+                        success = true,
                         message = resultado.message ?? "Pedido creado exitosamente",
                         data = resultado.data
                     });
@@ -487,19 +489,19 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogWarning("⚠️ Error creando pedido: {Message}", resultado.message);
 
-                    return Json(new 
-                    { 
-                        success = false, 
-                        message = resultado.message ?? "Error creando el pedido" 
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message ?? "Error creando el pedido"
                     });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error creando pedido para proveedor {ProveedorId}", request?.ProveedorId);
-                return Json(new 
-                { 
-                    success = false, 
+                return Json(new
+                {
+                    success = false,
                     message = "Error interno del servidor al crear el pedido",
                     details = ex.Message
                 });
@@ -531,5 +533,6 @@ namespace GestionLlantera.Web.Controllers
     {
         public bool Activo { get; set; }
     }
+}
 
     
