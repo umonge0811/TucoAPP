@@ -214,18 +214,20 @@
                     <!-- Tabla de productos -->
                     <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-sm table-hover">
-                            <thead class="table-light sticky-top">
-                                <tr>
-                                    <th style="width: 50px;">
-                                        <input type="checkbox" id="seleccionarTodosProductos" onchange="seleccionarTodosProductos()">
-                                    </th>
-                                    <th>Producto / Medidas</th>
-                                    <th>Marca</th>
-                                    <th>Stock</th>
-                                    <th>Cantidad</th>
-                                    <th>Precio Unit.</th>
-                                </tr>
-                            </thead>
+                            <thead class="table-light">
+                                        <tr>
+                                            <th width="50px">
+                                                <input type="checkbox" class="form-check-input" id="seleccionarTodosProductos" onchange="seleccionarTodosProductos()">
+                                            </th>
+                                            <th width="80px">ID</th>
+                                            <th>Producto</th>
+                                            <th>Marca/Modelo</th>
+                                            <th>Medidas</th>
+                                            <th>Stock</th>
+                                            <th>Cantidad</th>
+                                            <th>Precio Unit.</th>
+                                        </tr>
+                                    </thead>
                             <tbody id="cuerpoTablaProductosPedido">
                                 <!-- Contenido dinámico -->
                             </tbody>

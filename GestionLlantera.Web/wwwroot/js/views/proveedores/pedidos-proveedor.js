@@ -506,7 +506,7 @@ function cargarProductosEnTabla() {
     if (productosInventario.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="6" class="text-center py-4">
+                <td colspan="8" class="text-center py-4">
                     <i class="bi bi-exclamation-triangle text-warning"></i>
                     <p class="mt-2">No hay productos disponibles en el inventario</p>
                 </td>
@@ -563,6 +563,9 @@ function cargarProductosEnTabla() {
                            value="${producto.productoId}" 
                            onchange="toggleProductoSeleccionado(${producto.productoId})">
                 </td>
+                <td class="text-center">
+                    <span class="badge bg-primary">${producto.productoId}</span>
+                </td>
                 <td>
                     <div>
                         <strong>${producto.nombreProducto}</strong>
@@ -573,10 +576,13 @@ function cargarProductosEnTabla() {
                 <td>
                     <div>
                         <span class="badge bg-light text-dark">${marcaInfo}</span>
-                        ${medidasInfo ? `<br><small class="text-primary fw-bold"><i class="bi bi-rulers me-1"></i>${medidasInfo}</small>` : ''}
+                        ${modeloInfo && !esLlanta ? `<br><small class="text-muted">${modeloInfo}</small>` : ''}
                     </div>
                 </td>
-                <td>
+                <td class="text-center">
+                    ${medidasInfo ? `<span class="text-primary fw-bold"><i class="bi bi-rulers me-1"></i>${medidasInfo}</span>` : '<span class="text-muted">N/A</span>'}
+                </td>
+                <td class="text-center">
                     <span class="badge ${stockDisponible > 0 ? 'bg-success' : 'bg-danger'}">${stockDisponible}</span>
                 </td>
                 <td>
