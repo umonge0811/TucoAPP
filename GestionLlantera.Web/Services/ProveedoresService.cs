@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
 using tuco.Clases.Models;
+using GestionLlantera.Web.Models.DTOs;
 
 namespace GestionLlantera.Web.Services
 {

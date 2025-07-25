@@ -4,6 +4,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using tuco.Clases.Models;
 using System.Text.Json;
 using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Models.DTOs;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -531,17 +532,4 @@ namespace GestionLlantera.Web.Controllers
         public bool Activo { get; set; }
     }
 
-    // DTOs para crear pedido
-    public class CrearPedidoProveedorRequest
-    {
-        public int ProveedorId { get; set; }
-        public List<ProductoPedidoRequest> Productos { get; set; } = new List<ProductoPedidoRequest>();
-    }
-
-    public class ProductoPedidoRequest
-    {
-        public int ProductoId { get; set; }
-        public int Cantidad { get; set; }
-        public decimal? PrecioUnitario { get; set; }
-    }
-}
+    

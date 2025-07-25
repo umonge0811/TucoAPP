@@ -1,5 +1,6 @@
 
 using tuco.Clases.Models;
+using GestionLlantera.Web.Models.DTOs;
 
 namespace GestionLlantera.Web.Services.Interfaces
 {
