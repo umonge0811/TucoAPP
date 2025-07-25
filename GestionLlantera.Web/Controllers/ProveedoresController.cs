@@ -411,24 +411,16 @@ namespace GestionLlantera.Web.Controllers
                     resultado.data?.GetType().Name ?? "null",
                     resultado.message);
 
-                // Asegurar que la respuesta sea consistente
+                // Devolver directamente la respuesta del API sin envolver
                 if (resultado.success)
                 {
-                    return Json(new 
-                    { 
-                        success = true, 
-                        data = resultado.data ?? new List<object>(),
-                        message = resultado.message ?? "Pedidos obtenidos exitosamente"
-                    });
+                    // Si resultado.data ya es un array de pedidos, devolverlo directamente
+                    return Json(resultado.data ?? new List<object>());
                 }
                 else
                 {
-                    return Json(new 
-                    { 
-                        success = false, 
-                        data = new List<object>(),
-                        message = resultado.message ?? "No se encontraron pedidos"
-                    });
+                    _logger.LogWarning("📦 No se encontraron pedidos: {Message}", resultado.message);
+                    return Json(new List<object>());
                 }
             }
             catch (Exception ex)

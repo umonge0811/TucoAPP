@@ -213,15 +213,9 @@ namespace GestionLlantera.Web.Services
 
                     try
                     {
-                        var pedidos = JsonConvert.DeserializeObject<List<dynamic>>(content);
-                        if (pedidos == null)
-                        {
-                            _logger.LogInformation("📋 Deserialización resultó en null");
-                            return (true, new List<object>(), "No hay pedidos disponibles");
-                        }
-
-                        _logger.LogInformation("📋 ✅ {Count} pedidos deserializados exitosamente", pedidos.Count);
-                        return (true, pedidos, $"{pedidos.Count} pedidos obtenidos exitosamente");
+                        // Deserializar directamente como dynamic para mantener la estructura JSON
+                        var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
+                        return (true, data: pedidos, message: "Pedidos obtenidos exitosamente");
                     }
                     catch (JsonException ex)
                     {
@@ -233,7 +227,7 @@ namespace GestionLlantera.Web.Services
                 else
                 {
                     _logger.LogError("❌ Error HTTP obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
-                    
+
                     // Intentar extraer mensaje de error del contenido
                     try
                     {
