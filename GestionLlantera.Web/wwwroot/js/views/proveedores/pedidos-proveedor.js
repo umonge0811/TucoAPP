@@ -524,7 +524,7 @@ function configurarOrdenamientoTablaProductos() {
         }
 
         // Actualizar indicadores visuales
-        actualizarIndicadoresOrdenamientoProductos(columna);
+        actualizarIndicadoresOrdenamientoProductos(this, columna);
 
         // Ordenar productos
         ordenarProductosTabla(columna, estadoOrdenamientoProductos.direccion);
@@ -534,30 +534,35 @@ function configurarOrdenamientoTablaProductos() {
 /**
  * Actualizar indicadores visuales de ordenamiento
  */
-function actualizarIndicadoresOrdenamientoProductos(columnaActiva) {
+function actualizarIndicadoresOrdenamientoProductos(elementoClickeado, columnaActiva) {
+    // Limpiar todas las clases de ordenamiento
     $('#tablaProductosPedido .sortable').removeClass('sorted-asc sorted-desc');
     $('#tablaProductosPedido .sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up text-muted');
 
-    const $columnaActiva = $(`#tablaProductosPedido .sortable[data-column="${columnaActiva}"]`);
+    // Aplicar clases a la columna activa
+    const $columnaActiva = $(elementoClickeado);
     const iconoClase = estadoOrdenamientoProductos.direccion === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down';
     
     $columnaActiva.addClass(`sorted-${estadoOrdenamientoProductos.direccion}`);
     $columnaActiva.find('i').removeClass('bi-arrow-down-up text-muted').addClass(`${iconoClase} text-primary`);
+    
+    console.log(`🔄 Indicadores actualizados para columna: ${columnaActiva} (${estadoOrdenamientoProductos.direccion})`);
 }
 
 /**
  * Ordenar productos en la tabla
  */
 function ordenarProductosTabla(columna, direccion) {
-    const tbody = $('#cuerpoTablaProductosPedido');
-    const filas = tbody.find('tr').toArray();
+    const $table = $('#tablaProductosPedido');
+    const $tbody = $table.find('tbody');
+    const filas = $tbody.find('tr').toArray();
 
     filas.sort(function(a, b) {
         let valorA, valorB;
-        const filaA = $(a);
-        const filaB = $(b);
-        const productoIdA = parseInt(filaA.data('producto-id'));
-        const productoIdB = parseInt(filaB.data('producto-id'));
+        const $filaA = $(a);
+        const $filaB = $(b);
+        const productoIdA = parseInt($filaA.data('producto-id'));
+        const productoIdB = parseInt($filaB.data('producto-id'));
         const productoA = productosInventario.find(p => p.productoId === productoIdA);
         const productoB = productosInventario.find(p => p.productoId === productoIdB);
 
@@ -609,9 +614,9 @@ function ordenarProductosTabla(columna, direccion) {
     });
 
     // Reordenar filas en el DOM
-    tbody.empty().append(filas);
+    $tbody.empty().append(filas);
 
-    console.log(`✅ Tabla de productos ordenada: ${columna} ${direccion}`);
+    console.log(`✅ Tabla de productos ordenada por ${columna} (${direccion})`);
 }
 
 /**
