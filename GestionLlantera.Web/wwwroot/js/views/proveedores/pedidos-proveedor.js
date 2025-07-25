@@ -281,7 +281,7 @@ function llenarSelectProveedores() {
     for (let i = 0; i < proveedoresDisponibles.length; i++) {
         const proveedor = proveedoresDisponibles[i];
         console.log(`🔍 Procesando proveedor ${i + 1}:`, proveedor);
-        
+
         // Log detallado de las propiedades del proveedor
         console.log('📊 Propiedades del proveedor:', {
             id: proveedor?.id,
@@ -300,12 +300,12 @@ function llenarSelectProveedores() {
             (proveedor.proveedorId !== undefined && proveedor.proveedorId !== null)
         );
         const tieneNombre = proveedor && (proveedor.nombre || proveedor.nombreProveedor);
-        
+
         if (tieneId && tieneNombre) {
             // Usar la propiedad correcta según lo que esté disponible
             const proveedorId = proveedor.id || proveedor.proveedorId;
             const nombreProveedor = proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre';
-            
+
             const option = `<option value="${proveedorId}">${nombreProveedor}</option>`;
 
             console.log(`➕ Agregando opción: ${option}`);
@@ -472,20 +472,20 @@ function mostrarInfoProveedor(proveedor) {
 
     const nombre = proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre';
     const email = proveedor.email || proveedor.correo || 'No especificado';
-    
+
     $('#infoNombreProveedor').text(nombre);
     $('#infoContactoProveedor').text(proveedor.contacto || 'No especificado');
     $('#infoEmailProveedor').text(email);
     $('#infoTelefonoProveedor').text(proveedor.telefono || 'No especificado');
     $('#infoDireccionProveedor').text(proveedor.direccion || 'No especificada');
-    
+
     // Resaltar el email si existe
     if (email !== 'No especificado') {
         $('#infoEmailProveedor').removeClass('text-muted').addClass('text-info');
     } else {
         $('#infoEmailProveedor').removeClass('text-info').addClass('text-muted');
     }
-    
+
     $('#infoProveedorSeleccionado').show();
 }
 
@@ -726,7 +726,10 @@ function cargarProductosEnTabla() {
 
     tbody.html(html);
 
-    // Configurar ordenamiento después de cargar el HTML - CRÍTICO PARA QUE FUNCIONE
+    console.log('📋 === HTML DE PRODUCTOS CARGADO ===');
+    console.log(`📊 Productos renderizados: ${productosInventario.length}`);
+
+    // Configurar ordenamiento INMEDIATAMENTE después de cargar el HTML - IGUAL QUE EN INVENTARIO FACTURACIÓN
     configurarOrdenamientoTablaProductos();
 }
 
@@ -831,17 +834,17 @@ function filtrarProductosPedido() {
             try {
                 if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
                     const llantaInfo = producto.llanta || producto.Llanta[0];
-                    
+
                     // Buscar en marca de llanta
                     if (llantaInfo.marca) {
                         cumpleBusqueda = llantaInfo.marca.toLowerCase().includes(busqueda);
                     }
-                    
+
                     // Buscar en modelo de llanta
                     if (!cumpleBusqueda && llantaInfo.modelo) {
                         cumpleBusqueda = llantaInfo.modelo.toLowerCase().includes(busqueda);
                     }
-                    
+
                     // Buscar en medidas completas
                     if (!cumpleBusqueda && llantaInfo.ancho && llantaInfo.diametro) {
                         let medidas = '';
@@ -850,7 +853,7 @@ function filtrarProductosPedido() {
                         } else {
                             medidas = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
                         }
-                        
+
                         // Buscar en formato completo y en componentes individuales
                         cumpleBusqueda = medidas.toLowerCase().includes(busqueda) ||
                                        llantaInfo.ancho.toString().includes(busqueda) ||

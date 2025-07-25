@@ -217,29 +217,29 @@
                     <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-sm table-hover">
                             <thead class="table-light">
-                                                    <tr>
-                                                        <th class="text-center" style="width: 50px;">
-                                                            <input type="checkbox" class="form-check-input" id="seleccionarTodosProductos" onchange="seleccionarTodosProductos()">
-                                                        </th>
-                                                        <th class="sortable text-center" data-column="id" style="width: 80px;">
-                                                            ID <i class="bi bi-arrow-down-up"></i>
-                                                        </th>
-                                                        <th class="sortable" data-column="nombre">
-                                                            Producto <i class="bi bi-arrow-down-up"></i>
-                                                        </th>
-                                                        <th class="sortable" data-column="marca">
-                                                            Marca <i class="bi bi-arrow-down-up"></i>
-                                                        </th>
-                                                        <th class="sortable text-center" data-column="medida">
-                                                            Medida <i class="bi bi-arrow-down-up"></i>
-                                                        </th>
-                                                        <th class="sortable text-center" data-column="stock">
-                                                            Stock <i class="bi bi-arrow-down-up"></i>
-                                                        </th>
-                                                        <th class="text-center" style="width: 100px;">Cantidad</th>
-                                                        <th class="text-center" style="width: 120px;">Precio Unit.</th>
-                                                    </tr>
-                                                </thead>
+                                        <tr>
+                                            <th style="width: 40px;">
+                                                <input type="checkbox" class="form-check-input" id="seleccionarTodosProductos" onchange="seleccionarTodosProductos()">
+                                            </th>
+                                            <th class="text-center sortable" data-column="id" style="cursor: pointer; width: 60px;">
+                                                ID <i class="bi bi-arrow-down-up opacity-50"></i>
+                                            </th>
+                                            <th class="sortable" data-column="nombre" style="cursor: pointer;">
+                                                Producto <i class="bi bi-arrow-down-up opacity-50"></i>
+                                            </th>
+                                            <th class="sortable" data-column="marca" style="cursor: pointer;">
+                                                Marca <i class="bi bi-arrow-down-up opacity-50"></i>
+                                            </th>
+                                            <th class="text-center sortable" data-column="medida" style="cursor: pointer;">
+                                                Medida <i class="bi bi-arrow-down-up opacity-50"></i>
+                                            </th>
+                                            <th class="text-center sortable" data-column="stock" style="cursor: pointer;">
+                                                Stock <i class="bi bi-arrow-down-up opacity-50"></i>
+                                            </th>
+                                            <th class="text-center" style="width: 100px;">Cantidad</th>
+                                            <th class="text-center" style="width: 120px;">Precio Unit.</th>
+                                        </tr>
+                                    </thead>
                             <tbody id="cuerpoTablaProductosPedido">
                                 <!-- Contenido dinámico -->
                             </tbody>
