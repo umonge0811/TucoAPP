@@ -47,7 +47,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-
         [HttpGet]
         public async Task<IActionResult> ObtenerProveedores()
         {
@@ -104,7 +103,7 @@ namespace GestionLlantera.Web.Controllers
                     telefono = p.Telefono,
                     direccion = p.Direccion,
                     activo = p.Activo,
-                    pedidosProveedors = p.PedidosProveedors // Incluir pedidos para verificar si tiene registros
+                    pedidosProveedors = p.PedidosProveedors
                 }).ToList();
 
                 _logger.LogInformation("📋 Enviando TODOS los {Count} proveedores al cliente (activos e inactivos)", resultado.Count);
@@ -129,7 +128,6 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos del proveedor requeridos" });
                 }
 
-                // ✅ OBTENER TOKEN - ESTO FALTABA
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
@@ -137,13 +135,11 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
-                // Validaciones
                 if (string.IsNullOrWhiteSpace(request.NombreProveedor))
                 {
                     return Json(new { success = false, message = "El nombre del proveedor es requerido" });
                 }
 
-                // Crear objeto Proveedore
                 var proveedor = new Proveedore
                 {
                     NombreProveedor = request.NombreProveedor.Trim(),
@@ -222,7 +218,6 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                // Validaciones
                 if (request.ProveedorId < 0)
                 {
                     return Json(new { success = false, message = "ID del proveedor inválido" });
@@ -233,7 +228,6 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "El nombre del proveedor es requerido" });
                 }
 
-                // Crear objeto Proveedore
                 var proveedor = new Proveedore
                 {
                     ProveedorId = request.ProveedorId,
@@ -460,7 +454,7 @@ namespace GestionLlantera.Web.Controllers
 
                 // Crear el pedido usando el servicio
                 _logger.LogInformation("📦 Preparando datos del pedido para el proveedor {ProveedorId}", request.ProveedorId);
-                
+
                 var pedidoData = new CrearPedidoProveedorRequest
                 {
                     ProveedorId = request.ProveedorId,
@@ -473,14 +467,14 @@ namespace GestionLlantera.Web.Controllers
                 };
 
                 var resultado = await _proveedoresService.CrearPedidoProveedorAsync(pedidoData, token);
-                
+
                 _logger.LogInformation("📦 Resultado del servicio: Success={Success}, Message={Message}", 
                     resultado.success, resultado.message);
 
                 if (resultado.success)
                 {
                     _logger.LogInformation("✅ Pedido creado exitosamente para proveedor {ProveedorId}", request.ProveedorId);
-                    
+
                     return Json(new 
                     { 
                         success = true, 
@@ -491,7 +485,7 @@ namespace GestionLlantera.Web.Controllers
                 else
                 {
                     _logger.LogWarning("⚠️ Error creando pedido: {Message}", resultado.message);
-                    
+
                     return Json(new 
                     { 
                         success = false, 
@@ -508,71 +502,6 @@ namespace GestionLlantera.Web.Controllers
                     message = "Error interno del servidor al crear el pedido",
                     details = ex.Message
                 });
-            }
-                    return Json(new { success = false, message = "Datos del pedido requeridos" });
-                }
-
-                // ✅ OBTENER TOKEN
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    return Json(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
-                }
-
-                // Validaciones básicas
-                if (request.ProveedorId <= 0)
-                {
-                    return Json(new { success = false, message = "Debe seleccionar un proveedor válido" });
-                }
-
-                if (request.Productos == null || !request.Productos.Any())
-                {
-                    return Json(new { success = false, message = "Debe seleccionar al menos un producto" });
-                }
-
-                // Validar productos
-                foreach (var producto in request.Productos)
-                {
-                    if (producto.ProductoId <= 0)
-                    {
-                        return Json(new { success = false, message = "ID de producto inválido" });
-                    }
-                    if (producto.Cantidad <= 0)
-                    {
-                        return Json(new { success = false, message = "La cantidad debe ser mayor a 0" });
-                    }
-                }
-
-                // Crear el pedido
-                _logger.LogInformation("📦 Preparando datos del pedido para el proveedor {ProveedorId}", request.ProveedorId);
-                var pedidoData = new CrearPedidoProveedorRequest
-                {
-                    ProveedorId = request.ProveedorId,
-                    Productos = request.Productos.Select(p => new ProductoPedidoRequest
-                    {
-                        ProductoId = p.ProductoId,
-                        Cantidad = p.Cantidad,
-                        PrecioUnitario = p.PrecioUnitario ?? 0 // Asegurarse de que no sea nulo
-                    }).ToList()
-                };
-
-                var resultado = await _proveedoresService.CrearPedidoProveedorAsync(pedidoData, token);
-                
-                if (resultado.success)
-                {
-                    _logger.LogInformation("✅ Pedido creado exitosamente para proveedor {ProveedorId}", request.ProveedorId);
-                }
-                else
-                {
-                    _logger.LogWarning("⚠️ Error creando pedido: {Message}", resultado.message);
-                }
-
-                return Json(resultado);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error creando pedido para proveedor {ProveedorId}", request?.ProveedorId);
-                return Json(new { success = false, message = "Error interno del servidor al crear el pedido" });
             }
         }
     }
@@ -615,7 +544,4 @@ namespace GestionLlantera.Web.Controllers
         public int Cantidad { get; set; }
         public decimal? PrecioUnitario { get; set; }
     }
-}d { get; set; }
-        public int Cantidad { get; set; }
-        public decimal? PrecioUnitario { get; set; }
-    }
+}
