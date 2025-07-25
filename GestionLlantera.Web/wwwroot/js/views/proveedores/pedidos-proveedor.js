@@ -954,24 +954,78 @@ async function finalizarPedido() {
             body: JSON.stringify(datosPedido)
         });
 
+        console.log('📦 Response completo:', response);
+        console.log('📦 Response status:', response.status);
+        console.log('📦 Response ok:', response.ok);
+
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error HTTP response:', errorText);
             throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
         }
 
-        const resultado = await response.json();
-        console.log('📦 Respuesta del servidor:', resultado);
+        const responseText = await response.text();
+        console.log('📦 Response text crudo:', responseText);
 
-        if (resultado.success && resultado.data) {
-            const pedidoId = resultado.data.pedidoId;
-            const mensaje = resultado.message || 'Pedido creado exitosamente';
-            
+        let resultado;
+        try {
+            resultado = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('❌ Error parseando JSON:', parseError);
+            console.log('📦 Texto que falló al parsear:', responseText);
+            throw new Error('Respuesta del servidor no es JSON válido');
+        }
+
+        console.log('📦 Resultado parseado:', resultado);
+        console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
+        console.log('📦 resultado.success:', resultado?.success);
+        console.log('📦 resultado.data:', resultado?.data);
+        console.log('📦 resultado.message:', resultado?.message);
+
+        // Verificar diferentes estructuras de respuesta
+        let success = false;
+        let data = null;
+        let mensaje = 'Pedido creado exitosamente';
+        let pedidoId = null;
+
+        // Estructura 1: { success: true, data: {...}, message: "..." }
+        if (resultado && typeof resultado === 'object') {
+            if (resultado.success === true) {
+                success = true;
+                data = resultado.data;
+                mensaje = resultado.message || mensaje;
+                if (data && data.pedidoId) {
+                    pedidoId = data.pedidoId;
+                }
+                console.log('✅ Estructura tipo 1 detectada');
+            }
+            // Estructura 2: Respuesta directa con pedidoId
+            else if (resultado.pedidoId) {
+                success = true;
+                data = resultado;
+                pedidoId = resultado.pedidoId;
+                mensaje = resultado.message || mensaje;
+                console.log('✅ Estructura tipo 2 detectada (pedidoId directo)');
+            }
+            // Estructura 3: Array o respuesta sin success
+            else if (Array.isArray(resultado) || (!resultado.hasOwnProperty('success') && resultado.pedidoId)) {
+                success = true;
+                data = resultado;
+                pedidoId = resultado.pedidoId || 'N/A';
+                console.log('✅ Estructura tipo 3 detectada');
+            }
+        }
+
+        console.log('📦 Variables finales:', { success, data, mensaje, pedidoId });
+
+        if (success) {
             console.log('✅ Pedido creado exitosamente con ID:', pedidoId);
-            mostrarExito(`${mensaje}. ID del pedido: ${pedidoId}`);
+            mostrarExito(`${mensaje}${pedidoId ? `. ID del pedido: ${pedidoId}` : ''}`);
             $('#modalNuevoPedido').modal('hide');
             await cargarPedidos();
             limpiarFormulario();
         } else {
-            const errorMsg = resultado.message || resultado.details || 'Error desconocido al crear el pedido';
+            const errorMsg = resultado?.message || resultado?.details || resultado?.error || 'Error desconocido al crear el pedido';
             console.error('❌ Error creando pedido:', errorMsg);
             mostrarError(errorMsg);
         }
