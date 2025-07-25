@@ -676,9 +676,9 @@ function cargarProductosEnTabla() {
         return `
             <tr class="${rowClass}" 
                 data-producto-id="${producto.productoId}"
-                data-nombre="${(producto.nombreProducto || '').toLowerCase()}"
-                data-marca="${marcaInfo.toLowerCase()}"
-                data-medida="${medidaLlanta.toLowerCase()}"
+                data-nombre="${producto.nombreProducto || ''}"
+                data-marca="${marcaInfo}"
+                data-medida="${medidaLlanta}"
                 data-stock="${stockDisponible}">
                 <td>
                     <input type="checkbox" class="form-check-input producto-checkbox" 
