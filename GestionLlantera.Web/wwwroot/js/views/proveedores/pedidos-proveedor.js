@@ -507,141 +507,84 @@ function anteriorPaso() {
 }
 
 /**
- * Configurar ordenamiento de la tabla de productos
+ * Configurar ordenamiento de la tabla de productos - IGUAL QUE EN INVENTARIO FACTURACIÓN
  */
 function configurarOrdenamientoTablaProductos() {
     console.log('🔧 Configurando ordenamiento de tabla de productos...');
 
-    $(document).on('click', '#tablaProductosPedido .sortable', function() {
-        const columna = $(this).data('column');
-        
+    // Limpiar eventos previos para evitar duplicados
+    $('#tablaProductosPedido .sortable').off('click.ordenamiento');
+
+    // Configurar eventos de ordenamiento
+    $('#tablaProductosPedido .sortable').on('click.ordenamiento', function() {
+        const column = $(this).data('column');
+        const $table = $('#tablaProductosPedido');
+        const $tbody = $table.find('tbody');
+        const rows = $tbody.find('tr').toArray();
+
+        console.log(`🔄 Ordenando por columna: ${column}`);
+
         // Determinar dirección de ordenamiento
-        if (estadoOrdenamientoProductos.columna === columna) {
-            estadoOrdenamientoProductos.direccion = estadoOrdenamientoProductos.direccion === 'asc' ? 'desc' : 'asc';
+        let ascending = true;
+        if ($(this).hasClass('sorted-asc')) {
+            ascending = false;
+            $(this).removeClass('sorted-asc').addClass('sorted-desc');
         } else {
-            estadoOrdenamientoProductos.columna = columna;
-            estadoOrdenamientoProductos.direccion = 'asc';
+            $(this).removeClass('sorted-desc').addClass('sorted-asc');
+            ascending = true;
         }
 
-        // Actualizar indicadores visuales
-        actualizarIndicadoresOrdenamientoProductos(this, columna);
+        // Limpiar iconos de otras columnas
+        $('#tablaProductosPedido .sortable').not(this).removeClass('sorted-asc sorted-desc');
 
-        // Ordenar productos
-        ordenarProductosTabla(columna, estadoOrdenamientoProductos.direccion);
-    });
-}
+        // Actualizar icono
+        $('#tablaProductosPedido .sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up text-muted');
+        $(this).find('i').removeClass('bi-arrow-down-up text-muted').addClass(ascending ? 'bi-arrow-up text-primary' : 'bi-arrow-down text-primary');
 
-/**
- * Actualizar indicadores visuales de ordenamiento
- */
-function actualizarIndicadoresOrdenamientoProductos(elementoClickeado, columnaActiva) {
-    // Limpiar todas las clases de ordenamiento
-    $('#tablaProductosPedido .sortable').removeClass('sorted-asc sorted-desc');
-    $('#tablaProductosPedido .sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up text-muted');
+        // Ordenar filas
+        rows.sort(function(a, b) {
+            let aVal, bVal;
 
-    // Aplicar clases a la columna activa
-    const $columnaActiva = $(elementoClickeado);
-    const iconoClase = estadoOrdenamientoProductos.direccion === 'asc' ? 'bi-arrow-up' : 'bi-arrow-down';
-    
-    $columnaActiva.addClass(`sorted-${estadoOrdenamientoProductos.direccion}`);
-    $columnaActiva.find('i').removeClass('bi-arrow-down-up text-muted').addClass(`${iconoClase} text-primary`);
-    
-    console.log(`🔄 Indicadores actualizados para columna: ${columnaActiva} (${estadoOrdenamientoProductos.direccion})`);
-}
-
-/**
- * Ordenar productos en la tabla
- */
-function ordenarProductosTabla(columna, direccion) {
-    const $table = $('#tablaProductosPedido');
-    const $tbody = $table.find('tbody');
-    const filas = $tbody.find('tr').toArray();
-
-    filas.sort(function(a, b) {
-        let valorA, valorB;
-        const $filaA = $(a);
-        const $filaB = $(b);
-        const productoIdA = parseInt($filaA.data('producto-id'));
-        const productoIdB = parseInt($filaB.data('producto-id'));
-        const productoA = productosInventario.find(p => p.productoId === productoIdA);
-        const productoB = productosInventario.find(p => p.productoId === productoIdB);
-
-        switch(columna) {
-            case 'id':
-                valorA = productoA?.productoId || 0;
-                valorB = productoB?.productoId || 0;
-                break;
-            case 'nombre':
-                valorA = (productoA?.nombreProducto || '').toLowerCase();
-                valorB = (productoB?.nombreProducto || '').toLowerCase();
-                break;
-            case 'marca':
-                // Para llantas, usar marca de llanta; para otros, marca del producto
-                if (productoA?.llanta || (productoA?.Llanta && productoA.Llanta.length > 0)) {
-                    const llantaA = productoA.llanta || productoA.Llanta[0];
-                    valorA = (llantaA?.marca || productoA?.marca || '').toLowerCase();
-                } else {
-                    valorA = (productoA?.marca || '').toLowerCase();
-                }
-                
-                if (productoB?.llanta || (productoB?.Llanta && productoB.Llanta.length > 0)) {
-                    const llantaB = productoB.llanta || productoB.Llanta[0];
-                    valorB = (llantaB?.marca || productoB?.marca || '').toLowerCase();
-                } else {
-                    valorB = (productoB?.marca || '').toLowerCase();
-                }
-                break;
-            case 'medida':
-                // Extraer medidas para ordenamiento
-                valorA = extraerMedidaParaOrdenamiento(productoA);
-                valorB = extraerMedidaParaOrdenamiento(productoB);
-                break;
-            case 'stock':
-                valorA = productoA?.cantidadEnInventario || productoA?.stock || 0;
-                valorB = productoB?.cantidadEnInventario || productoB?.stock || 0;
-                break;
-            default:
-                valorA = 0;
-                valorB = 0;
-        }
-
-        // Comparar valores
-        if (typeof valorA === 'string' && typeof valorB === 'string') {
-            return direccion === 'asc' ? valorA.localeCompare(valorB) : valorB.localeCompare(valorA);
-        } else {
-            return direccion === 'asc' ? valorA - valorB : valorB - valorA;
-        }
-    });
-
-    // Reordenar filas en el DOM
-    $tbody.empty().append(filas);
-
-    console.log(`✅ Tabla de productos ordenada por ${columna} (${direccion})`);
-}
-
-/**
- * Extraer medida para ordenamiento
- */
-function extraerMedidaParaOrdenamiento(producto) {
-    if (!producto) return 'zzz'; // Valores sin datos van al final
-
-    try {
-        if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
-            const llantaInfo = producto.llanta || producto.Llanta[0];
-            
-            if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
-                // Crear un valor numérico para ordenamiento: ancho * 1000 + diametro
-                const ancho = parseInt(llantaInfo.ancho) || 0;
-                const diametro = parseInt(llantaInfo.diametro) || 0;
-                return ancho * 1000 + diametro;
+            switch(column) {
+                case 'id':
+                    aVal = parseInt($(a).data('producto-id')) || 0;
+                    bVal = parseInt($(b).data('producto-id')) || 0;
+                    break;
+                case 'nombre':
+                    aVal = $(a).data('nombre') || '';
+                    bVal = $(b).data('nombre') || '';
+                    break;
+                case 'marca':
+                    aVal = $(a).data('marca') || '';
+                    bVal = $(b).data('marca') || '';
+                    break;
+                case 'medida':
+                    aVal = $(a).data('medida') || 'zzz';
+                    bVal = $(b).data('medida') || 'zzz';
+                    break;
+                case 'stock':
+                    aVal = parseInt($(a).data('stock')) || 0;
+                    bVal = parseInt($(b).data('stock')) || 0;
+                    break;
+                default:
+                    return 0;
             }
-        }
-    } catch (error) {
-        console.warn('⚠️ Error extrayendo medida para ordenamiento:', error);
-    }
 
-    return 999999; // Productos sin medida van al final
+            if (typeof aVal === 'string') {
+                return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            } else {
+                return ascending ? aVal - bVal : bVal - aVal;
+            }
+        });
+
+        // Reordenar filas en el DOM
+        $tbody.empty().append(rows);
+
+        console.log(`✅ Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
+    });
 }
+
+
 
 /**
  * Cargar productos en la tabla de selección
@@ -671,6 +614,7 @@ function cargarProductosEnTabla() {
             marca: producto.marca,
             modelo: producto.modelo,
             stock: producto.stock || producto.cantidadEnInventario,
+            stockMinimo: producto.stockMinimo,
             esLlanta: producto.esLlanta,
             llanta: producto.llanta
         });
@@ -678,6 +622,7 @@ function cargarProductosEnTabla() {
         // Determinar si es llanta y extraer medidas IGUAL QUE EN INVENTARIO FACTURACIÓN
         let esLlanta = false;
         let medidaLlanta = 'N/A';
+        let medidaParaBusqueda = 'n/a';
         let marcaInfo = producto.marca || '';
         let modeloInfo = producto.modelo || '';
 
@@ -691,9 +636,11 @@ function cargarProductosEnTabla() {
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
                         // Formato completo con perfil
                         medidaLlanta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                        medidaParaBusqueda = `${medidaLlanta} ${llantaInfo.ancho}/${llantaInfo.perfil} ${llantaInfo.ancho}x${llantaInfo.perfil}x${llantaInfo.diametro} ${llantaInfo.ancho} ${llantaInfo.perfil} ${llantaInfo.diametro}`.toLowerCase();
                     } else {
                         // Formato sin perfil
                         medidaLlanta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                        medidaParaBusqueda = `${medidaLlanta} ${llantaInfo.ancho} R${llantaInfo.diametro} ${llantaInfo.diametro}`.toLowerCase();
                     }
                 }
 
@@ -713,9 +660,28 @@ function cargarProductosEnTabla() {
 
         // Determinar stock usando la misma lógica del inventario
         const stockDisponible = producto.cantidadEnInventario || producto.stock || 0;
+        const stockMinimo = producto.stockMinimo || 0;
+
+        // Determinar clases de fila según stock - IGUAL QUE EN INVENTARIO FACTURACIÓN
+        let rowClass = '';
+        let stockBadge = '';
+        if (stockDisponible <= 0) {
+            rowClass = 'table-danger';
+            stockBadge = '<span class="badge bg-danger">Sin Stock</span>';
+        } else if (stockDisponible <= stockMinimo) {
+            rowClass = 'table-warning';
+            stockBadge = '<span class="badge bg-warning text-dark">Stock Bajo</span>';
+        } else {
+            stockBadge = '<span class="badge bg-success">Disponible</span>';
+        }
 
         return `
-            <tr data-producto-id="${producto.productoId}">
+            <tr class="${rowClass}" 
+                data-producto-id="${producto.productoId}"
+                data-nombre="${(producto.nombreProducto || '').toLowerCase()}"
+                data-marca="${marcaInfo.toLowerCase()}"
+                data-medida="${medidaParaBusqueda}"
+                data-stock="${stockDisponible}">
                 <td>
                     <input type="checkbox" class="form-check-input producto-checkbox" 
                            value="${producto.productoId}" 
@@ -740,7 +706,11 @@ function cargarProductosEnTabla() {
                     ${medidaLlanta !== 'N/A' ? `<span class="text-primary fw-bold">${medidaLlanta}</span>` : '<span class="text-muted">N/A</span>'}
                 </td>
                 <td class="text-center">
-                    <span class="badge ${stockDisponible > 0 ? 'bg-success' : 'bg-danger'}">${stockDisponible}</span>
+                    <div class="d-flex flex-column align-items-center">
+                        <strong class="text-primary">${stockDisponible}</strong>
+                        <small class="text-muted">Mín: ${stockMinimo}</small>
+                        ${stockBadge}
+                    </div>
                 </td>
                 <td>
                     <input type="number" class="form-control form-control-sm cantidad-producto" 
@@ -759,6 +729,9 @@ function cargarProductosEnTabla() {
     }).join('');
 
     tbody.html(html);
+
+    // Configurar ordenamiento - CRÍTICO PARA QUE FUNCIONE
+    configurarOrdenamientoTablaProductos();
 }
 
 /**
