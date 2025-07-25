@@ -174,7 +174,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo TODOS los proveedores (activos e inactivos)");
+                _logger.LogInformation("📋 Obteniendo pedidos de proveedores");
 
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
@@ -194,19 +194,28 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
-                    return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    // Intentar deserializar, si falla o está vacío, devolver array vacío
+                    try
+                    {
+                        var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
+                        return (true, pedidos ?? new List<object>(), "Pedidos obtenidos exitosamente");
+                    }
+                    catch
+                    {
+                        _logger.LogInformation("📋 No hay pedidos disponibles o respuesta vacía");
+                        return (true, new List<object>(), "No hay pedidos disponibles");
+                    }
                 }
                 else
                 {
                     _logger.LogError("❌ Error obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
-                    return (false, null, "Error obteniendo pedidos");
+                    return (false, new List<object>(), "Error obteniendo pedidos");
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo pedidos");
-                return (false, null, "Error interno del servidor");
+                return (false, new List<object>(), "Error interno del servidor");
             }
         }
 
@@ -305,6 +314,39 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, "❌ Error creando pedido");
                 return (false, null, "Error interno del servidor");
+            }
+        }
+
+        public async Task<(bool success, object data, string message)> ObtenerProductosParaFacturacionAsync()
+        {
+            try
+            {
+                _logger.LogInformation("📦 Obteniendo productos para facturación desde servicio de proveedores");
+
+                var response = await _httpClient.GetAsync("/Facturacion/ObtenerProductosParaFacturacion");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(content);
+
+                    // Log para debug de los datos recibidos
+                    _logger.LogInformation("📋 Datos de productos recibidos: {Content}", content.Substring(0, Math.Min(500, content.Length)));
+
+                    _logger.LogInformation("✅ Productos obtenidos exitosamente");
+                    return (true, resultado, "Productos cargados exitosamente");
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error HTTP obteniendo productos: {StatusCode} - {Error}", response.StatusCode, error);
+                    return (false, null, $"Error HTTP: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo productos para facturación");
+                return (false, null, $"Error: {ex.Message}");
             }
         }
     }

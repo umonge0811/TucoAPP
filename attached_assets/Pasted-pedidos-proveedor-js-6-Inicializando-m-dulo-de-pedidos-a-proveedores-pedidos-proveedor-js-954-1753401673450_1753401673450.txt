@@ -1,0 +1,74 @@
+pedidos-proveedor.js:6 🚀 Inicializando módulo de pedidos a proveedores...
+pedidos-proveedor.js:954 ✅ Módulo de pedidos a proveedores cargado completamente
+pedidos-proveedor.js:24 📚 DOM cargado, inicializando pedidos a proveedores...
+pedidos-proveedor.js:42 🔧 Configurando event listeners...
+pedidos-proveedor.js:74 📋 Cargando datos iniciales completos...
+pedidos-proveedor.js:88 👥 Cargando proveedores...
+pedidos-proveedor.js:128 📦 Cargando TODOS los pedidos...
+pedidos-proveedor.js:215 📦 Cargando productos del inventario...
+pedidos-proveedor.js:30 ✅ Módulo de pedidos a proveedores inicializado correctamente
+permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:20  GET https://localhost:7038/api/permisos/funciones net::ERR_ABORTED 404 (Not Found)
+cargarFunciones @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:20
+init @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:13
+PermisosInfoService @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:8
+(anonymous) @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:164
+permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:32  GET https://localhost:7038/DiagnosticoPermisos/mis-permisos net::ERR_ABORTED 404 (Not Found)
+cargarPermisosUsuario @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:32
+init @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:14
+await in init
+PermisosInfoService @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:8
+(anonymous) @ permisosInfo.js?v=Wv101qEnPxOiKE466CCQWZr5NFVuh_uWm7M6WC_92Po:164
+pedidos-proveedor.js:104 📋 Respuesta del servidor: {success: true, data: Array(3)}
+pedidos-proveedor.js:240 🔄 Iniciando llenarSelectProveedores...
+pedidos-proveedor.js:241 📋 proveedoresDisponibles: (3) [{…}, {…}, {…}]
+pedidos-proveedor.js:255 🔢 Total proveedores a procesar: 3
+pedidos-proveedor.js:262 🔍 Procesando proveedor 1: {id: 1002, nombre: 'Distribuidora  Tuco', contacto: 'Isaias Barboza', email: 'isaias@gmail.com', telefono: '70084939', …}
+pedidos-proveedor.js:265 📊 Propiedades del proveedor: {id: 1002, nombre: 'Distribuidora  Tuco', proveedorId: undefined, nombreProveedor: undefined, contacto: 'Isaias Barboza', …}
+pedidos-proveedor.js:290 ➕ Agregando opción: <option value="1002">Distribuidora  Tuco</option>
+pedidos-proveedor.js:262 🔍 Procesando proveedor 2: {id: 1005, nombre: 'Distribuidora El carmen S.A', contacto: 'Ismael Arias', email: 'jmejias@ticodevcr.com', telefono: '6666-2222', …}
+pedidos-proveedor.js:265 📊 Propiedades del proveedor: {id: 1005, nombre: 'Distribuidora El carmen S.A', proveedorId: undefined, nombreProveedor: undefined, contacto: 'Ismael Arias', …}
+pedidos-proveedor.js:290 ➕ Agregando opción: <option value="1005">Distribuidora El carmen S.A</option>
+pedidos-proveedor.js:262 🔍 Procesando proveedor 3: {id: 1007, nombre: 'Distribuidora Tucan S.A', contacto: 'Ulises Monge Aguilar', email: 'a@R.com', telefono: '35872471', …}
+pedidos-proveedor.js:265 📊 Propiedades del proveedor: {id: 1007, nombre: 'Distribuidora Tucan S.A', proveedorId: undefined, nombreProveedor: undefined, contacto: 'Ulises Monge Aguilar', …}
+pedidos-proveedor.js:290 ➕ Agregando opción: <option value="1007">Distribuidora Tucan S.A</option>
+pedidos-proveedor.js:306 ✅ 3 de 3 proveedores agregados a los selects
+pedidos-proveedor.js:309 📊 Opciones en select: 4
+pedidos-proveedor.js:310 📊 Opciones en filtro: 4
+pedidos-proveedor.js:109 ✅ 3 proveedores cargados
+pedidos-proveedor.js:229 ✅ 6 productos del inventario cargados
+pedidos-proveedor.js:156 ❌ Error cargando pedidos: Error: Error obteniendo pedidos
+    at cargarPedidos (pedidos-proveedor.js:153:19)
+    at async Promise.all (index 1)
+    at async cargarDatosIniciales (pedidos-proveedor.js:75:9)
+cargarPedidos @ pedidos-proveedor.js:156
+await in cargarPedidos
+cargarDatosIniciales @ pedidos-proveedor.js:77
+(anonymous) @ pedidos-proveedor.js:28
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+pedidos-proveedor.js:917 ❌ Error: Error cargando pedidos: Error obteniendo pedidos
+mostrarError @ pedidos-proveedor.js:917
+cargarPedidos @ pedidos-proveedor.js:157
+await in cargarPedidos
+cargarDatosIniciales @ pedidos-proveedor.js:77
+(anonymous) @ pedidos-proveedor.js:28
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2

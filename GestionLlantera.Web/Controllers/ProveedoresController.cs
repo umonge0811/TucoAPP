@@ -403,7 +403,6 @@ namespace GestionLlantera.Web.Controllers
                 {
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
-
                 var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
                 return Json(resultado);
             }

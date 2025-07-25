@@ -16,6 +16,12 @@ let productosInventario = [];
 let productosSeleccionados = [];
 let proveedorSeleccionado = null;
 
+// Variables para ordenamiento de productos
+let estadoOrdenamientoProductos = {
+    columna: null,
+    direccion: 'asc'
+};
+
 // =====================================
 // INICIALIZACIÓN
 // =====================================
@@ -49,6 +55,9 @@ function configurarEventListeners() {
     $('#modalNuevoPedido').on('hidden.bs.modal', function() {
         resetearFormularioPedido();
     });
+
+    // Configurar ordenamiento de tabla de productos
+    configurarOrdenamientoTablaProductos();
 }
 
 // =====================================
@@ -59,11 +68,25 @@ function configurarEventListeners() {
  * Cargar datos iniciales
  */
 async function cargarDatosIniciales() {
-    await Promise.all([
-        cargarProveedores(),
-        cargarPedidos(),
-        cargarProductosInventario()
-    ]);
+    // Verificar si viene un proveedor específico desde la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const proveedorIdParam = urlParams.get('proveedorId');
+
+    if (proveedorIdParam) {
+        console.log(`🔗 Parámetro proveedorId detectado: ${proveedorIdParam}`);
+        await Promise.all([
+            cargarProveedores(),
+            cargarPedidosDeProveedor(proveedorIdParam),
+            cargarProductosInventario()
+        ]);
+    } else {
+        console.log('📋 Cargando datos iniciales completos...');
+        await Promise.all([
+            cargarProveedores(),
+            cargarPedidos(),
+            cargarProductosInventario()
+        ]);
+    }
 }
 
 /**
@@ -107,45 +130,99 @@ async function cargarProveedores() {
 }
 
 /**
- * Cargar todos los pedidos
+ * Cargar todos los pedidos (sin filtro por proveedor)
  */
 async function cargarPedidos() {
     try {
-        console.log('📦 Cargando pedidos...');
+        console.log('📦 Cargando TODOS los pedidos...');
         mostrarLoadingPedidos(true);
 
-        // Obtener parámetro de proveedor de la URL si existe
-        const urlParams = new URLSearchParams(window.location.search);
-        const proveedorId = urlParams.get('proveedorId');
-
-        let url = '/Proveedores/ObtenerPedidosProveedor';
-        if (proveedorId) {
-            url += `?proveedorId=${proveedorId}`;
-        }
-
-        const response = await fetch(url, {
+        const response = await fetch('/Proveedores/ObtenerPedidosProveedor', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            credentials: 'include'
         });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
 
         const data = await response.json();
 
-        if (data.success && data.data) {
-            pedidosData = data.data;
+        if (data.success) {
+            // Si success es true pero no hay data, inicializar como array vacío
+            pedidosData = Array.isArray(data.data) ? data.data : [];
             pedidosFiltrados = [...pedidosData];
             mostrarPedidos();
             actualizarContadorPedidos();
-            console.log(`✅ ${pedidosData.length} pedidos cargados`);
+            console.log(`✅ ${pedidosData.length} pedidos cargados exitosamente`);
         } else {
-            throw new Error(data.message || 'Error obteniendo pedidos');
+            // Si no hay pedidos, mostrar mensaje informativo en lugar de error
+            const mensaje = data.message || 'No hay pedidos disponibles';
+            console.log(`ℹ️ ${mensaje}`);
+            pedidosData = [];
+            pedidosFiltrados = [];
+            mostrarSinDatosPedidos(true);
+            actualizarContadorPedidos();
         }
     } catch (error) {
         console.error('❌ Error cargando pedidos:', error);
         mostrarError('Error cargando pedidos: ' + error.message);
         mostrarSinDatosPedidos(true);
+        // Inicializar arrays vacíos para evitar errores
+        pedidosData = [];
+        pedidosFiltrados = [];
+    } finally {
+        mostrarLoadingPedidos(false);
+    }
+}
+
+/**
+ * Cargar pedidos de un proveedor específico (para cuando viene desde la vista de proveedores)
+ */
+async function cargarPedidosDeProveedor(proveedorId) {
+    try {
+        console.log(`📦 Cargando pedidos del proveedor ${proveedorId}...`);
+        mostrarLoadingPedidos(true);
+
+        const response = await fetch(`/Proveedores/ObtenerPedidosProveedor?proveedorId=${proveedorId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            pedidosData = Array.isArray(data.data) ? data.data : [];
+            pedidosFiltrados = [...pedidosData];
+            mostrarPedidos();
+            actualizarContadorPedidos();
+            console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
+        } else {
+            const mensaje = data.message || `No hay pedidos para el proveedor ${proveedorId}`;
+            console.log(`ℹ️ ${mensaje}`);
+            pedidosData = [];
+            pedidosFiltrados = [];
+            mostrarSinDatosPedidos(true);
+            actualizarContadorPedidos();
+        }
+    } catch (error) {
+        console.error('❌ Error cargando pedidos del proveedor:', error);
+        mostrarError('Error cargando pedidos del proveedor: ' + error.message);
+        mostrarSinDatosPedidos(true);
+        pedidosData = [];
+        pedidosFiltrados = [];
     } finally {
         mostrarLoadingPedidos(false);
     }
@@ -204,7 +281,7 @@ function llenarSelectProveedores() {
     for (let i = 0; i < proveedoresDisponibles.length; i++) {
         const proveedor = proveedoresDisponibles[i];
         console.log(`🔍 Procesando proveedor ${i + 1}:`, proveedor);
-        
+
         // Log detallado de las propiedades del proveedor
         console.log('📊 Propiedades del proveedor:', {
             id: proveedor?.id,
@@ -223,12 +300,12 @@ function llenarSelectProveedores() {
             (proveedor.proveedorId !== undefined && proveedor.proveedorId !== null)
         );
         const tieneNombre = proveedor && (proveedor.nombre || proveedor.nombreProveedor);
-        
+
         if (tieneId && tieneNombre) {
             // Usar la propiedad correcta según lo que esté disponible
             const proveedorId = proveedor.id || proveedor.proveedorId;
             const nombreProveedor = proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre';
-            
+
             const option = `<option value="${proveedorId}">${nombreProveedor}</option>`;
 
             console.log(`➕ Agregando opción: ${option}`);
@@ -366,7 +443,7 @@ function seleccionarProveedor() {
     if (!proveedorId) {
         proveedorSeleccionado = null;
         $('#infoProveedorSeleccionado').hide();
-        $('#btnSiguientePaso').prop('disabled', true);
+        $('#btnSiguientePaso').prop('disabled', false);
         return;
     }
 
@@ -391,10 +468,24 @@ function mostrarInfoProveedor(proveedor) {
         return;
     }
 
-    $('#infoNombreProveedor').text(proveedor.nombreProveedor || 'Sin nombre');
+    console.log('📋 Mostrando información del proveedor:', proveedor);
+
+    const nombre = proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre';
+    const email = proveedor.email || proveedor.correo || 'No especificado';
+
+    $('#infoNombreProveedor').text(nombre);
     $('#infoContactoProveedor').text(proveedor.contacto || 'No especificado');
+    $('#infoEmailProveedor').text(email);
     $('#infoTelefonoProveedor').text(proveedor.telefono || 'No especificado');
     $('#infoDireccionProveedor').text(proveedor.direccion || 'No especificada');
+
+    // Resaltar el email si existe
+    if (email !== 'No especificado') {
+        $('#infoEmailProveedor').removeClass('text-muted').addClass('text-info');
+    } else {
+        $('#infoEmailProveedor').removeClass('text-info').addClass('text-muted');
+    }
+
     $('#infoProveedorSeleccionado').show();
 }
 
@@ -416,6 +507,84 @@ function anteriorPaso() {
 }
 
 /**
+ * Configurar ordenamiento de la tabla de productos - EXACTAMENTE IGUAL QUE EN INVENTARIO FACTURACIÓN
+ */
+function configurarOrdenamientoTablaProductos() {
+    console.log('🔧 Configurando ordenamiento de tabla de productos...');
+
+    $('.sortable').off('click').on('click', function() {
+        console.log('🚀 === INICIO FUNCIÓN DE ORDENAMIENTO ===');
+        
+        const column = $(this).data('column');
+        const $table = $('#tablaProductosPedido');
+        const $tbody = $table.find('tbody');
+        const rows = $tbody.find('tr').toArray();
+
+        console.log(`📊 DATOS DEL CLICK:`, {
+            elemento: this,
+            columna: column,
+            tablaEncontrada: $table.length > 0,
+            tbodyEncontrado: $tbody.length > 0,
+            cantidadFilas: rows.length,
+            columnValue: $(this).attr('data-column'),
+            allDataAttributes: Object.assign({}, this.dataset)
+        });
+
+        // DIAGNÓSTICO DETALLADO
+        console.log('🔍 === DIAGNÓSTICO DETALLADO ===');
+        console.log('📋 ID de tabla buscada: tablaProductosPedido');
+        console.log('📋 Tabla encontrada:', $table[0]);
+        console.log('📋 TBody encontrado:', $tbody[0]);
+        console.log('📋 HTML de tabla:', $table.length > 0 ? $table[0].outerHTML.substring(0, 200) + '...' : 'NO ENCONTRADA');
+        console.log('📋 Contenido de tbody:', $tbody.html());
+        console.log('📋 Todos los tr en tbody:', $tbody.find('tr'));
+        console.log('📋 Cantidad de tr encontrados:', $tbody.find('tr').length);
+        
+        // Verificar si existe alguna tabla con productos
+        const todasLasTablas = $('table');
+        console.log('📋 Total de tablas en la página:', todasLasTablas.length);
+        todasLasTablas.each(function(index) {
+            console.log(`📋 Tabla ${index + 1}:`, {
+                id: this.id,
+                clases: this.className,
+                filas: $(this).find('tr').length
+            });
+        });
+
+        if (!column) {
+            console.error('❌ NO SE DETECTÓ COLUMNA - data-column está vacío o indefinido');
+            return;
+        }
+
+        if (rows.length === 0) {
+            console.warn('⚠️ NO HAY FILAS PARA ORDENAR');
+            console.warn('🔍 Intentando buscar filas con selectores alternativos...');
+            
+            // Buscar filas con data-producto-id
+            const filasConData = $('tr[data-producto-id]');
+            console.log('📋 Filas con data-producto-id encontradas:', filasConData.length);
+            
+            if (filasConData.length > 0) {
+                console.log('✅ Usando filas encontradas con data-producto-id');
+                // Usar estas filas en lugar de las del tbody
+                const filasArray = filasConData.toArray();
+                console.log('📋 Filas a ordenar:', filasArray.length);
+                
+                // Continuar con el ordenamiento usando filasArray
+                ordenarFilas(filasArray, column, $(this));
+                return;
+            }
+            
+            return;
+        }
+
+        ordenarFilas(rows, column, $(this));
+    });
+}
+
+
+
+/**
  * Cargar productos en la tabla de selección
  */
 function cargarProductosEnTabla() {
@@ -424,7 +593,7 @@ function cargarProductosEnTabla() {
     if (productosInventario.length === 0) {
         tbody.html(`
             <tr>
-                <td colspan="6" class="text-center py-4">
+                <td colspan="8" class="text-center py-4">
                     <i class="bi bi-exclamation-triangle text-warning"></i>
                     <p class="mt-2">No hay productos disponibles en el inventario</p>
                 </td>
@@ -433,38 +602,161 @@ function cargarProductosEnTabla() {
         return;
     }
 
-    const html = productosInventario.map(producto => `
-        <tr data-producto-id="${producto.productoId}">
-            <td>
-                <input type="checkbox" class="form-check-input producto-checkbox" 
-                       value="${producto.productoId}" 
-                       onchange="toggleProductoSeleccionado(${producto.productoId})">
-            </td>
-            <td>
-                <strong>${producto.nombreProducto}</strong>
-                <br>
-                <small class="text-muted">${producto.modelo || ''}</small>
-            </td>
-            <td>${producto.marca || '-'}</td>
-            <td>
-                <span class="badge ${producto.stock > 0 ? 'bg-success' : 'bg-danger'}">${producto.stock}</span>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm cantidad-producto" 
-                       value="1" min="1" style="width: 80px;" 
-                       onchange="actualizarCantidadProducto(${producto.productoId}, this.value)"
-                       disabled>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm precio-producto" 
-                       value="0.00" min="0" step="0.01" style="width: 100px;"
-                       onchange="actualizarPrecioProducto(${producto.productoId}, this.value)"
-                       disabled>
-            </td>
-        </tr>
-    `).join('');
+    console.log('🔍 Datos de productos recibidos:', productosInventario);
+
+    const html = productosInventario.map(producto => {
+        // Log detallado de cada producto
+        console.log('📦 Producto:', {
+            id: producto.productoId,
+            nombre: producto.nombreProducto,
+            marca: producto.marca,
+            modelo: producto.modelo,
+            stock: producto.stock || producto.cantidadEnInventario,
+            stockMinimo: producto.stockMinimo,
+            esLlanta: producto.esLlanta,
+            llanta: producto.llanta
+        });
+
+        // Determinar si es llanta y extraer medidas IGUAL QUE EN INVENTARIO FACTURACIÓN
+        let esLlanta = false;
+        let medidaLlanta = 'N/A';
+        let medidaParaBusqueda = 'n/a';
+        let marcaInfo = producto.marca || '';
+        let modeloInfo = producto.modelo || '';
+
+        try {
+            // Verificar si es llanta usando la misma lógica del modal de inventario
+            if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
+                esLlanta = true;
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        // Formato completo con perfil
+                        medidaLlanta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                        medidaParaBusqueda = `${medidaLlanta} ${llantaInfo.ancho}/${llantaInfo.perfil} ${llantaInfo.ancho}x${llantaInfo.perfil}x${llantaInfo.diametro} ${llantaInfo.ancho} ${llantaInfo.perfil} ${llantaInfo.diametro}`.toLowerCase();
+                    } else {
+                        // Formato sin perfil
+                        medidaLlanta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                        medidaParaBusqueda = `${medidaLlanta} ${llantaInfo.ancho} R${llantaInfo.diametro} ${llantaInfo.diametro}`.toLowerCase();
+                    }
+                }
+
+                // Usar marca y modelo de la llanta si están disponibles
+                marcaInfo = llantaInfo.marca || marcaInfo || 'Sin marca';
+                modeloInfo = llantaInfo.modelo || modeloInfo || '';
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando información de llanta:', error);
+        }
+
+        // Si no es llanta, usar marca/modelo del producto general
+        if (!esLlanta) {
+            marcaInfo = marcaInfo || 'N/A';
+            modeloInfo = modeloInfo || '';
+        }
+
+        // Determinar stock usando la misma lógica del inventario
+        const stockDisponible = producto.cantidadEnInventario || producto.stock || 0;
+        const stockMinimo = producto.stockMinimo || 0;
+
+        // Determinar clases de fila según stock - IGUAL QUE EN INVENTARIO FACTURACIÓN
+        let rowClass = '';
+        let stockBadge = '';
+        if (stockDisponible <= 0) {
+            rowClass = 'table-danger';
+            stockBadge = '<span class="badge bg-danger">Sin Stock</span>';
+        } else if (stockDisponible <= stockMinimo) {
+            rowClass = 'table-warning';
+            stockBadge = '<span class="badge bg-warning text-dark">Stock Bajo</span>';
+        } else {
+            stockBadge = '<span class="badge bg-success">Disponible</span>';
+        }
+
+        return `
+            <tr class="${rowClass}" 
+                data-producto-id="${producto.productoId}"
+                data-nombre="${producto.nombreProducto || ''}"
+                data-marca="${marcaInfo}"
+                data-medida="${medidaLlanta}"
+                data-stock="${stockDisponible}">
+                <td>
+                    <input type="checkbox" class="form-check-input producto-checkbox" 
+                           value="${producto.productoId}" 
+                           onchange="toggleProductoSeleccionado(${producto.productoId})">
+                </td>
+                <td class="text-center">
+                    ${producto.productoId}
+                </td>
+                <td>
+                    <div>
+                        <strong>${producto.nombreProducto}</strong>
+                    </div>
+                    ${modeloInfo ? `<small class="text-muted">Modelo: ${modeloInfo}</small>` : ''}
+                </td>
+                <td>
+                    <div>
+                        ${marcaInfo}
+                        ${modeloInfo && !esLlanta ? `<br><small class="text-muted">${modeloInfo}</small>` : ''}
+                    </div>
+                </td>
+                <td class="text-center">
+                    ${medidaLlanta !== 'N/A' ? `<span class="text-primary fw-bold">${medidaLlanta}</span>` : '<span class="text-muted">N/A</span>'}
+                </td>
+                <td class="text-center">
+                    <div class="d-flex flex-column align-items-center">
+                        <strong class="text-primary">${stockDisponible}</strong>
+                        <small class="text-muted">Mín: ${stockMinimo}</small>
+                        ${stockBadge}
+                    </div>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm cantidad-producto" 
+                           value="1" min="1" max="${stockDisponible}" style="width: 80px;" 
+                           onchange="actualizarCantidadProducto(${producto.productoId}, this.value)"
+                           disabled>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm precio-producto" 
+                           value="0.00" min="0" step="0.01" style="width: 100px;"
+                           onchange="actualizarPrecioProducto(${producto.productoId}, this.value)"
+                           disabled>
+                </td>
+            </tr>
+        `;
+    }).join('');
 
     tbody.html(html);
+
+    console.log('📋 === HTML DE PRODUCTOS CARGADO ===');
+    console.log(`📊 Productos renderizados: ${productosInventario.length}`);
+
+    // Verificar elementos sortable antes de configurar ordenamiento
+    setTimeout(() => {
+        const elementosSortable = $('.sortable');
+        console.log('🔍 === VERIFICANDO ELEMENTOS SORTABLE ===');
+        console.log(`📊 Elementos .sortable encontrados: ${elementosSortable.length}`);
+        
+        elementosSortable.each(function(index) {
+            console.log(`📋 Elemento ${index + 1}:`, {
+                elemento: this,
+                dataColumn: $(this).data('column'),
+                attrDataColumn: $(this).attr('data-column'),
+                texto: $(this).text().trim(),
+                clases: this.className
+            });
+        });
+
+        // Configurar ordenamiento INMEDIATAMENTE después de cargar el HTML - IGUAL QUE EN INVENTARIO FACTURACIÓN
+        configurarOrdenamientoTablaProductos();
+        
+        // Verificar que los event listeners se configuraron
+        console.log('🔧 === VERIFICANDO EVENT LISTENERS ===');
+        elementosSortable.each(function(index) {
+            const events = $._data(this, 'events');
+            console.log(`📋 Eventos en elemento ${index + 1}:`, events);
+        });
+    }, 100);
 }
 
 /**
@@ -550,9 +842,55 @@ function filtrarProductosPedido() {
 
         if (!producto) return;
 
-        const cumpleBusqueda = !busqueda || 
-            producto.nombreProducto.toLowerCase().includes(busqueda) ||
-            (producto.marca && producto.marca.toLowerCase().includes(busqueda));
+        // Buscar en nombre del producto
+        let cumpleBusqueda = !busqueda || producto.nombreProducto.toLowerCase().includes(busqueda);
+
+        // Buscar en marca
+        if (!cumpleBusqueda && producto.marca) {
+            cumpleBusqueda = producto.marca.toLowerCase().includes(busqueda);
+        }
+
+        // Buscar en modelo
+        if (!cumpleBusqueda && producto.modelo) {
+            cumpleBusqueda = producto.modelo.toLowerCase().includes(busqueda);
+        }
+
+        // Buscar en medidas de llantas usando la misma lógica del modal de inventario
+        if (!cumpleBusqueda) {
+            try {
+                if (producto.llanta || (producto.Llanta && producto.Llanta.length > 0)) {
+                    const llantaInfo = producto.llanta || producto.Llanta[0];
+
+                    // Buscar en marca de llanta
+                    if (llantaInfo.marca) {
+                        cumpleBusqueda = llantaInfo.marca.toLowerCase().includes(busqueda);
+                    }
+
+                    // Buscar en modelo de llanta
+                    if (!cumpleBusqueda && llantaInfo.modelo) {
+                        cumpleBusqueda = llantaInfo.modelo.toLowerCase().includes(busqueda);
+                    }
+
+                    // Buscar en medidas completas
+                    if (!cumpleBusqueda && llantaInfo.ancho && llantaInfo.diametro) {
+                        let medidas = '';
+                        if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                            medidas = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                        } else {
+                            medidas = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                        }
+
+                        // Buscar en formato completo y en componentes individuales
+                        cumpleBusqueda = medidas.toLowerCase().includes(busqueda) ||
+                                       llantaInfo.ancho.toString().includes(busqueda) ||
+                                       (llantaInfo.perfil && llantaInfo.perfil.toString().includes(busqueda)) ||
+                                       llantaInfo.diametro.toString().includes(busqueda);
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Error en búsqueda de llanta:', error);
+            }
+        }
 
         const cumpleCategoria = !categoria || producto.categoria === categoria;
 
@@ -600,7 +938,7 @@ async function finalizarPedido() {
         btnFinalizar.html('<i class="bi bi-hourglass-split me-1"></i>Creando Pedido...').prop('disabled', true);
 
         const datosPedido = {
-            proveedorId: proveedorSeleccionado.proveedorId,
+            proveedorId: proveedorSeleccionado.id || proveedorSeleccionado.proveedorId,
             productos: productosSeleccionados.map(p => ({
                 productoId: p.productoId,
                 cantidad: p.cantidad,
@@ -836,7 +1174,17 @@ function actualizarContadorPedidos() {
  */
 function mostrarExito(mensaje) {
     console.log('✅ Éxito:', mensaje);
-    if (typeof mostrarToast === 'function') {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'success',
+            title: '¡Éxito!',
+            text: mensaje,
+            confirmButtonText: 'Continuar',
+            confirmButtonColor: '#28a745',
+            timer: 3000,
+            timerProgressBar: true
+        });
+    } else if (typeof mostrarToast === 'function') {
         mostrarToast('Éxito', mensaje, 'success');
     } else {
         alert('Éxito: ' + mensaje);
@@ -848,11 +1196,136 @@ function mostrarExito(mensaje) {
  */
 function mostrarError(mensaje) {
     console.error('❌ Error:', mensaje);
-    if (typeof mostrarToast === 'function') {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: mensaje,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#dc3545'
+        });
+    } else if (typeof mostrarToast === 'function') {
         mostrarToast('Error', mensaje, 'danger');
     } else {
         alert('Error: ' + mensaje);
     }
+}
+
+/**
+ * Función para ordenar filas de tabla
+ */
+function ordenarFilas(rows, column, $elementoClick) {
+    console.log(`🔄 Ordenando por columna: ${column}`);
+    console.log('📋 Filas recibidas para ordenar:', rows.length);
+
+    // Determinar dirección de ordenamiento
+    let ascending = true;
+    if ($elementoClick.hasClass('sorted-asc')) {
+        ascending = false;
+        $elementoClick.removeClass('sorted-asc').addClass('sorted-desc');
+    } else {
+        $elementoClick.removeClass('sorted-desc').addClass('sorted-asc');
+        ascending = true;
+    }
+
+    console.log(`📈 Dirección de ordenamiento: ${ascending ? 'ascendente' : 'descendente'}`);
+
+    // Limpiar iconos de otras columnas
+    $('.sortable').not($elementoClick).removeClass('sorted-asc sorted-desc');
+
+    // Actualizar icono
+    $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
+    $elementoClick.find('i').removeClass('bi-arrow-down-up').addClass(ascending ? 'bi-arrow-up' : 'bi-arrow-down');
+
+    // Ordenar filas - USANDO .data() IGUAL QUE EN INVENTARIO FACTURACIÓN
+    console.log('🔄 === INICIANDO FUNCIÓN SORT ===');
+    
+    rows.sort(function(a, b) {
+        console.log('🚀 === DENTRO DE SORT FUNCTION ===');
+        console.log('📋 Parámetros recibidos:', {
+            a: a,
+            b: b,
+            column: column,
+            aElement: $(a)[0],
+            bElement: $(b)[0]
+        });
+
+        let aVal, bVal;
+
+        console.log(`🔍 Entrando al switch con columna: "${column}"`);
+
+        switch(column) {
+            case 'id':
+                console.log('✅ CASE ID - Obteniendo valores de producto-id');
+                aVal = parseInt($(a).data('producto-id')) || 0;
+                bVal = parseInt($(b).data('producto-id')) || 0;
+                console.log('📊 ID Values:', { aVal, bVal });
+                break;
+            case 'nombre':
+                console.log('✅ CASE NOMBRE - Obteniendo valores de nombre');
+                aVal = $(a).data('nombre') || '';
+                bVal = $(b).data('nombre') || '';
+                console.log('📊 Nombre Values:', { aVal, bVal });
+                break;
+            case 'marca':
+                console.log('✅ CASE MARCA - Obteniendo valores de marca');
+                aVal = $(a).data('marca') || '';
+                bVal = $(b).data('marca') || '';
+                console.log('📊 Marca Values:', { aVal, bVal });
+                break;
+            case 'medida':
+                console.log('✅ CASE MEDIDA - Obteniendo valores de medida');
+                aVal = $(a).data('medida') || 'zzz';
+                bVal = $(b).data('medida') || 'zzz';
+                console.log('📊 Medida Values:', { aVal, bVal });
+                break;
+            case 'stock':
+                console.log('✅ CASE STOCK - Obteniendo valores de stock');
+                aVal = parseInt($(a).data('stock')) || 0;
+                bVal = parseInt($(b).data('stock')) || 0;
+                console.log('📊 Stock Values:', { aVal, bVal });
+                break;
+            default:
+                console.error(`❌ DEFAULT CASE - Columna no reconocida: "${column}"`);
+                console.log('📋 Todos los data attributes de A:', $(a).data());
+                console.log('📋 Todos los data attributes de B:', $(b).data());
+                return 0;
+        }
+
+        console.log('📊 Valores finales antes de comparar:', { aVal, bVal, tipo: typeof aVal });
+
+        if (typeof aVal === 'string') {
+            aVal = aVal.toLowerCase();
+            bVal = bVal.toLowerCase();
+            const result = ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            console.log('📊 Resultado comparación string:', result);
+            return result;
+        } else {
+            const result = ascending ? aVal - bVal : bVal - aVal;
+            console.log('📊 Resultado comparación numérica:', result);
+            return result;
+        }
+    });
+
+    console.log('✅ SORT FUNCTION COMPLETADA');
+
+    // Determinar dónde colocar las filas ordenadas
+    const $tabla = $('#tablaProductosPedido');
+    const $tbody = $tabla.find('tbody');
+    
+    if ($tbody.length > 0) {
+        console.log('📋 Reordenando en tbody de tablaProductosPedido');
+        $tbody.empty().append(rows);
+    } else {
+        // Si no hay tbody específico, buscar el contenedor padre común
+        console.log('📋 No se encontró tbody, buscando contenedor padre...');
+        const $contenedorPadre = $(rows[0]).parent();
+        console.log('📋 Contenedor padre encontrado:', $contenedorPadre[0]);
+        $contenedorPadre.empty().append(rows);
+    }
+
+    console.log(`✅ Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
+    console.log('🏁 === FIN FUNCIÓN DE ORDENAMIENTO ===');
 }
 
 // =====================================
@@ -874,5 +1347,6 @@ window.guardarProveedorRapido = guardarProveedorRapido;
 window.verDetallePedido = verDetallePedido;
 window.cambiarEstadoPedido = cambiarEstadoPedido;
 window.aplicarFiltros = aplicarFiltros;
+window.cargarPedidosDeProveedor = cargarPedidosDeProveedor;
 
 console.log('✅ Módulo de pedidos a proveedores cargado completamente');
