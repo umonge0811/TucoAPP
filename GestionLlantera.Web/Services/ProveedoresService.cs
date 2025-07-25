@@ -177,7 +177,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo pedidos de proveedores - ProveedorId: {ProveedorId}", 
+                _logger.LogInformation("📋 🟢 [SERVICE] INICIO - ObtenerPedidosProveedorAsync - ProveedorId: {ProveedorId}", 
                     proveedorId?.ToString() ?? "TODOS");
 
                 if (!string.IsNullOrEmpty(jwtToken))
@@ -185,6 +185,7 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Clear();
                     _httpClient.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("📋 🔐 [SERVICE] Token JWT configurado");
                 }
 
                 string url = "api/PedidosProveedor";
@@ -193,42 +194,65 @@ namespace GestionLlantera.Web.Services
                     url += $"?proveedorId={proveedorId}";
                 }
 
-                _logger.LogInformation("📋 Llamando a API: {Url}", url);
+                _logger.LogInformation("📋 🌐 [SERVICE] Llamando a API: {Url}", url);
 
                 var response = await _httpClient.GetAsync(url);
                 var content = await response.Content.ReadAsStringAsync();
 
-                _logger.LogInformation("📋 Respuesta API: StatusCode={StatusCode}, ContentLength={ContentLength}", 
+                _logger.LogInformation("📋 📡 [SERVICE] Respuesta API: StatusCode={StatusCode}, ContentLength={ContentLength}", 
                     response.StatusCode, content?.Length ?? 0);
+
+                _logger.LogInformation("📋 📄 [SERVICE] CONTENIDO COMPLETO DE LA API: {Content}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("📋 Contenido de respuesta: {Content}", 
-                        content.Length > 500 ? content.Substring(0, 500) + "..." : content);
-
                     // Intentar deserializar la respuesta
                     if (string.IsNullOrWhiteSpace(content))
                     {
-                        _logger.LogInformation("📋 Respuesta vacía - no hay pedidos");
+                        _logger.LogInformation("📋 ⚠️ [SERVICE] Respuesta vacía - no hay pedidos");
                         return (true, new List<object>(), "No hay pedidos disponibles");
                     }
 
                     try
                     {
-                        // Deserializar directamente como dynamic para mantener la estructura JSON
-                        var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
-                        return (true, data: pedidos, message: "Pedidos obtenidos exitosamente");
+                        _logger.LogInformation("📋 ⚙️ [SERVICE] Intentando deserializar JSON...");
+                        
+                        // Deserializar directamente como dynamic
+                        var pedidosRaw = JsonConvert.DeserializeObject<dynamic>(content);
+                        
+                        _logger.LogInformation("📋 🔍 [SERVICE] Resultado de deserialización:");
+                        _logger.LogInformation("📋 🔍 [SERVICE] - Tipo: {Type}", pedidosRaw?.GetType()?.Name ?? "NULL");
+                        _logger.LogInformation("📋 🔍 [SERVICE] - ToString: {Data}", pedidosRaw?.ToString() ?? "NULL");
+                        
+                        // Si es JArray, convertir a objeto regular
+                        if (pedidosRaw is Newtonsoft.Json.Linq.JArray jArray)
+                        {
+                            _logger.LogInformation("📋 🔄 [SERVICE] Detectado JArray con {Count} elementos", jArray.Count);
+                            
+                            var listaPedidos = new List<object>();
+                            foreach (var item in jArray)
+                            {
+                                _logger.LogInformation("📋 🔍 [SERVICE] Elemento JArray: {Item}", item.ToString());
+                                listaPedidos.Add(item);
+                            }
+                            
+                            _logger.LogInformation("📋 ✅ [SERVICE] Lista convertida con {Count} elementos", listaPedidos.Count);
+                            return (true, listaPedidos, "Pedidos obtenidos exitosamente");
+                        }
+                        
+                        _logger.LogInformation("📋 ✅ [SERVICE] Retornando datos como dynamic");
+                        return (true, data: pedidosRaw, message: "Pedidos obtenidos exitosamente");
                     }
-                    catch (System.Text.Json.JsonException ex)
+                    catch (JsonException ex)
                     {
-                        _logger.LogError(ex, "❌ Error deserializando respuesta JSON");
-                        _logger.LogError("📋 Contenido que falló al deserializar: {Content}", content);
+                        _logger.LogError(ex, "❌ [SERVICE] Error deserializando respuesta JSON");
+                        _logger.LogError("📋 💥 [SERVICE] Contenido que falló: {Content}", content);
                         return (false, new List<object>(), "Error procesando respuesta del servidor");
                     }
                 }
                 else
                 {
-                    _logger.LogError("❌ Error HTTP obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
+                    _logger.LogError("❌ [SERVICE] Error HTTP obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
 
                     // Intentar extraer mensaje de error del contenido
                     try
@@ -245,7 +269,7 @@ namespace GestionLlantera.Web.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo pedidos");
+                _logger.LogError(ex, "❌ [SERVICE] Error obteniendo pedidos");
                 return (false, new List<object>(), "Error interno del servidor");
             }
         }

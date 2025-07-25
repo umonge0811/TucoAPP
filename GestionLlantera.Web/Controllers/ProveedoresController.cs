@@ -395,18 +395,24 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📦 Solicitando pedidos - ProveedorId: {ProveedorId}", proveedorId?.ToString() ?? "TODOS");
+                _logger.LogInformation("📦 🟢 [CONTROLLER] INICIO - ObtenerPedidosProveedor - ProveedorId: {ProveedorId}", proveedorId?.ToString() ?? "TODOS");
 
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
-                    _logger.LogWarning("⚠️ Token JWT no encontrado");
+                    _logger.LogWarning("⚠️ [CONTROLLER] Token JWT no encontrado");
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
+                _logger.LogInformation("📦 🔐 [CONTROLLER] Token JWT obtenido, llamando al servicio...");
+                
                 var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
 
-                _logger.LogInformation($"📦 Resultado del servicio: Success={resultado.success}, DataType={resultado.data?.GetType()}, Message={resultado.message}");
+                _logger.LogInformation("📦 📋 [CONTROLLER] Resultado del servicio:");
+                _logger.LogInformation("📦 📋 [CONTROLLER] - Success: {Success}", resultado.success);
+                _logger.LogInformation("📦 📋 [CONTROLLER] - DataType: {DataType}", resultado.data?.GetType()?.Name ?? "NULL");
+                _logger.LogInformation("📦 📋 [CONTROLLER] - Message: {Message}", resultado.message);
+                _logger.LogInformation("📦 📋 [CONTROLLER] - Data ToString: {Data}", resultado.data?.ToString() ?? "NULL");
 
                 if (resultado.success)
                 {
@@ -418,12 +424,29 @@ namespace GestionLlantera.Web.Controllers
                         message = resultado.message
                     };
 
-                    _logger.LogInformation($"📦 Enviando respuesta estructurada: {System.Text.Json.JsonSerializer.Serialize(jsonResponse)}");
+                    _logger.LogInformation("📦 🔄 [CONTROLLER] Creando respuesta JSON estructurada...");
+                    
+                    try
+                    {
+                        var serializedResponse = System.Text.Json.JsonSerializer.Serialize(jsonResponse, new System.Text.Json.JsonSerializerOptions
+                        {
+                            WriteIndented = true,
+                            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                        });
+                        
+                        _logger.LogInformation("📦 📤 [CONTROLLER] RESPUESTA SERIALIZADA COMPLETA: {Response}", serializedResponse);
+                    }
+                    catch (Exception serEx)
+                    {
+                        _logger.LogError(serEx, "❌ [CONTROLLER] Error serializando respuesta para log");
+                    }
 
+                    _logger.LogInformation("📦 ✅ [CONTROLLER] Enviando respuesta OK al frontend");
                     return Ok(jsonResponse);
                 }
                 else
                 {
+                    _logger.LogWarning("📦 ⚠️ [CONTROLLER] Servicio retornó error: {Message}", resultado.message);
                     return BadRequest(new { 
                         success = false, 
                         message = resultado.message,
@@ -433,7 +456,7 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo pedidos");
+                _logger.LogError(ex, "❌ [CONTROLLER] Error obteniendo pedidos");
                 return Json(new { 
                     success = false, 
                     data = new List<object>(),

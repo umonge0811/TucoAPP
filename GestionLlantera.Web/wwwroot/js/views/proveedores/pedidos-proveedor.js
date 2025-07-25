@@ -151,32 +151,78 @@ async function cargarPedidos() {
         }
 
         const data = await response.json();
-        console.log('📦 Respuesta completa del servidor:', data);
-        console.log('📦 Tipo de data:', typeof data);
-        console.log('📦 Es array:', Array.isArray(data));
-        console.log('📦 Tiene success:', data.hasOwnProperty('success'));
-        console.log('📦 Estructura de data:', JSON.stringify(data, null, 2));
+        console.log('📦 🟢 [FRONTEND] RESPUESTA COMPLETA DEL SERVIDOR:', data);
+        console.log('📦 🔍 [FRONTEND] Tipo de data:', typeof data);
+        console.log('📦 🔍 [FRONTEND] Es array:', Array.isArray(data));
+        console.log('📦 🔍 [FRONTEND] Tiene success:', data.hasOwnProperty('success'));
+        console.log('📦 🔍 [FRONTEND] Success value:', data.success);
+        console.log('📦 🔍 [FRONTEND] Data.data type:', typeof data.data);
+        console.log('📦 🔍 [FRONTEND] Data.data es array:', Array.isArray(data.data));
+        
+        if (data.data && Array.isArray(data.data)) {
+            console.log('📦 🔍 [FRONTEND] Cantidad de elementos en data.data:', data.data.length);
+            
+            // Analizar los primeros elementos
+            data.data.forEach((elemento, index) => {
+                if (index < 3) { // Solo los primeros 3 para no saturar
+                    console.log(`📦 🔍 [FRONTEND] Elemento ${index}:`, {
+                        tipo: typeof elemento,
+                        esArray: Array.isArray(elemento),
+                        valor: elemento,
+                        propiedades: elemento && typeof elemento === 'object' ? Object.keys(elemento) : 'N/A'
+                    });
+                }
+            });
+        }
+        
+        console.log('📦 📄 [FRONTEND] ESTRUCTURA COMPLETA:', JSON.stringify(data, null, 2));
 
         // La respuesta debe venir en formato estructurado: { success: true, data: [...], message: "..." }
         let pedidos = [];
         
+        console.log('📦 🔄 [FRONTEND] PROCESANDO RESPUESTA DEL SERVIDOR...');
+        
         if (data.success === true && data.data) {
-            // Formato esperado: { success: true, data: [...] }
-            pedidos = Array.isArray(data.data) ? data.data : [];
-            console.log('📦 Usando data.data (formato estructurado), cantidad:', pedidos.length);
+            console.log('📦 ✅ [FRONTEND] Success=true y data existe');
+            
+            if (Array.isArray(data.data)) {
+                console.log('📦 ✅ [FRONTEND] data.data es array, procesando...');
+                pedidos = data.data;
+                console.log('📦 📊 [FRONTEND] Cantidad de pedidos detectados:', pedidos.length);
+                
+                // Analizar estructura de cada pedido
+                pedidos.forEach((pedido, index) => {
+                    if (index < 3) { // Solo los primeros 3
+                        console.log(`📦 🔍 [FRONTEND] Pedido ${index + 1}:`, {
+                            tipo: typeof pedido,
+                            esArray: Array.isArray(pedido),
+                            propiedades: pedido && typeof pedido === 'object' && !Array.isArray(pedido) ? Object.keys(pedido) : 'N/A',
+                            valor: pedido
+                        });
+                        
+                        // Si es array, analizar su contenido
+                        if (Array.isArray(pedido)) {
+                            console.log(`📦 ⚠️ [FRONTEND] PEDIDO ${index + 1} ES ARRAY (PROBLEMA!):`, pedido);
+                        }
+                    }
+                });
+            } else {
+                console.log('📦 ⚠️ [FRONTEND] data.data NO es array:', typeof data.data, data.data);
+                pedidos = [];
+            }
         } else if (data.success === false) {
-            // Error del servidor
-            console.log(`ℹ️ Error del servidor: ${data.message}`);
+            console.log(`📦 ❌ [FRONTEND] Error del servidor: ${data.message}`);
             pedidos = [];
         } else if (Array.isArray(data)) {
-            // Formato directo: [...] (por compatibilidad)
+            console.log('📦 🔄 [FRONTEND] Usando formato legacy (data directo)');
             pedidos = data;
-            console.log('📦 Usando data directo (formato legacy), cantidad:', pedidos.length);
         } else {
-            // Casos no manejados
-            console.warn('⚠️ Formato de respuesta no reconocido:', data);
+            console.warn('📦 ⚠️ [FRONTEND] Formato de respuesta no reconocido:', data);
             pedidos = [];
         }
+        
+        console.log('📦 📊 [FRONTEND] PEDIDOS FINALES PROCESADOS:', pedidos.length);
+        console.log('📦 📋 [FRONTEND] ESTRUCTURA FINAL DE PEDIDOS:', pedidos);
 
         // Log de los primeros pedidos para debug
         if (pedidos.length > 0) {
