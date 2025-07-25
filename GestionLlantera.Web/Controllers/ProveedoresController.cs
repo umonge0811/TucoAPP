@@ -414,25 +414,66 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearPedidoProveedor([FromBody] dynamic pedidoData)
+        public async Task<IActionResult> CrearPedidoProveedor([FromBody] CrearPedidoProveedorRequest request)
         {
             try
             {
-                // ✅ OBTENER TOKEN - ESTO FALTABA
+                _logger.LogInformation("📦 Creando pedido para proveedor {ProveedorId} con {CantidadProductos} productos", 
+                    request?.ProveedorId, request?.Productos?.Count ?? 0);
+
+                if (request == null)
+                {
+                    return Json(new { success = false, message = "Datos del pedido requeridos" });
+                }
+
+                // ✅ OBTENER TOKEN
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
-                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
-                    return RedirectToAction("Login", "Account");
+                    return Json(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
                 }
 
-                var resultado = await _proveedoresService.CrearPedidoProveedorAsync(pedidoData, token);
+                // Validaciones básicas
+                if (request.ProveedorId <= 0)
+                {
+                    return Json(new { success = false, message = "Debe seleccionar un proveedor válido" });
+                }
+
+                if (request.Productos == null || !request.Productos.Any())
+                {
+                    return Json(new { success = false, message = "Debe seleccionar al menos un producto" });
+                }
+
+                // Validar productos
+                foreach (var producto in request.Productos)
+                {
+                    if (producto.ProductoId <= 0)
+                    {
+                        return Json(new { success = false, message = "ID de producto inválido" });
+                    }
+                    if (producto.Cantidad <= 0)
+                    {
+                        return Json(new { success = false, message = "La cantidad debe ser mayor a 0" });
+                    }
+                }
+
+                var resultado = await _proveedoresService.CrearPedidoProveedorAsync(request, token);
+                
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Pedido creado exitosamente para proveedor {ProveedorId}", request.ProveedorId);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error creando pedido: {Message}", resultado.message);
+                }
+
                 return Json(resultado);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error creando pedido");
-                return Json(new { success = false, message = "Error creando pedido" });
+                _logger.LogError(ex, "❌ Error creando pedido para proveedor {ProveedorId}", request?.ProveedorId);
+                return Json(new { success = false, message = "Error interno del servidor al crear el pedido" });
             }
         }
     }
@@ -462,3 +503,18 @@ namespace GestionLlantera.Web.Controllers
         public bool Activo { get; set; }
     }
 }
+
+
+    // DTOs para crear pedido
+    public class CrearPedidoProveedorRequest
+    {
+        public int ProveedorId { get; set; }
+        public List<ProductoPedidoRequest> Productos { get; set; } = new List<ProductoPedidoRequest>();
+    }
+
+    public class ProductoPedidoRequest
+    {
+        public int ProductoId { get; set; }
+        public int Cantidad { get; set; }
+        public decimal? PrecioUnitario { get; set; }
+    }

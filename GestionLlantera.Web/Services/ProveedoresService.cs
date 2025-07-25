@@ -286,7 +286,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string message)> CrearPedidoProveedorAsync(dynamic pedidoData, string token)
+        public async Task<(bool success, string message, object? data)> CrearPedidoProveedorAsync(object pedidoData, string token)
         {
             try
             {
@@ -302,18 +302,18 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                    return (true, resultado, "Pedido creado exitosamente");
+                    return (true, "Pedido creado exitosamente", resultado);
                 }
                 else
                 {
                     _logger.LogError("❌ Error creando pedido: {StatusCode} - {Content}", response.StatusCode, responseContent);
-                    return (false, null, "Error creando pedido");
+                    return (false, "Error creando pedido", null);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error creando pedido");
-                return (false, null, "Error interno del servidor");
+                return (false, "Error interno del servidor", null);
             }
         }
 

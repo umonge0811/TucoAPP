@@ -514,7 +514,7 @@ function configurarOrdenamientoTablaProductos() {
 
     $('.sortable').off('click').on('click', function() {
         console.log('🚀 === INICIO FUNCIÓN DE ORDENAMIENTO ===');
-        
+
         const column = $(this).data('column');
         const $table = $('#tablaProductosPedido');
         const $tbody = $table.find('tbody');
@@ -539,7 +539,7 @@ function configurarOrdenamientoTablaProductos() {
         console.log('📋 Contenido de tbody:', $tbody.html());
         console.log('📋 Todos los tr en tbody:', $tbody.find('tr'));
         console.log('📋 Cantidad de tr encontrados:', $tbody.find('tr').length);
-        
+
         // Verificar si existe alguna tabla con productos
         const todasLasTablas = $('table');
         console.log('📋 Total de tablas en la página:', todasLasTablas.length);
@@ -559,22 +559,22 @@ function configurarOrdenamientoTablaProductos() {
         if (rows.length === 0) {
             console.warn('⚠️ NO HAY FILAS PARA ORDENAR');
             console.warn('🔍 Intentando buscar filas con selectores alternativos...');
-            
+
             // Buscar filas con data-producto-id
             const filasConData = $('tr[data-producto-id]');
             console.log('📋 Filas con data-producto-id encontradas:', filasConData.length);
-            
+
             if (filasConData.length > 0) {
                 console.log('✅ Usando filas encontradas con data-producto-id');
                 // Usar estas filas en lugar de las del tbody
                 const filasArray = filasConData.toArray();
                 console.log('📋 Filas a ordenar:', filasArray.length);
-                
+
                 // Continuar con el ordenamiento usando filasArray
                 ordenarFilas(filasArray, column, $(this));
                 return;
             }
-            
+
             return;
         }
 
@@ -736,7 +736,7 @@ function cargarProductosEnTabla() {
         const elementosSortable = $('.sortable');
         console.log('🔍 === VERIFICANDO ELEMENTOS SORTABLE ===');
         console.log(`📊 Elementos .sortable encontrados: ${elementosSortable.length}`);
-        
+
         elementosSortable.each(function(index) {
             console.log(`📋 Elemento ${index + 1}:`, {
                 elemento: this,
@@ -749,7 +749,7 @@ function cargarProductosEnTabla() {
 
         // Configurar ordenamiento INMEDIATAMENTE después de cargar el HTML - IGUAL QUE EN INVENTARIO FACTURACIÓN
         configurarOrdenamientoTablaProductos();
-        
+
         // Verificar que los event listeners se configuraron
         console.log('🔧 === VERIFICANDO EVENT LISTENERS ===');
         elementosSortable.each(function(index) {
@@ -949,20 +949,23 @@ async function finalizarPedido() {
         const response = await fetch('/Proveedores/CrearPedidoProveedor', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(datosPedido)
         });
 
         const resultado = await response.json();
+        console.log('📦 Respuesta del servidor:', resultado);
 
         if (resultado.success) {
+            console.log('✅ Pedido creado exitosamente');
             mostrarExito('Pedido creado exitosamente');
             $('#modalNuevoPedido').modal('hide');
-            await cargarPedidos(); // Recargar lista
+            await cargarPedidos();
+            limpiarFormulario();
         } else {
-            mostrarError(resultado.message);
+            console.error('❌ Error creando pedido:', resultado.message);
+            mostrarError(resultado.message || 'Error al crear el pedido');
         }
     } catch (error) {
         console.error('❌ Error creando pedido:', error);
@@ -1239,7 +1242,7 @@ function ordenarFilas(rows, column, $elementoClick) {
 
     // Ordenar filas - USANDO .data() IGUAL QUE EN INVENTARIO FACTURACIÓN
     console.log('🔄 === INICIANDO FUNCIÓN SORT ===');
-    
+
     rows.sort(function(a, b) {
         console.log('🚀 === DENTRO DE SORT FUNCTION ===');
         console.log('📋 Parámetros recibidos:', {
@@ -1312,7 +1315,7 @@ function ordenarFilas(rows, column, $elementoClick) {
     // Determinar dónde colocar las filas ordenadas
     const $tabla = $('#tablaProductosPedido');
     const $tbody = $tabla.find('tbody');
-    
+
     if ($tbody.length > 0) {
         console.log('📋 Reordenando en tbody de tablaProductosPedido');
         $tbody.empty().append(rows);
@@ -1326,6 +1329,45 @@ function ordenarFilas(rows, column, $elementoClick) {
 
     console.log(`✅ Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
     console.log('🏁 === FIN FUNCIÓN DE ORDENAMIENTO ===');
+}
+
+/**
+ * Limpiar Formulario
+ */
+function limpiarFormulario() {
+    // Deseleccionar todos los productos seleccionados
+    $('tr[data-producto-id]:visible .producto-checkbox').each(function() {
+        const checkbox = $(this);
+        if (checkbox.is(':checked')) {
+            checkbox.prop('checked', false);
+            const productoId = parseInt(checkbox.val());
+            toggleProductoSeleccionado(productoId);
+        }
+    });
+
+    // Resetear el filtro de búsqueda de productos
+    $('#buscarProductoPedido').val('');
+    filtrarProductosPedido();
+
+    // Resetear la selección de categoría
+    $('#filtroCategoriaPedido').val('');
+
+    // Desmarcar el checkbox de seleccionar todos
+    $('#seleccionarTodosProductos').prop('checked', false);
+
+    // Opcional: podría también resetear la cantidad y el precio de cada producto
+    $('input.cantidad-producto').val(1);
+    $('input.precio-producto').val(0.00);
+
+    // Ocultar la información del proveedor seleccionado
+    $('#infoProveedorSeleccionado').hide();
+
+    // Deseleccionar el proveedor
+    $('#selectProveedor').val('');
+    seleccionarProveedor();
+
+    // Actualizar el resumen del pedido
+    actualizarResumenPedido();
 }
 
 // =====================================
