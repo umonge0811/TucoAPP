@@ -543,32 +543,30 @@ function configurarOrdenamientoTablaProductos() {
 
             switch(column) {
                 case 'id':
-                    aVal = parseInt($(a).data('producto-id')) || 0;
-                    bVal = parseInt($(b).data('producto-id')) || 0;
+                    aVal = parseInt($(a).attr('data-producto-id')) || 0;
+                    bVal = parseInt($(b).attr('data-producto-id')) || 0;
                     break;
                 case 'nombre':
-                    aVal = $(a).data('nombre') || '';
-                    bVal = $(b).data('nombre') || '';
+                    aVal = $(a).attr('data-nombre') || '';
+                    bVal = $(b).attr('data-nombre') || '';
                     break;
                 case 'marca':
-                    aVal = $(a).data('marca') || '';
-                    bVal = $(b).data('marca') || '';
+                    aVal = $(a).attr('data-marca') || '';
+                    bVal = $(b).attr('data-marca') || '';
                     break;
                 case 'medida':
-                    aVal = $(a).data('medida') || 'zzz';
-                    bVal = $(b).data('medida') || 'zzz';
+                    aVal = $(a).attr('data-medida') || 'zzz';
+                    bVal = $(b).attr('data-medida') || 'zzz';
                     break;
                 case 'stock':
-                    aVal = parseInt($(a).data('stock')) || 0;
-                    bVal = parseInt($(b).data('stock')) || 0;
+                    aVal = parseInt($(a).attr('data-stock')) || 0;
+                    bVal = parseInt($(b).attr('data-stock')) || 0;
                     break;
                 default:
                     return 0;
             }
 
             if (typeof aVal === 'string') {
-                aVal = aVal.toLowerCase();
-                bVal = bVal.toLowerCase();
                 return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
             } else {
                 return ascending ? aVal - bVal : bVal - aVal;
@@ -678,7 +676,7 @@ function cargarProductosEnTabla() {
                 data-producto-id="${producto.productoId}"
                 data-nombre="${(producto.nombreProducto || '').toLowerCase()}"
                 data-marca="${marcaInfo.toLowerCase()}"
-                data-medida="${medidaParaBusqueda}"
+                data-medida="${medidaLlanta.toLowerCase()}"
                 data-stock="${stockDisponible}">
                 <td>
                     <input type="checkbox" class="form-check-input producto-checkbox" 
