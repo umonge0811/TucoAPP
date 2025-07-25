@@ -286,7 +286,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, string message, object? data)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token)
+        public async Task<(bool success, object? data, string message)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token)
         {
             try
             {
