@@ -316,5 +316,38 @@ namespace GestionLlantera.Web.Services
                 return (false, null, "Error interno del servidor");
             }
         }
+
+        public async Task<(bool success, object data, string message)> ObtenerProductosParaFacturacionAsync()
+        {
+            try
+            {
+                _logger.LogInformation("📦 Obteniendo productos para facturación desde servicio de proveedores");
+
+                var response = await _httpClient.GetAsync("/Facturacion/ObtenerProductosParaFacturacion");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(content);
+
+                    // Log para debug de los datos recibidos
+                    _logger.LogInformation("📋 Datos de productos recibidos: {Content}", content.Substring(0, Math.Min(500, content.Length)));
+
+                    _logger.LogInformation("✅ Productos obtenidos exitosamente");
+                    return (true, resultado, "Productos cargados exitosamente");
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error HTTP obteniendo productos: {StatusCode} - {Error}", response.StatusCode, error);
+                    return (false, null, $"Error HTTP: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo productos para facturación");
+                return (false, null, $"Error: {ex.Message}");
+            }
+        }
     }
 }

@@ -459,12 +459,24 @@ function mostrarInfoProveedor(proveedor) {
         return;
     }
 
+    console.log('📋 Mostrando información del proveedor:', proveedor);
+
     const nombre = proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre';
+    const email = proveedor.email || proveedor.correo || 'No especificado';
+    
     $('#infoNombreProveedor').text(nombre);
     $('#infoContactoProveedor').text(proveedor.contacto || 'No especificado');
-    $('#infoEmailProveedor').text(proveedor.email || 'No especificado');
+    $('#infoEmailProveedor').text(email);
     $('#infoTelefonoProveedor').text(proveedor.telefono || 'No especificado');
     $('#infoDireccionProveedor').text(proveedor.direccion || 'No especificada');
+    
+    // Resaltar el email si existe
+    if (email !== 'No especificado') {
+        $('#infoEmailProveedor').removeClass('text-muted').addClass('text-info');
+    } else {
+        $('#infoEmailProveedor').removeClass('text-info').addClass('text-muted');
+    }
+    
     $('#infoProveedorSeleccionado').show();
 }
 
@@ -503,36 +515,83 @@ function cargarProductosEnTabla() {
         return;
     }
 
-    const html = productosInventario.map(producto => `
-        <tr data-producto-id="${producto.productoId}">
-            <td>
-                <input type="checkbox" class="form-check-input producto-checkbox" 
-                       value="${producto.productoId}" 
-                       onchange="toggleProductoSeleccionado(${producto.productoId})">
-            </td>
-            <td>
-                <strong>${producto.nombreProducto}</strong>
-                <br>
-                <small class="text-muted">${producto.modelo || ''}</small>
-            </td>
-            <td>${producto.marca || '-'}</td>
-            <td>
-                <span class="badge ${producto.stock > 0 ? 'bg-success' : 'bg-danger'}">${producto.stock}</span>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm cantidad-producto" 
-                       value="1" min="1" style="width: 80px;" 
-                       onchange="actualizarCantidadProducto(${producto.productoId}, this.value)"
-                       disabled>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm precio-producto" 
-                       value="0.00" min="0" step="0.01" style="width: 100px;"
-                       onchange="actualizarPrecioProducto(${producto.productoId}, this.value)"
-                       disabled>
-            </td>
-        </tr>
-    `).join('');
+    console.log('🔍 Datos de productos recibidos:', productosInventario);
+
+    const html = productosInventario.map(producto => {
+        // Log detallado de cada producto
+        console.log('📦 Producto:', {
+            id: producto.productoId,
+            nombre: producto.nombreProducto,
+            marca: producto.marca,
+            modelo: producto.modelo,
+            stock: producto.stock || producto.cantidadEnInventario,
+            esLlanta: producto.esLlanta,
+            llanta: producto.llanta
+        });
+
+        // Determinar si es llanta y extraer información
+        const esLlanta = producto.esLlanta || (producto.llanta && producto.llanta.length > 0);
+        let marcaInfo = producto.marca || '';
+        let modeloInfo = producto.modelo || '';
+        let medidasInfo = '';
+
+        // Si es llanta, extraer información específica
+        if (esLlanta && producto.llanta && producto.llanta.length > 0) {
+            const llantaData = producto.llanta[0];
+            marcaInfo = llantaData.marca || marcaInfo || 'Sin marca';
+            modeloInfo = llantaData.modelo || modeloInfo || '';
+            
+            // Construir medidas
+            if (llantaData.ancho && llantaData.perfil && llantaData.diametro) {
+                medidasInfo = `${llantaData.ancho}/${llantaData.perfil}/R${llantaData.diametro}`;
+            }
+        }
+
+        // Si no es llanta, usar marca/modelo del producto general
+        if (!esLlanta) {
+            marcaInfo = marcaInfo || 'N/A';
+            modeloInfo = modeloInfo || '';
+        }
+
+        // Determinar stock
+        const stockDisponible = producto.stock || producto.cantidadEnInventario || 0;
+
+        return `
+            <tr data-producto-id="${producto.productoId}">
+                <td>
+                    <input type="checkbox" class="form-check-input producto-checkbox" 
+                           value="${producto.productoId}" 
+                           onchange="toggleProductoSeleccionado(${producto.productoId})">
+                </td>
+                <td>
+                    <div>
+                        <strong>${producto.nombreProducto}</strong>
+                        ${esLlanta ? '<span class="badge bg-info ms-2">Llanta</span>' : ''}
+                    </div>
+                    ${modeloInfo ? `<small class="text-muted">Modelo: ${modeloInfo}</small>` : ''}
+                    ${medidasInfo ? `<br><small class="text-primary"><i class="bi bi-rulers me-1"></i>${medidasInfo}</small>` : ''}
+                </td>
+                <td>
+                    <span class="badge bg-light text-dark">${marcaInfo}</span>
+                </td>
+                <td>
+                    <span class="badge ${stockDisponible > 0 ? 'bg-success' : 'bg-danger'}">${stockDisponible}</span>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm cantidad-producto" 
+                           value="1" min="1" max="${stockDisponible}" style="width: 80px;" 
+                           onchange="actualizarCantidadProducto(${producto.productoId}, this.value)"
+                           disabled>
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm precio-producto" 
+                           value="0.00" min="0" step="0.01" style="width: 100px;"
+                           onchange="actualizarPrecioProducto(${producto.productoId}, this.value)"
+                           disabled>
+                </td>
+            </tr>
+        `;
+    }).join('');
 
     tbody.html(html);
 }
@@ -620,9 +679,39 @@ function filtrarProductosPedido() {
 
         if (!producto) return;
 
-        const cumpleBusqueda = !busqueda || 
-            producto.nombreProducto.toLowerCase().includes(busqueda) ||
-            (producto.marca && producto.marca.toLowerCase().includes(busqueda));
+        // Buscar en nombre del producto
+        let cumpleBusqueda = !busqueda || producto.nombreProducto.toLowerCase().includes(busqueda);
+
+        // Buscar en marca
+        if (!cumpleBusqueda && producto.marca) {
+            cumpleBusqueda = producto.marca.toLowerCase().includes(busqueda);
+        }
+
+        // Buscar en modelo
+        if (!cumpleBusqueda && producto.modelo) {
+            cumpleBusqueda = producto.modelo.toLowerCase().includes(busqueda);
+        }
+
+        // Si es llanta, buscar en datos específicos de llanta
+        if (!cumpleBusqueda && producto.esLlanta && producto.llanta && producto.llanta.length > 0) {
+            const llantaData = producto.llanta[0];
+            
+            // Buscar en marca de llanta
+            if (llantaData.marca) {
+                cumpleBusqueda = llantaData.marca.toLowerCase().includes(busqueda);
+            }
+            
+            // Buscar en modelo de llanta
+            if (!cumpleBusqueda && llantaData.modelo) {
+                cumpleBusqueda = llantaData.modelo.toLowerCase().includes(busqueda);
+            }
+            
+            // Buscar en medidas
+            if (!cumpleBusqueda && llantaData.ancho && llantaData.perfil && llantaData.diametro) {
+                const medidas = `${llantaData.ancho}/${llantaData.perfil}/R${llantaData.diametro}`;
+                cumpleBusqueda = medidas.includes(busqueda);
+            }
+        }
 
         const cumpleCategoria = !categoria || producto.categoria === categoria;
 
