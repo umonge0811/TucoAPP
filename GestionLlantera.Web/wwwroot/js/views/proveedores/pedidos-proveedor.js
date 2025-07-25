@@ -537,36 +537,38 @@ function configurarOrdenamientoTablaProductos() {
         $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
         $(this).find('i').removeClass('bi-arrow-down-up').addClass(ascending ? 'bi-arrow-up' : 'bi-arrow-down');
 
-        // Ordenar filas
+        // Ordenar filas - USANDO .data() IGUAL QUE EN INVENTARIO FACTURACIÓN
         rows.sort(function(a, b) {
             let aVal, bVal;
 
             switch(column) {
                 case 'id':
-                    aVal = parseInt($(a).attr('data-producto-id')) || 0;
-                    bVal = parseInt($(b).attr('data-producto-id')) || 0;
+                    aVal = parseInt($(a).data('producto-id')) || 0;
+                    bVal = parseInt($(b).data('producto-id')) || 0;
                     break;
                 case 'nombre':
-                    aVal = $(a).attr('data-nombre') || '';
-                    bVal = $(b).attr('data-nombre') || '';
+                    aVal = $(a).data('nombre') || '';
+                    bVal = $(b).data('nombre') || '';
                     break;
                 case 'marca':
-                    aVal = $(a).attr('data-marca') || '';
-                    bVal = $(b).attr('data-marca') || '';
+                    aVal = $(a).data('marca') || '';
+                    bVal = $(b).data('marca') || '';
                     break;
                 case 'medida':
-                    aVal = $(a).attr('data-medida') || 'zzz';
-                    bVal = $(b).attr('data-medida') || 'zzz';
+                    aVal = $(a).data('medida') || 'zzz';
+                    bVal = $(b).data('medida') || 'zzz';
                     break;
                 case 'stock':
-                    aVal = parseInt($(a).attr('data-stock')) || 0;
-                    bVal = parseInt($(b).attr('data-stock')) || 0;
+                    aVal = parseInt($(a).data('stock')) || 0;
+                    bVal = parseInt($(b).data('stock')) || 0;
                     break;
                 default:
                     return 0;
             }
 
             if (typeof aVal === 'string') {
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
                 return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
             } else {
                 return ascending ? aVal - bVal : bVal - aVal;
