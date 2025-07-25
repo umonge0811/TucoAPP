@@ -426,6 +426,92 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos del pedido requeridos" });
                 }
 
+                // Validar datos básicos
+                if (request.ProveedorId <= 0)
+                {
+                    return Json(new { success = false, message = "ID de proveedor inválido" });
+                }
+
+                if (request.Productos == null || !request.Productos.Any())
+                {
+                    return Json(new { success = false, message = "Debe seleccionar al menos un producto" });
+                }
+
+                // Validar productos
+                foreach (var producto in request.Productos)
+                {
+                    if (producto.ProductoId <= 0)
+                    {
+                        return Json(new { success = false, message = "ID de producto inválido" });
+                    }
+
+                    if (producto.Cantidad <= 0)
+                    {
+                        return Json(new { success = false, message = "La cantidad debe ser mayor a 0" });
+                    }
+                }
+
+                // Obtener token JWT
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
+                }
+
+                // Crear el pedido usando el servicio
+                _logger.LogInformation("📦 Preparando datos del pedido para el proveedor {ProveedorId}", request.ProveedorId);
+                
+                var pedidoData = new CrearPedidoProveedorRequest
+                {
+                    ProveedorId = request.ProveedorId,
+                    Productos = request.Productos.Select(p => new ProductoPedidoRequest
+                    {
+                        ProductoId = p.ProductoId,
+                        Cantidad = p.Cantidad,
+                        PrecioUnitario = p.PrecioUnitario ?? 0
+                    }).ToList()
+                };
+
+                var resultado = await _proveedoresService.CrearPedidoProveedorAsync(pedidoData, token);
+                
+                _logger.LogInformation("📦 Resultado del servicio: Success={Success}, Message={Message}", 
+                    resultado.success, resultado.message);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Pedido creado exitosamente para proveedor {ProveedorId}", request.ProveedorId);
+                    
+                    return Json(new 
+                    { 
+                        success = true, 
+                        message = resultado.message ?? "Pedido creado exitosamente",
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error creando pedido: {Message}", resultado.message);
+                    
+                    return Json(new 
+                    { 
+                        success = false, 
+                        message = resultado.message ?? "Error creando el pedido" 
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error creando pedido para proveedor {ProveedorId}", request?.ProveedorId);
+                return Json(new 
+                { 
+                    success = false, 
+                    message = "Error interno del servidor al crear el pedido",
+                    details = ex.Message
+                });
+            }
+                    return Json(new { success = false, message = "Datos del pedido requeridos" });
+                }
+
                 // ✅ OBTENER TOKEN
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
@@ -515,8 +601,6 @@ namespace GestionLlantera.Web.Controllers
     {
         public bool Activo { get; set; }
     }
-}
-
 
     // DTOs para crear pedido
     public class CrearPedidoProveedorRequest
@@ -528,6 +612,10 @@ namespace GestionLlantera.Web.Controllers
     public class ProductoPedidoRequest
     {
         public int ProductoId { get; set; }
+        public int Cantidad { get; set; }
+        public decimal? PrecioUnitario { get; set; }
+    }
+}d { get; set; }
         public int Cantidad { get; set; }
         public decimal? PrecioUnitario { get; set; }
     }
