@@ -507,16 +507,12 @@ function anteriorPaso() {
 }
 
 /**
- * Configurar ordenamiento de la tabla de productos - IGUAL QUE EN INVENTARIO FACTURACIÓN
+ * Configurar ordenamiento de la tabla de productos - EXACTAMENTE IGUAL QUE EN INVENTARIO FACTURACIÓN
  */
 function configurarOrdenamientoTablaProductos() {
     console.log('🔧 Configurando ordenamiento de tabla de productos...');
 
-    // Limpiar eventos previos para evitar duplicados
-    $('#tablaProductosPedido .sortable').off('click.ordenamiento');
-
-    // Configurar eventos de ordenamiento
-    $('#tablaProductosPedido .sortable').on('click.ordenamiento', function() {
+    $('.sortable').off('click').on('click', function() {
         const column = $(this).data('column');
         const $table = $('#tablaProductosPedido');
         const $tbody = $table.find('tbody');
@@ -535,11 +531,11 @@ function configurarOrdenamientoTablaProductos() {
         }
 
         // Limpiar iconos de otras columnas
-        $('#tablaProductosPedido .sortable').not(this).removeClass('sorted-asc sorted-desc');
+        $('.sortable').not(this).removeClass('sorted-asc sorted-desc');
 
         // Actualizar icono
-        $('#tablaProductosPedido .sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up text-muted');
-        $(this).find('i').removeClass('bi-arrow-down-up text-muted').addClass(ascending ? 'bi-arrow-up text-primary' : 'bi-arrow-down text-primary');
+        $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
+        $(this).find('i').removeClass('bi-arrow-down-up').addClass(ascending ? 'bi-arrow-up' : 'bi-arrow-down');
 
         // Ordenar filas
         rows.sort(function(a, b) {
@@ -571,6 +567,8 @@ function configurarOrdenamientoTablaProductos() {
             }
 
             if (typeof aVal === 'string') {
+                aVal = aVal.toLowerCase();
+                bVal = bVal.toLowerCase();
                 return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
             } else {
                 return ascending ? aVal - bVal : bVal - aVal;
@@ -731,9 +729,7 @@ function cargarProductosEnTabla() {
     tbody.html(html);
 
     // Configurar ordenamiento después de cargar el HTML - CRÍTICO PARA QUE FUNCIONE
-    setTimeout(() => {
-        configurarOrdenamientoTablaProductos();
-    }, 100);
+    configurarOrdenamientoTablaProductos();
 }
 
 /**
