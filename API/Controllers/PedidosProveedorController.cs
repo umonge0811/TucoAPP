@@ -148,6 +148,7 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("📦 Creando nuevo pedido a proveedor");
+                _logger.LogInformation("📦 Request recibido: {Request}", pedidoRequest?.ToString());
 
                 // Obtener información del usuario desde los claims
                 var usuarioId = this.ObtenerUsuarioIdDelToken();
@@ -156,11 +157,34 @@ namespace API.Controllers
                     return BadRequest(new { message = "No se pudo identificar al usuario" });
                 }
 
-                // Deserializar datos del pedido
-                string jsonString = pedidoRequest.ToString();
-                var datos = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(jsonString);
+                // Manejar el request de forma más robusta
+                dynamic datos;
+                if (pedidoRequest is string jsonString)
+                {
+                    datos = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(jsonString);
+                }
+                else
+                {
+                    datos = pedidoRequest;
+                }
 
-                int proveedorId = datos.proveedorId;
+                // Validar que los datos requeridos estén presentes
+                if (datos?.proveedorId == null)
+                {
+                    return BadRequest(new { message = "El ID del proveedor es requerido" });
+                }
+
+                if (datos?.productos == null)
+                {
+                    return BadRequest(new { message = "Los productos son requeridos" });
+                }
+
+                int proveedorId;
+                if (!int.TryParse(datos.proveedorId.ToString(), out proveedorId))
+                {
+                    return BadRequest(new { message = "ID de proveedor inválido" });
+                }
+
                 var productosSeleccionados = datos.productos;
 
                 // Verificar que el proveedor existe
@@ -185,15 +209,42 @@ namespace API.Controllers
                 // Agregar detalles del pedido
                 foreach (var producto in productosSeleccionados)
                 {
+                    // Validar datos del producto
+                    if (producto?.productoId == null || producto?.cantidad == null)
+                    {
+                        _logger.LogWarning("⚠️ Producto con datos incompletos ignorado: {Producto}", producto?.ToString());
+                        continue;
+                    }
+
+                    if (!int.TryParse(producto.productoId.ToString(), out int productoId))
+                    {
+                        _logger.LogWarning("⚠️ ProductoId inválido: {ProductoId}", producto.productoId);
+                        continue;
+                    }
+
+                    if (!int.TryParse(producto.cantidad.ToString(), out int cantidad) || cantidad <= 0)
+                    {
+                        _logger.LogWarning("⚠️ Cantidad inválida: {Cantidad}", producto.cantidad);
+                        continue;
+                    }
+
+                    decimal? precioUnitario = null;
+                    if (producto.precioUnitario != null && decimal.TryParse(producto.precioUnitario.ToString(), out decimal precio))
+                    {
+                        precioUnitario = precio;
+                    }
+
                     var detalle = new DetallePedido
                     {
                         PedidoId = nuevoPedido.PedidoId,
-                        ProductoId = (int)producto.productoId,
-                        Cantidad = (int)producto.cantidad,
-                        PrecioUnitario = producto.precioUnitario != null ? (decimal)producto.precioUnitario : null
+                        ProductoId = productoId,
+                        Cantidad = cantidad,
+                        PrecioUnitario = precioUnitario
                     };
 
                     _context.DetallePedidos.Add(detalle);
+                    _logger.LogInformation("📦 Detalle agregado: ProductoId={ProductoId}, Cantidad={Cantidad}, Precio={Precio}", 
+                        productoId, cantidad, precioUnitario);
                 }
 
                 await _context.SaveChangesAsync();
@@ -208,13 +259,34 @@ namespace API.Controllers
                     .Include(pp => pp.DetallePedidos)
                         .ThenInclude(dp => dp.Producto)
                     .Where(pp => pp.PedidoId == nuevoPedido.PedidoId)
+                    .Select(pp => new
+                    {
+                        pp.PedidoId,
+                        pp.ProveedorId,
+                        ProveedorNombre = pp.Proveedor.NombreProveedor,
+                        pp.FechaPedido,
+                        pp.Estado,
+                        pp.UsuarioId,
+                        UsuarioNombre = pp.Usuario.NombreUsuario,
+                        DetallePedidos = pp.DetallePedidos.Select(dp => new
+                        {
+                            dp.DetalleId,
+                            dp.ProductoId,
+                            ProductoNombre = dp.Producto.NombreProducto,
+                            dp.Cantidad,
+                            dp.PrecioUnitario
+                        }).ToList(),
+                        TotalProductos = pp.DetallePedidos.Count(),
+                        MontoTotal = pp.DetallePedidos.Sum(dp => dp.Cantidad * (dp.PrecioUnitario ?? 0))
+                    })
                     .FirstOrDefaultAsync();
 
-                return CreatedAtAction("GetPedidoProveedor", new { id = nuevoPedido.PedidoId }, new
+                return Ok(new
                 {
                     success = true,
                     message = "Pedido creado exitosamente",
-                    pedido = pedidoCompleto
+                    data = pedidoCompleto,
+                    pedidoId = nuevoPedido.PedidoId
                 });
             }
             catch (Exception ex)
