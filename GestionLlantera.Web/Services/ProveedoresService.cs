@@ -219,7 +219,7 @@ namespace GestionLlantera.Web.Services
                         var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
                         return (true, data: pedidos, message: "Pedidos obtenidos exitosamente");
                     }
-                    catch (JsonException ex)
+                    catch (System.Text.Json.JsonException ex)
                     {
                         _logger.LogError(ex, "❌ Error deserializando respuesta JSON");
                         _logger.LogError("📋 Contenido que falló al deserializar: {Content}", content);
