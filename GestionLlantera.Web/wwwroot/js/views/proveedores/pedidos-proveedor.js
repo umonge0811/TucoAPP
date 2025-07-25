@@ -513,10 +513,32 @@ function configurarOrdenamientoTablaProductos() {
     console.log('🔧 Configurando ordenamiento de tabla de productos...');
 
     $('.sortable').off('click').on('click', function() {
+        console.log('🚀 === INICIO FUNCIÓN DE ORDENAMIENTO ===');
+        
         const column = $(this).data('column');
         const $table = $('#tablaProductosPedido');
         const $tbody = $table.find('tbody');
         const rows = $tbody.find('tr').toArray();
+
+        console.log(`📊 DATOS DEL CLICK:`, {
+            elemento: this,
+            columna: column,
+            tablaEncontrada: $table.length > 0,
+            tbodyEncontrado: $tbody.length > 0,
+            cantidadFilas: rows.length,
+            columnValue: $(this).attr('data-column'),
+            allDataAttributes: Object.assign({}, this.dataset)
+        });
+
+        if (!column) {
+            console.error('❌ NO SE DETECTÓ COLUMNA - data-column está vacío o indefinido');
+            return;
+        }
+
+        if (rows.length === 0) {
+            console.warn('⚠️ NO HAY FILAS PARA ORDENAR');
+            return;
+        }
 
         console.log(`🔄 Ordenando por columna: ${column}`);
 
@@ -530,6 +552,8 @@ function configurarOrdenamientoTablaProductos() {
             ascending = true;
         }
 
+        console.log(`📈 Dirección de ordenamiento: ${ascending ? 'ascendente' : 'descendente'}`);
+
         // Limpiar iconos de otras columnas
         $('.sortable').not(this).removeClass('sorted-asc sorted-desc');
 
@@ -538,47 +562,82 @@ function configurarOrdenamientoTablaProductos() {
         $(this).find('i').removeClass('bi-arrow-down-up').addClass(ascending ? 'bi-arrow-up' : 'bi-arrow-down');
 
         // Ordenar filas - USANDO .data() IGUAL QUE EN INVENTARIO FACTURACIÓN
+        console.log('🔄 === INICIANDO FUNCIÓN SORT ===');
+        
         rows.sort(function(a, b) {
+            console.log('🚀 === DENTRO DE SORT FUNCTION ===');
+            console.log('📋 Parámetros recibidos:', {
+                a: a,
+                b: b,
+                column: column,
+                aElement: $(a)[0],
+                bElement: $(b)[0]
+            });
+
             let aVal, bVal;
+
+            console.log(`🔍 Entrando al switch con columna: "${column}"`);
 
             switch(column) {
                 case 'id':
+                    console.log('✅ CASE ID - Obteniendo valores de producto-id');
                     aVal = parseInt($(a).data('producto-id')) || 0;
                     bVal = parseInt($(b).data('producto-id')) || 0;
+                    console.log('📊 ID Values:', { aVal, bVal });
                     break;
                 case 'nombre':
+                    console.log('✅ CASE NOMBRE - Obteniendo valores de nombre');
                     aVal = $(a).data('nombre') || '';
                     bVal = $(b).data('nombre') || '';
+                    console.log('📊 Nombre Values:', { aVal, bVal });
                     break;
                 case 'marca':
+                    console.log('✅ CASE MARCA - Obteniendo valores de marca');
                     aVal = $(a).data('marca') || '';
                     bVal = $(b).data('marca') || '';
+                    console.log('📊 Marca Values:', { aVal, bVal });
                     break;
                 case 'medida':
+                    console.log('✅ CASE MEDIDA - Obteniendo valores de medida');
                     aVal = $(a).data('medida') || 'zzz';
                     bVal = $(b).data('medida') || 'zzz';
+                    console.log('📊 Medida Values:', { aVal, bVal });
                     break;
                 case 'stock':
+                    console.log('✅ CASE STOCK - Obteniendo valores de stock');
                     aVal = parseInt($(a).data('stock')) || 0;
                     bVal = parseInt($(b).data('stock')) || 0;
+                    console.log('📊 Stock Values:', { aVal, bVal });
                     break;
                 default:
+                    console.error(`❌ DEFAULT CASE - Columna no reconocida: "${column}"`);
+                    console.log('📋 Todos los data attributes de A:', $(a).data());
+                    console.log('📋 Todos los data attributes de B:', $(b).data());
                     return 0;
             }
+
+            console.log('📊 Valores finales antes de comparar:', { aVal, bVal, tipo: typeof aVal });
 
             if (typeof aVal === 'string') {
                 aVal = aVal.toLowerCase();
                 bVal = bVal.toLowerCase();
-                return ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                const result = ascending ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                console.log('📊 Resultado comparación string:', result);
+                return result;
             } else {
-                return ascending ? aVal - bVal : bVal - aVal;
+                const result = ascending ? aVal - bVal : bVal - aVal;
+                console.log('📊 Resultado comparación numérica:', result);
+                return result;
             }
         });
+
+        console.log('✅ SORT FUNCTION COMPLETADA');
 
         // Reordenar filas en el DOM
         $tbody.empty().append(rows);
 
         console.log(`✅ Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
+        console.log('🏁 === FIN FUNCIÓN DE ORDENAMIENTO ===');
     });
 }
 
@@ -731,8 +790,32 @@ function cargarProductosEnTabla() {
     console.log('📋 === HTML DE PRODUCTOS CARGADO ===');
     console.log(`📊 Productos renderizados: ${productosInventario.length}`);
 
-    // Configurar ordenamiento INMEDIATAMENTE después de cargar el HTML - IGUAL QUE EN INVENTARIO FACTURACIÓN
-    configurarOrdenamientoTablaProductos();
+    // Verificar elementos sortable antes de configurar ordenamiento
+    setTimeout(() => {
+        const elementosSortable = $('.sortable');
+        console.log('🔍 === VERIFICANDO ELEMENTOS SORTABLE ===');
+        console.log(`📊 Elementos .sortable encontrados: ${elementosSortable.length}`);
+        
+        elementosSortable.each(function(index) {
+            console.log(`📋 Elemento ${index + 1}:`, {
+                elemento: this,
+                dataColumn: $(this).data('column'),
+                attrDataColumn: $(this).attr('data-column'),
+                texto: $(this).text().trim(),
+                clases: this.className
+            });
+        });
+
+        // Configurar ordenamiento INMEDIATAMENTE después de cargar el HTML - IGUAL QUE EN INVENTARIO FACTURACIÓN
+        configurarOrdenamientoTablaProductos();
+        
+        // Verificar que los event listeners se configuraron
+        console.log('🔧 === VERIFICANDO EVENT LISTENERS ===');
+        elementosSortable.each(function(index) {
+            const events = $._data(this, 'events');
+            console.log(`📋 Eventos en elemento ${index + 1}:`, events);
+        });
+    }, 100);
 }
 
 /**
