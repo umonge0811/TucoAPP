@@ -142,7 +142,7 @@ namespace API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<object>> PostPedidoProveedor([FromBody] dynamic pedidoRequest)
+        public async Task<ActionResult<object>> PostPedidoProveedor([FromBody] CrearPedidoProveedorRequest pedidoRequest)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -156,35 +156,24 @@ namespace API.Controllers
                     return BadRequest(new { message = "No se pudo identificar al usuario" });
                 }
 
-                // Manejar el request de forma más robusta
-                dynamic datos;
-                if (pedidoRequest is string jsonString)
-                {
-                    datos = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(jsonString);
-                }
-                else
-                {
-                    datos = pedidoRequest;
-                }
-
                 // Validar que los datos requeridos estén presentes
-                if (datos?.proveedorId == null)
+                if (pedidoRequest == null)
                 {
-                    return BadRequest(new { message = "El ID del proveedor es requerido" });
+                    return BadRequest(new { message = "Los datos del pedido son requeridos" });
                 }
 
-                if (datos?.productos == null)
+                if (pedidoRequest.ProveedorId <= 0)
+                {
+                    return BadRequest(new { message = "El ID del proveedor es requerido y debe ser válido" });
+                }
+
+                if (pedidoRequest.Productos == null || !pedidoRequest.Productos.Any())
                 {
                     return BadRequest(new { message = "Los productos son requeridos" });
                 }
 
-                int proveedorId;
-                if (!int.TryParse(datos.proveedorId.ToString(), out proveedorId))
-                {
-                    return BadRequest(new { message = "ID de proveedor inválido" });
-                }
-
-                var productosSeleccionados = datos.productos;
+                int proveedorId = pedidoRequest.ProveedorId;
+                var productosSeleccionados = pedidoRequest.Productos;
 
                 // Verificar que el proveedor existe
                 var proveedor = await _context.Proveedores.FindAsync(proveedorId);
@@ -209,30 +198,21 @@ namespace API.Controllers
                 foreach (var producto in productosSeleccionados)
                 {
                     // Validar datos del producto
-                    if (producto?.productoId == null || producto?.cantidad == null)
+                    if (producto.ProductoId <= 0)
                     {
-                        _logger.LogWarning("⚠️ Producto con datos incompletos ignorado: {Producto}", (object?)(producto?.ToString()));
+                        _logger.LogWarning("⚠️ ProductoId inválido: {ProductoId}", producto.ProductoId);
                         continue;
                     }
 
-                    if (!int.TryParse(producto.productoId.ToString(), out int productoId))
+                    if (producto.Cantidad <= 0)
                     {
-                        _logger.LogWarning("⚠️ ProductoId inválido: {ProductoId}", (object?)(producto.productoId));
+                        _logger.LogWarning("⚠️ Cantidad inválida: {Cantidad}", producto.Cantidad);
                         continue;
                     }
 
-                    if (!int.TryParse(producto.cantidad.ToString(), out int cantidad) || cantidad <= 0)
-                    {
-                        _logger.LogWarning("⚠️ Cantidad inválida: {Cantidad}", (object?)(producto.cantidad));
-                        continue;
-                    }
-
-                    decimal? precioUnitario = null;
-                    decimal precioTemporal = 0;
-                    if (producto.precioUnitario != null && decimal.TryParse(producto.precioUnitario.ToString(), out precioTemporal))
-                    {
-                        precioUnitario = precioTemporal;
-                    }
+                    int productoId = producto.ProductoId;
+                    int cantidad = producto.Cantidad;
+                    decimal? precioUnitario = producto.PrecioUnitario;
 
                     var detalle = new DetallePedido
                     {
@@ -244,7 +224,7 @@ namespace API.Controllers
 
                     _context.DetallePedidos.Add(detalle);
                     _logger.LogInformation("📦 Detalle agregado: ProductoId={ProductoId}, Cantidad={Cantidad}, Precio={Precio}", 
-                        (object)productoId, (object)cantidad, (object?)precioUnitario);
+                        productoId, cantidad, precioUnitario);
                 }
 
                 await _context.SaveChangesAsync();
@@ -415,5 +395,11 @@ namespace API.Controllers
         public int ProductoId { get; set; }
         public int Cantidad { get; set; }
         public decimal? PrecioUnitario { get; set; }
+    }
+
+    public class CrearPedidoProveedorRequest
+    {
+        public int ProveedorId { get; set; }
+        public List<ProductoPedidoRequest> Productos { get; set; } = new List<ProductoPedidoRequest>();
     }
 }
