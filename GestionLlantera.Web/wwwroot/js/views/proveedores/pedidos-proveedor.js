@@ -954,22 +954,30 @@ async function finalizarPedido() {
             body: JSON.stringify(datosPedido)
         });
 
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
         const resultado = await response.json();
         console.log('📦 Respuesta del servidor:', resultado);
 
-        if (resultado.success) {
-            console.log('✅ Pedido creado exitosamente');
-            mostrarExito('Pedido creado exitosamente');
+        if (resultado.success && resultado.data) {
+            const pedidoId = resultado.data.pedidoId;
+            const mensaje = resultado.message || 'Pedido creado exitosamente';
+            
+            console.log('✅ Pedido creado exitosamente con ID:', pedidoId);
+            mostrarExito(`${mensaje}. ID del pedido: ${pedidoId}`);
             $('#modalNuevoPedido').modal('hide');
             await cargarPedidos();
             limpiarFormulario();
         } else {
-            console.error('❌ Error creando pedido:', resultado.message);
-            mostrarError(resultado.message || 'Error al crear el pedido');
+            const errorMsg = resultado.message || resultado.details || 'Error desconocido al crear el pedido';
+            console.error('❌ Error creando pedido:', errorMsg);
+            mostrarError(errorMsg);
         }
     } catch (error) {
-        console.error('❌ Error creando pedido:', error);
-        mostrarError('Error creando pedido: ' + error.message);
+        console.error('❌ Error de red creando pedido:', error);
+        mostrarError('Error de conexión: ' + error.message);
     } finally {
         const btnFinalizar = $('button[onclick="finalizarPedido()"]');
         btnFinalizar.html('<i class="bi bi-check-circle me-1"></i>Finalizar Pedido <span id="contadorSeleccionados" class="badge bg-white text-success ms-1">' + productosSeleccionados.length + '</span>').prop('disabled', false);
