@@ -98,7 +98,6 @@
                                     <th>Proveedor</th>
                                     <th>Fecha</th>
                                     <th>Estado</th>
-                                    <th>Productos</th>
                                     <th>Monto Total</th>
                                     <th>Usuario</th>
                                     <th class="text-center">Acciones</th>
@@ -111,13 +110,15 @@
                     </div>
 
                     <!-- Sin datos -->
-                    <div id="sinDatosPedidos" class="text-center py-4" style="display: none;">
-                        <i class="bi bi-inbox display-1 text-muted"></i>
-                        <p class="mt-2 text-muted">No se encontraron pedidos</p>
-                        <button type="button" class="btn btn-primary" onclick="abrirModalNuevoPedido()">
-                            <i class="bi bi-plus-circle me-1"></i>Crear Primer Pedido
-                        </button>
-                    </div>
+                    <div id="sinDatosPedidos" class="text-center py-5" style="display: none;">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                    <h5 class="text-muted mt-3">No hay pedidos disponibles</h5>
+                                    <p class="text-muted">No se encontraron pedidos que coincidan con los criterios de búsqueda.</p>
+                                </td>
+                            </tr>
+                        </div>
                 </div>
             </div>
         </div>

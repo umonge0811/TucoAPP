@@ -152,6 +152,9 @@ async function cargarPedidos() {
 
         const data = await response.json();
         console.log('📦 Respuesta completa del servidor:', data);
+        console.log('📦 Tipo de data:', typeof data);
+        console.log('📦 Es array:', Array.isArray(data));
+        console.log('📦 Tiene success:', data.hasOwnProperty('success'));
 
         // La respuesta puede venir en diferentes formatos, vamos a manejar todos
         let pedidos = [];
@@ -159,9 +162,11 @@ async function cargarPedidos() {
         if (data.success && data.data) {
             // Formato: { success: true, data: [...] }
             pedidos = Array.isArray(data.data) ? data.data : [];
+            console.log('📦 Usando data.data, cantidad:', pedidos.length);
         } else if (Array.isArray(data)) {
             // Formato directo: [...]
             pedidos = data;
+            console.log('📦 Usando data directo, cantidad:', pedidos.length);
         } else if (data.success === false && data.message) {
             // Error del servidor
             console.log(`ℹ️ ${data.message}`);
@@ -170,6 +175,12 @@ async function cargarPedidos() {
             // Otros casos, asumir que no hay datos
             console.log('ℹ️ No se encontraron pedidos');
             pedidos = [];
+        }
+
+        // Log de los primeros pedidos para debug
+        if (pedidos.length > 0) {
+            console.log('📦 Primer pedido (estructura):', pedidos[0]);
+            console.log('📦 Propiedades del primer pedido:', Object.keys(pedidos[0]));
         }
 
         pedidosData = pedidos;
@@ -390,16 +401,31 @@ function mostrarPedidos() {
     const html = pedidosFiltrados.map((pedido, index) => {
         console.log(`📦 Procesando pedido ${index + 1}:`, pedido);
         
-        // Validar datos del pedido y usar valores por defecto si faltan
-        const pedidoId = pedido.pedidoId || pedido.PedidoId || 'N/A';
-        const proveedorNombre = pedido.proveedorNombre || pedido.ProveedorNombre || 'Sin nombre';
-        const fechaPedido = pedido.fechaPedido || pedido.FechaPedido || new Date();
-        const estado = pedido.estado || pedido.Estado || 'Pendiente';
-        const totalProductos = pedido.totalProductos || pedido.TotalProductos || 0;
-        const montoTotal = pedido.montoTotal || pedido.MontoTotal || 0;
-        const usuarioNombre = pedido.usuarioNombre || pedido.UsuarioNombre || 'Sin usuario';
+        // Corregir el mapeo de datos - usar las propiedades exactas que vienen de la API
+        const pedidoId = pedido.pedidoId || 'N/A';
+        const proveedorNombre = pedido.proveedorNombre || 'Sin nombre';
+        const fechaPedido = pedido.fechaPedido;
+        const estado = pedido.estado || 'Pendiente';
+        const montoTotal = pedido.montoTotal || 0;
+        const usuarioNombre = pedido.usuarioNombre || 'Sin usuario';
         
-        const fecha = new Date(fechaPedido).toLocaleDateString('es-ES');
+        // Formatear fecha correctamente
+        let fechaFormateada = 'Fecha inválida';
+        if (fechaPedido) {
+            try {
+                const fecha = new Date(fechaPedido);
+                if (!isNaN(fecha.getTime())) {
+                    fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+                }
+            } catch (error) {
+                console.warn('⚠️ Error formateando fecha:', error);
+            }
+        }
+        
         const estadoBadge = obtenerBadgeEstado(estado);
 
         return `
@@ -408,11 +434,8 @@ function mostrarPedidos() {
                 <td>
                     <strong>${proveedorNombre}</strong>
                 </td>
-                <td>${fecha}</td>
+                <td>${fechaFormateada}</td>
                 <td>${estadoBadge}</td>
-                <td>
-                    <span class="badge bg-info">${totalProductos}</span>
-                </td>
                 <td>
                     <strong>$${parseFloat(montoTotal).toFixed(2)}</strong>
                 </td>
@@ -463,7 +486,7 @@ function aplicarFiltros() {
         const cumpleEstado = !estado || pedido.estado === estado;
         const cumpleBusqueda = !busqueda || 
             pedido.pedidoId.toString().includes(busqueda) ||
-            pedido.proveedorNombre.toLowerCase().includes(busqueda);
+            (pedido.proveedorNombre && pedido.proveedorNombre.toLowerCase().includes(busqueda));
 
         return cumpleProveedor && cumpleEstado && cumpleBusqueda;
     });
