@@ -457,7 +457,20 @@ namespace GestionLlantera.Web.Controllers
                     }
                 }
 
-                var resultado = await _proveedoresService.CrearPedidoProveedorAsync(request, token);
+                // Crear el pedido
+                _logger.LogInformation("📦 Preparando datos del pedido para el proveedor {ProveedorId}", request.ProveedorId);
+                var pedidoData = new CrearPedidoProveedorRequest
+                {
+                    ProveedorId = request.ProveedorId,
+                    Productos = request.Productos.Select(p => new ProductoPedidoRequest
+                    {
+                        ProductoId = p.ProductoId,
+                        Cantidad = p.Cantidad,
+                        PrecioUnitario = p.PrecioUnitario ?? 0 // Asegurarse de que no sea nulo
+                    }).ToList()
+                };
+
+                var resultado = await _proveedoresService.CrearPedidoProveedorAsync(pedidoData, token);
                 
                 if (resultado.success)
                 {
