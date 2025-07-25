@@ -148,7 +148,6 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("📦 Creando nuevo pedido a proveedor");
-                _logger.LogInformation("📦 Request recibido: {Request}", pedidoRequest?.ToString());
 
                 // Obtener información del usuario desde los claims
                 var usuarioId = this.ObtenerUsuarioIdDelToken();
