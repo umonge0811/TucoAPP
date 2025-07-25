@@ -212,19 +212,19 @@ namespace API.Controllers
                     // Validar datos del producto
                     if (producto?.productoId == null || producto?.cantidad == null)
                     {
-                        _logger.LogWarning("⚠️ Producto con datos incompletos ignorado: {Producto}", producto?.ToString());
+                        _logger.LogWarning("⚠️ Producto con datos incompletos ignorado: {Producto}", (object?)(producto?.ToString()));
                         continue;
                     }
 
                     if (!int.TryParse(producto.productoId.ToString(), out int productoId))
                     {
-                        _logger.LogWarning("⚠️ ProductoId inválido: {ProductoId}", producto.productoId);
+                        _logger.LogWarning("⚠️ ProductoId inválido: {ProductoId}", (object?)(producto.productoId));
                         continue;
                     }
 
                     if (!int.TryParse(producto.cantidad.ToString(), out int cantidad) || cantidad <= 0)
                     {
-                        _logger.LogWarning("⚠️ Cantidad inválida: {Cantidad}", producto.cantidad);
+                        _logger.LogWarning("⚠️ Cantidad inválida: {Cantidad}", (object?)(producto.cantidad));
                         continue;
                     }
 
@@ -244,7 +244,7 @@ namespace API.Controllers
 
                     _context.DetallePedidos.Add(detalle);
                     _logger.LogInformation("📦 Detalle agregado: ProductoId={ProductoId}, Cantidad={Cantidad}, Precio={Precio}", 
-                        productoId, cantidad, precioUnitario);
+                        (object)productoId, (object)cantidad, (object?)precioUnitario);
                 }
 
                 await _context.SaveChangesAsync();
