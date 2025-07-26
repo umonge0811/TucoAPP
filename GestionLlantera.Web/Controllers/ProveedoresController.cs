@@ -407,12 +407,13 @@ namespace GestionLlantera.Web.Controllers
 
                 if (resultado.success)
                 {
-                    _logger.LogInformation("📦 Enviando {Count} pedidos al cliente", 
-                        resultado.data is System.Collections.IEnumerable enumerable && !(resultado.data is string) 
-                            ? enumerable.Cast<object>().Count() 
-                            : 0);
+                    // Asegurar que data sea una lista válida
+                    var pedidos = resultado.data as System.Collections.IEnumerable<object> ?? new List<object>();
+                    var listaPedidos = pedidos.ToList();
                     
-                    return Json(new { success = true, data = resultado.data, message = resultado.message });
+                    _logger.LogInformation("📦 Enviando {Count} pedidos al cliente", listaPedidos.Count);
+                    
+                    return Json(new { success = true, data = listaPedidos });
                 }
                 else
                 {
