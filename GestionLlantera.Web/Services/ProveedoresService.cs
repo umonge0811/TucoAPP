@@ -216,31 +216,67 @@ namespace GestionLlantera.Web.Services
                     try
                     {
                         _logger.LogInformation("📋 ⚙️ [SERVICE] Intentando deserializar JSON...");
+                        _logger.LogInformation("📋 📄 [SERVICE] CONTENIDO A DESERIALIZAR (primeros 500 chars): {Content}", 
+                            content.Length > 500 ? content.Substring(0, 500) + "..." : content);
                         
-                        // Deserializar directamente como dynamic
+                        // PASO 1: Deserializar directamente como dynamic para ver qué obtenemos
                         var pedidosRaw = JsonConvert.DeserializeObject<dynamic>(content);
                         
-                        _logger.LogInformation("📋 🔍 [SERVICE] Resultado de deserialización:");
+                        _logger.LogInformation("📋 🔍 [SERVICE] PASO 1 - Resultado de deserialización:");
                         _logger.LogInformation("📋 🔍 [SERVICE] - Tipo: {Type}", (object)(pedidosRaw?.GetType()?.Name ?? "NULL"));
-                        _logger.LogInformation("📋 🔍 [SERVICE] - ToString: {Data}", (object)(pedidosRaw?.ToString() ?? "NULL"));
+                        _logger.LogInformation("📋 🔍 [SERVICE] - ToString (primeros 200 chars): {Data}", 
+                            (object)((pedidosRaw?.ToString()?.Length > 200 ? pedidosRaw.ToString().Substring(0, 200) + "..." : pedidosRaw?.ToString()) ?? "NULL"));
                         
-                        // Si es JArray, convertir a objeto regular
+                        // PASO 2: Verificar si es JArray y procesar elemento por elemento
                         if (pedidosRaw is Newtonsoft.Json.Linq.JArray jArray)
                         {
-                            _logger.LogInformation("📋 🔄 [SERVICE] Detectado JArray con {Count} elementos", jArray.Count);
+                            _logger.LogInformation("📋 🔄 [SERVICE] PASO 2 - Detectado JArray con {Count} elementos", jArray.Count);
                             
                             var listaPedidos = new List<object>();
-                            foreach (var item in jArray)
+                            for (int i = 0; i < jArray.Count; i++)
                             {
-                                _logger.LogInformation("📋 🔍 [SERVICE] Elemento JArray: {Item}", item.ToString());
-                                listaPedidos.Add(item);
+                                var item = jArray[i];
+                                _logger.LogInformation("📋 🔍 [SERVICE] Elemento {Index} - Tipo: {Type}", i, item.GetType().Name);
+                                _logger.LogInformation("📋 🔍 [SERVICE] Elemento {Index} - ToString: {Item}", i, 
+                                    item.ToString().Length > 200 ? item.ToString().Substring(0, 200) + "..." : item.ToString());
+                                
+                                // Convertir a objeto plano para evitar problemas de serialización
+                                var elementoPlano = item.ToObject<object>();
+                                _logger.LogInformation("📋 🔄 [SERVICE] Elemento {Index} convertido a objeto - Tipo: {Type}", i, elementoPlano?.GetType()?.Name ?? "NULL");
+                                
+                                listaPedidos.Add(elementoPlano);
                             }
                             
                             _logger.LogInformation("📋 ✅ [SERVICE] Lista convertida con {Count} elementos", listaPedidos.Count);
+                            
+                            // PASO 3: Verificar que la lista se mantenga correcta
+                            _logger.LogInformation("📋 🔍 [SERVICE] PASO 3 - Verificando lista final:");
+                            for (int i = 0; i < Math.Min(3, listaPedidos.Count); i++)
+                            {
+                                var elemento = listaPedidos[i];
+                                _logger.LogInformation("📋 🔍 [SERVICE] Lista elemento {Index} - Tipo: {Type}", i, elemento?.GetType()?.Name ?? "NULL");
+                                _logger.LogInformation("📋 🔍 [SERVICE] Lista elemento {Index} - ToString: {Element}", i, 
+                                    elemento?.ToString()?.Length > 100 ? elemento.ToString().Substring(0, 100) + "..." : elemento?.ToString() ?? "NULL");
+                            }
+                            
                             return (true, listaPedidos, "Pedidos obtenidos exitosamente");
                         }
                         
-                        _logger.LogInformation("📋 ✅ [SERVICE] Retornando datos como dynamic");
+                        // PASO 4: Si no es JArray, intentar deserializar como lista directamente
+                        _logger.LogInformation("📋 🔄 [SERVICE] PASO 4 - No es JArray, intentando deserializar como lista directa...");
+                        
+                        try
+                        {
+                            var listaDirect = JsonConvert.DeserializeObject<List<object>>(content);
+                            _logger.LogInformation("📋 ✅ [SERVICE] Deserialización directa exitosa con {Count} elementos", listaDirect?.Count ?? 0);
+                            return (true, listaDirect ?? new List<object>(), "Pedidos obtenidos exitosamente");
+                        }
+                        catch (Exception exDirect)
+                        {
+                            _logger.LogWarning(exDirect, "📋 ⚠️ [SERVICE] Fallo deserialización directa, usando dynamic original");
+                        }
+                        
+                        _logger.LogInformation("📋 ✅ [SERVICE] Retornando datos como dynamic original");
                         return (true, data: pedidosRaw, message: "Pedidos obtenidos exitosamente");
                     }
                     catch (Newtonsoft.Json.JsonException ex)

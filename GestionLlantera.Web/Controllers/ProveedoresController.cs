@@ -416,6 +416,26 @@ namespace GestionLlantera.Web.Controllers
 
                 if (resultado.success)
                 {
+                    _logger.LogInformation("📦 🔍 [CONTROLLER] ANTES DE CREAR RESPUESTA:");
+                    _logger.LogInformation("📦 🔍 [CONTROLLER] - resultado.data tipo: {Type}", resultado.data?.GetType()?.Name ?? "NULL");
+                    _logger.LogInformation("📦 🔍 [CONTROLLER] - resultado.data toString: {Data}", 
+                        resultado.data?.ToString()?.Length > 300 ? resultado.data.ToString().Substring(0, 300) + "..." : resultado.data?.ToString() ?? "NULL");
+                    
+                    // Verificar si resultado.data es una lista y analizar sus elementos
+                    if (resultado.data is System.Collections.IEnumerable enumerable && !(resultado.data is string))
+                    {
+                        var lista = enumerable.Cast<object>().ToList();
+                        _logger.LogInformation("📦 🔍 [CONTROLLER] - Es enumerable con {Count} elementos", lista.Count);
+                        
+                        for (int i = 0; i < Math.Min(3, lista.Count); i++)
+                        {
+                            var elemento = lista[i];
+                            _logger.LogInformation("📦 🔍 [CONTROLLER] - Elemento {Index} tipo: {Type}", i, elemento?.GetType()?.Name ?? "NULL");
+                            _logger.LogInformation("📦 🔍 [CONTROLLER] - Elemento {Index} toString: {Element}", i, 
+                                elemento?.ToString()?.Length > 150 ? elemento.ToString().Substring(0, 150) + "..." : elemento?.ToString() ?? "NULL");
+                        }
+                    }
+                    
                     // Asegurarnos de que la respuesta sea JSON válido
                     var jsonResponse = new
                     {
@@ -425,16 +445,20 @@ namespace GestionLlantera.Web.Controllers
                     };
 
                     _logger.LogInformation("📦 🔄 [CONTROLLER] Creando respuesta JSON estructurada...");
+                    _logger.LogInformation("📦 🔍 [CONTROLLER] jsonResponse.data tipo: {Type}", jsonResponse.data?.GetType()?.Name ?? "NULL");
                     
                     try
                     {
-                        var serializedResponse = System.Text.Json.JsonSerializer.Serialize(jsonResponse, new System.Text.Json.JsonSerializerOptions
-                        {
-                            WriteIndented = true,
-                            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                        });
+                        // Usar Newtonsoft.Json para serializar como lo hace normalmente ASP.NET Core
+                        var serializedResponse = Newtonsoft.Json.JsonConvert.SerializeObject(jsonResponse, 
+                            Newtonsoft.Json.Formatting.Indented,
+                            new Newtonsoft.Json.JsonSerializerSettings
+                            {
+                                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
+                            });
                         
-                        _logger.LogInformation("📦 📤 [CONTROLLER] RESPUESTA SERIALIZADA COMPLETA: {Response}", serializedResponse);
+                        _logger.LogInformation("📦 📤 [CONTROLLER] RESPUESTA SERIALIZADA COMPLETA (primeros 1000 chars): {Response}", 
+                            serializedResponse.Length > 1000 ? serializedResponse.Substring(0, 1000) + "..." : serializedResponse);
                     }
                     catch (Exception serEx)
                     {
