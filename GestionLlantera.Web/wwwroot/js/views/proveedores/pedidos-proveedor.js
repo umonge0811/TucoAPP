@@ -1238,7 +1238,7 @@ async function verDetallePedido(pedidoId) {
                         </tr>
                         <tr>
                             <td><strong>Total:</strong></td>
-                            <td><strong class="text-primary">$${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</strong></td>
+                            <td><strong class="text-primary">₡${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</strong></td>
                         </tr>
                     </table>
                 </div>
@@ -1281,10 +1281,10 @@ async function verDetallePedido(pedidoId) {
                     <thead class="table-primary">
                         <tr>
                             <th class="text-center" style="width: 80px;">Cantidad</th>
-                            <th>Producto</th>
-                            <th class="text-center" style="width: 150px;">Medida</th>
-                            <th class="text-center" style="width: 120px;">Precio Unit.</th>
-                            <th class="text-center" style="width: 120px;">Subtotal</th>
+                            <th class="text-center" style="width: 130px;">Medida</th>
+                            <th style="width: 200px;">Producto</th>
+                            <th class="text-center" style="width: 110px;">Precio Unit.</th>
+                            <th class="text-center" style="width: 110px;">Subtotal</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1298,23 +1298,20 @@ async function verDetallePedido(pedidoId) {
                                         <td class="text-center">
                                             <span class="badge bg-secondary">${detalle.cantidad}</span>
                                         </td>
-                                        <td>
-                                            <div>
-                                                <strong>${detalle.productoNombre}</strong>
-                                                ${esLlanta ? '<br><small class="text-muted"><i class="bi bi-circle me-1"></i>Llanta</small>' : ''}
-                                            </div>
-                                        </td>
                                         <td class="text-center">
                                             ${esLlanta ? 
                                                 `<span class="badge bg-info text-dark">${medidaLlanta}</span>` : 
                                                 '<span class="text-muted">N/A</span>'
                                             }
                                         </td>
-                                        <td class="text-center">
-                                            <strong>$${(detalle.precioUnitario || 0).toFixed(2)}</strong>
+                                        <td>
+                                            <strong>${detalle.productoNombre}</strong>
                                         </td>
                                         <td class="text-center">
-                                            <strong class="text-success">$${detalle.subtotal.toFixed(2)}</strong>
+                                            <strong>₡${(detalle.precioUnitario || 0).toFixed(2)}</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <strong class="text-success">₡${detalle.subtotal.toFixed(2)}</strong>
                                         </td>
                                     </tr>
                                 `;
@@ -1335,7 +1332,7 @@ async function verDetallePedido(pedidoId) {
                                 <span class="fs-6">Total del Pedido:</span>
                             </th>
                             <th class="text-center">
-                                <span class="fs-5 text-primary">$${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</span>
+                                <span class="fs-5 text-primary">₡${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</span>
                             </th>
                         </tr>
                     </tfoot>
@@ -1364,7 +1361,7 @@ async function verDetallePedido(pedidoId) {
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Promedio por Item</small>
-                                <div class="h5 mb-0 text-success">$${((pedido.totalPrecio || pedido.montoTotal || 0) / pedido.detallePedidos.reduce((sum, d) => sum + d.cantidad, 0)).toFixed(2)}</div>
+                                <div class="h5 mb-0 text-success">₡${((pedido.totalPrecio || pedido.montoTotal || 0) / pedido.detallePedidos.reduce((sum, d) => sum + d.cantidad, 0)).toFixed(2)}</div>
                             </div>
                         </div>
                     </div>
