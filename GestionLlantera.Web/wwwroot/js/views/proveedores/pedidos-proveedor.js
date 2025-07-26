@@ -1366,13 +1366,6 @@ async function verDetallePedido(pedidoId) {
                         </div>
                     </div>
                 </div>
-                <div class="row mt-3">
-                    <div class="col-12 text-center">
-                        <button type="button" class="btn btn-danger" onclick="descargarPdfPedido(${pedido.pedidoId})" title="Descargar PDF">
-                            <i class="bi bi-file-earmark-pdf me-2"></i>Descargar Orden de Compra (PDF)
-                        </button>
-                    </div>
-                </div>
             ` : ''}
         `;
 
@@ -1391,94 +1384,6 @@ function cambiarEstadoPedido(pedidoId, estadoActual) {
     // Implementar cambio de estado
     console.log('🔄 Cambiando estado del pedido:', pedidoId, estadoActual);
     // Por ahora solo log, se puede implementar un modal para cambiar estado
-}
-
-/**
- * Descargar PDF del pedido
- */
-async function descargarPdfPedido(pedidoId) {
-    try {
-        console.log('📄 Descargando PDF del pedido:', pedidoId);
-
-        // Mostrar loading
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Generando PDF...',
-                html: `
-                    <div class="text-center">
-                        <i class="bi bi-file-earmark-pdf text-danger display-1"></i>
-                        <p class="mt-3 text-muted">Preparando orden de compra del pedido #${pedidoId}</p>
-                    </div>
-                `,
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-        }
-
-        // Realizar la petición
-        const response = await fetch(`/Proveedores/DescargarPdfPedido?pedidoId=${pedidoId}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/pdf'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        // Obtener el blob y descargarlo
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Orden_Compra_${pedidoId}_${new Date().toISOString().slice(0, 10)}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-
-        // Mostrar éxito
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Descarga exitosa!',
-                html: `
-                    <div class="text-center">
-                        <i class="bi bi-file-earmark-pdf text-danger display-1"></i>
-                        <p class="mt-3">La orden de compra del pedido <strong>#${pedidoId}</strong> se ha descargado correctamente.</p>
-                    </div>
-                `,
-                timer: 3000,
-                timerProgressBar: true,
-                confirmButtonColor: '#d32f2f'
-            });
-        }
-
-        console.log('✅ Descarga PDF del pedido completada exitosamente');
-
-    } catch (error) {
-        console.error('❌ Error descargando PDF del pedido:', error);
-
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al descargar PDF',
-                html: `
-                    <div class="text-center">
-                        <i class="bi bi-exclamation-triangle text-danger display-1"></i>
-                        <p class="mt-3">${error.message || 'No se pudo descargar el archivo PDF'}</p>
-                    </div>
-                `,
-                confirmButtonColor: '#d33'
-            });
-        } else {
-            alert('Error al descargar PDF: ' + error.message);
-        }
-    }
 }
 
 // =====================================
@@ -1730,6 +1635,5 @@ window.verDetallePedido = verDetallePedido;
 window.cambiarEstadoPedido = cambiarEstadoPedido;
 window.aplicarFiltros = aplicarFiltros;
 window.cargarPedidosDeProveedor = cargarPedidosDeProveedor;
-window.descargarPdfPedido = descargarPdfPedido;
 
 console.log('✅ Módulo de pedidos a proveedores cargado completamente');

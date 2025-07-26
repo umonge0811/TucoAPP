@@ -402,7 +402,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
-
+                
                 var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
 
                 if (resultado.success)
@@ -410,9 +410,9 @@ namespace GestionLlantera.Web.Controllers
                     // Asegurar que data sea una lista válida
                     var pedidos = resultado.data as System.Collections.IEnumerable ?? new List<object>();
                     var listaPedidos = pedidos.Cast<object>().ToList();
-
+                    
                     _logger.LogInformation("📦 Enviando {Count} pedidos al cliente", listaPedidos.Count);
-
+                    
                     return Json(new { success = true, data = listaPedidos });
                 }
                 else
@@ -523,31 +523,6 @@ namespace GestionLlantera.Web.Controllers
                     message = "Error interno del servidor al crear el pedido",
                     details = ex.Message
                 });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> DescargarPdfPedido(int pedidoId)
-        {
-            try
-            {
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
-                    return RedirectToAction("Login", "Account");
-                }
-
-                var pdfBytes = await _proveedoresService.DescargarPdfPedidoAsync(pedidoId, token);
-                var fileName = $"Orden_Compra_{pedidoId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-
-                return File(pdfBytes, "application/pdf", fileName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error descargando PDF del pedido {PedidoId}", pedidoId);
-                TempData["Error"] = "Error al descargar el PDF del pedido";
-                return RedirectToAction("PedidosProveedor");
             }
         }
     }

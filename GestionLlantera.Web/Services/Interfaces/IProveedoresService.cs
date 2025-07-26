@@ -1,3 +1,4 @@
+
 using tuco.Clases.Models;
 using GestionLlantera.Web.Models.DTOs;
 
@@ -12,7 +13,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<(bool success, object data, string message)> EliminarProveedorAsync(int id, string token);
         Task<(bool success, object data, string message)> CambiarEstadoProveedorAsync(int proveedorId, bool activo, string token);
         Task<(bool success, object data, string message)> ObtenerPedidosProveedorAsync(int? proveedorId, string token);
-        Task<(bool success, object data, string message, string details)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest request, string jwtToken);
-        Task<byte[]> DescargarPdfPedidoAsync(int pedidoId, string jwtToken);
+        Task<(bool success, object data, string message)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token);
     }
 }
