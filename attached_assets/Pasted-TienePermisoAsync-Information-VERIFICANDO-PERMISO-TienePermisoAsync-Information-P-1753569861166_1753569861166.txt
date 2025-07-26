@@ -1,0 +1,134 @@
+TienePermisoAsync: Information: 🔎 === VERIFICANDO PERMISO ===
+TienePermisoAsync: Information: 🔎 Permiso: 'VerCostos'
+TienePermisoAsync: Information: 🔎 Usuario autenticado: Julissa Mejias
+API.ServicesAPI.PermisosService: Information: 🔍 === INICIO VERIFICACIÓN PERMISO EN SERVICE ===
+API.ServicesAPI.PermisosService: Information: 🔍 Permiso solicitado: 'VerCostos'
+API.ServicesAPI.PermisosService: Information: 🔍 Usuario Identity: Julissa Mejias
+API.ServicesAPI.PermisosService: Information: 🔍 ID Usuario extraído: 4
+API.ServicesAPI.PermisosService: Information: 🔍 Es administrador: True
+API.ServicesAPI.PermisosService: Information: ✅ Usuario 4 es administrador - acceso concedido a VerCostos
+TienePermisoAsync: Information: 🔎 Resultado del servicio: True
+TienePermisoAsync: Information: 🔎 === FIN VERIFICACIÓN PERMISO ===
+TienePermisoAsync: Information: 🔎 === VERIFICANDO PERMISO ===
+TienePermisoAsync: Information: 🔎 Permiso: 'VerUtilidades'
+TienePermisoAsync: Information: 🔎 Usuario autenticado: Julissa Mejias
+API.ServicesAPI.PermisosService: Information: 🔍 === INICIO VERIFICACIÓN PERMISO EN SERVICE ===
+API.ServicesAPI.PermisosService: Information: 🔍 Permiso solicitado: 'VerUtilidades'
+API.ServicesAPI.PermisosService: Information: 🔍 Usuario Identity: Julissa Mejias
+API.ServicesAPI.PermisosService: Information: 🔍 ID Usuario extraído: 4
+API.ServicesAPI.PermisosService: Information: 🔍 Es administrador: True
+API.ServicesAPI.PermisosService: Information: ✅ Usuario 4 es administrador - acceso concedido a VerUtilidades
+TienePermisoAsync: Information: 🔎 Resultado del servicio: True
+TienePermisoAsync: Information: 🔎 === FIN VERIFICACIÓN PERMISO ===
+API.Controllers.InventarioController: Information: 🔍 Usuario Julissa Mejias - VerCostos: True, VerUtilidades: True
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT [p].[ProveedorID], [p].[Activo], [p].[Contacto], [p].[Direccion], [p].[Email], [p].[NombreProveedor], [p].[Telefono], [p0].[PedidoID], [p0].[Estado], [p0].[FechaPedido], [p0].[ProveedorID], [p0].[UsuarioID]
+FROM [Proveedores] AS [p]
+LEFT JOIN [PedidosProveedor] AS [p0] ON [p].[ProveedorID] = [p0].[ProveedorID]
+ORDER BY [p].[NombreProveedor], [p].[ProveedorID]
+El subproceso 2716 terminó con código 0 (0x0).
+El subproceso 35660 terminó con código 0 (0x0).
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT [p].[ProductoID], [p].[NombreProducto], [p].[Descripcion], [p].[Costo], [p].[PorcentajeUtilidad], CASE
+    WHEN ([p].[Costo] IS NOT NULL) AND ([p].[PorcentajeUtilidad] IS NOT NULL) THEN [p].[Costo] * ([p].[PorcentajeUtilidad] / 100.0)
+    ELSE NULL
+END, CASE
+    WHEN ([p].[Costo] IS NOT NULL) AND ([p].[PorcentajeUtilidad] IS NOT NULL) THEN [p].[Costo] + ([p].[Costo] * ([p].[PorcentajeUtilidad] / 100.0))
+    ELSE [p].[Precio]
+END, CASE
+    WHEN ([p].[Costo] IS NOT NULL) AND ([p].[PorcentajeUtilidad] IS NOT NULL) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [p].[Precio], [p].[CantidadEnInventario], [p].[StockMinimo], [p].[FechaUltimaActualizacion], [i].[ImagenID], [i].[URLImagen], [i].[Descripcion], [i].[FechaCreacion], [t0].[LlantaId], [t0].[Ancho], [t0].[Perfil], [t0].[Diametro], [t0].[Marca], [t0].[Modelo], [t0].[Capas], [t0].[IndiceVelocidad], [t0].[TipoTerreno], [t0].[c]
+FROM [Productos] AS [p]
+LEFT JOIN [ImagenesProducto] AS [i] ON [p].[ProductoID] = [i].[ProductoID]
+LEFT JOIN (
+    SELECT [t].[LlantaId], [t].[Ancho], [t].[Perfil], [t].[Diametro], [t].[Marca], [t].[Modelo], [t].[Capas], [t].[IndiceVelocidad], [t].[TipoTerreno], [t].[c], [t].[ProductoID]
+    FROM (
+        SELECT [l].[LlantaID] AS [LlantaId], [l].[Ancho], [l].[Perfil], [l].[Diametro], [l].[Marca], [l].[Modelo], [l].[Capas], [l].[IndiceVelocidad], [l].[TipoTerreno], 1 AS [c], [l].[ProductoID], ROW_NUMBER() OVER(PARTITION BY [l].[ProductoID] ORDER BY [l].[LlantaID]) AS [row]
+        FROM [Llantas] AS [l]
+    ) AS [t]
+    WHERE [t].[row] <= 1
+) AS [t0] ON [p].[ProductoID] = [t0].[ProductoID]
+ORDER BY [p].[ProductoID]
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT [p].[PedidoID], [p].[ProveedorID], COALESCE([p0].[NombreProveedor], 'Sin nombre'), [p].[FechaPedido], COALESCE([p].[Estado], 'Pendiente'), [p].[UsuarioID], COALESCE([u].[NombreUsuario], 'Sin usuario'), (
+    SELECT COUNT(*)
+    FROM [DetallePedido] AS [d]
+    WHERE [p].[PedidoID] = [d].[PedidoID]), (
+    SELECT COALESCE(SUM(CAST([d0].[Cantidad] AS decimal(10,2)) * COALESCE([d0].[PrecioUnitario], 0.0)), 0.0)
+    FROM [DetallePedido] AS [d0]
+    WHERE [p].[PedidoID] = [d0].[PedidoID]), [p0].[ProveedorID], [u].[UsuarioID], [t].[detalleId], [t].[productoId], [t].[productoNombre], [t].[cantidad], [t].[precioUnitario], [t].[subtotal], [t].[ProductoID0]
+FROM [PedidosProveedor] AS [p]
+LEFT JOIN [Proveedores] AS [p0] ON [p].[ProveedorID] = [p0].[ProveedorID]
+LEFT JOIN [Usuarios] AS [u] ON [p].[UsuarioID] = [u].[UsuarioID]
+LEFT JOIN (
+    SELECT [d1].[DetalleID] AS [detalleId], [d1].[ProductoID] AS [productoId], COALESCE([p1].[NombreProducto], 'Sin nombre') AS [productoNombre], [d1].[Cantidad] AS [cantidad], COALESCE([d1].[PrecioUnitario], 0.0) AS [precioUnitario], CAST([d1].[Cantidad] AS decimal(10,2)) * COALESCE([d1].[PrecioUnitario], 0.0) AS [subtotal], [p1].[ProductoID] AS [ProductoID0], [d1].[PedidoID]
+    FROM [DetallePedido] AS [d1]
+    LEFT JOIN [Productos] AS [p1] ON [d1].[ProductoID] = [p1].[ProductoID]
+) AS [t] ON [p].[PedidoID] = [t].[PedidoID]
+ORDER BY [p].[FechaPedido] DESC, [p].[PedidoID], [p0].[ProveedorID], [u].[UsuarioID], [t].[detalleId]
+API.Controllers.PedidosProveedorController: Information: 📦 ✅ 12 pedidos encontrados
+API.Controllers.PedidosProveedorController: Information: 📦 Pedido: ID=12, Proveedor=Distribuidora  Tuco, Productos=2, Monto=$0.0000
+API.Controllers.PedidosProveedorController: Information: 📦 Pedido: ID=11, Proveedor=Distribuidora El carmen S.A, Productos=1, Monto=$0.0000
+API.Controllers.PedidosProveedorController: Information: 📦 Pedido: ID=10, Proveedor=Distribuidora El carmen S.A, Productos=3, Monto=$0.0000
+System.Net.Http.HttpClient.APIClient.ClientHandler: Information: Received HTTP response headers after 2020.1759ms - 200
+System.Net.Http.HttpClient.APIClient.LogicalHandler: Information: End processing HTTP request after 2025.1254ms - 200
+System.Net.Http.HttpClient.APIClient.ClientHandler: Information: Received HTTP response headers after 686.0716ms - 200
+System.Net.Http.HttpClient.APIClient.LogicalHandler: Information: End processing HTTP request after 720.7456ms - 200
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\PrivateAssemblies\Runtime\Microsoft.VisualStudio.Debugger.Runtime.NetCoreApp.dll' cargado. Se omitió la carga de símbolos. El módulo está optimizado y la opción del depurador 'Sólo mi código' está habilitada.
+System.Net.Http.HttpClient.APIClient.ClientHandler: Information: Received HTTP response headers after 2052.9644ms - 200
+System.Net.Http.HttpClient.APIClient.LogicalHandler: Information: End processing HTTP request after 6420.9724ms - 200
+GestionLlantera.Web.Services.InventarioService: Information: Respuesta recibida de la API, procesando 6611 caracteres...
+GestionLlantera.Web.Services.ProveedoresService: Information: 📋 Contenido crudo: [{"pedidoId":12,"proveedorId":1002,"proveedorNombre":"Distribuidora  Tuco","fechaPedido":"2025-07-25T00:15:44.13","estado":"Pendiente","usuarioId":4,"usuarioNombre":"Julissa Mejias","totalProductos":2,"montoTotal":0.0000,"detallePedidos":[{"detalleId":35,"productoId":1016,"productoNombre":"Llanta Kumho Mobile","cantidad":1,"precioUnitario":0.00,"subtotal":0.0000},{"detalleId":36,"productoId":1018,"productoNombre":"Llanta Firestone Extreme","cantidad":1,"precioUnitario":0.00,"subtotal":0.0000}]},...
+GestionLlantera.Web.Services.ProveedoresService: Information: 📋 12 pedidos obtenidos exitosamente (array directo)
+El subproceso '.NET ThreadPool Worker' (41208) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (2120) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (28900) terminó con código 0 (0x0).
+GestionLlantera.Web.Controllers.ProveedoresController: Information: 📦 Enviando 12 pedidos al cliente
+El subproceso '.NET ThreadPool Worker' (33956) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (31932) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (36724) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (37608) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (8720) terminó con código 0 (0x0).
+📦 Respuesta del servidor: {success: true, data: Array(12)}
+✅ 12 pedidos cargados
+📦 Primer pedido (estructura): {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Propiedades del primer pedido: (10) ['pedidoId', 'proveedorId', 'proveedorNombre', 'fechaPedido', 'estado', 'usuarioId', 'usuarioNombre', 'totalProductos', 'montoTotal', 'detallePedidos']
+📋 Iniciando mostrarPedidos...
+📊 pedidosFiltrados: (12) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+📋 Renderizando 12 pedidos en la tabla
+📦 Procesando pedido 1: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 2: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 3: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 4: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 5: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 6: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 7: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 8: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 9: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 10: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 11: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+📦 Procesando pedido 12: {pedidoId: Array(0), proveedorId: Array(0), proveedorNombre: Array(0), fechaPedido: Array(0), estado: Array(0), …}
+✅ 12 pedidos renderizados en la tabla
+GestionLlantera.Web.Services.ProveedoresService: Information: 📋 Total proveedores obtenidos: 3
+GestionLlantera.Web.Controllers.ProveedoresController: Information: 📋 Enviando 3 proveedores al cliente
+GestionLlantera.Web.Controllers.ProveedoresController: Information: 📋 Proveedor: ID=1002, Nombre='Distribuidora  Tuco', Contacto='Isaias Barboza'
+GestionLlantera.Web.Controllers.ProveedoresController: Information: 📋 Proveedor: ID=1005, Nombre='Distribuidora El carmen S.A', Contacto='Ismael Arias'
+GestionLlantera.Web.Controllers.ProveedoresController: Information: 📋 Proveedor: ID=1007, Nombre='Distribuidora Tucan S.A', Contacto='Ulises Monge Aguilar'
+📋 Respuesta del servidor: {success: true, data: Array(3)}
+🔄 Iniciando llenarSelectProveedores...
+📋 proveedoresDisponibles: (3) [{…}, {…}, {…}]
+🔢 Total proveedores a procesar: 3
+🔍 Procesando proveedor 1: {id: 1002, nombre: 'Distribuidora  Tuco', contacto: 'Isaias Barboza', email: 'isaias@gmail.com', telefono: '70084939', …}
+📊 Propiedades del proveedor: {id: 1002, nombre: 'Distribuidora  Tuco', proveedorId: undefined, nombreProveedor: undefined, contacto: 'Isaias Barboza', …}
+➕ Agregando opción: <option value="1002">Distribuidora  Tuco</option>
+🔍 Procesando proveedor 2: {id: 1005, nombre: 'Distribuidora El carmen S.A', contacto: 'Ismael Arias', email: 'jmejias@ticodevcr.com', telefono: '6666-2222', …}
+📊 Propiedades del proveedor: {id: 1005, nombre: 'Distribuidora El carmen S.A', proveedorId: undefined, nombreProveedor: undefined, contacto: 'Ismael Arias', …}
+➕ Agregando opción: <option value="1005">Distribuidora El carmen S.A</option>
+🔍 Procesando proveedor 3: {id: 1007, nombre: 'Distribuidora Tucan S.A', contacto: 'Ulises Monge Aguilar', email: 'a@R.com', telefono: '35872471', …}
+📊 Propiedades del proveedor: {id: 1007, nombre: 'Distribuidora Tucan S.A', proveedorId: undefined, nombreProveedor: undefined, contacto: 'Ulises Monge Aguilar', …}
+➕ Agregando opción: <option value="1007">Distribuidora Tucan S.A</option>
+✅ 3 de 3 proveedores agregados a los selects
+📊 Opciones en select: 4
+📊 Opciones en filtro: 4
+✅ 3 proveedores cargados
