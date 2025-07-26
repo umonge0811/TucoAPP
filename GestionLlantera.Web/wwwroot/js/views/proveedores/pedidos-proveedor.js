@@ -153,47 +153,34 @@ async function cargarPedidos() {
         const data = await response.json();
         console.log('📦 Respuesta del servidor:', data);
 
-        // Procesar respuesta igual que en proveedores - simple y directo
-        let pedidos = [];
-        
         if (data.success && data.data) {
-            pedidos = Array.isArray(data.data) ? data.data : [];
-            console.log('📦 Pedidos procesados exitosamente:', pedidos.length);
+            pedidosData = Array.isArray(data.data) ? data.data : [];
+            pedidosFiltrados = [...pedidosData];
+            
+            console.log(`✅ ${pedidosData.length} pedidos cargados`);
+            
+            if (pedidosData.length > 0) {
+                console.log('📦 Primer pedido (estructura):', pedidosData[0]);
+                console.log('📦 Propiedades del primer pedido:', Object.keys(pedidosData[0]));
+                mostrarPedidos();
+            } else {
+                mostrarSinDatosPedidos(true);
+            }
         } else {
-            console.log('📦 No hay pedidos disponibles o error en respuesta');
-            pedidos = [];
-        }
-
-        // Log de los primeros pedidos para debug
-        if (pedidos.length > 0) {
-            console.log('📦 Primer pedido (estructura):', pedidos[0]);
-            console.log('📦 Propiedades del primer pedido:', Object.keys(pedidos[0]));
-        }
-
-        pedidosData = pedidos;
-        pedidosFiltrados = [...pedidosData];
-
-        console.log(`📊 Total de pedidos procesados: ${pedidosData.length}`);
-        
-        if (pedidosData.length === 0) {
-            console.log('ℹ️ No hay pedidos disponibles');
-            mostrarSinDatosPedidos(true);
-        } else {
-            console.log('✅ Mostrando pedidos en la tabla');
-            mostrarPedidos();
+            throw new Error(data.message || 'Error obteniendo pedidos');
         }
         
         actualizarContadorPedidos();
-        console.log(`✅ ${pedidosData.length} pedidos cargados exitosamente`);
 
     } catch (error) {
         console.error('❌ Error cargando pedidos:', error);
-        mostrarError('Error cargando pedidos: ' + error.message);
-        mostrarSinDatosPedidos(true);
-        // Inicializar arrays vacíos para evitar errores
         pedidosData = [];
         pedidosFiltrados = [];
+        mostrarSinDatosPedidos(true);
         actualizarContadorPedidos();
+        if (typeof mostrarError === 'function') {
+            mostrarError('Error cargando pedidos: ' + error.message);
+        }
     } finally {
         mostrarLoadingPedidos(false);
     }
