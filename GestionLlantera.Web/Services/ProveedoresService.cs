@@ -177,7 +177,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo pedidos desde API - ProveedorId: {ProveedorId}", 
+                _logger.LogInformation("📋 Obteniendo pedidos desde API - ProveedorId: {ProveedorId}",
                     proveedorId?.ToString() ?? "TODOS");
 
                 if (!string.IsNullOrEmpty(jwtToken))
@@ -205,28 +205,77 @@ namespace GestionLlantera.Web.Services
                     }
 
                     // Deserializar directamente como dynamic/JArray para obtener la estructura correcta
-                    var jsonResponse = JsonConvert.DeserializeObject<dynamic>(content);
-                    
+                    //var jsonResponse = JsonConvert.DeserializeObject<dynamic>(content);
+
                     _logger.LogInformation("📋 Contenido crudo: {Content}", content.Length > 500 ? content.Substring(0, 500) + "..." : content);
 
                     // Si la respuesta es directamente un array
-                    if (jsonResponse is Newtonsoft.Json.Linq.JArray jArray)
+                    //if (jsonResponse is Newtonsoft.Json.Linq.JArray jArray)
+                    //{
+                    //    var pedidos = jArray.ToObject<List<object>>() ?? new List<object>();
+                    //    _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (array directo)", pedidos.Count);
+                    //    return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    //}
+                    //// Si la respuesta tiene estructura con success/data
+                    //else if (jsonResponse != null && jsonResponse.data != null)
+                    //{
+                    //    var pedidos = ((Newtonsoft.Json.Linq.JArray)jsonResponse.data).ToObject<List<object>>() ?? new List<object>();
+                    //    _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (estructura success/data)", pedidos.Count);
+                    //    return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    //}
+                    //else
+                    //{
+                    //    _logger.LogWarning("📋 Estructura de respuesta inesperada");
+                    //    return (true, new List<object>(), "No hay pedidos disponibles");
+                    //}
+
+                    if (content.TrimStart().StartsWith("["))
                     {
-                        var pedidos = jArray.ToObject<List<object>>() ?? new List<object>();
-                        _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (array directo)", pedidos.Count);
-                        return (true, pedidos, "Pedidos obtenidos exitosamente");
-                    }
-                    // Si la respuesta tiene estructura con success/data
-                    else if (jsonResponse != null && jsonResponse.data != null)
-                    {
-                        var pedidos = ((Newtonsoft.Json.Linq.JArray)jsonResponse.data).ToObject<List<object>>() ?? new List<object>();
-                        _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (estructura success/data)", pedidos.Count);
-                        return (true, pedidos, "Pedidos obtenidos exitosamente");
+                        // Deserializar directamente como JsonElement para mantener la estructura original
+                        var pedidosJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+                        var pedidosList = new List<object>();
+
+                        foreach (var pedidoElement in pedidosJsonElement.EnumerateArray())
+                        {
+                            // Convertir cada elemento a Dictionary<string, object> para mantener la estructura
+                            var pedidoDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(pedidoElement.GetRawText());
+                            pedidosList.Add(pedidoDict);
+                        }
+
+                        _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (array directo)", pedidosList.Count);
+                        return (true, pedidosList, "Pedidos obtenidos exitosamente");
                     }
                     else
                     {
-                        _logger.LogWarning("📋 Estructura de respuesta inesperada");
-                        return (true, new List<object>(), "No hay pedidos disponibles");
+                        // Respuesta con estructura success/data
+                        var resultadoElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+
+                        if (resultadoElement.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
+                        {
+                            if (resultadoElement.TryGetProperty("data", out var dataProp))
+                            {
+                                var pedidosList = new List<object>();
+
+                                foreach (var pedidoElement in dataProp.EnumerateArray())
+                                {
+                                    var pedidoDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(pedidoElement.GetRawText());
+                                    pedidosList.Add(pedidoDict);
+                                }
+
+                                _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente", pedidosList.Count);
+                                return (true, pedidosList, "Pedidos obtenidos exitosamente");
+                            }
+                            else
+                            {
+                                _logger.LogWarning("📋 No se encontró la propiedad 'data' en la respuesta.");
+                                return (true, new List<object>(), "No hay pedidos disponibles");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("📋 La respuesta indica 'success: false'.");
+                            return (true, new List<object>(), "No hay pedidos disponibles");
+                        }
                     }
                 }
                 else
