@@ -221,8 +221,8 @@ namespace GestionLlantera.Web.Services
                         var pedidosRaw = JsonConvert.DeserializeObject<dynamic>(content);
                         
                         _logger.LogInformation("📋 🔍 [SERVICE] Resultado de deserialización:");
-                        _logger.LogInformation("📋 🔍 [SERVICE] - Tipo: {Type}", pedidosRaw?.GetType()?.Name ?? "NULL");
-                        _logger.LogInformation("📋 🔍 [SERVICE] - ToString: {Data}", pedidosRaw?.ToString() ?? "NULL");
+                        _logger.LogInformation("📋 🔍 [SERVICE] - Tipo: {Type}", (object)(pedidosRaw?.GetType()?.Name ?? "NULL"));
+                        _logger.LogInformation("📋 🔍 [SERVICE] - ToString: {Data}", (object)(pedidosRaw?.ToString() ?? "NULL"));
                         
                         // Si es JArray, convertir a objeto regular
                         if (pedidosRaw is Newtonsoft.Json.Linq.JArray jArray)
@@ -243,7 +243,7 @@ namespace GestionLlantera.Web.Services
                         _logger.LogInformation("📋 ✅ [SERVICE] Retornando datos como dynamic");
                         return (true, data: pedidosRaw, message: "Pedidos obtenidos exitosamente");
                     }
-                    catch (JsonException ex)
+                    catch (Newtonsoft.Json.JsonException ex)
                     {
                         _logger.LogError(ex, "❌ [SERVICE] Error deserializando respuesta JSON");
                         _logger.LogError("📋 💥 [SERVICE] Contenido que falló: {Content}", content);
