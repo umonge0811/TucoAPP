@@ -371,12 +371,12 @@ function mostrarPedidos() {
     const html = pedidosFiltrados.map((pedido, index) => {
         console.log(`📦 Procesando pedido ${index + 1}:`, pedido);
         
-        // Corregir el mapeo de datos - usar las propiedades exactas que vienen de la API
+        // Mapear las propiedades exactas que vienen de la API según la imagen del controlador
         const pedidoId = pedido.pedidoId || 'N/A';
         const proveedorNombre = pedido.proveedorNombre || 'Sin nombre';
         const fechaPedido = pedido.fechaPedido;
         const estado = pedido.estado || 'Pendiente';
-        const montoTotal = pedido.montoTotal || 0;
+        const montoTotal = pedido.totalPrecio || 0; // Usar totalPrecio en lugar de montoTotal
         const usuarioNombre = pedido.usuarioNombre || 'Sin usuario';
         
         // Formatear fecha correctamente
