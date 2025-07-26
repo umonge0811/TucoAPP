@@ -4,6 +4,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using tuco.Clases.Models;
 using System.Text.Json;
 using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Models.DTOs;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -47,7 +48,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-
         [HttpGet]
         public async Task<IActionResult> ObtenerProveedores()
         {
@@ -58,7 +58,8 @@ namespace GestionLlantera.Web.Controllers
                 var jwtToken = this.ObtenerTokenJWT();
                 var proveedores = await _proveedoresService.ObtenerTodosProveedoresAsync(jwtToken);
 
-                var resultado = proveedores.Select(p => new {
+                var resultado = proveedores.Select(p => new
+                {
                     id = p.ProveedorId,
                     nombre = p.NombreProveedor,
                     contacto = p.Contacto,
@@ -71,7 +72,7 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("📋 Enviando {Count} proveedores al cliente", resultado.Count);
                 foreach (var prov in resultado)
                 {
-                    _logger.LogInformation("📋 Proveedor: ID={Id}, Nombre='{Nombre}', Contacto='{Contacto}'", 
+                    _logger.LogInformation("📋 Proveedor: ID={Id}, Nombre='{Nombre}', Contacto='{Contacto}'",
                         prov.id, prov.nombre ?? "NULL", prov.contacto ?? "NULL");
                 }
 
@@ -97,14 +98,15 @@ namespace GestionLlantera.Web.Controllers
                 var jwtToken = this.ObtenerTokenJWT();
                 var proveedores = await _proveedoresService.ObtenerTodosProveedoresAsync(jwtToken);
 
-                var resultado = proveedores.Select(p => new {
+                var resultado = proveedores.Select(p => new
+                {
                     id = p.ProveedorId,
                     nombre = p.NombreProveedor,
                     contacto = p.Contacto,
                     telefono = p.Telefono,
                     direccion = p.Direccion,
                     activo = p.Activo,
-                    pedidosProveedors = p.PedidosProveedors // Incluir pedidos para verificar si tiene registros
+                    pedidosProveedors = p.PedidosProveedors
                 }).ToList();
 
                 _logger.LogInformation("📋 Enviando TODOS los {Count} proveedores al cliente (activos e inactivos)", resultado.Count);
@@ -129,7 +131,6 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos del proveedor requeridos" });
                 }
 
-                // ✅ OBTENER TOKEN - ESTO FALTABA
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
@@ -137,13 +138,11 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
-                // Validaciones
                 if (string.IsNullOrWhiteSpace(request.NombreProveedor))
                 {
                     return Json(new { success = false, message = "El nombre del proveedor es requerido" });
                 }
 
-                // Crear objeto Proveedore
                 var proveedor = new Proveedore
                 {
                     NombreProveedor = request.NombreProveedor.Trim(),
@@ -222,7 +221,6 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                // Validaciones
                 if (request.ProveedorId < 0)
                 {
                     return Json(new { success = false, message = "ID del proveedor inválido" });
@@ -233,7 +231,6 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "El nombre del proveedor es requerido" });
                 }
 
-                // Crear objeto Proveedore
                 var proveedor = new Proveedore
                 {
                     ProveedorId = request.ProveedorId,
@@ -398,39 +395,134 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                _logger.LogInformation("📦 Obteniendo pedidos - ProveedorId: {ProveedorId}", proveedorId?.ToString() ?? "TODOS");
+
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
+                
                 var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
-                return Json(resultado);
+
+                if (resultado.success)
+                {
+                    // Asegurar que data sea una lista válida
+                    var pedidos = resultado.data as System.Collections.IEnumerable ?? new List<object>();
+                    var listaPedidos = pedidos.Cast<object>().ToList();
+                    
+                    _logger.LogInformation("📦 Enviando {Count} pedidos al cliente", listaPedidos.Count);
+                    
+                    return Json(new { success = true, data = listaPedidos });
+                }
+                else
+                {
+                    _logger.LogWarning("📦 Error obteniendo pedidos: {Message}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo pedidos");
-                return Json(new { success = false, message = "Error obteniendo pedidos" });
+                return Json(new { success = false, message = "Error al obtener pedidos" });
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearPedidoProveedor([FromBody] dynamic pedidoData)
+        public async Task<IActionResult> CrearPedidoProveedor([FromBody] CrearPedidoProveedorRequest request)
         {
             try
             {
-                var token = HttpContext.Session.GetString("JWTToken");
-                if (string.IsNullOrEmpty(token))
+                _logger.LogInformation("📦 Creando pedido para proveedor {ProveedorId} con {CantidadProductos} productos",
+                    request?.ProveedorId, request?.Productos?.Count ?? 0);
+
+                if (request == null)
                 {
-                    return Json(new { success = false, message = "Sesión expirada" });
+                    return Json(new { success = false, message = "Datos del pedido requeridos" });
                 }
 
+                // Validar datos básicos
+                if (request.ProveedorId <= 0)
+                {
+                    return Json(new { success = false, message = "ID de proveedor inválido" });
+                }
+
+                if (request.Productos == null || !request.Productos.Any())
+                {
+                    return Json(new { success = false, message = "Debe seleccionar al menos un producto" });
+                }
+
+                // Validar productos
+                foreach (var producto in request.Productos)
+                {
+                    if (producto.ProductoId <= 0)
+                    {
+                        return Json(new { success = false, message = "ID de producto inválido" });
+                    }
+
+                    if (producto.Cantidad <= 0)
+                    {
+                        return Json(new { success = false, message = "La cantidad debe ser mayor a 0" });
+                    }
+                }
+
+                // Obtener token JWT
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
+                }
+
+                // Crear el pedido usando el servicio
+                _logger.LogInformation("📦 Preparando datos del pedido para el proveedor {ProveedorId}", request.ProveedorId);
+
+                var pedidoData = new CrearPedidoProveedorRequest
+                {
+                    ProveedorId = request.ProveedorId,
+                    Productos = request.Productos.Select(p => new ProductoPedidoRequest
+                    {
+                        ProductoId = p.ProductoId,
+                        Cantidad = p.Cantidad,
+                        PrecioUnitario = p.PrecioUnitario ?? 0
+                    }).ToList()
+                };
+
                 var resultado = await _proveedoresService.CrearPedidoProveedorAsync(pedidoData, token);
-                return Json(resultado);
+
+                _logger.LogInformation("📦 Resultado del servicio: Success={Success}, Message={Message}",
+                    resultado.success, resultado.message);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Pedido creado exitosamente para proveedor {ProveedorId}", request.ProveedorId);
+
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message ?? "Pedido creado exitosamente",
+                        data = resultado.data
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error creando pedido: {Message}", resultado.message);
+
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message ?? "Error creando el pedido"
+                    });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error creando pedido");
-                return Json(new { success = false, message = "Error creando pedido" });
+                _logger.LogError(ex, "❌ Error creando pedido para proveedor {ProveedorId}", request?.ProveedorId);
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor al crear el pedido",
+                    details = ex.Message
+                });
             }
         }
     }

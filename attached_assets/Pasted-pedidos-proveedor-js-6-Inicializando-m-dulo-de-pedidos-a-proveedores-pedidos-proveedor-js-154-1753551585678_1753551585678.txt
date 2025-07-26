@@ -1,0 +1,401 @@
+pedidos-proveedor.js:6 🚀 Inicializando módulo de pedidos a proveedores...
+pedidos-proveedor.js:1542 ✅ Módulo de pedidos a proveedores cargado completamente
+pedidos-proveedor.js:30 📚 DOM cargado, inicializando pedidos a proveedores...
+pedidos-proveedor.js:48 🔧 Configurando event listeners...
+pedidos-proveedor.js:599 🔧 Configurando ordenamiento de tabla de productos...
+pedidos-proveedor.js:83 📋 Cargando datos iniciales completos...
+pedidos-proveedor.js:97 👥 Cargando proveedores...
+pedidos-proveedor.js:137 📦 Cargando TODOS los pedidos...
+pedidos-proveedor.js:293 📦 Cargando productos del inventario...
+pedidos-proveedor.js:36 ✅ Módulo de pedidos a proveedores inicializado correctamente
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+pedidos-proveedor.js:154 📦 🟢 [FRONTEND] RESPUESTA COMPLETA DEL SERVIDOR: Object
+pedidos-proveedor.js:155 📦 🔍 [FRONTEND] Tipo de data: object
+pedidos-proveedor.js:156 📦 🔍 [FRONTEND] Es array: false
+pedidos-proveedor.js:157 📦 🔍 [FRONTEND] Tiene success: true
+pedidos-proveedor.js:158 📦 🔍 [FRONTEND] Success value: true
+pedidos-proveedor.js:159 📦 🔍 [FRONTEND] Data.data type: object
+pedidos-proveedor.js:160 📦 🔍 [FRONTEND] Data.data es array: true
+pedidos-proveedor.js:163 📦 🔍 [FRONTEND] Cantidad de elementos en data.data: 12
+pedidos-proveedor.js:168 📦 🔍 [FRONTEND] Elemento 0: Object
+pedidos-proveedor.js:168 📦 🔍 [FRONTEND] Elemento 1: Object
+pedidos-proveedor.js:168 📦 🔍 [FRONTEND] Elemento 2: Object
+pedidos-proveedor.js:178 📦 📄 [FRONTEND] ESTRUCTURA COMPLETA: {
+  "success": true,
+  "data": [
+    {
+      "pedidoId": [],
+      "proveedorId": [],
+      "proveedorNombre": [],
+      "fechaPedido": [],
+      "estado": [],
+      "usuarioId": [],
+      "usuarioNombre": [],
+      "totalProductos": [],
+      "montoTotal": [],
+      "detallePedidos": [
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ],
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ]
+      ]
+    },
+    {
+      "pedidoId": [],
+      "proveedorId": [],
+      "proveedorNombre": [],
+      "fechaPedido": [],
+      "estado": [],
+      "usuarioId": [],
+      "usuarioNombre": [],
+      "totalProductos": [],
+      "montoTotal": [],
+      "detallePedidos": [
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ]
+      ]
+    },
+    {
+      "pedidoId": [],
+      "proveedorId": [],
+      "proveedorNombre": [],
+      "fechaPedido": [],
+      "estado": [],
+      "usuarioId": [],
+      "usuarioNombre": [],
+      "totalProductos": [],
+      "montoTotal": [],
+      "detallePedidos": [
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ],
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ],
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ]
+      ]
+    },
+    {
+      "pedidoId": [],
+      "proveedorId": [],
+      "proveedorNombre": [],
+      "fechaPedido": [],
+      "estado": [],
+      "usuarioId": [],
+      "usuarioNombre": [],
+      "totalProductos": [],
+      "montoTotal": [],
+      "detallePedidos": [
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ],
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ],
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ]
+      ]
+    },
+    {
+      "pedidoId": [],
+      "proveedorId": [],
+      "proveedorNombre": [],
+      "fechaPedido": [],
+      "estado": [],
+      "usuarioId": [],
+      "usuarioNombre": [],
+      "totalProductos": [],
+      "montoTotal": [],
+      "detallePedidos": [
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ],
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ]
+      ]
+    },
+    {
+      "pedidoId": [],
+      "proveedorId": [],
+      "proveedorNombre": [],
+      "fechaPedido": [],
+      "estado": [],
+      "usuarioId": [],
+      "usuarioNombre": [],
+      "totalProductos": [],
+      "montoTotal": [],
+      "detallePedidos": [
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ]
+        ],
+        [
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          ],
+          [
+            []
+          
+pedidos-proveedor.js:185 📦 Pedidos procesados exitosamente: 12
+pedidos-proveedor.js:193 📦 Primer pedido (estructura): Object
+pedidos-proveedor.js:194 📦 Propiedades del primer pedido: Array(10)
+pedidos-proveedor.js:200 📊 Total de pedidos procesados: 12
+pedidos-proveedor.js:206 ✅ Mostrando pedidos en la tabla
+pedidos-proveedor.js:395 📋 Iniciando mostrarPedidos...
+pedidos-proveedor.js:396 📊 pedidosFiltrados: Array(12)
+pedidos-proveedor.js:406 📋 Renderizando 12 pedidos en la tabla
+pedidos-proveedor.js:410 📦 Procesando pedido 1: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 2: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 3: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 4: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 5: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 6: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 7: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 8: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 9: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 10: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 11: Object
+pedidos-proveedor.js:410 📦 Procesando pedido 12: Object
+pedidos-proveedor.js:466 ✅ 12 pedidos renderizados en la tabla
+pedidos-proveedor.js:211 ✅ 12 pedidos cargados exitosamente
+pedidos-proveedor.js:113 📋 Respuesta del servidor: Object
+pedidos-proveedor.js:318 🔄 Iniciando llenarSelectProveedores...
+pedidos-proveedor.js:319 📋 proveedoresDisponibles: Array(3)
+pedidos-proveedor.js:333 🔢 Total proveedores a procesar: 3
+pedidos-proveedor.js:340 🔍 Procesando proveedor 1: Object
+pedidos-proveedor.js:343 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:368 ➕ Agregando opción: <option value="1002">Distribuidora  Tuco</option>
+pedidos-proveedor.js:340 🔍 Procesando proveedor 2: Object
+pedidos-proveedor.js:343 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:368 ➕ Agregando opción: <option value="1005">Distribuidora El carmen S.A</option>
+pedidos-proveedor.js:340 🔍 Procesando proveedor 3: Object
+pedidos-proveedor.js:343 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:368 ➕ Agregando opción: <option value="1007">Distribuidora Tucan S.A</option>
+pedidos-proveedor.js:384 ✅ 3 de 3 proveedores agregados a los selects
+pedidos-proveedor.js:387 📊 Opciones en select: 4
+pedidos-proveedor.js:388 📊 Opciones en filtro: 4
+pedidos-proveedor.js:118 ✅ 3 proveedores cargados
+pedidos-proveedor.js:307 ✅ 6 productos del inventario cargados

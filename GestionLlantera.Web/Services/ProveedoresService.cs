@@ -2,7 +2,10 @@ using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Net.Http.Headers;
 using tuco.Clases.Models;
+using GestionLlantera.Web.Models.DTOs;
 
 namespace GestionLlantera.Web.Services
 {
@@ -174,7 +177,8 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo pedidos de proveedores");
+                _logger.LogInformation("📋 Obteniendo pedidos desde API - ProveedorId: {ProveedorId}",
+                    proveedorId?.ToString() ?? "TODOS");
 
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
@@ -194,22 +198,90 @@ namespace GestionLlantera.Web.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    // Intentar deserializar, si falla o está vacío, devolver array vacío
-                    try
+                    if (string.IsNullOrWhiteSpace(content))
                     {
-                        var pedidos = JsonConvert.DeserializeObject<dynamic>(content);
-                        return (true, pedidos ?? new List<object>(), "Pedidos obtenidos exitosamente");
-                    }
-                    catch
-                    {
-                        _logger.LogInformation("📋 No hay pedidos disponibles o respuesta vacía");
+                        _logger.LogInformation("📋 Respuesta vacía - no hay pedidos");
                         return (true, new List<object>(), "No hay pedidos disponibles");
+                    }
+
+                    // Deserializar directamente como dynamic/JArray para obtener la estructura correcta
+                    //var jsonResponse = JsonConvert.DeserializeObject<dynamic>(content);
+
+                    _logger.LogInformation("📋 Contenido crudo: {Content}", content.Length > 500 ? content.Substring(0, 500) + "..." : content);
+
+                    // Si la respuesta es directamente un array
+                    //if (jsonResponse is Newtonsoft.Json.Linq.JArray jArray)
+                    //{
+                    //    var pedidos = jArray.ToObject<List<object>>() ?? new List<object>();
+                    //    _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (array directo)", pedidos.Count);
+                    //    return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    //}
+                    //// Si la respuesta tiene estructura con success/data
+                    //else if (jsonResponse != null && jsonResponse.data != null)
+                    //{
+                    //    var pedidos = ((Newtonsoft.Json.Linq.JArray)jsonResponse.data).ToObject<List<object>>() ?? new List<object>();
+                    //    _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (estructura success/data)", pedidos.Count);
+                    //    return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    //}
+                    //else
+                    //{
+                    //    _logger.LogWarning("📋 Estructura de respuesta inesperada");
+                    //    return (true, new List<object>(), "No hay pedidos disponibles");
+                    //}
+
+                    if (content.TrimStart().StartsWith("["))
+                    {
+                        // Deserializar directamente como JsonElement para mantener la estructura original
+                        var pedidosJsonElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+                        var pedidosList = new List<object>();
+
+                        foreach (var pedidoElement in pedidosJsonElement.EnumerateArray())
+                        {
+                            // Convertir cada elemento a Dictionary<string, object> para mantener la estructura
+                            var pedidoDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(pedidoElement.GetRawText());
+                            pedidosList.Add(pedidoDict);
+                        }
+
+                        _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (array directo)", pedidosList.Count);
+                        return (true, pedidosList, "Pedidos obtenidos exitosamente");
+                    }
+                    else
+                    {
+                        // Respuesta con estructura success/data
+                        var resultadoElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+
+                        if (resultadoElement.TryGetProperty("success", out var successProp) && successProp.GetBoolean())
+                        {
+                            if (resultadoElement.TryGetProperty("data", out var dataProp))
+                            {
+                                var pedidosList = new List<object>();
+
+                                foreach (var pedidoElement in dataProp.EnumerateArray())
+                                {
+                                    var pedidoDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(pedidoElement.GetRawText());
+                                    pedidosList.Add(pedidoDict);
+                                }
+
+                                _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente", pedidosList.Count);
+                                return (true, pedidosList, "Pedidos obtenidos exitosamente");
+                            }
+                            else
+                            {
+                                _logger.LogWarning("📋 No se encontró la propiedad 'data' en la respuesta.");
+                                return (true, new List<object>(), "No hay pedidos disponibles");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogWarning("📋 La respuesta indica 'success: false'.");
+                            return (true, new List<object>(), "No hay pedidos disponibles");
+                        }
                     }
                 }
                 else
                 {
-                    _logger.LogError("❌ Error obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
-                    return (false, new List<object>(), "Error obteniendo pedidos");
+                    _logger.LogError("❌ Error HTTP obteniendo pedidos: {StatusCode}", response.StatusCode);
+                    return (false, new List<object>(), $"Error HTTP {response.StatusCode}");
                 }
             }
             catch (Exception ex)
@@ -286,34 +358,64 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string message)> CrearPedidoProveedorAsync(dynamic pedidoData, string token)
+        public async Task<(bool success, object? data, string? message)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token)
         {
             try
             {
-                _logger.LogInformation("📦 Creando pedido para proveedor");
-                ConfigurarAutenticacion(token);
+                _logger.LogInformation("📦 Enviando pedido al API para proveedor {ProveedorId}", pedidoData.ProveedorId);
 
-                var json = JsonConvert.SerializeObject(pedidoData);
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var json = JsonConvert.SerializeObject(pedidoData, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore
+                });
+
+                _logger.LogInformation("📦 JSON enviado: {Json}", json);
+
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-
                 var response = await _httpClient.PostAsync("api/PedidosProveedor", content);
+
                 var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📦 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
 
                 if (response.IsSuccessStatusCode)
                 {
+                    if (string.IsNullOrWhiteSpace(responseContent))
+                    {
+                        _logger.LogWarning("📦 Respuesta vacía del API");
+                        return (success: false, data: null, message: "Respuesta vacía del servidor");
+                    }
+
                     var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-                    return (true, resultado, "Pedido creado exitosamente");
+                    var mensaje = resultado?.message?.ToString() ?? "Pedido creado exitosamente";
+
+                    return (success: true, data: resultado?.data, message: mensaje);
                 }
                 else
                 {
-                    _logger.LogError("❌ Error creando pedido: {StatusCode} - {Content}", response.StatusCode, responseContent);
-                    return (false, null, "Error creando pedido");
+                    _logger.LogError("❌ Error del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    // Intentar obtener el mensaje de error del API
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorResponse?.message?.ToString() ?? "Error desconocido del servidor";
+                        return (success: false, data: null, message: errorMessage);
+                    }
+                    catch
+                    {
+                        return (success: false, data: null, message: "Error del servidor");
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error creando pedido");
-                return (false, null, "Error interno del servidor");
+                _logger.LogError(ex, "❌ Error creando pedido a proveedor");
+                return (success: false, data: null, message: "Error interno: " );
             }
         }
 

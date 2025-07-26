@@ -90,7 +90,7 @@ public partial class TucoContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
-        // ✅ CONFIGURACIÓN DE AjustesInventarioPendientes
+        // ✅ CONFIGURACIÓN DE AjustesInventarioPendientesd
         modelBuilder.Entity<AjusteInventarioPendiente>(entity =>
         {
             entity.HasKey(e => e.AjusteId);

@@ -1,5 +1,6 @@
 
 using tuco.Clases.Models;
+using GestionLlantera.Web.Models.DTOs;
 
 namespace GestionLlantera.Web.Services.Interfaces
 {
@@ -12,6 +13,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<(bool success, object data, string message)> EliminarProveedorAsync(int id, string token);
         Task<(bool success, object data, string message)> CambiarEstadoProveedorAsync(int proveedorId, bool activo, string token);
         Task<(bool success, object data, string message)> ObtenerPedidosProveedorAsync(int? proveedorId, string token);
-        Task<(bool success, object data, string message)> CrearPedidoProveedorAsync(dynamic pedidoData, string token);
+        Task<(bool success, object data, string message)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token);
     }
 }

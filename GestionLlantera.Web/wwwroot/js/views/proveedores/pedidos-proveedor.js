@@ -151,30 +151,36 @@ async function cargarPedidos() {
         }
 
         const data = await response.json();
+        console.log('📦 Respuesta del servidor:', data);
 
-        if (data.success) {
-            // Si success es true pero no hay data, inicializar como array vacío
+        if (data.success && data.data) {
             pedidosData = Array.isArray(data.data) ? data.data : [];
             pedidosFiltrados = [...pedidosData];
-            mostrarPedidos();
-            actualizarContadorPedidos();
-            console.log(`✅ ${pedidosData.length} pedidos cargados exitosamente`);
+            
+            console.log(`✅ ${pedidosData.length} pedidos cargados`);
+            
+            if (pedidosData.length > 0) {
+                console.log('📦 Primer pedido (estructura):', pedidosData[0]);
+                console.log('📦 Propiedades del primer pedido:', Object.keys(pedidosData[0]));
+                mostrarPedidos();
+            } else {
+                mostrarSinDatosPedidos(true);
+            }
         } else {
-            // Si no hay pedidos, mostrar mensaje informativo en lugar de error
-            const mensaje = data.message || 'No hay pedidos disponibles';
-            console.log(`ℹ️ ${mensaje}`);
-            pedidosData = [];
-            pedidosFiltrados = [];
-            mostrarSinDatosPedidos(true);
-            actualizarContadorPedidos();
+            throw new Error(data.message || 'Error obteniendo pedidos');
         }
+        
+        actualizarContadorPedidos();
+
     } catch (error) {
         console.error('❌ Error cargando pedidos:', error);
-        mostrarError('Error cargando pedidos: ' + error.message);
-        mostrarSinDatosPedidos(true);
-        // Inicializar arrays vacíos para evitar errores
         pedidosData = [];
         pedidosFiltrados = [];
+        mostrarSinDatosPedidos(true);
+        actualizarContadorPedidos();
+        if (typeof mostrarError === 'function') {
+            mostrarError('Error cargando pedidos: ' + error.message);
+        }
     } finally {
         mostrarLoadingPedidos(false);
     }
@@ -202,27 +208,40 @@ async function cargarPedidosDeProveedor(proveedorId) {
         }
 
         const data = await response.json();
+        console.log(`📦 Respuesta para proveedor ${proveedorId}:`, data);
 
-        if (data.success) {
-            pedidosData = Array.isArray(data.data) ? data.data : [];
-            pedidosFiltrados = [...pedidosData];
-            mostrarPedidos();
-            actualizarContadorPedidos();
-            console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
+        // Procesar respuesta igual que en cargarPedidos
+        let pedidos = [];
+        
+        if (data.success && data.data) {
+            pedidos = Array.isArray(data.data) ? data.data : [];
+            console.log(`📦 Pedidos del proveedor ${proveedorId} procesados:`, pedidos.length);
         } else {
-            const mensaje = data.message || `No hay pedidos para el proveedor ${proveedorId}`;
-            console.log(`ℹ️ ${mensaje}`);
-            pedidosData = [];
-            pedidosFiltrados = [];
-            mostrarSinDatosPedidos(true);
-            actualizarContadorPedidos();
+            console.log(`📦 No hay pedidos para el proveedor ${proveedorId}`);
+            pedidos = [];
         }
+
+        pedidosData = pedidos;
+        pedidosFiltrados = [...pedidosData];
+
+        console.log(`📊 Pedidos del proveedor ${proveedorId}: ${pedidosData.length}`);
+        
+        if (pedidosData.length === 0) {
+            mostrarSinDatosPedidos(true);
+        } else {
+            mostrarPedidos();
+        }
+        
+        actualizarContadorPedidos();
+        console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
+
     } catch (error) {
         console.error('❌ Error cargando pedidos del proveedor:', error);
         mostrarError('Error cargando pedidos del proveedor: ' + error.message);
         mostrarSinDatosPedidos(true);
         pedidosData = [];
         pedidosFiltrados = [];
+        actualizarContadorPedidos();
     } finally {
         mostrarLoadingPedidos(false);
     }
@@ -335,40 +354,68 @@ function llenarSelectProveedores() {
  * Mostrar pedidos en la tabla
  */
 function mostrarPedidos() {
+    console.log('📋 Iniciando mostrarPedidos...');
+    console.log('📊 pedidosFiltrados:', pedidosFiltrados);
+    
     const tbody = $('#cuerpoTablaPedidos');
 
-    if (pedidosFiltrados.length === 0) {
+    if (!pedidosFiltrados || pedidosFiltrados.length === 0) {
+        console.log('📋 No hay pedidos para mostrar');
         mostrarSinDatosPedidos(true);
         return;
     }
 
+    console.log(`📋 Renderizando ${pedidosFiltrados.length} pedidos en la tabla`);
     mostrarSinDatosPedidos(false);
 
-    const html = pedidosFiltrados.map(pedido => {
-        const fecha = new Date(pedido.fechaPedido).toLocaleDateString('es-ES');
-        const estadoBadge = obtenerBadgeEstado(pedido.estado);
+    const html = pedidosFiltrados.map((pedido, index) => {
+        console.log(`📦 Procesando pedido ${index + 1}:`, pedido);
+        
+        // Mapear las propiedades exactas que vienen de la API según la imagen del controlador
+        const pedidoId = pedido.pedidoId || 'N/A';
+        const proveedorNombre = pedido.proveedorNombre || 'Sin nombre';
+        const fechaPedido = pedido.fechaPedido;
+        const estado = pedido.estado || 'Pendiente';
+        const montoTotal = pedido.totalPrecio || 0; // Usar totalPrecio en lugar de montoTotal
+        const usuarioNombre = pedido.usuarioNombre || 'Sin usuario';
+        
+        // Formatear fecha correctamente
+        let fechaFormateada = 'Fecha inválida';
+        if (fechaPedido) {
+            try {
+                const fecha = new Date(fechaPedido);
+                if (!isNaN(fecha.getTime())) {
+                    fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+                }
+            } catch (error) {
+                console.warn('⚠️ Error formateando fecha:', error);
+            }
+        }
+        
+        const estadoBadge = obtenerBadgeEstado(estado);
 
         return `
             <tr>
-                <td>${pedido.pedidoId}</td>
+                <td>${pedidoId}</td>
                 <td>
-                    <strong>${pedido.proveedorNombre}</strong>
+                    <strong>${proveedorNombre}</strong>
                 </td>
-                <td>${fecha}</td>
+                <td>${fechaFormateada}</td>
                 <td>${estadoBadge}</td>
                 <td>
-                    <span class="badge bg-info">${pedido.totalProductos}</span>
+                    <strong>$${parseFloat(montoTotal).toFixed(2)}</strong>
                 </td>
-                <td>
-                    <strong>$${pedido.montoTotal.toFixed(2)}</strong>
-                </td>
-                <td>${pedido.usuarioNombre}</td>
+                <td>${usuarioNombre}</td>
                 <td class="text-center">
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-outline-info" onclick="verDetallePedido(${pedido.pedidoId})" title="Ver Detalle">
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="verDetallePedido(${pedidoId})" title="Ver Detalle">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="cambiarEstadoPedido(${pedido.pedidoId}, '${pedido.estado}')" title="Cambiar Estado">
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="cambiarEstadoPedido(${pedidoId}, '${estado}')" title="Cambiar Estado">
                             <i class="bi bi-arrow-repeat"></i>
                         </button>
                     </div>
@@ -378,6 +425,7 @@ function mostrarPedidos() {
     }).join('');
 
     tbody.html(html);
+    console.log(`✅ ${pedidosFiltrados.length} pedidos renderizados en la tabla`);
 }
 
 /**
@@ -408,7 +456,7 @@ function aplicarFiltros() {
         const cumpleEstado = !estado || pedido.estado === estado;
         const cumpleBusqueda = !busqueda || 
             pedido.pedidoId.toString().includes(busqueda) ||
-            pedido.proveedorNombre.toLowerCase().includes(busqueda);
+            (pedido.proveedorNombre && pedido.proveedorNombre.toLowerCase().includes(busqueda));
 
         return cumpleProveedor && cumpleEstado && cumpleBusqueda;
     });
@@ -514,7 +562,7 @@ function configurarOrdenamientoTablaProductos() {
 
     $('.sortable').off('click').on('click', function() {
         console.log('🚀 === INICIO FUNCIÓN DE ORDENAMIENTO ===');
-        
+
         const column = $(this).data('column');
         const $table = $('#tablaProductosPedido');
         const $tbody = $table.find('tbody');
@@ -539,7 +587,7 @@ function configurarOrdenamientoTablaProductos() {
         console.log('📋 Contenido de tbody:', $tbody.html());
         console.log('📋 Todos los tr en tbody:', $tbody.find('tr'));
         console.log('📋 Cantidad de tr encontrados:', $tbody.find('tr').length);
-        
+
         // Verificar si existe alguna tabla con productos
         const todasLasTablas = $('table');
         console.log('📋 Total de tablas en la página:', todasLasTablas.length);
@@ -559,22 +607,22 @@ function configurarOrdenamientoTablaProductos() {
         if (rows.length === 0) {
             console.warn('⚠️ NO HAY FILAS PARA ORDENAR');
             console.warn('🔍 Intentando buscar filas con selectores alternativos...');
-            
+
             // Buscar filas con data-producto-id
             const filasConData = $('tr[data-producto-id]');
             console.log('📋 Filas con data-producto-id encontradas:', filasConData.length);
-            
+
             if (filasConData.length > 0) {
                 console.log('✅ Usando filas encontradas con data-producto-id');
                 // Usar estas filas en lugar de las del tbody
                 const filasArray = filasConData.toArray();
                 console.log('📋 Filas a ordenar:', filasArray.length);
-                
+
                 // Continuar con el ordenamiento usando filasArray
                 ordenarFilas(filasArray, column, $(this));
                 return;
             }
-            
+
             return;
         }
 
@@ -736,7 +784,7 @@ function cargarProductosEnTabla() {
         const elementosSortable = $('.sortable');
         console.log('🔍 === VERIFICANDO ELEMENTOS SORTABLE ===');
         console.log(`📊 Elementos .sortable encontrados: ${elementosSortable.length}`);
-        
+
         elementosSortable.each(function(index) {
             console.log(`📋 Elemento ${index + 1}:`, {
                 elemento: this,
@@ -749,7 +797,7 @@ function cargarProductosEnTabla() {
 
         // Configurar ordenamiento INMEDIATAMENTE después de cargar el HTML - IGUAL QUE EN INVENTARIO FACTURACIÓN
         configurarOrdenamientoTablaProductos();
-        
+
         // Verificar que los event listeners se configuraron
         console.log('🔧 === VERIFICANDO EVENT LISTENERS ===');
         elementosSortable.each(function(index) {
@@ -949,24 +997,89 @@ async function finalizarPedido() {
         const response = await fetch('/Proveedores/CrearPedidoProveedor', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(datosPedido)
         });
 
-        const resultado = await response.json();
+        console.log('📦 Response completo:', response);
+        console.log('📦 Response status:', response.status);
+        console.log('📦 Response ok:', response.ok);
 
-        if (resultado.success) {
-            mostrarExito('Pedido creado exitosamente');
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error HTTP response:', errorText);
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
+        const responseText = await response.text();
+        console.log('📦 Response text crudo:', responseText);
+
+        let resultado;
+        try {
+            resultado = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('❌ Error parseando JSON:', parseError);
+            console.log('📦 Texto que falló al parsear:', responseText);
+            throw new Error('Respuesta del servidor no es JSON válido');
+        }
+
+        console.log('📦 Resultado parseado:', resultado);
+        console.log('📦 Propiedades del resultado:', Object.keys(resultado || {}));
+        console.log('📦 resultado.success:', resultado?.success);
+        console.log('📦 resultado.data:', resultado?.data);
+        console.log('📦 resultado.message:', resultado?.message);
+
+        // Verificar diferentes estructuras de respuesta
+        let success = false;
+        let data = null;
+        let mensaje = 'Pedido creado exitosamente';
+        let pedidoId = null;
+
+        // Estructura 1: { success: true, data: {...}, message: "..." }
+        if (resultado && typeof resultado === 'object') {
+            if (resultado.success === true) {
+                success = true;
+                data = resultado.data;
+                mensaje = resultado.message || mensaje;
+                if (data && data.pedidoId) {
+                    pedidoId = data.pedidoId;
+                }
+                console.log('✅ Estructura tipo 1 detectada');
+            }
+            // Estructura 2: Respuesta directa con pedidoId
+            else if (resultado.pedidoId) {
+                success = true;
+                data = resultado;
+                pedidoId = resultado.pedidoId;
+                mensaje = resultado.message || mensaje;
+                console.log('✅ Estructura tipo 2 detectada (pedidoId directo)');
+            }
+            // Estructura 3: Array o respuesta sin success
+            else if (Array.isArray(resultado) || (!resultado.hasOwnProperty('success') && resultado.pedidoId)) {
+                success = true;
+                data = resultado;
+                pedidoId = resultado.pedidoId || 'N/A';
+                console.log('✅ Estructura tipo 3 detectada');
+            }
+        }
+
+        console.log('📦 Variables finales:', { success, data, mensaje, pedidoId });
+
+        if (success) {
+            console.log('✅ Pedido creado exitosamente con ID:', pedidoId);
+            mostrarExito(`${mensaje}${pedidoId ? `. ID del pedido: ${pedidoId}` : ''}`);
             $('#modalNuevoPedido').modal('hide');
-            await cargarPedidos(); // Recargar lista
+            await cargarPedidos();
+            limpiarFormulario();
         } else {
-            mostrarError(resultado.message);
+            const errorMsg = resultado?.message || resultado?.details || resultado?.error || 'Error desconocido al crear el pedido';
+            console.error('❌ Error creando pedido:', errorMsg);
+            mostrarError(errorMsg);
         }
     } catch (error) {
-        console.error('❌ Error creando pedido:', error);
-        mostrarError('Error creando pedido: ' + error.message);
+        console.error('❌ Error de red creando pedido:', error);
+        mostrarError('Error de conexión: ' + error.message);
     } finally {
         const btnFinalizar = $('button[onclick="finalizarPedido()"]');
         btnFinalizar.html('<i class="bi bi-check-circle me-1"></i>Finalizar Pedido <span id="contadorSeleccionados" class="badge bg-white text-success ms-1">' + productosSeleccionados.length + '</span>').prop('disabled', false);
@@ -1239,7 +1352,7 @@ function ordenarFilas(rows, column, $elementoClick) {
 
     // Ordenar filas - USANDO .data() IGUAL QUE EN INVENTARIO FACTURACIÓN
     console.log('🔄 === INICIANDO FUNCIÓN SORT ===');
-    
+
     rows.sort(function(a, b) {
         console.log('🚀 === DENTRO DE SORT FUNCTION ===');
         console.log('📋 Parámetros recibidos:', {
@@ -1312,7 +1425,7 @@ function ordenarFilas(rows, column, $elementoClick) {
     // Determinar dónde colocar las filas ordenadas
     const $tabla = $('#tablaProductosPedido');
     const $tbody = $tabla.find('tbody');
-    
+
     if ($tbody.length > 0) {
         console.log('📋 Reordenando en tbody de tablaProductosPedido');
         $tbody.empty().append(rows);
@@ -1326,6 +1439,45 @@ function ordenarFilas(rows, column, $elementoClick) {
 
     console.log(`✅ Tabla ordenada por ${column} (${ascending ? 'ascendente' : 'descendente'})`);
     console.log('🏁 === FIN FUNCIÓN DE ORDENAMIENTO ===');
+}
+
+/**
+ * Limpiar Formulario
+ */
+function limpiarFormulario() {
+    // Deseleccionar todos los productos seleccionados
+    $('tr[data-producto-id]:visible .producto-checkbox').each(function() {
+        const checkbox = $(this);
+        if (checkbox.is(':checked')) {
+            checkbox.prop('checked', false);
+            const productoId = parseInt(checkbox.val());
+            toggleProductoSeleccionado(productoId);
+        }
+    });
+
+    // Resetear el filtro de búsqueda de productos
+    $('#buscarProductoPedido').val('');
+    filtrarProductosPedido();
+
+    // Resetear la selección de categoría
+    $('#filtroCategoriaPedido').val('');
+
+    // Desmarcar el checkbox de seleccionar todos
+    $('#seleccionarTodosProductos').prop('checked', false);
+
+    // Opcional: podría también resetear la cantidad y el precio de cada producto
+    $('input.cantidad-producto').val(1);
+    $('input.precio-producto').val(0.00);
+
+    // Ocultar la información del proveedor seleccionado
+    $('#infoProveedorSeleccionado').hide();
+
+    // Deseleccionar el proveedor
+    $('#selectProveedor').val('');
+    seleccionarProveedor();
+
+    // Actualizar el resumen del pedido
+    actualizarResumenPedido();
 }
 
 // =====================================
