@@ -177,52 +177,16 @@ async function cargarPedidos() {
         
         console.log('📦 📄 [FRONTEND] ESTRUCTURA COMPLETA:', JSON.stringify(data, null, 2));
 
-        // La respuesta debe venir en formato estructurado: { success: true, data: [...], message: "..." }
+        // Procesar respuesta igual que en proveedores
         let pedidos = [];
         
-        console.log('📦 🔄 [FRONTEND] PROCESANDO RESPUESTA DEL SERVIDOR...');
-        
-        if (data.success === true && data.data) {
-            console.log('📦 ✅ [FRONTEND] Success=true y data existe');
-            
-            if (Array.isArray(data.data)) {
-                console.log('📦 ✅ [FRONTEND] data.data es array, procesando...');
-                pedidos = data.data;
-                console.log('📦 📊 [FRONTEND] Cantidad de pedidos detectados:', pedidos.length);
-                
-                // Analizar estructura de cada pedido
-                pedidos.forEach((pedido, index) => {
-                    if (index < 3) { // Solo los primeros 3
-                        console.log(`📦 🔍 [FRONTEND] Pedido ${index + 1}:`, {
-                            tipo: typeof pedido,
-                            esArray: Array.isArray(pedido),
-                            propiedades: pedido && typeof pedido === 'object' && !Array.isArray(pedido) ? Object.keys(pedido) : 'N/A',
-                            valor: pedido
-                        });
-                        
-                        // Si es array, analizar su contenido
-                        if (Array.isArray(pedido)) {
-                            console.log(`📦 ⚠️ [FRONTEND] PEDIDO ${index + 1} ES ARRAY (PROBLEMA!):`, pedido);
-                        }
-                    }
-                });
-            } else {
-                console.log('📦 ⚠️ [FRONTEND] data.data NO es array:', typeof data.data, data.data);
-                pedidos = [];
-            }
-        } else if (data.success === false) {
-            console.log(`📦 ❌ [FRONTEND] Error del servidor: ${data.message}`);
-            pedidos = [];
-        } else if (Array.isArray(data)) {
-            console.log('📦 🔄 [FRONTEND] Usando formato legacy (data directo)');
-            pedidos = data;
+        if (data.success && data.data) {
+            pedidos = Array.isArray(data.data) ? data.data : [];
+            console.log('📦 Pedidos procesados exitosamente:', pedidos.length);
         } else {
-            console.warn('📦 ⚠️ [FRONTEND] Formato de respuesta no reconocido:', data);
+            console.log('📦 No hay pedidos disponibles o error en respuesta');
             pedidos = [];
         }
-        
-        console.log('📦 📊 [FRONTEND] PEDIDOS FINALES PROCESADOS:', pedidos.length);
-        console.log('📦 📋 [FRONTEND] ESTRUCTURA FINAL DE PEDIDOS:', pedidos);
 
         // Log de los primeros pedidos para debug
         if (pedidos.length > 0) {
@@ -284,21 +248,14 @@ async function cargarPedidosDeProveedor(proveedorId) {
         console.log(`📦 Respuesta para proveedor ${proveedorId}:`, data);
         console.log(`📦 Estructura de respuesta:`, JSON.stringify(data, null, 2));
 
-        // Manejar formato estructurado de respuesta
+        // Procesar respuesta igual que en cargarPedidos
         let pedidos = [];
         
-        if (data.success === true && data.data) {
+        if (data.success && data.data) {
             pedidos = Array.isArray(data.data) ? data.data : [];
-            console.log(`📦 Usando data.data para proveedor ${proveedorId}, cantidad:`, pedidos.length);
-        } else if (data.success === false) {
-            console.log(`ℹ️ Error para proveedor ${proveedorId}: ${data.message}`);
-            pedidos = [];
-        } else if (Array.isArray(data)) {
-            // Formato directo por compatibilidad
-            pedidos = data;
-            console.log(`📦 Usando data directo para proveedor ${proveedorId}, cantidad:`, pedidos.length);
+            console.log(`📦 Pedidos del proveedor ${proveedorId} procesados:`, pedidos.length);
         } else {
-            console.log(`ℹ️ No hay pedidos para el proveedor ${proveedorId}`);
+            console.log(`📦 No hay pedidos para el proveedor ${proveedorId}`);
             pedidos = [];
         }
 

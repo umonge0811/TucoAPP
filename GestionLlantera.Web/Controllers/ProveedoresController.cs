@@ -395,97 +395,35 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📦 🟢 [CONTROLLER] INICIO - ObtenerPedidosProveedor - ProveedorId: {ProveedorId}", proveedorId?.ToString() ?? "TODOS");
+                _logger.LogInformation("📦 Obteniendo pedidos - ProveedorId: {ProveedorId}", proveedorId?.ToString() ?? "TODOS");
 
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
                 {
-                    _logger.LogWarning("⚠️ [CONTROLLER] Token JWT no encontrado");
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
-
-                _logger.LogInformation("📦 🔐 [CONTROLLER] Token JWT obtenido, llamando al servicio...");
                 
                 var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
 
-                _logger.LogInformation("📦 📋 [CONTROLLER] Resultado del servicio:");
-                _logger.LogInformation("📦 📋 [CONTROLLER] - Success: {Success}", resultado.success);
-                _logger.LogInformation("📦 📋 [CONTROLLER] - DataType: {DataType}", resultado.data?.GetType()?.Name ?? "NULL");
-                _logger.LogInformation("📦 📋 [CONTROLLER] - Message: {Message}", resultado.message);
-                _logger.LogInformation("📦 📋 [CONTROLLER] - Data ToString: {Data}", resultado.data?.ToString() ?? "NULL");
-
                 if (resultado.success)
                 {
-                    _logger.LogInformation("📦 🔍 [CONTROLLER] ANTES DE CREAR RESPUESTA:");
-                    _logger.LogInformation("📦 🔍 [CONTROLLER] - resultado.data tipo: {Type}", resultado.data?.GetType()?.Name ?? "NULL");
-                    _logger.LogInformation("📦 🔍 [CONTROLLER] - resultado.data toString: {Data}", 
-                        resultado.data?.ToString()?.Length > 300 ? resultado.data.ToString().Substring(0, 300) + "..." : resultado.data?.ToString() ?? "NULL");
+                    _logger.LogInformation("📦 Enviando {Count} pedidos al cliente", 
+                        resultado.data is System.Collections.IEnumerable enumerable && !(resultado.data is string) 
+                            ? enumerable.Cast<object>().Count() 
+                            : 0);
                     
-                    // Verificar si resultado.data es una lista y analizar sus elementos
-                    if (resultado.data is System.Collections.IEnumerable enumerable && !(resultado.data is string))
-                    {
-                        var lista = enumerable.Cast<object>().ToList();
-                        _logger.LogInformation("📦 🔍 [CONTROLLER] - Es enumerable con {Count} elementos", lista.Count);
-                        
-                        for (int i = 0; i < Math.Min(3, lista.Count); i++)
-                        {
-                            var elemento = lista[i];
-                            _logger.LogInformation("📦 🔍 [CONTROLLER] - Elemento {Index} tipo: {Type}", i, elemento?.GetType()?.Name ?? "NULL");
-                            _logger.LogInformation("📦 🔍 [CONTROLLER] - Elemento {Index} toString: {Element}", i, 
-                                elemento?.ToString()?.Length > 150 ? elemento.ToString().Substring(0, 150) + "..." : elemento?.ToString() ?? "NULL");
-                        }
-                    }
-                    
-                    // Asegurarnos de que la respuesta sea JSON válido
-                    var jsonResponse = new
-                    {
-                        success = true,
-                        data = resultado.data,
-                        message = resultado.message
-                    };
-
-                    _logger.LogInformation("📦 🔄 [CONTROLLER] Creando respuesta JSON estructurada...");
-                    _logger.LogInformation("📦 🔍 [CONTROLLER] jsonResponse.data tipo: {Type}", jsonResponse.data?.GetType()?.Name ?? "NULL");
-                    
-                    try
-                    {
-                        // Usar Newtonsoft.Json para serializar como lo hace normalmente ASP.NET Core
-                        var serializedResponse = Newtonsoft.Json.JsonConvert.SerializeObject(jsonResponse, 
-                            Newtonsoft.Json.Formatting.Indented,
-                            new Newtonsoft.Json.JsonSerializerSettings
-                            {
-                                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore
-                            });
-                        
-                        _logger.LogInformation("📦 📤 [CONTROLLER] RESPUESTA SERIALIZADA COMPLETA (primeros 1000 chars): {Response}", 
-                            serializedResponse.Length > 1000 ? serializedResponse.Substring(0, 1000) + "..." : serializedResponse);
-                    }
-                    catch (Exception serEx)
-                    {
-                        _logger.LogError(serEx, "❌ [CONTROLLER] Error serializando respuesta para log");
-                    }
-
-                    _logger.LogInformation("📦 ✅ [CONTROLLER] Enviando respuesta OK al frontend");
-                    return Ok(jsonResponse);
+                    return Json(new { success = true, data = resultado.data, message = resultado.message });
                 }
                 else
                 {
-                    _logger.LogWarning("📦 ⚠️ [CONTROLLER] Servicio retornó error: {Message}", resultado.message);
-                    return BadRequest(new { 
-                        success = false, 
-                        message = resultado.message,
-                        data = (object)null
-                    });
+                    _logger.LogWarning("📦 Error obteniendo pedidos: {Message}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ [CONTROLLER] Error obteniendo pedidos");
-                return Json(new { 
-                    success = false, 
-                    data = new List<object>(),
-                    message = "Error interno del servidor" 
-                });
+                _logger.LogError(ex, "❌ Error obteniendo pedidos");
+                return Json(new { success = false, message = "Error al obtener pedidos" });
             }
         }
 

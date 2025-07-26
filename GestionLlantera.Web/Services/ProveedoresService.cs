@@ -177,7 +177,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 🟢 [SERVICE] INICIO - ObtenerPedidosProveedorAsync - ProveedorId: {ProveedorId}", 
+                _logger.LogInformation("📋 Obteniendo pedidos desde API - ProveedorId: {ProveedorId}", 
                     proveedorId?.ToString() ?? "TODOS");
 
                 if (!string.IsNullOrEmpty(jwtToken))
@@ -185,7 +185,6 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Clear();
                     _httpClient.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                    _logger.LogInformation("📋 🔐 [SERVICE] Token JWT configurado");
                 }
 
                 string url = "api/PedidosProveedor";
@@ -194,118 +193,32 @@ namespace GestionLlantera.Web.Services
                     url += $"?proveedorId={proveedorId}";
                 }
 
-                _logger.LogInformation("📋 🌐 [SERVICE] Llamando a API: {Url}", url);
-
                 var response = await _httpClient.GetAsync(url);
                 var content = await response.Content.ReadAsStringAsync();
 
-                _logger.LogInformation("📋 📡 [SERVICE] Respuesta API: StatusCode={StatusCode}, ContentLength={ContentLength}", 
-                    response.StatusCode, content?.Length ?? 0);
-
-                _logger.LogInformation("📋 📄 [SERVICE] CONTENIDO COMPLETO DE LA API: {Content}", content);
-
                 if (response.IsSuccessStatusCode)
                 {
-                    // Intentar deserializar la respuesta
                     if (string.IsNullOrWhiteSpace(content))
                     {
-                        _logger.LogInformation("📋 ⚠️ [SERVICE] Respuesta vacía - no hay pedidos");
+                        _logger.LogInformation("📋 Respuesta vacía - no hay pedidos");
                         return (true, new List<object>(), "No hay pedidos disponibles");
                     }
 
-                    try
-                    {
-                        _logger.LogInformation("📋 ⚙️ [SERVICE] Intentando deserializar JSON...");
-                        _logger.LogInformation("📋 📄 [SERVICE] CONTENIDO A DESERIALIZAR (primeros 500 chars): {Content}", 
-                            content.Length > 500 ? content.Substring(0, 500) + "..." : content);
-                        
-                        // PASO 1: Deserializar directamente como dynamic para ver qué obtenemos
-                        var pedidosRaw = JsonConvert.DeserializeObject<dynamic>(content);
-                        
-                        _logger.LogInformation("📋 🔍 [SERVICE] PASO 1 - Resultado de deserialización:");
-                        _logger.LogInformation("📋 🔍 [SERVICE] - Tipo: {Type}", (object)(pedidosRaw?.GetType()?.Name ?? "NULL"));
-                        _logger.LogInformation("📋 🔍 [SERVICE] - ToString (primeros 200 chars): {Data}", 
-                            (object)((pedidosRaw?.ToString()?.Length > 200 ? pedidosRaw.ToString().Substring(0, 200) + "..." : pedidosRaw?.ToString()) ?? "NULL"));
-                        
-                        // PASO 2: Verificar si es JArray y procesar elemento por elemento
-                        if (pedidosRaw is Newtonsoft.Json.Linq.JArray jArray)
-                        {
-                            _logger.LogInformation("📋 🔄 [SERVICE] PASO 2 - Detectado JArray con {Count} elementos", jArray.Count);
-                            
-                            var listaPedidos = new List<object>();
-                            for (int i = 0; i < jArray.Count; i++)
-                            {
-                                var item = jArray[i];
-                                _logger.LogInformation("📋 🔍 [SERVICE] Elemento {Index} - Tipo: {Type}", i, item.GetType().Name);
-                                _logger.LogInformation("📋 🔍 [SERVICE] Elemento {Index} - ToString: {Item}", i, 
-                                    item.ToString().Length > 200 ? item.ToString().Substring(0, 200) + "..." : item.ToString());
-                                
-                                // Convertir a objeto plano para evitar problemas de serialización
-                                var elementoPlano = item.ToObject<object>();
-                                _logger.LogInformation("📋 🔄 [SERVICE] Elemento {Index} convertido a objeto - Tipo: {Type}", i, elementoPlano?.GetType()?.Name ?? "NULL");
-                                
-                                listaPedidos.Add(elementoPlano);
-                            }
-                            
-                            _logger.LogInformation("📋 ✅ [SERVICE] Lista convertida con {Count} elementos", listaPedidos.Count);
-                            
-                            // PASO 3: Verificar que la lista se mantenga correcta
-                            _logger.LogInformation("📋 🔍 [SERVICE] PASO 3 - Verificando lista final:");
-                            for (int i = 0; i < Math.Min(3, listaPedidos.Count); i++)
-                            {
-                                var elemento = listaPedidos[i];
-                                _logger.LogInformation("📋 🔍 [SERVICE] Lista elemento {Index} - Tipo: {Type}", i, elemento?.GetType()?.Name ?? "NULL");
-                                _logger.LogInformation("📋 🔍 [SERVICE] Lista elemento {Index} - ToString: {Element}", i, 
-                                    elemento?.ToString()?.Length > 100 ? elemento.ToString().Substring(0, 100) + "..." : elemento?.ToString() ?? "NULL");
-                            }
-                            
-                            return (true, listaPedidos, "Pedidos obtenidos exitosamente");
-                        }
-                        
-                        // PASO 4: Si no es JArray, intentar deserializar como lista directamente
-                        _logger.LogInformation("📋 🔄 [SERVICE] PASO 4 - No es JArray, intentando deserializar como lista directa...");
-                        
-                        try
-                        {
-                            var listaDirect = JsonConvert.DeserializeObject<List<object>>(content);
-                            _logger.LogInformation("📋 ✅ [SERVICE] Deserialización directa exitosa con {Count} elementos", listaDirect?.Count ?? 0);
-                            return (true, listaDirect ?? new List<object>(), "Pedidos obtenidos exitosamente");
-                        }
-                        catch (Exception exDirect)
-                        {
-                            _logger.LogWarning(exDirect, "📋 ⚠️ [SERVICE] Fallo deserialización directa, usando dynamic original");
-                        }
-                        
-                        _logger.LogInformation("📋 ✅ [SERVICE] Retornando datos como dynamic original");
-                        return (true, data: pedidosRaw, message: "Pedidos obtenidos exitosamente");
-                    }
-                    catch (Newtonsoft.Json.JsonException ex)
-                    {
-                        _logger.LogError(ex, "❌ [SERVICE] Error deserializando respuesta JSON");
-                        _logger.LogError("📋 💥 [SERVICE] Contenido que falló: {Content}", content);
-                        return (false, new List<object>(), "Error procesando respuesta del servidor");
-                    }
+                    // Deserializar directamente como lista de objetos, igual que en proveedores
+                    var pedidos = JsonConvert.DeserializeObject<List<object>>(content) ?? new List<object>();
+                    _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente", pedidos.Count);
+
+                    return (true, pedidos, "Pedidos obtenidos exitosamente");
                 }
                 else
                 {
-                    _logger.LogError("❌ [SERVICE] Error HTTP obteniendo pedidos: {StatusCode} - {Content}", response.StatusCode, content);
-
-                    // Intentar extraer mensaje de error del contenido
-                    try
-                    {
-                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(content);
-                        var errorMessage = errorResponse?.message?.ToString() ?? "Error obteniendo pedidos";
-                        return (false, new List<object>(), errorMessage);
-                    }
-                    catch
-                    {
-                        return (false, new List<object>(), $"Error HTTP {response.StatusCode}");
-                    }
+                    _logger.LogError("❌ Error HTTP obteniendo pedidos: {StatusCode}", response.StatusCode);
+                    return (false, new List<object>(), $"Error HTTP {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ [SERVICE] Error obteniendo pedidos");
+                _logger.LogError(ex, "❌ Error obteniendo pedidos");
                 return (false, new List<object>(), "Error interno del servidor");
             }
         }
