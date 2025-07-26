@@ -99,102 +99,58 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🔍 Obteniendo pedido {Id}", id);
 
-                // Obtener información de la empresa
-                    var informacionEmpresa = new
+                var pedido = await _context.PedidosProveedores
+                    .Include(pp => pp.Proveedor)
+                    .Include(pp => pp.Usuario)
+                    .Include(pp => pp.DetallePedidos)
+                        .ThenInclude(dp => dp.Producto)
+                    .Where(pp => pp.PedidoId == id)
+                    .Select(pp => new
                     {
-                        NombreEmpresa = "MULTISERVICIOS TUCO",
-                        Direccion = "San José, Costa Rica",
-                        Telefono = "+506 2222-2222",
-                        Email = "info@tuco.com",
-                        Cedula = "3-101-123456"
-                    };
-
-                    // Obtener información completa del pedido incluyendo datos de llantas
-                    var pedidoCompleto = await _context.PedidosProveedores
-                        .Include(pp => pp.Proveedor)
-                        .Include(pp => pp.Usuario)
-                        .Include(pp => pp.DetallePedidos)
-                            .ThenInclude(dp => dp.Producto)
-                                .ThenInclude(p => p.Llanta)
-                        .Where(pp => pp.PedidoId == id)
-                        .FirstOrDefaultAsync();
-
-                    if (pedidoCompleto == null)
-                    {
-                        return NotFound(new { message = "Pedido no encontrado" });
-                    }
-
-                    // Construir la respuesta con información procesada
-                    var pedidoParaPdf = new
-                    {
-                        // Información básica del pedido  
-                        PedidoId = pedidoCompleto.PedidoId,
-                        FechaPedido = pedidoCompleto.FechaPedido,
-                        Estado = pedidoCompleto.Estado,
-
-                        // Información del proveedor
+                        pp.PedidoId,
+                        pp.ProveedorId,
                         Proveedor = new
                         {
-                            pedidoCompleto.Proveedor.NombreProveedor,
-                            pedidoCompleto.Proveedor.Contacto,
-                            pedidoCompleto.Proveedor.Telefono,
-                            pedidoCompleto.Proveedor.Direccion,
-                            pedidoCompleto.Proveedor.Email
+                            pp.Proveedor.ProveedorId,
+                            pp.Proveedor.NombreProveedor,
+                            pp.Proveedor.Contacto,
+                            pp.Proveedor.Telefono,
+                            pp.Proveedor.Direccion
                         },
-
-                        // Información del usuario
+                        pp.FechaPedido,
+                        pp.Estado,
+                        pp.UsuarioId,
                         Usuario = new
                         {
-                            pedidoCompleto.Usuario.NombreUsuario
+                            pp.Usuario.UsuarioId,
+                            pp.Usuario.NombreUsuario
                         },
-
-                        // Información de la empresa
-                        Empresa = informacionEmpresa,
-
-                        // Detalles de productos con información de llantas procesada
-                        DetallePedidos = pedidoCompleto.DetallePedidos.Select(dp => 
+                        DetallePedidos = pp.DetallePedidos.Select(dp => new
                         {
-                            // Procesar información de llanta
-                            string medidaLlanta = "N/A";
-                            if (dp.Producto.Llanta != null && dp.Producto.Llanta.Any())
+                            dp.DetalleId,
+                            dp.ProductoId,
+                            Producto = new
                             {
-                                var llanta = dp.Producto.Llanta.First();
-                                if (llanta.Perfil.HasValue && llanta.Perfil > 0)
-                                {
-                                    medidaLlanta = $"{llanta.Ancho}/{llanta.Perfil}/R{llanta.Diametro}";
-                                }
-                                else
-                                {
-                                    medidaLlanta = $"{llanta.Ancho}/R{llanta.Diametro}";
-                                }
-                            }
-
-                            return new
-                            {
-                                dp.ProductoId,
-                                dp.Cantidad,
-                                dp.PrecioUnitario,
-                                Subtotal = dp.Cantidad * (dp.PrecioUnitario ?? 0),
-
-                                // Información del producto
-                                Producto = new
-                                {
-                                    dp.Producto.NombreProducto,
-                                    dp.Producto.Descripcion
-                                },
-
-                                // Información de llanta procesada
-                                MedidaLlanta = medidaLlanta,
-                                EsLlanta = dp.Producto.Llanta != null && dp.Producto.Llanta.Any()
-                            };
+                                dp.Producto.ProductoId,
+                                dp.Producto.NombreProducto,
+                                dp.Producto.Descripcion,
+                                dp.Producto.CantidadEnInventario
+                            },
+                            dp.Cantidad,
+                            dp.PrecioUnitario,
+                            Subtotal = dp.Cantidad * (dp.PrecioUnitario ?? 0)
                         }).ToList(),
+                        TotalProductos = pp.DetallePedidos.Count(),
+                        MontoTotal = pp.DetallePedidos.Sum(dp => dp.Cantidad * (dp.PrecioUnitario ?? 0))
+                    })
+                    .FirstOrDefaultAsync();
 
-                        // Totales
-                        TotalProductos = pedidoCompleto.DetallePedidos.Count(),
-                        MontoTotal = pedidoCompleto.DetallePedidos.Sum(dp => dp.Cantidad * (dp.PrecioUnitario ?? 0))
-                    };
+                if (pedido == null)
+                {
+                    return NotFound(new { message = "Pedido no encontrado" });
+                }
 
-                return Ok(pedidoParaPdf);
+                return Ok(pedido);
             }
             catch (Exception ex)
             {
