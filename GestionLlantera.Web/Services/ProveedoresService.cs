@@ -1,3 +1,6 @@
+Librerías agregadas e implementado método para descargar el PDF del pedido en el servicio de proveedores.
+```
+```replit_final_file
 using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -449,6 +452,87 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, "❌ Error obteniendo productos para facturación");
                 return (false, null, $"Error: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool success, object data, string message, string details)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest request, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Enviando solicitud para crear pedido a proveedor...");
+
+                using var httpClient = _httpClientFactory.CreateClient("APIClient");
+
+                // Configurar autenticación JWT
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var json = JsonSerializer.Serialize(request, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await httpClient.PostAsync("api/PedidosProveedor", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📦 Respuesta de la API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonSerializer.Deserialize<dynamic>(responseContent);
+                    return (true, resultado, "Pedido creado exitosamente", null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error en la API al crear pedido: {StatusCode} - {Content}", response.StatusCode, responseContent);
+                    return (false, null, "Error al crear el pedido", responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Excepción al crear pedido a proveedor");
+                return (false, null, "Error de conexión al crear pedido", ex.Message);
+            }
+        }
+
+        public async Task<byte[]> DescargarPdfPedidoAsync(int pedidoId, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("📄 Descargando PDF del pedido {PedidoId}", pedidoId);
+
+                using var httpClient = _httpClientFactory.CreateClient("APIClient");
+
+                // Configurar autenticación JWT
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await httpClient.GetAsync($"api/PedidosProveedor/{pedidoId}/pdf");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error descargando PDF: {StatusCode} - {Error}", response.StatusCode, errorContent);
+                    throw new Exception($"Error del servidor: {response.StatusCode}");
+                }
+
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                _logger.LogInformation("✅ PDF descargado correctamente, tamaño: {Size} bytes", bytes.Length);
+
+                return bytes;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error descargando PDF del pedido {PedidoId}", pedidoId);
+                throw;
             }
         }
     }

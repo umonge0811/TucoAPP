@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using tuco.Clases.Models;
 using API.Extensions;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
 
 namespace API.Controllers
 {
@@ -323,6 +325,38 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("{id}/pdf")]
+        public async Task<IActionResult> GenerarPdfPedido(int id)
+        {
+            try
+            {
+                _logger.LogInformation("📄 Generando PDF para pedido {Id}", id);
+
+                var pedido = await _context.PedidosProveedores
+                    .Include(pp => pp.Proveedor)
+                    .Include(pp => pp.Usuario)
+                    .Include(pp => pp.DetallePedidos)
+                        .ThenInclude(dp => dp.Producto)
+                            .ThenInclude(p => p.Llanta)
+                    .FirstOrDefaultAsync(pp => pp.PedidoId == id);
+
+                if (pedido == null)
+                {
+                    return NotFound(new { message = "Pedido no encontrado" });
+                }
+
+                var pdfBytes = GenerarPdfPedidoBytes(pedido);
+                var fileName = $"Pedido_Proveedor_{id}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error generando PDF del pedido {Id}", id);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePedidoProveedor(int id)
         {
@@ -359,6 +393,170 @@ namespace API.Controllers
                 _logger.LogError(ex, "❌ Error eliminando pedido {Id}", id);
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
+        }
+
+        /// <summary>
+        /// Genera el PDF del pedido como array de bytes
+        /// </summary>
+        private byte[] GenerarPdfPedidoBytes(PedidosProveedor pedido)
+        {
+            using var memoryStream = new MemoryStream();
+            var document = new iTextSharp.text.Document(iTextSharp.text.PageSize.A4, 40, 40, 60, 40);
+            var writer = iTextSharp.text.pdf.PdfWriter.GetInstance(document, memoryStream);
+
+            // Fuentes
+            var titleFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 16, iTextSharp.text.BaseColor.BLACK);
+            var headerFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 12, iTextSharp.text.BaseColor.BLACK);
+            var normalFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 10, iTextSharp.text.BaseColor.BLACK);
+            var boldFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 10, iTextSharp.text.BaseColor.BLACK);
+            var smallFont = iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA, 8, iTextSharp.text.BaseColor.GRAY);
+
+            // Colores
+            var azulEmpresa = new iTextSharp.text.BaseColor(63, 127, 191);
+            var grisClaro = new iTextSharp.text.BaseColor(245, 245, 245);
+
+            document.Open();
+
+            // ENCABEZADO DE LA EMPRESA
+            var headerTable = new iTextSharp.text.pdf.PdfPTable(3);
+            headerTable.WidthPercentage = 100;
+            headerTable.SetWidths(new float[] { 1f, 2f, 1f });
+
+            // Logo placeholder
+            var logoCell = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("TUCO\nLLANTERIA", iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 12, iTextSharp.text.BaseColor.WHITE)));
+            logoCell.BackgroundColor = azulEmpresa;
+            logoCell.Padding = 10f;
+            logoCell.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
+            logoCell.VerticalAlignment = iTextSharp.text.Element.ALIGN_MIDDLE;
+            logoCell.Border = iTextSharp.text.Rectangle.BOX;
+            headerTable.AddCell(logoCell);
+
+            // Información de empresa
+            var empresaInfo = new iTextSharp.text.pdf.PdfPCell();
+            empresaInfo.Border = iTextSharp.text.Rectangle.BOX;
+            empresaInfo.Padding = 10f;
+            empresaInfo.AddElement(new iTextSharp.text.Paragraph("MULTISERVICIOS TUCO", titleFont));
+            empresaInfo.AddElement(new iTextSharp.text.Paragraph("Sistema de Gestión de Inventarios", normalFont));
+            empresaInfo.AddElement(new iTextSharp.text.Paragraph("Teléfono: +506 1234-5678", smallFont));
+            empresaInfo.AddElement(new iTextSharp.text.Paragraph("Email: info@tucollanteria.com", smallFont));
+            headerTable.AddCell(empresaInfo);
+
+            // Información del documento
+            var docInfo = new iTextSharp.text.pdf.PdfPCell();
+            docInfo.Border = iTextSharp.text.Rectangle.BOX;
+            docInfo.Padding = 10f;
+            docInfo.BackgroundColor = grisClaro;
+            docInfo.AddElement(new iTextSharp.text.Paragraph("ORDEN DE COMPRA", headerFont));
+            docInfo.AddElement(new iTextSharp.text.Paragraph($"No. {pedido.PedidoId:000000}", boldFont));
+            docInfo.AddElement(new iTextSharp.text.Paragraph($"Fecha: {pedido.FechaPedido:dd/MM/yyyy}", normalFont));
+            docInfo.AddElement(new iTextSharp.text.Paragraph($"Estado: {pedido.Estado}", normalFont));
+            headerTable.AddCell(docInfo);
+
+            document.Add(headerTable);
+            document.Add(new iTextSharp.text.Paragraph("\n"));
+
+            // INFORMACIÓN DEL PROVEEDOR Y USUARIO
+            var infoTable = new iTextSharp.text.pdf.PdfPTable(2);
+            infoTable.WidthPercentage = 100;
+            infoTable.SetWidths(new float[] { 1f, 1f });
+
+            // Información del proveedor
+            var proveedorCell = new iTextSharp.text.pdf.PdfPCell();
+            proveedorCell.Border = iTextSharp.text.Rectangle.BOX;
+            proveedorCell.Padding = 10f;
+            proveedorCell.AddElement(new iTextSharp.text.Paragraph("INFORMACIÓN DEL PROVEEDOR", headerFont));
+            proveedorCell.AddElement(new iTextSharp.text.Paragraph($"Nombre: {pedido.Proveedor?.NombreProveedor ?? "N/A"}", normalFont));
+            proveedorCell.AddElement(new iTextSharp.text.Paragraph($"Contacto: {pedido.Proveedor?.Contacto ?? "N/A"}", normalFont));
+            proveedorCell.AddElement(new iTextSharp.text.Paragraph($"Teléfono: {pedido.Proveedor?.Telefono ?? "N/A"}", normalFont));
+            proveedorCell.AddElement(new iTextSharp.text.Paragraph($"Dirección: {pedido.Proveedor?.Direccion ?? "N/A"}", normalFont));
+            infoTable.AddCell(proveedorCell);
+
+            // Información del usuario
+            var usuarioCell = new iTextSharp.text.pdf.PdfPCell();
+            usuarioCell.Border = iTextSharp.text.Rectangle.BOX;
+            usuarioCell.Padding = 10f;
+            usuarioCell.AddElement(new iTextSharp.text.Paragraph("INFORMACIÓN DEL PEDIDO", headerFont));
+            usuarioCell.AddElement(new iTextSharp.text.Paragraph($"Solicitado por: {pedido.Usuario?.NombreUsuario ?? "N/A"}", normalFont));
+            usuarioCell.AddElement(new iTextSharp.text.Paragraph($"Fecha de solicitud: {pedido.FechaPedido:dd/MM/yyyy HH:mm}", normalFont));
+            usuarioCell.AddElement(new iTextSharp.text.Paragraph($"Estado actual: {pedido.Estado}", normalFont));
+            infoTable.AddCell(usuarioCell);
+
+            document.Add(infoTable);
+            document.Add(new iTextSharp.text.Paragraph("\n"));
+
+            // TABLA DE PRODUCTOS
+            document.Add(new iTextSharp.text.Paragraph("DETALLE DE PRODUCTOS SOLICITADOS", headerFont));
+            document.Add(new iTextSharp.text.Paragraph("\n"));
+
+            var productTable = new iTextSharp.text.pdf.PdfPTable(5);
+            productTable.WidthPercentage = 100;
+            productTable.SetWidths(new float[] { 1f, 1.5f, 3f, 1.5f, 1.5f });
+
+            // Headers
+            string[] headers = { "Cant.", "Medida", "Producto", "Precio Unit.", "Subtotal" };
+            foreach (var header in headers)
+            {
+                var headerCell = new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(header, iTextSharp.text.FontFactory.GetFont(iTextSharp.text.FontFactory.HELVETICA_BOLD, 9, iTextSharp.text.BaseColor.WHITE)));
+                headerCell.BackgroundColor = azulEmpresa;
+                headerCell.Padding = 8f;
+                headerCell.HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER;
+                productTable.AddCell(headerCell);
+            }
+
+            // Datos de productos
+            decimal total = 0;
+            foreach (var detalle in pedido.DetallePedidos)
+            {
+                var subtotal = detalle.Cantidad * (detalle.PrecioUnitario ?? 0);
+                total += subtotal;
+
+                // Obtener medida de llanta si aplica
+                string medida = "N/A";
+                if (detalle.Producto?.Llanta != null)
+                {
+                    var llanta = detalle.Producto.Llanta;
+                    if (llanta.Perfil.HasValue && llanta.Perfil > 0)
+                    {
+                        medida = $"{llanta.Ancho}/{llanta.Perfil}/R{llanta.Diametro}";
+                    }
+                    else
+                    {
+                        medida = $"{llanta.Ancho}/R{llanta.Diametro}";
+                    }
+                }
+
+                productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(detalle.Cantidad.ToString(), normalFont)) { HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER, Padding = 6f });
+                productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(medida, normalFont)) { HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER, Padding = 6f });
+                productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase(detalle.Producto?.NombreProducto ?? "N/A", normalFont)) { Padding = 6f });
+                productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase($"₡{detalle.PrecioUnitario:N2}", normalFont)) { HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT, Padding = 6f });
+                productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase($"₡{subtotal:N2}", boldFont)) { HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT, Padding = 6f });
+            }
+
+            // Fila de total
+            productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("", normalFont)) { Border = iTextSharp.text.Rectangle.NO_BORDER });
+            productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("", normalFont)) { Border = iTextSharp.text.Rectangle.NO_BORDER });
+            productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("", normalFont)) { Border = iTextSharp.text.Rectangle.NO_BORDER });
+            productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("TOTAL:", boldFont)) { HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT, Padding = 6f, BackgroundColor = grisClaro });
+            productTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase($"₡{total:N2}", titleFont)) { HorizontalAlignment = iTextSharp.text.Element.ALIGN_RIGHT, Padding = 6f, BackgroundColor = grisClaro });
+
+            document.Add(productTable);
+
+            // PIE DE PÁGINA
+            document.Add(new iTextSharp.text.Paragraph("\n\n"));
+            document.Add(new iTextSharp.text.Paragraph("OBSERVACIONES:", headerFont));
+            document.Add(new iTextSharp.text.Paragraph("_" + new string('_', 80), normalFont));
+            document.Add(new iTextSharp.text.Paragraph("_" + new string('_', 80), normalFont));
+            document.Add(new iTextSharp.text.Paragraph("\n"));
+
+            var firmasTable = new iTextSharp.text.pdf.PdfPTable(2);
+            firmasTable.WidthPercentage = 100;
+            firmasTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("AUTORIZADO POR:\n\n\n_____________________\nFirma y Sello", normalFont)) { Border = iTextSharp.text.Rectangle.NO_BORDER, HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER });
+            firmasTable.AddCell(new iTextSharp.text.pdf.PdfPCell(new iTextSharp.text.Phrase("RECIBIDO POR:\n\n\n_____________________\nFirma del Proveedor", normalFont)) { Border = iTextSharp.text.Rectangle.NO_BORDER, HorizontalAlignment = iTextSharp.text.Element.ALIGN_CENTER });
+
+            document.Add(firmasTable);
+
+            document.Close();
+            return memoryStream.ToArray();
         }
 
         /// <summary>
