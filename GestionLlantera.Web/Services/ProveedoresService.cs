@@ -207,7 +207,7 @@ namespace GestionLlantera.Web.Services
                     // Deserializar directamente como dynamic/JArray para obtener la estructura correcta
                     var jsonResponse = JsonConvert.DeserializeObject<dynamic>(content);
                     
-                    _logger.LogInformation("📋 Tipo de respuesta JSON: {Type}", jsonResponse?.GetType().Name);
+                    _logger.LogInformation("📋 Tipo de respuesta JSON: {Type}", jsonResponse?.GetType().Name ?? "null");
                     _logger.LogInformation("📋 Contenido crudo: {Content}", content.Length > 500 ? content.Substring(0, 500) + "..." : content);
 
                     // Si la respuesta es directamente un array

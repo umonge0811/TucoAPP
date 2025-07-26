@@ -408,8 +408,8 @@ namespace GestionLlantera.Web.Controllers
                 if (resultado.success)
                 {
                     // Asegurar que data sea una lista válida
-                    var pedidos = resultado.data as System.Collections.IEnumerable<object> ?? new List<object>();
-                    var listaPedidos = pedidos.ToList();
+                    var pedidos = resultado.data as System.Collections.IEnumerable ?? new List<object>();
+                    var listaPedidos = pedidos.Cast<object>().ToList();
                     
                     _logger.LogInformation("📦 Enviando {Count} pedidos al cliente", listaPedidos.Count);
                     
