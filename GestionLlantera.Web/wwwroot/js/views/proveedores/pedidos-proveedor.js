@@ -151,33 +151,9 @@ async function cargarPedidos() {
         }
 
         const data = await response.json();
-        console.log('📦 🟢 [FRONTEND] RESPUESTA COMPLETA DEL SERVIDOR:', data);
-        console.log('📦 🔍 [FRONTEND] Tipo de data:', typeof data);
-        console.log('📦 🔍 [FRONTEND] Es array:', Array.isArray(data));
-        console.log('📦 🔍 [FRONTEND] Tiene success:', data.hasOwnProperty('success'));
-        console.log('📦 🔍 [FRONTEND] Success value:', data.success);
-        console.log('📦 🔍 [FRONTEND] Data.data type:', typeof data.data);
-        console.log('📦 🔍 [FRONTEND] Data.data es array:', Array.isArray(data.data));
-        
-        if (data.data && Array.isArray(data.data)) {
-            console.log('📦 🔍 [FRONTEND] Cantidad de elementos en data.data:', data.data.length);
-            
-            // Analizar los primeros elementos
-            data.data.forEach((elemento, index) => {
-                if (index < 3) { // Solo los primeros 3 para no saturar
-                    console.log(`📦 🔍 [FRONTEND] Elemento ${index}:`, {
-                        tipo: typeof elemento,
-                        esArray: Array.isArray(elemento),
-                        valor: elemento,
-                        propiedades: elemento && typeof elemento === 'object' ? Object.keys(elemento) : 'N/A'
-                    });
-                }
-            });
-        }
-        
-        console.log('📦 📄 [FRONTEND] ESTRUCTURA COMPLETA:', JSON.stringify(data, null, 2));
+        console.log('📦 Respuesta del servidor:', data);
 
-        // Procesar respuesta igual que en proveedores
+        // Procesar respuesta igual que en proveedores - simple y directo
         let pedidos = [];
         
         if (data.success && data.data) {
@@ -246,7 +222,6 @@ async function cargarPedidosDeProveedor(proveedorId) {
 
         const data = await response.json();
         console.log(`📦 Respuesta para proveedor ${proveedorId}:`, data);
-        console.log(`📦 Estructura de respuesta:`, JSON.stringify(data, null, 2));
 
         // Procesar respuesta igual que en cargarPedidos
         let pedidos = [];

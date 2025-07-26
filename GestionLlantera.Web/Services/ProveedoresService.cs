@@ -204,11 +204,31 @@ namespace GestionLlantera.Web.Services
                         return (true, new List<object>(), "No hay pedidos disponibles");
                     }
 
-                    // Deserializar directamente como lista de objetos, igual que en proveedores
-                    var pedidos = JsonConvert.DeserializeObject<List<object>>(content) ?? new List<object>();
-                    _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente", pedidos.Count);
+                    // Deserializar directamente como dynamic/JArray para obtener la estructura correcta
+                    var jsonResponse = JsonConvert.DeserializeObject<dynamic>(content);
+                    
+                    _logger.LogInformation("📋 Tipo de respuesta JSON: {Type}", jsonResponse?.GetType().Name);
+                    _logger.LogInformation("📋 Contenido crudo: {Content}", content.Length > 500 ? content.Substring(0, 500) + "..." : content);
 
-                    return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    // Si la respuesta es directamente un array
+                    if (jsonResponse is Newtonsoft.Json.Linq.JArray jArray)
+                    {
+                        var pedidos = jArray.ToObject<List<object>>() ?? new List<object>();
+                        _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (array directo)", pedidos.Count);
+                        return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    }
+                    // Si la respuesta tiene estructura con success/data
+                    else if (jsonResponse != null && jsonResponse.data != null)
+                    {
+                        var pedidos = ((Newtonsoft.Json.Linq.JArray)jsonResponse.data).ToObject<List<object>>() ?? new List<object>();
+                        _logger.LogInformation("📋 {Count} pedidos obtenidos exitosamente (estructura success/data)", pedidos.Count);
+                        return (true, pedidos, "Pedidos obtenidos exitosamente");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("📋 Estructura de respuesta inesperada");
+                        return (true, new List<object>(), "No hay pedidos disponibles");
+                    }
                 }
                 else
                 {
