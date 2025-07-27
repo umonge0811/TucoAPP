@@ -30,33 +30,6 @@
 
 .btn-group .btn {
     padding: 0.25rem 0.5rem;
-    transition: all 0.2s ease;
-}
-
-.btn-group .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/* Estilo específico para el botón PDF */
-.btn-outline-danger:hover {
-    background-color: #dc3545;
-    border-color: #dc3545;
-    color: white;
-}
-
-/* Mejorar el botón PDF del modal */
-.card .btn-danger {
-    background: linear-gradient(45deg, #dc3545, #c82333);
-    border: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.card .btn-danger:hover {
-    background: linear-gradient(45deg, #c82333, #a71e2a);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
 }
 
 .modal-lg {
