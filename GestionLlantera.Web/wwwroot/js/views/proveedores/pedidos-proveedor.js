@@ -1369,12 +1369,12 @@ async function verDetallePedido(pedidoId) {
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card bg-primary">
-                            <div class="card-body text-center py-2">
-                                <button class="btn btn-light btn-sm w-100" onclick="generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')" title="Descargar PDF del pedido">
-                                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                                </button>
-                            </div>
+                        <div class="d-grid">
+                            <button class="btn btn-danger btn-lg shadow-sm" onclick="generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')" title="Descargar PDF del pedido">
+                                <i class="bi bi-file-earmark-pdf-fill fs-4 mb-2"></i>
+                                <div class="fw-bold">Descargar PDF</div>
+                                <small class="opacity-75">Reporte completo</small>
+                            </button>
                         </div>
                     </div>
                 </div>
