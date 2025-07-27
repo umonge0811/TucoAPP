@@ -1383,6 +1383,10 @@ async function verDetallePedido(pedidoId) {
     `;
 
         $('#contenidoDetallePedido').html(html);
+        
+        // Configurar el botón PDF del modal con el ID del pedido actual
+        $('#btnPdfModalDetalle').attr('onclick', `generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')`);
+        
         $('#modalDetallePedido').modal('show');
     } catch (error) {
         console.error('❌ Error viendo detalle del pedido:', error);
