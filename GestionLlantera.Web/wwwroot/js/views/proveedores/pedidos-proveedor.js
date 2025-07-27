@@ -156,9 +156,9 @@ async function cargarPedidos() {
         if (data.success && data.data) {
             pedidosData = Array.isArray(data.data) ? data.data : [];
             pedidosFiltrados = [...pedidosData];
-            
+
             console.log(`✅ ${pedidosData.length} pedidos cargados`);
-            
+
             if (pedidosData.length > 0) {
                 console.log('📦 Primer pedido (estructura):', pedidosData[0]);
                 console.log('📦 Propiedades del primer pedido:', Object.keys(pedidosData[0]));
@@ -169,7 +169,7 @@ async function cargarPedidos() {
         } else {
             throw new Error(data.message || 'Error obteniendo pedidos');
         }
-        
+
         actualizarContadorPedidos();
 
     } catch (error) {
@@ -212,7 +212,7 @@ async function cargarPedidosDeProveedor(proveedorId) {
 
         // Procesar respuesta igual que en cargarPedidos
         let pedidos = [];
-        
+
         if (data.success && data.data) {
             pedidos = Array.isArray(data.data) ? data.data : [];
             console.log(`📦 Pedidos del proveedor ${proveedorId} procesados:`, pedidos.length);
@@ -225,13 +225,13 @@ async function cargarPedidosDeProveedor(proveedorId) {
         pedidosFiltrados = [...pedidosData];
 
         console.log(`📊 Pedidos del proveedor ${proveedorId}: ${pedidosData.length}`);
-        
+
         if (pedidosData.length === 0) {
             mostrarSinDatosPedidos(true);
         } else {
             mostrarPedidos();
         }
-        
+
         actualizarContadorPedidos();
         console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
 
@@ -356,7 +356,7 @@ function llenarSelectProveedores() {
 function mostrarPedidos() {
     console.log('📋 Iniciando mostrarPedidos...');
     console.log('📊 pedidosFiltrados:', pedidosFiltrados);
-    
+
     const tbody = $('#cuerpoTablaPedidos');
 
     if (!pedidosFiltrados || pedidosFiltrados.length === 0) {
@@ -370,7 +370,7 @@ function mostrarPedidos() {
 
     const html = pedidosFiltrados.map((pedido, index) => {
         console.log(`📦 Procesando pedido ${index + 1}:`, pedido);
-        
+
         // Mapear las propiedades exactas que vienen de la API según la imagen del controlador
         const pedidoId = pedido.pedidoId || 'N/A';
         const proveedorNombre = pedido.proveedorNombre || 'Sin nombre';
@@ -378,7 +378,7 @@ function mostrarPedidos() {
         const estado = pedido.estado || 'Pendiente';
         const montoTotal = pedido.totalPrecio || 0; // Usar totalPrecio en lugar de montoTotal
         const usuarioNombre = pedido.usuarioNombre || 'Sin usuario';
-        
+
         // Formatear fecha correctamente
         let fechaFormateada = 'Fecha inválida';
         if (fechaPedido) {
@@ -395,7 +395,7 @@ function mostrarPedidos() {
                 console.warn('⚠️ Error formateando fecha:', error);
             }
         }
-        
+
         const estadoBadge = obtenerBadgeEstado(estado);
 
         return `
@@ -1200,10 +1200,10 @@ async function verDetallePedido(pedidoId) {
                 p.nombreProducto === productoNombre || 
                 p.nombreProducto.toLowerCase().includes(productoNombre.toLowerCase())
             );
-            
+
             if (producto && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
                 const llantaInfo = producto.llanta || producto.Llanta[0];
-                
+
                 if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
                         return `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
@@ -1292,7 +1292,7 @@ async function verDetallePedido(pedidoId) {
                             pedido.detallePedidos.map(detalle => {
                                 const medidaLlanta = obtenerInfoLlanta(detalle.productoNombre);
                                 const esLlanta = medidaLlanta !== 'N/A';
-                                
+
                                 return `
                                     <tr>
                                         <td class="text-center">
@@ -1341,7 +1341,7 @@ async function verDetallePedido(pedidoId) {
 
             ${pedido.detallePedidos && pedido.detallePedidos.length > 0 ? `
                 <div class="row mt-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Total de Items</small>
@@ -1349,7 +1349,7 @@ async function verDetallePedido(pedidoId) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Productos Únicos</small>
@@ -1357,17 +1357,27 @@ async function verDetallePedido(pedidoId) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
-                                <small class="text-muted">Promedio por Item</small>
-                                <div class="h5 mb-0 text-success">₡${((pedido.totalPrecio || pedido.montoTotal || 0) / pedido.detallePedidos.reduce((sum, d) => sum + d.cantidad, 0)).toFixed(2)}</div>
+                                <small class="text-muted">Total</small>
+                                <div class="h5 mb-0 text-success">₡${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-primary">
+                            <div class="card-body text-center py-2">
+                                <button class="btn btn-light btn-sm w-100" onclick="descargarPedidoPdf(${pedido.pedidoId})" title="Descargar PDF del pedido">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             ` : ''}
-        `;
+        </div>
+    `;
 
         $('#contenidoDetallePedido').html(html);
         $('#modalDetallePedido').modal('show');
@@ -1615,6 +1625,131 @@ function limpiarFormulario() {
     actualizarResumenPedido();
 }
 
+/**
+ * ✅ FUNCIÓN: Eliminar pedido con confirmación
+ */
+async function eliminarPedido(pedidoId) {
+    console.log('🗑️ Eliminando pedido:', pedidoId);
+
+    const result = await Swal.fire({
+        title: '¿Eliminar Pedido?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '✅ Sí, eliminar',
+        cancelButtonText: '❌ Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        Swal.fire({
+            title: 'Eliminando...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        const response = await fetch(`/api/PedidosProveedor/${pedidoId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Eliminado!',
+                text: 'El pedido ha sido eliminado correctamente',
+                timer: 2000,
+                timerProgressBar: true
+            });
+
+            // Recargar la lista
+            await cargarPedidos();
+        } else {
+            throw new Error(data.message || 'Error eliminando pedido');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando pedido:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'No se pudo eliminar el pedido'
+        });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Descargar PDF del pedido
+ */
+async function descargarPedidoPdf(pedidoId) {
+    console.log('📄 Descargando PDF del pedido:', pedidoId);
+
+    try {
+        // Mostrar loading
+        Swal.fire({
+            title: 'Generando PDF...',
+            html: '<div class="spinner-border text-primary" role="status"></div>',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Realizar la petición para obtener el PDF
+        const response = await fetch(`/api/reportes/pedido/${pedidoId}/pdf`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener el blob y descargarlo
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Pedido_${pedidoId}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-file-earmark-pdf text-danger display-1"></i>
+                    <p class="mt-3">El PDF del pedido <strong>#${pedidoId}</strong> se ha descargado correctamente.</p>
+                </div>
+            `,
+            timer: 3000,
+            timerProgressBar: true,
+            confirmButtonColor: '#28a745'
+        });
+
+    } catch (error) {
+        console.error('❌ Error descargando PDF:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar PDF',
+            text: error.message || 'No se pudo descargar el archivo PDF',
+            confirmButtonColor: '#d33'
+        });
+    }
+}
+
 // =====================================
 // EXPORTAR FUNCIONES GLOBALMENTE
 // =====================================
@@ -1635,5 +1770,6 @@ window.verDetallePedido = verDetallePedido;
 window.cambiarEstadoPedido = cambiarEstadoPedido;
 window.aplicarFiltros = aplicarFiltros;
 window.cargarPedidosDeProveedor = cargarPedidosDeProveedor;
+window.descargarPedidoPdf = descargarPedidoPdf;
 
 console.log('✅ Módulo de pedidos a proveedores cargado completamente');
