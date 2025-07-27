@@ -1,4 +1,4 @@
-﻿using API.Authorization;
+using API.Authorization;
 using API.Data;
 using API.ServicesAPI;
 using API.ServicesAPI.Interfaces;
@@ -25,8 +25,9 @@ builder.Services.AddScoped<INotificacionService, NotificacionService>();
 builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 // ✅ AGREGAR ESTA LÍNEA
 builder.Services.AddScoped<IAjustesInventarioPendientesService, AjustesInventarioPendientesService>();
-// ✅ AGREGAR SERVICIO DE REPORTES
+// ✅ AGREGAR SERVICIOS DE REPORTES
 builder.Services.AddScoped<IReporteInventarioService, ReporteInventarioService>();
+builder.Services.AddScoped<IReportePedidosService, ReportePedidosService>();
 
 
 // ? SERVICIOS DE PERMISOS - Sistema completamente dinámico
