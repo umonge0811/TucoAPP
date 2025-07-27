@@ -1,4 +1,3 @@
-
 using API.ServicesAPI.Interfaces;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
@@ -69,7 +68,7 @@ namespace API.ServicesAPI
 
                     document.Close();
                     _logger.LogInformation("✅ PDF mejorado generado exitosamente para pedido ID: {PedidoId}", pedidoId);
-                    
+
                     return memoryStream.ToArray();
                 }
             }
@@ -95,7 +94,7 @@ namespace API.ServicesAPI
             var logoPhrase = new Phrase();
             logoPhrase.Add(new Chunk("GT", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 28, BaseColor.WHITE)));
             logoPhrase.Add(new Chunk("\nGESTIÓN\nLLANTERA", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 11, BaseColor.WHITE)));
-            
+
             logoCell.AddElement(new Paragraph(logoPhrase) { Alignment = Element.ALIGN_CENTER });
             headerTable.AddCell(logoCell);
 
@@ -147,7 +146,7 @@ namespace API.ServicesAPI
         private void AgregarTituloElegante(Document document, string titulo)
         {
             var tituloTable = new PdfPTable(1) { WidthPercentage = 80, HorizontalAlignment = Element.ALIGN_CENTER };
-            
+
             var tituloCell = new PdfPCell();
             tituloCell.Border = Rectangle.BOX;
             tituloCell.BorderColor = ColorPrimario;
@@ -161,7 +160,7 @@ namespace API.ServicesAPI
 
             tituloCell.AddElement(new Paragraph(tituloPhrase) { Alignment = Element.ALIGN_CENTER });
             tituloTable.AddCell(tituloCell);
-            
+
             document.Add(tituloTable);
         }
 
@@ -454,6 +453,316 @@ namespace API.ServicesAPI
             notaFinal.Alignment = Element.ALIGN_CENTER;
             notaFinal.SpacingBefore = 20;
             document.Add(notaFinal);
+        }
+
+        private string GenerarHtmlPedido(PedidosProveedor pedido)
+        {
+            var productos = pedido.DetallePedidos?.ToList() ?? new List<DetallePedido>();
+            var total = productos.Sum(p => p.Precio * p.Cantidad);
+
+            var html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }}
+
+        .container {{
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }}
+
+        .header {{
+            background-color: #ffffff;
+            border-bottom: 3px solid #e9ecef;
+            padding: 40px;
+            text-align: center;
+        }}
+
+        .header h1 {{
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: 300;
+            color: #2c3e50;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }}
+
+        .header .subtitle {{
+            font-size: 1.1em;
+            color: #6c757d;
+            margin-top: 8px;
+            font-weight: 400;
+        }}
+
+        .content {{
+            padding: 40px;
+        }}
+
+        .info-section {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }}
+
+        .info-card {{
+            background: #ffffff;
+            padding: 25px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            border-top: 3px solid #495057;
+        }}
+
+        .info-card h3 {{
+            margin: 0 0 20px 0;
+            color: #495057;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        .info-item {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px 0;
+        }}
+
+        .info-item:last-child {{
+            margin-bottom: 0;
+        }}
+
+        .info-label {{
+            font-weight: 500;
+            color: #6c757d;
+            font-size: 0.95em;
+        }}
+
+        .info-value {{
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: right;
+        }}
+
+        .products-section {{
+            margin-top: 40px;
+        }}
+
+        .section-title {{
+            color: #495057;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }}
+
+        .products-table {{
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+        }}
+
+        .products-table th {{
+            background-color: #495057;
+            color: white;
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        .products-table td {{
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 0.95em;
+        }}
+
+        .products-table tbody tr:nth-child(even) {{
+            background-color: #f8f9fa;
+        }}
+
+        .products-table tbody tr:hover {{
+            background-color: #e3f2fd;
+        }}
+
+        .products-table tr:last-child td {{
+            border-bottom: none;
+        }}
+
+        .text-right {{
+            text-align: right;
+        }}
+
+        .text-center {{
+            text-align: center;
+        }}
+
+        .font-weight-bold {{
+            font-weight: 600;
+        }}
+
+        .total-section {{
+            margin-top: 40px;
+            border-top: 2px solid #e9ecef;
+            padding-top: 30px;
+        }}
+
+        .total-row {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }}
+
+        .total-label {{
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        .total-amount {{
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #2c3e50;
+            background-color: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: 2px solid #dee2e6;
+        }}
+
+        .footer {{
+            background-color: #f8f9fa;
+            padding: 25px 40px;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+        }}
+
+        .footer p {{
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9em;
+        }}
+
+        .divider {{
+            height: 1px;
+            background-color: #dee2e6;
+            margin: 20px 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='header'>
+            <h1>Orden de Pedido</h1>
+            <div class='subtitle'>Pedido N° {pedido.PedidoId:D6}</div>
+        </div>
+
+        <div class='content'>
+            <div class='info-section'>
+                <div class='info-card'>
+                    <h3>Información del Pedido</h3>
+                    <div class='info-item'>
+                        <span class='info-label'>Número de Pedido</span>
+                        <span class='info-value'>#{pedido.PedidoId:D6}</span>
+                    </div>
+                    <div class='info-item'>
+                        <span class='info-label'>Fecha del Pedido</span>
+                        <span class='info-value'>{pedido.FechaPedido:dd/MM/yyyy}</span>
+                    </div>
+                    <div class='info-item'>
+                        <span class='info-label'>Estado</span>
+                        <span class='info-value'>{pedido.Estado}</span>
+                    </div>
+                </div>
+
+                <div class='info-card'>
+                    <h3>Información del Proveedor</h3>
+                    <div class='info-item'>
+                        <span class='info-label'>Nombre</span>
+                        <span class='info-value'>{pedido.Proveedor?.Nombre ?? "No especificado"}</span>
+                    </div>
+                    <div class='info-item'>
+                        <span class='info-label'>Teléfono</span>
+                        <span class='info-value'>{pedido.Proveedor?.Telefono ?? "No especificado"}</span>
+                    </div>
+                    <div class='info-item'>
+                        <span class='info-label'>Email</span>
+                        <span class='info-value'>{pedido.Proveedor?.Email ?? "No especificado"}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class='products-section'>
+                <h3 class='section-title'>Productos Solicitados</h3>
+                <table class='products-table'>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th class='text-center'>Cantidad</th>
+                            <th class='text-right'>Precio Unit.</th>
+                            <th class='text-right'>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>";
+
+            foreach (var producto in productos)
+            {
+                var subtotal = producto.Precio * producto.Cantidad;
+                html += $@"
+                        <tr>
+                            <td class='font-weight-bold'>{producto.Producto?.Nombre ?? "Producto no especificado"}</td>
+                            <td class='text-center'>{producto.Cantidad}</td>
+                            <td class='text-right'>L. {producto.Precio:N2}</td>
+                            <td class='text-right font-weight-bold'>L. {subtotal:N2}</td>
+                        </tr>";
+            }
+
+            html += $@"
+                    </tbody>
+                </table>
+            </div>
+
+            <div class='total-section'>
+                <div class='total-row'>
+                    <span class='total-label'>Total del Pedido</span>
+                    <span class='total-amount'>L. {total:N2}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class='footer'>
+            <p>Documento generado automáticamente el {DateTime.Now:dd/MM/yyyy HH:mm}</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+            return html;
         }
     }
 }
