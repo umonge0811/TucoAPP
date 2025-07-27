@@ -1,4 +1,10 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
+using Microsoft.Extensions.Logging;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Threading.Tasks;
+using System;
 
 namespace GestionLlantera.Web.Services
 {
@@ -26,7 +32,7 @@ namespace GestionLlantera.Web.Services
                 {
                     httpClient.DefaultRequestHeaders.Clear();
                     httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                        new AuthenticationHeaderValue("Bearer", jwtToken);
                     _logger.LogInformation("🔐 Token JWT configurado para la petición Excel");
                 }
                 else
@@ -68,7 +74,7 @@ namespace GestionLlantera.Web.Services
                 {
                     httpClient.DefaultRequestHeaders.Clear();
                     httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                        new AuthenticationHeaderValue("Bearer", jwtToken);
                     _logger.LogInformation("🔐 Token JWT configurado para la petición PDF");
                 }
                 else
@@ -110,7 +116,7 @@ namespace GestionLlantera.Web.Services
                 {
                     httpClient.DefaultRequestHeaders.Clear();
                     httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                        new AuthenticationHeaderValue("Bearer", jwtToken);
                     _logger.LogInformation("🔐 Token JWT configurado para la petición de datos");
                 }
                 else
@@ -128,7 +134,7 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var jsonContent = await response.Content.ReadAsStringAsync();
-                var reporte = System.Text.Json.JsonSerializer.Deserialize<object>(jsonContent);
+                var reporte = JsonSerializer.Deserialize<object>(jsonContent);
 
                 _logger.LogInformation("✅ Datos del reporte obtenidos correctamente");
                 return reporte;
@@ -136,6 +142,49 @@ namespace GestionLlantera.Web.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "💥 Error obteniendo reporte para inventario {InventarioId}", inventarioId);
+                throw;
+            }
+        }
+
+        public async Task<byte[]> DescargarPedidoPdfAsync(int pedidoId, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("📥 Descargando PDF para pedido {PedidoId}", pedidoId);
+
+                var httpClient = _httpClientFactory.CreateClient("APIClient");
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    httpClient.DefaultRequestHeaders.Clear();
+                    httpClient.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para la petición PDF de pedido");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para PDF de pedido");
+                }
+
+                var response = await httpClient.GetAsync($"api/reportes/pedido/{pedidoId}/pdf");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error en API al descargar PDF pedido: {StatusCode} - {Content}", 
+                        response.StatusCode, errorContent);
+                    throw new Exception($"Error del servidor: {response.StatusCode}");
+                }
+
+                var archivoBytes = await response.Content.ReadAsByteArrayAsync();
+                _logger.LogInformation("✅ PDF de pedido descargado exitosamente. Tamaño: {Size} bytes", archivoBytes.Length);
+
+                return archivoBytes;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al descargar PDF del pedido {PedidoId}", pedidoId);
                 throw;
             }
         }

@@ -276,13 +276,9 @@ async function descargarPedidoPdf(pedidoId, tituloPedido = null) {
             }
         });
 
-        // ✅ USAR LA RUTA DEL API CONTROLLER DIRECTAMENTE
-        const response = await fetch(`/api/reportes/pedido/${pedidoId}/pdf`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/pdf',
-                'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-            }
+        // ✅ USAR LA RUTA DEL CONTROLADOR WEB (igual que inventarios)
+        const response = await fetch(`/Reportes/pedido/${pedidoId}/pdf`, {
+            method: 'GET'
         });
 
         if (!response.ok) {
