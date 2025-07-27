@@ -415,6 +415,9 @@ function mostrarPedidos() {
                         <button type="button" class="btn btn-sm btn-outline-info" onclick="verDetallePedido(${pedidoId})" title="Ver Detalle">
                             <i class="bi bi-eye"></i>
                         </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="generarReportePedido(${pedidoId}, 'Pedido_${pedidoId}')" title="Generar PDF">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </button>
                         <button type="button" class="btn btn-sm btn-outline-warning" onclick="cambiarEstadoPedido(${pedidoId}, '${estado}')" title="Cambiar Estado">
                             <i class="bi bi-arrow-repeat"></i>
                         </button>
@@ -1366,10 +1369,11 @@ async function verDetallePedido(pedidoId) {
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card bg-primary">
+                        <div class="card border-0 bg-transparent">
                             <div class="card-body text-center py-2">
-                                <button class="btn btn-light btn-sm w-100" onclick="generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')" title="Descargar PDF del pedido">
-                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                <button class="btn btn-danger btn-sm w-100 shadow-sm" onclick="generarReportePedido(${pedido.pedidoId}, 'Pedido_${pedido.pedidoId}')" title="Descargar PDF del pedido">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i>
+                                    <span class="fw-bold">Descargar PDF</span>
                                 </button>
                             </div>
                         </div>
@@ -1704,5 +1708,25 @@ window.verDetallePedido = verDetallePedido;
 window.cambiarEstadoPedido = cambiarEstadoPedido;
 window.aplicarFiltros = aplicarFiltros;
 window.cargarPedidosDeProveedor = cargarPedidosDeProveedor;
+window.generarReportePedido = generarReportePedido;
+
+/**
+ * Generar reporte de pedido en PDF
+ */
+async function generarReportePedido(pedidoId, nombreArchivo) {
+    try {
+        console.log(`📄 Generando reporte para pedido ${pedidoId}...`);
+        
+        if (typeof reportesUtils !== 'undefined' && reportesUtils.generarReportePedidos) {
+            await reportesUtils.generarReportePedidos(pedidoId, nombreArchivo);
+        } else {
+            console.error('❌ reportesUtils no está disponible');
+            mostrarError('Error: Módulo de reportes no disponible');
+        }
+    } catch (error) {
+        console.error('❌ Error generando reporte de pedido:', error);
+        mostrarError('Error generando el reporte: ' + error.message);
+    }
+}
 
 console.log('✅ Módulo de pedidos a proveedores cargado completamente');
