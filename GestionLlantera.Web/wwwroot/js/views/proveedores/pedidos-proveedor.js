@@ -415,6 +415,9 @@ function mostrarPedidos() {
                         <button type="button" class="btn btn-sm btn-outline-info" onclick="verDetallePedido(${pedidoId})" title="Ver Detalle">
                             <i class="bi bi-eye"></i>
                         </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="generarReportePedido(${pedidoId}, 'Pedido ${pedidoId}')" title="Descargar PDF">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </button>
                         <button type="button" class="btn btn-sm btn-outline-warning" onclick="cambiarEstadoPedido(${pedidoId}, '${estado}')" title="Cambiar Estado">
                             <i class="bi bi-arrow-repeat"></i>
                         </button>
