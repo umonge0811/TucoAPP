@@ -156,9 +156,9 @@ async function cargarPedidos() {
         if (data.success && data.data) {
             pedidosData = Array.isArray(data.data) ? data.data : [];
             pedidosFiltrados = [...pedidosData];
-            
+
             console.log(`✅ ${pedidosData.length} pedidos cargados`);
-            
+
             if (pedidosData.length > 0) {
                 console.log('📦 Primer pedido (estructura):', pedidosData[0]);
                 console.log('📦 Propiedades del primer pedido:', Object.keys(pedidosData[0]));
@@ -169,7 +169,7 @@ async function cargarPedidos() {
         } else {
             throw new Error(data.message || 'Error obteniendo pedidos');
         }
-        
+
         actualizarContadorPedidos();
 
     } catch (error) {
@@ -212,7 +212,7 @@ async function cargarPedidosDeProveedor(proveedorId) {
 
         // Procesar respuesta igual que en cargarPedidos
         let pedidos = [];
-        
+
         if (data.success && data.data) {
             pedidos = Array.isArray(data.data) ? data.data : [];
             console.log(`📦 Pedidos del proveedor ${proveedorId} procesados:`, pedidos.length);
@@ -225,13 +225,13 @@ async function cargarPedidosDeProveedor(proveedorId) {
         pedidosFiltrados = [...pedidosData];
 
         console.log(`📊 Pedidos del proveedor ${proveedorId}: ${pedidosData.length}`);
-        
+
         if (pedidosData.length === 0) {
             mostrarSinDatosPedidos(true);
         } else {
             mostrarPedidos();
         }
-        
+
         actualizarContadorPedidos();
         console.log(`✅ ${pedidosData.length} pedidos del proveedor ${proveedorId} cargados`);
 
@@ -356,7 +356,7 @@ function llenarSelectProveedores() {
 function mostrarPedidos() {
     console.log('📋 Iniciando mostrarPedidos...');
     console.log('📊 pedidosFiltrados:', pedidosFiltrados);
-    
+
     const tbody = $('#cuerpoTablaPedidos');
 
     if (!pedidosFiltrados || pedidosFiltrados.length === 0) {
@@ -370,7 +370,7 @@ function mostrarPedidos() {
 
     const html = pedidosFiltrados.map((pedido, index) => {
         console.log(`📦 Procesando pedido ${index + 1}:`, pedido);
-        
+
         // Mapear las propiedades exactas que vienen de la API según la imagen del controlador
         const pedidoId = pedido.pedidoId || 'N/A';
         const proveedorNombre = pedido.proveedorNombre || 'Sin nombre';
@@ -378,7 +378,7 @@ function mostrarPedidos() {
         const estado = pedido.estado || 'Pendiente';
         const montoTotal = pedido.totalPrecio || 0; // Usar totalPrecio en lugar de montoTotal
         const usuarioNombre = pedido.usuarioNombre || 'Sin usuario';
-        
+
         // Formatear fecha correctamente
         let fechaFormateada = 'Fecha inválida';
         if (fechaPedido) {
@@ -395,7 +395,7 @@ function mostrarPedidos() {
                 console.warn('⚠️ Error formateando fecha:', error);
             }
         }
-        
+
         const estadoBadge = obtenerBadgeEstado(estado);
 
         return `
@@ -1185,54 +1185,199 @@ async function verDetallePedido(pedidoId) {
             return;
         }
 
+        // Buscar información completa del proveedor
+        const proveedorCompleto = proveedoresDisponibles.find(p => {
+            const id = p.id || p.proveedorId;
+            return id.toString() === pedido.proveedorId.toString();
+        });
+
         const fecha = new Date(pedido.fechaPedido).toLocaleDateString('es-ES');
         const estadoBadge = obtenerBadgeEstado(pedido.estado);
+
+        // Función para obtener información de llanta desde productosInventario
+        const obtenerInfoLlanta = (productoNombre) => {
+            const producto = productosInventario.find(p => 
+                p.nombreProducto === productoNombre || 
+                p.nombreProducto.toLowerCase().includes(productoNombre.toLowerCase())
+            );
+
+            if (producto && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        return `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        return `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
+                }
+            }
+            return 'N/A';
+        };
 
         const html = `
             <div class="row">
                 <div class="col-md-6">
-                    <h6>Información del Pedido</h6>
-                    <p><strong>ID:</strong> ${pedido.pedidoId}</p>
-                    <p><strong>Fecha:</strong> ${fecha}</p>
-                    <p><strong>Estado:</strong> ${estadoBadge}</p>
-                    <p><strong>Usuario:</strong> ${pedido.usuarioNombre}</p>
+                    <h6><i class="bi bi-box-seam me-2"></i>Información del Pedido</h6>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>ID:</strong></td>
+                            <td>${pedido.pedidoId}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fecha:</strong></td>
+                            <td>${fecha}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Estado:</strong></td>
+                            <td>${estadoBadge}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Usuario:</strong></td>
+                            <td>${pedido.usuarioNombre}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total:</strong></td>
+                            <td><strong class="text-primary">₡${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</strong></td>
+                        </tr>
+                    </table>
                 </div>
                 <div class="col-md-6">
-                    <h6>Información del Proveedor</h6>
-                    <p><strong>Nombre:</strong> ${pedido.proveedorNombre}</p>
+                    <h6><i class="bi bi-truck me-2"></i>Información del Proveedor</h6>
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td><strong>Nombre:</strong></td>
+                            <td>${pedido.proveedorNombre}</td>
+                        </tr>
+                        ${proveedorCompleto ? `
+                            <tr>
+                                <td><strong>Contacto:</strong></td>
+                                <td>${proveedorCompleto.contacto || 'No especificado'}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Teléfono:</strong></td>
+                                <td>${proveedorCompleto.telefono || 'No especificado'}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Email:</strong></td>
+                                <td>${proveedorCompleto.email || proveedorCompleto.correo || 'No especificado'}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dirección:</strong></td>
+                                <td>${proveedorCompleto.direccion || 'No especificada'}</td>
+                            </tr>
+                        ` : `
+                            <tr>
+                                <td colspan="2"><em class="text-muted">Información adicional no disponible</em></td>
+                            </tr>
+                        `}
+                    </table>
                 </div>
             </div>
 
-            <h6 class="mt-3">Productos del Pedido</h6>
+            <h6 class="mt-4 mb-3"><i class="bi bi-list-ul me-2"></i>Productos del Pedido</h6>
             <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead class="table-light">
+                <table class="table table-sm table-striped">
+                    <thead class="table-primary">
                         <tr>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio Unit.</th>
-                            <th>Subtotal</th>
+                            <th class="text-center" style="width: 80px;">Cantidad</th>
+                            <th class="text-center" style="width: 130px;">Medida</th>
+                            <th style="width: 200px;">Producto</th>
+                            <th class="text-center" style="width: 110px;">Precio Unit.</th>
+                            <th class="text-center" style="width: 110px;">Subtotal</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${pedido.detallePedidos.map(detalle => `
-                            <tr>
-                                <td>${detalle.productoNombre}</td>
-                                <td>${detalle.cantidad}</td>
-                                <td>$${(detalle.precioUnitario || 0).toFixed(2)}</td>
-                                <td><strong>$${detalle.subtotal.toFixed(2)}</strong></td>
-                            </tr>
-                        `).join('')}
+                        ${pedido.detallePedidos && pedido.detallePedidos.length > 0 ? 
+                            pedido.detallePedidos.map(detalle => {
+                                const medidaLlanta = obtenerInfoLlanta(detalle.productoNombre);
+                                const esLlanta = medidaLlanta !== 'N/A';
+
+                                return `
+                                    <tr>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary">${detalle.cantidad}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            ${esLlanta ? 
+                                                `<span class="badge bg-info text-dark">${medidaLlanta}</span>` : 
+                                                '<span class="text-muted">N/A</span>'
+                                            }
+                                        </td>
+                                        <td>
+                                            <strong>${detalle.productoNombre}</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <strong>₡${(detalle.precioUnitario || 0).toFixed(2)}</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            <strong class="text-success">₡${detalle.subtotal.toFixed(2)}</strong>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('') 
+                            : `
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-3">
+                                        <i class="bi bi-inbox"></i>
+                                        <br>No hay productos en este pedido
+                                    </td>
+                                </tr>
+                            `
+                        }
                     </tbody>
                     <tfoot class="table-light">
                         <tr>
-                            <th colspan="3">Total:</th>
-                            <th>$${pedido.montoTotal.toFixed(2)}</th>
+                            <th colspan="4" class="text-end">
+                                <span class="fs-6">Total del Pedido:</span>
+                            </th>
+                            <th class="text-center">
+                                <span class="fs-5 text-primary">₡${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</span>
+                            </th>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-        `;
+
+            ${pedido.detallePedidos && pedido.detallePedidos.length > 0 ? `
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-2">
+                                <small class="text-muted">Total de Items</small>
+                                <div class="h5 mb-0 text-primary">${pedido.detallePedidos.reduce((sum, d) => sum + d.cantidad, 0)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-2">
+                                <small class="text-muted">Productos Únicos</small>
+                                <div class="h5 mb-0 text-info">${pedido.detallePedidos.length}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-2">
+                                <small class="text-muted">Total</small>
+                                <div class="h5 mb-0 text-success">₡${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-primary">
+                            <div class="card-body text-center py-2">
+                                <button class="btn btn-light btn-sm w-100" onclick="generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')" title="Descargar PDF del pedido">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+    `;
 
         $('#contenidoDetallePedido').html(html);
         $('#modalDetallePedido').modal('show');
@@ -1479,6 +1624,65 @@ function limpiarFormulario() {
     // Actualizar el resumen del pedido
     actualizarResumenPedido();
 }
+
+/**
+ * ✅ FUNCIÓN: Eliminar pedido con confirmación
+ */
+async function eliminarPedido(pedidoId) {
+    console.log('🗑️ Eliminando pedido:', pedidoId);
+
+    const result = await Swal.fire({
+        title: '¿Eliminar Pedido?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '✅ Sí, eliminar',
+        cancelButtonText: '❌ Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        Swal.fire({
+            title: 'Eliminando...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        const response = await fetch(`/api/PedidosProveedor/${pedidoId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Eliminado!',
+                text: 'El pedido ha sido eliminado correctamente',
+                timer: 2000,
+                timerProgressBar: true
+            });
+
+            // Recargar la lista
+            await cargarPedidos();
+        } else {
+            throw new Error(data.message || 'Error eliminando pedido');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando pedido:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'No se pudo eliminar el pedido'
+        });
+    }
+}
+
+
 
 // =====================================
 // EXPORTAR FUNCIONES GLOBALMENTE
