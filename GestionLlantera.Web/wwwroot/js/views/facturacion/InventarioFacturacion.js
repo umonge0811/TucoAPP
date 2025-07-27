@@ -913,11 +913,15 @@ function construirUrlImagen(urlOriginal) {
 // ✅ NO NECESITAMOS FUNCIÓN DUPLICADA - SE USA LA DE FACTURACION.JS PRINCIPAL
 
 /**
- * Función auxiliar para mostrar toast
+ * Función auxiliar para mostrar toast - usando la función principal de facturacion.js
  */
 function mostrarToast(titulo, mensaje, tipo = 'info') {
-    if (typeof window.mostrarToast === 'function') {
-        window.mostrarToast(titulo, mensaje, tipo);
+    // Verificar si existe la función principal de facturacion.js
+    if (typeof window.mostrarToastModerno === 'function') {
+        window.mostrarToastModerno(titulo, mensaje, tipo);
+    } else if (typeof toastr !== 'undefined') {
+        // Fallback a toastr si está disponible
+        toastr[tipo] ? toastr[tipo](`${titulo}: ${mensaje}`) : toastr.info(`${titulo}: ${mensaje}`);
     } else {
         console.log(`${tipo.toUpperCase()}: ${titulo} - ${mensaje}`);
         alert(`${titulo}: ${mensaje}`);
