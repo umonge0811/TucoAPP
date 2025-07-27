@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using Tuco.Clases.Models;
 using API.Data;
+using tuco.Clases.Models;
 
 namespace API.ServicesAPI
 {
@@ -27,8 +28,8 @@ namespace API.ServicesAPI
             try
             {
                 // Obtener datos del pedido con todos los includes necesarios
-                var pedido = await _context.PedidosProveedors
-                    .Include(p => p.Proveedore)
+                var pedido = await _context.PedidosProveedores
+                    .Include(p => p.Proveedor)
                     .Include(p => p.DetallePedidos)
                         .ThenInclude(dp => dp.Producto)
                             .ThenInclude(prod => prod.Llanta)
@@ -51,7 +52,7 @@ namespace API.ServicesAPI
                     await AgregarEncabezadoEmpresa(document);
                     AgregarTitulo(document, "PEDIDO A PROVEEDOR");
                     AgregarInformacionPedido(document, pedido);
-                    AgregarInformacionProveedor(document, pedido.Proveedore);
+                    AgregarInformacionProveedor(document, pedido.Proveedor);
                     AgregarDetallesProductos(document, pedido.DetallePedidos.ToList());
                     AgregarTotales(document, pedido);
                     AgregarPiePagina(document);
@@ -143,7 +144,7 @@ namespace API.ServicesAPI
                 pedido.PedidoId.ToString(),
                 pedido.FechaPedido.ToString("dd/MM/yyyy"),
                 pedido.Estado ?? "Pendiente",
-                pedido.Usuario?.Nombre ?? "N/A"
+                pedido.Usuario?.NombreUsuario ?? "N/A"
             };
 
             foreach (var data in dataCells)
@@ -178,7 +179,7 @@ namespace API.ServicesAPI
 
             var proveedorData = new[]
             {
-                new[] { "Nombre:", proveedor.Nombre ?? "N/A" },
+                new[] { "Nombre:", proveedor.NombreProveedor ?? "N/A" },
                 new[] { "Contacto:", proveedor.Contacto ?? "N/A" },
                 new[] { "Teléfono:", proveedor.Telefono ?? "N/A" },
                 new[] { "Email:", proveedor.Email ?? "N/A" },
@@ -257,7 +258,7 @@ namespace API.ServicesAPI
                 });
 
                 // Producto
-                table.AddCell(new PdfPCell(new Phrase(detalle.Producto?.Nombre ?? "N/A", dataFont))
+                table.AddCell(new PdfPCell(new Phrase(detalle.Producto?.NombreProducto?? "N/A", dataFont))
                 {
                     HorizontalAlignment = Element.ALIGN_LEFT,
                     Padding = 6
