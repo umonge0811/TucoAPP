@@ -1382,15 +1382,15 @@ namespace GestionLlantera.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> MarcarProductosEntregados([FromBody] MarcarEntregadosRequest request)
         {
+            // ✅ VALIDACIÓN DE PERMISOS MVC CON EL PERMISO CORRECTO
+            var validacion = await this.ValidarPermisoMvcAsync("Entregar Pendientes",
+                "No tienes permisos para marcar productos como entregados.");
+            if (validacion != null) return validacion;
+
             try
             {
                 _logger.LogInformation("✅ === MARCANDO PRODUCTOS COMO ENTREGADOS ===");
                 _logger.LogInformation("✅ Productos a marcar: {Count}", request.ProductosIds?.Count ?? 0);
-
-                if (!await this.TienePermisoAsync("Completar Facturas"))
-                {
-                    return Json(new { success = false, message = "Sin permisos para marcar productos como entregados" });
-                }
 
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))
