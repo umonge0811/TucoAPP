@@ -458,7 +458,7 @@ namespace API.ServicesAPI
         private string GenerarHtmlPedido(PedidosProveedor pedido)
         {
             var productos = pedido.DetallePedidos?.ToList() ?? new List<DetallePedido>();
-            var total = productos.Sum(p => p.Precio * p.Cantidad);
+            var total = productos.Sum(p => (p.PrecioUnitario ?? 0) * p.Cantidad);
 
             var html = $@"
 <!DOCTYPE html>
@@ -704,7 +704,7 @@ namespace API.ServicesAPI
                     <h3>Información del Proveedor</h3>
                     <div class='info-item'>
                         <span class='info-label'>Nombre</span>
-                        <span class='info-value'>{pedido.Proveedor?.Nombre ?? "No especificado"}</span>
+                        <span class='info-value'>{pedido.Proveedor?.NombreProveedor ?? "No especificado"}</span>
                     </div>
                     <div class='info-item'>
                         <span class='info-label'>Teléfono</span>
@@ -732,12 +732,12 @@ namespace API.ServicesAPI
 
             foreach (var producto in productos)
             {
-                var subtotal = producto.Precio * producto.Cantidad;
+                var subtotal = (producto.PrecioUnitario ?? 0) * producto.Cantidad;
                 html += $@"
                         <tr>
-                            <td class='font-weight-bold'>{producto.Producto?.Nombre ?? "Producto no especificado"}</td>
+                            <td class='font-weight-bold'>{producto.Producto?.NombreProducto ?? "Producto no especificado"}</td>
                             <td class='text-center'>{producto.Cantidad}</td>
-                            <td class='text-right'>L. {producto.Precio:N2}</td>
+                            <td class='text-right'>L. {producto.PrecioUnitario ?? 0:N2}</td>
                             <td class='text-right font-weight-bold'>L. {subtotal:N2}</td>
                         </tr>";
             }
