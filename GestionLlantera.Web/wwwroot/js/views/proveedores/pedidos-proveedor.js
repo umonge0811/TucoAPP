@@ -1344,7 +1344,7 @@ async function verDetallePedido(pedidoId) {
 
             ${pedido.detallePedidos && pedido.detallePedidos.length > 0 ? `
                 <div class="row mt-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Total de Items</small>
@@ -1352,7 +1352,7 @@ async function verDetallePedido(pedidoId) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Productos Únicos</small>
@@ -1360,21 +1360,12 @@ async function verDetallePedido(pedidoId) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Total</small>
                                 <div class="h5 mb-0 text-success">₡${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="d-grid">
-                            <button class="btn btn-danger btn-lg shadow-sm" onclick="generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')" title="Descargar PDF del pedido">
-                                <i class="bi bi-file-earmark-pdf-fill fs-4 mb-2"></i>
-                                <div class="fw-bold">Descargar PDF</div>
-                                <small class="opacity-75">Reporte completo</small>
-                            </button>
                         </div>
                     </div>
                 </div>
