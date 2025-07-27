@@ -1368,7 +1368,7 @@ async function verDetallePedido(pedidoId) {
                     <div class="col-md-3">
                         <div class="card bg-primary">
                             <div class="card-body text-center py-2">
-                                <button class="btn btn-light btn-sm w-100" onclick="descargarPedidoPdf(${pedido.pedidoId})" title="Descargar PDF del pedido">
+                                <button class="btn btn-light btn-sm w-100" onclick="generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')" title="Descargar PDF del pedido">
                                     <i class="bi bi-file-earmark-pdf"></i> PDF
                                 </button>
                             </div>
@@ -1682,73 +1682,7 @@ async function eliminarPedido(pedidoId) {
     }
 }
 
-/**
- * ✅ FUNCIÓN: Descargar PDF del pedido
- */
-async function descargarPedidoPdf(pedidoId) {
-    console.log('📄 Descargando PDF del pedido:', pedidoId);
 
-    try {
-        // Mostrar loading
-        Swal.fire({
-            title: 'Generando PDF...',
-            html: '<div class="spinner-border text-primary" role="status"></div>',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        // Realizar la petición para obtener el PDF
-        const response = await fetch(`/api/reportes/pedido/${pedidoId}/pdf`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/pdf'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        // Obtener el blob y descargarlo
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Pedido_${pedidoId}_${new Date().toISOString().slice(0, 10)}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-
-        // Mostrar éxito
-        Swal.fire({
-            icon: 'success',
-            title: '¡Descarga exitosa!',
-            html: `
-                <div class="text-center">
-                    <i class="bi bi-file-earmark-pdf text-danger display-1"></i>
-                    <p class="mt-3">El PDF del pedido <strong>#${pedidoId}</strong> se ha descargado correctamente.</p>
-                </div>
-            `,
-            timer: 3000,
-            timerProgressBar: true,
-            confirmButtonColor: '#28a745'
-        });
-
-    } catch (error) {
-        console.error('❌ Error descargando PDF:', error);
-
-        Swal.fire({
-            icon: 'error',
-            title: 'Error al descargar PDF',
-            text: error.message || 'No se pudo descargar el archivo PDF',
-            confirmButtonColor: '#d33'
-        });
-    }
-}
 
 // =====================================
 // EXPORTAR FUNCIONES GLOBALMENTE
@@ -1770,6 +1704,5 @@ window.verDetallePedido = verDetallePedido;
 window.cambiarEstadoPedido = cambiarEstadoPedido;
 window.aplicarFiltros = aplicarFiltros;
 window.cargarPedidosDeProveedor = cargarPedidosDeProveedor;
-window.descargarPedidoPdf = descargarPedidoPdf;
 
 console.log('✅ Módulo de pedidos a proveedores cargado completamente');
