@@ -142,7 +142,7 @@ namespace API.ServicesAPI
             var dataCells = new[]
             {
                 pedido.PedidoId.ToString(),
-                pedido.FechaPedido.ToString("dd/MM/yyyy"),
+                pedido.FechaPedido?.ToString("dd/MM/yyyy") ?? "N/A",
                 pedido.Estado ?? "Pendiente",
                 pedido.Usuario?.NombreUsuario ?? "N/A"
             };
@@ -238,9 +238,9 @@ namespace API.ServicesAPI
 
                 // Medida (para llantas)
                 var medida = "N/A";
-                if (detalle.Producto?.Llanta != null)
+                if (detalle.Producto?.Llanta != null && detalle.Producto.Llanta.Any())
                 {
-                    var llanta = detalle.Producto.Llanta;
+                    var llanta = detalle.Producto.Llanta.First();
                     if (llanta.Perfil > 0)
                     {
                         medida = $"{llanta.Ancho}/{llanta.Perfil}/R{llanta.Diametro}";
