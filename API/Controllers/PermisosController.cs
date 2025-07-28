@@ -450,7 +450,7 @@ public class PermisosController : ControllerBase
 
             // Necesitamos acceso al IMemoryCache - agregar al constructor
             var cache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
-            
+
             if (cache != null)
             {
                 // Limpiar caché específico para cada usuario
@@ -473,6 +473,56 @@ public class PermisosController : ControllerBase
         }
     }
     #endregion
+
+    [HttpPost("asignar-permiso-usuario")]
+        public async Task<IActionResult> AsignarPermisoAUsuario([FromBody] AsignarPermisoRequest request)
+        {
+            try
+            {
+                var permiso = await _context.Permisos.FindAsync(request.PermisoId);
+                var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
+
+                if (permiso == null || usuario == null)
+                {
+                    return BadRequest("Permiso o usuario no encontrado");
+                }
+
+                // Verificar si ya existe la asignación
+                var existeAsignacion = await _context.UsuarioPermiso
+                    .AnyAsync(up => up.UsuarioID == request.UsuarioId && up.PermisoID == request.PermisoId);
+
+                if (existeAsignacion)
+                {
+                    return BadRequest("El permiso ya está asignado al usuario");
+                }
+
+                var usuarioPermiso = new UsuarioPermisoRE
+                {
+                    UsuarioID = request.UsuarioId,
+                    PermisoID = request.PermisoId
+                };
+
+                _context.UsuarioPermiso.Add(usuarioPermiso);
+                await _context.SaveChangesAsync();
+
+                // ✅ LIMPIAR CACHE DEL USUARIO ESPECÍFICO
+                var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
+                if (permisosService != null)
+                {
+                    permisosService.LimpiarCacheUsuarios(new List<int> { request.UsuarioId });
+                    _logger.LogInformation("✅ Cache de permisos limpiado para usuario {UserId}", request.UsuarioId);
+                }
+
+                _logger.LogInformation("✅ Permiso {PermisoId} asignado al usuario {UserId}", request.PermisoId, request.UsuarioId);
+
+                return Ok(new { message = "Permiso asignado correctamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al asignar permiso");
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
 }
 
 /// <summary>

@@ -88,27 +88,20 @@
     <script src="~/js/utils/buttonUtils.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-    <script>
-        // ✅ LIMPIAR CACHÉ LOCAL AL CAMBIAR DE USUARIO
-        window.addEventListener('beforeunload', function() {
-            // Limpiar cualquier caché local del navegador relacionado con permisos
-            if (typeof(Storage) !== "undefined") {
-                localStorage.removeItem('permisosCache');
-                localStorage.removeItem('userPermissions');
-                sessionStorage.clear();
-            }
-        });
-
-        // ✅ FUNCIÓN GLOBAL PARA FORZAR RECARGA DE PERMISOS
-        window.forzarRecargaPermisos = function() {
-            if (typeof(Storage) !== "undefined") {
-                localStorage.removeItem('permisosCache');
-                localStorage.removeItem('userPermissions');
-                sessionStorage.clear();
-            }
-            location.reload();
-        };
-    </script>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <script src="~/js/permisosMonitor.js" asp-append-version="true"></script>
+        <script>
+            // Iniciar monitor de permisos solo para usuarios autenticados
+            document.addEventListener('DOMContentLoaded', function() {
+                if (typeof PermisosMonitor !== 'undefined') {
+                    const monitor = new PermisosMonitor();
+                    monitor.iniciar();
+                    console.log('✅ Monitor de permisos iniciado automáticamente');
+                }
+            });
+        </script>
+    }
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
