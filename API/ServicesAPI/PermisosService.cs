@@ -60,7 +60,7 @@ namespace API.ServicesAPI
                 if (!_cache.TryGetValue(cacheKey, out List<string> permisosUsuario))
                 {
                     _logger.LogInformation("🔍 No encontrado en caché, consultando base de datos...");
-
+                    
                     // ✅ TERCERO: Consultar base de datos
                     permisosUsuario = await ObtenerPermisosUsuarioAsync(userId.Value);
 
@@ -90,7 +90,7 @@ namespace API.ServicesAPI
                     ).ToList();
 
                     _logger.LogInformation("🔍 Variaciones encontradas: [{Variaciones}]", string.Join(", ", variaciones));
-
+                    
                     if (variaciones.Any())
                     {
                         _logger.LogInformation("✅ Encontrada coincidencia por variación");
@@ -246,13 +246,13 @@ namespace API.ServicesAPI
         }
 
         /// <summary>
-        /// Refresca los permisos en caché (útil cuando se modifican permisos)
+        /// Refresca los permisos en caché
         /// </summary>
         public async Task RefrescarCachePermisosAsync()
         {
             try
             {
-                // Obtener todos los usuarios para limpiar su caché individual
+                // ✅ Limpiar caché de permisos
                 var usuarios = await _context.Usuarios.Select(u => u.UsuarioId).ToListAsync();
 
                 foreach (var userId in usuarios)
@@ -268,42 +268,6 @@ namespace API.ServicesAPI
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al refrescar caché de permisos");
-            }
-        }
-
-        /// <summary>
-        /// Refresca permisos e invalida sesiones para un usuario específico
-        /// </summary>
-        public async Task RefrescarPermisosUsuarioAsync(int usuarioId)
-        {
-            try
-            {
-                // Limpiar caché del usuario específico
-                _cache.Remove($"permisos_usuario_{usuarioId}");
-                _cache.Remove($"roles_usuario_{usuarioId}");
-
-                // ✅ INVALIDAR SESIONES ACTIVAS DEL USUARIO
-                var sesionesActivas = await _context.SesionUsuario
-                    .Where(s => s.UsuarioId == usuarioId && s.EstaActiva == true)
-                    .ToListAsync();
-
-                if (sesionesActivas.Any())
-                {
-                    foreach (var sesion in sesionesActivas)
-                    {
-                        sesion.EstaActiva = false;
-                        sesion.FechaInvalidacion = DateTime.Now;
-                    }
-
-                    await _context.SaveChangesAsync();
-                    _logger.LogInformation($"✅ Invalidadas {sesionesActivas.Count} sesiones para usuario {usuarioId} por cambio de permisos");
-                }
-
-                _logger.LogInformation($"Permisos refrescados para usuario {usuarioId}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al refrescar permisos para usuario {UserId}", usuarioId);
             }
         }
     }

@@ -1,4 +1,4 @@
-// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
@@ -304,40 +304,3 @@ function inicializarNotificaciones() {
 
 // Auto-inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', inicializarNotificaciones);
-
-// Configuración global para peticiones HTTP
-$(document).ajaxSetup({
-    beforeSend: function(xhr) {
-        const token = localStorage.getItem('token');
-        if (token) {
-            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-        }
-    },
-    // ✅ MANEJO GLOBAL DE SESIÓN INVÁLIDA
-    error: function(xhr, status, error) {
-        if (xhr.status === 401) {
-            console.log('⚠️ Sesión inválida detectada - redirigiendo al login');
-
-            // Limpiar datos de sesión
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-
-            // Mostrar mensaje al usuario
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: '🔒 Sesión Expirada',
-                    text: 'Tu sesión ha expirado o ha sido invalidada. Serás redirigido al login.',
-                    icon: 'warning',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                }).then(() => {
-                    window.location.href = '/Account/Login';
-                });
-            } else {
-                alert('Tu sesión ha expirado. Serás redirigido al login.');
-                window.location.href = '/Account/Login';
-            }
-        }
-    }
-});

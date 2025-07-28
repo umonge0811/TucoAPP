@@ -182,10 +182,6 @@ app.UseRouting();
 // Usar la política de CORS
 app.UseCors("AllowAll");
 app.UseAuthentication();
-
-// ✅ MIDDLEWARE PARA VALIDAR SESIONES ACTIVAS
-app.UseMiddleware<API.Middleware.ValidarSesionMiddleware>();
-
 app.UseAuthorization();
 
 app.MapControllers();
