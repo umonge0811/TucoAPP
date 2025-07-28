@@ -203,25 +203,25 @@
                 </div>
                 <span>Inventario</span>
             </a>
-            <a href="@Url.Action("EntregasPendientes", "Facturacion")" class="quick-access-card">
+            <a asp-permiso="Entregar Pendientes" href="@Url.Action("EntregasPendientes", "Facturacion")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-truck"></i>
                 </div>
                 <span>Entregas Pendientes</span>
             </a>
-            <a href="@Url.Action("Index", "Clientes")" class="quick-access-card">
+            <a asp-permiso="Ver Clientes" href="@Url.Action("Index", "Clientes")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-people"></i>
                 </div>
                 <span>Clientes</span>
             </a>
-            <a href="#" class="quick-access-card">
+            <a asp-permiso="Ver Reportes" href="#" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-graph-up"></i>
                 </div>
                 <span>Reportes</span>
             </a>
-            <a href="@Url.Action("RolesPermisos", "Configuracion")" class="quick-access-card">
+            <a asp-permiso="Configuracion Sistema" href="@Url.Action("RolesPermisos", "Configuracion")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-gear"></i>
                 </div>
@@ -337,4 +337,3 @@
         </div>
     </div>
 </div>
-```
