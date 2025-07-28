@@ -383,7 +383,7 @@ public class PermisosController : ControllerBase
     
 
     [HttpPost("asignar-permiso-usuario")]
-    public async Task<IActionResult> AsignarPermisoAUsuario([FromBody] AsignarPermisoRequest request)
+    public async Task<IActionResult> AsignarPermisoAUsuario([FromBody] AsignarPermisoRequest request, [FromServices] ITokenInvalidationService tokenService)
     {
         try
         {
@@ -416,10 +416,18 @@ public class PermisosController : ControllerBase
             _context.UsuarioPermiso.Add(usuarioPermiso);
             await _context.SaveChangesAsync();
 
+            // ✅ INVALIDAR SESIONES DEL USUARIO
+            await tokenService.InvalidarSesionesUsuarioAsync(request.UsuarioId);
+
             // ✅ REFRESCAR CACHÉ DE PERMISOS
             await _permisosService.RefrescarCachePermisosAsync();
 
-            return Ok(new { message = "Permiso asignado correctamente" });
+            _logger.LogInformation("🔄 Permiso asignado y sesiones invalidadas para usuario {UsuarioId}", request.UsuarioId);
+
+            return Ok(new { 
+                message = "Permiso asignado correctamente. El usuario deberá iniciar sesión nuevamente.",
+                requireUserLogin = true 
+            });
         }
         catch (Exception ex)
         {
@@ -429,7 +437,7 @@ public class PermisosController : ControllerBase
     }
 
     [HttpDelete("quitar-permiso-usuario")]
-    public async Task<IActionResult> QuitarPermisoAUsuario([FromBody] AsignarPermisoRequest request)
+    public async Task<IActionResult> QuitarPermisoAUsuario([FromBody] AsignarPermisoRequest request, [FromServices] ITokenInvalidationService tokenService)
     {
         try
         {
@@ -444,10 +452,18 @@ public class PermisosController : ControllerBase
             _context.UsuarioPermiso.Remove(usuarioPermiso);
             await _context.SaveChangesAsync();
 
+            // ✅ INVALIDAR SESIONES DEL USUARIO
+            await tokenService.InvalidarSesionesUsuarioAsync(request.UsuarioId);
+
             // ✅ REFRESCAR CACHÉ DE PERMISOS
             await _permisosService.RefrescarCachePermisosAsync();
 
-            return Ok(new { message = "Permiso removido correctamente" });
+            _logger.LogInformation("🔄 Permiso removido y sesiones invalidadas para usuario {UsuarioId}", request.UsuarioId);
+
+            return Ok(new { 
+                message = "Permiso removido correctamente. El usuario deberá iniciar sesión nuevamente.",
+                requireUserLogin = true 
+            });
         }
         catch (Exception ex)
         {
