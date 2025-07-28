@@ -43,6 +43,16 @@ namespace API.ServicesAPI
                     return false;
                 }
 
+                // ✅ VERIFICAR SI LA SESIÓN SIGUE ACTIVA
+                var sesionActiva = await _context.SesionUsuarios
+                    .AnyAsync(s => s.UsuarioId == userId.Value && s.EstaActiva);
+                    
+                if (!sesionActiva)
+                {
+                    _logger.LogWarning("⚠️ Sesión del usuario {UserId} ha sido invalidada", userId.Value);
+                    return false;
+                }
+
                 // ✅ PRIMERO: Verificar si es administrador (acceso total)
                 var esAdministrador = await EsAdministradorAsync(user);
                 _logger.LogInformation("🔍 Es administrador: {EsAdministrador}", esAdministrador);

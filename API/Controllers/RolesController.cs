@@ -1,3 +1,7 @@
+The goal is to invalidate user sessions upon role permission changes by adding code to update SesionUsuarios table in the database.
+```
+
+```csharp
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
@@ -592,4 +596,4 @@ public class RolesController : ControllerBase
 
 
 }
-
+```
