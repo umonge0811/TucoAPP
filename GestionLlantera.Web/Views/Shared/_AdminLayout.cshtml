@@ -76,9 +76,12 @@
                                 </li>
                                 <!-- Historial de Inventarios - Para usuarios asignados -->
                                 <li class="nav-item" asp-permiso="Sub_Menu_HistorialInventario">
-                                    <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
-                                        <i class="bi bi-clock-history"></i> Historial de Inventarios
-                                    </a>
+                                    @if (await this.TienePermisoAsync("Ver Historial Inventarios"))
+                                    {
+                                        <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
+                                            <i class="bi bi-clock-history"></i> Historial de Inventarios
+                                        </a>
+                                    }
                                 </li>
                             </ul>
                         </div>
@@ -359,9 +362,12 @@
                                     </a>
                                 </li>
                                 <li class="nav-item" asp-permiso="Sub_Menu_HistorialInventario">
-                                    <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
-                                        <i class="bi bi-clock-history"></i> Historial de Inventarios
-                                    </a>
+                                    @if (await this.TienePermisoAsync("Ver Historial Inventarios"))
+                                    {
+                                        <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
+                                            <i class="bi bi-clock-history"></i> Historial de Inventarios
+                                        </a>
+                                    }
                                 </li>
                             </ul>
                         </div>

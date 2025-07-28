@@ -924,7 +924,16 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
-                // ✅ VERIFICAR PERMISOS
+                // 🔒 VERIFICAR PERMISO BÁSICO PARA VER HISTORIAL
+                var puedeVerHistorial = await this.TienePermisoAsync("Ver Historial Inventarios");
+                if (!puedeVerHistorial)
+                {
+                    _logger.LogWarning("🚫 Usuario {Usuario} sin permisos para ver historial de inventarios", User.Identity?.Name);
+                    TempData["Error"] = "No tienes permisos para ver el historial de inventarios.";
+                    return RedirectToAction("Index", "Dashboard");
+                }
+
+                // ✅ VERIFICAR PERMISOS ESPECÍFICOS
                 var puedeVerHistorialCompleto = await this.TienePermisoAsync("Ver Historial Inventarios Completo");
                 var usuarioId = ObtenerIdUsuarioActual();
 
