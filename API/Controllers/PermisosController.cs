@@ -380,61 +380,7 @@ public class PermisosController : ControllerBase
     /// Obtiene todos los permisos del usuario actual (útil para debugging)
     /// GET: api/Permisos/mis-permisos
     /// </summary>
-    [HttpGet("mis-permisos")]
-    [Authorize]
-    public async Task<IActionResult> ObtenerMisPermisos()
-    {
-        try
-        {
-            var userId = _permisosService.ObtenerUsuarioId(User);
-            if (userId == null)
-            {
-                return BadRequest(new { message = "No se pudo obtener el ID del usuario" });
-            }
-
-            var permisos = await _permisosService.ObtenerPermisosUsuarioAsync(userId.Value);
-
-            return Ok(new
-            {
-                permisos = permisos,
-                usuario = User.Identity?.Name ?? "Anónimo",
-                userId = userId.Value,
-                timestamp = DateTime.Now
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener permisos del usuario");
-            return StatusCode(500, new { message = "Error al obtener permisos" });
-        }
-    }
-
-    /// <summary>
-    /// Endpoint para verificar si el usuario es administrador (útil para el frontend)
-    /// GET: api/Permisos/es-administrador
-    /// </summary>
-    [HttpGet("es-administrador")]
-    [Authorize]
-    public async Task<IActionResult> EsAdministrador()
-    {
-        try
-        {
-            var esAdmin = await _permisosService.EsAdministradorAsync(User);
-
-            return Ok(new
-            {
-                esAdministrador = esAdmin,
-                usuario = User.Identity?.Name ?? "Anónimo",
-                timestamp = DateTime.Now
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al verificar si es administrador");
-            return Ok(new { esAdministrador = false });
-        }
-    }
-    #endregion
+    
 
     [HttpPost("asignar-permiso-usuario")]
     public async Task<IActionResult> AsignarPermisoAUsuario([FromBody] AsignarPermisoRequest request)
@@ -510,34 +456,7 @@ public class PermisosController : ControllerBase
         }
     }
 
-    [HttpGet("mis-permisos")]
-    [Authorize]
-    public async Task<IActionResult> ObtenerMisPermisos()
-    {
-        try
-        {
-            var userId = _permisosService.ObtenerUsuarioId(User);
-            if (userId == null)
-            {
-                return BadRequest(new { message = "No se pudo obtener el ID del usuario" });
-            }
-
-            var permisos = await _permisosService.ObtenerPermisosUsuarioAsync(userId.Value);
-
-            return Ok(new
-            {
-                permisos = permisos,
-                usuario = User.Identity?.Name ?? "Anónimo",
-                userId = userId.Value,
-                timestamp = DateTime.Now
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener permisos del usuario");
-            return StatusCode(500, new { message = "Error al obtener permisos" });
-        }
-    }
+    
 
     [HttpPost("refrescar-mis-permisos")]
     [Authorize]
@@ -564,4 +483,10 @@ public class PermisosController : ControllerBase
             return StatusCode(500, new { message = "Error interno del servidor" });
         }
     }
+}
+
+public class AsignarPermisoRequest
+{
+    public int UsuarioId { get; set; }
+    public int PermisoId { get; set; }
 }
