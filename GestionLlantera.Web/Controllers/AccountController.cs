@@ -180,9 +180,9 @@ namespace GestionLlantera.Web.Controllers
                     permisosService?.LimpiarCacheCompleto();
 
                     // ✅ AGREGAR HEADERS PARA EVITAR CACHÉ DEL NAVEGADOR
-                    Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
-                    Response.Headers.Add("Pragma", "no-cache");
-                    Response.Headers.Add("Expires", "0");
+                    Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                    Response.Headers["Pragma"] = "no-cache";
+                    Response.Headers["Expires"] = "0";
 
                     return RedirectToAction("Index", "Dashboard");
                 }
@@ -254,9 +254,9 @@ namespace GestionLlantera.Web.Controllers
                 permisosService?.LimpiarCacheCompleto();
 
                 // ✅ AGREGAR HEADERS PARA EVITAR CACHÉ DEL NAVEGADOR
-                Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
-                Response.Headers.Add("Pragma", "no-cache");
-                Response.Headers.Add("Expires", "0");
+                Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                Response.Headers["Pragma"] = "no-cache";
+                Response.Headers["Expires"] = "0";
 
                 // Redirigir al usuario a la página de inicio
                 return RedirectToAction("Index", "Home");
