@@ -51,7 +51,7 @@ function configurarEventListeners() {
     console.log('🔗 Configurando event listeners para filtros avanzados...');
 
     // ✅ FILTROS BÁSICOS
-    
+
     // Filtro por estado
     $('#filtroEstado').on('change', function () {
         const estadoSeleccionado = $(this).val();
@@ -75,14 +75,14 @@ function configurarEventListeners() {
     });
 
     // ✅ FILTROS AVANZADOS DE FECHAS
-    
+
     $('#filtroFechaDesde, #filtroFechaHasta').on('change', function () {
         console.log('📅 Filtro de fecha cambiado');
         filtrarInventarios();
     });
 
     // ✅ FILTRO POR PROGRESO
-    
+
     $('#filtroProgreso').on('change', function () {
         const progreso = $(this).val();
         console.log('📊 Filtrando por progreso:', progreso);
@@ -90,7 +90,7 @@ function configurarEventListeners() {
     });
 
     // ✅ FILTROS DE RANGO CON DEBOUNCE
-    
+
     let timeoutRangos;
     $('#filtroProductosMin, #filtroProductosMax').on('input', function () {
         clearTimeout(timeoutRangos);
@@ -101,7 +101,7 @@ function configurarEventListeners() {
     });
 
     // ✅ BOTONES DE CONTROL
-    
+
     // Botón de actualizar
     $('#btnActualizar').on('click', function () {
         console.log('🔄 Recargando historial...');
@@ -115,11 +115,11 @@ function configurarEventListeners() {
     });
 
     // ✅ TOGGLE PARA FILTROS AVANZADOS
-    
+
     $('#btnToggleFiltrosAvanzados').on('click', function () {
         const $filtrosAvanzados = $('#filtrosAvanzadosHistorial');
         const $icono = $(this).find('i');
-        
+
         if ($filtrosAvanzados.is(':visible')) {
             $filtrosAvanzados.slideUp();
             $icono.removeClass('bi-chevron-up').addClass('bi-chevron-down');
@@ -132,7 +132,7 @@ function configurarEventListeners() {
     });
 
     // ✅ EVENTOS ADICIONALES
-    
+
     // Paste en búsqueda
     $('#busquedaTexto').on('paste', function () {
         setTimeout(() => {
@@ -294,7 +294,7 @@ function filtrarInventarios(estado = '') {
     if (textoBusqueda && typeof textoBusqueda === 'string' && textoBusqueda.trim()) {
         const textoBusquedaLower = String(textoBusqueda).toLowerCase().trim();
         console.log('🔍 Aplicando filtro de texto:', textoBusquedaLower);
-        
+
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
             const titulo = obtenerValorSeguro(inv, ['titulo', 'Titulo', 'nombreInventario', 'NombreInventario']);
             const descripcion = obtenerValorSeguro(inv, ['descripcion', 'Descripcion', 'observaciones', 'Observaciones']);
@@ -314,26 +314,26 @@ function filtrarInventarios(estado = '') {
     // ✅ 3. FILTRO POR RANGO DE FECHAS
     const fechaDesde = $('#filtroFechaDesde').val();
     const fechaHasta = $('#filtroFechaHasta').val();
-    
+
     if (fechaDesde || fechaHasta) {
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
             const fechaInicio = inv.fechaInicio ? new Date(inv.fechaInicio) : null;
-            
+
             if (!fechaInicio) return false;
-            
+
             let cumpleFecha = true;
-            
+
             if (fechaDesde) {
                 const fechaDesdeFiltro = new Date(fechaDesde);
                 if (fechaInicio < fechaDesdeFiltro) cumpleFecha = false;
             }
-            
+
             if (fechaHasta && cumpleFecha) {
                 const fechaHastaFiltro = new Date(fechaHasta);
                 fechaHastaFiltro.setHours(23, 59, 59, 999); // Incluir todo el día
                 if (fechaInicio > fechaHastaFiltro) cumpleFecha = false;
             }
-            
+
             return cumpleFecha;
         });
         console.log('🔍 Después de filtro por fechas:', inventariosFiltrados.length);
@@ -344,7 +344,7 @@ function filtrarInventarios(estado = '') {
     if (progresoFiltro && progresoFiltro !== 'todos') {
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
             const porcentaje = obtenerValorNumerico(inv, ['porcentajeProgreso', 'PorcentajeProgreso']);
-            
+
             switch (progresoFiltro) {
                 case 'sin_empezar':
                     return porcentaje === 0;
@@ -362,44 +362,44 @@ function filtrarInventarios(estado = '') {
     // ✅ 5. FILTRO POR RANGO DE PRODUCTOS
     const productosMin = parseInt($('#filtroProductosMin').val()) || null;
     const productosMax = parseInt($('#filtroProductosMax').val()) || null;
-    
+
     if (productosMin !== null || productosMax !== null) {
         inventariosFiltrados = inventariosFiltrados.filter(inv => {
             const totalProductos = obtenerValorNumerico(inv, ['totalProductos', 'TotalProductos']);
-            
+
             let cumpleRango = true;
-            
+
             if (productosMin !== null && totalProductos < productosMin) {
                 cumpleRango = false;
             }
-            
+
             if (productosMax !== null && totalProductos > productosMax) {
                 cumpleRango = false;
             }
-            
+
             return cumpleRango;
         });
         console.log('🔍 Después de filtro por productos:', inventariosFiltrados.length);
     }
 
     console.log('🔍 === TOTAL INVENTARIOS FILTRADOS ===:', inventariosFiltrados.length);
-    
+
     // Actualizar indicadores de filtros activos
     actualizarIndicadoresFiltrosActivos();
-    
+
     renderizarInventarios(inventariosFiltrados);
 }
 
 // ✅ FUNCIÓN PARA ACTUALIZAR INDICADORES DE FILTROS ACTIVOS
 function actualizarIndicadoresFiltrosActivos() {
     const filtrosActivos = [];
-    
+
     // Verificar filtros activos
     const textoBusqueda = $('#busquedaTexto').val();
     if (textoBusqueda && textoBusqueda.trim()) {
         filtrosActivos.push(`🔍 "${textoBusqueda.trim()}"`);
     }
-    
+
     const estadoFiltro = $('#filtroEstado').val();
     if (estadoFiltro && estadoFiltro !== 'todos') {
         const estadosTexto = {
@@ -410,7 +410,7 @@ function actualizarIndicadoresFiltrosActivos() {
         };
         filtrosActivos.push(estadosTexto[estadoFiltro] || estadoFiltro);
     }
-    
+
     const fechaDesde = $('#filtroFechaDesde').val();
     const fechaHasta = $('#filtroFechaHasta').val();
     if (fechaDesde || fechaHasta) {
@@ -418,7 +418,7 @@ function actualizarIndicadoresFiltrosActivos() {
         const hasta = fechaHasta ? new Date(fechaHasta).toLocaleDateString() : '∞';
         filtrosActivos.push(`📅 ${desde} - ${hasta}`);
     }
-    
+
     const progresoFiltro = $('#filtroProgreso').val();
     if (progresoFiltro && progresoFiltro !== 'todos') {
         const progresoTexto = {
@@ -428,7 +428,7 @@ function actualizarIndicadoresFiltrosActivos() {
         };
         filtrosActivos.push(progresoTexto[progresoFiltro] || progresoFiltro);
     }
-    
+
     const productosMin = $('#filtroProductosMin').val();
     const productosMax = $('#filtroProductosMax').val();
     if (productosMin || productosMax) {
@@ -436,21 +436,21 @@ function actualizarIndicadoresFiltrosActivos() {
         const max = productosMax || '∞';
         filtrosActivos.push(`📦 ${min} - ${max} productos`);
     }
-    
+
     // Actualizar UI de filtros activos
     const $contadorFiltros = $('#contadorFiltrosActivos');
     const $btnLimpiar = $('#btnLimpiarFiltros');
     const $contenedorTags = $('#tagsFilttrosActivos');
-    
+
     if (filtrosActivos.length > 0) {
         if ($contadorFiltros.length > 0) {
             $contadorFiltros.text(`${filtrosActivos.length} activos`).show();
         }
-        
+
         if ($btnLimpiar.length > 0) {
             $btnLimpiar.prop('disabled', false).removeClass('btn-outline-secondary').addClass('btn-outline-danger');
         }
-        
+
         if ($contenedorTags.length > 0) {
             $contenedorTags.empty();
             filtrosActivos.forEach((filtro, index) => {
@@ -473,7 +473,7 @@ function actualizarIndicadoresFiltrosActivos() {
 // ✅ FUNCIÓN PARA LIMPIAR TODOS LOS FILTROS
 function limpiarTodosLosFiltros() {
     console.log('🧹 Limpiando todos los filtros del historial');
-    
+
     // Limpiar inputs
     $('#busquedaTexto').val('');
     $('#filtroEstado').val('todos');
@@ -482,7 +482,7 @@ function limpiarTodosLosFiltros() {
     $('#filtroProgreso').val('todos');
     $('#filtroProductosMin').val('');
     $('#filtroProductosMax').val('');
-    
+
     // Resetear configuración
     filtrosHistorialConfig.activos = {
         texto: '',
@@ -494,10 +494,10 @@ function limpiarTodosLosFiltros() {
         productosMin: null,
         productosMax: null
     };
-    
+
     // Aplicar filtros (mostrará todos)
     filtrarInventarios();
-    
+
     console.log('✅ Filtros del historial limpiados');
 }
 
@@ -920,7 +920,7 @@ async function descargarReportePdf(inventarioId, titulo) {
                     </div>
                 </div>
                 <p class="mt-3 text-muted">Preparando reporte de "${titulo}"</p>
-            `,
+            `,```text
             allowOutsideClick: false,
             showConfirmButton: false,
             didOpen: () => {
