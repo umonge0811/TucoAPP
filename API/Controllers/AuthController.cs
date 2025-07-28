@@ -779,6 +779,84 @@ public class AuthController : ControllerBase
     }
     #endregion
 
+    #region Regenerar JWT con nuevos permisos
+    /// <summary>
+    /// Regenera el JWT del usuario con los permisos actualizados
+    /// </summary>
+    /// <param name="request">Contiene el token actual</param>
+    /// <returns>Nuevo token con permisos actualizados</returns>
+    [HttpPost("regenerar-jwt")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RegenerarJWT([FromBody] LogoutRequestDTO request)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(request.Token))
+            {
+                return BadRequest(new { message = "Token requerido" });
+            }
+
+            // Decodificar el token para obtener el ID del usuario
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(request.Token);
+            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int usuarioId))
+            {
+                return BadRequest(new { message = "Token inválido" });
+            }
+
+            // Buscar el usuario
+            var usuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId);
+            if (usuario == null)
+            {
+                return BadRequest(new { message = "Usuario no encontrado" });
+            }
+
+            // Invalidar sesiones anteriores
+            var sesionesActivas = await _context.SesionUsuario
+                .Where(s => s.UsuarioId == usuarioId && s.EstaActiva == true)
+                .ToListAsync();
+
+            foreach (var sesion in sesionesActivas)
+            {
+                sesion.EstaActiva = false;
+                sesion.FechaInvalidacion = DateTime.Now;
+            }
+
+            // Generar nuevo JWT con permisos actualizados
+            var nuevoToken = GenerarToken(usuario);
+
+            // Registrar nueva sesión
+            var tokenHash = BCrypt.Net.BCrypt.HashString(nuevoToken.Substring(nuevoToken.Length - 20));
+            var nuevaSesion = new SesionUsuario
+            {
+                UsuarioId = usuario.UsuarioId,
+                FechaHoraInicio = DateTime.Now,
+                TokenHash = tokenHash,
+                EstaActiva = true,
+                FechaInvalidacion = null
+            };
+
+            _context.SesionUsuario.Add(nuevaSesion);
+            await _context.SaveChangesAsync();
+
+            _logger?.LogInformation($"✅ JWT regenerado para usuario {usuario.Email} (ID: {usuario.UsuarioId})");
+
+            return Ok(new
+            {
+                message = "Token regenerado exitosamente",
+                token = nuevoToken
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "❌ Error al regenerar JWT");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+    #endregion
+
 
 
 
