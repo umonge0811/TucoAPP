@@ -262,7 +262,7 @@ public class RolesController : ControllerBase
             // Guardar cambios en la base de datos
             await _context.SaveChangesAsync();
 
-            // ✅ INVALIDAR SESIONES DE USUARIOS CON ESTE ROL AUTOMÁTICAMENTE
+            // ✅ INVALIDAR SESIONES DE USUARIOS CON ESTE ROL
             var usuariosConRol = await _context.UsuarioRoles
                 .Where(ur => ur.RolId == id)
                 .Select(ur => ur.UsuarioId)
@@ -270,27 +270,21 @@ public class RolesController : ControllerBase
 
             if (usuariosConRol.Any())
             {
-                // Llamar al endpoint de invalidación
-                var forzarRequest = new { UsuarioIds = usuariosConRol };
-                var jsonContent = System.Text.Json.JsonSerializer.Serialize(forzarRequest);
-                var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
+                var sesionesActivas = await _context.SesionUsuario
+                    .Where(s => usuariosConRol.Contains(s.UsuarioId.Value) && s.EstaActiva)
+                    .ToListAsync();
 
-                try
+                foreach (var sesion in sesionesActivas)
                 {
-                    var response = await _httpClient.PostAsync("api/Auth/forzar-regeneracion-jwt", content);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine($"✅ Sesiones invalidadas automáticamente para {usuariosConRol.Count} usuarios");
-                    }
+                    sesion.EstaActiva = false;
+                    sesion.FechaInvalidacion = DateTime.Now;
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Error al invalidar sesiones automáticamente: {ex.Message}");
-                }
+
+                await _context.SaveChangesAsync();
+
+                // ✅ LIMPIAR CACHÉ DE PERMISOS INMEDIATAMENTE
+                await LimpiarCachePermisos(usuariosConRol);
             }
-
-            // ✅ LIMPIAR CACHÉ DE PERMISOS INMEDIATAMENTE
-            await LimpiarCachePermisos(usuariosConRol);
 
             // Registrar en el historial la actualización exitosa
             await HistorialHelper.RegistrarHistorial(
@@ -625,9 +619,9 @@ public class RolesController : ControllerBase
         {
             // Llamar al API de permisos para limpiar caché específico
             var requestData = new { usuarioIds = usuarioIds };
-
+            
             var response = await _httpClient.PostAsJsonAsync("/api/permisos/limpiar-cache", requestData);
-
+            
             if (response.IsSuccessStatusCode)
             {
                 _logger.LogInformation("✅ Caché de permisos limpiado para {Count} usuarios", usuarioIds.Count);
