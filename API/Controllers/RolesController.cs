@@ -10,6 +10,7 @@ using System.Net.Http;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 using tuco.Utilities;
 using Microsoft.AspNetCore.Cors;
+using API.ServicesAPI.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]

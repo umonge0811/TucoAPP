@@ -59,5 +59,10 @@ namespace API.ServicesAPI.Interfaces
         /// Refresca permisos e invalida sesiones para un usuario específico
         /// </summary>
         Task RefrescarPermisosUsuarioAsync(int usuarioId);
+
+        /// <summary>
+        /// Invalida todas las sesiones activas de un usuario específico
+        /// </summary>
+        Task InvalidarSesionesUsuario(int usuarioId, string motivo);
     }
 }
