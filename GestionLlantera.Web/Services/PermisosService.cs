@@ -1,4 +1,4 @@
-using GestionLlantera.Web.Services.Interfaces;
+﻿using GestionLlantera.Web.Services.Interfaces;
 using System.Net.Http;
 using System.Text.Json;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
@@ -15,7 +15,7 @@ namespace GestionLlantera.Web.Services
 
         private PermisosUsuarioActual? _permisosCache;
         private DateTime _ultimaActualizacion = DateTime.MinValue;
-        private readonly TimeSpan _tiempoCache = TimeSpan.FromMinutes(2); // ✅ Reducido de 10 a 2 minutos
+        private readonly TimeSpan _tiempoCache = TimeSpan.FromMinutes(10);
 
         public PermisosUsuarioActual PermisosActuales => _permisosCache ?? new PermisosUsuarioActual();
 
