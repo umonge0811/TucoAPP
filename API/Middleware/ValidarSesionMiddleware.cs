@@ -1,15 +1,10 @@
 
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
 using System.Security.Claims;
 
 namespace API.Middleware
 {
-    /// <summary>
-    /// Middleware que valida si la sesión del usuario sigue siendo válida
-    /// Fuerza re-login si la sesión fue invalidada por cambios de permisos
-    /// </summary>
     public class ValidarSesionMiddleware
     {
         private readonly RequestDelegate _next;
@@ -23,55 +18,30 @@ namespace API.Middleware
 
         public async Task InvokeAsync(HttpContext context, TucoContext dbContext)
         {
-            // ✅ SOLO VALIDAR USUARIOS AUTENTICADOS
+            // Solo validar para rutas que requieren autenticación
             if (context.User.Identity?.IsAuthenticated == true)
             {
-                try
+                var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
+                if (int.TryParse(userIdClaim, out int userId))
                 {
-                    // Obtener ID del usuario
-                    var userIdClaim = context.User.FindFirst("userId")?.Value ??
-                                     context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    // Verificar si el usuario tiene sesiones activas
+                    var sesionActiva = await dbContext.SesionUsuario
+                        .AnyAsync(s => s.UsuarioId == userId && s.EstaActiva == true);
 
-                    if (int.TryParse(userIdClaim, out int userId))
+                    if (!sesionActiva)
                     {
-                        // ✅ VERIFICAR SI EL USUARIO TIENE SESIONES ACTIVAS
-                        var tieneSesionActiva = await dbContext.SesionUsuario
-                            .AnyAsync(s => s.UsuarioId == userId && s.EstaActiva == true);
-
-                        if (!tieneSesionActiva)
-                        {
-                            _logger.LogWarning($"⚠️ Usuario {userId} no tiene sesiones activas - forzando logout");
-
-                            // Limpiar autenticación y redirigir al login
-                            context.Response.StatusCode = 401;
-                            context.Response.Headers.Add("X-Session-Invalid", "true");
-                            
-                            await context.Response.WriteAsync("Sesión invalidada. Por favor, inicia sesión nuevamente.");
-                            return;
-                        }
-
-                        _logger.LogDebug($"✅ Usuario {userId} tiene sesión activa válida");
+                        _logger.LogWarning($"⚠️ Usuario {userId} sin sesión activa válida - cerrando sesión");
+                        
+                        // Retornar 401 para forzar logout en el frontend
+                        context.Response.StatusCode = 401;
+                        await context.Response.WriteAsync("Sesión inválida");
+                        return;
                     }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "❌ Error validando sesión del usuario");
-                    // En caso de error, continuar sin bloquear (fail-safe)
                 }
             }
 
             await _next(context);
-        }
-    }
-
-    /// <summary>
-    /// Extensión para registrar el middleware fácilmente
-    /// </summary>
-    public static class ValidarSesionMiddlewareExtensions
-    {
-        public static IApplicationBuilder UseValidarSesion(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<ValidarSesionMiddleware>();
         }
     }
 }

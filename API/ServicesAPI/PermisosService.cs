@@ -306,49 +306,5 @@ namespace API.ServicesAPI
                 _logger.LogError(ex, "Error al refrescar permisos para usuario {UserId}", usuarioId);
             }
         }
-
-        /// <summary>
-        /// Invalida sesiones cuando se cambian roles de un usuario
-        /// </summary>
-        public async Task InvalidarSesionesPorCambioRolesAsync(int usuarioId)
-        {
-            await RefrescarPermisosUsuarioAsync(usuarioId);
-        }
-
-        /// <summary>
-        /// Invalida sesiones cuando se cambian permisos directos de un usuario
-        /// </summary>
-        public async Task InvalidarSesionesPorCambioPermisosDirectosAsync(int usuarioId)
-        {
-            await RefrescarPermisosUsuarioAsync(usuarioId);
-        }
-
-        /// <summary>
-        /// Invalida sesiones de todos los usuarios con un rol específico cuando se modifican los permisos del rol
-        /// </summary>
-        public async Task InvalidarSesionesPorCambioPermisosRolAsync(int rolId)
-        {
-            try
-            {
-                // Obtener todos los usuarios que tienen este rol
-                var usuariosConRol = await _context.UsuarioRoles
-                    .Where(ur => ur.RolId == rolId)
-                    .Select(ur => ur.UsuarioId)
-                    .ToListAsync();
-
-                _logger.LogInformation($"Invalidando sesiones de {usuariosConRol.Count} usuarios por cambio en rol {rolId}");
-
-                foreach (var usuarioId in usuariosConRol)
-                {
-                    await RefrescarPermisosUsuarioAsync(usuarioId);
-                }
-
-                _logger.LogInformation($"✅ Procesados {usuariosConRol.Count} usuarios por cambio en rol {rolId}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al invalidar sesiones por cambio en rol {RolId}", rolId);
-            }
-        }
     }
 }
