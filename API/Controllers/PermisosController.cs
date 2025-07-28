@@ -310,6 +310,60 @@ public class PermisosController : ControllerBase
     }
     #endregion
 
+    #region Asignación y Eliminación de Permisos de Usuario
+    [HttpPost("asignar-usuario")]
+    public async Task<IActionResult> AsignarPermisoAUsuario([FromBody] AsignarPermisoUsuarioRequest request)
+    {
+        try
+        {
+            var resultado = await _permisosService.AsignarPermisoAUsuario(request.UsuarioId, request.PermisoId);
+
+            if (resultado)
+            {
+                // ✅ INVALIDAR SESIONES ACTIVAS DEL USUARIO
+                await _permisosService.InvalidarSesionesUsuario(request.UsuarioId, "Nuevo permiso asignado");
+
+                return Ok(new { success = true, message = "Permiso asignado correctamente. Las sesiones activas han sido invalidadas." });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = "No se pudo asignar el permiso" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al asignar permiso a usuario");
+            return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+        }
+    }
+
+    [HttpDelete("quitar-usuario/{usuarioId}/{permisoId}")]
+    public async Task<IActionResult> QuitarPermisoDeUsuario(int usuarioId, int permisoId)
+    {
+        try
+        {
+            var resultado = await _permisosService.QuitarPermisoDeUsuario(usuarioId, permisoId);
+
+            if (resultado)
+            {
+                // ✅ INVALIDAR SESIONES ACTIVAS DEL USUARIO
+                await _permisosService.InvalidarSesionesUsuario(usuarioId, "Permiso removido");
+
+                return Ok(new { success = true, message = "Permiso quitado correctamente. Las sesiones activas han sido invalidadas." });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = "No se pudo quitar el permiso" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al quitar permiso de usuario");
+            return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+        }
+    }
+    #endregion
+
     #region Verificación de Permisos (Sistema Global)
     /// <summary>
     /// Verifica si el usuario actual tiene un permiso específico

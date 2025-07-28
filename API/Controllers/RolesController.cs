@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Tuco.Clases.Models;
@@ -17,16 +17,19 @@ using Microsoft.AspNetCore.Cors;
 [EnableCors("AllowAll")]
 public class RolesController : ControllerBase
 {
+    private readonly IRolesService _rolesService;
+    private readonly IPermisosService _permisosService;
     private readonly TucoContext _context;
     private readonly ILogger<RolesController> _logger;
     HttpClient _httpClient;
 
-
-    public RolesController(TucoContext context, IHttpClientFactory httpClientFactory, ILogger<RolesController> logger)
+    public RolesController(IRolesService rolesService, IPermisosService permisosService, TucoContext context, IHttpClientFactory httpClientFactory, ILogger<RolesController> logger)
     {
+        _rolesService = rolesService;
+        _permisosService = permisosService;
         _context = context;
-        _httpClient = httpClientFactory.CreateClient("TucoApi");
         _logger = logger;
+        _httpClient = httpClientFactory.CreateClient("TucoApi");
     }
 
 
@@ -586,10 +589,43 @@ public class RolesController : ControllerBase
     }
     #endregion
 
+    [HttpPost("{rolId}/permisos")]
+    public async Task<IActionResult> AsignarPermisosARol(int rolId, [FromBody] List<int> permisosIds)
+    {
+        try
+        {
+            var resultado = await _rolesService.AsignarPermisosARol(rolId, permisosIds);
+
+            if (resultado)
+            {
+                // ✅ INVALIDAR SESIONES DE USUARIOS CON ESTE ROL
+                var usuariosConRol = await _context.UsuarioRolREs
+                    .Where(ur => ur.RolId == rolId)
+                    .Select(ur => ur.UsuarioId)
+                    .ToListAsync();
+
+                foreach (var usuarioId in usuariosConRol)
+                {
+                    await _permisosService.InvalidarSesionesUsuario(usuarioId, "Cambio de permisos en rol");
+                }
+
+                return Ok(new { success = true, message = $"Permisos asignados al rol correctamente. {usuariosConRol.Count} usuarios afectados - sesiones invalidadas." });
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = "No se pudieron asignar los permisos al rol" });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al asignar permisos al rol");
+            return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+        }
+    }
+
 
 
 
 
 
 }
-

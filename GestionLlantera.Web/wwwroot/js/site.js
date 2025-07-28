@@ -325,17 +325,17 @@ $(document).ajaxSetup({
             // Mostrar mensaje al usuario
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    title: '🔒 Sesión Expirada',
-                    text: 'Tu sesión ha expirado o ha sido invalidada. Serás redirigido al login.',
-                    icon: 'warning',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
+                    title: '🔒 Sesión Invalidada',
+                    text: 'Tu sesión ha sido invalidada debido a cambios en tus permisos. Por favor, inicia sesión nuevamente para obtener tus permisos actualizados.',
+                    icon: 'info',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Ir al Login',
+                    confirmButtonColor: '#3085d6'
                 }).then(() => {
                     window.location.href = '/Account/Login';
                 });
             } else {
-                alert('Tu sesión ha expirado. Serás redirigido al login.');
+                alert('Tu sesión ha sido invalidada. Por favor, inicia sesión nuevamente.');
                 window.location.href = '/Account/Login';
             }
         }
