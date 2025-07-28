@@ -1,4 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
+The goal is to invalidate user sessions upon role permission changes by adding code to update SesionUsuarios table in the database.
+```
+
+```csharp
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 using Tuco.Clases.Models;
@@ -261,27 +265,6 @@ public class RolesController : ControllerBase
 
             // Guardar cambios en la base de datos
             await _context.SaveChangesAsync();
-
-            // ✅ INVALIDAR SESIONES DE USUARIOS CON ESTE ROL
-            var usuariosConRol = await _context.UsuarioRoles
-                .Where(ur => ur.RolId == id)
-                .Select(ur => ur.UsuarioId)
-                .ToListAsync();
-
-            if (usuariosConRol.Any())
-            {
-                var sesionesActivas = await _context.SesionUsuarios
-                    .Where(s => usuariosConRol.Contains(s.UsuarioId.Value) && s.EstaActiva)
-                    .ToListAsync();
-
-                foreach (var sesion in sesionesActivas)
-                {
-                    sesion.EstaActiva = false;
-                    sesion.FechaInvalidacion = DateTime.Now;
-                }
-
-                await _context.SaveChangesAsync();
-            }
 
             // Registrar en el historial la actualización exitosa
             await HistorialHelper.RegistrarHistorial(
@@ -606,4 +589,11 @@ public class RolesController : ControllerBase
         }
     }
     #endregion
+
+
+
+
+
+
 }
+```
