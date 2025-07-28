@@ -44,7 +44,7 @@ namespace API.ServicesAPI
                 }
 
                 // ✅ VERIFICAR SI LA SESIÓN SIGUE ACTIVA
-                var sesionActiva = await _context.SesionUsuario
+                var sesionActiva = await _context.SesionUsuarios
                     .AnyAsync(s => s.UsuarioId == userId.Value && s.EstaActiva);
                     
                 if (!sesionActiva)
