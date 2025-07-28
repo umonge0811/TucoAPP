@@ -1,4 +1,3 @@
-
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "_AdminLayout";
@@ -32,11 +31,11 @@
                         <div class="stat-comparison">
                             <span>₡850,000 este mes</span>
                         </div>
-                      
+
                     </div>
-                    
+
                 </div>
-                
+
             </div>
 
 
@@ -192,13 +191,13 @@
     @* Accesos Rápidos *@
     <div class="dashboard-section">
         <div class="quick-access-grid">
-            <a href="@Url.Action("Index", "Facturacion")" class="quick-access-card">
+            <a asp-permiso="Ver Facturación" href="@Url.Action("Index", "Facturacion")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-cart-plus"></i>
                 </div>
                 <span>Nueva Venta</span>
             </a>
-            <a href="@Url.Action("Index", "Inventario")" class="quick-access-card">
+            <a asp-permiso="Ver Productos" href="@Url.Action("Index", "Inventario")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-box-seam"></i>
                 </div>
@@ -338,3 +337,4 @@
         </div>
     </div>
 </div>
+```

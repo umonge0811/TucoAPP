@@ -148,6 +148,13 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Productos' intentó acceder al inventario");
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
                 var token = ObtenerTokenJWT();
 

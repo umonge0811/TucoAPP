@@ -850,6 +850,10 @@ namespace API.Controllers
             [FromQuery] int pagina = 1,
             [FromQuery] int tamano = 20)
         {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Ver Facturación",
+                "Solo usuarios con permiso 'Ver Facturación' pueden ver proformas");
+            if (validacionPermiso != null) return validacionPermiso;
+
             try
             {
                 _logger.LogInformation("📋 === OBTENIENDO PROFORMAS CON FILTROS ===");

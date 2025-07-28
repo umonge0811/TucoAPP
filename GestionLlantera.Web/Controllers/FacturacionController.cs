@@ -47,6 +47,14 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ VERIFICAR PERMISO PARA ACCEDER A FACTURACIÓN
+                if (!await this.TienePermisoAsync("Ver Facturación"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Facturación' intentó acceder al módulo");
+                    TempData["Error"] = "No tienes permisos para acceder al módulo de facturación.";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 _logger.LogInformation("🛒 === ACCESO AL MÓDULO DE FACTURACIÓN ===");
                 _logger.LogInformation("🛒 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
                 _logger.LogInformation("🛒 Nombre de usuario: {Name}", User.Identity?.Name);
