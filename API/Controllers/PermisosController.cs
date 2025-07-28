@@ -434,6 +434,9 @@ public class PermisosController : ControllerBase
             return Ok(new { esAdministrador = false });
         }
     }
+    #endregion
+}
+
 
     /// <summary>
     /// Limpia el caché de permisos para usuarios específicos
@@ -448,17 +451,11 @@ public class PermisosController : ControllerBase
                 return BadRequest(new { message = "IDs de usuarios requeridos" });
             }
 
-            // Necesitamos acceso al IMemoryCache - agregar al constructor
-            var cache = HttpContext.RequestServices.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
-            
-            if (cache != null)
+            // Limpiar caché específico para cada usuario
+            foreach (var userId in request.UsuarioIds)
             {
-                // Limpiar caché específico para cada usuario
-                foreach (var userId in request.UsuarioIds)
-                {
-                    cache.Remove($"permisos_usuario_{userId}");
-                    cache.Remove($"roles_usuario_{userId}");
-                }
+                _cache.Remove($"permisos_usuario_{userId}");
+                _cache.Remove($"roles_usuario_{userId}");
             }
 
             _logger.LogInformation("✅ Caché limpiado para {Count} usuarios: [{Usuarios}]", 
