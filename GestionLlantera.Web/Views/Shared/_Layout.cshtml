@@ -31,7 +31,13 @@
     @* Librerías de terceros *@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100" data-authenticated="@User.Identity.IsAuthenticated.ToString().ToLower()">
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <!-- Sistema de monitoreo automático de permisos -->
+        <script src="~/js/permisosMonitor.js" asp-append-version="true"></script>
+    }
     @* Navbar *@
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container">

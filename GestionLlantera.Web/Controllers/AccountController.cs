@@ -174,10 +174,15 @@ namespace GestionLlantera.Web.Controllers
                         });
 
                     _logger.LogInformation("Login exitoso para usuario: {Email}", model.Email);
-                    
+
                     // ✅ LIMPIAR CACHÉ DE PERMISOS AL INICIAR NUEVA SESIÓN
                     var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
                     permisosService?.LimpiarCacheCompleto();
+
+                    // ✅ AGREGAR HEADERS PARA EVITAR CACHÉ DEL NAVEGADOR
+                    Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
+                    Response.Headers.Add("Pragma", "no-cache");
+                    Response.Headers.Add("Expires", "0");
 
                     return RedirectToAction("Index", "Dashboard");
                 }
@@ -243,10 +248,15 @@ namespace GestionLlantera.Web.Controllers
                 {
                     Response.Cookies.Delete(cookie);
                 }
-                
+
                 // ✅ LIMPIAR CACHÉ DE PERMISOS
                 var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
                 permisosService?.LimpiarCacheCompleto();
+
+                // ✅ AGREGAR HEADERS PARA EVITAR CACHÉ DEL NAVEGADOR
+                Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate");
+                Response.Headers.Add("Pragma", "no-cache");
+                Response.Headers.Add("Expires", "0");
 
                 // Redirigir al usuario a la página de inicio
                 return RedirectToAction("Index", "Home");

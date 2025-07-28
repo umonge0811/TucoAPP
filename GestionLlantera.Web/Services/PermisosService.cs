@@ -15,7 +15,7 @@ namespace GestionLlantera.Web.Services
 
         private PermisosUsuarioActual? _permisosCache;
         private DateTime _ultimaActualizacion = DateTime.MinValue;
-        private readonly TimeSpan _tiempoCache = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan _tiempoCache = TimeSpan.FromMinutes(1); // ✅ REDUCIR A 1 MINUTO
 
         public PermisosUsuarioActual PermisosActuales => _permisosCache ?? new PermisosUsuarioActual();
 
@@ -126,12 +126,16 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                // ✅ Verificar caché
-                if (_permisosCache != null && DateTime.Now - _ultimaActualizacion < _tiempoCache)
+                // ✅ Verificar caché - FORZAR RENOVACIÓN MÁS FRECUENTE
+                var tiempoCacheEfectivo = TimeSpan.FromSeconds(30); // ✅ 30 segundos para desarrollo
+                if (_permisosCache != null && DateTime.Now - _ultimaActualizacion < tiempoCacheEfectivo)
                 {
-                    _logger.LogDebug("Usando permisos desde caché");
+                    _logger.LogDebug("Usando permisos desde caché (expira en {Segundos}s)", 
+                        (tiempoCacheEfectivo - (DateTime.Now - _ultimaActualizacion)).TotalSeconds);
                     return _permisosCache;
                 }
+
+                _logger.LogInformation("🔄 Caché de permisos expirado - Renovando desde API");
 
                 // ✅ SOLUCIÓN TEMPORAL: Verificar directamente en el contexto HTTP
                 var context = _httpContextAccessor.HttpContext;
