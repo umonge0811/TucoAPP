@@ -1499,7 +1499,6 @@ function mostrarModalFinalizarVenta() {
     modalFinalizarVenta.show();
 }
 
-
 function actualizarResumenVentaModal() {
     const metodoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
     const configMetodo = CONFIGURACION_PRECIOS[metodoSeleccionado];
@@ -2034,11 +2033,11 @@ async function completarFacturaExistente(facturaId) {
         console.log('💰 Factura ID:', facturaId);
 
         // ✅ VALIDACIÓN INICIAL
-        if (!facturaId) {
-            console.error('❌ FacturaId es requerido');
-            mostrarToast('Error', 'ID de factura no válido', 'danger');
-            return;
-        }
+        //if (!facturaId) {
+        //    console.error('❌ FacturaId es requerido');
+        //    mostrarToast('Error', 'ID de factura no válido', 'danger');
+        //    return;
+        //}
 
 
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
