@@ -984,6 +984,7 @@ namespace GestionLlantera.Web.Controllers
                 ViewBag.TotalInventarios = inventariosConHistorial.Count;
                 ViewBag.UsuarioNombre = User.Identity?.Name ?? "Usuario";
                 ViewBag.UsuarioRoles = User.Claims.Where(c => c.Type == "Role").Select(c => c.Value).ToArray();
+                ViewBag.MostrarAlertaPermisos = false;
 
                 return View(inventariosConHistorial);
             }

@@ -304,7 +304,7 @@
         // ========================================
         window.userConfig = {
             userId: @(ViewBag.UsuarioId ?? 0),
-            userName: '@Html.Raw(ViewBag.UsuarioNombre ?? "Usuario")',
+            userName: @Html.Raw(Json.Serialize(ViewBag.UsuarioNombre ?? "Usuario")),
             roles: @Html.Raw(Json.Serialize(ViewBag.UsuarioRoles ?? new string[0]))
         };
 
