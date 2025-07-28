@@ -198,6 +198,32 @@ public class AuthController : ControllerBase
         // Generar el token JWT para la sesión
         var token = GenerarToken(usuario);
 
+        // ✅ REGISTRAR SESIÓN EN LA BASE DE DATOS
+        try
+        {
+            // Generar hash del token para almacenamiento seguro
+            var tokenHash = BCrypt.Net.BCrypt.HashString(token.Substring(token.Length - 20)); // Usamos los últimos 20 caracteres
+
+            var sesion = new SesionUsuario
+            {
+                UsuarioId = usuario.UsuarioId,
+                FechaHoraInicio = DateTime.Now,
+                TokenHash = tokenHash,
+                EstaActiva = true,
+                FechaInvalidacion = null
+            };
+
+            _context.SesionUsuario.Add(sesion);
+            await _context.SaveChangesAsync();
+
+            _logger?.LogInformation($"✅ Sesión registrada para usuario {usuario.Email} (ID: {usuario.UsuarioId})");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, $"❌ Error registrando sesión para usuario {usuario.Email}");
+            // No fallar el login por esto, solo registrar el error
+        }
+
         return Ok(new
         {
             Message = "Login exitoso.",
