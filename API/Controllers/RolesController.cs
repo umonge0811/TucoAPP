@@ -281,6 +281,9 @@ public class RolesController : ControllerBase
                 }
 
                 await _context.SaveChangesAsync();
+
+                // ✅ LIMPIAR CACHÉ DE PERMISOS INMEDIATAMENTE
+                await LimpiarCachePermisos(usuariosConRol);
             }
 
             // Registrar en el historial la actualización exitosa
@@ -606,4 +609,31 @@ public class RolesController : ControllerBase
         }
     }
     #endregion
+
+    /// <summary>
+    /// Limpia el caché de permisos para usuarios específicos
+    /// </summary>
+    private async Task LimpiarCachePermisos(List<int> usuarioIds)
+    {
+        try
+        {
+            // Llamar al API de permisos para limpiar caché específico
+            var requestData = new { usuarioIds = usuarioIds };
+            
+            var response = await _httpClient.PostAsJsonAsync("/api/permisos/limpiar-cache", requestData);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("✅ Caché de permisos limpiado para {Count} usuarios", usuarioIds.Count);
+            }
+            else
+            {
+                _logger.LogWarning("⚠️ No se pudo limpiar el caché de permisos");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Error al limpiar caché de permisos");
+        }
+    }
 }
