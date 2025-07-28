@@ -843,7 +843,7 @@ namespace API.Controllers
 
         [HttpGet("proformas")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<FacturaDTO>>> ObtenerProformas(
+        public async Task<IActionResult> ObtenerProformas(
             [FromQuery] string? estado = null,
             [FromQuery] string? busquedaGeneral = null,
             [FromQuery] string? busqueda = null,
