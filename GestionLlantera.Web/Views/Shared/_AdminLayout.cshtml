@@ -85,28 +85,28 @@
                     </li>
 
                     <!-- ✅ VENTAS - Solo si puede facturar -->
-                    <li class="nav-item" asp-permiso="Ver Facturación">
+                    <li class="nav-item" asp-permiso="Menu_Ventas">
                         <a class="nav-link" data-bs-toggle="collapse" href="#ventasMenu">
                             <i class="bi bi-cart"></i> Ventas
                         </a>
                         <div class="collapse submenu" id="ventasMenu">
                             <ul class="nav flex-column">
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_Clientes">
                                     <a class="nav-link" asp-controller="Clientes" asp-action="Index">
                                         <i class="bi bi-people"></i> Clientes
                                     </a>
                                 </li>
-                                <li class="nav-item" asp-permiso="Ver Facturación">
+                                <li class="nav-item" asp-permiso="Sub_Menu_Facturación">
                                     <a class="nav-link" asp-controller="Facturacion" asp-action="Index">
                                         <i class="bi bi-receipt-cutoff"></i> Facturación
                                     </a>
                                 </li>
-                                <li class="nav-item" asp-permiso="Ver Reportes">
+                                <li class="nav-item" asp-permiso="Sub_Menu_ReportesVentas">
                                     <a class="nav-link" asp-controller="Ventas" asp-action="Reportes">
                                         <i class="bi bi-graph-up"></i> Reportes de Ventas
                                     </a>
                                 </li>
-                                <li class="nav-item" asp-permiso="Ver Facturación">
+                                <li class="nav-item" asp-permiso="Sub_Menu_EntregasPendientes">
                                     <a class="nav-link" asp-controller="Facturacion" asp-action="EntregasPendientes">
                                         <i class="bi bi-truck"></i> Entregas Pendientes
                                     </a>
@@ -116,18 +116,18 @@
                     </li>
 
                     <!-- ✅ PROVEEDORES Y PEDIDOS - Módulo separado -->
-                    <li class="nav-item" asp-permiso="Ver Facturación">
+                    <li class="nav-item" asp-permiso="Menu_Proveedores">
                         <a class="nav-link" data-bs-toggle="collapse" href="#proveedoresMenu">
                             <i class="bi bi-truck"></i> Proveedores y Pedidos
                         </a>
                         <div class="collapse submenu" id="proveedoresMenu">
                             <ul class="nav flex-column">
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_GestionProveedores">
                                     <a class="nav-link" asp-controller="Proveedores" asp-action="Index">
                                         <i class="bi bi-building"></i> Gestión de Proveedores
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_PedidosProveedores">
                                     <a class="nav-link" asp-controller="Proveedores" asp-action="PedidosProveedor">
                                         <i class="bi bi-box-arrow-in-down"></i> Pedidos a Proveedores
                                     </a>
@@ -137,18 +137,18 @@
                     </li>
 
                     <!-- ✅ REPORTES - Solo si puede ver reportes -->
-                    <li class="nav-item" asp-permiso="Ver Reportes">
+                    <li class="nav-item" asp-permiso="Menu_Reportes">
                         <a class="nav-link" data-bs-toggle="collapse" href="#reportesMenu">
                             <i class="bi bi-graph-up"></i> Reportes
                         </a>
                         <div class="collapse submenu" id="reportesMenu">
                             <ul class="nav flex-column">
-                                <li class="nav-item" asp-permiso="Ver Reportes">
+                                <li class="nav-item" asp-permiso="Sub_Menu_ExportarExcel">
                                     <a class="nav-link" asp-controller="Inventario" asp-action="ExportarExcel">
                                         <i class="bi bi-file-excel"></i> Exportar Excel
                                     </a>
                                 </li>
-                                <li class="nav-item" asp-permiso="Ver Reportes">
+                                <li class="nav-item" asp-permiso="Sub_Menu_ExportarPDF">
                                     <a class="nav-link" asp-controller="Inventario" asp-action="ExportarPDF">
                                         <i class="bi bi-file-pdf"></i> Exportar PDF
                                     </a>
@@ -157,7 +157,7 @@
                         </div>
                     </li>
 
-                    <li class="nav-item" asp-permiso="Gestion Completa">
+                    <li class="nav-item" asp-permiso="Menu_Configuración">
 
                         <a class="nav-link" data-bs-toggle="collapse" href="#configMenu">
                             <i class="bi bi-gear"></i> Configuración
@@ -165,13 +165,13 @@
                         <div class="collapse submenu" id="configMenu">
                             <ul class="nav flex-column">
                                 <!-- Roles y Permisos - Solo gestión completa -->
-                                <li class="nav-item" asp-permiso="Gestion Completa">
+                                <li class="nav-item" asp-permiso="Sub_Menu_RolesPermisos">
                                     <a class="nav-link" asp-controller="Configuracion" asp-action="RolesPermisos">
                                         <i class="bi bi-shield-check"></i> Roles y Permisos
                                     </a>
                                 </li>
                                 <!-- Gestión de Usuarios - Permiso específico -->
-                                <li class="nav-item" asp-permiso="Gestion Usuarios">
+                                <li class="nav-item" asp-permiso="Sub_Menu_GestionUsuarios">
                                     <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
                                         <i class="bi bi-people"></i> Gestión de Usuarios
                                     </a>
@@ -182,20 +182,20 @@
                     </li>
                     <!-- herramientas de administración -->
                     <!-- ✅ HERRAMIENTAS DE SISTEMA - Solo gestión completa -->
-                    <li class="nav-item" asp-permiso="Gestion Completa">
+                    <li class="nav-item" asp-permiso="Menu_HerramientasSistema">
                         <a class="nav-link" data-bs-toggle="collapse" href="#herramientasMenu">
                             <i class="bi bi-tools"></i> Herramientas de Sistema
                         </a>
                         <div class="collapse submenu" id="herramientasMenu">
                             <ul class="nav flex-column">
                                 <!-- Diagnóstico de Permisos -->
-                                <li class="nav-item" asp-permiso="Gestion Completa">
+                                <li class="nav-item" asp-permiso="Sub_Menu_DiagnosticoPermisos">
                                     <a class="nav-link" asp-controller="DiagnosticoPermisos" asp-action="Index">
                                         <i class="bi bi-shield-check"></i> Diagnóstico de Permisos
                                     </a>
                                 </li>
                                 <!-- Logs del Sistema (si existe) -->
-                                <li class="nav-item" asp-permiso="Gestion Completa">
+                                <li class="nav-item" asp-permiso="Sub_Menu_LogsSistema">
                                     <a class="nav-link" asp-controller="Sistema" asp-action="Logs">
                                         <i class="bi bi-journal-text"></i> Logs del Sistema
                                     </a>
