@@ -600,7 +600,7 @@ public class RolesController : ControllerBase
             if (resultado)
             {
                 // ✅ INVALIDAR SESIONES DE USUARIOS CON ESTE ROL
-                var usuariosConRol = await _context.UsuarioRolREs
+                var usuariosConRol = await _context.UsuarioRoles
                     .Where(ur => ur.RolId == rolId)
                     .Select(ur => ur.UsuarioId)
                     .ToListAsync();
