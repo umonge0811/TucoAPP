@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.ServicesAPI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -28,15 +28,17 @@ public class UsuariosController : ControllerBase
     private HttpClient _httpClient;
     private readonly ILogger<UsuariosController> _logger;
     private readonly IConfiguration _configuration;
+    private readonly API.ServicesAPI.Interfaces.IPermisosService _permisosService;
 
-
-    public UsuariosController(TucoContext context, EmailService emailService, IHttpClientFactory httpClientFactory, ILogger<UsuariosController> logger, IConfiguration configuration)
+    public UsuariosController(TucoContext context, EmailService emailService, IHttpClientFactory httpClientFactory, ILogger<UsuariosController> logger, IConfiguration configuration,
+        API.ServicesAPI.Interfaces.IPermisosService permisosService)
     {
         _context = context;
         _emailService = emailService; // Inyectar EmailService
         _httpClient = httpClientFactory.CreateClient("TucoApi");
         _logger = logger;
         _configuration = configuration;
+        _permisosService = permisosService;
     }
 
 

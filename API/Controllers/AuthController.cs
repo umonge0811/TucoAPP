@@ -198,13 +198,24 @@ public class AuthController : ControllerBase
         // Generar el token JWT para la sesión
         var token = GenerarToken(usuario);
 
-        // ✅ REGISTRAR SESIÓN EN LA BASE DE DATOS
+        // ✅ LIMPIAR SESIONES INACTIVAS ANTERIORES Y REGISTRAR NUEVA SESIÓN
         try
         {
+            // Primero, marcar como inactivas las sesiones anteriores del usuario
+            var sesionesAnteriores = await _context.SesionUsuario
+                .Where(s => s.UsuarioId == usuario.UsuarioId && s.EstaActiva == true)
+                .ToListAsync();
+
+            foreach (var sesionAnterior in sesionesAnteriores)
+            {
+                sesionAnterior.EstaActiva = false;
+                sesionAnterior.FechaInvalidacion = DateTime.Now;
+            }
+
             // Generar hash del token para almacenamiento seguro
             var tokenHash = BCrypt.Net.BCrypt.HashString(token.Substring(token.Length - 20)); // Usamos los últimos 20 caracteres
 
-            var sesion = new SesionUsuario
+            var nuevaSesion = new SesionUsuario
             {
                 UsuarioId = usuario.UsuarioId,
                 FechaHoraInicio = DateTime.Now,
@@ -213,10 +224,10 @@ public class AuthController : ControllerBase
                 FechaInvalidacion = null
             };
 
-            _context.SesionUsuario.Add(sesion);
+            _context.SesionUsuario.Add(nuevaSesion);
             await _context.SaveChangesAsync();
 
-            _logger?.LogInformation($"✅ Sesión registrada para usuario {usuario.Email} (ID: {usuario.UsuarioId})");
+            _logger?.LogInformation($"✅ Sesión registrada para usuario {usuario.Email} (ID: {usuario.UsuarioId}). Sesiones anteriores invalidadas: {sesionesAnteriores.Count}");
         }
         catch (Exception ex)
         {

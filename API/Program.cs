@@ -183,8 +183,8 @@ app.UseRouting();
 app.UseCors("AllowAll");
 app.UseAuthentication();
 
-// ✅ MIDDLEWARE PARA VALIDAR SESIONES ACTIVAS
-app.UseMiddleware<API.Middleware.ValidarSesionMiddleware>();
+// ✅ AGREGAR MIDDLEWARE DE VALIDACIÓN DE SESIONES
+app.UseValidarSesion();
 
 app.UseAuthorization();
 
