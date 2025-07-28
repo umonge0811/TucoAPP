@@ -26,7 +26,7 @@ namespace API.ServicesAPI
                 _logger.LogInformation("🔒 Invalidando todas las sesiones del usuario {UsuarioId}", usuarioId);
 
                 // 1. Marcar tokens como invalidados en memoria (temporal)
-                var sesionesActivas = await _context.SesionUsuario
+                var sesionesActivas = await _context.SesionUsuarios
                     .Where(s => s.UsuarioId == usuarioId && s.EstaActiva)
                     .ToListAsync();
 

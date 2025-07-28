@@ -547,12 +547,6 @@ public partial class TucoContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.UsuarioId).HasColumnName("UsuarioID");
-            entity.Property(e => e.Token)
-                .HasMaxLength(500);
-            entity.Property(e => e.EstaActiva)
-                .HasDefaultValue(true);
-            entity.Property(e => e.FechaInvalidacion)
-                .HasColumnType("datetime");
 
             entity.HasOne(d => d.Usuario).WithMany(p => p.SesionUsuarios)
                 .HasForeignKey(d => d.UsuarioId)
