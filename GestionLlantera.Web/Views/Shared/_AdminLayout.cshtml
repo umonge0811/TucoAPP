@@ -50,34 +50,34 @@
                         </a>
                     </li>
                     @* <!-- INVENTARIOS --> *@
-                    <li class="nav-item" asp-permiso="Modificar Inventario">
+                    <li class="nav-item" asp-permiso="Menu Inventario">
                         <a class="nav-link" data-bs-toggle="collapse" href="#inventarioMenu">
                             <i class="bi bi-box-seam"></i> Inventario
                         </a>
                         <div class="collapse submenu" id="inventarioMenu">
                             <ul class="nav flex-column">
                                 <!-- Ver Productos - Permiso base de inventario -->
-                                <li class="nav-item" asp-permiso="Modificar Inventario">
+                                <li class="nav-item" asp-permiso="Sub_Menu_VerProductos">
                                     <a class="nav-link" asp-controller="Inventario" asp-action="Index">
                                         <i class="bi bi-list-ul"></i> Ver Productos
                                     </a>
                                 </li>
                                 <!-- Agregar Producto - Permiso específico -->
-                                <li class="nav-item" asp-permiso="Editar Productos">
+                                <li class="nav-item" asp-permiso="Sub_Menu_AgregarProductos">
                                     <a class="nav-link" asp-controller="Inventario" asp-action="AgregarProducto">
                                         <i class="bi bi-plus-lg"></i> Agregar Producto
                                     </a>
                                 </li>
                                 <!-- Programar Inventario - Permiso específico -->
-                                <li class="nav-item" asp-permiso="Programar Inventario">
+                                <li class="nav-item" asp-permiso="Sub_Menu_ProgramarInventario">
                                     <a class="nav-link" asp-controller="Inventario" asp-action="ProgramarInventario">
                                         <i class="bi bi-calendar-check"></i> Programar Inventario
                                     </a>
                                 </li>
                                 <!-- Historial de Inventarios - Para usuarios asignados -->
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_HistorialInventario">
                                     <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
-                                        <i class="bi bi-clock-history"></i> Historial de Inventarios
+                                        <i class="bi bi-clock-history"></i> Historial de Inventarios TomaInventario
                                     </a>
                                 </li>
                             </ul>
