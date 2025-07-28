@@ -303,8 +303,8 @@
         // CONFIGURACIÓN GLOBAL DE USUARIO
         // ========================================
         window.userConfig = {
-            userId: @ViewBag.UsuarioId,
-            userName: '@ViewBag.UsuarioNombre',
+            userId: @(ViewBag.UsuarioId ?? 0),
+            userName: '@Html.Raw(ViewBag.UsuarioNombre ?? "Usuario")',
             roles: @Html.Raw(Json.Serialize(ViewBag.UsuarioRoles ?? new string[0]))
         };
 
