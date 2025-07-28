@@ -799,7 +799,7 @@ async function guardarRol() {
             nombreRol: nombreRol,
             descripcionRol: descripcionRol,
             permisoIds: permisoIds
-        };```text
+        };
 
         console.log('Enviando petición POST a /Configuracion/crear-rol');
         console.log('Datos a enviar:', dataRol);
@@ -820,16 +820,10 @@ async function guardarRol() {
             throw new Error('Error al guardar el rol');
         }
 
-        const data = await response.json();
-
-        toastr.success('Rol creado exitosamente');
+        // Cerrar el modal y refrescar tablas
         modalRol.hide();
         await refrescarTablas();
-
-        // ✅ REGENERAR JWT SI ES NECESARIO (para rol recién creado)
-        if (data.rolId) {
-            await regenerarJWTSiEsNecesario(data.rolId);
-        }
+        toastr.success('Rol creado exitosamente');
 
     } catch (error) {
         console.error('Error detallado en guardarRol:', error);
@@ -897,11 +891,10 @@ async function actualizarRol() {
         modalRol.hide();
 
         // Asegurar que la tabla se actualice completamente con los datos nuevos
-        toastr.success('Rol actualizado exitosamente');
         await refrescarTablas();
 
-        // ✅ REGENERAR JWT SI ES NECESARIO
-        await regenerarJWTSiEsNecesario(rolId);
+        // Mostrar mensaje de éxito
+        toastr.success('Rol actualizado exitosamente');
 
     } catch (error) {
         console.error('Error detallado en actualizarRol:', error);
@@ -1096,42 +1089,6 @@ window.eliminarPermiso = async function eliminarPermiso(permisoId) {
     } catch (error) {
         console.error('Error:', error);
         Swal.fire('Error', error.message || 'Error al eliminar el permiso', 'error');
-    }
-}
-
-// ✅ Función para regenerar el JWT (simulada)
-async function regenerarJWTSiEsNecesario(rolId) {
-    console.log(`REGENERANDO JWT para el rol ${rolId}`);
-
-    // Aquí iría la lógica real para invalidar el token actual y forzar la regeneración
-    // Esto podría implicar llamar a un endpoint en el backend que realice esta acción
-
-    try {
-        const response = await fetch('/Configuracion/Refresh-token', { // Reemplaza con la URL correcta
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
-            },
-            body: JSON.stringify({ rolId: rolId }) // Enviar el rolId si es necesario
-        });
-
-        if (!response.ok) {
-            console.error('Error al solicitar la regeneración del token');
-            return;
-        }
-
-        const data = await response.json();
-
-        if (data.success) {
-            console.log('Token regenerado exitosamente');
-            mostrarNotificacion('Su sesión se ha actualizado. Por favor, inicie sesión nuevamente.', 'success');
-        } else {
-            console.warn('No fue necesario regenerar el token o hubo un problema:', data.message);
-        }
-
-    } catch (error) {
-        console.error('Error al comunicarse con el servidor para regenerar el token:', error);
     }
 }
 

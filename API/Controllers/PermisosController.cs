@@ -472,36 +472,6 @@ public class PermisosController : ControllerBase
             return StatusCode(500, new { message = "Error al limpiar caché" });
         }
     }
-
-    /// <summary>
-    /// Notifica que los permisos de un rol han sido actualizados
-    /// </summary>
-    [HttpPost("notificar-actualizacion-rol/{rolId}")]
-    [Authorize]
-    public async Task<IActionResult> NotificarActualizacionRol(int rolId)
-    {
-        try
-        {
-            // Obtener usuarios con este rol
-            var usuariosConRol = await _context.UsuarioRoles
-                .Where(ur => ur.RolId == rolId)
-                .Select(ur => ur.UsuarioId)
-                .ToListAsync();
-
-            _logger.LogInformation($"✅ Notificación enviada: {usuariosConRol.Count} usuarios necesitan actualizar sus tokens por cambios en rol {rolId}");
-
-            return Ok(new { 
-                message = "Notificación enviada", 
-                usuariosAfectados = usuariosConRol.Count,
-                usuarioIds = usuariosConRol
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al notificar actualización de rol");
-            return StatusCode(500, new { message = "Error al notificar actualización" });
-        }
-    }
     #endregion
 }
 
