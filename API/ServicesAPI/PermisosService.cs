@@ -3,6 +3,7 @@ using API.ServicesAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
+using tuco.Clases.Models;
 
 namespace API.ServicesAPI
 {
@@ -381,5 +382,98 @@ namespace API.ServicesAPI
         }
 
         // ✅ NUEVOS MÉTODOS PARA VERIFICACIÓN DE PERMISOS DEL USUARIO
+
+        /// <summary>
+        /// Asigna un permiso específico a un usuario
+        /// </summary>
+        public async Task<bool> AsignarPermisoAUsuario(int usuarioId, int permisoId)
+        {
+            try
+            {
+                // Verificar si el usuario existe
+                var usuario = await _context.Usuarios.FindAsync(usuarioId);
+                if (usuario == null)
+                {
+                    _logger.LogWarning("Usuario {UserId} no encontrado", usuarioId);
+                    return false;
+                }
+
+                // Verificar si el permiso existe
+                var permiso = await _context.Permisos.FindAsync(permisoId);
+                if (permiso == null)
+                {
+                    _logger.LogWarning("Permiso {PermisoId} no encontrado", permisoId);
+                    return false;
+                }
+
+                // Verificar si el usuario ya tiene el permiso
+                var existeRelacion = await _context.UsuarioPermiso
+                    .AnyAsync(up => up.UsuarioID == usuarioId && up.PermisoID == permisoId);
+
+                if (existeRelacion)
+                {
+                    _logger.LogInformation("Usuario {UserId} ya tiene el permiso {PermisoId}", usuarioId, permisoId);
+                    return true; // Ya tiene el permiso, consideramos exitoso
+                }
+
+                // Crear la relación usuario-permiso
+                var usuarioPermiso = new tuco.Clases.Models.UsuarioPermisoRE
+                {
+                    UsuarioID = usuarioId,
+                    PermisoID = permisoId
+                };
+
+                _context.UsuarioPermiso.Add(usuarioPermiso);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Permiso {PermisoId} ({PermisoNombre}) asignado al usuario {UserId}", 
+                    permisoId, permiso.NombrePermiso, usuarioId);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al asignar permiso {PermisoId} al usuario {UserId}", permisoId, usuarioId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Quita un permiso específico de un usuario
+        /// </summary>
+        public async Task<bool> QuitarPermisoDeUsuario(int usuarioId, int permisoId)
+        {
+            try
+            {
+                // Buscar la relación usuario-permiso
+                var usuarioPermiso = await _context.UsuarioPermiso
+                    .FirstOrDefaultAsync(up => up.UsuarioID == usuarioId && up.PermisoID == permisoId);
+
+                if (usuarioPermiso == null)
+                {
+                    _logger.LogWarning("No se encontró la relación usuario-permiso para Usuario {UserId} y Permiso {PermisoId}", 
+                        usuarioId, permisoId);
+                    return false;
+                }
+
+                // Obtener información del permiso para logging
+                var permiso = await _context.Permisos.FindAsync(permisoId);
+                var nombrePermiso = permiso?.NombrePermiso ?? "Desconocido";
+
+                // Eliminar la relación
+                _context.UsuarioPermiso.Remove(usuarioPermiso);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Permiso {PermisoId} ({PermisoNombre}) quitado del usuario {UserId}", 
+                    permisoId, nombrePermiso, usuarioId);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al quitar permiso {PermisoId} del usuario {UserId}", permisoId, usuarioId);
+                return false;
+            }
+        }
     }
 }
