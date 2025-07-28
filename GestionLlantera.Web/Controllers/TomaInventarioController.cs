@@ -860,7 +860,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Completa un inventario
+        /// Completa un inventario```tool_code
         /// </summary>
         [HttpPost]
         [Route("TomaInventario/CompletarInventario/{inventarioId}")]
@@ -924,12 +924,25 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
-                // ✅ VERIFICAR PERMISOS
+                // 🔒 VERIFICACIÓN DE PERMISOS PARA HISTORIAL
+
+                // ✅ VERIFICAR QUE TENGA UNO DE LOS DOS PERMISOS
+                var puedeVerHistorial = await this.TienePermisoAsync("Ver Historial Inventarios");
                 var puedeVerHistorialCompleto = await this.TienePermisoAsync("Ver Historial Inventarios Completo");
+
+                // El usuario debe tener AL MENOS UNO de los dos permisos
+                if (!puedeVerHistorial && !puedeVerHistorialCompleto)
+                {
+                    _logger.LogWarning("🚫 Usuario {Usuario} sin permisos para ver historial de inventarios", User.Identity?.Name);
+                    TempData["Error"] = "No tienes permisos para ver el historial de inventarios.";
+                    return RedirectToAction("Index", "Dashboard");
+                }
+
                 var usuarioId = ObtenerIdUsuarioActual();
 
                 _logger.LogInformation("🔐 === PERMISOS DE HISTORIAL ===");
                 _logger.LogInformation("🔐 Usuario ID: {UsuarioId}", usuarioId);
+                _logger.LogInformation("🔐 Puede ver historial básico: {PuedeVer}", puedeVerHistorial);
                 _logger.LogInformation("🔐 Puede ver historial completo: {PuedeVer}", puedeVerHistorialCompleto);
 
                 List<InventarioProgramadoDTO> inventarios;
