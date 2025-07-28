@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 using tuco.Clases.Models;
+using Tuco.Clases.Models;
 
 namespace API.ServicesAPI
 {
@@ -417,7 +418,7 @@ namespace API.ServicesAPI
                 }
 
                 // Crear la relación usuario-permiso
-                var usuarioPermiso = new tuco.Clases.Models.UsuarioPermisoRE
+                var usuarioPermiso = new UsuarioPermisoRE
                 {
                     UsuarioID = usuarioId,
                     PermisoID = permisoId
