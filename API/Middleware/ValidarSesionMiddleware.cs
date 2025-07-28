@@ -74,13 +74,4 @@ namespace API.Middleware
             return builder.UseMiddleware<ValidarSesionMiddleware>();
         }
     }
-
-    // ✅ EXTENSIÓN PARA USAR EL MIDDLEWARE
-    public static class ValidarSesionMiddlewareExtensions
-    {
-        public static IApplicationBuilder UseValidarSesion(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<ValidarSesionMiddleware>();
-        }
-    }
 }
