@@ -435,4 +435,133 @@ public class PermisosController : ControllerBase
         }
     }
     #endregion
+
+    [HttpPost("asignar-permiso-usuario")]
+    public async Task<IActionResult> AsignarPermisoAUsuario([FromBody] AsignarPermisoRequest request)
+    {
+        try
+        {
+            var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.UsuarioId == request.UsuarioId);
+            if (!usuarioExiste)
+            {
+                return BadRequest(new { message = "Usuario no encontrado" });
+            }
+
+            var permisoExiste = await _context.Permisos.AnyAsync(p => p.PermisoId == request.PermisoId);
+            if (!permisoExiste)
+            {
+                return BadRequest(new { message = "Permiso no encontrado" });
+            }
+
+            var permisoYaAsignado = await _context.UsuarioPermisoREs
+                .AnyAsync(up => up.UsuarioId == request.UsuarioId && up.PermisoId == request.PermisoId);
+
+            if (permisoYaAsignado)
+            {
+                return BadRequest(new { message = "El permiso ya está asignado al usuario" });
+            }
+
+            var usuarioPermiso = new UsuarioPermisoRE
+            {
+                UsuarioId = request.UsuarioId,
+                PermisoId = request.PermisoId
+            };
+
+            _context.UsuarioPermisoREs.Add(usuarioPermiso);
+            await _context.SaveChangesAsync();
+
+            // ✅ REFRESCAR CACHÉ DE PERMISOS
+            await _permisosService.RefrescarCachePermisosAsync();
+
+            return Ok(new { message = "Permiso asignado correctamente" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al asignar permiso al usuario");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    [HttpDelete("quitar-permiso-usuario")]
+    public async Task<IActionResult> QuitarPermisoAUsuario([FromBody] AsignarPermisoRequest request)
+    {
+        try
+        {
+            var usuarioPermiso = await _context.UsuarioPermisoREs
+                .FirstOrDefaultAsync(up => up.UsuarioId == request.UsuarioId && up.PermisoId == request.PermisoId);
+
+            if (usuarioPermiso == null)
+            {
+                return BadRequest(new { message = "El permiso no está asignado al usuario" });
+            }
+
+            _context.UsuarioPermisoREs.Remove(usuarioPermiso);
+            await _context.SaveChangesAsync();
+
+            // ✅ REFRESCAR CACHÉ DE PERMISOS
+            await _permisosService.RefrescarCachePermisosAsync();
+
+            return Ok(new { message = "Permiso removido correctamente" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al quitar permiso al usuario");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+
+    [HttpGet("mis-permisos")]
+    [Authorize]
+    public async Task<IActionResult> ObtenerMisPermisos()
+    {
+        try
+        {
+            var userId = _permisosService.ObtenerUsuarioId(User);
+            if (userId == null)
+            {
+                return BadRequest(new { message = "No se pudo obtener el ID del usuario" });
+            }
+
+            var permisos = await _permisosService.ObtenerPermisosUsuarioAsync(userId.Value);
+
+            return Ok(new
+            {
+                permisos = permisos,
+                usuario = User.Identity?.Name ?? "Anónimo",
+                userId = userId.Value,
+                timestamp = DateTime.Now
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener permisos del usuario");
+            return StatusCode(500, new { message = "Error al obtener permisos" });
+        }
+    }
+
+    [HttpPost("refrescar-mis-permisos")]
+    [Authorize]
+    public async Task<IActionResult> RefrescarMisPermisos()
+    {
+        try
+        {
+            var userId = _permisosService.ObtenerUsuarioId(User);
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "Usuario no identificado" });
+            }
+
+            // Limpiar caché específico del usuario
+            await _permisosService.RefrescarCachePermisosAsync();
+
+            _logger.LogInformation("Permisos refrescados para usuario {UserId}", userId);
+
+            return Ok(new { message = "Permisos refrescados correctamente" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al refrescar permisos del usuario");
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
 }
