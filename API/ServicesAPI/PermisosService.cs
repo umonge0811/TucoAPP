@@ -14,7 +14,7 @@ namespace API.ServicesAPI
         private readonly TucoContext _context;
         private readonly IMemoryCache _cache;
         private readonly ILogger<PermisosService> _logger;
-        private readonly TimeSpan _cacheExpiration = TimeSpan.FromSeconds(5); // Cache por 5 segundos para desarrollo
+        private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(2); // Cache por 2 minutos
 
         public PermisosService(TucoContext context, IMemoryCache cache, ILogger<PermisosService> logger)
         {

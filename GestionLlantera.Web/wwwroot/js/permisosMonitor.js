@@ -1,3 +1,4 @@
+
 /**
  * 🔄 SISTEMA DE MONITOREO AUTOMÁTICO DE PERMISOS
  * Este módulo verifica automáticamente si los permisos del usuario han cambiado
@@ -17,10 +18,10 @@ class PermisosMonitor {
      */
     iniciar() {
         this.logger.log('🔄 Iniciando monitoreo de permisos...');
-
+        
         // Verificar inmediatamente
         this.verificarPermisos();
-
+        
         // Configurar verificación periódica
         this.intervalId = setInterval(() => {
             this.verificarPermisos();
@@ -71,10 +72,10 @@ class PermisosMonitor {
             }
 
             const data = await response.json();
-
+            
             if (data.success) {
                 const nuevosPermisos = data.permisos;
-
+                
                 // Comparar con permisos anteriores
                 if (this.permisosActuales && this.hanCambiado(this.permisosActuales, nuevosPermisos)) {
                     this.logger.log('🔄 ¡Permisos han cambiado! Recargando página...');
@@ -82,7 +83,7 @@ class PermisosMonitor {
                 } else {
                     this.logger.debug('✅ Permisos sin cambios');
                 }
-
+                
                 this.permisosActuales = nuevosPermisos;
                 this.ultimaVerificacion = new Date();
             }
@@ -112,7 +113,7 @@ class PermisosMonitor {
     onPermisosActualizados(nuevosPermisos) {
         // Mostrar notificación
         this.mostrarNotificacionCambios();
-
+        
         // Recargar la página después de un breve delay
         setTimeout(() => {
             window.location.reload();
@@ -133,7 +134,7 @@ class PermisosMonitor {
             min-width: 300px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         `;
-
+        
         notificacion.innerHTML = `
             <div class="d-flex align-items-center">
                 <i class="bi bi-arrow-clockwise me-2 text-primary fs-5"></i>
@@ -144,9 +145,9 @@ class PermisosMonitor {
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-
+        
         document.body.appendChild(notificacion);
-
+        
         // Auto-remover después de 3 segundos
         setTimeout(() => {
             if (notificacion.parentNode) {
@@ -170,7 +171,7 @@ class PermisosMonitor {
             });
 
             const data = await response.json();
-
+            
             if (data.success) {
                 this.logger.log('🧹 Caché de permisos limpiado');
                 this.verificarPermisos(); // Verificar inmediatamente
