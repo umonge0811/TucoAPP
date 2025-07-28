@@ -32,7 +32,6 @@ builder.Services.AddScoped<IReportePedidosService, ReportePedidosService>();
 
 // ? SERVICIOS DE PERMISOS - Sistema completamente dinámico
 builder.Services.AddScoped<IPermisosService, PermisosService>();
-builder.Services.AddScoped<ITokenInvalidationService, TokenInvalidationService>();
 builder.Services.AddMemoryCache(); // Para el caché de permisos
 
 // ? HANDLER DE AUTORIZACIÓN DINÁMICO - Mantener para funcionalidades específicas
@@ -73,7 +72,7 @@ builder.Services.AddDbContext<TucoContext>(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
 // ? SERVICIOS NECESARIOS PARA EL SISTEMA DINÁMICO
