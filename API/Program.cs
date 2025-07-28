@@ -73,7 +73,7 @@ builder.Services.AddDbContext<TucoContext>(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
 
 // ? SERVICIOS NECESARIOS PARA EL SISTEMA DINÁMICO
@@ -183,10 +183,6 @@ app.UseRouting();
 // Usar la política de CORS
 app.UseCors("AllowAll");
 app.UseAuthentication();
-
-// Middleware personalizado de validación de tokens
-app.UseMiddleware<API.Middleware.TokenValidationMiddleware>();
-
 app.UseAuthorization();
 
 app.MapControllers();
