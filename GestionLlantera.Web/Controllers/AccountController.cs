@@ -174,6 +174,11 @@ namespace GestionLlantera.Web.Controllers
                         });
 
                     _logger.LogInformation("Login exitoso para usuario: {Email}", model.Email);
+                    
+                    // ✅ LIMPIAR CACHÉ DE PERMISOS AL INICIAR NUEVA SESIÓN
+                    var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
+                    permisosService?.LimpiarCacheCompleto();
+
                     return RedirectToAction("Index", "Dashboard");
                 }
 
@@ -207,7 +212,7 @@ namespace GestionLlantera.Web.Controllers
                         // Llamar al API para invalidar la sesión
                         var client = _httpClientFactory.CreateClient("APIClient");
                         var response = await client.PostAsJsonAsync("/api/auth/logout", new { token = token });
-                        
+
                         if (response.IsSuccessStatusCode)
                         {
                             _logger.LogInformation("Sesión invalidada correctamente en la base de datos");
@@ -238,6 +243,10 @@ namespace GestionLlantera.Web.Controllers
                 {
                     Response.Cookies.Delete(cookie);
                 }
+                
+                // ✅ LIMPIAR CACHÉ DE PERMISOS
+                var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
+                permisosService?.LimpiarCacheCompleto();
 
                 // Redirigir al usuario a la página de inicio
                 return RedirectToAction("Index", "Home");

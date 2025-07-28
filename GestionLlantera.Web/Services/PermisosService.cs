@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using System.Net.Http;
 using System.Text.Json;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
@@ -242,6 +242,16 @@ namespace GestionLlantera.Web.Services
             _permisosCache = null;
             _ultimaActualizacion = DateTime.MinValue;
             await ObtenerPermisosUsuarioActualAsync();
+        }
+
+        /// <summary>
+        /// Limpia completamente el caché de permisos (útil al cambiar de usuario)
+        /// </summary>
+        public void LimpiarCacheCompleto()
+        {
+            _logger.LogInformation("🧹 Limpiando caché completo de permisos");
+            _permisosCache = null;
+            _ultimaActualizacion = DateTime.MinValue;
         }
 
         /// <summary>

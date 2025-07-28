@@ -1,4 +1,4 @@
-﻿using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
+using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Services.Interfaces
 {
@@ -14,6 +14,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<PermisosUsuarioActual> ObtenerPermisosUsuarioActualAsync();
         Task<bool> TienePermisoAsync(string nombrePermiso);
         Task RefrescarPermisosAsync();
+        void LimpiarCacheCompleto();
         PermisosUsuarioActual PermisosActuales { get; }
     }
 

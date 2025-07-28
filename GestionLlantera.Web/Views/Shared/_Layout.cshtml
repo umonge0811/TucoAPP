@@ -81,26 +81,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="~/js/utils/buttonUtils.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="~/js/views/account/recuperarContrasena.js"></script>
 
-    @* Notificaciones *@
-    @if (TempData["Success"] != null)
-    {
-        <script>
-            $(document).ready(function() {
-                toastr.success('@TempData["Success"]');
-            });
-        </script>
-    }
+    <script>
+        // ✅ LIMPIAR CACHÉ LOCAL AL CAMBIAR DE USUARIO
+        window.addEventListener('beforeunload', function() {
+            // Limpiar cualquier caché local del navegador relacionado con permisos
+            if (typeof(Storage) !== "undefined") {
+                localStorage.removeItem('permisosCache');
+                localStorage.removeItem('userPermissions');
+                sessionStorage.clear();
+            }
+        });
 
-    @if (TempData["Error"] != null)
-    {
-        <script>
-            $(document).ready(function() {
-                toastr.error('@TempData["Error"]');
-            });
-        </script>
-    }
+        // ✅ FUNCIÓN GLOBAL PARA FORZAR RECARGA DE PERMISOS
+        window.forzarRecargaPermisos = function() {
+            if (typeof(Storage) !== "undefined") {
+                localStorage.removeItem('permisosCache');
+                localStorage.removeItem('userPermissions');
+                sessionStorage.clear();
+            }
+            location.reload();
+        };
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
