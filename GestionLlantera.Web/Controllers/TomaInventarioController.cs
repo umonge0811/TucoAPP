@@ -934,8 +934,14 @@ namespace GestionLlantera.Web.Controllers
                 if (!puedeVerHistorial && !puedeVerHistorialCompleto)
                 {
                     _logger.LogWarning("🚫 Usuario {Usuario} sin permisos para ver historial de inventarios", User.Identity?.Name);
-                    TempData["Error"] = "No tienes permisos para ver el historial de inventarios.";
-                    return RedirectToAction("Index", "Dashboard");
+                    
+                    // ✅ PREPARAR DATOS PARA LA ALERTA DETALLADA
+                    ViewBag.PermisoRequerido = "Ver Historial Inventarios";
+                    ViewBag.HoraIntento = DateTime.Now.ToString("HH:mm:ss");
+                    ViewBag.UsuarioSinPermiso = User.Identity?.Name ?? "Usuario desconocido";
+                    ViewBag.MostrarAlertaPermisos = true;
+                    
+                    return View("Historial", new List<InventarioProgramadoDTO>());
                 }
 
                 var usuarioId = ObtenerIdUsuarioActual();
