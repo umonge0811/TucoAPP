@@ -350,36 +350,5 @@ namespace API.ServicesAPI
                 _logger.LogError(ex, "Error al invalidar sesiones por cambio en rol {RolId}", rolId);
             }
         }
-
-        // ✅ MÉTODO PARA INVALIDAR SESIONES ACTIVAS CUANDO CAMBIEN PERMISOS
-        public async Task InvalidarSesionesUsuario(int usuarioId, string motivo = "Cambio de permisos")
-        {
-            try
-            {
-                var sesionesActivas = await _context.SesionUsuario
-                    .Where(s => s.UsuarioId == usuarioId && s.EstaActiva)
-                    .ToListAsync();
-
-                if (sesionesActivas.Any())
-                {
-                    foreach (var sesion in sesionesActivas)
-                    {
-                        sesion.EstaActiva = false;
-                        sesion.FechaInvalidacion = DateTime.Now;
-                    }
-
-                    await _context.SaveChangesAsync();
-
-                    _logger.LogInformation($"✅ {sesionesActivas.Count} sesiones invalidadas para usuario {usuarioId}. Motivo: {motivo}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"❌ Error invalidando sesiones del usuario {usuarioId}");
-                throw;
-            }
-        }
-
-        // ✅ NUEVOS MÉTODOS PARA VERIFICACIÓN DE PERMISOS DEL USUARIO
     }
 }
