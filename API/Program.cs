@@ -1,5 +1,6 @@
 using API.Authorization;
 using API.Data;
+using API.Middleware;
 using API.ServicesAPI;
 using API.ServicesAPI.Interfaces;
 using API.Services;
