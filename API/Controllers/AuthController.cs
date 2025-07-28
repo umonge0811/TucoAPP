@@ -723,7 +723,93 @@ public class AuthController : ControllerBase
     }
     #endregion
 
+    #region Invalidar Sesiones Usuario
+    /// <summary>
+    /// Invalida todas las sesiones activas de un usuario específico
+    /// Útil cuando se cambian permisos o se requiere re-autenticación
+    /// </summary>
+    /// <param name="usuarioId">ID del usuario cuyas sesiones se invalidarán</param>
+    /// <returns>Resultado de la operación</returns>
+    [HttpPost("invalidar-sesiones-usuario/{usuarioId}")]
+    [Authorize] // Solo usuarios autenticados pueden hacer esto
+    public async Task<IActionResult> InvalidarSesionesUsuario(int usuarioId)
+    {
+        try
+        {
+            var sesionesActivas = await _context.SesionUsuario
+                .Where(s => s.UsuarioId == usuarioId && s.EstaActiva == true)
+                .ToListAsync();
 
+            if (sesionesActivas.Any())
+            {
+                foreach (var sesion in sesionesActivas)
+                {
+                    sesion.EstaActiva = false;
+                    sesion.FechaInvalidacion = DateTime.Now;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger?.LogInformation($"✅ Invalidadas {sesionesActivas.Count} sesiones para usuario {usuarioId}");
+
+                return Ok(new 
+                { 
+                    Message = $"Se invalidaron {sesionesActivas.Count} sesiones activas",
+                    SesionesInvalidadas = sesionesActivas.Count
+                });
+            }
+
+            return Ok(new { Message = "No se encontraron sesiones activas para invalidar" });
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, $"❌ Error invalidando sesiones para usuario {usuarioId}");
+            return StatusCode(500, new { Message = "Error al invalidar sesiones" });
+        }
+    }
+
+    /// <summary>
+    /// Invalida todas las sesiones activas de todos los usuarios
+    /// Útil para mantenimiento o cambios globales
+    /// </summary>
+    [HttpPost("invalidar-todas-sesiones")]
+    [Authorize] // Solo administradores deberían poder hacer esto
+    public async Task<IActionResult> InvalidarTodasLasSesiones()
+    {
+        try
+        {
+            var sesionesActivas = await _context.SesionUsuario
+                .Where(s => s.EstaActiva == true)
+                .ToListAsync();
+
+            if (sesionesActivas.Any())
+            {
+                foreach (var sesion in sesionesActivas)
+                {
+                    sesion.EstaActiva = false;
+                    sesion.FechaInvalidacion = DateTime.Now;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger?.LogInformation($"✅ Invalidadas TODAS las sesiones ({sesionesActivas.Count} sesiones)");
+
+                return Ok(new 
+                { 
+                    Message = $"Se invalidaron todas las sesiones activas",
+                    SesionesInvalidadas = sesionesActivas.Count
+                });
+            }
+
+            return Ok(new { Message = "No había sesiones activas para invalidar" });
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "❌ Error invalidando todas las sesiones");
+            return StatusCode(500, new { Message = "Error al invalidar sesiones" });
+        }
+    }
+    #endregion
 
 
 }
