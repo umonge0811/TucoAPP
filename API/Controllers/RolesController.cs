@@ -270,7 +270,7 @@ public class RolesController : ControllerBase
 
             if (usuariosConRol.Any())
             {
-                var sesionesActivas = await _context.SesionUsuarios
+                var sesionesActivas = await _context.SesionUsuario
                     .Where(s => usuariosConRol.Contains(s.UsuarioId.Value) && s.EstaActiva)
                     .ToListAsync();
 
