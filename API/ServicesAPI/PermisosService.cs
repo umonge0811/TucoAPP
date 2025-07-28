@@ -273,33 +273,11 @@ namespace API.ServicesAPI
 
                 _cache.Remove("todos_los_permisos");
 
-                _logger.LogInformation("✅ Caché de permisos refrescado para {Count} usuarios", usuarios.Count);
+                _logger.LogInformation("Caché de permisos refrescado para {Count} usuarios", usuarios.Count);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al refrescar caché de permisos");
-            }
-        }
-
-        /// <summary>
-        /// Limpia el caché de permisos para usuarios específicos
-        /// </summary>
-        public void LimpiarCacheUsuarios(List<int> usuarioIds)
-        {
-            try
-            {
-                foreach (var userId in usuarioIds)
-                {
-                    _cache.Remove($"permisos_usuario_{userId}");
-                    _cache.Remove($"roles_usuario_{userId}");
-                    _logger.LogInformation("✅ Cache limpiado para usuario {UserId}", userId);
-                }
-
-                _logger.LogInformation("✅ Caché limpiado para {Count} usuarios específicos", usuarioIds.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error al limpiar caché de usuarios específicos");
+                _logger.LogError(ex, "Error al refrescar caché de permisos");
             }
         }
     }

@@ -281,9 +281,6 @@ public class RolesController : ControllerBase
                     if (response.IsSuccessStatusCode)
                     {
                         Console.WriteLine($"✅ Sesiones invalidadas automáticamente para {usuariosConRol.Count} usuarios");
-                        
-                        // ✅ LIMPIAR CACHÉ DE PERMISOS DESPUÉS DE INVALIDAR SESIONES
-                        await LimpiarCachePermisosUsuarios(usuariosConRol);
                     }
                 }
                 catch (Exception ex)
@@ -643,29 +640,6 @@ public class RolesController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ Error al limpiar caché de permisos");
-        }
-    }
-
-    /// <summary>
-    /// Limpia el caché de permisos directamente en memoria para usuarios específicos
-    /// </summary>
-    private async Task LimpiarCachePermisosUsuarios(List<int> usuarioIds)
-    {
-        try
-        {
-            // Obtener el servicio de permisos del contenedor DI
-            var permisosService = HttpContext.RequestServices.GetService<API.ServicesAPI.Interfaces.IPermisosService>();
-            
-            if (permisosService != null)
-            {
-                // Limpiar caché específico de los usuarios afectados
-                permisosService.LimpiarCacheUsuarios(usuarioIds);
-                _logger.LogInformation("✅ Caché de permisos limpiado directamente para {Count} usuarios", usuarioIds.Count);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "❌ Error al limpiar caché de permisos directamente");
         }
     }
 }
