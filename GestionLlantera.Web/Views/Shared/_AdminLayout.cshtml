@@ -77,7 +77,7 @@
                                 <!-- Historial de Inventarios - Para usuarios asignados -->
                                 <li class="nav-item" asp-permiso="Sub_Menu_HistorialInventario">
                                     <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
-                                        <i class="bi bi-clock-history"></i> Historial de Inventarios TomaInventario
+                                        <i class="bi bi-clock-history"></i> Historial de Inventarios
                                     </a>
                                 </li>
                             </ul>
@@ -158,7 +158,6 @@
                     </li>
 
                     <li class="nav-item" asp-permiso="Menu_Configuración">
-
                         <a class="nav-link" data-bs-toggle="collapse" href="#configMenu">
                             <i class="bi bi-gear"></i> Configuración
                         </a>
@@ -178,9 +177,7 @@
                                 </li>
                             </ul>
                         </div>
-
                     </li>
-                    <!-- herramientas de administración -->
                     <!-- ✅ HERRAMIENTAS DE SISTEMA - Solo gestión completa -->
                     <li class="nav-item" asp-permiso="Menu_HerramientasSistema">
                         <a class="nav-link" data-bs-toggle="collapse" href="#herramientasMenu">
@@ -339,30 +336,29 @@
                             <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     </li>
-                    <!-- INVENTARIOS, en la sección del mobileSidebar -->
-
-                    <li class="nav-item">
+                    <!-- INVENTARIOS MÓVIL -->
+                    <li class="nav-item" asp-permiso="Menu_Inventario">
                         <a class="nav-link" data-bs-toggle="collapse" href="#inventarioMenuMobile">
                             <i class="bi bi-box-seam"></i> Inventario
                         </a>
                         <div class="collapse submenu" id="inventarioMenuMobile">
                             <ul class="nav flex-column">
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_VerProductos">
                                     <a class="nav-link" asp-controller="Inventario" asp-action="Index">
                                         <i class="bi bi-list-ul"></i> Ver Productos
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_AgregarProductos">
                                     <a class="nav-link" asp-controller="Inventario" asp-action="AgregarProducto">
                                         <i class="bi bi-plus-lg"></i> Agregar Producto
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" asp-controller="Inventario" asp-action="Programaciones">
-                                        <i class="bi bi-calendar-check"></i> Inventarios Programados
+                                <li class="nav-item" asp-permiso="Sub_Menu_ProgramarInventario">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="ProgramarInventario">
+                                        <i class="bi bi-calendar-check"></i> Programar Inventario
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_HistorialInventario">
                                     <a class="nav-link" asp-controller="TomaInventario" asp-action="Historial">
                                         <i class="bi bi-clock-history"></i> Historial de Inventarios
                                     </a>
@@ -371,23 +367,23 @@
                         </div>
                     </li>
                     <!-- VENTAS MÓVIL -->
-                    <li class="nav-item">
+                    <li class="nav-item" asp-permiso="Menu_Ventas">
                         <a class="nav-link" data-bs-toggle="collapse" href="#ventasMenuMobile">
                             <i class="bi bi-cart"></i> Ventas
                         </a>
                         <div class="collapse submenu" id="ventasMenuMobile">
                             <ul class="nav flex-column">
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_Clientes">
                                     <a class="nav-link" asp-controller="Clientes" asp-action="Index">
                                         <i class="bi bi-people"></i> Clientes
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_Facturación">
                                     <a class="nav-link" asp-controller="Facturacion" asp-action="Index">
                                         <i class="bi bi-receipt-cutoff"></i> Facturación
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_EntregasPendientes">
                                     <a class="nav-link" asp-controller="Facturacion" asp-action="EntregasPendientes">
                                         <i class="bi bi-truck"></i> Entregas Pendientes
                                     </a>
@@ -396,18 +392,18 @@
                         </div>
                     </li>
                     <!-- PROVEEDORES Y PEDIDOS MÓVIL -->
-                    <li class="nav-item">
+                    <li class="nav-item" asp-permiso="Menu_Proveedores">
                         <a class="nav-link" data-bs-toggle="collapse" href="#proveedoresMenuMobile">
                             <i class="bi bi-truck"></i> Proveedores y Pedidos
                         </a>
                         <div class="collapse submenu" id="proveedoresMenuMobile">
                             <ul class="nav flex-column">
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_GestionProveedores">
                                     <a class="nav-link" asp-controller="Proveedores" asp-action="Index">
                                         <i class="bi bi-building"></i> Gestión de Proveedores
                                     </a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" asp-permiso="Sub_Menu_PedidosProveedores">
                                     <a class="nav-link" asp-controller="Proveedores" asp-action="PedidosProveedor">
                                         <i class="bi bi-box-arrow-in-down"></i> Pedidos a Proveedores
                                     </a>
@@ -415,28 +411,65 @@
                             </ul>
                         </div>
                     </li>
-                    <!-- En _AdminLayout.cshtml, en la sección del mobileSidebar -->
-                    <li class="nav-item">
-                        @if (User.IsInRole("Administrador"))
-                        {
-                            <a class="nav-link" data-bs-toggle="collapse" href="#configMenuMobile">
-                                <i class="bi bi-gear"></i> Configuración
-                            </a>
-                            <div class="collapse submenu" id="configMenuMobile">
-                                <ul class="nav flex-column">
-                                    <li class="nav-item">
-                                        <a class="nav-link" asp-controller="Configuracion" asp-action="RolesPermisos">
-                                            <i class="bi bi-shield-check"></i> Roles y Permisos
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
-                                            <i class="bi bi-people"></i> Gestión de Usuarios
+                    <!-- REPORTES MÓVIL -->
+                    <li class="nav-item" asp-permiso="Menu_Reportes">
+                        <a class="nav-link" data-bs-toggle="collapse" href="#reportesMenuMobile">
+                            <i class="bi bi-graph-up"></i> Reportes
+                        </a>
+                        <div class="collapse submenu" id="reportesMenuMobile">
+                            <ul class="nav flex-column">
+                                <li class="nav-item" asp-permiso="Sub_Menu_ExportarExcel">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="ExportarExcel">
+                                        <i class="bi bi-file-excel"></i> Exportar Excel
                                     </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        }
+                                </li>
+                                <li class="nav-item" asp-permiso="Sub_Menu_ExportarPDF">
+                                    <a class="nav-link" asp-controller="Inventario" asp-action="ExportarPDF">
+                                        <i class="bi bi-file-pdf"></i> Exportar PDF
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <!-- CONFIGURACIÓN MÓVIL -->
+                    <li class="nav-item" asp-permiso="Menu_Configuración">
+                        <a class="nav-link" data-bs-toggle="collapse" href="#configMenuMobile">
+                            <i class="bi bi-gear"></i> Configuración
+                        </a>
+                        <div class="collapse submenu" id="configMenuMobile">
+                            <ul class="nav flex-column">
+                                <li class="nav-item" asp-permiso="Sub_Menu_RolesPermisos">
+                                    <a class="nav-link" asp-controller="Configuracion" asp-action="RolesPermisos">
+                                        <i class="bi bi-shield-check"></i> Roles y Permisos
+                                    </a>
+                                </li>
+                                <li class="nav-item" asp-permiso="Sub_Menu_GestionUsuarios">
+                                    <a class="nav-link" asp-controller="Usuarios" asp-action="Index">
+                                        <i class="bi bi-people"></i> Gestión de Usuarios
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                    <!-- HERRAMIENTAS DE SISTEMA MÓVIL -->
+                    <li class="nav-item" asp-permiso="Menu_HerramientasSistema">
+                        <a class="nav-link" data-bs-toggle="collapse" href="#herramientasMenuMobile">
+                            <i class="bi bi-tools"></i> Herramientas de Sistema
+                        </a>
+                        <div class="collapse submenu" id="herramientasMenuMobile">
+                            <ul class="nav flex-column">
+                                <li class="nav-item" asp-permiso="Sub_Menu_DiagnosticoPermisos">
+                                    <a class="nav-link" asp-controller="DiagnosticoPermisos" asp-action="Index">
+                                        <i class="bi bi-shield-check"></i> Diagnóstico de Permisos
+                                    </a>
+                                </li>
+                                <li class="nav-item" asp-permiso="Sub_Menu_LogsSistema">
+                                    <a class="nav-link" asp-controller="Sistema" asp-action="Logs">
+                                        <i class="bi bi-journal-text"></i> Logs del Sistema
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
                     </li>
 
                 </ul>
