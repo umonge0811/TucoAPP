@@ -399,8 +399,8 @@ public class PermisosController : ControllerBase
                 return BadRequest(new { message = "Permiso no encontrado" });
             }
 
-            var permisoYaAsignado = await _context.UsuarioPermisoREs
-                .AnyAsync(up => up.UsuarioId == request.UsuarioId && up.PermisoId == request.PermisoId);
+            var permisoYaAsignado = await _context.UsuarioPermiso
+                .AnyAsync(up => up.UsuarioID == request.UsuarioId && up.PermisoID == request.PermisoId);
 
             if (permisoYaAsignado)
             {
@@ -409,11 +409,11 @@ public class PermisosController : ControllerBase
 
             var usuarioPermiso = new UsuarioPermisoRE
             {
-                UsuarioId = request.UsuarioId,
-                PermisoId = request.PermisoId
+                UsuarioID = request.UsuarioId,
+                PermisoID = request.PermisoId
             };
 
-            _context.UsuarioPermisoREs.Add(usuarioPermiso);
+            _context.UsuarioPermiso.Add(usuarioPermiso);
             await _context.SaveChangesAsync();
 
             // ✅ REFRESCAR CACHÉ DE PERMISOS
@@ -433,15 +433,15 @@ public class PermisosController : ControllerBase
     {
         try
         {
-            var usuarioPermiso = await _context.UsuarioPermisoREs
-                .FirstOrDefaultAsync(up => up.UsuarioId == request.UsuarioId && up.PermisoId == request.PermisoId);
+            var usuarioPermiso = await _context.UsuarioPermiso
+                .FirstOrDefaultAsync(up => up.UsuarioID == request.UsuarioId && up.PermisoID == request.PermisoId);
 
             if (usuarioPermiso == null)
             {
                 return BadRequest(new { message = "El permiso no está asignado al usuario" });
             }
 
-            _context.UsuarioPermisoREs.Remove(usuarioPermiso);
+            _context.UsuarioPermiso.Remove(usuarioPermiso);
             await _context.SaveChangesAsync();
 
             // ✅ REFRESCAR CACHÉ DE PERMISOS
@@ -483,6 +483,7 @@ public class PermisosController : ControllerBase
             return StatusCode(500, new { message = "Error interno del servidor" });
         }
     }
+    #endregion
 }
 
 public class AsignarPermisoRequest
