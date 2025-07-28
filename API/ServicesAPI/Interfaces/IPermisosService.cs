@@ -64,15 +64,5 @@ namespace API.ServicesAPI.Interfaces
         /// Invalida todas las sesiones activas de un usuario específico
         /// </summary>
         Task InvalidarSesionesUsuario(int usuarioId, string motivo);
-
-        /// <summary>
-        /// Asigna un permiso específico a un usuario
-        /// </summary>
-        Task<bool> AsignarPermisoAUsuario(int usuarioId, int permisoId);
-
-        /// <summary>
-        /// Quita un permiso específico de un usuario
-        /// </summary>
-        Task<bool> QuitarPermisoDeUsuario(int usuarioId, int permisoId);
     }
 }
