@@ -1,4 +1,5 @@
 
+@model List<dynamic>
 @{
     ViewData["Title"] = "Gestión de Clientes";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -62,20 +63,77 @@
                     </div>
 
                     <!-- Tabla de clientes -->
-                    <div class="table-responsive">
+                    <div class="table-container">
                         <table class="table table-hover" id="tablaClientes">
-                            <thead class="table-light">
+                            <thead class="table-light table-fixed-header">
                                 <tr>
-                                    <th>Nombre</th>
-                                    <th>Identificación</th>
-                                    <th>Email</th>
-                                    <th>Teléfono</th>
-                                    <th>Dirección</th>
+                                    <th class="sortable" data-column="id" data-type="number">
+                                        ID
+                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    </th>
+                                    <th class="sortable" data-column="nombre" data-type="text">
+                                        Nombre
+                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    </th>
+                                    <th class="sortable" data-column="contacto" data-type="text">
+                                        Identificación
+                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    </th>
+                                    <th class="sortable" data-column="email" data-type="text">
+                                        Email
+                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    </th>
+                                    <th class="sortable" data-column="telefono" data-type="text">
+                                        Teléfono
+                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    </th>
+                                    <th class="sortable" data-column="direccion" data-type="text">
+                                        Dirección
+                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    </th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Se llena dinámicamente -->
+                                @if (Model != null && Model.Any())
+                                {
+                                    @foreach (var cliente in Model)
+                                    {
+                                        <tr>
+                                            <td><strong>@cliente.Id</strong></td>
+                                            <td><strong>@cliente.Nombre</strong></td>
+                                            <td>@cliente.Contacto</td>
+                                            <td>@cliente.Email</td>
+                                            <td>@cliente.Telefono</td>
+                                            <td>@cliente.Direccion</td>
+                                            <td class="text-center">
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-editar btn-accion btn-editar-cliente"
+                                                        data-cliente-id="@cliente.Id"
+                                                        title="Editar cliente"
+                                                        asp-permiso="Editar Clientes">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-eliminar btn-accion btn-eliminar-cliente"
+                                                        data-cliente-id="@cliente.Id"
+                                                        title="Eliminar cliente"
+                                                        asp-permiso="Eliminar Clientes">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4">
+                                            <i class="bi bi-people display-1 text-muted"></i>
+                                            <p class="mt-2 text-muted">No se encontraron clientes</p>
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
