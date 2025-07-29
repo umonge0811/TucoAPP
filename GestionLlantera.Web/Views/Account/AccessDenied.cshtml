@@ -7,6 +7,13 @@
     var moduloAcceso = TempData["ModuloAcceso"]?.ToString() ?? "esta página";
     var horaIntento = DateTime.Now.ToString("HH:mm:ss");
     
+    // DEBUG: Mostrar valores recibidos en consola (remover después de verificar)
+    System.Diagnostics.Debug.WriteLine($"DEBUG - TempData AccesoNoAutorizado: '{TempData["AccesoNoAutorizado"]}'");
+    System.Diagnostics.Debug.WriteLine($"DEBUG - TempData ModuloAcceso: '{TempData["ModuloAcceso"]}'");
+    System.Diagnostics.Debug.WriteLine($"DEBUG - permisoRequerido: '{permisoRequerido}'");
+    System.Diagnostics.Debug.WriteLine($"DEBUG - moduloAcceso: '{moduloAcceso}'");
+    System.Diagnostics.Debug.WriteLine($"DEBUG - moduloAcceso.ToLower(): '{moduloAcceso.ToLower()}'");
+    
     // Configurar colores según el módulo
     var configuracionModulo = moduloAcceso.ToLower() switch
     {
@@ -16,7 +23,7 @@
         "clientes" => new { Color = "info", Icono = "bi-people", Email = "¿Necesitas gestionar clientes?" },
         "proveedores" => new { Color = "primary", Icono = "bi-truck", Email = "¿Necesitas gestionar proveedores?" },
         "toma de inventario" => new { Color = "secondary", Icono = "bi-clipboard-check", Email = "¿Necesitas realizar toma de inventario?" },
-        "configuración del sistema" => new { Color = "primary", Icono = "bi-gear-fill", Email = "¿Necesitas acceso a configuración?" },
+        "configuración del sistema" => new { Color = "success", Icono = "bi-gear-fill", Email = "¿Necesitas acceso a configuración del sistema?" },
         _ => new { Color = "warning", Icono = "bi-shield-exclamation", Email = "¿Necesitas acceso a esta función?" }
     };
 }

@@ -44,8 +44,16 @@ public class ConfiguracionController : Controller
             {
                 _logger.LogWarning("🚫 Usuario sin permiso 'Gestión Completa' intentó acceder a configuración");
 
+                // ✅ DEBUG: Verificar que los valores se están configurando
+                _logger.LogInformation("DEBUG - Configurando TempData: AccesoNoAutorizado='Gestión Completa', ModuloAcceso='Configuración del Sistema'");
+                
                 TempData["AccesoNoAutorizado"] = "Gestión Completa";
                 TempData["ModuloAcceso"] = "Configuración del Sistema";
+                
+                // ✅ DEBUG: Verificar que los valores se guardaron
+                _logger.LogInformation("DEBUG - TempData configurado: AccesoNoAutorizado='{AccesoNoAutorizado}', ModuloAcceso='{ModuloAcceso}'", 
+                    TempData["AccesoNoAutorizado"], TempData["ModuloAcceso"]);
+                
                 return RedirectToAction("AccessDenied", "Account");
             }
 
