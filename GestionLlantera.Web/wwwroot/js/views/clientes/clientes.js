@@ -131,6 +131,8 @@ async function editarCliente(clienteId) {
         const resultado = await response.json();
 
         if (resultado.success && resultado.data) {
+            // Asegurar que el cliente tiene el ID correcto
+            resultado.data.clienteId = resultado.data.id || resultado.data.clienteId || clienteId;
             clienteEditando = resultado.data;
             llenarFormularioCliente(resultado.data);
 
@@ -146,29 +148,31 @@ async function editarCliente(clienteId) {
 
     } catch (error) {
         console.error('❌ Error cargando cliente para editar:', error);
-        mostrarError('Error al cargar cliente');
+        mostrarError('Error al cargar cliente para editar');
     }
 }
 
 function llenarFormularioCliente(cliente) {
-    $('#nombreCliente').val(cliente.nombre);
-    $('#contactoCliente').val(cliente.contacto);
-    $('#emailCliente').val(cliente.email);
+    // Asegurar que tenemos el ID correcto
+    clienteEditando = {
+        id: cliente.id || cliente.clienteId || cliente.ClienteId,
+        clienteId: cliente.id || cliente.clienteId || cliente.ClienteId,
+        nombre: cliente.nombre || cliente.nombreCliente || cliente.NombreCliente,
+        contacto: cliente.contacto || cliente.Contacto || '',
+        email: cliente.email || cliente.Email || '',
+        telefono: cliente.telefono || cliente.Telefono || '',
+        direccion: cliente.direccion || cliente.Direccion || ''
+    };
 
-    // Separar código de país y número de teléfono
-    if (cliente.telefono && cliente.telefono.includes('+')) {
-        const partesTelefono = cliente.telefono.split(' ');
-        const codigoPais = partesTelefono[0];
-        const numero = partesTelefono.slice(1).join(' ');
+    $('#nombreCliente').val(clienteEditando.nombre);
+    $('#contactoCliente').val(clienteEditando.contacto);
+    $('#emailCliente').val(clienteEditando.email);
+    $('#telefonoCliente').val(clienteEditando.telefono);
+    $('#direccionCliente').val(clienteEditando.direccion);
 
-        $('#codigoPaisCliente').val(codigoPais);
-        $('#telefonoCliente').val(numero);
-    } else {
-        $('#codigoPaisCliente').val('+506'); // Default Costa Rica
-        $('#telefonoCliente').val(cliente.telefono || '');
-    }
-
-    $('#direccionCliente').val(cliente.direccion);
+    // Limpiar validaciones previas
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
 }
 
 async function guardarCliente() {
@@ -194,25 +198,28 @@ async function guardarCliente() {
         $('#btnGuardarCliente').prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>Guardando...');
 
         let response;
+        let url;
+        let method;
+
         if (clienteEditando) {
             // Actualizar cliente existente
-            response = await fetch(`/Clientes/ActualizarCliente?id=${clienteEditando.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(clienteData)
-            });
+            const clienteId = clienteEditando.clienteId || clienteEditando.id;
+            clienteData.ClienteId = clienteId;
+            url = `/Clientes/ActualizarCliente?id=${clienteId}`;
+            method = 'PUT';
         } else {
             // Crear nuevo cliente
-            response = await fetch('/Clientes/CrearCliente', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(clienteData)
-            });
+            url = '/Clientes/CrearCliente';
+            method = 'POST';
         }
+
+        response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(clienteData)
+        });
 
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
