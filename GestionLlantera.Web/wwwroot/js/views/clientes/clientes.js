@@ -181,31 +181,8 @@ function mostrarClientes(clientesData) {
 function generarBotonesAcciones(clienteId) {
     let botones = '';
 
-    // ✅ VERIFICAR PERMISOS DE MANERA MÁS ROBUSTA
-    const permisos = window.permisosUsuario || {};
-    const esAdmin = permisos.esAdmin || false;
-    
-    // ✅ VERIFICAR PERMISO "Editar Clientes" de múltiples maneras
-    const puedeEditar = esAdmin || 
-                       permisos.puedeEditarClientes || 
-                       permisos['Editar Clientes'] || 
-                       (permisos.permisos && permisos.permisos.includes('Editar Clientes'));
-
-    // ✅ VERIFICAR PERMISO "Eliminar Clientes" de múltiples maneras
-    const puedeEliminar = esAdmin || 
-                         permisos.puedeEliminarClientes || 
-                         permisos['Eliminar Clientes'] || 
-                         (permisos.permisos && permisos.permisos.includes('Eliminar Clientes'));
-
-    console.log('🔐 Verificando permisos para cliente:', clienteId, {
-        permisos: permisos,
-        esAdmin: esAdmin,
-        puedeEditar: puedeEditar,
-        puedeEliminar: puedeEliminar
-    });
-
     // ✅ BOTÓN EDITAR (requiere permiso "Editar Clientes")
-    if (puedeEditar) {
+    if (window.permisosUsuario && (window.permisosUsuario.puedeEditarClientes || window.permisosUsuario.esAdmin)) {
         botones += `
             <button type="button" 
                     class="btn btn-sm btn-editar btn-accion" 
@@ -217,7 +194,7 @@ function generarBotonesAcciones(clienteId) {
     }
 
     // ✅ BOTÓN ELIMINAR (requiere permiso "Eliminar Clientes")
-    if (puedeEliminar) {
+    if (window.permisosUsuario && (window.permisosUsuario.puedeEliminarClientes || window.permisosUsuario.esAdmin)) {
         botones += `
             <button type="button" 
                     class="btn btn-sm btn-danger btn-accion" 
@@ -249,19 +226,6 @@ function abrirModalNuevoCliente() {
 
 async function editarCliente(clienteId) {
     try {
-        // ✅ VERIFICAR PERMISOS ANTES DE EDITAR
-        const permisos = window.permisosUsuario || {};
-        const esAdmin = permisos.esAdmin || false;
-        const puedeEditar = esAdmin || 
-                           permisos.puedeEditarClientes || 
-                           permisos['Editar Clientes'] || 
-                           (permisos.permisos && permisos.permisos.includes('Editar Clientes'));
-
-        if (!puedeEditar) {
-            mostrarToast('Sin permisos', 'No tienes permisos para editar clientes', 'warning');
-            return;
-        }
-
         console.log(`✏️ Editando cliente: ${clienteId}`);
 
         const response = await fetch(`/Clientes/ObtenerClientePorId?id=${clienteId}`);
@@ -374,19 +338,6 @@ async function guardarCliente() {
 
 async function eliminarCliente(clienteId) {
     try {
-        // ✅ VERIFICAR PERMISOS ANTES DE ELIMINAR
-        const permisos = window.permisosUsuario || {};
-        const esAdmin = permisos.esAdmin || false;
-        const puedeEliminar = esAdmin || 
-                             permisos.puedeEliminarClientes || 
-                             permisos['Eliminar Clientes'] || 
-                             (permisos.permisos && permisos.permisos.includes('Eliminar Clientes'));
-
-        if (!puedeEliminar) {
-            mostrarToast('Sin permisos', 'No tienes permisos para eliminar clientes', 'warning');
-            return;
-        }
-
         const cliente = clientes.find(c => c.id === clienteId);
         const nombreCliente = cliente ? cliente.nombre : `Cliente ${clienteId}`;
 
