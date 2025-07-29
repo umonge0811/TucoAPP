@@ -62,73 +62,160 @@
                     </div>
 
                     <!-- Tabla de clientes -->
-                    <div class="table-container">
-                        <table class="table table-hover" id="tablaClientes">
-                            <thead class="table-light table-fixed-header">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped align-middle" id="tablaClientes">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th class="sortable" data-column="id" data-type="number">
-                                        ID
-                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    <th class="text-center sortable" data-column="id" data-type="number" style="width: 80px;">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            ID
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
                                     </th>
-                                    <th class="sortable" data-column="nombre" data-type="text">
-                                        Nombre
-                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    <th class="sortable" data-column="nombre" data-type="text" style="min-width: 200px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person me-2"></i>
+                                            Nombre Cliente
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
                                     </th>
-                                    <th class="sortable" data-column="contacto" data-type="text">
-                                        Identificación
-                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    <th class="sortable d-none d-md-table-cell" data-column="contacto" data-type="text" style="min-width: 140px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person-badge me-2"></i>
+                                            Identificación
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
                                     </th>
-                                    <th class="sortable" data-column="email" data-type="text">
-                                        Email
-                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    <th class="sortable d-none d-lg-table-cell" data-column="email" data-type="text" style="min-width: 200px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-envelope me-2"></i>
+                                            Email
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
                                     </th>
-                                    <th class="sortable" data-column="telefono" data-type="text">
-                                        Teléfono
-                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    <th class="sortable d-none d-sm-table-cell" data-column="telefono" data-type="text" style="min-width: 120px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-telephone me-2"></i>
+                                            Teléfono
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
                                     </th>
-                                    <th class="sortable" data-column="direccion" data-type="text">
-                                        Dirección
-                                        <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                    <th class="sortable d-none d-xl-table-cell" data-column="direccion" data-type="text" style="min-width: 250px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-geo-alt me-2"></i>
+                                            Dirección
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
                                     </th>
-                                    <th class="text-center">Acciones</th>
+                                    <th class="text-center" style="width: 120px;">
+                                        <i class="bi bi-gear me-1"></i>Acciones
+                                    </th>
                                 </tr>
                             </thead>
                             
                             <tbody id="clientesTableBody">
                             @foreach (var cliente in Model)
                             {
-                                <tr data-id="@cliente.ClienteId">
+                                <tr data-id="@cliente.ClienteId" class="cliente-row">
                                     <!-- 1. ID -->
-                                    <td><strong>@cliente.ClienteId</strong></td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary fs-6">@cliente.ClienteId</span>
+                                    </td>
 
                                     <!-- 2. Nombre -->
-                                    <td><strong>@cliente.NombreCliente</strong></td>
+                                    <td>
+                                        <div class="fw-bold text-primary">@cliente.NombreCliente</div>
+                                        <!-- Info móvil: mostrar datos importantes en pantallas pequeñas -->
+                                        <div class="d-md-none small text-muted mt-1">
+                                            @if (!string.IsNullOrEmpty(cliente.Contacto))
+                                            {
+                                                <div><i class="bi bi-person-badge me-1"></i>@cliente.Contacto</div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(cliente.Telefono))
+                                            {
+                                                <div><i class="bi bi-telephone me-1"></i>@cliente.Telefono</div>
+                                            }
+                                        </div>
+                                        <div class="d-lg-none d-md-block small text-muted mt-1">
+                                            @if (!string.IsNullOrEmpty(cliente.Email))
+                                            {
+                                                <div><i class="bi bi-envelope me-1"></i>@cliente.Email</div>
+                                            }
+                                        </div>
+                                    </td>
 
-                                    <!-- 3. Identificación -->
-                                    <td>@cliente.Contacto</td>
+                                    <!-- 3. Identificación (oculta en móvil) -->
+                                    <td class="d-none d-md-table-cell">
+                                        @if (!string.IsNullOrEmpty(cliente.Contacto))
+                                        {
+                                            <span class="badge bg-light text-dark">@cliente.Contacto</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No especificada</span>
+                                        }
+                                    </td>
 
-                                    <!-- 4. Email -->
-                                    <td>@cliente.Email</td>
+                                    <!-- 4. Email (oculta en tablet y móvil) -->
+                                    <td class="d-none d-lg-table-cell">
+                                        @if (!string.IsNullOrEmpty(cliente.Email))
+                                        {
+                                            <a href="mailto:@cliente.Email" class="text-decoration-none">
+                                                @cliente.Email
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No especificado</span>
+                                        }
+                                    </td>
 
-                                    <!-- 5. Teléfono -->
-                                    <td>@(cliente.Telefono ?? "No especificado")</td>
+                                    <!-- 5. Teléfono (oculta en móvil) -->
+                                    <td class="d-none d-sm-table-cell">
+                                        @if (!string.IsNullOrEmpty(cliente.Telefono))
+                                        {
+                                            <a href="tel:@cliente.Telefono" class="text-decoration-none">
+                                                <i class="bi bi-telephone me-1"></i>@cliente.Telefono
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No especificado</span>
+                                        }
+                                    </td>
 
-                                    <!-- 6. Dirección -->
-                                    <td>@(cliente.Direccion ?? "No especificada")</td>
+                                    <!-- 6. Dirección (solo en desktop) -->
+                                    <td class="d-none d-xl-table-cell">
+                                        @if (!string.IsNullOrEmpty(cliente.Direccion))
+                                        {
+                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                                  title="@cliente.Direccion">
+                                                @cliente.Direccion
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No especificada</span>
+                                        }
+                                    </td>
 
                                     <!-- 7. Acciones -->
-                                    <td>
-                                        <div class="btn-group">
-                                            <button type="button" class="btn btn-sm btn-info ver-cliente-btn"
-                                                    data-id="@cliente.ClienteId" data-bs-toggle="tooltip" title="Ver detalles">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-primary editar-cliente-btn"
-                                                    data-id="@cliente.ClienteId" data-bs-toggle="tooltip" title="Editar">
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary editar-cliente-btn"
+                                                    data-id="@cliente.ClienteId" 
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Editar cliente"
+                                                    onclick="editarCliente(@cliente.ClienteId)"
+                                                    asp-permiso="Editar Clientes">
                                                 <i class="bi bi-pencil"></i>
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-danger eliminar-cliente-btn"
-                                                    data-id="@cliente.ClienteId" data-bs-toggle="tooltip" title="Eliminar">
+                                            <button type="button" class="btn btn-outline-danger eliminar-cliente-btn"
+                                                    data-id="@cliente.ClienteId" 
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Eliminar cliente"
+                                                    onclick="eliminarCliente(@cliente.ClienteId)"
+                                                    asp-permiso="Eliminar Clientes">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>

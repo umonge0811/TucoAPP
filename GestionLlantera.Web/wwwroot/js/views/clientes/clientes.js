@@ -68,31 +68,8 @@ function configurarEventos() {
 
 // ===== CARGA DE DATOS =====
 async function cargarClientes() {
-    try {
-        mostrarEstadoCarga(true);
-        console.log('🔍 Buscando clientes: ""');
-
-        const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent("")}`);
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const resultado = await response.json();
-
-        if (resultado.success && resultado.data) {
-            clientes = resultado.data;
-            mostrarClientes(clientes);
-        } else {
-            mostrarSinResultados();
-        }
-
-    } catch (error) {
-        console.error('❌ Error buscando clientes:', error);
-        mostrarError('Error al buscar clientes');
-    } finally {
-        mostrarEstadoCarga(false);
-    }
+    // Recargar la página para obtener los datos actualizados del servidor
+    window.location.reload();
 }
 
 async function buscarClientes(termino) {
@@ -125,41 +102,8 @@ async function buscarClientes(termino) {
 
 // ===== MOSTRAR DATOS =====
 function mostrarClientes(clientesData) {
-    const tbody = $('#tablaClientes tbody');
-    tbody.empty();
-
-    if (!clientesData || clientesData.length === 0) {
-        mostrarSinResultados();
-        return;
-    }
-
-    clientesData.forEach(cliente => {
-        const fila = `
-            <tr>
-                <td><strong>${cliente.nombre}</strong></td>
-                <td>${cliente.contacto}</td>
-                <td>${cliente.email}</td>
-                <td>${cliente.telefono}</td>
-                <td>${cliente.direccion}</td>
-                <td class="text-center">
-                    <button type="button" 
-                            class="btn btn-sm btn-editar btn-accion"
-                            onclick="editarCliente(${cliente.id})"
-                            title="Editar cliente">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" 
-                            class="btn btn-sm btn-eliminar btn-accion"
-                            onclick="eliminarCliente(${cliente.id})"
-                            title="Eliminar cliente">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        tbody.append(fila);
-    });
-
+    // La tabla ya está renderizada desde el servidor, no necesitamos recrearla
+    console.log('✅ Clientes cargados desde el servidor - No se requiere recrear tabla');
     ocultarEstadosEspeciales();
 }
 
