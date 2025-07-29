@@ -33,9 +33,12 @@ function inicializarClientes() {
 function configurarEventos() {
     // Búsqueda de clientes
     $('#buscarClientes').on('input', debounce(function() {
-        const termino = $(this).val().trim();
-        if (termino.length >= 2 || termino.length === 0) {
-            buscarClientes(termino);
+        const termino = $(this).val();
+        if (termino && typeof termino === 'string') {
+            const terminoLimpio = termino.trim();
+            if (terminoLimpio.length >= 2 || terminoLimpio.length === 0) {
+                buscarClientes(terminoLimpio);
+            }
         }
     }, 300));
 
@@ -74,10 +77,17 @@ async function cargarClientes() {
 
 async function buscarClientes(termino) {
     try {
-        mostrarEstadoCarga(true);
-        console.log(`🔍 Buscando clientes: "${termino}"`);
+        // Validar que el término sea válido
+        if (termino === undefined || termino === null) {
+            console.warn('⚠️ Término de búsqueda inválido:', termino);
+            return;
+        }
 
-        const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(termino)}`);
+        const terminoSeguro = String(termino).trim();
+        mostrarEstadoCarga(true);
+        console.log(`🔍 Buscando clientes: "${terminoSeguro}"`);
+
+        const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(terminoSeguro)}`);
 
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
