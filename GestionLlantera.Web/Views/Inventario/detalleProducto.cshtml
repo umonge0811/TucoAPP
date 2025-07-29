@@ -1,4 +1,4 @@
-﻿@model Tuco.Clases.DTOs.Inventario.ProductoDTO
+@model Tuco.Clases.DTOs.Inventario.ProductoDTO
 @{
     ViewData["Title"] = "Detalle de Producto";
     Layout = "_AdminLayout";
@@ -70,9 +70,9 @@
                     <span>Más acciones</span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li>
+                    <li asp-permiso="Ajustar Stock">
                         <button class="dropdown-item ajuste-stock-btn" type="button" 
-                            data-id="@Model.ProductoId" asp-permiso="Ajustar Stock">
+                            data-id="@Model.ProductoId">
                         <i class="bi bi-plus-slash-minus me-2"></i>Ajustar Stock
                         </button>
                     </li>

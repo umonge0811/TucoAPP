@@ -1,0 +1,31 @@
+PermisoID	NombrePermiso	DescripcionPermiso	Modulo
+1	Modificar Inventario	Permiso para modificar la cantidad de productos en inventario	Inventario
+2	Crear Facturas	Permite crear y hacer cobros de facturar	Facturación
+3	Ver Costos	Permite ver información de costos de productos	Costos y Utilidades
+4	Ver Utilidades	Permite ver información de utilidades y márgenes de ganancia	Costos y Utilidades
+5	Programar Inventario	Permite crear y programar inventarios	Inventario
+6	Gestion Completa	Acceso completo a todas las funciones administrativas	Administración
+7	Editar Productos	Permite crear y editar productos	Inventario
+8	Eliminar Productos	Permite eliminar productos del sistema	Inventario
+9	Ajustar Stock	Permite realizar ajustes de inventario y stock	Inventario
+10	Ver Reportes	Permite acceder a reportes y estadísticas	Reportes
+11	Gestion Usuarios	Permite gestionar usuarios y sus permisos	Administración
+12	Configuracion Sistema	Permite acceder a configuraciones del sistema	Administración
+13	VerCostos	Permite ver los costos de los productos en el inventario	Costos y Utilidades
+14	VerUtilidades	Permite ver las utilidades y porcentajes de ganancia de los productos	Costos y Utilidades
+15	ProgramarInventario	Permite crear y programar nuevos inventarios	Inventario
+16	Iniciar Inventario	Para poder dar inicio a los inventarios	Inventario
+1016	Completar Inventario	Se utiliza para que los asignados a realizar inventarios puedas dar por finalizado el proceso.	Inventario
+1017	Descargar Reportes	Permite descargar reportes en Excel y PDF	Reportes
+1018	Ver Facturación	Para acceder al módulo de facturación	Facturación
+1019	Editar Clientes	Permite modificar la informacion de los clientes	Clientes
+1020	Ver Productos	Para visualizar Productos de Inventario	Inventario
+1021	Ver Historial Inventarios Completo	Permite Visualizar inventarios Anteriores	Inventario
+1022	CompletarFacturas	Permite completar facturas y cambiar estado a pagada	Facturación
+1023	EditarFacturas	Permite editar facturas existentes	Facturación
+1024	AnularFacturas	Permite anular facturas	Facturación
+1025	Crear Clientes	Permiso para agregar nuevos clientes	Clientes
+1026	Ver Clientes	Permiso para ver los clientes del Sistema	Clientes
+1027	Eliminar Clientes	Permiso para eliminar un cliente de la Base de Datos	Clientes
+1028	Entregar Pendientes	Permite al Usuario Entregar a nivel de sistema productos pendientes de Entrega	Facturación
+1030	Prueba	Prueba	Administración

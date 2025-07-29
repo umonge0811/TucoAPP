@@ -47,6 +47,14 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ VERIFICAR PERMISO PARA ACCEDER A FACTURACIÓN
+                if (!await this.TienePermisoAsync("Ver Facturación"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Facturación' intentó acceder al módulo");
+                    TempData["Error"] = "No tienes permisos para acceder al módulo de facturación.";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 _logger.LogInformation("🛒 === ACCESO AL MÓDULO DE FACTURACIÓN ===");
                 _logger.LogInformation("🛒 Usuario autenticado: {IsAuthenticated}", User.Identity?.IsAuthenticated);
                 _logger.LogInformation("🛒 Nombre de usuario: {Name}", User.Identity?.Name);
@@ -1382,15 +1390,15 @@ namespace GestionLlantera.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> MarcarProductosEntregados([FromBody] MarcarEntregadosRequest request)
         {
+            // ✅ VALIDACIÓN DE PERMISOS MVC CON EL PERMISO CORRECTO
+            var validacion = await this.ValidarPermisoMvcAsync("Entregar Pendientes",
+                "No tienes permisos para marcar productos como entregados.");
+            if (validacion != null) return validacion;
+
             try
             {
                 _logger.LogInformation("✅ === MARCANDO PRODUCTOS COMO ENTREGADOS ===");
                 _logger.LogInformation("✅ Productos a marcar: {Count}", request.ProductosIds?.Count ?? 0);
-
-                if (!await this.TienePermisoAsync("Completar Facturas"))
-                {
-                    return Json(new { success = false, message = "Sin permisos para marcar productos como entregados" });
-                }
 
                 var jwtToken = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(jwtToken))

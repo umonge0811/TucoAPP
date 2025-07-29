@@ -1,0 +1,64 @@
+PermisoID	NombrePermiso	DescripcionPermiso	Modulo
+1	Modificar Inventario	Permiso para modificar la cantidad de productos en inventario	Inventario
+2	Crear Facturas	Permite crear y hacer cobros de facturar	Facturación
+3	Ver Costos	Permite ver información de costos de productos	Costos y Utilidades
+4	Ver Utilidades	Permite ver información de utilidades y márgenes de ganancia	Costos y Utilidades
+5	Programar Inventario	Permite crear y programar inventarios	Inventario
+6	Gestion Completa	Acceso completo a todas las funciones administrativas	Administración
+7	Editar Productos	Permite crear y editar productos	Inventario
+8	Eliminar Productos	Permite eliminar productos del sistema	Inventario
+9	Ajustar Stock	Permite realizar ajustes de inventario y stock	Inventario
+10	Ver Reportes	Permite acceder a reportes y estadísticas	Reportes
+11	Gestion Usuarios	Permite gestionar usuarios y sus permisos	Administración
+12	Configuracion Sistema	Permite acceder a configuraciones del sistema	Administración
+13	VerCostos	Permite ver los costos de los productos en el inventario	Costos y Utilidades
+14	VerUtilidades	Permite ver las utilidades y porcentajes de ganancia de los productos	Costos y Utilidades
+15	ProgramarInventario	Permite crear y programar nuevos inventarios	Inventario
+16	Iniciar Inventario	Para poder dar inicio a los inventarios	Inventario
+1016	Completar Inventario	Se utiliza para que los asignados a realizar inventarios puedas dar por finalizado el proceso.	Inventario
+1017	Descargar Reportes	Permite descargar reportes en Excel y PDF	Reportes
+1018	Ver Facturación	Para acceder al módulo de facturación	Facturación
+1019	Editar Clientes	Permite modificar la informacion de los clientes	Clientes
+1020	Ver Productos	Para visualizar Productos de Inventario	Inventario
+1021	Ver Historial Inventarios Completo	Permite Visualizar inventarios Anteriores	Inventario
+1022	CompletarFacturas	Permite completar facturas y cambiar estado a pagada	Facturación
+1023	EditarFacturas	Permite editar facturas existentes	Facturación
+1024	AnularFacturas	Permite anular facturas	Facturación
+1025	Crear Clientes	Permiso para agregar nuevos clientes	Clientes
+1026	Ver Clientes	Permiso para ver los clientes del Sistema	Clientes
+1027	Eliminar Clientes	Permiso para eliminar un cliente de la Base de Datos	Clientes
+1028	Entregar Pendientes	Permite al Usuario Entregar a nivel de sistema productos pendientes de Entrega	Facturación
+1030	Prueba	Prueba	Administración
+1032	Menu_Inventario	Permite ver el Menú de inventario	Inventario
+1033	Sub_Menu_VerProductos	Permite Visualizar el SubMenú de Modulo de Inventario Ver Productos	Inventario
+1034	Sub_Menu_AgregarProductos	Permite Visualizar el SubMenú de Modulo de Inventario Agregar Productos	Inventario
+1035	Sub_Menu_ProgramarInventario	Permite Visualizar el SubMenú de Modulo de Inventario Programar Inventario	Inventario
+1036	Sub_Menu_HistorialInventario	Permite Visualizar el SubMenú de Modulo de Inventario Historial Inventario	Inventario
+1037	Menu_Ventas	Acceso al menú principal de Ventas	Ventas
+1038	Sub_Menu_Clientes	Permite gestionar clientes	Ventas
+1039	Sub_Menu_Facturación	Permite acceder al sistema de facturación	Ventas
+1040	Sub_Menu_ReportesVentas	Permite ver reportes de ventas	Ventas
+1041	Sub_Menu_EntregasPendientes	Permite ver entregas pendientes	Ventas
+1042	Menu_Proveedores	Acceso al menú principal de Proveedores	Proveedores
+1043	Sub_Menu_GestionProveedores	Permite gestionar proveedores	Proveedores
+1044	Sub_Menu_PedidosProveedores	Permite gestionar pedidos a proveedores	Proveedores
+1045	Menu_Reportes	Acceso al menú principal de Reportes	Reportes
+1046	Sub_Menu_ExportarExcel	Permite exportar reportes a Excel	Reportes
+1047	Sub_Menu_ExportarPDF	Permite exportar reportes a PDF	Reportes
+1048	Menu_Configuración	Acceso al menú principal de Configuración	Configuración
+1049	Sub_Menu_RolesPermisos	Permite gestionar roles y permisos	Configuración
+1050	Sub_Menu_GestionUsuarios	Permite gestionar usuarios del sistema	Configuración
+1051	Menu_HerramientasSistema	Acceso al menú principal de Herramientas de Sistema	Sistema
+1052	Sub_Menu_DiagnosticoPermisos	Permite acceder al diagnóstico de permisos	Sistema
+1053	Sub_Menu_LogsSistema	Permite ver los logs del sistema	Sistema
+1054	Sub_Menu_Clientes	Permite acceder al submenú Clientes del módulo Ventas para gestionar información de clientes y sus datos de contacto	Ventas
+1055	Sub_Menu_Facturación	Permite acceder al submenú Facturación del módulo Ventas para crear facturas, proformas y gestionar el proceso de facturación	Ventas
+1056	Sub_Menu_Reportes	Permite acceder al submenú Reportes de Ventas del módulo Ventas para consultar estadísticas y reportes de ventas realizadas	Ventas
+1057	Sub_Menu_EntregasPendientes	Permite acceder al submenú Entregas Pendientes del módulo Ventas para gestionar y dar seguimiento a entregas pendientes	Ventas
+1058	Sub_Menu_Usuarios	Permite acceder al submenú Usuarios del módulo Administración para crear, editar y gestionar cuentas de usuario del sistema	Administración
+1059	Sub_Menu_RolesPermisos	Permite acceder al submenú Roles y Permisos del módulo Administración para configurar roles y asignar permisos de acceso	Administración
+1060	Sub_Menu_DiagnosticoPermisos	Permite acceder al submenú Diagnóstico de Permisos del módulo Administración para verificar y diagnosticar permisos del sistema	Administración
+1061	Sub_Menu_GestionProveedores	Permite acceder al submenú Gestión de Proveedores del módulo Proveedores para administrar información de proveedores	Proveedores
+1062	Sub_Menu_PedidosProveedor	Permite acceder al submenú Pedidos a Proveedores del módulo Proveedores para crear y gestionar órdenes de compra	Proveedores
+1063	Sub_Menu_ReportesGenerales	Permite acceder al submenú Reportes Generales del módulo Reportes para consultar reportes estadísticos del sistema	Reportes
+1064	Sub_Menu_ReportesFinancieros	Permite acceder al submenú Reportes Financieros del módulo Reportes para consultar análisis financieros y de rentabilidad	Reportes

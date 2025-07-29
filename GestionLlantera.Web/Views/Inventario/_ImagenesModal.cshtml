@@ -1,4 +1,4 @@
-﻿@model GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO
+@model GestionLlantera.Web.Models.DTOs.Inventario.ProductoDTO
 
 <!-- Referencias a los archivos CSS y JS -->
 <link rel="stylesheet" href="~/css/views/inventario/imagenes/imagenesModal.css" />
@@ -143,6 +143,11 @@
 </div>
 <div class="modal-footer">
     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+    <button type="button" class="btn btn-success btn-sm ajuste-stock-btn" 
+                                data-id="" title="Ajustar Stock" asp-permiso="Ajustar Stock">
+                            <i class="bi bi-plus-slash-minus me-1"></i>
+                            Ajustar Stock
+                        </button>
 </div>
 
 <!-- Script para inicializar el carrusel cuando se abre el modal -->

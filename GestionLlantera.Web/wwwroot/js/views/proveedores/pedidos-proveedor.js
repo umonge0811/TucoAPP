@@ -415,6 +415,9 @@ function mostrarPedidos() {
                         <button type="button" class="btn btn-sm btn-outline-info" onclick="verDetallePedido(${pedidoId})" title="Ver Detalle">
                             <i class="bi bi-eye"></i>
                         </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="generarReportePedido(${pedidoId}, 'Pedido ${pedidoId}')" title="Descargar PDF">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </button>
                         <button type="button" class="btn btn-sm btn-outline-warning" onclick="cambiarEstadoPedido(${pedidoId}, '${estado}')" title="Cambiar Estado">
                             <i class="bi bi-arrow-repeat"></i>
                         </button>
@@ -1341,7 +1344,7 @@ async function verDetallePedido(pedidoId) {
 
             ${pedido.detallePedidos && pedido.detallePedidos.length > 0 ? `
                 <div class="row mt-3">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Total de Items</small>
@@ -1349,7 +1352,7 @@ async function verDetallePedido(pedidoId) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Productos Únicos</small>
@@ -1357,20 +1360,11 @@ async function verDetallePedido(pedidoId) {
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <div class="card bg-light">
                             <div class="card-body text-center py-2">
                                 <small class="text-muted">Total</small>
                                 <div class="h5 mb-0 text-success">₡${(pedido.totalPrecio || pedido.montoTotal || 0).toFixed(2)}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-primary">
-                            <div class="card-body text-center py-2">
-                                <button class="btn btn-light btn-sm w-100" onclick="generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')" title="Descargar PDF del pedido">
-                                    <i class="bi bi-file-earmark-pdf"></i> PDF
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -1380,6 +1374,10 @@ async function verDetallePedido(pedidoId) {
     `;
 
         $('#contenidoDetallePedido').html(html);
+        
+        // Configurar el botón PDF del modal con el ID del pedido actual
+        $('#btnPdfModalDetalle').attr('onclick', `generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')`);
+        
         $('#modalDetallePedido').modal('show');
     } catch (error) {
         console.error('❌ Error viendo detalle del pedido:', error);

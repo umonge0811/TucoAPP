@@ -222,7 +222,6 @@ async function cargarHistorialInventarios() {
 
     } catch (error) {
         console.error('❌ Error cargando historial:', error);
-        mostrarError(`Error al cargar el historial: ${error.message}`);
         mostrarEstadoVacio('Error al cargar inventarios');
 
     } finally {

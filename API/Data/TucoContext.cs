@@ -548,6 +548,19 @@ public partial class TucoContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.UsuarioId).HasColumnName("UsuarioID");
 
+            // ✅ CONFIGURACIÓN DE NUEVAS PROPIEDADES
+            entity.Property(e => e.TokenHash)
+                .HasMaxLength(255)
+                .IsRequired(false);
+
+            entity.Property(e => e.EstaActiva)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.FechaInvalidacion)
+                .HasColumnType("datetime")
+                .IsRequired(false);
+
             entity.HasOne(d => d.Usuario).WithMany(p => p.SesionUsuarios)
                 .HasForeignKey(d => d.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict) // CAMBIAR A Restrict

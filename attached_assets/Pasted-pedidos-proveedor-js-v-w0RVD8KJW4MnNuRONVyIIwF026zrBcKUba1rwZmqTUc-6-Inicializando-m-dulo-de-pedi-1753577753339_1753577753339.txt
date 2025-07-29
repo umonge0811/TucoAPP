@@ -1,0 +1,72 @@
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:6 🚀 Inicializando módulo de pedidos a proveedores...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1732 ✅ Módulo de pedidos a proveedores cargado completamente
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:30 📚 DOM cargado, inicializando pedidos a proveedores...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:48 🔧 Configurando event listeners...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:564 🔧 Configurando ordenamiento de tabla de productos...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:83 📋 Cargando datos iniciales completos...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:97 👥 Cargando proveedores...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:137 📦 Cargando TODOS los pedidos...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:255 📦 Cargando productos del inventario...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:36 ✅ Módulo de pedidos a proveedores inicializado correctamente
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:154 📦 Respuesta del servidor: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:160 ✅ 14 pedidos cargados
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:163 📦 Primer pedido (estructura): Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:164 📦 Propiedades del primer pedido: Array(10)
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:357 📋 Iniciando mostrarPedidos...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:358 📊 pedidosFiltrados: Array(14)
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:368 📋 Renderizando 14 pedidos en la tabla
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 1: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 2: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 3: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 4: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 5: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 6: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 7: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 8: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 9: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 10: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 11: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 12: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 13: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:372 📦 Procesando pedido 14: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:431 ✅ 14 pedidos renderizados en la tabla
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:113 📋 Respuesta del servidor: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:280 🔄 Iniciando llenarSelectProveedores...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:281 📋 proveedoresDisponibles: Array(3)
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:295 🔢 Total proveedores a procesar: 3
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:302 🔍 Procesando proveedor 1: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:305 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:330 ➕ Agregando opción: <option value="1002">Distribuidora  Tuco</option>
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:302 🔍 Procesando proveedor 2: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:305 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:330 ➕ Agregando opción: <option value="1005">Distribuidora El carmen S.A</option>
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:302 🔍 Procesando proveedor 3: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:305 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:330 ➕ Agregando opción: <option value="1007">Distribuidora Tucan S.A</option>
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:346 ✅ 3 de 3 proveedores agregados a los selects
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:349 📊 Opciones en select: 4
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:350 📊 Opciones en filtro: 4
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:118 ✅ 3 proveedores cargados
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:269 ✅ 6 productos del inventario cargados
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1718 📄 Generando reporte para pedido 14...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1723 ❌ reportesUtils no está disponible
+generarReportePedido @ pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1723
+onclick @ PedidosProveedor:1
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1460 ❌ Error: Error: Módulo de reportes no disponible
+mostrarError @ pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1460
+generarReportePedido @ pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1724
+onclick @ PedidosProveedor:1
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1181 👁️ Viendo detalle del pedido: 14
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1718 📄 Generando reporte para pedido 14...
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1723 ❌ reportesUtils no está disponible
+generarReportePedido @ pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1723
+onclick @ PedidosProveedor:1
+pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1460 ❌ Error: Error: Módulo de reportes no disponible
+mostrarError @ pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1460
+generarReportePedido @ pedidos-proveedor.js?v=w0RVD8KJW4MnNuRONVyIIwF026zrBcKUba1rwZmqTUc:1724
+onclick @ PedidosProveedor:1
+PedidosProveedor:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <button.btn-close>
+Ancestor with aria-hidden: <div.admin-wrapper> <div class=​"admin-wrapper" aria-hidden=​"true">​…​</div>​flex

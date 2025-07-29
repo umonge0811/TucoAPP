@@ -198,6 +198,32 @@ public class AuthController : ControllerBase
         // Generar el token JWT para la sesión
         var token = GenerarToken(usuario);
 
+        // ✅ REGISTRAR SESIÓN EN LA BASE DE DATOS
+        try
+        {
+            // Generar hash del token para almacenamiento seguro
+            var tokenHash = BCrypt.Net.BCrypt.HashString(token.Substring(token.Length - 20)); // Usamos los últimos 20 caracteres
+
+            var sesion = new SesionUsuario
+            {
+                UsuarioId = usuario.UsuarioId,
+                FechaHoraInicio = DateTime.Now,
+                TokenHash = tokenHash,
+                EstaActiva = true,
+                FechaInvalidacion = null
+            };
+
+            _context.SesionUsuario.Add(sesion);
+            await _context.SaveChangesAsync();
+
+            _logger?.LogInformation($"✅ Sesión registrada para usuario {usuario.Email} (ID: {usuario.UsuarioId})");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, $"❌ Error registrando sesión para usuario {usuario.Email}");
+            // No fallar el login por esto, solo registrar el error
+        }
+
         return Ok(new
         {
             Message = "Login exitoso.",
@@ -693,6 +719,62 @@ public class AuthController : ControllerBase
             );
 
             return StatusCode(500, new { message = "Error al restablecer contraseña" });
+        }
+    }
+    #endregion
+
+    #region Logout
+    /// <summary>
+    /// Endpoint para invalidar la sesión del usuario en la base de datos
+    /// </summary>
+    /// <param name="request">Contiene el token JWT del usuario</param>
+    /// <returns>Resultado de la invalidación</returns>
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequestDTO request)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(request.Token))
+            {
+                return BadRequest(new { message = "Token requerido" });
+            }
+
+            // Decodificar el token para obtener el ID del usuario
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(request.Token);
+            var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int usuarioId))
+            {
+                return BadRequest(new { message = "Token inválido" });
+            }
+
+            // Buscar y marcar como inactivas todas las sesiones activas del usuario
+            var sesionesActivas = await _context.SesionUsuario
+                .Where(s => s.UsuarioId == usuarioId && s.EstaActiva == true)
+                .ToListAsync();
+
+            if (sesionesActivas.Any())
+            {
+                foreach (var sesion in sesionesActivas)
+                {
+                    sesion.EstaActiva = false;
+                    sesion.FechaInvalidacion = DateTime.Now;
+                }
+
+                _context.SesionUsuario.UpdateRange(sesionesActivas);
+                await _context.SaveChangesAsync();
+
+                _logger?.LogInformation($"✅ Sesiones invalidadas para usuario ID: {usuarioId}. Total: {sesionesActivas.Count}");
+            }
+
+            return Ok(new { message = "Sesión invalidada correctamente" });
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "❌ Error al invalidar sesión");
+            return StatusCode(500, new { message = "Error interno del servidor" });
         }
     }
     #endregion
