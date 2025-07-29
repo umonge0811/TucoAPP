@@ -137,7 +137,7 @@ function mostrarClientes(clientesData) {
     clientesData.forEach(cliente => {
         const fila = `
             <tr>
-                <td><strong>${cliente.nombreCliente}</strong></td>
+                <td><strong>${cliente.nombre}</strong></td>
                 <td>${cliente.contacto}</td>
                 <td>${cliente.email}</td>
                 <td>${cliente.telefono}</td>
@@ -145,13 +145,13 @@ function mostrarClientes(clientesData) {
                 <td class="text-center">
                     <button type="button" 
                             class="btn btn-sm btn-editar btn-accion"
-                            onclick="editarCliente(${cliente.clienteId})"
+                            onclick="editarCliente(${cliente.id})"
                             title="Editar cliente">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button type="button" 
                             class="btn btn-sm btn-eliminar btn-accion"
-                            onclick="eliminarCliente(${cliente.clienteId})"
+                            onclick="eliminarCliente(${cliente.id})"
                             title="Eliminar cliente">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -208,8 +208,8 @@ async function editarCliente(clienteId) {
 }
 
 function llenarFormularioCliente(cliente) {
-    $('#clienteId').val(cliente.clienteId || cliente.id);
-    $('#nombreCliente').val(cliente.nombreCliente || cliente.nombre);
+    $('#clienteId').val(cliente.id);
+    $('#nombreCliente').val(cliente.nombre);
     $('#contactoCliente').val(cliente.contacto);
     $('#emailCliente').val(cliente.email);
     $('#telefonoCliente').val(cliente.telefono);

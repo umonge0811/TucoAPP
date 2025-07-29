@@ -77,15 +77,13 @@ namespace GestionLlantera.Web.Controllers
                 var jwtToken = this.ObtenerTokenJWT();
                 var clientes = await _clientesService.ObtenerTodosAsync(jwtToken);
 
-                var resultado = clientes.Select(c => new Tuco.Clases.DTOs.ClienteDTO
-                {
-                    ClienteId = c.ClienteId,
-                    NombreCliente = c.NombreCliente,
-                    Contacto = c.Contacto ?? "",
-                    Email = c.Email ?? "",
-                    Telefono = c.Telefono ?? "",
-                    Direccion = c.Direccion ?? "",
-                    UsuarioId = c.UsuarioId
+                var resultado = clientes.Select(c => new {
+                    id = c.ClienteId,
+                    nombre = c.NombreCliente,
+                    contacto = c.Contacto ?? "",
+                    email = c.Email ?? "",
+                    telefono = c.Telefono ?? "",
+                    direccion = c.Direccion ?? ""
                 }).ToList();
 
                 return Json(new { success = true, data = resultado });
