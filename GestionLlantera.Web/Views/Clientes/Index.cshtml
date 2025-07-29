@@ -160,7 +160,9 @@
                                     <td class="d-none d-lg-table-cell">
                                         @if (!string.IsNullOrEmpty(cliente.Email))
                                         {
-                                            @cliente.Email
+                                            <a href="mailto:@cliente.Email" class="text-decoration-none">
+                                                @cliente.Email
+                                            </a>
                                         }
                                         else
                                         {
@@ -172,7 +174,11 @@
                                     <td class="d-none d-sm-table-cell">
                                         @if (!string.IsNullOrEmpty(cliente.Telefono))
                                         {
-                                            @cliente.Telefono
+                                            <a href="https://wa.me/506@cliente.Telefono.ToString().Replace("-", "").Replace(" ", "")" 
+                                               class="text-decoration-none" 
+                                               target="_blank">
+                                                <i class="bi bi-whatsapp me-1"></i>@cliente.Telefono
+                                            </a>
                                         }
                                         else
                                         {
