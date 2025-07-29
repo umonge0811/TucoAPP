@@ -1,39 +1,3 @@
-
-/* Estilos personalizados para SweetAlert2 de inventarios */
-.swal-inventario-popup {
-    font-family: inherit !important;
-}
-
-.swal-inventario-popup .swal2-html-container {
-    text-align: left !important;
-}
-
-.swal-inventario-popup .form-check {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #dee2e6;
-}
-
-.swal-inventario-popup .form-check-input:checked {
-    background-color: #198754;
-    border-color: #198754;
-}
-
-.swal-inventario-popup .alert {
-    margin-bottom: 1rem;
-}
-
-.swal-inventario-popup ul {
-    padding-left: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.swal-inventario-popup ul li {
-    margin-bottom: 0.5rem;
-}
-
-
 ﻿/* /wwwroot/css/views/inventario/programar-inventario.css */
 
 /* Estilos para la tarjeta dashboard */

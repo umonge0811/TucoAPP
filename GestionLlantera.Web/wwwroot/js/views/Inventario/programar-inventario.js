@@ -1,4 +1,4 @@
-// /wwwroot/js/views/inventario/programar-inventario.js
+﻿// /wwwroot/js/views/inventario/programar-inventario.js
 
 document.addEventListener('DOMContentLoaded', function () {
     // Referencias a los modales
@@ -819,55 +819,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Función principal para iniciar inventario con confirmación usando SweetAlert2
+    // Función principal para iniciar inventario con confirmación
     function iniciarInventarioConConfirmacion(inventarioId) {
         console.log(`🎯 Iniciando proceso para inventario ${inventarioId}`);
 
-        // Mostrar SweetAlert2 de confirmación
-        Swal.fire({
-            title: '<i class="bi bi-play-circle me-2"></i>Iniciar Inventario',
-            html: `
-                <div class="text-start">
-                    <div class="alert alert-info mb-3">
-                        <i class="bi bi-info-circle me-2"></i>
-                        <strong>¿Está seguro de que desea iniciar este inventario?</strong>
-                    </div>
-                    <p class="mb-2">Al iniciar el inventario:</p>
-                    <ul class="text-start">
-                        <li>Se notificará por correo electrónico a todos los usuarios asignados</li>
-                        <li>Los usuarios podrán comenzar inmediatamente con el conteo físico</li>
-                        <li>El estado del inventario cambiará a "En Progreso"</li>
-                        <li>Se abrirá automáticamente la interfaz de toma de inventario</li>
-                    </ul>
-                    
-                    <div class="form-check mt-3">
-                        <input class="form-check-input" type="checkbox" id="abrirTomaAutomatica" checked>
-                        <label class="form-check-label" for="abrirTomaAutomatica">
-                            <i class="bi bi-tablet me-1"></i>
-                            Abrir interfaz de toma de inventario automáticamente
-                        </label>
-                    </div>
-                </div>
-            `,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#198754',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="bi bi-play-fill me-2"></i>Iniciar Inventario',
-            cancelButtonText: '<i class="bi bi-x-lg me-1"></i>Cancelar',
-            width: '600px',
-            customClass: {
-                popup: 'swal-inventario-popup',
-                confirmButton: 'btn btn-success',
-                cancelButton: 'btn btn-secondary'
-            },
-            showLoaderOnConfirm: true,
-            preConfirm: () => {
-                const abrirTomaAutomatica = document.getElementById('abrirTomaAutomatica').checked;
-                return ejecutarInicioInventarioSwal(inventarioId, abrirTomaAutomatica);
-            },
-            allowOutsideClick: () => !Swal.isLoading()
-        });
+        // Crear modal de confirmación dinámicamente si no existe
+        let modal = document.getElementById('modalIniciarInventario');
+
+        if (!modal) {
+            modal = crearModalIniciarInventario();
+            document.body.appendChild(modal);
+        }
+
+        // Configurar el modal para este inventario específico
+        configurarModalIniciarInventario(modal, inventarioId);
+
+        // Mostrar el modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
     }
 
     // Crear modal de confirmación dinámicamente
@@ -949,94 +918,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Función que ejecuta el inicio de inventario con SweetAlert2
-    async function ejecutarInicioInventarioSwal(inventarioId, abrirTomaAutomatica) {
-        console.log(`⚡ Ejecutando inicio de inventario ${inventarioId} con SweetAlert2`);
-
-        try {
-            console.log('📡 Enviando petición para iniciar inventario...');
-
-            // Obtener token CSRF
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
-            // Decidir qué endpoint usar según dónde estemos
-            let endpoint;
-
-            // Verificar si tenemos TomaInventarioController disponible
-            if (typeof window.tomaInventarioManager !== 'undefined') {
-                // Estamos en la vista de toma de inventario
-                endpoint = `/TomaInventario/IniciarInventario/${inventarioId}`;
-            } else {
-                // Estamos en las vistas de gestión de inventarios
-                endpoint = `/Inventario/IniciarInventario/${inventarioId}`;
-            }
-
-            console.log(`🎯 Usando endpoint: ${endpoint}`);
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                }
-            });
-
-            console.log(`📡 Respuesta recibida: ${response.status}`);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Error en respuesta:', errorText);
-                throw new Error(`Error ${response.status}: ${errorText}`);
-            }
-
-            const result = await response.json();
-            console.log('✅ Resultado:', result);
-
-            if (result.success) {
-                // Mostrar mensaje de éxito con SweetAlert2
-                await Swal.fire({
-                    icon: 'success',
-                    title: '¡Inventario Iniciado!',
-                    text: result.message || 'Inventario iniciado exitosamente',
-                    confirmButtonColor: '#198754',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-
-                // Vibración en dispositivos móviles
-                if (navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100]);
-                }
-
-                // Determinar próximo paso
-                if (abrirTomaAutomatica) {
-                    console.log('🚀 Redirigiendo a toma de inventario...');
-                    window.location.href = `/TomaInventario/Ejecutar/${inventarioId}`;
-                } else {
-                    console.log('🔄 Recargando página actual...');
-                    window.location.reload();
-                }
-
-            } else {
-                throw new Error(result.message || 'Error desconocido al iniciar inventario');
-            }
-
-        } catch (error) {
-            console.error('💥 Error al iniciar inventario:', error);
-
-            // Mostrar error con SweetAlert2
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al Iniciar Inventario',
-                text: error.message,
-                confirmButtonColor: '#dc3545'
-            });
-
-            throw error; // Re-lanzar para que SweetAlert2 maneje el estado de loading
-        }
-    }
-
-    // Función que ejecuta el inicio de inventario (versión original para compatibilidad)
+    // Función que ejecuta el inicio de inventario
     async function ejecutarInicioInventario(inventarioId, modal) {
         console.log(`⚡ Ejecutando inicio de inventario ${inventarioId}`);
 
