@@ -1,0 +1,257 @@
+                <div class="table-container">
+                    <table class="table table-hover">
+                        <thead class="table-light table-fixed-header">
+                            <tr>
+                                <th class="sortable" data-column="id" data-type="number">
+                                    ID
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th>Imagen</th>
+                                <th class="sortable" data-column="producto" data-type="text">
+                                    Producto
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th class="sortable" data-column="medidas" data-type="text">
+                                    Medidas
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th class="sortable" data-column="marca" data-type="text">
+                                    Marca/Modelo
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th class="sortable" data-column="costo" data-type="currency" asp-permiso="VerCostos">
+                                    Costo
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th class="sortable" data-column="utilidad" data-type="percentage" asp-permiso="Ver Utilidades">
+                                    Utilidad %
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th class="sortable" data-column="precio" data-type="currency">
+                                    Precio Final
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th class="sortable" data-column="stock" data-type="number">
+                                    Stock
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th class="sortable" data-column="stockmin" data-type="number">
+                                    Stock Mín
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var producto in Model)
+                            {
+                                <tr class="@(producto.CantidadEnInventario <= producto.StockMinimo ? "table-danger" : "")" data-id="@producto.ProductoId">
+                                    <!-- 1. ID -->
+                                    <td>@producto.ProductoId</td>
+
+                                    <!-- 2. Imagen -->
+                                    <!-- 2. Imagen - VERSIÓN MEJORADA -->
+                                    <td style="cursor: pointer; padding: 12px;">
+                                        <div class="producto-img-container"
+                                             style="width: 70px; height: 70px; position: relative; display: flex; align-items: center; justify-content: center;">
+
+                                            <!-- Enlace invisible para SEO y accesibilidad -->
+                                            <a href="@Url.Action("DetalleProducto", "Inventario", new { id = producto.ProductoId })"
+                                               class="producto-img-link"
+                                               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0;"
+                                               aria-label="Ver detalles de @producto.NombreProducto">
+                                            </a>
+
+                                            <!-- Contenedor de imagen visual -->
+                                            <div class="producto-img-mini" style="width: 100%; height: 100%; position: relative; z-index: 2;">
+                                                @if (producto.Imagenes != null && producto.Imagenes.Any())
+                                                {
+                                                    <img src="@producto.Imagenes.First().UrlImagen"
+                                                         alt="@producto.NombreProducto"
+                                                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #e9ecef; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                }
+                                                else
+                                                {
+                                                    <div class="sin-imagen-mini d-flex align-items-center justify-content-center"
+                                                         style="width: 100%; height: 100%; background-color: #f8f9fa; border-radius: 8px; border: 2px dashed #dee2e6;">
+                                                        <i class="bi bi-image" style="font-size: 1.8rem; color: #6c757d;"></i>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            <!-- Overlay hover para mejor UX -->
+                                            <div class="hover-overlay"
+                                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                                                    background: rgba(0,123,255,0.15); border-radius: 8px;
+                                                    opacity: 0; transition: opacity 0.3s ease; z-index: 3; pointer-events: none;">
+                                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white;">
+                                                    <i class="bi bi-eye" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- 3. Producto -->
+                                    <td>
+                                        <strong>@producto.NombreProducto</strong>
+                                        @if (!string.IsNullOrEmpty(producto.Descripcion))
+                                        {
+                                            <div class="small text-muted">@(producto.Descripcion.Length > 50 ? producto.Descripcion.Substring(0, 50) + "..." : producto.Descripcion)</div>
+                                        }
+                                        @if (producto.Llanta != null)
+                                        {
+                                            <span class="badge bg-primary">Llanta</span>
+                                        }
+                                    </td>
+                                    <!-- 4. Medidas -->
+                                    <td>
+                                        @if (producto.Llanta != null)
+                                        {
+                                            <span class="medida-llanta">
+                                                @if (producto.Llanta.Ancho.HasValue && !string.IsNullOrEmpty(producto.Llanta.Diametro))
+                                                {
+                                                    @if (producto.Llanta.Perfil.HasValue && producto.Llanta.Perfil.Value > 0)
+                                                    {
+                                                        <!-- Formato completo: 225/60/R16 -->
+                                                        @($"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}")
+                                                    }
+                                                    else
+                                                    {
+                                                        <!-- Formato sin perfil: 225/R16 -->
+                                                        @($"{producto.Llanta.Ancho}/R{producto.Llanta.Diametro}")
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span>N/A</span>
+                                                }
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+
+                                    <!-- 5. Marca/Modelo -->
+                                    <td>
+                                        @if (producto.Llanta != null)
+                                        {
+                                            <div class="marca-modelo">
+                                                @if (!string.IsNullOrEmpty(producto.Llanta.Marca) && !string.IsNullOrEmpty(producto.Llanta.Modelo))
+                                                {
+                                                    <span>@($"{producto.Llanta.Marca}/{producto.Llanta.Modelo}")</span>
+                                                    @if (!string.IsNullOrEmpty(producto.Llanta.TipoTerreno))
+                                                    {
+                                                        <div class="small text-muted">@producto.Llanta.TipoTerreno</div>
+                                                    }
+                                                }
+                                                else if (!string.IsNullOrEmpty(producto.Llanta.Marca))
+                                                {
+                                                    <span>@producto.Llanta.Marca</span>
+                                                }
+                                                else if (!string.IsNullOrEmpty(producto.Llanta.Modelo))
+                                                {
+                                                    <span>@producto.Llanta.Modelo</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Sin información</span>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+
+                                    <!-- 6. Costo -->
+                                    <td class="text-end" asp-permiso="VerCostos">
+                                        @if (producto.Costo.HasValue)
+                                        {
+                                            <span class="text-muted small">₡@producto.Costo.Value.ToString("N0")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+
+                                    <!-- 7. Utilidad % -->
+                                    <td class="text-center" asp-permiso="Ver Utilidades">
+                                        @if (producto.PorcentajeUtilidad.HasValue)
+                                        {
+                                            <span class="badge bg-info">@producto.PorcentajeUtilidad.Value.ToString("0.0")%</span>
+                                            @if (producto.UtilidadEnDinero.HasValue)
+                                            {
+                                                <div class="small text-muted">₡@producto.UtilidadEnDinero.Value.ToString("N0")</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+
+                                    <!-- 8. Precio Final -->
+                                    <td class="text-end fw-bold">
+                                        @if (producto.UsarCalculoAutomatico)
+                                        {
+                                            <!-- Precio calculado automáticamente -->
+                                            <span class="text-success">₡@((producto.PrecioCalculado ?? 0).ToString("N0"))</span>
+                                            <small class="d-block text-success">Calculado</small>
+                                        }
+                                        else
+                                        {
+                                            <!-- Precio manual -->
+                                            <span class="text-primary">₡@((producto.Precio ?? 0).ToString("N0"))</span>
+                                            <small class="d-block text-muted">Manual</small>
+                                        }
+                                    </td>
+
+                                    <!-- 9. Stock -->
+                                    <td class="text-center">
+                                        <span class="@(producto.CantidadEnInventario <= producto.StockMinimo ? "text-danger fw-bold" : "")">
+                                            @producto.CantidadEnInventario
+                                            @if (producto.CantidadEnInventario <= producto.StockMinimo)
+                                            {
+                                                <i class="bi bi-exclamation-triangle-fill ms-1" data-bs-toggle="tooltip" title="Stock bajo"></i>
+                                            }
+                                        </span>
+                                    </td>
+
+                                    <!-- 10. Stock Mín -->
+                                    <td class="text-center">
+                                        @producto.StockMinimo
+                                    </td>
+
+                                    <!-- 11. Acciones -->
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-info ver-detalles-btn"
+                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ver detalles">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <a href="@Url.Action("EditarProducto", "Inventario", new { id = producto.ProductoId })"
+                                               class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Editar"
+                                               asp-permiso="Editar Productos">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-success ajuste-stock-btn"
+                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Ajustar stock"
+                                                    asp-permiso="Ajustar Stock">
+                                                <i class="bi bi-plus-slash-minus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger eliminar-producto-btn"
+                                                    data-id="@producto.ProductoId" data-bs-toggle="tooltip" title="Eliminar"
+                                                    asp-permiso="Eliminar Productos">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
