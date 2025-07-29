@@ -216,12 +216,11 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
-                if (!await this.TienePermisoAsync("Ver Detalle Productos"))
+                if (!await this.TienePermisoAsync("Ver Detalle Producto"))
                 {
-                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Productos' intentó acceder al inventario");
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Detalle Producto' intentó acceder al inventario");
 
-                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Reportes' intentó descargar reporte Excel");
-                    TempData["AccesoNoAutorizado"] = "Ver Detalle Productos";
+                    TempData["AccesoNoAutorizado"] = "Ver Detalle Producto";
                     TempData["ModuloAcceso"] = "Inventario";
                     return RedirectToAction("AccessDenied", "Account");
                 }
