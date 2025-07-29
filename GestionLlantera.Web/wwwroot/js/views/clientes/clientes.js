@@ -1,4 +1,3 @@
-
 // ===== GESTIÓN DE CLIENTES - JAVASCRIPT =====
 
 let modalCliente = null;
@@ -21,10 +20,10 @@ function inicializarClientes() {
 
         // Configurar eventos
         configurarEventos();
-        
+
         // Cargar clientes iniciales
         cargarClientes();
-        
+
         console.log('✅ Gestión de clientes inicializada correctamente');
     } catch (error) {
         console.error('❌ Error inicializando gestión de clientes:', error);
@@ -32,6 +31,21 @@ function inicializarClientes() {
 }
 
 function configurarEventos() {
+    // Botón nuevo cliente
+    $('#btnNuevoCliente').on('click', function() {
+        // ✅ VERIFICAR PERMISOS ANTES DE ABRIR MODAL
+        if (window.permisosUsuario && (window.permisosUsuario.puedeCrearClientes || window.permisosUsuario.esAdmin)) {
+            abrirModalNuevoCliente();
+        } else {
+            mostrarToast('Sin permisos', 'No tienes permisos para crear clientes', 'warning');
+        }
+    });
+
+    // Botón guardar cliente
+    $('#btnGuardarCliente').on('click', function() {
+        guardarCliente();
+    });
+
     // Búsqueda de clientes
     $('#buscarClientes').on('input', debounce(function() {
         const termino = $(this).val().trim();
@@ -44,16 +58,6 @@ function configurarEventos() {
     $('#btnLimpiarFiltros').on('click', function() {
         $('#buscarClientes').val('');
         cargarClientes();
-    });
-
-    // Nuevo cliente
-    $('#btnNuevoCliente').on('click', function() {
-        abrirModalNuevoCliente();
-    });
-
-    // Guardar cliente
-    $('#btnGuardarCliente').on('click', function() {
-        guardarCliente();
     });
 
     // Limpiar formulario al cerrar modal
@@ -74,7 +78,7 @@ async function cargarClientes() {
         console.log('📋 Cargando clientes...');
 
         const response = await fetch('/Clientes/ObtenerClientes');
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -102,7 +106,7 @@ async function buscarClientes(termino) {
         console.log(`🔍 Buscando clientes: "${termino}"`);
 
         const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(termino)}`);
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -126,42 +130,87 @@ async function buscarClientes(termino) {
 
 // ===== MOSTRAR DATOS =====
 function mostrarClientes(clientesData) {
-    const tbody = $('#tablaClientes tbody');
-    tbody.empty();
+    try {
+        const tbody = $('#tablaClientes tbody');
+        tbody.empty();
 
-    if (!clientesData || clientesData.length === 0) {
-        mostrarSinResultados();
-        return;
+        if (!clientesData || clientesData.length === 0) {
+            $('#sinResultados').removeClass('d-none');
+            $('#estadoCarga').addClass('d-none');
+            return;
+        }
+
+        $('#sinResultados').addClass('d-none');
+        $('#estadoCarga').addClass('d-none');
+
+        clientesData.forEach(cliente => {
+            // ✅ GENERAR BOTONES CON VALIDACIÓN DE PERMISOS
+            const botonesAcciones = generarBotonesAcciones(cliente.id);
+
+            const fila = `
+                <tr data-cliente-id="${cliente.id}">
+                    <td>
+                        <div class="fw-semibold">${cliente.nombre}</div>
+                    </td>
+                    <td>${cliente.contacto || '-'}</td>
+                    <td>${cliente.email || '-'}</td>
+                    <td>${cliente.telefono || '-'}</td>
+                    <td>
+                        <div class="text-truncate" style="max-width: 200px;" title="${cliente.direccion || '-'}">
+                            ${cliente.direccion || '-'}
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group" role="group">
+                            ${botonesAcciones}
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tbody.append(fila);
+        });
+
+        console.log(`✅ Mostrando ${clientesData.length} clientes en la tabla`);
+    } catch (error) {
+        console.error('❌ Error mostrando clientes:', error);
+        mostrarError('Error al mostrar los clientes', 'danger');
+    }
+}
+
+// ===== FUNCIÓN PARA GENERAR BOTONES CON VALIDACIÓN DE PERMISOS =====
+function generarBotonesAcciones(clienteId) {
+    let botones = '';
+
+    // ✅ BOTÓN EDITAR (requiere permiso "Editar Clientes")
+    if (window.permisosUsuario && (window.permisosUsuario.puedeEditarClientes || window.permisosUsuario.esAdmin)) {
+        botones += `
+            <button type="button" 
+                    class="btn btn-sm btn-editar btn-accion" 
+                    onclick="editarCliente(${clienteId})"
+                    title="Editar cliente">
+                <i class="bi bi-pencil"></i>
+            </button>
+        `;
     }
 
-    clientesData.forEach(cliente => {
-        const fila = `
-            <tr>
-                <td><strong>${cliente.nombre}</strong></td>
-                <td>${cliente.contacto}</td>
-                <td>${cliente.email}</td>
-                <td>${cliente.telefono}</td>
-                <td>${cliente.direccion}</td>
-                <td class="text-center">
-                    <button type="button" 
-                            class="btn btn-sm btn-editar btn-accion"
-                            onclick="editarCliente(${cliente.id})"
-                            title="Editar cliente">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" 
-                            class="btn btn-sm btn-eliminar btn-accion"
-                            onclick="eliminarCliente(${cliente.id})"
-                            title="Eliminar cliente">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
+    // ✅ BOTÓN ELIMINAR (requiere permiso "Eliminar Clientes")
+    if (window.permisosUsuario && (window.permisosUsuario.puedeEliminarClientes || window.permisosUsuario.esAdmin)) {
+        botones += `
+            <button type="button" 
+                    class="btn btn-sm btn-danger btn-accion" 
+                    onclick="eliminarCliente(${clienteId})"
+                    title="Eliminar cliente">
+                <i class="bi bi-trash"></i>
+            </button>
         `;
-        tbody.append(fila);
-    });
+    }
 
-    ocultarEstadosEspeciales();
+    // ✅ SI NO HAY BOTONES, MOSTRAR MENSAJE
+    if (!botones) {
+        botones = '<small class="text-muted">Sin acciones</small>';
+    }
+
+    return botones;
 }
 
 // ===== MODAL DE CLIENTE =====
@@ -169,7 +218,7 @@ function abrirModalNuevoCliente() {
     clienteEditando = null;
     $('#modalClienteLabel').text('Nuevo Cliente');
     $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Crear Cliente');
-    
+
     if (modalCliente) {
         modalCliente.show();
     }
@@ -180,7 +229,7 @@ async function editarCliente(clienteId) {
         console.log(`✏️ Editando cliente: ${clienteId}`);
 
         const response = await fetch(`/Clientes/ObtenerClientePorId?id=${clienteId}`);
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -190,10 +239,10 @@ async function editarCliente(clienteId) {
         if (resultado.success && resultado.data) {
             clienteEditando = resultado.data;
             llenarFormularioCliente(resultado.data);
-            
+
             $('#modalClienteLabel').text('Editar Cliente');
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
-            
+
             if (modalCliente) {
                 modalCliente.show();
             }
@@ -262,11 +311,11 @@ async function guardarCliente() {
 
         if (resultado.success) {
             mostrarExito(resultado.message);
-            
+
             if (modalCliente) {
                 modalCliente.hide();
             }
-            
+
             // Recargar lista de clientes
             cargarClientes();
         } else {
@@ -278,7 +327,7 @@ async function guardarCliente() {
         mostrarError('Error al guardar cliente');
     } finally {
         $('#btnGuardarCliente').prop('disabled', false);
-        
+
         if (clienteEditando) {
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
         } else {
