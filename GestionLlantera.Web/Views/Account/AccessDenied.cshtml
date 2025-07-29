@@ -1,6 +1,7 @@
 
 @{
     ViewData["Title"] = "Acceso Denegado";
+    Layout = "_AdminLayout";
     
     // Obtener datos del TempData
     var permisoRequerido = TempData["AccesoNoAutorizado"]?.ToString() ?? "acceso";
