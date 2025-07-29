@@ -151,11 +151,23 @@ async function editarCliente(clienteId) {
 }
 
 function llenarFormularioCliente(cliente) {
-    $('#clienteId').val(cliente.id);
     $('#nombreCliente').val(cliente.nombre);
     $('#contactoCliente').val(cliente.contacto);
     $('#emailCliente').val(cliente.email);
-    $('#telefonoCliente').val(cliente.telefono);
+
+    // Separar código de país y número de teléfono
+    if (cliente.telefono && cliente.telefono.includes('+')) {
+        const partesTelefono = cliente.telefono.split(' ');
+        const codigoPais = partesTelefono[0];
+        const numero = partesTelefono.slice(1).join(' ');
+
+        $('#codigoPaisCliente').val(codigoPais);
+        $('#telefonoCliente').val(numero);
+    } else {
+        $('#codigoPaisCliente').val('+506'); // Default Costa Rica
+        $('#telefonoCliente').val(cliente.telefono || '');
+    }
+
     $('#direccionCliente').val(cliente.direccion);
 }
 
@@ -165,13 +177,18 @@ async function guardarCliente() {
             return;
         }
 
+        // Formatear teléfono con código de país
+        const codigoPais = $('#codigoPaisCliente').val();
+        const numeroTelefono = $('#telefonoCliente').val().trim();
+        const telefonoCompleto = `${codigoPais} ${numeroTelefono}`;
+
         const clienteData = {
-            ClienteId: clienteEditando ? clienteEditando.id : 0,
+            ClienteId: parseInt($('#clienteId').val()) || 0,
             NombreCliente: $('#nombreCliente').val().trim(),
-            Contacto: $('#contactoCliente').val().trim() || null,
-            Email: $('#emailCliente').val().trim() || null,
-            Telefono: $('#telefonoCliente').val().trim() || null,
-            Direccion: $('#direccionCliente').val().trim() || null
+            Contacto: $('#contactoCliente').val().trim(),
+            Email: $('#emailCliente').val().trim(),
+            Telefono: telefonoCompleto,
+            Direccion: $('#direccionCliente').val().trim()
         };
 
         $('#btnGuardarCliente').prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>Guardando...');
@@ -421,10 +438,10 @@ function validarEmail(email) {
 // ===== UTILIDADES =====
 function limpiarFormularioCliente() {
     $('#formCliente')[0].reset();
-    $('#clienteId').val('0');
-    $('.form-control').removeClass('is-invalid');
-    $('.invalid-feedback').text('');
-    clienteEditando = null;
+    $('#clienteId').val(0);
+    $('#codigoPaisCliente').val('+506'); // Reset a Costa Rica por defecto
+    $('#modalCliente .form-control, #modalCliente .form-select').removeClass('is-invalid is-valid');
+    $('#modalCliente .invalid-feedback').text('');
 }
 
 function mostrarEstadoCarga(mostrar) {
