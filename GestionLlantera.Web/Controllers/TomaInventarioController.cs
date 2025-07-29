@@ -265,7 +265,7 @@ namespace GestionLlantera.Web.Controllers
                 if (asignacion == null)
                 {
                     _logger.LogWarning("🚫 Usuario no asignado intentó acceder al inventario {InventarioId}", inventarioId);
-                    
+
                     return Json(new
                     {
                         success = false,
@@ -939,11 +939,9 @@ namespace GestionLlantera.Web.Controllers
                 if (!puedeVerHistorial && !puedeVerHistorialCompleto)
                 {
                     _logger.LogWarning("🚫 Usuario {Usuario} sin permisos para ver historial de inventarios", User.Identity?.Name);
-                    ViewBag.MostrarAlertaPermisos = true;
-                    ViewBag.PermisoRequerido = "Ver Historial Inventarios";
-                    ViewBag.AccionIntentada = "ver el historial de inventarios";
-                    ViewBag.HoraIntento = DateTime.Now.ToString("HH:mm:ss");
-                    return View(new List<InventarioProgramadoDTO>());
+                    TempData["AccesoNoAutorizado"] = "Ver Historial Inventarios";
+                    TempData["ModuloAcceso"] = "Historial de Inventarios";
+                    return RedirectToAction("AccessDenied", "Account");
                 }
 
                 var usuarioId = ObtenerIdUsuarioActual();

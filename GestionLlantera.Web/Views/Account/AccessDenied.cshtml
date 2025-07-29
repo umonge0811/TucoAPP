@@ -1,49 +1,69 @@
+
 @{
     ViewData["Title"] = "Acceso Denegado";
+    
+    // Obtener datos del TempData
+    var permisoRequerido = TempData["AccesoNoAutorizado"]?.ToString() ?? "acceso";
+    var moduloAcceso = TempData["ModuloAcceso"]?.ToString() ?? "esta página";
+    var horaIntento = DateTime.Now.ToString("HH:mm:ss");
+    
+    // Configurar colores según el módulo
+    var configuracionModulo = moduloAcceso.ToLower() switch
+    {
+        "facturación" => new { Color = "warning", Icono = "bi-receipt", Email = "¿Necesitas acceso a facturación?" },
+        "inventario" => new { Color = "danger", Icono = "bi-box-seam", Email = "¿Necesitas gestionar inventario?" },
+        "reportes" => new { Color = "warning", Icono = "bi-graph-up", Email = "¿Necesitas acceso a reportes?" },
+        "clientes" => new { Color = "info", Icono = "bi-people", Email = "¿Necesitas gestionar clientes?" },
+        "proveedores" => new { Color = "primary", Icono = "bi-truck", Email = "¿Necesitas gestionar proveedores?" },
+        "toma de inventario" => new { Color = "secondary", Icono = "bi-clipboard-check", Email = "¿Necesitas realizar toma de inventario?" },
+        _ => new { Color = "warning", Icono = "bi-shield-exclamation", Email = "¿Necesitas acceso a esta función?" }
+    };
 }
 
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            @if (TempData["AccesoNoAutorizado"] != null)
-            {
-                @Html.Raw(TempData["AccesoNoAutorizado"])
-            }
-            else
-            {
-                <div class="alert alert-warning alert-dismissible fade show border-warning shadow-sm" role="alert">
-                    <div class="d-flex align-items-start">
-                        <div class="alert-icon me-3">
-                            <i class="bi bi-shield-exclamation fs-3 text-warning"></i>
+            <div class="alert alert-@(configuracionModulo.Color) alert-dismissible fade show border-@(configuracionModulo.Color) shadow-sm" role="alert">
+                <div class="d-flex align-items-start">
+                    <div class="alert-icon me-3">
+                        <i class="@(configuracionModulo.Icono) fs-3 text-@(configuracionModulo.Color)"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="alert-heading mb-2 fw-bold">
+                            <i class="bi bi-lock-fill me-1"></i>
+                            Acceso No Autorizado - @moduloAcceso
+                        </h6>
+                        <p class="mb-2">No tienes permisos para acceder al módulo de @moduloAcceso.ToLower().</p>
+
+                        <div class="alert-details bg-light rounded p-2 mb-2">
+                            <small class="text-muted d-block">
+                                <i class="bi bi-info-circle me-1"></i>
+                                <strong>Permiso requerido:</strong>
+                                <code class="text-dark">@permisoRequerido</code>
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-clock me-1"></i>
+                                <strong>Hora del intento:</strong> @horaIntento
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-gear me-1"></i>
+                                <strong>Módulo:</strong> @moduloAcceso
+                            </small>
                         </div>
-                        <div class="flex-grow-1">
-                            <h6 class="alert-heading mb-2 fw-bold">
-                                <i class="bi bi-lock-fill me-1"></i>
-                                Acceso No Autorizado
-                            </h6>
-                            <p class="mb-2">No tienes permisos para acceder a esta página.</p>
 
-                            <div class="alert-details bg-light rounded p-2 mb-2">
-                                <small class="text-muted d-block">
-                                    <i class="bi bi-clock me-1"></i>
-                                    <strong>Hora del intento:</strong> @DateTime.Now.ToString("HH:mm:ss")
-                                </small>
-                            </div>
-
-                            <div class="alert-actions">
-                                <small class="text-muted">
-                                    💡 <strong>¿Necesitas acceso a esta función?</strong><br>
-                                    <a href="mailto:admin@tuempresa.com" class="btn btn-sm btn-outline-warning mt-1">
-                                        <i class="bi bi-envelope me-1"></i>
-                                        Solicitar Permisos
-                                    </a>
-                                </small>
-                            </div>
+                        <div class="alert-actions">
+                            <small class="text-muted">
+                                💡 <strong>@(configuracionModulo.Email)</strong><br>
+                                <a href="mailto:admin@tuempresa.com" class="btn btn-sm btn-outline-@(configuracionModulo.Color) mt-1">
+                                    <i class="bi bi-envelope me-1"></i>
+                                    Solicitar Permisos
+                                </a>
+                            </small>
                         </div>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
                 </div>
-            }
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
 
             <div class="text-center mt-4">
                 <a href="@Url.Action("Index", "Dashboard")" class="btn btn-primary">

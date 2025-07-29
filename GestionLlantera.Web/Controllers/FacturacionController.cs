@@ -51,48 +51,8 @@ namespace GestionLlantera.Web.Controllers
                 if (!await this.TienePermisoAsync("Ver Facturación"))
                 {
                     _logger.LogWarning("🚫 Usuario sin permiso 'Ver Facturación' intentó acceder al módulo");
-                    
-                    // Crear alerta personalizada de acceso no autorizado
-                    var alertaAccesoNoAutorizado = $@"
-                    <div class=""alert alert-warning alert-dismissible fade show border-warning shadow-sm"" role=""alert"">
-                        <div class=""d-flex align-items-start"">
-                            <div class=""alert-icon me-3"">
-                                <i class=""bi bi-shield-exclamation fs-3 text-warning""></i>
-                            </div>
-                            <div class=""flex-grow-1"">
-                                <h6 class=""alert-heading mb-2 fw-bold"">
-                                    <i class=""bi bi-lock-fill me-1""></i>
-                                    Acceso No Autorizado
-                                </h6>
-                                <p class=""mb-2"">No tienes permisos para acceder al módulo de facturación.</p>
-
-                                <div class=""alert-details bg-light rounded p-2 mb-2"">
-                                    <small class=""text-muted d-block"">
-                                        <i class=""bi bi-info-circle me-1""></i>
-                                        <strong>Permiso requerido:</strong>
-                                        <code class=""text-dark"">Ver Facturación</code>
-                                    </small>
-                                    <small class=""text-muted d-block"">
-                                        <i class=""bi bi-clock me-1""></i>
-                                        <strong>Hora del intento:</strong> {DateTime.Now:HH:mm:ss}
-                                    </small>
-                                </div>
-
-                                <div class=""alert-actions"">
-                                    <small class=""text-muted"">
-                                        💡 <strong>¿Necesitas acceso a esta función?</strong><br>
-                                        <a href=""mailto:admin@tuempresa.com"" class=""btn btn-sm btn-outline-warning mt-1"">
-                                            <i class=""bi bi-envelope me-1""></i>
-                                            Solicitar Permisos
-                                        </a>
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                        <button type=""button"" class=""btn-close"" data-bs-dismiss=""alert"" aria-label=""Cerrar""></button>
-                    </div>";
-
-                    TempData["AccesoNoAutorizado"] = alertaAccesoNoAutorizado;
+                    TempData["AccesoNoAutorizado"] = "Ver Facturación";
+                    TempData["ModuloAcceso"] = "Facturación";
                     return RedirectToAction("AccessDenied", "Account");
                 }
 

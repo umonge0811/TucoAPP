@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -33,52 +32,8 @@ namespace GestionLlantera.Web.Controllers
                 if (!await this.TienePermisoAsync("Ver Clientes"))
                 {
                     _logger.LogWarning("🚫 Usuario sin permiso 'Ver Clientes' intentó acceder al módulo de clientes");
-                    
-                    // Crear alerta personalizada de acceso no autorizado
-                    var alertaAccesoNoAutorizado = $@"
-                    <div class=""alert alert-info alert-dismissible fade show border-info shadow-sm"" role=""alert"">
-                        <div class=""d-flex align-items-start"">
-                            <div class=""alert-icon me-3"">
-                                <i class=""bi bi-shield-exclamation fs-3 text-info""></i>
-                            </div>
-                            <div class=""flex-grow-1"">
-                                <h6 class=""alert-heading mb-2 fw-bold"">
-                                    <i class=""bi bi-lock-fill me-1""></i>
-                                    Acceso No Autorizado - Clientes
-                                </h6>
-                                <p class=""mb-2"">No tienes permisos para acceder al módulo de gestión de clientes.</p>
-
-                                <div class=""alert-details bg-light rounded p-2 mb-2"">
-                                    <small class=""text-muted d-block"">
-                                        <i class=""bi bi-info-circle me-1""></i>
-                                        <strong>Permiso requerido:</strong>
-                                        <code class=""text-dark"">Ver Clientes</code>
-                                    </small>
-                                    <small class=""text-muted d-block"">
-                                        <i class=""bi bi-clock me-1""></i>
-                                        <strong>Hora del intento:</strong> {DateTime.Now:HH:mm:ss}
-                                    </small>
-                                    <small class=""text-muted d-block"">
-                                        <i class=""bi bi-people me-1""></i>
-                                        <strong>Módulo:</strong> Gestión de Clientes
-                                    </small>
-                                </div>
-
-                                <div class=""alert-actions"">
-                                    <small class=""text-muted"">
-                                        💡 <strong>¿Necesitas gestionar clientes?</strong><br>
-                                        <a href=""mailto:admin@tuempresa.com"" class=""btn btn-sm btn-outline-info mt-1"">
-                                            <i class=""bi bi-envelope me-1""></i>
-                                            Solicitar Permisos
-                                        </a>
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                        <button type=""button"" class=""btn-close"" data-bs-dismiss=""alert"" aria-label=""Cerrar""></button>
-                    </div>";
-
-                    TempData["AccesoNoAutorizado"] = alertaAccesoNoAutorizado;
+                    TempData["AccesoNoAutorizado"] = "Ver Clientes";
+                    TempData["ModuloAcceso"] = "Clientes";
                     return RedirectToAction("AccessDenied", "Account");
                 }
 

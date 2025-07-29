@@ -93,15 +93,9 @@ namespace GestionLlantera.Web.Controllers
                 if (!await this.TienePermisoAsync("Ver Proveedores"))
                 {
                     _logger.LogWarning("🚫 Usuario sin permiso 'Ver Proveedores' intentó acceder a la lista de proveedores");
-                    
-                    // Para requests AJAX, devolver JSON con mensaje personalizado
-                    return Json(new { 
-                        success = false, 
-                        message = "🔒 Acceso restringido: No tienes permisos para consultar proveedores",
-                        details = "Contacta al administrador para solicitar el permiso 'Ver Proveedores'",
-                        permiso_requerido = "Ver Proveedores",
-                        timestamp = DateTime.Now.ToString("HH:mm:ss")
-                    });
+                    TempData["AccesoNoAutorizado"] = "Ver Proveedores";
+                    TempData["ModuloAcceso"] = "Proveedores";
+                    return RedirectToAction("AccessDenied", "Account");
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();
@@ -411,7 +405,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
-                
+
                 var resultado = await _proveedoresService.ObtenerPedidosProveedorAsync(proveedorId, jwtToken);
 
                 if (resultado.success)
@@ -419,9 +413,9 @@ namespace GestionLlantera.Web.Controllers
                     // Asegurar que data sea una lista válida
                     var pedidos = resultado.data as System.Collections.IEnumerable ?? new List<object>();
                     var listaPedidos = pedidos.Cast<object>().ToList();
-                    
+
                     _logger.LogInformation("📦 Enviando {Count} pedidos al cliente", listaPedidos.Count);
-                    
+
                     return Json(new { success = true, data = listaPedidos });
                 }
                 else
