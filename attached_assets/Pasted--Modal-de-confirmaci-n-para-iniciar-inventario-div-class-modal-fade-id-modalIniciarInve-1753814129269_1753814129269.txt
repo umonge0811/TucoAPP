@@ -1,0 +1,52 @@
+<!-- Modal de confirmación para iniciar inventario -->
+<div class="modal fade" id="modalIniciarInventario" tabindex="-1" aria-labelledby="modalIniciarInventarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalIniciarInventarioLabel">Iniciar Inventario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro de que desea iniciar este inventario?</p>
+                <p>Al iniciar el inventario:</p>
+                <ul>
+                    <li>Se notificará por correo electrónico a todos los usuarios asignados</li>
+                    <li>Los usuarios podrán comenzar inmediatamente con el conteo físico</li>
+                    <li>El estado del inventario cambiará a "En Progreso"</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmarIniciar">Iniciar Inventario</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        console.log('🔧 JavaScript cargado para detalle inventario');
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('🔧 DOM cargado');
+            
+            // Botón de iniciar inventario
+            const iniciarInventarioBtn = document.querySelector('.iniciar-inventario-btn');
+            console.log('🔧 Botón encontrado:', iniciarInventarioBtn);
+            
+            if (iniciarInventarioBtn) {
+                console.log('🔧 Agregando event listener al botón');
+                iniciarInventarioBtn.addEventListener('click', function() {
+                    console.log('🔧 ¡CLICK DETECTADO!');
+                    const inventarioId = this.getAttribute('data-id');
+                    console.log('🔧 ID del inventario:', inventarioId);
+                    
+                    // Mostrar confirmación antes de iniciar
+                    if (confirm('¿Está seguro de que desea iniciar este inventario?\n\nAl iniciarlo:\n- Se notificará a todos los usuarios asignados\n- Podrán comenzar el conteo físico\n- El estado cambiará a "En Progreso"')) {
+                        iniciarInventario(inventarioId);
+                    }
+                });
+            } else {
+                console.log('❌ NO se encontró el botón con clase .iniciar-inventario-btn');
+            }
+        });
