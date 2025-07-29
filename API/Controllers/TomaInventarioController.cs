@@ -396,7 +396,7 @@ namespace API.Controllers
                     inventarioId, User.Identity?.Name ?? "Anónimo");
 
                 // ✅ VERIFICAR ACCESO AL INVENTARIO
-                var tieneAcceso = await VerificarAccesoInventario(inventarioId);
+                var tieneAcceso = await VerificarAccesoInventarioInternal(inventarioId);
                 if (!tieneAcceso)
                 {
                     _logger.LogWarning("🚫 Usuario {Usuario} sin acceso al inventario {InventarioId}",
@@ -667,7 +667,7 @@ namespace API.Controllers
         /// <summary>
         /// Verifica si el usuario actual tiene acceso al inventario
         /// </summary>
-        private async Task<bool> VerificarAccesoInventario(int inventarioId)
+        private async Task<bool> VerificarAccesoInventarioInternal(int inventarioId)
         {
             try
             {
@@ -762,7 +762,7 @@ namespace API.Controllers
                     inventarioId, User.Identity?.Name ?? "Anónimo");
 
                 // ✅ VERIFICAR ACCESO AL INVENTARIO
-                var tieneAcceso = await VerificarAccesoInventario(inventarioId);
+                var tieneAcceso = await VerificarAccesoInventarioInternal(inventarioId);
                 if (!tieneAcceso)
                 {
                     return Forbid("No tienes acceso a este inventario");
@@ -1492,9 +1492,9 @@ namespace API.Controllers
         {
             try
             {
-                var tieneAcceso = await VerificarAccesoInventario(inventarioId);
+                var tieneAcceso = await VerificarAccesoInventarioInternal(inventarioId);
                 var usuarioId = ObtenerIdUsuarioActual();
-                
+
                 return Ok(new
                 {
                     success = true,
