@@ -119,12 +119,12 @@
                                 <tr data-id="@cliente.ClienteId" class="cliente-row">
                                     <!-- 1. ID -->
                                     <td class="text-center">
-                                        <span class="badge bg-primary fs-6">@cliente.ClienteId</span>
+                                        @cliente.ClienteId
                                     </td>
 
                                     <!-- 2. Nombre -->
                                     <td>
-                                        <div class="fw-bold text-primary">@cliente.NombreCliente</div>
+                                        @cliente.NombreCliente
                                         <!-- Info móvil: mostrar datos importantes en pantallas pequeñas -->
                                         <div class="d-md-none small text-muted mt-1">
                                             @if (!string.IsNullOrEmpty(cliente.Contacto))
@@ -148,7 +148,7 @@
                                     <td class="d-none d-md-table-cell">
                                         @if (!string.IsNullOrEmpty(cliente.Contacto))
                                         {
-                                            <span class="badge bg-light text-dark">@cliente.Contacto</span>
+                                            @cliente.Contacto
                                         }
                                         else
                                         {
@@ -160,9 +160,7 @@
                                     <td class="d-none d-lg-table-cell">
                                         @if (!string.IsNullOrEmpty(cliente.Email))
                                         {
-                                            <a href="mailto:@cliente.Email" class="text-decoration-none">
-                                                @cliente.Email
-                                            </a>
+                                            @cliente.Email
                                         }
                                         else
                                         {
@@ -174,9 +172,7 @@
                                     <td class="d-none d-sm-table-cell">
                                         @if (!string.IsNullOrEmpty(cliente.Telefono))
                                         {
-                                            <a href="tel:@cliente.Telefono" class="text-decoration-none">
-                                                <i class="bi bi-telephone me-1"></i>@cliente.Telefono
-                                            </a>
+                                            @cliente.Telefono
                                         }
                                         else
                                         {
