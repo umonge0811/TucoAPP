@@ -1,5 +1,5 @@
 
-@model List<dynamic>
+@model List<Tuco.Clases.DTOs.ClienteDTO>
 @{
     ViewData["Title"] = "Gestión de Clientes";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -100,8 +100,8 @@
                                     @foreach (var cliente in Model)
                                     {
                                         <tr>
-                                            <td><strong>@cliente.Id</strong></td>
-                                            <td><strong>@cliente.Nombre</strong></td>
+                                            <td><strong>@cliente.ClienteId</strong></td>
+                                            <td><strong>@cliente.NombreCliente</strong></td>
                                             <td>@cliente.Contacto</td>
                                             <td>@cliente.Email</td>
                                             <td>@cliente.Telefono</td>
@@ -109,14 +109,14 @@
                                             <td class="text-center">
                                                 <button type="button" 
                                                         class="btn btn-sm btn-editar btn-accion btn-editar-cliente"
-                                                        data-cliente-id="@cliente.Id"
+                                                        data-cliente-id="@cliente.ClienteId"
                                                         title="Editar cliente"
                                                         asp-permiso="Editar Clientes">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
                                                 <button type="button" 
                                                         class="btn btn-sm btn-eliminar btn-accion btn-eliminar-cliente"
-                                                        data-cliente-id="@cliente.Id"
+                                                        data-cliente-id="@cliente.ClienteId"
                                                         title="Eliminar cliente"
                                                         asp-permiso="Eliminar Clientes">
                                                     <i class="bi bi-trash"></i>

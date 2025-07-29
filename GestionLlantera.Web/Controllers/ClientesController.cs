@@ -4,6 +4,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using tuco.Clases.Models;
+using Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -38,14 +39,16 @@ namespace GestionLlantera.Web.Controllers
                 var jwtToken = this.ObtenerTokenJWT();
                 var clientes = await _clientesService.ObtenerTodosAsync(jwtToken);
 
-                // Transformar datos para la vista
-                var clientesViewModel = clientes.Select(c => new {
-                    Id = c.ClienteId,
-                    Nombre = c.NombreCliente,
+                // Transformar datos para la vista usando ClienteDTO
+                var clientesViewModel = clientes.Select(c => new Tuco.Clases.DTOs.ClienteDTO
+                {
+                    ClienteId = c.ClienteId,
+                    NombreCliente = c.NombreCliente,
                     Contacto = c.Contacto ?? "",
                     Email = c.Email ?? "",
                     Telefono = c.Telefono ?? "",
-                    Direccion = c.Direccion ?? ""
+                    Direccion = c.Direccion ?? "",
+                    UsuarioId = c.UsuarioId
                 }).ToList();
 
                 ViewData["Title"] = "Gestión de Clientes";
