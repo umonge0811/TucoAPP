@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace GestionLlantera.Web.Controllers
 {
     [Authorize]
-    [Authorize(Roles = "Administrador")] // Solo usuarios con rol Admin pueden acceder
     public class UsuariosController : Controller
     {
         private readonly IUsuariosService _usuariosService;
@@ -58,9 +57,15 @@ namespace GestionLlantera.Web.Controllers
             try
             {
 
-                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios",
-                        "Solo usuarios autorizados pueden gestionar otros usuarios del sistema.");
-                if (validacion != null) return validacion;
+                // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
+                if (!await this.TienePermisoAsync("Gestión Usuarios"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Gestionar Usuarios' intentó acceder al Modulo Gestion de Usuarios");
+
+                    TempData["AccesoNoAutorizado"] = "Gestión Usuarios";
+                    TempData["ModuloAcceso"] = "usuarios";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
 
                 _logger.LogInformation("Obteniendo lista de usuarios");
                 var usuarios = await _usuariosService.ObtenerTodosAsync();

@@ -12,7 +12,6 @@ using System.Linq;
 
 // Controlador que maneja la configuración del sistema, incluyendo roles y permisos
 [Authorize] // Asegura que solo usuarios autenticados puedan acceder a este controlador
-[Authorize(Roles = "Administrador")] // Solo usuarios con rol Admin pueden acceder
 [Route("[controller]")]  // Ruta base
 public class ConfiguracionController : Controller
 {
