@@ -40,20 +40,20 @@ public class ConfiguracionController : Controller
         try
         {
             // ✅ VERIFICAR PERMISO PARA GESTIÓN COMPLETA
-            if (!await this.TienePermisoAsync("Gestión Completa"))
+            if (!await this.TienePermisoAsync("Configuracion Sistema"))
             {
-                _logger.LogWarning("🚫 Usuario sin permiso 'Gestión Completa' intentó acceder a configuración");
+                _logger.LogWarning("🚫 Usuario sin permiso 'Configuracion Sistema' intentó acceder a configuración");
 
                 // ✅ DEBUG: Verificar que los valores se están configurando
                 _logger.LogInformation("DEBUG - Configurando TempData: AccesoNoAutorizado='Gestión Completa', ModuloAcceso='Configuración del Sistema'");
-                
-                TempData["AccesoNoAutorizado"] = "Gestión Completa";
+
+                TempData["AccesoNoAutorizado"] = "Configuracion Sistema";
                 TempData["ModuloAcceso"] = "Configuración del Sistema";
-                
+
                 // ✅ DEBUG: Verificar que los valores se guardaron
                 _logger.LogInformation("DEBUG - TempData configurado: AccesoNoAutorizado='{AccesoNoAutorizado}', ModuloAcceso='{ModuloAcceso}'", 
                     TempData["AccesoNoAutorizado"], TempData["ModuloAcceso"]);
-                
+
                 return RedirectToAction("AccessDenied", "Account");
             }
 
