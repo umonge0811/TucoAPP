@@ -435,4 +435,34 @@ public class PermisosController : ControllerBase
         }
     }
     #endregion
+        /// <summary>
+        /// Verifica si el usuario actual es administrador
+        /// GET: api/permisos/verificar-admin
+        /// </summary>
+        [HttpGet("verificar-admin")]
+        public async Task<IActionResult> VerificarAdmin()
+        {
+            try
+            {
+                var esAdmin = await _permisosService.EsAdministradorAsync(User);
+
+                return Ok(new
+                {
+                    success = true,
+                    esAdmin = esAdmin,
+                    usuarioId = _permisosService.ObtenerUsuarioId(User),
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error verificando permisos de administrador",
+                    error = ex.Message
+                });
+            }
+        }
+    }
 }

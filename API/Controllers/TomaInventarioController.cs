@@ -1484,6 +1484,38 @@ namespace API.Controllers
 
 
         /// <summary>
+        /// Verifica si el usuario tiene acceso a un inventario específico
+        /// GET: api/TomaInventario/VerificarAccesoInventario/{inventarioId}
+        /// </summary>
+        [HttpGet("VerificarAccesoInventario/{inventarioId}")]
+        public async Task<IActionResult> VerificarAccesoInventario(int inventarioId)
+        {
+            try
+            {
+                var tieneAcceso = await VerificarAccesoInventario(inventarioId);
+                var usuarioId = ObtenerIdUsuarioActual();
+                
+                return Ok(new
+                {
+                    success = true,
+                    tieneAcceso = tieneAcceso,
+                    inventarioId = inventarioId,
+                    usuarioId = usuarioId,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verificando acceso al inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error verificando acceso al inventario"
+                });
+            }
+        }
+
+        /// <summary>
         /// Obtiene el ID del usuario actual desde los claims
         /// </summary>
         private int ObtenerIdUsuarioActual()
