@@ -39,10 +39,60 @@ public class ConfiguracionController : Controller
     {
         try
         {
+            // ✅ VERIFICAR PERMISO PARA GESTIÓN COMPLETA
+            if (!await this.TienePermisoAsync("Gestión Completa"))
+            {
+                _logger.LogWarning("🚫 Usuario sin permiso 'Gestión Completa' intentó acceder a configuración");
+                
+                // Crear alerta personalizada de acceso no autorizado
+                var alertaAccesoNoAutorizado = $@"
+                <div class=""alert alert-danger alert-dismissible fade show border-danger shadow-sm"" role=""alert"">
+                    <div class=""d-flex align-items-start"">
+                        <div class=""alert-icon me-3"">
+                            <i class=""bi bi-shield-x fs-3 text-danger""></i>
+                        </div>
+                        <div class=""flex-grow-1"">
+                            <h6 class=""alert-heading mb-2 fw-bold"">
+                                <i class=""bi bi-gear-fill me-1""></i>
+                                Acceso No Autorizado - Configuración del Sistema
+                            </h6>
+                            <p class=""mb-2"">No tienes permisos para acceder al módulo de configuración de roles y permisos.</p>
 
-            var validacion = await this.ValidarPermisoMvcAsync("Gestión Completa",
-       "Solo administradores pueden gestionar roles y permisos del sistema.");
-            if (validacion != null) return validacion;
+                            <div class=""alert-details bg-light rounded p-2 mb-2"">
+                                <small class=""text-muted d-block"">
+                                    <i class=""bi bi-info-circle me-1""></i>
+                                    <strong>Permiso requerido:</strong>
+                                    <code class=""text-dark"">Gestión Completa</code>
+                                </small>
+                                <small class=""text-muted d-block"">
+                                    <i class=""bi bi-clock me-1""></i>
+                                    <strong>Hora del intento:</strong> {DateTime.Now:HH:mm:ss}
+                                </small>
+                                <small class=""text-muted d-block"">
+                                    <i class=""bi bi-gear me-1""></i>
+                                    <strong>Módulo:</strong> Configuración del Sistema
+                                </small>
+                            </div>
+
+                            <div class=""alert-actions"">
+                                <small class=""text-muted"">
+                                    🔒 <strong>Solo administradores del sistema pueden acceder.</strong><br>
+                                    <a href=""mailto:admin@tuempresa.com"" class=""btn btn-sm btn-outline-danger mt-1"">
+                                        <i class=""bi bi-envelope me-1""></i>
+                                        Contactar Administrador
+                                    </a>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <button type=""button"" class=""btn-close"" data-bs-dismiss=""alert"" aria-label=""Cerrar""></button>
+                </div>";
+
+                TempData["AccesoNoAutorizado"] = "Gestión Completa";
+                TempData["ModuloAcceso"] = "Configuración del Sistema";
+                TempData["AlertaPersonalizada"] = alertaAccesoNoAutorizado;
+                return RedirectToAction("AccessDenied", "Account");
+            }
 
 
             // Registramos el inicio de la carga de la vista
