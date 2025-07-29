@@ -329,81 +329,40 @@
 <!-- Los modales se mantienen igual -->
 <!-- Modal Nuevo/Editar Rol -->
 <div class="modal fade" id="modalNuevoRol" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="bi bi-shield-plus me-2"></i>
+                    <i class="bi bi-shield-plus"></i>
                     Nuevo Rol
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-0">
+            <div class="modal-body">
                 <form id="formRol">
                     <input type="hidden" id="rolId" value="0" />
-                    
-                    <!-- Información básica del rol -->
-                    <div class="bg-light p-4 border-bottom">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-tag me-1"></i>
-                                    Nombre del Rol
-                                </label>
-                                <input type="text" class="form-control form-control-lg" id="nombreRol" required placeholder="Ej: Administrador, Vendedor...">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-card-text me-1"></i>
-                                    Descripción
-                                </label>
-                                <textarea class="form-control" id="descripcionRol" rows="3" placeholder="Descripción del rol y sus responsabilidades..."></textarea>
-                            </div>
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label">Nombre del Rol</label>
+                        <input type="text" class="form-control" id="nombreRol" required>
                     </div>
-
-                    <!-- Permisos por módulos -->
-                    <div class="p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 fw-bold text-primary">
-                                <i class="bi bi-key-fill me-2"></i>
-                                Permisos por Módulo
-                            </h6>
-                            <div class="btn-group btn-group-sm" role="group">
-                                <button type="button" class="btn btn-outline-primary" onclick="expandirTodosAcordeones()">
-                                    <i class="bi bi-arrows-expand me-1"></i>
-                                    Expandir Todos
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="contraerTodosAcordeones()">
-                                    <i class="bi bi-arrows-collapse me-1"></i>
-                                    Contraer Todos
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="listaPermisos" class="permisos-modulos-horizontal">
+                    <div class="mb-4">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcionRol" rows="3"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Permisos por Módulo</label>
+                        <div id="listaPermisos" class="permisos-modulos">
                             <!-- Se cargará dinámicamente vía JavaScript -->
                         </div>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer bg-light">
-                <div class="d-flex justify-content-between w-100">
-                    <div class="text-muted small">
-                        <i class="bi bi-info-circle me-1"></i>
-                        Selecciona los permisos necesarios para este rol
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">
-                            <i class="bi bi-x-lg me-1"></i>
-                            Cancelar
-                        </button>
-                        <button type="button" class="btn btn-primary" id="btnGuardarRol">
-                            <i class="bi bi-check-lg me-1"></i>
-                            Guardar Rol
-                        </button>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn-new" id="btnGuardarRol">
+                    <i class="bi bi-check-lg"></i>
+                    Guardar Rol
+                </button>
             </div>
         </div>
     </div>
