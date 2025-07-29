@@ -33,12 +33,16 @@ function inicializarClientes() {
 function configurarEventos() {
     // Búsqueda de clientes
     $('#buscarClientes').on('input', debounce(function() {
-        const termino = $(this).val();
-        if (termino && typeof termino === 'string') {
-            const terminoLimpio = termino.trim();
+        try {
+            const elemento = $(this);
+            const termino = elemento.val() || '';
+            const terminoLimpio = String(termino).trim();
+            
             if (terminoLimpio.length >= 2 || terminoLimpio.length === 0) {
                 buscarClientes(terminoLimpio);
             }
+        } catch (error) {
+            console.error('❌ Error en configurarEventos búsqueda:', error);
         }
     }, 300));
 
@@ -78,12 +82,20 @@ async function cargarClientes() {
 async function buscarClientes(termino) {
     try {
         // Validar que el término sea válido
-        if (termino === undefined || termino === null) {
+        if (termino === undefined || termino === null || typeof termino === 'object') {
             console.warn('⚠️ Término de búsqueda inválido:', termino);
             return;
         }
 
-        const terminoSeguro = String(termino).trim();
+        // Convertir a string y limpiar
+        let terminoSeguro = '';
+        try {
+            terminoSeguro = String(termino).trim();
+        } catch (conversionError) {
+            console.error('❌ Error convirtiendo término a string:', conversionError);
+            return;
+        }
+
         mostrarEstadoCarga(true);
         console.log(`🔍 Buscando clientes: "${terminoSeguro}"`);
 
@@ -503,7 +515,11 @@ function debounce(func, wait) {
     return function executedFunction(...args) {
         const later = () => {
             clearTimeout(timeout);
-            func(...args);
+            try {
+                func.apply(this, args);
+            } catch (error) {
+                console.error('❌ Error en función debounced:', error);
+            }
         };
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
