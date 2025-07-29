@@ -39,13 +39,13 @@ public class ConfiguracionController : Controller
     {
         try
         {
-            // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
-            if (!await this.TienePermisoAsync("Configuracion Sistema"))
+            // ✅ VERIFICAR PERMISO PARA GESTIÓN COMPLETA
+            if (!await this.TienePermisoAsync("Gestión Completa"))
             {
-                _logger.LogWarning("🚫 Usuario sin permiso 'Configuracion Sistema' intentó acceder al inventario");
+                _logger.LogWarning("🚫 Usuario sin permiso 'Gestión Completa' intentó acceder a configuración");
 
-                TempData["AccesoNoAutorizado"] = "Configuracion Sistema";
-                TempData["ModuloAcceso"] = "Inventario";
+                TempData["AccesoNoAutorizado"] = "Gestión Completa";
+                TempData["ModuloAcceso"] = "Configuración del Sistema";
                 return RedirectToAction("AccessDenied", "Account");
             }
 
