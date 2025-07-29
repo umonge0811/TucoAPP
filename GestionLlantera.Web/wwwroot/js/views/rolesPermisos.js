@@ -531,40 +531,42 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
 
         console.log('Permisos por módulo:', permisosPorModulo);
 
-        // Generar HTML para acordeón de permisos categorizados por módulo
+        // Generar HTML para acordeón de permisos categorizados por módulo - TODOS CERRADOS
         let html = '<div class="accordion" id="accordionPermisosModal">';
         let accordionIndex = 0;
 
         Object.keys(permisosPorModulo).sort().forEach(modulo => {
             const collapseId = `collapseModal${accordionIndex}`;
             const headingId = `headingModal${accordionIndex}`;
-            const isFirstItem = accordionIndex === 0;
             const permisosDelModulo = permisosPorModulo[modulo];
 
             html += `
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="${headingId}">
-                        <button class="accordion-button ${isFirstItem ? '' : 'collapsed'}" type="button" 
+                        <button class="accordion-button collapsed" type="button" 
                                 data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
-                                aria-expanded="${isFirstItem ? 'true' : 'false'}" aria-controls="${collapseId}">
+                                aria-expanded="false" aria-controls="${collapseId}">
                             <i class="bi bi-layers me-2"></i>
                             <strong>${modulo}</strong>
                             <span class="badge bg-primary ms-2">${permisosDelModulo.length}</span>
                         </button>
                     </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse ${isFirstItem ? 'show' : ''}" 
+                    <div id="${collapseId}" class="accordion-collapse collapse" 
                          aria-labelledby="${headingId}" data-bs-parent="#accordionPermisosModal">
-                        <div class="accordion-body p-3">
-                            <div class="row g-2">
+                        <div class="accordion-body">
+                            <div class="permisos-grid">
                                 ${permisosDelModulo.map(permiso => `
-                                    <div class="col-12">
-                                        <div class="form-check p-2 border rounded bg-light">
-                                            <input class="form-check-input" type="checkbox" value="${permiso.permisoId}" id="permiso_${permiso.permisoId}">
-                                            <label class="form-check-label fw-semibold" for="permiso_${permiso.permisoId}">
-                                                <i class="bi bi-key-fill me-1 text-primary"></i>
-                                                ${permiso.nombrePermiso}
-                                            </label>
-                                            ${permiso.descripcionPermiso ? `<div class="text-muted small mt-1">${permiso.descripcionPermiso}</div>` : ''}
+                                    <div class="permiso-card" onclick="togglePermiso('permiso_${permiso.permisoId}')">
+                                        <div class="form-check d-flex align-items-start">
+                                            <input class="form-check-input" type="checkbox" value="${permiso.permisoId}" 
+                                                   id="permiso_${permiso.permisoId}" onchange="updatePermisoCard(this)">
+                                            <div class="flex-grow-1">
+                                                <label class="form-check-label" for="permiso_${permiso.permisoId}">
+                                                    <i class="bi bi-key-fill"></i>
+                                                    ${permiso.nombrePermiso}
+                                                </label>
+                                                ${permiso.descripcionPermiso ? `<div class="permiso-descripcion">${permiso.descripcionPermiso}</div>` : ''}
+                                            </div>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -697,7 +699,7 @@ async function cargarPermisosParaRol(rolId) {
             return grupos;
         }, {});
 
-        // Generar HTML para acordeón de permisos
+        // Generar HTML para acordeón de permisos - TODOS CERRADOS AL EDITAR
         const listaPermisos = document.getElementById('listaPermisos');
         let html = '<div class="accordion" id="accordionPermisosModalEditar">';
         let accordionIndex = 0;
@@ -705,33 +707,35 @@ async function cargarPermisosParaRol(rolId) {
         Object.keys(permisosPorModulo).sort().forEach(modulo => {
             const collapseId = `collapseModalEditar${accordionIndex}`;
             const headingId = `headingModalEditar${accordionIndex}`;
-            const isFirstItem = accordionIndex === 0;
             const permisosDelModulo = permisosPorModulo[modulo];
 
             html += `
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="${headingId}">
-                        <button class="accordion-button ${isFirstItem ? '' : 'collapsed'}" type="button" 
+                        <button class="accordion-button collapsed" type="button" 
                                 data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
-                                aria-expanded="${isFirstItem ? 'true' : 'false'}" aria-controls="${collapseId}">
+                                aria-expanded="false" aria-controls="${collapseId}">
                             <i class="bi bi-layers me-2"></i>
                             <strong>${modulo}</strong>
                             <span class="badge bg-primary ms-2">${permisosDelModulo.length}</span>
                         </button>
                     </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse ${isFirstItem ? 'show' : ''}" 
+                    <div id="${collapseId}" class="accordion-collapse collapse" 
                          aria-labelledby="${headingId}" data-bs-parent="#accordionPermisosModalEditar">
-                        <div class="accordion-body p-3">
-                            <div class="row g-2">
+                        <div class="accordion-body">
+                            <div class="permisos-grid">
                                 ${permisosDelModulo.map(permiso => `
-                                    <div class="col-12">
-                                        <div class="form-check p-2 border rounded bg-light">
-                                            <input class="form-check-input" type="checkbox" value="${permiso.permisoId}" id="permiso_${permiso.permisoId}">
-                                            <label class="form-check-label fw-semibold" for="permiso_${permiso.permisoId}">
-                                                <i class="bi bi-key-fill me-1 text-primary"></i>
-                                                ${permiso.nombrePermiso}
-                                            </label>
-                                            ${permiso.descripcionPermiso ? `<div class="text-muted small mt-1">${permiso.descripcionPermiso}</div>` : ''}
+                                    <div class="permiso-card" onclick="togglePermiso('permiso_${permiso.permisoId}')">
+                                        <div class="form-check d-flex align-items-start">
+                                            <input class="form-check-input" type="checkbox" value="${permiso.permisoId}" 
+                                                   id="permiso_${permiso.permisoId}" onchange="updatePermisoCard(this)">
+                                            <div class="flex-grow-1">
+                                                <label class="form-check-label" for="permiso_${permiso.permisoId}">
+                                                    <i class="bi bi-key-fill"></i>
+                                                    ${permiso.nombrePermiso}
+                                                </label>
+                                                ${permiso.descripcionPermiso ? `<div class="permiso-descripcion">${permiso.descripcionPermiso}</div>` : ''}
+                                            </div>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -760,6 +764,7 @@ async function cargarPermisosParaRol(rolId) {
             const checkbox = document.getElementById(`permiso_${permiso.permisoId}`);
             if (checkbox) {
                 checkbox.checked = true;
+                updatePermisoCard(checkbox);
             }
         });
     } catch (error) {
@@ -843,6 +848,53 @@ async function actualizarRol() {
 
         // Obtener los datos del formulario  
         const rolId = document.getElementById('rolId').value;
+
+
+// Funciones para el nuevo diseño del modal
+window.togglePermiso = function(permisoId) {
+    const checkbox = document.getElementById(permisoId);
+    if (checkbox) {
+        checkbox.checked = !checkbox.checked;
+        updatePermisoCard(checkbox);
+    }
+}
+
+window.updatePermisoCard = function(checkbox) {
+    const card = checkbox.closest('.permiso-card');
+    if (card) {
+        if (checkbox.checked) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    }
+}
+
+window.expandirTodosAcordeones = function() {
+    const collapses = document.querySelectorAll('#accordionPermisosModal .accordion-collapse, #accordionPermisosModalEditar .accordion-collapse');
+    collapses.forEach(collapse => {
+        const bsCollapse = new bootstrap.Collapse(collapse, { show: true });
+    });
+}
+
+window.contraerTodosAcordeones = function() {
+    const collapses = document.querySelectorAll('#accordionPermisosModal .accordion-collapse, #accordionPermisosModalEditar .accordion-collapse');
+    collapses.forEach(collapse => {
+        const bsCollapse = bootstrap.Collapse.getInstance(collapse);
+        if (bsCollapse) {
+            bsCollapse.hide();
+        }
+    });
+}
+
+// Inicializar estado de las tarjetas al cargar permisos
+function inicializarEstadoTarjetas() {
+    const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        updatePermisoCard(checkbox);
+    });
+}
+
         const nombreRol = document.getElementById('nombreRol').value.trim();
         const descripcionRol = document.getElementById('descripcionRol').value.trim();
 
