@@ -34,8 +34,22 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction("AccessDenied", "Account");
                 }
 
+                // Cargar clientes para mostrar en la vista (como en inventario)
+                var jwtToken = this.ObtenerTokenJWT();
+                var clientes = await _clientesService.ObtenerTodosAsync(jwtToken);
+
+                // Transformar datos para la vista
+                var clientesViewModel = clientes.Select(c => new {
+                    Id = c.ClienteId,
+                    Nombre = c.NombreCliente,
+                    Contacto = c.Contacto ?? "",
+                    Email = c.Email ?? "",
+                    Telefono = c.Telefono ?? "",
+                    Direccion = c.Direccion ?? ""
+                }).ToList();
+
                 ViewData["Title"] = "Gestión de Clientes";
-                return View();
+                return View(clientesViewModel);
             }
             catch (Exception ex)
             {
