@@ -92,7 +92,16 @@ namespace GestionLlantera.Web.Controllers
             {
                 if (!await this.TienePermisoAsync("Ver Proveedores"))
                 {
-                    return Json(new { success = false, message = "Sin permisos para consultar proveedores" });
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Proveedores' intentó acceder a la lista de proveedores");
+                    
+                    // Para requests AJAX, devolver JSON con mensaje personalizado
+                    return Json(new { 
+                        success = false, 
+                        message = "🔒 Acceso restringido: No tienes permisos para consultar proveedores",
+                        details = "Contacta al administrador para solicitar el permiso 'Ver Proveedores'",
+                        permiso_requerido = "Ver Proveedores",
+                        timestamp = DateTime.Now.ToString("HH:mm:ss")
+                    });
                 }
 
                 var jwtToken = this.ObtenerTokenJWT();

@@ -264,10 +264,15 @@ namespace GestionLlantera.Web.Controllers
 
                 if (asignacion == null)
                 {
+                    _logger.LogWarning("🚫 Usuario no asignado intentó acceder al inventario {InventarioId}", inventarioId);
+                    
                     return Json(new
                     {
                         success = false,
-                        message = "Usuario no asignado a este inventario",
+                        message = "🔒 Acceso restringido: No estás asignado a este inventario programado",
+                        details = "Solo los usuarios asignados pueden ejecutar este inventario",
+                        inventario_id = inventarioId,
+                        timestamp = DateTime.Now.ToString("HH:mm:ss"),
                         permisos = new
                         {
                             permisoConteo = false,
