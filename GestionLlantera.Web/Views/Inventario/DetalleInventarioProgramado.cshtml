@@ -1,10 +1,11 @@
-﻿@model Tuco.Clases.DTOs.Inventario.InventarioProgramadoDTO
+@model Tuco.Clases.DTOs.Inventario.InventarioProgramadoDTO
 @{
     ViewData["Title"] = "Detalle de Inventario Programado";
     Layout = "_AdminLayout";
 }
 
 <link rel="stylesheet" href="~/css/views/inventario/detalle-inventario.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/views/inventario/detalle-inventario-programado.css" asp-append-version="true" />
 
 <div class="container-fluid">
     <div class="page-header d-flex justify-content-between align-items-center mb-4">
@@ -423,115 +424,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        console.log('🔧 JavaScript cargado para detalle inventario');
-        
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('🔧 DOM cargado');
-            
-            // Botón de iniciar inventario
-            const iniciarInventarioBtn = document.querySelector('.iniciar-inventario-btn');
-            console.log('🔧 Botón encontrado:', iniciarInventarioBtn);
-            
-            if (iniciarInventarioBtn) {
-                console.log('🔧 Agregando event listener al botón');
-                iniciarInventarioBtn.addEventListener('click', function() {
-                    console.log('🔧 ¡CLICK DETECTADO!');
-                    const inventarioId = this.getAttribute('data-id');
-                    console.log('🔧 ID del inventario:', inventarioId);
-                    
-                    // Mostrar confirmación antes de iniciar
-                    if (confirm('¿Está seguro de que desea iniciar este inventario?\n\nAl iniciarlo:\n- Se notificará a todos los usuarios asignados\n- Podrán comenzar el conteo físico\n- El estado cambiará a "En Progreso"')) {
-                        iniciarInventario(inventarioId);
-                    }
-                });
-            } else {
-                console.log('❌ NO se encontró el botón con clase .iniciar-inventario-btn');
-            }
-        });
-
-        // Función para iniciar el inventario
-// Función para iniciar el inventario
-async function iniciarInventario(inventarioId) {
-    try {
-        console.log('🚀 Iniciando inventario:', inventarioId);
-        
-        // Deshabilitar botón y mostrar loading
-        const btn = document.querySelector('.iniciar-inventario-btn');
-        const textoOriginal = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Iniciando...';
-        
-        // Llamar al controlador para iniciar el inventario
-        const response = await fetch(`/TomaInventario/IniciarInventario/${inventarioId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        const resultado = await response.json();
-        console.log('📡 Respuesta del servidor:', resultado);
-        
-        if (resultado.success) {
-            console.log('✅ Inventario iniciado exitosamente');
-            
-            // Mostrar mensaje de éxito
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: '¡Éxito!',
-                    text: resultado.message || 'Inventario iniciado exitosamente',
-                    icon: 'success',
-                    confirmButtonText: 'Ir a Toma de Inventario'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Redirigir a la vista de ejecución
-                        window.location.href = `/TomaInventario/Ejecutar/${inventarioId}`;
-                    }
-                });
-            } else {
-                alert(resultado.message || 'Inventario iniciado exitosamente');
-                // Redirigir a la vista de ejecución
-                window.location.href = `/TomaInventario/Ejecutar/${inventarioId}`;
-            }
-        } else {
-            console.error('❌ Error al iniciar inventario:', resultado.message);
-            
-            // Mostrar error
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    title: 'Error',
-                    text: resultado.message || 'No se pudo iniciar el inventario',
-                    icon: 'error'
-                });
-            } else {
-                alert('Error: ' + (resultado.message || 'No se pudo iniciar el inventario'));
-            }
-            
-            // Restaurar botón
-            btn.disabled = false;
-            btn.innerHTML = textoOriginal;
-        }
-        
-    } catch (error) {
-        console.error('💥 Error crítico:', error);
-        
-        // Mostrar error
-        if (typeof Swal !== 'undefined') {
-            Swal.fire({
-                title: 'Error',
-                text: 'Error de conexión. Inténtelo nuevamente.',
-                icon: 'error'
-            });
-        } else {
-            alert('Error de conexión. Inténtelo nuevamente.');
-        }
-        
-        // Restaurar botón
-        const btn = document.querySelector('.iniciar-inventario-btn');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-play me-1"></i> Iniciar Inventario';
-    }
-}    </script>
+    <script src="~/js/views/Inventario/detalle-inventario-programado.js" asp-append-version="true"></script>
 }
