@@ -1,4 +1,3 @@
-
 // ===== GESTIÓN DE CLIENTES - JAVASCRIPT =====
 
 let modalCliente = null;
@@ -21,10 +20,10 @@ function inicializarClientes() {
 
         // Configurar eventos
         configurarEventos();
-        
-        // Cargar clientes iniciales
-        cargarClientes();
-        
+
+        // Los clientes ya están cargados desde el servidor
+        console.log('✅ Clientes cargados desde el servidor');
+
         console.log('✅ Gestión de clientes inicializada correctamente');
     } catch (error) {
         console.error('❌ Error inicializando gestión de clientes:', error);
@@ -71,10 +70,10 @@ function configurarEventos() {
 async function cargarClientes() {
     try {
         mostrarEstadoCarga(true);
-        console.log('📋 Cargando clientes...');
+        console.log('🔍 Buscando clientes: ""');
 
-        const response = await fetch('/Clientes/ObtenerClientes');
-        
+        const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent("")}`);
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -89,8 +88,8 @@ async function cargarClientes() {
         }
 
     } catch (error) {
-        console.error('❌ Error cargando clientes:', error);
-        mostrarError('Error al cargar clientes');
+        console.error('❌ Error buscando clientes:', error);
+        mostrarError('Error al buscar clientes');
     } finally {
         mostrarEstadoCarga(false);
     }
@@ -102,7 +101,7 @@ async function buscarClientes(termino) {
         console.log(`🔍 Buscando clientes: "${termino}"`);
 
         const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(termino)}`);
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -169,7 +168,7 @@ function abrirModalNuevoCliente() {
     clienteEditando = null;
     $('#modalClienteLabel').text('Nuevo Cliente');
     $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Crear Cliente');
-    
+
     if (modalCliente) {
         modalCliente.show();
     }
@@ -180,7 +179,7 @@ async function editarCliente(clienteId) {
         console.log(`✏️ Editando cliente: ${clienteId}`);
 
         const response = await fetch(`/Clientes/ObtenerClientePorId?id=${clienteId}`);
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -190,10 +189,10 @@ async function editarCliente(clienteId) {
         if (resultado.success && resultado.data) {
             clienteEditando = resultado.data;
             llenarFormularioCliente(resultado.data);
-            
+
             $('#modalClienteLabel').text('Editar Cliente');
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
-            
+
             if (modalCliente) {
                 modalCliente.show();
             }
@@ -262,11 +261,11 @@ async function guardarCliente() {
 
         if (resultado.success) {
             mostrarExito(resultado.message);
-            
+
             if (modalCliente) {
                 modalCliente.hide();
             }
-            
+
             // Recargar lista de clientes
             cargarClientes();
         } else {
@@ -278,7 +277,7 @@ async function guardarCliente() {
         mostrarError('Error al guardar cliente');
     } finally {
         $('#btnGuardarCliente').prop('disabled', false);
-        
+
         if (clienteEditando) {
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
         } else {
