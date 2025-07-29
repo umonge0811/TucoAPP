@@ -49,7 +49,8 @@ function configurarEventos() {
     // Limpiar filtros
     $('#btnLimpiarFiltros').on('click', function() {
         $('#buscarClientes').val('');
-        cargarClientes();
+        mostrarTodosLosClientes();
+        console.log('🧹 Filtros limpiados - Mostrando todos los clientes');
     });
 
     // Nuevo cliente
@@ -81,45 +82,78 @@ async function cargarClientes() {
 
 async function buscarClientes(termino) {
     try {
-        // Validar que el término sea válido
-        if (termino === undefined || termino === null || typeof termino === 'object') {
-            console.warn('⚠️ Término de búsqueda inválido:', termino);
+        console.log(`🔍 Buscando clientes: "${termino}"`);
+        
+        // Si el término está vacío, mostrar todos los clientes
+        if (!termino || termino.trim() === '') {
+            mostrarTodosLosClientes();
             return;
         }
 
-        // Convertir a string y limpiar
-        let terminoSeguro = '';
-        try {
-            terminoSeguro = String(termino).trim();
-        } catch (conversionError) {
-            console.error('❌ Error convirtiendo término a string:', conversionError);
-            return;
-        }
-
-        mostrarEstadoCarga(true);
-        console.log(`🔍 Buscando clientes: "${terminoSeguro}"`);
-
-        const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(terminoSeguro)}`);
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const resultado = await response.json();
-
-        if (resultado.success && resultado.data) {
-            clientes = resultado.data;
-            mostrarClientes(clientes);
-        } else {
-            mostrarSinResultados();
-        }
+        // Filtrar clientes localmente (más rápido y responsivo)
+        filtrarClientesEnTabla(termino.trim().toLowerCase());
 
     } catch (error) {
         console.error('❌ Error buscando clientes:', error);
         mostrarError('Error al buscar clientes');
-    } finally {
-        mostrarEstadoCarga(false);
     }
+}
+
+// Nueva función para filtrar clientes directamente en la tabla
+function filtrarClientesEnTabla(termino) {
+    let clientesVisibles = 0;
+    
+    // Obtener todas las filas de la tabla
+    $("tbody tr").each(function() {
+        const $fila = $(this);
+        let coincide = false;
+        
+        if (!termino) {
+            // Si no hay término, mostrar todas las filas
+            coincide = true;
+        } else {
+            // Buscar en el nombre del cliente (columna 2)
+            const nombre = $fila.find("td:eq(1)").text().toLowerCase();
+            
+            // Buscar en la identificación (columna 3)  
+            const identificacion = $fila.find("td:eq(2)").text().toLowerCase();
+            
+            // Buscar en el email (columna 4)
+            const email = $fila.find("td:eq(3)").text().toLowerCase();
+            
+            // Buscar en el teléfono (columna 5)
+            const telefono = $fila.find("td:eq(4)").text().toLowerCase();
+            
+            // Verificar si el término coincide con algún campo
+            coincide = nombre.includes(termino) || 
+                      identificacion.includes(termino) || 
+                      email.includes(termino) || 
+                      telefono.includes(termino);
+        }
+        
+        // Mostrar u ocultar la fila según si coincide
+        if (coincide) {
+            $fila.show();
+            clientesVisibles++;
+        } else {
+            $fila.hide();
+        }
+    });
+    
+    // Actualizar el estado de la tabla
+    if (clientesVisibles === 0) {
+        mostrarSinResultados();
+    } else {
+        ocultarEstadosEspeciales();
+        console.log(`✅ Mostrando ${clientesVisibles} clientes que coinciden con "${termino}"`);
+    }
+}
+
+// Nueva función para mostrar todos los clientes
+function mostrarTodosLosClientes() {
+    $("tbody tr").show();
+    ocultarEstadosEspeciales();
+    console.log('✅ Mostrando todos los clientes');
 }
 
 // ===== MOSTRAR DATOS =====
@@ -127,6 +161,13 @@ function mostrarClientes(clientesData) {
     // La tabla ya está renderizada desde el servidor, no necesitamos recrearla
     console.log('✅ Clientes cargados desde el servidor - No se requiere recrear tabla');
     ocultarEstadosEspeciales();
+}
+
+// Función para contar clientes visibles
+function contarClientesVisibles() {
+    const clientesVisibles = $("tbody tr:visible").length;
+    console.log(`📊 Clientes visibles: ${clientesVisibles}`);
+    return clientesVisibles;
 }
 
 // ===== MODAL DE CLIENTE =====
