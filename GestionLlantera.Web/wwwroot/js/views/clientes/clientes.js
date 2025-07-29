@@ -1,3 +1,4 @@
+
 // ===== GESTIÓN DE CLIENTES - JAVASCRIPT =====
 
 let modalCliente = null;
@@ -20,10 +21,10 @@ function inicializarClientes() {
 
         // Configurar eventos
         configurarEventos();
-
+        
         // Cargar clientes iniciales
         cargarClientes();
-
+        
         console.log('✅ Gestión de clientes inicializada correctamente');
     } catch (error) {
         console.error('❌ Error inicializando gestión de clientes:', error);
@@ -45,35 +46,9 @@ function configurarEventos() {
         cargarClientes();
     });
 
-    // ✅ EVENTOS DELEGADOS COMO EN INVENTARIO (funcionan con contenido dinámico)
-
-    // Nuevo cliente - evento delegado
-    $(document).on('click', '#btnNuevoCliente', function() {
-        if (window.permisosUsuario && (window.permisosUsuario.puedeCrearClientes || window.permisosUsuario.esAdmin)) {
-            abrirModalNuevoCliente();
-        } else {
-            mostrarError('No tienes permisos para crear clientes');
-        }
-    });
-
-    // Editar cliente - evento delegado (como en inventario)
-    $(document).on('click', '.btn-editar-cliente', function() {
-        if (window.permisosUsuario && (window.permisosUsuario.puedeEditarClientes || window.permisosUsuario.esAdmin)) {
-            const clienteId = $(this).data('cliente-id');
-            editarCliente(clienteId);
-        } else {
-            mostrarError('No tienes permisos para editar clientes');
-        }
-    });
-
-    // Eliminar cliente - evento delegado (como en inventario)
-    $(document).on('click', '.btn-eliminar-cliente', function() {
-        if (window.permisosUsuario && (window.permisosUsuario.puedeEliminarClientes || window.permisosUsuario.esAdmin)) {
-            const clienteId = $(this).data('cliente-id');
-            eliminarCliente(clienteId);
-        } else {
-            mostrarError('No tienes permisos para eliminar clientes');
-        }
+    // Nuevo cliente
+    $('#btnNuevoCliente').on('click', function() {
+        abrirModalNuevoCliente();
     });
 
     // Guardar cliente
@@ -95,68 +70,29 @@ function configurarEventos() {
 // ===== CARGA DE DATOS =====
 async function cargarClientes() {
     try {
-        console.log('🔄 Cargando lista de clientes...');
-
-        // ✅ CARGAR PERMISOS PRIMERO (como en inventario)
-        await cargarPermisosUsuario();
+        mostrarEstadoCarga(true);
+        console.log('📋 Cargando clientes...');
 
         const response = await fetch('/Clientes/ObtenerClientes');
+        
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
         const resultado = await response.json();
-        console.log('📦 Respuesta del servidor:', resultado);
 
-        if (resultado.success && Array.isArray(resultado.data)) {
+        if (resultado.success && resultado.data) {
             clientes = resultado.data;
-            console.log(`✅ ${clientes.length} clientes cargados exitosamente`);
             mostrarClientes(clientes);
         } else {
-            console.warn('⚠️ No se obtuvieron datos válidos:', resultado);
-            mostrarError(resultado.message || 'No se pudieron cargar los clientes');
+            mostrarSinResultados();
         }
 
     } catch (error) {
         console.error('❌ Error cargando clientes:', error);
-        mostrarError('Error al cargar los clientes');
-    }
-}
-
-// ✅ NUEVA FUNCIÓN: Cargar permisos del usuario (replicando inventario)
-async function cargarPermisosUsuario() {
-    try {
-        console.log('🔒 Cargando permisos del usuario...');
-
-        const response = await fetch('/api/permisos/usuario-actual');
-        if (response.ok) {
-            const resultado = await response.json();
-            if (resultado.success) {
-                window.permisosUsuario = {
-                    puedeCrearClientes: resultado.permisos.puedeCrearClientes || false,
-                    puedeEditarClientes: resultado.permisos.puedeEditarClientes || false,
-                    puedeEliminarClientes: resultado.permisos.puedeEliminarClientes || false,
-                    esAdmin: resultado.permisos.esAdmin || false
-                };
-                console.log('✅ Permisos cargados:', window.permisosUsuario);
-            }
-        } else {
-            console.warn('⚠️ No se pudieron cargar permisos, usando valores por defecto');
-            window.permisosUsuario = {
-                puedeCrearClientes: false,
-                puedeEditarClientes: false,
-                puedeEliminarClientes: false,
-                esAdmin: false
-            };
-        }
-    } catch (error) {
-        console.error('❌ Error cargando permisos:', error);
-        window.permisosUsuario = {
-            puedeCrearClientes: false,
-            puedeEditarClientes: false,
-            puedeEliminarClientes: false,
-            esAdmin: false
-        };
+        mostrarError('Error al cargar clientes');
+    } finally {
+        mostrarEstadoCarga(false);
     }
 }
 
@@ -166,7 +102,7 @@ async function buscarClientes(termino) {
         console.log(`🔍 Buscando clientes: "${termino}"`);
 
         const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(termino)}`);
-
+        
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -199,7 +135,6 @@ function mostrarClientes(clientesData) {
     }
 
     clientesData.forEach(cliente => {
-        // ✅ GENERAR BOTONES SIEMPRE (como en inventario), la validación se hace en los eventos
         const fila = `
             <tr>
                 <td><strong>${cliente.nombre}</strong></td>
@@ -209,14 +144,14 @@ function mostrarClientes(clientesData) {
                 <td>${cliente.direccion}</td>
                 <td class="text-center">
                     <button type="button" 
-                            class="btn btn-sm btn-editar btn-accion btn-editar-cliente"
-                            data-cliente-id="${cliente.id}"
+                            class="btn btn-sm btn-editar btn-accion"
+                            onclick="editarCliente(${cliente.id})"
                             title="Editar cliente">
                         <i class="bi bi-pencil"></i>
                     </button>
                     <button type="button" 
-                            class="btn btn-sm btn-eliminar btn-accion btn-eliminar-cliente"
-                            data-cliente-id="${cliente.id}"
+                            class="btn btn-sm btn-eliminar btn-accion"
+                            onclick="eliminarCliente(${cliente.id})"
                             title="Eliminar cliente">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -234,7 +169,7 @@ function abrirModalNuevoCliente() {
     clienteEditando = null;
     $('#modalClienteLabel').text('Nuevo Cliente');
     $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Crear Cliente');
-
+    
     if (modalCliente) {
         modalCliente.show();
     }
@@ -245,7 +180,7 @@ async function editarCliente(clienteId) {
         console.log(`✏️ Editando cliente: ${clienteId}`);
 
         const response = await fetch(`/Clientes/ObtenerClientePorId?id=${clienteId}`);
-
+        
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -255,10 +190,10 @@ async function editarCliente(clienteId) {
         if (resultado.success && resultado.data) {
             clienteEditando = resultado.data;
             llenarFormularioCliente(resultado.data);
-
+            
             $('#modalClienteLabel').text('Editar Cliente');
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
-
+            
             if (modalCliente) {
                 modalCliente.show();
             }
@@ -327,11 +262,11 @@ async function guardarCliente() {
 
         if (resultado.success) {
             mostrarExito(resultado.message);
-
+            
             if (modalCliente) {
                 modalCliente.hide();
             }
-
+            
             // Recargar lista de clientes
             cargarClientes();
         } else {
@@ -343,7 +278,7 @@ async function guardarCliente() {
         mostrarError('Error al guardar cliente');
     } finally {
         $('#btnGuardarCliente').prop('disabled', false);
-
+        
         if (clienteEditando) {
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
         } else {
