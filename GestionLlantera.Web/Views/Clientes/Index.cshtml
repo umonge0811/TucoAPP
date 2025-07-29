@@ -133,25 +133,23 @@
                                             }
                                             @if (!string.IsNullOrEmpty(cliente.Telefono))
                                             {
-                                                @{
-                                                    var telefonoMovil = cliente.Telefono;
-                                                    var codigoPaisMovil = "";
-                                                    var numeroLimpioMovil = "";
-                                                    
-                                                    if (telefonoMovil.StartsWith("+"))
-                                                    {
-                                                        var partesMovil = telefonoMovil.Split(' ', 2);
-                                                        codigoPaisMovil = partesMovil[0];
-                                                        numeroLimpioMovil = partesMovil.Length > 1 ? partesMovil[1].Replace("-", "").Replace(" ", "") : "";
-                                                    }
-                                                    else
-                                                    {
-                                                        codigoPaisMovil = "+506";
-                                                        numeroLimpioMovil = telefonoMovil.Replace("-", "").Replace(" ", "");
-                                                    }
-                                                    
-                                                    var whatsappUrlMovil = $"https://wa.me/{codigoPaisMovil.Replace("+", "")}{numeroLimpioMovil}";
+                                                var telefonoMovil = cliente.Telefono;
+                                                var codigoPaisMovil = "";
+                                                var numeroLimpioMovil = "";
+                                                
+                                                if (telefonoMovil.StartsWith("+"))
+                                                {
+                                                    var partesMovil = telefonoMovil.Split(' ', 2);
+                                                    codigoPaisMovil = partesMovil[0];
+                                                    numeroLimpioMovil = partesMovil.Length > 1 ? partesMovil[1].Replace("-", "").Replace(" ", "") : "";
                                                 }
+                                                else
+                                                {
+                                                    codigoPaisMovil = "+506";
+                                                    numeroLimpioMovil = telefonoMovil.Replace("-", "").Replace(" ", "");
+                                                }
+                                                
+                                                var whatsappUrlMovil = $"https://wa.me/{codigoPaisMovil.Replace("+", "")}{numeroLimpioMovil}";
                                                 <div>
                                                     <a href="@whatsappUrlMovil" target="_blank" class="text-decoration-none">
                                                         <i class="bi bi-whatsapp text-success me-1"></i>@cliente.Telefono
@@ -197,26 +195,24 @@
                                     <td class="d-none d-sm-table-cell">
                                         @if (!string.IsNullOrEmpty(cliente.Telefono))
                                         {
-                                            @{
-                                                // Extraer código de país y número
-                                                var telefonoCompleto = cliente.Telefono;
-                                                var codigoPais = "";
-                                                var numeroLimpio = "";
-                                                
-                                                if (telefonoCompleto.StartsWith("+"))
-                                                {
-                                                    var partes = telefonoCompleto.Split(' ', 2);
-                                                    codigoPais = partes[0];
-                                                    numeroLimpio = partes.Length > 1 ? partes[1].Replace("-", "").Replace(" ", "") : "";
-                                                }
-                                                else
-                                                {
-                                                    codigoPais = "+506"; // Default Costa Rica
-                                                    numeroLimpio = telefonoCompleto.Replace("-", "").Replace(" ", "");
-                                                }
-                                                
-                                                var whatsappUrl = $"https://wa.me/{codigoPais.Replace("+", "")}{numeroLimpio}";
+                                            // Extraer código de país y número
+                                            var telefonoCompleto = cliente.Telefono;
+                                            var codigoPais = "";
+                                            var numeroLimpio = "";
+                                            
+                                            if (telefonoCompleto.StartsWith("+"))
+                                            {
+                                                var partes = telefonoCompleto.Split(' ', 2);
+                                                codigoPais = partes[0];
+                                                numeroLimpio = partes.Length > 1 ? partes[1].Replace("-", "").Replace(" ", "") : "";
                                             }
+                                            else
+                                            {
+                                                codigoPais = "+506"; // Default Costa Rica
+                                                numeroLimpio = telefonoCompleto.Replace("-", "").Replace(" ", "");
+                                            }
+                                            
+                                            var whatsappUrl = $"https://wa.me/{codigoPais.Replace("+", "")}{numeroLimpio}";
                                             <a href="@whatsappUrl" 
                                                class="text-decoration-none" 
                                                target="_blank"
