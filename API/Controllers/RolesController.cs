@@ -519,6 +519,24 @@ public class RolesController : ControllerBase
                 var cacheKey = $"permisos_usuario_{usuarioId}";
                 _cache.Remove(cacheKey);
                 _logger.LogInformation("Caché de permisos invalidado para usuario {UsuarioId} por cambio en rol {RolId}", usuarioId, rolId);
+
+                // ✅ INVALIDAR TOKENS DE USUARIOS AFECTADOS
+                try
+                {
+                    var response = await _httpClient.PostAsync($"/api/Auth/invalidar-token/{usuarioId}", null);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation("Token invalidado exitosamente para usuario {UsuarioId} por cambio en rol {RolId}", usuarioId, rolId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("No se pudo invalidar token para usuario {UsuarioId}: {StatusCode}", usuarioId, response.StatusCode);
+                    }
+                }
+                catch (Exception tokenEx)
+                {
+                    _logger.LogError(tokenEx, "Error al invalidar token para usuario {UsuarioId}", usuarioId);
+                }
             }
 
             _logger.LogInformation("Permisos del rol {RolId} actualizados exitosamente. {Count} usuarios afectados", rolId, usuariosAfectados.Count);

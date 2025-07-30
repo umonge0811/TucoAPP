@@ -165,13 +165,32 @@ async function guardarRoles() {
             throw new Error(errorText || 'Error al guardar roles');
         }
 
+        // ✅ INVALIDAR TOKEN DEL USUARIO DESPUÉS DE CAMBIAR ROLES
+        try {
+            const invalidarResponse = await fetch(`/api/Auth/invalidar-token/${usuarioId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (invalidarResponse.ok) {
+                console.log(`Token invalidado para usuario ${usuarioId}`);
+            } else {
+                console.warn(`No se pudo invalidar token para usuario ${usuarioId}`);
+            }
+        } catch (tokenError) {
+            console.error('Error al invalidar token:', tokenError);
+        }
+
         modalRoles.hide();
 
         await Swal.fire({
             icon: 'success',
             title: 'Roles actualizados',
-            text: 'Los roles se han actualizado exitosamente',
-            timer: 1500
+            text: 'Los roles se han actualizado exitosamente. El usuario deberá volver a iniciar sesión.',
+            timer: 2500
         });
 
         window.location.reload();

@@ -1,4 +1,3 @@
-
 /**
  * 🔄 SISTEMA DE MONITOREO AUTOMÁTICO DE PERMISOS
  * Este módulo verifica automáticamente si los permisos del usuario han cambiado
@@ -18,10 +17,10 @@ class PermisosMonitor {
      */
     iniciar() {
         this.logger.log('🔄 Iniciando monitoreo de permisos...');
-        
+
         // Verificar inmediatamente
         this.verificarPermisos();
-        
+
         // Configurar verificación periódica
         this.intervalId = setInterval(() => {
             this.verificarPermisos();
@@ -72,10 +71,10 @@ class PermisosMonitor {
             }
 
             const data = await response.json();
-            
+
             if (data.success) {
                 const nuevosPermisos = data.permisos;
-                
+
                 // Comparar con permisos anteriores
                 if (this.permisosActuales && this.hanCambiado(this.permisosActuales, nuevosPermisos)) {
                     this.logger.log('🔄 ¡Permisos han cambiado! Recargando página...');
@@ -83,7 +82,7 @@ class PermisosMonitor {
                 } else {
                     this.logger.debug('✅ Permisos sin cambios');
                 }
-                
+
                 this.permisosActuales = nuevosPermisos;
                 this.ultimaVerificacion = new Date();
             }
@@ -113,7 +112,7 @@ class PermisosMonitor {
     onPermisosActualizados(nuevosPermisos) {
         // Mostrar notificación
         this.mostrarNotificacionCambios();
-        
+
         // Recargar la página con parámetro para refresh de permisos
         setTimeout(() => {
             const url = new URL(window.location);
@@ -151,7 +150,7 @@ class PermisosMonitor {
             min-width: 300px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         `;
-        
+
         notificacion.innerHTML = `
             <div class="d-flex align-items-center">
                 <i class="bi bi-arrow-clockwise me-2 text-primary fs-5"></i>
@@ -162,9 +161,9 @@ class PermisosMonitor {
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-        
+
         document.body.appendChild(notificacion);
-        
+
         // Auto-remover después de 3 segundos
         setTimeout(() => {
             if (notificacion.parentNode) {
@@ -188,13 +187,63 @@ class PermisosMonitor {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 this.logger.log('🧹 Caché de permisos limpiado');
                 this.verificarPermisos(); // Verificar inmediatamente
             }
         } catch (error) {
             this.logger.error('❌ Error limpiando caché:', error);
+        }
+    }
+
+    /**
+     * Verificar cambios en permisos desde el servidor
+     */
+    async verificarCambiosPermisos() {
+        try {
+            // Primero verificar si el token sigue vigente
+            const tokenResponse = await fetch('/api/Auth/verificar-token-vigente', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (tokenResponse.ok) {
+                const tokenData = await tokenResponse.json();
+                if (tokenData.debeRenovar) {
+                    console.log('Token debe renovarse, redirigiendo...');
+                    this.mostrarNotificacionCambios();
+                    setTimeout(() => {
+                        window.location.href = '/Account/Login?message=sesion_renovada';
+                    }, 2000);
+                    return;
+                }
+            }
+
+            // Verificar cambios normales en permisos
+            const response = await fetch('/Permisos/VerificarCambios', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.hanCambiado) {
+                this.onPermisosActualizados(data.permisos);
+            }
+        } catch (error) {
+            console.error('Error verificando cambios de permisos:', error);
         }
     }
 }
