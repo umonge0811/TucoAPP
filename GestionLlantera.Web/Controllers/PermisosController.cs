@@ -48,7 +48,7 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Limpiar caché de permisos manualmente
         /// </summary>
-        [HttpPost]
+        [HttpPost("LimpiarCache")]
         public async Task<IActionResult> LimpiarCache()
         {
             try
@@ -56,48 +56,12 @@ namespace GestionLlantera.Web.Controllers
                 _permisosService.LimpiarCacheCompleto();
                 await _permisosService.RefrescarPermisosAsync();
 
-                _logger.LogInformation("Caché de permisos limpiado manualmente por el usuario");
-
                 return Json(new { success = true, message = "Caché limpiado correctamente" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al limpiar caché de permisos");
-                return Json(new { success = false, message = "Error al limpiar caché" });
-            }
-        }
-
-        /// <summary>
-        /// Endpoint de diagnóstico para verificar permisos del usuario actual
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> Diagnostico()
-        {
-            try
-            {
-                var context = HttpContext;
-                var diagnostico = new
-                {
-                    UsuarioAutenticado = context.User?.Identity?.IsAuthenticated ?? false,
-                    UserId = context.User?.FindFirst("userId")?.Value ??
-                            context.User?.FindFirst("UsuarioId")?.Value ??
-                            context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
-                    Email = context.User?.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ??
-                           context.User?.FindFirst("email")?.Value,
-                    Roles = context.User?.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
-                                         .Select(c => c.Value).ToList() ?? new List<string>(),
-                    Claims = context.User?.Claims.Select(c => new { c.Type, c.Value }).ToList() ?? new List<object>(),
-                    TieneCookieJWT = !string.IsNullOrEmpty(context.Request.Cookies["JwtToken"]),
-                    PermisosActuales = await _permisosService.ObtenerPermisosUsuarioActualAsync(),
-                    Timestamp = DateTime.Now
-                };
-
-                return Json(new { success = true, data = diagnostico });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error en diagnóstico de permisos");
-                return Json(new { success = false, message = ex.Message });
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
