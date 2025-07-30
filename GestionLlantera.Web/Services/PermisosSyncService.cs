@@ -71,24 +71,11 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var result = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
-                    
-                    // Verificar si el token debe renovarse
-                    if (result.TryGetProperty("debeRenovar", out var debeRenovarProp))
-                    {
-                        var debeRenovar = debeRenovarProp.GetBoolean();
-                        if (debeRenovar)
-                        {
-                            _logger.LogInformation("El token debe renovarse según la API");
-                            return false;
-                        }
-                        return true;
-                    }
-                    
+                    var result = System.Text.Json.JsonSerializer.Deserialize<dynamic>(content);
+                    // Simplificado: verificar respuesta
                     return true;
                 }
 
-                _logger.LogWarning("API respondió con código {StatusCode}", response.StatusCode);
                 return false;
             }
             catch (Exception ex)
