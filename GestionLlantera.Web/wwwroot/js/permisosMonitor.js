@@ -1,3 +1,4 @@
+
 /**
  * 🔄 SISTEMA DE MONITOREO AUTOMÁTICO DE PERMISOS
  * Este módulo verifica automáticamente si los permisos del usuario han cambiado
@@ -5,35 +6,29 @@
 
 class PermisosMonitor {
     constructor() {
-        this.permisosActuales = null;
-        this.usuarioActual = null;
         this.intervalId = null;
-        this.isChecking = false;
-        this.ultimaVerificacion = Date.now();
-        this.contadorCambios = 0;
-        this.logger = {
-            log: (message) => console.log(`[PermisosMonitor] ${message}`),
-            error: (message) => console.error(`[PermisosMonitor] ${message}`)
-        };
+        this.ultimaVerificacion = null;
+        this.permisosActuales = null;
+        this.intervaloVerificacion = 3000; // ✅ REDUCIR A 3 SEGUNDOS para detectar cambios más rápido
+        this.logger = console;
+        this.ultimaActualizacionRoles = null; // ✅ NUEVO: Rastrear cambios de roles
     }
 
     /**
      * Iniciar el monitoreo automático de permisos
      */
     iniciar() {
-        this.logger.log('🚀 Iniciando monitoreo de permisos...');
-
-        // Verificar inmediatamente al iniciar
+        this.logger.log('🔄 Iniciando monitoreo de permisos...');
+        
+        // Verificar inmediatamente
         this.verificarPermisos();
-
-        // ✅ REDUCIR INTERVALO A 15 SEGUNDOS PARA MEJOR RESPONSIVIDAD
+        
+        // Configurar verificación periódica
         this.intervalId = setInterval(() => {
             this.verificarPermisos();
-        }, 15000);
+        }, this.intervaloVerificacion);
 
-        this.logger.log('✅ Monitoreo de permisos iniciado (verificación cada 15 segundos)');
-
-        // ✅ AGREGAR LISTENER PARA EVENTOS DE FOCUS/VISIBILIDAD
+        // Escuchar eventos de visibilidad para verificar cuando se vuelve a la página
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
                 this.logger.log('🔄 Página visible - Verificando permisos...');
@@ -41,6 +36,7 @@ class PermisosMonitor {
             }
         });
 
+        // Escuchar eventos de foco
         window.addEventListener('focus', () => {
             this.logger.log('🔄 Ventana enfocada - Verificando permisos...');
             this.verificarPermisos();
@@ -59,95 +55,66 @@ class PermisosMonitor {
     }
 
     /**
-     * Verificar permisos del usuario actual
+     * Verificar si los permisos han cambiado
      */
     async verificarPermisos() {
-        if (this.isChecking) return;
-
-        this.isChecking = true;
         try {
-            const response = await fetch('/Permisos/VerificarPermisosActuales', {
+            const response = await fetch('/Permisos/VerificarCambios', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
 
             if (!response.ok) {
-                this.logger.error(`Error HTTP: ${response.status}`);
+                this.logger.warn('⚠️ Error al verificar permisos:', response.status);
                 return;
             }
 
             const data = await response.json();
-
-            if (data.success && data.usuario) {
-                // ✅ DETECTAR CAMBIO DE USUARIO
-                if (this.usuarioActual && this.usuarioActual !== data.usuario.nombreUsuario) {
-                    this.logger.log(`🔄 CAMBIO DE USUARIO DETECTADO: ${this.usuarioActual} → ${data.usuario.nombreUsuario}`);
-                    this.contadorCambios++;
-
-                    // Limpiar estado anterior
-                    this.permisosActuales = null;
-
-                    // Forzar recarga inmediata de la página
-                    this.mostrarNotificacionCambioUsuario(this.usuarioActual, data.usuario.nombreUsuario);
-                    setTimeout(() => {
-                        this.logger.log('🔄 Recargando página por cambio de usuario...');
-                        window.location.reload();
-                    }, 1500);
-                    return;
+            
+            if (data.success) {
+                const nuevosPermisos = data.permisos;
+                
+                // Comparar con permisos anteriores
+                if (this.permisosActuales && this.hanCambiado(this.permisosActuales, nuevosPermisos)) {
+                    this.logger.log('🔄 ¡Permisos han cambiado! Recargando página...');
+                    this.onPermisosActualizados(nuevosPermisos);
+                } else {
+                    this.logger.debug('✅ Permisos sin cambios');
                 }
-
-                this.usuarioActual = data.usuario.nombreUsuario;
-
-                // ✅ VERIFICAR CAMBIOS EN PERMISOS PARA EL MISMO USUARIO
-                if (this.permisosActuales && this.hanCambiadoPermisos(this.permisosActuales, data.permisos)) {
-                    this.logger.log('🔄 Cambios detectados en permisos del usuario');
-                    this.contadorCambios++;
-                    this.onPermisosActualizados(data.permisos);
-                }
-
-                this.permisosActuales = data.permisos;
-                this.ultimaVerificacion = Date.now();
+                
+                this.permisosActuales = nuevosPermisos;
+                this.ultimaVerificacion = new Date();
             }
         } catch (error) {
-            this.logger.error('Error verificando permisos:', error);
-        } finally {
-            this.isChecking = false;
+            this.logger.error('❌ Error verificando permisos:', error);
         }
     }
 
     /**
      * Comparar si los permisos han cambiado
      */
-    hanCambiadoPermisos(permisosAnteriores, permisosNuevos) {
-        if (!permisosAnteriores || !permisosNuevos) {
-            return true;
-        }
-
+    hanCambiado(permisosAnteriores, permisosNuevos) {
         const campos = [
             'puedeVerCostos', 'puedeVerUtilidades', 'puedeProgramarInventario',
             'puedeEditarProductos', 'puedeEliminarProductos', 'puedeAjustarStock',
             'esAdministrador'
         ];
 
-        return campos.some(campo => permisosAnteriores[campo] !== permisosNuevos[campo]);
+        return campos.some(campo => 
+            permisosAnteriores[campo] !== permisosNuevos[campo]
+        );
     }
 
     /**
      * Evento cuando los permisos se actualizan
      */
     onPermisosActualizados(nuevosPermisos) {
-        this.logger.log('✅ Permisos actualizados');
-
         // Mostrar notificación
         this.mostrarNotificacionCambios();
-
+        
         // Recargar la página después de un breve delay
         setTimeout(() => {
             window.location.reload();
@@ -168,7 +135,7 @@ class PermisosMonitor {
             min-width: 300px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         `;
-
+        
         notificacion.innerHTML = `
             <div class="d-flex align-items-center">
                 <i class="bi bi-arrow-clockwise me-2 text-primary fs-5"></i>
@@ -179,49 +146,13 @@ class PermisosMonitor {
             </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-
+        
         document.body.appendChild(notificacion);
-
+        
         // Auto-remover después de 3 segundos
         setTimeout(() => {
             if (notificacion.parentNode) {
-                notificacion.parentNode.removeChild(notificacion);
-            }
-        }, 3000);
-    }
-
-    /**
-     * ✅ NUEVO: Mostrar notificación específica para cambio de usuario
-     */
-    mostrarNotificacionCambioUsuario(usuarioAnterior, usuarioNuevo) {
-        const notificacion = document.createElement('div');
-        notificacion.className = 'alert alert-warning alert-dismissible fade show position-fixed';
-        notificacion.style.cssText = `
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            min-width: 350px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-left: 4px solid #ff9800;
-        `;
-
-        notificacion.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="bi bi-person-fill-check me-2 text-warning fs-5"></i>
-                <div>
-                    <strong>Cambio de Usuario Detectado</strong><br>
-                    <small>${usuarioAnterior} → ${usuarioNuevo}</small><br>
-                    <small class="text-muted">Actualizando interfaz...</small>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(notificacion);
-
-        // Auto-remover después de 3 segundos
-        setTimeout(() => {
-            if (notificacion.parentNode) {
-                notificacion.parentNode.removeChild(notificacion);
+                notificacion.remove();
             }
         }, 3000);
     }
@@ -241,7 +172,7 @@ class PermisosMonitor {
             });
 
             const data = await response.json();
-
+            
             if (data.success) {
                 this.logger.log('🧹 Caché de permisos limpiado');
                 this.verificarPermisos(); // Verificar inmediatamente
@@ -256,30 +187,30 @@ class PermisosMonitor {
      */
     async forzarVerificacionInmediata() {
         this.logger.log('🔄 FORZANDO verificación inmediata de permisos...');
-
+        
         try {
             // 1. Limpiar permisos actuales para forzar comparación
             this.permisosActuales = null;
-
+            
             // 2. Limpiar caché del servidor
             await this.limpiarCache();
-
+            
             // 3. Verificar inmediatamente con datos frescos
             await this.verificarPermisos();
-
+            
             // 4. Si estamos en páginas administrativas, mostrar notificación
             if (window.location.pathname.includes('/Configuracion/') || 
                 window.location.pathname.includes('/Admin/')) {
-
+                
                 this.mostrarNotificacionCambios();
-
+                
                 // 5. Recargar la página después de 3 segundos para asegurar cambios
                 setTimeout(() => {
                     this.logger.log('🔄 Recargando página para aplicar cambios de permisos...');
                     window.location.reload();
                 }, 3000);
             }
-
+            
             this.logger.log('✅ Verificación forzada completada');
         } catch (error) {
             this.logger.error('❌ Error en verificación forzada:', error);
@@ -291,7 +222,7 @@ class PermisosMonitor {
      */
     async notificarCambioRoles() {
         this.logger.log('🔄 Notificación de cambio de roles recibida');
-
+        
         try {
             // Notificar al servidor sobre los cambios
             const response = await fetch('/Permisos/NotificarCambiosRoles', {
