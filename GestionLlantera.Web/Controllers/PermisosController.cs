@@ -71,18 +71,18 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🔄 === NOTIFICANDO CAMBIOS EN ROLES ===");
-                
+
                 // 1. Limpiar caché local del frontend
                 _permisosService.LimpiarCacheCompleto();
                 _logger.LogInformation("✅ Caché local del frontend limpiado");
-                
+
                 // 2. Llamar al servidor API para limpiar su caché también
                 try
                 {
                     using var httpClient = new HttpClient();
                     var apiUrl = _configuration["ApiSettings:BaseUrl"];
                     var response = await httpClient.PostAsync($"{apiUrl}/api/Permisos/limpiar-cache", null);
-                    
+
                     if (response.IsSuccessStatusCode)
                     {
                         _logger.LogInformation("✅ Caché del servidor API limpiado exitosamente");
@@ -161,6 +161,60 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogError(ex, "Error al invalidar caché global");
                 return StatusCode(500, new { success = false, message = "Error al invalidar caché" });
+            }
+        }
+
+        /// <summary>
+        /// ✅ NUEVO: Endpoint para verificar permisos actuales del usuario (usado por JavaScript)
+        /// </summary>
+        [HttpGet("VerificarPermisosActuales")]
+        public async Task<IActionResult> VerificarPermisosActuales()
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Verificando permisos actuales del usuario");
+
+                if (!User.Identity.IsAuthenticated)
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                // ✅ INCLUIR INFORMACIÓN DEL USUARIO ACTUAL
+                var nombreUsuario = User.Identity.Name ?? "Usuario Desconocido";
+                var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+                var userId = User.FindFirst("userId")?.Value;
+
+                // Obtener permisos del usuario actual
+                var permisos = await _permisosService.ObtenerPermisosUsuarioActualAsync();
+
+                _logger.LogInformation("✅ Permisos verificados para usuario: {Usuario} (ID: {UserId})", nombreUsuario, userId);
+
+                return Json(new
+                {
+                    success = true,
+                    usuario = new
+                    {
+                        nombreUsuario = nombreUsuario,
+                        email = email,
+                        userId = userId
+                    },
+                    permisos = new
+                    {
+                        esAdministrador = permisos.EsAdministrador,
+                        puedeVerCostos = permisos.PuedeVerCostos,
+                        puedeVerUtilidades = permisos.PuedeVerUtilidades,
+                        puedeProgramarInventario = permisos.PuedeProgramarInventario,
+                        puedeEditarProductos = permisos.PuedeEditarProductos,
+                        puedeEliminarProductos = permisos.PuedeEliminarProductos,
+                        puedeAjustarStock = permisos.PuedeAjustarStock
+                    },
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar permisos actuales");
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
     }

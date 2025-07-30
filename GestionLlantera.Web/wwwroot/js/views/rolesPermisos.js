@@ -48,11 +48,20 @@ async function refrescarTablas() {
     try {
         console.log('Iniciando actualización de tablas...');
 
+        // Mostrar indicador de carga
+        mostrarCargando(true);
+
         // Realizar ambas operaciones en paralelo y esperar a que ambas terminen
         const [permisos, roles] = await Promise.all([
             cargarPermisos(),
             cargarRoles()
         ]);
+
+        // ✅ NOTIFICAR AL MONITOR DE PERMISOS SOBRE LOS CAMBIOS
+        if (window.permisosMonitor) {
+            console.log('🔄 Notificando cambios al monitor de permisos...');
+            await window.permisosMonitor.notificarCambioRoles();
+        }
 
         console.log('Tablas actualizadas exitosamente');
         return { permisos, roles };
