@@ -809,6 +809,41 @@
     font-size: 0.9rem;
     line-height: 1.4;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Estilos para badges de dependencias */
+#accordionPermisosModal .badge,
+#accordionPermisosModalEditar .badge {
+    font-size: 0.65rem;
+    font-weight: 500;
+    margin-left: 0.25rem;
+}
+
+#accordionPermisosModal .badge.bg-warning,
+#accordionPermisosModalEditar .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+#accordionPermisosModal .badge.bg-info,
+#accordionPermisosModalEditar .badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000 !important;
+}
+
+/* Animación sutil para checkboxes que se activan automáticamente */
+.permiso-checkbox:checked,
+.permiso-checkbox-editar:checked {
+    animation: checkboxActivated 0.3s ease-in-out;
+}
+
+@keyframes checkboxActivated {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
 
 /* Estilos para acordeones en tabla de roles */
