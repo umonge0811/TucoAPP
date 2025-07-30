@@ -1,16 +1,15 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using Tuco.Clases.Models;
+using System.Collections.Generic;
 using API.Data;
 using tuco.Clases.Models;
 using Tuco.Clases.DTOs;
-using Microsoft.Extensions.Caching.Memory;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using tuco.Clases.Models;
+using System.Net.Http;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 using tuco.Utilities;
 using Microsoft.AspNetCore.Cors;
-using System.Linq;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -20,16 +19,14 @@ public class RolesController : ControllerBase
 {
     private readonly TucoContext _context;
     private readonly ILogger<RolesController> _logger;
-    private readonly IMemoryCache _cache;
     HttpClient _httpClient;
 
 
-    public RolesController(TucoContext context, IHttpClientFactory httpClientFactory, ILogger<RolesController> logger, IMemoryCache cache)
+    public RolesController(TucoContext context, IHttpClientFactory httpClientFactory, ILogger<RolesController> logger)
     {
         _context = context;
         _httpClient = httpClientFactory.CreateClient("TucoApi");
         _logger = logger;
-        _cache = cache;
     }
 
 
@@ -483,53 +480,53 @@ public class RolesController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Actualizando permisos del rol {RolId}", rolId);
-
             var rol = await _context.Roles.Include(r => r.RolPermiso).FirstOrDefaultAsync(r => r.RolId == rolId);
+
             if (rol == null)
             {
-                return NotFound(new { message = "Rol no encontrado" });
+                return NotFound(new { Message = "Rol no encontrado." });
             }
 
-            // Obtener usuarios afectados por este cambio de rol
-            var usuariosAfectados = await _context.UsuarioRoles
-                .Where(ur => ur.RolId == rolId)
-                .Select(ur => ur.UsuarioId)
-                .ToListAsync();
-
-            // Remover permisos existentes
-            _context.RolPermiso.RemoveRange(rol.RolPermiso);
-
-            // Agregar nuevos permisos
-            foreach (var permisoId in permisosIds)
+            // Eliminar permisos no incluidos
+            var permisosAEliminar = rol.RolPermiso.Where(rp => !permisosIds.Contains(rp.PermisoID)).ToList();
+            foreach (var permiso in permisosAEliminar)
             {
-                _context.RolPermiso.Add(new RolPermisoRE
-                {
-                    RolID = rolId,
-                    PermisoID = permisoId
-                });
+                rol.RolPermiso.Remove(permiso);
+            }
+
+            // Agregar permisos nuevos
+            var permisosAAgregar = permisosIds.Where(pid => !rol.RolPermiso.Any(rp => rp.PermisoID == pid)).ToList();
+            foreach (var permisoId in permisosAAgregar)
+            {
+                rol.RolPermiso.Add(new RolPermisoRE { RolID = rolId, PermisoID = permisoId });
             }
 
             await _context.SaveChangesAsync();
 
-            // Invalidar caché de permisos para usuarios afectados
-            foreach (var usuarioId in usuariosAfectados)
-            {
-                var cacheKey = $"permisos_usuario_{usuarioId}";
-                _cache.Remove(cacheKey);
-                _logger.LogInformation("Caché de permisos invalidado para usuario {UsuarioId} por cambio en rol {RolId}", usuarioId, rolId);
-            }
+            // Registrar en el historial
+            await HistorialHelper.RegistrarHistorial(
+                _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Actualizar permisos de rol",
+                modulo: "Roles",
+                detalle: $"Permisos del rol ID {rolId} actualizados.",
+                estadoAccion: "Éxito"
+            );
 
-            _logger.LogInformation("Permisos del rol {RolId} actualizados exitosamente. {Count} usuarios afectados", rolId, usuariosAfectados.Count);
-            return Ok(new { 
-                message = "Permisos actualizados exitosamente", 
-                usuariosAfectados = usuariosAfectados.Count 
-            });
+            return Ok(new { Message = "Permisos actualizados exitosamente." });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al actualizar permisos del rol {RolId}", rolId);
-            return StatusCode(500, new { message = "Error interno del servidor" });
+            await HistorialHelper.RegistrarHistorial(
+                _httpClient,
+                usuarioId: 1,
+                tipoAccion: "Actualizar permisos de rol",
+                modulo: "Roles",
+                detalle: $"Error al actualizar permisos del rol ID {rolId}",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+            return StatusCode(500, new { Message = $"Error: {ex.Message}" });
         }
     }
     #endregion

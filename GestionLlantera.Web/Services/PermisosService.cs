@@ -256,19 +256,6 @@ namespace GestionLlantera.Web.Services
             _logger.LogInformation("🧹 Limpiando caché completo de permisos");
             _permisosCache = null;
             _ultimaActualizacion = DateTime.MinValue;
-            
-            // También limpiar headers de autorización para forzar nueva autenticación
-            _httpClient.DefaultRequestHeaders.Clear();
-        }
-
-        /// <summary>
-        /// Verifica si los permisos están desactualizados y necesitan renovación
-        /// </summary>
-        public bool NecesitaRenovacion()
-        {
-            var tiempoMaximoCache = TimeSpan.FromMinutes(5); // 5 minutos máximo
-            return _permisosCache == null || 
-                   DateTime.Now - _ultimaActualizacion > tiempoMaximoCache;
         }
 
         /// <summary>
