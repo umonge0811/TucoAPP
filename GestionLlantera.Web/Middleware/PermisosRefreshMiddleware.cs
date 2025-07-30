@@ -22,11 +22,21 @@ namespace GestionLlantera.Web.Middleware
                 // Solo verificar en páginas que requieren autenticación
                 if (context.User?.Identity?.IsAuthenticated == true)
                 {
-                    // Verificar si el servicio de permisos necesita renovación
-                    if (permisosService is PermisosService ps && ps.NecesitaRenovacion())
+                    // ✅ VERIFICAR SI NECESITA ACTUALIZACIÓN DE PERMISOS
+                    if (permisosService is PermisosService ps)
                     {
-                        _logger.LogDebug("Permisos necesitan renovación - forzando refresh");
-                        await permisosService.RefrescarPermisosAsync();
+                        // Verificar renovación normal
+                        if (ps.NecesitaRenovacion())
+                        {
+                            _logger.LogDebug("🔄 Permisos necesitan renovación por tiempo - forzando refresh");
+                            await permisosService.RefrescarPermisosAsync();
+                        }
+                        // También verificar actualización basada en timestamp
+                        else if (ps.NecesitaActualizacionPermisos())
+                        {
+                            _logger.LogDebug("🔄 Permisos necesitan actualización por timestamp - forzando refresh");
+                            await permisosService.RefrescarPermisosAsync();
+                        }
                     }
 
                     // Verificar si hay un parámetro especial para forzar refresh

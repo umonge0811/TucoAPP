@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.AspNetCore.Razor.TagHelpers;
 using Microsoft.AspNetCore.Http;
 using GestionLlantera.Web.Services.Interfaces;
 
@@ -57,54 +57,53 @@ namespace GestionLlantera.Web.TagHelpers
 
         public override async Task ProcessAsync(TagHelperContext context, TagHelperOutput output)
         {
-            // Si no se especifica permiso, mostrar normalmente
-            if (string.IsNullOrEmpty(Permiso))
-            {
-                _logger.LogDebug("TagHelper usado sin especificar permiso en elemento {TagName}", output.TagName);
-                return;
-            }
-
-            var user = _httpContextAccessor.HttpContext?.User;
-
-            // Usuario no autenticado - ocultar por seguridad
-            if (user == null || !user.Identity.IsAuthenticated)
-            {
-                _logger.LogDebug("TagHelper: Usuario no autenticado - procesando elemento con permiso {Permiso}", Permiso);
-                ProcesarSinPermiso(output);
-                return;
-            }
-
             try
             {
-                // ✅ VERIFICACIÓN GLOBAL USANDO EL SERVICIO
-                var tienePermiso = await _permisosService.TienePermisoAsync(Permiso);
-
-                _logger.LogDebug("TagHelper: Usuario {Usuario} - Permiso '{Permiso}' = {TienePermiso}",
-                    user.Identity.Name ?? "Desconocido", Permiso, tienePermiso);
-
-                // Aplicar lógica según configuración
-                var debeOcultar = Invertir ? tienePermiso : !tienePermiso;
-
-                if (debeOcultar)
+                // Verificar si el usuario está autenticado
+                if (!_httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? true)
                 {
-                    ProcesarSinPermiso(output);
+                    output.SuppressOutput();
+                    return;
+                }
+
+                var permisosService = _httpContextAccessor.HttpContext.RequestServices
+                    .GetRequiredService<IPermisosService>();
+
+                // ✅ VERIFICAR SI NECESITA ACTUALIZAR PERMISOS ANTES DE VALIDAR
+                if (permisosService is PermisosService ps && ps.NecesitaActualizacionPermisos())
+                {
+                    var logger = _httpContextAccessor.HttpContext?.RequestServices
+                        .GetService<ILogger<PermisoTagHelper>>();
+                    logger?.LogDebug("🔄 TagHelper forzando actualización de permisos para validar: {Permiso}", Permiso);
+
+                    await permisosService.RefrescarPermisosAsync();
+                }
+
+                // ✅ VALIDAR PERMISO CON DATOS ACTUALIZADOS
+                bool tienePermiso = await permisosService.TienePermisoAsync(Permiso);
+
+                if (!tienePermiso)
+                {
+                    var logger = _httpContextAccessor.HttpContext?.RequestServices
+                        .GetService<ILogger<PermisoTagHelper>>();
+                    logger?.LogDebug("🚫 TagHelper: Permiso '{Permiso}' DENEGADO - ocultando elemento", Permiso);
+                    output.SuppressOutput();
                 }
                 else
                 {
-                    // Si tiene permiso y no hay que ocultar, el elemento se muestra normalmente
-                    _logger.LogDebug("TagHelper: Mostrando elemento - Usuario tiene permiso {Permiso}", Permiso);
+                    var logger = _httpContextAccessor.HttpContext?.RequestServices
+                        .GetService<ILogger<PermisoTagHelper>>();
+                    logger?.LogDebug("✅ TagHelper: Permiso '{Permiso}' CONCEDIDO - mostrando elemento", Permiso);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error verificando permiso '{Permiso}' para usuario {Usuario}",
-                    Permiso, user.Identity?.Name ?? "Desconocido");
+                // Log del error y ocultar el elemento por seguridad
+                var logger = _httpContextAccessor.HttpContext?.RequestServices
+                    .GetService<ILogger<PermisoTagHelper>>();
+                logger?.LogError(ex, "❌ Error verificando permiso {Permiso} en TagHelper", Permiso);
 
-                // En caso de error, ocultar por seguridad (a menos que sea comportamiento invertido)
-                if (!Invertir)
-                {
-                    ProcesarSinPermiso(output);
-                }
+                output.SuppressOutput();
             }
         }
 
