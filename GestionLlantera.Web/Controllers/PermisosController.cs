@@ -9,13 +9,11 @@ namespace GestionLlantera.Web.Controllers
     {
         private readonly IPermisosService _permisosService;
         private readonly ILogger<PermisosController> _logger;
-        private readonly IConfiguration _configuration;
 
-        public PermisosController(IPermisosService permisosService, ILogger<PermisosController> logger, IConfiguration configuration)
+        public PermisosController(IPermisosService permisosService, ILogger<PermisosController> logger)
         {
             _permisosService = permisosService;
             _logger = logger;
-            _configuration = configuration;
         }
 
         /// <summary>
