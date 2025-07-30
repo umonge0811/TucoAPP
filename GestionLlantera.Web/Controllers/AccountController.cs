@@ -175,51 +175,9 @@ namespace GestionLlantera.Web.Controllers
 
                     _logger.LogInformation("Login exitoso para usuario: {Email}", model.Email);
 
-                    // ✅ OBTENER SERVICIOS NECESARIOS
-                    var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
-                    var permisosSyncService = HttpContext.RequestServices.GetService<IPermisosSyncService>();
-
                     // ✅ LIMPIAR CACHÉ DE PERMISOS AL INICIAR NUEVA SESIÓN
+                    var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
                     permisosService?.LimpiarCacheCompleto();
-
-                    // ✅ VALIDAR Y CARGAR PERMISOS DEL TOKEN RECIÉN DECODIFICADO
-                    try
-                    {
-                        // Obtener información del usuario del token
-                        var userIdClaim = principal.FindFirst("userId")?.Value ?? 
-                                         principal.FindFirst("UsuarioId")?.Value ??
-                                         principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-                        
-                        if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
-                        {
-                            _logger.LogInformation("Validando permisos para usuario ID: {UserId}", userId);
-                            
-                            // Forzar recarga de permisos desde el token/base de datos
-                            await permisosService?.RefrescarPermisosAsync();
-                            
-                            // Verificar que los permisos se cargaron correctamente
-                            var permisosActuales = await permisosService?.ObtenerPermisosUsuarioAsync();
-                            
-                            if (permisosActuales != null)
-                            {
-                                _logger.LogInformation("Permisos validados correctamente. Permisos encontrados: {Count}", 
-                                    permisosActuales.GetType().GetProperties().Count(p => p.GetValue(permisosActuales) is true));
-                            }
-                            else
-                            {
-                                _logger.LogWarning("No se pudieron cargar los permisos del usuario {UserId}", userId);
-                            }
-                        }
-                        else
-                        {
-                            _logger.LogWarning("No se pudo obtener el ID del usuario del token para validar permisos");
-                        }
-                    }
-                    catch (Exception permisosEx)
-                    {
-                        _logger.LogError(permisosEx, "Error al validar permisos después del login");
-                        // Continuar con el login aunque falle la validación de permisos
-                    }
 
                     // ✅ AGREGAR HEADERS PARA EVITAR CACHÉ DEL NAVEGADOR
                     Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";

@@ -245,63 +245,10 @@ namespace GestionLlantera.Web.Services
         /// </summary>
         public async Task RefrescarPermisosAsync()
         {
-            try
-            {
-                LimpiarCacheCompleto();
-                _logger.LogInformation("🔄 Iniciando refresh completo de permisos...");
-
-                // ✅ VALIDAR TOKEN JWT ACTUAL
-                var jwtToken = _httpContextAccessor.HttpContext?.Request.Cookies["JwtToken"];
-                if (!string.IsNullOrEmpty(jwtToken))
-                {
-                    try
-                    {
-                        var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
-                        var decodedToken = handler.ReadToken(jwtToken) as System.IdentityModel.Tokens.Jwt.JwtSecurityToken;
-
-                        if (decodedToken != null)
-                        {
-                            // Verificar expiración del token
-                            if (decodedToken.ValidTo < DateTime.UtcNow)
-                            {
-                                _logger.LogWarning("❌ Token JWT expirado - no se pueden cargar permisos");
-                                return;
-                            }
-
-                            // Log de claims del token para debugging
-                            var userIdClaim = decodedToken.Claims.FirstOrDefault(c => c.Type == "userId" || c.Type == "UsuarioId")?.Value;
-                            _logger.LogInformation("✅ Token JWT válido para usuario: {UserId}", userIdClaim);
-                        }
-                    }
-                    catch (Exception tokenEx)
-                    {
-                        _logger.LogError(tokenEx, "❌ Error al validar token JWT");
-                    }
-                }
-
-                // ✅ FORZAR RECARGA DESDE BASE DE DATOS
-                _logger.LogDebug("🔄 Forzando recarga de permisos desde base de datos...");
-
-                // La próxima llamada a ObtenerPermisosUsuarioAsync cargará los datos frescos
-                var permisosActualizados = await ObtenerPermisosUsuarioActualAsync();
-
-                if (permisosActualizados != null)
-                {
-                    _logger.LogInformation("✅ Permisos refrescados correctamente");
-
-                    // ✅ MARCAR TIMESTAMP DE ÚLTIMA ACTUALIZACIÓN
-                    var cacheKey = "ultima_actualizacion_permisos";
-                    _cache.Set(cacheKey, DateTime.UtcNow, TimeSpan.FromHours(1));
-                }
-                else
-                {
-                    _logger.LogWarning("⚠️ No se pudieron cargar los permisos actualizados");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error al refrescar permisos");
-            }
+            _logger.LogInformation("Refrescando permisos del usuario");
+            _permisosCache = null;
+            _ultimaActualizacion = DateTime.MinValue;
+            await ObtenerPermisosUsuarioActualAsync();
         }
 
         /// <summary>
@@ -426,40 +373,6 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, "Error al obtener token del usuario");
                 return null;
-            }
-        }
-
-        /// <summary>
-        /// Verifica si los permisos necesitan ser actualizados
-        /// </summary>
-        public bool NecesitaActualizacionPermisos()
-        {
-            try
-            {
-                var ultimaActualizacion = _cache.Get<DateTime?>("ultima_actualizacion_permisos");
-
-                // Si no hay timestamp de última actualización, necesita actualización
-                if (ultimaActualizacion == null)
-                {
-                    _logger.LogDebug("🔄 Permisos necesitan actualización: sin timestamp");
-                    return true;
-                }
-
-                // Si han pasado más de 5 minutos, necesita actualización
-                var tiempoTranscurrido = DateTime.UtcNow - ultimaActualizacion.Value;
-                if (tiempoTranscurrido.TotalMinutes > 5)
-                {
-                    _logger.LogDebug("🔄 Permisos necesitan actualización: {Minutos} minutos transcurridos",
-                        (int)tiempoTranscurrido.TotalMinutes);
-                    return true;
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error verificando si necesita actualización de permisos");
-                return true; // En caso de error, forzar actualización
             }
         }
     }
