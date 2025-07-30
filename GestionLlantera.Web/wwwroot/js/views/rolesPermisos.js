@@ -977,15 +977,10 @@ window.eliminarRol = async function eliminarRol(rolId) {
                 throw new Error(errorData.message || 'Error al eliminar el rol');
             }
 
-            // ✅ NOTIFICAR AL MONITOR DE PERMISOS SOBRE CAMBIOS
-            if (window.permisosMonitor) {
-                console.log('🔄 Notificando eliminación de rol al monitor de permisos');
-                window.permisosMonitor.notificarCambioRoles();
-            }
-
             // Refrescar tablas
             await refrescarTablas();
 
+            // Mostrar mensaje de éxito con SweetAlert2
             await Swal.fire(
                 '¡Eliminado!',
                 'El rol ha sido eliminado.',

@@ -188,61 +188,24 @@ class PermisosMonitor {
     async forzarVerificacionInmediata() {
         this.logger.log('🔄 FORZANDO verificación inmediata de permisos...');
         
-        try {
-            // 1. Limpiar permisos actuales para forzar comparación
-            this.permisosActuales = null;
-            
-            // 2. Limpiar caché del servidor
-            await this.limpiarCache();
-            
-            // 3. Verificar inmediatamente con datos frescos
-            await this.verificarPermisos();
-            
-            // 4. Si estamos en páginas administrativas, mostrar notificación
-            if (window.location.pathname.includes('/Configuracion/') || 
-                window.location.pathname.includes('/Admin/')) {
-                
-                this.mostrarNotificacionCambios();
-                
-                // 5. Recargar la página después de 3 segundos para asegurar cambios
-                setTimeout(() => {
-                    this.logger.log('🔄 Recargando página para aplicar cambios de permisos...');
-                    window.location.reload();
-                }, 3000);
-            }
-            
+        // Limpiar permisos actuales para forzar comparación
+        this.permisosActuales = null;
+        
+        // Verificar inmediatamente
+        await this.verificarPermisos();
+        
+        // Si hay cambios, recargar automáticamente
+        if (this.permisosActuales) {
             this.logger.log('✅ Verificación forzada completada');
-        } catch (error) {
-            this.logger.error('❌ Error en verificación forzada:', error);
         }
     }
 
     /**
      * ✅ NUEVO: Método que pueden llamar otras páginas cuando cambien roles
      */
-    async notificarCambioRoles() {
+    notificarCambioRoles() {
         this.logger.log('🔄 Notificación de cambio de roles recibida');
-        
-        try {
-            // Notificar al servidor sobre los cambios
-            const response = await fetch('/Permisos/NotificarCambiosRoles', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            if (response.ok) {
-                this.logger.log('✅ Servidor notificado sobre cambios en roles');
-            }
-        } catch (error) {
-            this.logger.error('❌ Error notificando cambios al servidor:', error);
-        }
-
-        // Forzar verificación inmediata
-        await this.forzarVerificacionInmediata();
+        this.forzarVerificacionInmediata();
     }
 }
 
