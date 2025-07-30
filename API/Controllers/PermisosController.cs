@@ -464,5 +464,62 @@ public class PermisosController : ControllerBase
                 });
             }
         }
+
+        /// <summary>
+        /// ✅ NUEVO: Endpoint para notificar cambios en roles/permisos
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> NotificarCambiosRoles()
+        {
+            try
+            {
+                // Limpiar caché de permisos
+                _permisosService.LimpiarCacheCompleto();
+
+                _logger.LogInformation("🔄 Cambios en roles notificados - Caché limpiado");
+
+                return Ok(new { 
+                    success = true, 
+                    message = "Cambios en roles procesados correctamente",
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al procesar cambios en roles");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// ✅ NUEVO: Endpoint público para limpiar caché desde frontend
+        /// </summary>
+        [HttpPost("limpiar-cache")]
+        public async Task<IActionResult> LimpiarCachePublico()
+        {
+            try
+            {
+                _logger.LogInformation("🧹 === SOLICITUD DE LIMPIEZA DE CACHÉ DESDE FRONTEND ===");
+
+                // Usar el nuevo método asíncrono
+                await _permisosService.LimpiarCacheCompletoAsync();
+
+                _logger.LogInformation("✅ Caché limpiado exitosamente desde frontend");
+
+                return Ok(new { 
+                    success = true, 
+                    message = "Caché de permisos limpiado correctamente",
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al limpiar caché desde frontend");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    error = ex.Message 
+                });
+            }
+        }
     }
-    

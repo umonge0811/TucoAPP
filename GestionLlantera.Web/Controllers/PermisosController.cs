@@ -68,10 +68,32 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // Limpiar caché de permisos
+                _logger.LogInformation("🔄 === NOTIFICANDO CAMBIOS EN ROLES ===");
+                
+                // 1. Limpiar caché local del frontend
                 _permisosService.LimpiarCacheCompleto();
-
-                _logger.LogInformation("🔄 Cambios en roles notificados - Caché limpiado");
+                _logger.LogInformation("✅ Caché local del frontend limpiado");
+                
+                // 2. Llamar al servidor API para limpiar su caché también
+                try
+                {
+                    using var httpClient = new HttpClient();
+                    var apiUrl = _configuration["ApiSettings:BaseUrl"];
+                    var response = await httpClient.PostAsync($"{apiUrl}/api/Permisos/limpiar-cache", null);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation("✅ Caché del servidor API limpiado exitosamente");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("⚠️ No se pudo limpiar el caché del servidor API: {StatusCode}", response.StatusCode);
+                    }
+                }
+                catch (Exception apiEx)
+                {
+                    _logger.LogError(apiEx, "❌ Error al comunicarse con el servidor API para limpiar caché");
+                }
 
                 return Ok(new { 
                     success = true, 
