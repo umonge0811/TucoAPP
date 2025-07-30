@@ -45,19 +45,44 @@ namespace GestionLlantera.Web.Controllers
         /// Endpoint para limpiar caché de permisos
         /// </summary>
         [HttpPost]
-        public IActionResult LimpiarCache()
+        public async Task<IActionResult> LimpiarCache()
         {
             try
             {
                 _permisosService.LimpiarCacheCompleto();
-                _logger.LogInformation("Caché de permisos limpiado manualmente");
 
-                return Json(new { success = true, message = "Caché limpiado exitosamente" });
+                return Ok(new { success = true, message = "Caché limpiado correctamente" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al limpiar caché de permisos");
-                return Json(new { success = false, error = ex.Message });
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// ✅ NUEVO: Endpoint para notificar cambios en roles/permisos
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> NotificarCambiosRoles()
+        {
+            try
+            {
+                // Limpiar caché de permisos
+                _permisosService.LimpiarCacheCompleto();
+
+                _logger.LogInformation("🔄 Cambios en roles notificados - Caché limpiado");
+
+                return Ok(new { 
+                    success = true, 
+                    message = "Cambios en roles procesados correctamente",
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al procesar cambios en roles");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
 
