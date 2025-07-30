@@ -1,6 +1,7 @@
 
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
+using System.Text.Json;
 
 namespace GestionLlantera.Web.Services
 {
@@ -37,15 +38,12 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                // 1. Invalidar caché local inmediatamente
+                // Invalidar caché local
                 var cacheKeys = new[]
                 {
                     $"permisos_usuario_{usuarioId}",
                     $"roles_usuario_{usuarioId}",
-                    "permisos_cache_general",
-                    "usuarios_permisos_cache",
-                    $"user_permissions_{usuarioId}",
-                    $"user_roles_{usuarioId}"
+                    "permisos_cache_general"
                 };
 
                 foreach (var key in cacheKeys)
@@ -53,34 +51,10 @@ namespace GestionLlantera.Web.Services
                     _cache.Remove(key);
                 }
 
-                // 2. Limpiar caché del servicio de permisos COMPLETAMENTE
+                // Limpiar caché del servicio de permisos
                 _permisosService.LimpiarCacheCompleto();
 
-                // 3. Llamar a la API para invalidar token del usuario
-                try
-                {
-                    var apiBaseUrl = _configuration["ApiSettings:BaseUrl"];
-                    var invalidateUrl = $"{apiBaseUrl}/api/Auth/invalidar-token/{usuarioId}";
-                    
-                    var response = await _httpClient.PostAsync(invalidateUrl, null);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        _logger.LogInformation("Token invalidado exitosamente en API para usuario {UsuarioId}", usuarioId);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("No se pudo invalidar token en API para usuario {UsuarioId}: {StatusCode}", usuarioId, response.StatusCode);
-                    }
-                }
-                catch (Exception tokenEx)
-                {
-                    _logger.LogError(tokenEx, "Error al invalidar token en API para usuario {UsuarioId}", usuarioId);
-                }
-
-                // 4. Forzar recarga de permisos inmediata
-                await ForzarRecargaPermisos();
-
-                _logger.LogInformation("Caché completamente invalidado para usuario {UsuarioId}", usuarioId);
+                _logger.LogInformation("Caché invalidado localmente para usuario {UsuarioId}", usuarioId);
             }
             catch (Exception ex)
             {

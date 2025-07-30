@@ -8,7 +8,7 @@ class PermisosMonitor {
         this.intervalId = null;
         this.ultimaVerificacion = null;
         this.permisosActuales = null;
-        this.intervaloVerificacion = 3000; // 3 segundos para detección más rápida
+        this.intervaloVerificacion = 10000; // 10 segundos
         this.logger = console;
     }
 
@@ -198,29 +198,11 @@ class PermisosMonitor {
     }
 
     /**
-     * Verificar cambios en permisos desde el servidor con detección más agresiva
+     * Verificar cambios en permisos desde el servidor
      */
     async verificarCambiosPermisos() {
         try {
-            // 1. Verificar si hay invalidaciones forzosas
-            const forceRefreshResponse = await fetch('/Permisos/VerificarRefreshForzoso', {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            if (forceRefreshResponse.ok) {
-                const forceData = await forceRefreshResponse.json();
-                if (forceData.debeRenovar) {
-                    console.log('🔄 Refresh forzoso detectado - Recargando inmediatamente...');
-                    this.forzarRecargaInmediata();
-                    return;
-                }
-            }
-
-            // 2. Verificar si el token sigue vigente
+            // Primero verificar si el token sigue vigente
             const tokenResponse = await fetch('/api/Auth/verificar-token-vigente', {
                 method: 'GET',
                 credentials: 'include',
@@ -233,7 +215,7 @@ class PermisosMonitor {
             if (tokenResponse.ok) {
                 const tokenData = await tokenResponse.json();
                 if (tokenData.debeRenovar) {
-                    console.log('🔑 Token debe renovarse, redirigiendo...');
+                    console.log('Token debe renovarse, redirigiendo...');
                     this.mostrarNotificacionCambios();
                     setTimeout(() => {
                         window.location.href = '/Account/Login?message=sesion_renovada';
@@ -242,15 +224,12 @@ class PermisosMonitor {
                 }
             }
 
-            // 3. Verificar cambios normales en permisos
+            // Verificar cambios normales en permisos
             const response = await fetch('/Permisos/VerificarCambios', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
 
@@ -260,45 +239,12 @@ class PermisosMonitor {
 
             const data = await response.json();
 
-            if (data.hanCambiado || data.success === false) {
-                console.log('🔄 Cambios detectados en permisos - Actualizando...');
-                this.onPermisosActualizados(data.permisos || {});
+            if (data.hanCambiado) {
+                this.onPermisosActualizados(data.permisos);
             }
         } catch (error) {
-            console.error('❌ Error verificando cambios de permisos:', error);
-            // En caso de error, forzar verificación más agresiva
-            this.forzarRecargaInmediata();
+            console.error('Error verificando cambios de permisos:', error);
         }
-    }
-
-    /**
-     * Forzar recarga inmediata sin esperar
-     */
-    forzarRecargaInmediata() {
-        console.log('🚀 Forzando recarga inmediata de la página...');
-        
-        // Limpiar cualquier caché del navegador
-        if ('caches' in window) {
-            caches.keys().then(names => {
-                names.forEach(name => {
-                    caches.delete(name);
-                });
-            });
-        }
-
-        // Limpiar localStorage relacionado con permisos
-        Object.keys(localStorage).forEach(key => {
-            if (key.includes('permiso') || key.includes('cache')) {
-                localStorage.removeItem(key);
-            }
-        });
-
-        // Recarga con timestamp para evitar cache
-        const url = new URL(window.location);
-        url.searchParams.set('refresh_permisos', 'true');
-        url.searchParams.set('t', Date.now().toString());
-        
-        window.location.replace(url.toString());
     }
 }
 
