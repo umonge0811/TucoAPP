@@ -820,10 +820,35 @@ async function guardarRol() {
             throw new Error('Error al guardar el rol');
         }
 
-        // Cerrar el modal y refrescar tablas
+        // ✅ Cerrar el modal
         modalRol.hide();
+
+        // ✅ Actualizar las tablas
         await refrescarTablas();
-        toastr.success('Rol creado exitosamente');
+
+        // ✅ NUEVO: Notificar al monitor de permisos sobre el cambio
+        if (window.permisosMonitor) {
+            console.log('🔄 Notificando cambio de roles al monitor de permisos...');
+            window.permisosMonitor.notificarCambioRoles();
+        }
+
+        // ✅ NUEVO: Invalidar caché global de permisos
+        try {
+            await fetch('/Permisos/InvalidarCacheGlobal', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            console.log('✅ Caché global de permisos invalidado');
+        } catch (error) {
+            console.warn('⚠️ No se pudo invalidar el caché global:', error);
+        }
+
+        console.log('✅ Rol guardado exitosamente');
+        return response;
 
     } catch (error) {
         console.error('Error detallado en guardarRol:', error);
@@ -887,11 +912,32 @@ async function actualizarRol() {
             throw new Error('Error al actualizar el rol');
         }
 
-        // Cerrar el modal primero
+        // ✅ Cerrar el modal
         modalRol.hide();
 
-        // Asegurar que la tabla se actualice completamente con los datos nuevos
+        // ✅ Actualizar las tablas
         await refrescarTablas();
+
+        // ✅ NUEVO: Notificar al monitor de permisos sobre el cambio
+        if (window.permisosMonitor) {
+            console.log('🔄 Notificando cambio de roles al monitor de permisos...');
+            window.permisosMonitor.notificarCambioRoles();
+        }
+
+        // ✅ NUEVO: Invalidar caché global de permisos
+        try {
+            await fetch('/Permisos/InvalidarCacheGlobal', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            console.log('✅ Caché global de permisos invalidado');
+        } catch (error) {
+            console.warn('⚠️ No se pudo invalidar el caché global:', error);
+        }
 
         // Mostrar mensaje de éxito
         toastr.success('Rol actualizado exitosamente');
