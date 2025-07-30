@@ -71,7 +71,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var esAdmin = await _permisosService.EsAdministradorAsync(User);
+                var esAdmin = await _permisosService.EsAdministradorAsync();
 
                 return Ok(new
                 {
