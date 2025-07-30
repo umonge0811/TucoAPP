@@ -273,6 +273,15 @@ namespace GestionLlantera.Web.Services
         }
 
         /// <summary>
+        /// Verifica si el usuario actual es administrador
+        /// </summary>
+        public async Task<bool> EsAdministradorAsync()
+        {
+            var permisos = await ObtenerPermisosUsuarioActualAsync();
+            return permisos.EsAdministrador;
+        }
+
+        /// <summary>
         /// Obtiene el token JWT del usuario actual
         /// </summary>
         private string? ObtenerTokenDelUsuario()

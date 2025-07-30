@@ -15,6 +15,12 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<bool> TienePermisoAsync(string nombrePermiso);
         Task RefrescarPermisosAsync();
         void LimpiarCacheCompleto();
+
+        /// <summary>
+        /// Verifica si el usuario actual es administrador
+        /// </summary>
+        Task<bool> EsAdministradorAsync();
+
         PermisosUsuarioActual PermisosActuales { get; }
     }
 
