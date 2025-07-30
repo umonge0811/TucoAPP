@@ -249,6 +249,20 @@ namespace GestionLlantera.Web.Services
         }
 
         /// <summary>
+        /// Fuerza la renovación inmediata de permisos (ignora caché completamente)
+        /// </summary>
+        public async Task<PermisosUsuarioActual> ForzarRenovacionPermisosAsync()
+        {
+            _logger.LogInformation("🔄 FORZANDO renovación inmediata de permisos (ignorando caché)");
+            
+            // Limpiar caché completamente
+            LimpiarCacheCompleto();
+            
+            // Obtener permisos frescos
+            return await ObtenerPermisosUsuarioActualAsync();
+        }
+
+        /// <summary>
         /// Limpia completamente el caché de permisos (útil al cambiar de usuario)
         /// </summary>
         public void LimpiarCacheCompleto()

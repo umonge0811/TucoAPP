@@ -9,8 +9,9 @@ class PermisosMonitor {
         this.intervalId = null;
         this.ultimaVerificacion = null;
         this.permisosActuales = null;
-        this.intervaloVerificacion = 10000; // 10 segundos
+        this.intervaloVerificacion = 3000; // ✅ REDUCIR A 3 SEGUNDOS para detectar cambios más rápido
         this.logger = console;
+        this.ultimaActualizacionRoles = null; // ✅ NUEVO: Rastrear cambios de roles
     }
 
     /**
@@ -179,6 +180,32 @@ class PermisosMonitor {
         } catch (error) {
             this.logger.error('❌ Error limpiando caché:', error);
         }
+    }
+
+    /**
+     * ✅ NUEVO: Forzar verificación inmediata de permisos
+     */
+    async forzarVerificacionInmediata() {
+        this.logger.log('🔄 FORZANDO verificación inmediata de permisos...');
+        
+        // Limpiar permisos actuales para forzar comparación
+        this.permisosActuales = null;
+        
+        // Verificar inmediatamente
+        await this.verificarPermisos();
+        
+        // Si hay cambios, recargar automáticamente
+        if (this.permisosActuales) {
+            this.logger.log('✅ Verificación forzada completada');
+        }
+    }
+
+    /**
+     * ✅ NUEVO: Método que pueden llamar otras páginas cuando cambien roles
+     */
+    notificarCambioRoles() {
+        this.logger.log('🔄 Notificación de cambio de roles recibida');
+        this.forzarVerificacionInmediata();
     }
 }
 

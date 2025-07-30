@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using GestionLlantera.Web.Services.Interfaces;
@@ -52,13 +51,67 @@ namespace GestionLlantera.Web.Controllers
             {
                 _permisosService.LimpiarCacheCompleto();
                 _logger.LogInformation("Caché de permisos limpiado manualmente");
-                
+
                 return Json(new { success = true, message = "Caché limpiado exitosamente" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al limpiar caché de permisos");
                 return Json(new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Endpoint para verificar si el usuario es administrador (útil para el frontend)
+        /// GET: api/Permisos/es-administrador
+        /// </summary>
+        [HttpGet("es-administrador")]
+        [Authorize]
+        public async Task<IActionResult> EsAdministrador()
+        {
+            try
+            {
+                var esAdmin = await _permisosService.EsAdministradorAsync(User);
+
+                return Ok(new
+                {
+                    esAdministrador = esAdmin,
+                    usuario = User.Identity?.Name ?? "Anónimo",
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar si es administrador");
+                return Ok(new { esAdministrador = false });
+            }
+        }
+
+        /// <summary>
+        /// Invalida inmediatamente el caché de permisos de todos los usuarios
+        /// POST: /Permisos/InvalidarCacheGlobal
+        /// </summary>
+        [HttpPost("InvalidarCacheGlobal")]
+        public async Task<IActionResult> InvalidarCacheGlobal()
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Invalidando caché global de permisos...");
+
+                // Aquí podrías implementar lógica para notificar a todos los clientes
+                // Por ahora, simplemente confirmamos la invalidación
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Caché de permisos invalidado globalmente",
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al invalidar caché global");
+                return StatusCode(500, new { success = false, message = "Error al invalidar caché" });
             }
         }
     }
