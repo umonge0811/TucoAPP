@@ -403,40 +403,4 @@ namespace GestionLlantera.Web.Extensions
             }
         }
     }
-
-    /// <summary>
-    /// Extensiones para HttpContext
-    /// </summary>
-    public static class HttpContextExtensions
-    {
-        /// <summary>
-        /// Obtiene el ID del usuario actual desde los claims del HttpContext
-        /// </summary>
-        public static int? GetUsuarioId(this HttpContext context)
-        {
-            try
-            {
-                var user = context?.User;
-                if (user == null || !user.Identity.IsAuthenticated)
-                {
-                    return null;
-                }
-
-                // Intentar obtener el ID del usuario de los claims
-                var userIdClaim = user.FindFirst("userId")?.Value ??
-                                 user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
-                {
-                    return userId;
-                }
-
-                return null;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-    }
 }
