@@ -12,6 +12,7 @@ namespace GestionLlantera.Web.Services.Interfaces
 
         // ✅ NUEVOS MÉTODOS (Verificación de permisos del usuario)
         Task<PermisosUsuarioActual> ObtenerPermisosUsuarioActualAsync();
+        Task<PermisosUsuarioActual> ObtenerPermisosUsuarioAsync();
         Task<bool> TienePermisoAsync(string nombrePermiso);
         Task RefrescarPermisosAsync();
         void LimpiarCacheCompleto();
