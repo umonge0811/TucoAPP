@@ -147,9 +147,9 @@ namespace GestionLlantera.Web.Controllers
                     var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
 
                     var claims = new List<Claim>
-                        {
-                            new Claim("JwtToken", token) // Mantener referencia al token
-                        };
+            {
+                new Claim("JwtToken", token) // Mantener referencia al token
+            };
 
                     // ✅ TRANSFERIR TODOS LOS CLAIMS DEL JWT A LA COOKIE DE AUTENTICACIÓN
                     if (jwtToken != null)
