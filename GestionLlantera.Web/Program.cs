@@ -108,6 +108,9 @@ app.UseAuthentication();
 app.UseJwtClaimsMiddleware();
 app.UseAuthorization();
 
+// Middleware para refresh automático de permisos
+app.UseMiddleware<PermisosRefreshMiddleware>();
+
 // ✅ NUEVO: Middleware de auditoría de permisos
 app.UsePermisosAuditoria();
 

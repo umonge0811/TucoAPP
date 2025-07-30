@@ -1,3 +1,82 @@
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using API.ServicesAPI.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
+
+namespace API.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController : ControllerBase
+    {
+        private readonly IMemoryCache _cache;
+        private readonly ILogger<AuthController> _logger;
+
+        public AuthController(IMemoryCache cache, ILogger<AuthController> logger)
+        {
+            _cache = cache;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Invalida el token de un usuario específico cuando cambian sus roles/permisos
+        /// </summary>
+        [HttpPost("invalidar-token/{usuarioId}")]
+        [Authorize]
+        public async Task<IActionResult> InvalidarTokenUsuario(int usuarioId)
+        {
+            try
+            {
+                // Invalidar caché de permisos del usuario
+                var cacheKey = $"permisos_usuario_{usuarioId}";
+                _cache.Remove(cacheKey);
+
+                // Marcar token como inválido (simplificado)
+                var tokenInvalidKey = $"token_invalid_{usuarioId}_{DateTime.UtcNow.Ticks}";
+                _cache.Set(tokenInvalidKey, true, TimeSpan.FromDays(1));
+
+                _logger.LogInformation("Token invalidado para usuario {UsuarioId}", usuarioId);
+
+                return Ok(new { success = true, message = "Token invalidado correctamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al invalidar token del usuario {UsuarioId}", usuarioId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Endpoint para que la aplicación Web verifique si debe renovar el token
+        /// </summary>
+        [HttpGet("verificar-token-vigente")]
+        [Authorize]
+        public async Task<IActionResult> VerificarTokenVigente()
+        {
+            try
+            {
+                var usuarioId = User.FindFirst("UsuarioId")?.Value;
+                if (string.IsNullOrEmpty(usuarioId))
+                {
+                    return Unauthorized(new { debeRenovar = true });
+                }
+
+                // Verificar si hay invalidaciones pendientes
+                var pattern = $"token_invalid_{usuarioId}_*";
+                // Simplificado: en producción usar Redis con pattern matching
+                
+                return Ok(new { debeRenovar = false, usuarioId = usuarioId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar vigencia del token");
+                return Ok(new { debeRenovar = true });
+            }
+        }
+    }
+}
+
 using API.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

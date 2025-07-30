@@ -114,10 +114,27 @@ class PermisosMonitor {
         // Mostrar notificación
         this.mostrarNotificacionCambios();
         
-        // Recargar la página después de un breve delay
+        // Recargar la página con parámetro para refresh de permisos
         setTimeout(() => {
-            window.location.reload();
+            const url = new URL(window.location);
+            url.searchParams.set('refresh_permisos', 'true');
+            window.location.href = url.toString();
         }, 2000);
+    }
+
+    /**
+     * Forzar refresh inmediato de permisos
+     */
+    async forzarRefreshPermisos() {
+        try {
+            const url = new URL(window.location);
+            url.searchParams.set('refresh_permisos', 'true');
+            window.location.href = url.toString();
+        } catch (error) {
+            console.error('Error al forzar refresh de permisos:', error);
+            // Fallback: reload normal
+            window.location.reload();
+        }
     }
 
     /**
