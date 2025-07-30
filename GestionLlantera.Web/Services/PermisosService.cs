@@ -148,42 +148,48 @@ namespace GestionLlantera.Web.Services
 
                 _logger.LogInformation("🔄 Caché de permisos expirado - Renovando desde API");
 
-                // ✅ SOLUCIÓN TEMPORAL: Verificar directamente en el contexto HTTP
                 var context = _httpContextAccessor.HttpContext;
-                if (context?.User?.Identity?.IsAuthenticated == true)
+                if (context?.User?.Identity?.IsAuthenticated != true)
                 {
-                    // ✅ VERIFICAR DIRECTAMENTE SI ES ADMINISTRADOR
-                    var esAdministradorDirecto = context.User.IsInRole("Administrador");
-
-                    _logger.LogInformation("🔍 Usuario es administrador (directo): {EsAdmin}", esAdministradorDirecto);
-
-                    if (esAdministradorDirecto)
-                    {
-                        // ✅ Si es administrador, darle TODOS los permisos
-                        _permisosCache = new PermisosUsuarioActual
-                        {
-                            EsAdministrador = true,
-                            PuedeVerCostos = true,
-                            PuedeVerUtilidades = true,
-                            PuedeProgramarInventario = true,
-                            PuedeEditarProductos = true,
-                            PuedeEliminarProductos = true,
-                            PuedeAjustarStock = true
-                        };
-
-                        _ultimaActualizacion = DateTime.Now;
-                        _logger.LogInformation("✅ Permisos de administrador asignados directamente");
-                        return _permisosCache;
-                    }
+                    _logger.LogWarning("Usuario no autenticado - no se pueden obtener permisos");
+                    return new PermisosUsuarioActual();
                 }
 
-                // ✅ RESTO DEL CÓDIGO ORIGINAL (para usuarios no administradores)
+                // ✅ PRIMERO: Verificar si es administrador desde los roles del token
+                var esAdministrador = context.User.IsInRole("Administrador") || 
+                                    context.User.IsInRole("Admin") || 
+                                    context.User.IsInRole("SuperAdmin");
+
+                _logger.LogInformation("🔍 Usuario es administrador: {EsAdmin}", esAdministrador);
+
+                if (esAdministrador)
+                {
+                    // ✅ Si es administrador, darle TODOS los permisos
+                    _permisosCache = new PermisosUsuarioActual
+                    {
+                        EsAdministrador = true,
+                        PuedeVerCostos = true,
+                        PuedeVerUtilidades = true,
+                        PuedeProgramarInventario = true,
+                        PuedeEditarProductos = true,
+                        PuedeEliminarProductos = true,
+                        PuedeAjustarStock = true
+                    };
+
+                    _ultimaActualizacion = DateTime.Now;
+                    _logger.LogInformation("✅ Permisos de administrador asignados correctamente");
+                    return _permisosCache;
+                }
+
+                // ✅ SEGUNDO: Obtener token y consultar API para usuarios no administradores
                 var token = ObtenerTokenDelUsuario();
                 if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogWarning("No se encontró token de usuario");
+                    _logger.LogWarning("❌ No se encontró token JWT para usuario no administrador");
                     return new PermisosUsuarioActual();
                 }
+
+                _logger.LogDebug("✅ Token JWT encontrado, consultando API de permisos...");
 
                 // Configurar headers de autorización
                 _httpClient.DefaultRequestHeaders.Clear();
@@ -191,13 +197,15 @@ namespace GestionLlantera.Web.Services
 
                 // Llamar a la API
                 var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Inventario/mis-permisos";
-                _logger.LogDebug("Obteniendo permisos desde API: {Url}", url);
+                _logger.LogDebug("🌐 Consultando API: {Url}", url);
 
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
+                    _logger.LogDebug("📥 Respuesta de API recibida: {Json}", json);
+
                     var permisos = JsonSerializer.Deserialize<PermisosUsuarioActual>(json, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
@@ -206,18 +214,22 @@ namespace GestionLlantera.Web.Services
                     _permisosCache = permisos ?? new PermisosUsuarioActual();
                     _ultimaActualizacion = DateTime.Now;
 
-                    _logger.LogInformation("Permisos obtenidos desde API. Es Admin: {EsAdmin}", _permisosCache.EsAdministrador);
+                    _logger.LogInformation("✅ Permisos obtenidos desde API correctamente");
+                    _logger.LogDebug("📋 Permisos del usuario: {Permisos}", JsonSerializer.Serialize(_permisosCache));
+                    
                     return _permisosCache;
                 }
                 else
                 {
-                    _logger.LogWarning("Error al obtener permisos de la API: {StatusCode}", response.StatusCode);
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al obtener permisos de la API. StatusCode: {StatusCode}, Content: {Content}", 
+                        response.StatusCode, errorContent);
                     return new PermisosUsuarioActual();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener permisos del usuario actual");
+                _logger.LogError(ex, "❌ Error crítico al obtener permisos del usuario actual");
                 return new PermisosUsuarioActual();
             }
         }
@@ -403,20 +415,20 @@ namespace GestionLlantera.Web.Services
                     return null;
                 }
 
-                // ✅ Intentar obtener de la sesión primero
+                // ✅ CORREGIR: La cookie se llama "JwtToken", no "AuthToken"
+                var tokenFromCookie = context.Request.Cookies["JwtToken"];
+                if (!string.IsNullOrEmpty(tokenFromCookie))
+                {
+                    _logger.LogDebug("Token obtenido de cookies: JwtToken");
+                    return tokenFromCookie;
+                }
+
+                // ✅ Intentar obtener de la sesión
                 var tokenFromSession = context.Session.GetString("JwtToken");
                 if (!string.IsNullOrEmpty(tokenFromSession))
                 {
                     _logger.LogDebug("Token obtenido de la sesión");
                     return tokenFromSession;
-                }
-
-                // ✅ Intentar obtener de cookies
-                var tokenFromCookie = context.Request.Cookies["AuthToken"];
-                if (!string.IsNullOrEmpty(tokenFromCookie))
-                {
-                    _logger.LogDebug("Token obtenido de cookies");
-                    return tokenFromCookie;
                 }
 
                 // ✅ Intentar obtener del header Authorization
@@ -427,7 +439,15 @@ namespace GestionLlantera.Web.Services
                     return authHeader.Substring("Bearer ".Length);
                 }
 
-                _logger.LogWarning("No se pudo obtener el token JWT del usuario");
+                // ✅ NUEVO: Intentar obtener desde los claims del usuario autenticado
+                var tokenFromClaims = context.User.FindFirst("JwtToken")?.Value;
+                if (!string.IsNullOrEmpty(tokenFromClaims))
+                {
+                    _logger.LogDebug("Token obtenido de claims del usuario");
+                    return tokenFromClaims;
+                }
+
+                _logger.LogWarning("No se pudo obtener el token JWT del usuario en ninguna ubicación");
                 return null;
             }
             catch (Exception ex)

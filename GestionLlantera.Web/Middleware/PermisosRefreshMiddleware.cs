@@ -22,6 +22,27 @@ namespace GestionLlantera.Web.Middleware
                 // Solo verificar en páginas que requieren autenticación
                 if (context.User?.Identity?.IsAuthenticated == true)
                 {
+                    _logger.LogDebug("🔍 Usuario autenticado detectado - verificando permisos...");
+                    
+                    // ✅ DIAGNÓSTICO: Verificar información del usuario
+                    var userId = context.User.FindFirst("userId")?.Value ?? 
+                                context.User.FindFirst("UsuarioId")?.Value ?? 
+                                context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                    
+                    var userEmail = context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? 
+                                   context.User.FindFirst("email")?.Value;
+                    
+                    var userRoles = context.User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+                                                     .Select(c => c.Value).ToList();
+
+                    _logger.LogInformation("👤 Usuario detectado - ID: {UserId}, Email: {Email}, Roles: [{Roles}]", 
+                        userId, userEmail, string.Join(", ", userRoles));
+
+                    // ✅ DIAGNÓSTICO: Verificar cookies
+                    var jwtCookie = context.Request.Cookies["JwtToken"];
+                    _logger.LogDebug("🍪 Cookie JwtToken presente: {Present}, Longitud: {Length}", 
+                        !string.IsNullOrEmpty(jwtCookie), jwtCookie?.Length ?? 0);
+
                     // ✅ VERIFICAR SI NECESITA ACTUALIZACIÓN DE PERMISOS
                     if (permisosService is PermisosService ps)
                     {
@@ -37,6 +58,15 @@ namespace GestionLlantera.Web.Middleware
                             _logger.LogDebug("🔄 Permisos necesitan actualización por timestamp - forzando refresh");
                             await permisosService.RefrescarPermisosAsync();
                         }
+                        else
+                        {
+                            _logger.LogDebug("✅ Permisos están actualizados");
+                        }
+
+                        // ✅ DIAGNÓSTICO: Verificar permisos actuales
+                        var permisosActuales = ps.PermisosActuales;
+                        _logger.LogInformation("📋 Permisos actuales del usuario: Admin={Admin}, VerCostos={VerCostos}, EditarProductos={EditarProductos}", 
+                            permisosActuales.EsAdministrador, permisosActuales.PuedeVerCostos, permisosActuales.PuedeEditarProductos);
                     }
 
                     // Verificar si hay un parámetro especial para forzar refresh
@@ -52,10 +82,14 @@ namespace GestionLlantera.Web.Middleware
                         return;
                     }
                 }
+                else
+                {
+                    _logger.LogDebug("❌ Usuario no autenticado o no presente");
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error en PermisosRefreshMiddleware");
+                _logger.LogError(ex, "❌ Error crítico en PermisosRefreshMiddleware");
                 // Continuar con la ejecución normal en caso de error
             }
 
