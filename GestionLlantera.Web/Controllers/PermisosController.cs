@@ -86,7 +86,7 @@ namespace GestionLlantera.Web.Controllers
                            context.User?.FindFirst("email")?.Value,
                     Roles = context.User?.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
                                          .Select(c => c.Value).ToList() ?? new List<string>(),
-                    Claims = context.User?.Claims.Select(c => new { c.Type, c.Value }).ToList() ?? new List<object>(),
+                    Claims = context.User?.Claims.Select(c => new { c.Type, c.Value }).ToList() ?? new List<dynamic>(),
                     TieneCookieJWT = !string.IsNullOrEmpty(context.Request.Cookies["JwtToken"]),
                     PermisosActuales = await _permisosService.ObtenerPermisosUsuarioActualAsync(),
                     Timestamp = DateTime.Now
