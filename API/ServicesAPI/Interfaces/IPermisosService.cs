@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 
 namespace API.ServicesAPI.Interfaces
 {
@@ -54,5 +54,15 @@ namespace API.ServicesAPI.Interfaces
         /// Refresca los permisos en caché (útil cuando se modifican permisos)
         /// </summary>
         Task RefrescarCachePermisosAsync();
+
+        /// <summary>
+        /// Limpia completamente el caché de permisos (método síncrono)
+        /// </summary>
+        void LimpiarCacheCompleto();
+
+        /// <summary>
+        /// Limpia completamente el caché de permisos (método asíncrono)
+        /// </summary>
+        Task LimpiarCacheCompletoAsync();
     }
 }

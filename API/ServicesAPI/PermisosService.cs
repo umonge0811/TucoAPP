@@ -282,7 +282,38 @@ namespace API.ServicesAPI
         }
 
         /// <summary>
-        /// ✅ NUEVO: Limpia completamente el caché de permisos (método público)
+        /// ✅ NUEVO: Limpia completamente el caché de permisos (método síncrono)
+        /// </summary>
+        public void LimpiarCacheCompleto()
+        {
+            try
+            {
+                _logger.LogInformation("🧹 === INICIANDO LIMPIEZA SÍNCRONA DE CACHÉ ===");
+                
+                // Obtener todos los usuarios de forma síncrona
+                var usuarios = _context.Usuarios.Select(u => u.UsuarioId).ToList();
+                
+                // Limpiar caché de permisos por usuario
+                foreach (var userId in usuarios)
+                {
+                    _cache.Remove($"permisos_usuario_{userId}");
+                    _cache.Remove($"roles_usuario_{userId}");
+                }
+                
+                // Limpiar caché global
+                _cache.Remove("todos_los_permisos");
+                
+                _logger.LogInformation("🧹 Caché de permisos limpiado completamente para {Count} usuarios", usuarios.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al limpiar caché completo de permisos");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// ✅ NUEVO: Limpia completamente el caché de permisos (método público asíncrono)
         /// </summary>
         public async Task LimpiarCacheCompletoAsync()
         {
