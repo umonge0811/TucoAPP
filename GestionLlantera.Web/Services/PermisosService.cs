@@ -123,15 +123,7 @@ namespace GestionLlantera.Web.Services
         // ✅ NUEVOS MÉTODOS PARA VERIFICACIÓN DE PERMISOS DEL USUARIO ACTUAL
 
         /// <summary>
-        /// Obtiene los permisos del usuario actual (alias para compatibilidad)
-        /// </summary>
-        public async Task<PermisosUsuarioActual> ObtenerPermisosUsuarioAsync()
-        {
-            return await ObtenerPermisosUsuarioActualAsync();
-        }
-
-        /// <summary>
-        /// Obtiene los permisos del usuario actual
+        /// Obtiene los permisos del usuario actual desde la API
         /// </summary>
         public async Task<PermisosUsuarioActual> ObtenerPermisosUsuarioActualAsync()
         {
