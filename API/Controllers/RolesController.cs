@@ -11,6 +11,7 @@ using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 using tuco.Utilities;
 using Microsoft.AspNetCore.Cors;
 using System.Linq;
+using Tuco.Clases.Models;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -498,12 +499,12 @@ public class RolesController : ControllerBase
                 .ToListAsync();
 
             // Remover permisos existentes
-            _context.RolPermiso.RemoveRange(rol.RolPermiso);
+            _context.RolPermisos.RemoveRange(rol.RolPermiso);
 
             // Agregar nuevos permisos
             foreach (var permisoId in permisosIds)
             {
-                _context.RolPermiso.Add(new RolPermisoRE
+                _context.RolPermisos.Add(new RolPermisoRE
                 {
                     RolID = rolId,
                     PermisoID = permisoId
