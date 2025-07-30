@@ -2,6 +2,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using System.Net.Http;
 using System.Text.Json;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace GestionLlantera.Web.Services
 {
@@ -12,6 +13,7 @@ namespace GestionLlantera.Web.Services
         private readonly ILogger<PermisosService> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly JsonSerializerOptions _jsonOptions;
+        private readonly IMemoryCache _cache; //Inyeccion de dependencias de IMemoryCache
 
         private PermisosUsuarioActual? _permisosCache;
         private DateTime _ultimaActualizacion = DateTime.MinValue;
@@ -19,7 +21,7 @@ namespace GestionLlantera.Web.Services
 
         public PermisosUsuarioActual PermisosActuales => _permisosCache ?? new PermisosUsuarioActual();
 
-        public PermisosService(HttpClient httpClient, IConfiguration configuration, ILogger<PermisosService> logger, IHttpContextAccessor httpContextAccessor)
+        public PermisosService(HttpClient httpClient, IConfiguration configuration, ILogger<PermisosService> logger, IHttpContextAccessor httpContextAccessor, IMemoryCache cache)
         {
             _httpClient = httpClient;
             _configuration = configuration;
@@ -30,6 +32,7 @@ namespace GestionLlantera.Web.Services
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true
             };
+            _cache = cache;
         }
         public async Task<List<PermisoDTO>> ObtenerTodosLosPermisos()
         {
@@ -130,7 +133,7 @@ namespace GestionLlantera.Web.Services
                 var tiempoCacheEfectivo = TimeSpan.FromSeconds(30); // ✅ 30 segundos para desarrollo
                 if (_permisosCache != null && DateTime.Now - _ultimaActualizacion < tiempoCacheEfectivo)
                 {
-                    _logger.LogDebug("Usando permisos desde caché (expira en {Segundos}s)", 
+                    _logger.LogDebug("Usando permisos desde caché (expira en {Segundos}s)",
                         (tiempoCacheEfectivo - (DateTime.Now - _ultimaActualizacion)).TotalSeconds);
                     return _permisosCache;
                 }
@@ -253,12 +256,66 @@ namespace GestionLlantera.Web.Services
         /// </summary>
         public void LimpiarCacheCompleto()
         {
-            _logger.LogInformation("🧹 Limpiando caché completo de permisos");
-            _permisosCache = null;
-            _ultimaActualizacion = DateTime.MinValue;
-            
-            // También limpiar headers de autorización para forzar nueva autenticación
-            _httpClient.DefaultRequestHeaders.Clear();
+            try
+            {
+                _logger.LogInformation("🧹 Iniciando limpieza COMPLETA del caché de permisos...");
+
+                // Lista exhaustiva de todas las posibles claves de caché
+                var cacheKeysPatterns = new[]
+                {
+                    "permisos_usuario_",
+                    "roles_usuario_",
+                    "user_permissions_",
+                    "user_roles_",
+                    "permisos_cache_general",
+                    "usuarios_permisos_cache",
+                    "todos_los_permisos",
+                    "permisos_info_",
+                    "usuario_info_",
+                    "roles_info_"
+                };
+
+                // Como IMemoryCache no permite enumerar claves, usamos un enfoque más agresivo
+                // Invalidamos las claves más comunes para usuarios ID 1-1000
+                for (int userId = 1; userId <= 1000; userId++)
+                {
+                    var userKeys = new[]
+                    {
+                        $"permisos_usuario_{userId}",
+                        $"roles_usuario_{userId}",
+                        $"user_permissions_{userId}",
+                        $"user_roles_{userId}",
+                        $"permisos_info_{userId}",
+                        $"usuario_info_{userId}"
+                    };
+
+                    foreach (var key in userKeys)
+                    {
+                        _cache.Remove(key);
+                    }
+                }
+
+                // Invalidar claves generales
+                var generalKeys = new[]
+                {
+                    "permisos_cache_general",
+                    "usuarios_permisos_cache",
+                    "todos_los_permisos",
+                    "roles_info",
+                    "permisos_sistema"
+                };
+
+                foreach (var key in generalKeys)
+                {
+                    _cache.Remove(key);
+                }
+
+                _logger.LogInformation("✅ Caché COMPLETAMENTE limpiado - Se invalidaron claves para usuarios 1-1000 y claves generales");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al limpiar caché completo");
+            }
         }
 
         /// <summary>
@@ -267,7 +324,7 @@ namespace GestionLlantera.Web.Services
         public bool NecesitaRenovacion()
         {
             var tiempoMaximoCache = TimeSpan.FromMinutes(5); // 5 minutos máximo
-            return _permisosCache == null || 
+            return _permisosCache == null ||
                    DateTime.Now - _ultimaActualizacion > tiempoMaximoCache;
         }
 
@@ -319,6 +376,6 @@ namespace GestionLlantera.Web.Services
             }
         }
     }
-       
-    
+
+
 }

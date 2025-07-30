@@ -513,17 +513,33 @@ public class RolesController : ControllerBase
 
             await _context.SaveChangesAsync();
 
-            // Invalidar caché de permisos para usuarios afectados
+            // ✅ INVALIDACIÓN COMPLETA Y AGRESIVA DE CACHÉ
             foreach (var usuarioId in usuariosAfectados)
             {
-                var cacheKey = $"permisos_usuario_{usuarioId}";
-                _cache.Remove(cacheKey);
-                _logger.LogInformation("Caché de permisos invalidado para usuario {UsuarioId} por cambio en rol {RolId}", usuarioId, rolId);
+                // Invalidar múltiples claves de caché
+                var cacheKeys = new[]
+                {
+                    $"permisos_usuario_{usuarioId}",
+                    $"roles_usuario_{usuarioId}",
+                    $"user_permissions_{usuarioId}",
+                    $"user_roles_{usuarioId}",
+                    "permisos_cache_general",
+                    "usuarios_permisos_cache",
+                    "todos_los_permisos"
+                };
+
+                foreach (var key in cacheKeys)
+                {
+                    _cache.Remove(key);
+                }
+
+                _logger.LogInformation("Caché COMPLETAMENTE invalidado para usuario {UsuarioId} por cambio en rol {RolId}", usuarioId, rolId);
 
                 // ✅ INVALIDAR TOKENS DE USUARIOS AFECTADOS
                 try
                 {
-                    var response = await _httpClient.PostAsync($"/api/Auth/invalidar-token/{usuarioId}", null);
+                    var invalidateUrl = $"/api/Auth/invalidar-token/{usuarioId}";
+                    var response = await _httpClient.PostAsync(invalidateUrl, null);
                     if (response.IsSuccessStatusCode)
                     {
                         _logger.LogInformation("Token invalidado exitosamente para usuario {UsuarioId} por cambio en rol {RolId}", usuarioId, rolId);
@@ -536,6 +552,18 @@ public class RolesController : ControllerBase
                 catch (Exception tokenEx)
                 {
                     _logger.LogError(tokenEx, "Error al invalidar token para usuario {UsuarioId}", usuarioId);
+                }
+
+                // ✅ MARCAR PARA RENOVACIÓN FORZOSA EN WEB APP
+                try
+                {
+                    var forceRefreshKey = $"force_refresh_{usuarioId}";
+                    _cache.Set(forceRefreshKey, true, TimeSpan.FromMinutes(5));
+                    _logger.LogInformation("Marcado refresh forzoso para usuario {UsuarioId}", usuarioId);
+                }
+                catch (Exception refreshEx)
+                {
+                    _logger.LogError(refreshEx, "Error al marcar refresh forzoso para usuario {UsuarioId}", usuarioId);
                 }
             }
 

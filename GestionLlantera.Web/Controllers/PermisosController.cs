@@ -1,7 +1,8 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using GestionLlantera.Web.Services.Interfaces;
+using Microsoft.Extensions.Caching.Memory; // Asegúrate de agregar esta using
+using GestionLlantera.Web.Extensions;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -10,11 +11,13 @@ namespace GestionLlantera.Web.Controllers
     {
         private readonly IPermisosService _permisosService;
         private readonly ILogger<PermisosController> _logger;
+        private readonly IMemoryCache _cache; // Inyecta IMemoryCache
 
-        public PermisosController(IPermisosService permisosService, ILogger<PermisosController> logger)
+        public PermisosController(IPermisosService permisosService, ILogger<PermisosController> logger, IMemoryCache cache)
         {
             _permisosService = permisosService;
             _logger = logger;
+            _cache = cache;
         }
 
         /// <summary>
@@ -43,22 +46,60 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Endpoint para limpiar caché de permisos
+        /// Limpiar caché de permisos manualmente
         /// </summary>
-        [HttpPost]
-        public IActionResult LimpiarCache()
+        [HttpPost("LimpiarCache")]
+        public async Task<IActionResult> LimpiarCache()
         {
             try
             {
                 _permisosService.LimpiarCacheCompleto();
-                _logger.LogInformation("Caché de permisos limpiado manualmente");
-                
-                return Json(new { success = true, message = "Caché limpiado exitosamente" });
+                await _permisosService.RefrescarPermisosAsync();
+
+                return Json(new { success = true, message = "Caché limpiado correctamente" });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al limpiar caché de permisos");
-                return Json(new { success = false, error = ex.Message });
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Verificar si el usuario necesita un refresh forzoso de permisos
+        /// </summary>
+        [HttpGet("VerificarRefreshForzoso")]
+        public async Task<IActionResult> VerificarRefreshForzoso()
+        {
+            try
+            {
+                var usuarioId = HttpContext.GetUsuarioId();
+                if (usuarioId == null)
+                {
+                    return Json(new { debeRenovar = true, motivo = "Usuario no identificado" });
+                }
+
+                // Verificar si hay una marca de refresh forzoso
+                var forceRefreshKey = $"force_refresh_{usuarioId}";
+                var debeRenovar = _cache.Get(forceRefreshKey) != null;
+
+                if (debeRenovar)
+                {
+                    // Remover la marca después de detectarla
+                    _cache.Remove(forceRefreshKey);
+                    _logger.LogInformation("Refresh forzoso detectado y procesado para usuario {UsuarioId}", usuarioId);
+                }
+
+                return Json(new { 
+                    debeRenovar = debeRenovar, 
+                    usuarioId = usuarioId,
+                    timestamp = DateTime.Now 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al verificar refresh forzoso");
+                return Json(new { debeRenovar = true, motivo = "Error interno" });
             }
         }
     }
