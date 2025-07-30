@@ -12,7 +12,6 @@ using System.Linq;
 
 // Controlador que maneja la configuración del sistema, incluyendo roles y permisos
 [Authorize] // Asegura que solo usuarios autenticados puedan acceder a este controlador
-[Authorize(Roles = "Administrador")] // Solo usuarios con rol Admin pueden acceder
 [Route("[controller]")]  // Ruta base
 public class ConfiguracionController : Controller
 {
@@ -39,10 +38,23 @@ public class ConfiguracionController : Controller
     {
         try
         {
+            // ✅ VERIFICAR PERMISO PARA GESTIÓN COMPLETA
+            if (!await this.TienePermisoAsync("Configuracion Sistema"))
+            {
+                _logger.LogWarning("🚫 Usuario sin permiso 'Configuracion Sistema' intentó acceder a configuración");
 
-            var validacion = await this.ValidarPermisoMvcAsync("Gestión Completa",
-       "Solo administradores pueden gestionar roles y permisos del sistema.");
-            if (validacion != null) return validacion;
+                // ✅ DEBUG: Verificar que los valores se están configurando
+                _logger.LogInformation("DEBUG - Configurando TempData: AccesoNoAutorizado='Gestión Completa', ModuloAcceso='Configuración del Sistema'");
+
+                TempData["AccesoNoAutorizado"] = "Configuracion Sistema";
+                TempData["ModuloAcceso"] = "Configuración del Sistema";
+
+                // ✅ DEBUG: Verificar que los valores se guardaron
+                _logger.LogInformation("DEBUG - TempData configurado: AccesoNoAutorizado='{AccesoNoAutorizado}', ModuloAcceso='{ModuloAcceso}'", 
+                    TempData["AccesoNoAutorizado"], TempData["ModuloAcceso"]);
+
+                return RedirectToAction("AccessDenied", "Account");
+            }
 
 
             // Registramos el inicio de la carga de la vista

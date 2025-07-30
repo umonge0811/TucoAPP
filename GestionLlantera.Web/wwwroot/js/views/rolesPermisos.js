@@ -544,15 +544,15 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
             html += `
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="${headingId}">
-                        <button class="accordion-button ${isFirstItem ? '' : 'collapsed'}" type="button" 
+                        <button class="accordion-button collapsed" type="button" 
                                 data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
-                                aria-expanded="${isFirstItem ? 'true' : 'false'}" aria-controls="${collapseId}">
+                                aria-expanded="false" aria-controls="${collapseId}">
                             <i class="bi bi-layers me-2"></i>
                             <strong>${modulo}</strong>
                             <span class="badge bg-primary ms-2">${permisosDelModulo.length}</span>
                         </button>
                     </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse ${isFirstItem ? 'show' : ''}" 
+                    <div id="${collapseId}" class="accordion-collapse collapse" 
                          aria-labelledby="${headingId}" data-bs-parent="#accordionPermisosModal">
                         <div class="accordion-body p-3">
                             <div class="row g-2">
@@ -711,15 +711,15 @@ async function cargarPermisosParaRol(rolId) {
             html += `
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="${headingId}">
-                        <button class="accordion-button ${isFirstItem ? '' : 'collapsed'}" type="button" 
+                        <button class="accordion-button collapsed" type="button" 
                                 data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
-                                aria-expanded="${isFirstItem ? 'true' : 'false'}" aria-controls="${collapseId}">
+                                aria-expanded="false" aria-controls="${collapseId}">
                             <i class="bi bi-layers me-2"></i>
                             <strong>${modulo}</strong>
                             <span class="badge bg-primary ms-2">${permisosDelModulo.length}</span>
                         </button>
                     </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse ${isFirstItem ? 'show' : ''}" 
+                    <div id="${collapseId}" class="accordion-collapse collapse" 
                          aria-labelledby="${headingId}" data-bs-parent="#accordionPermisosModalEditar">
                         <div class="accordion-body p-3">
                             <div class="row g-2">

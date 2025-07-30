@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -32,6 +31,9 @@ namespace GestionLlantera.Web.Controllers
                 // Verificar permisos
                 if (!await this.TienePermisoAsync("Ver Clientes"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Clientes' intentó acceder al módulo de clientes");
+                    TempData["AccesoNoAutorizado"] = "Ver Clientes";
+                    TempData["ModuloAcceso"] = "Clientes";
                     return RedirectToAction("AccessDenied", "Account");
                 }
 

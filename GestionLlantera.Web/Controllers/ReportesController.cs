@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
 using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
+using GestionLlantera.Web.Extensions;
 
 
 namespace GestionLlantera.Web.Controllers
@@ -45,6 +46,15 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ VERIFICAR PERMISO PARA VER REPORTES
+                if (!await this.TienePermisoAsync("Ver Reportes"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Reportes' intentó descargar reporte Excel");
+                    TempData["AccesoNoAutorizado"] = "Ver Reportes";
+                    TempData["ModuloAcceso"] = "Reportes";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 // ✅ OBTENER TOKEN JWT
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))

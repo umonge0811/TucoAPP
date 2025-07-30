@@ -101,11 +101,7 @@
                                         <i class="bi bi-receipt-cutoff"></i> Facturación
                                     </a>
                                 </li>
-                                <li class="nav-item" asp-permiso="Sub_Menu_ReportesVentas">
-                                    <a class="nav-link" asp-controller="Ventas" asp-action="Reportes">
-                                        <i class="bi bi-graph-up"></i> Reportes de Ventas
-                                    </a>
-                                </li>
+                                
                                 <li class="nav-item" asp-permiso="Sub_Menu_EntregasPendientes">
                                     <a class="nav-link" asp-controller="Facturacion" asp-action="EntregasPendientes">
                                         <i class="bi bi-truck"></i> Entregas Pendientes
@@ -153,6 +149,11 @@
                                         <i class="bi bi-file-pdf"></i> Exportar PDF
                                     </a>
                                 </li>
+                                <li class="nav-item" asp-permiso="Sub_Menu_ReportesVentas">
+                                    <a class="nav-link" asp-controller="Ventas" asp-action="Reportes">
+                                        <i class="bi bi-graph-up"></i> Reportes de Ventas
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>
@@ -179,20 +180,20 @@
                         </div>
                     </li>
                     <!-- ✅ HERRAMIENTAS DE SISTEMA - Solo gestión completa -->
-                    <li class="nav-item" asp-permiso="Menu_HerramientasSistema">
+                    <li class="nav-item" asp-permiso="Menu_HerramientasSistemaDEV">
                         <a class="nav-link" data-bs-toggle="collapse" href="#herramientasMenu">
                             <i class="bi bi-tools"></i> Herramientas de Sistema
                         </a>
                         <div class="collapse submenu" id="herramientasMenu">
                             <ul class="nav flex-column">
                                 <!-- Diagnóstico de Permisos -->
-                                <li class="nav-item" asp-permiso="Sub_Menu_DiagnosticoPermisos">
+                                <li class="nav-item" asp-permiso="Sub_Menu_DiagnosticoPermisosDEV">
                                     <a class="nav-link" asp-controller="DiagnosticoPermisos" asp-action="Index">
                                         <i class="bi bi-shield-check"></i> Diagnóstico de Permisos
                                     </a>
                                 </li>
                                 <!-- Logs del Sistema (si existe) -->
-                                <li class="nav-item" asp-permiso="Sub_Menu_LogsSistema">
+                                <li class="nav-item" asp-permiso="Sub_Menu_LogsSistemaDEV">
                                     <a class="nav-link" asp-controller="Sistema" asp-action="Logs">
                                         <i class="bi bi-journal-text"></i> Logs del Sistema
                                     </a>
