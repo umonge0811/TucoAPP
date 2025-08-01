@@ -1321,6 +1321,91 @@ namespace API.Controllers
         }
 
         /// <summary>
+        /// Notifica a los supervisores que un usuario completó su conteo
+        /// </summary>
+        [HttpPost("NotificarConteoCompletado/{inventarioId}")]
+        public async Task<IActionResult> NotificarConteoCompletado(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO ===");
+                
+                var inventario = await _context.InventariosProgramados
+                    .Include(i => i.AsignacionesUsuarios)
+                    .ThenInclude(a => a.Usuario)
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    return NotFound(new { success = false, message = "Inventario no encontrado" });
+                }
+
+                // Obtener información del usuario actual desde los claims
+                var usuarioActualId = ObtenerIdUsuarioActual();
+                var usuarioActual = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.UsuarioId == usuarioActualId);
+
+                if (usuarioActual == null)
+                {
+                    return BadRequest(new { success = false, message = "Usuario no encontrado" });
+                }
+
+                // Obtener usuarios con permisos de validación/supervisión
+                var usuariosSupervisores = await _context.UsuarioPermiso
+                    .Include(up => up.Permiso)
+                    .Where(up => up.Permiso.NombrePermiso.Contains("Finalizar") || 
+                                up.Permiso.NombrePermiso.Contains("Validar") ||
+                                up.Permiso.NombrePermiso.Contains("Supervisor"))
+                    .Select(up => up.UsuarioID)
+                    .Distinct()
+                    .ToListAsync();
+
+                // También incluir al creador del inventario
+                if (inventario.UsuarioCreadorId != null)
+                {
+                    usuariosSupervisores.Add(inventario.UsuarioCreadorId);
+                }
+
+                usuariosSupervisores = usuariosSupervisores.Distinct().ToList();
+
+                if (!usuariosSupervisores.Any())
+                {
+                    _logger.LogWarning("⚠️ No se encontraron supervisores para notificar");
+                    return Ok(new { success = true, message = "No hay supervisores disponibles para notificar", notificados = 0 });
+                }
+
+                // Crear notificaciones
+                var titulo = "📝 Conteo Completado por Usuario";
+                var mensaje = $"El usuario {usuarioActual.NombreUsuario} ha completado su parte del conteo en el inventario '{inventario.Titulo}'. Puedes revisar y finalizar el inventario.";
+                var urlAccion = $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}";
+
+                await _notificacionService.CrearNotificacionesAsync(
+                    usuariosIds: usuariosSupervisores,
+                    titulo: titulo,
+                    mensaje: mensaje,
+                    tipo: "info",
+                    icono: "fas fa-clipboard-check",
+                    urlAccion: urlAccion,
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: inventario.InventarioProgramadoId
+                );
+
+                _logger.LogInformation("✅ Notificaciones de conteo completado enviadas a {Count} supervisores", usuariosSupervisores.Count);
+
+                return Ok(new { 
+                    success = true, 
+                    message = "Supervisores notificados exitosamente",
+                    notificados = usuariosSupervisores.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error notificando conteo completado para inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
         /// Notifica al creador del inventario que fue finalizado
         /// </summary>
         private async Task NotificarCreadorInventario(InventarioProgramado inventario)

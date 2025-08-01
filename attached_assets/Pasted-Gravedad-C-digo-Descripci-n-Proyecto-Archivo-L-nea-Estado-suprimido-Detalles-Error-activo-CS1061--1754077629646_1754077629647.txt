@@ -1,0 +1,16 @@
+Gravedad	Código	Descripción	Proyecto	Archivo	Línea	Estado suprimido	Detalles
+Error (activo)	CS1061	"int" no contiene una definición para "HasValue" ni un método de extensión accesible "HasValue" que acepte un primer argumento del tipo "int" (¿falta alguna directiva using o una referencia de ensamblado?)	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\TomaInventarioController.cs	1363		
+Error (activo)	CS1061	"int" no contiene una definición para "Value" ni un método de extensión accesible "Value" que acepte un primer argumento del tipo "int" (¿falta alguna directiva using o una referencia de ensamblado?)	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\TomaInventarioController.cs	1365		
+Error (activo)	CS1061	"TomaInventarioController" no contiene una definición para "GetUsuarioId" ni un método de extensión accesible "GetUsuarioId" que acepte un primer argumento del tipo "TomaInventarioController" (¿falta alguna directiva using o una referencia de ensamblado?)	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\TomaInventarioController.cs	1344		
+Error (activo)	CS1061	"TucoContext" no contiene una definición para "UsuarioPermisoREs" ni un método de extensión accesible "UsuarioPermisoREs" que acepte un primer argumento del tipo "TucoContext" (¿falta alguna directiva using o una referencia de ensamblado?)	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\TomaInventarioController.cs	1354		
+Error (activo)	MSB4018	Error inesperado en la tarea "UpdateExternallyDefinedStaticWebAssets".
+System.InvalidOperationException: No file exists for the asset at either location 'C:\Users\UMA08\source\repos\Tuco\API\wwwroot\uploads\productos\3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp' or 'wwwroot\uploads\productos\3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp'.
+   en Microsoft.AspNetCore.StaticWebAssets.Tasks.StaticWebAsset.ResolveFile(String identity, String originalItemSpec)
+   en Microsoft.AspNetCore.StaticWebAssets.Tasks.StaticWebAsset.ApplyDefaults()
+   en Microsoft.AspNetCore.StaticWebAssets.Tasks.StaticWebAsset.FromV1TaskItem(ITaskItem item)
+   en System.Linq.Enumerable.WhereSelectArrayIterator`2.MoveNext()
+   en System.Linq.Buffer`1..ctor(IEnumerable`1 source)
+   en System.Linq.Enumerable.ToArray[TSource](IEnumerable`1 source)
+   en Microsoft.AspNetCore.StaticWebAssets.Tasks.UpdateExternallyDefinedStaticWebAssets.Execute()
+   en Microsoft.Build.BackEnd.TaskExecutionHost.Execute()
+   en Microsoft.Build.BackEnd.TaskBuilder.<ExecuteInstantiatedTask>d__26.MoveNext()	GestionLlantera.Web	C:\Program Files\dotnet\sdk\9.0.302\Sdks\Microsoft.NET.Sdk.StaticWebAssets\targets\Microsoft.NET.Sdk.StaticWebAssets.References.targets	131		
