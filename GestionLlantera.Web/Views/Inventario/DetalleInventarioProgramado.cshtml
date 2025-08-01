@@ -32,7 +32,7 @@
                     <i class="bi bi-pencil me-1"></i> Editar
                 </a>
             }
-            
+
             @if (Model.Estado == "Completado")
             {
                 <div class="btn-group">
@@ -70,7 +70,7 @@
                         <span class="detail-label">Título:</span>
                         <span class="detail-value">@Model.Titulo</span>
                     </div>
-                    
+
                     <div class="detail-item">
                         <span class="detail-label">Estado:</span>
                         <span class="detail-value">
@@ -94,32 +94,32 @@
                             }
                         </span>
                     </div>
-                    
+
                     <div class="detail-item">
                         <span class="detail-label">Tipo:</span>
                         <span class="detail-value">@Model.TipoInventario</span>
                     </div>
-                    
+
                     <div class="detail-item">
                         <span class="detail-label">Fecha Inicio:</span>
                         <span class="detail-value">@Model.FechaInicio.ToString("dd/MM/yyyy")</span>
                     </div>
-                    
+
                     <div class="detail-item">
                         <span class="detail-label">Fecha Fin:</span>
                         <span class="detail-value">@Model.FechaFin.ToString("dd/MM/yyyy")</span>
                     </div>
-                    
+
                     <div class="detail-item">
                         <span class="detail-label">Creado por:</span>
                         <span class="detail-value">@Model.UsuarioCreadorNombre</span>
                     </div>
-                    
+
                     <div class="detail-item">
                         <span class="detail-label">Fecha Creación:</span>
                         <span class="detail-value">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</span>
                     </div>
-                    
+
                     @if (!string.IsNullOrEmpty(Model.Descripcion))
                     {
                         <div class="detail-item description-item">
@@ -129,7 +129,7 @@
                     }
                 </div>
             </div>
-            
+
             <div class="dashboard-card mb-4">
                 <div class="card-header">
                     <h3>
@@ -195,7 +195,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-md-8">
             @if (Model.Estado == "En Progreso" || Model.Estado == "Completado")
             {
@@ -242,7 +242,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Barra de Progreso -->
                         <div class="progress-status mb-3">
                             <div class="d-flex justify-content-between mb-1">
@@ -258,7 +258,7 @@
                                      aria-valuemax="100"></div>
                             </div>
                         </div>
-                        
+
                         <!-- Resumen de Actividades -->
                         <div class="activity-summary">
                             <h5 class="mb-3">Actividad Reciente</h5>
@@ -270,9 +270,9 @@
                                         <small class="text-muted">@Model.FechaInicio.ToString("dd/MM/yyyy HH:mm")</small>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Aquí se pueden agregar más eventos del timeline -->
-                                
+
                                 @if (Model.Estado == "Completado")
                                 {
                                     <div class="timeline-item">
@@ -287,7 +287,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Tabla de Productos con Discrepancias -->
                 @if (Model.Discrepancias > 0)
                 {
@@ -299,31 +299,70 @@
                             </h3>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Producto</th>
-                                            <th>Cantidad Sistema</th>
-                                            <th>Cantidad Física</th>
-                                            <th>Diferencia</th>
-                                            <th>Observaciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Esta parte se llenaría dinámicamente con datos reales -->
-                                        <tr>
-                                            <td>Llanta ejemplo con discrepancia</td>
-                                            <td>10</td>
-                                            <td>8</td>
-                                            <td class="text-danger">-2</td>
-                                            <td>Se encontraron 2 unidades con daños</td>
-                                        </tr>
-                                        <!-- Aquí pueden ir más filas de ejemplo -->
-                                    </tbody>
-                                </table>
+                            <!-- ✅ DISCREPANCIAS REALES OBTENIDAS DEL CONTROLADOR -->
+                        @if (ViewBag.DiscrepanciasReales != null && ((List<dynamic>)ViewBag.DiscrepanciasReales).Any())
+                        {
+                            <div class="row">
+                                @foreach (var discrepancia in (List<dynamic>)ViewBag.DiscrepanciasReales)
+                                {
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card border-warning">
+                                            <div class="card-body">
+                                                <h6 class="card-title text-warning">
+                                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                                    @((string)discrepancia.nombreProducto ?? "Producto sin nombre")
+                                                </h6>
+                                                <div class="row">
+                                                    <div class="col-4">
+                                                        <small class="text-muted">Sistema:</small>
+                                                        <div class="fw-bold">@((int?)discrepancia.cantidadSistema ?? 0)</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <small class="text-muted">Físico:</small>
+                                                        <div class="fw-bold">@((int?)discrepancia.cantidadFisica ?? 0)</div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <small class="text-muted">Diferencia:</small>
+                                                        @{
+                                                            int diferencia = ((int?)discrepancia.diferencia ?? 0);
+                                                            string claseColor = diferencia < 0 ? "text-danger" : (diferencia > 0 ? "text-success" : "text-muted");
+                                                            string signo = diferencia > 0 ? "+" : "";
+                                                        }
+                                                        <div class="fw-bold @claseColor">@(signo)@diferencia</div>
+                                                    </div>
+                                                </div>
+                                                @if (discrepancia.usuarioConteo != null)
+                                                {
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">Contado por: @((string)discrepancia.usuarioConteo)</small>
+                                                    </div>
+                                                }
+                                                @if (discrepancia.fechaConteo != null)
+                                                {
+                                                    <div class="mt-1">
+                                                        <small class="text-muted">Fecha: @(((DateTime?)discrepancia.fechaConteo)?.ToString("dd/MM/yyyy HH:mm") ?? "No disponible")</small>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
-                        </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                @if (Model.Estado == "Programado")
+                                {
+                                    <text>El inventario aún no ha iniciado. Las discrepancias se mostrarán una vez que comience el conteo.</text>
+                                }
+                                else
+                                {
+                                    <text>No se encontraron discrepancias en este inventario. ¡Excelente trabajo!</text>
+                                }
+                            </div>
+                        }</div>
                     </div>
                 }
             }
@@ -351,7 +390,7 @@
                             <i class="bi bi-info-circle me-2"></i>
                             Este inventario está programado pero aún no ha comenzado. Haga clic en "Iniciar Inventario" cuando esté listo para comenzar el conteo físico.
                         </div>
-                        
+
                         <div class="mb-3">
                             <h5>Información del Inventario Programado:</h5>
                             <ul class="list-group">
@@ -369,7 +408,7 @@
                                 </li>
                             </ul>
                         </div>
-                        
+
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle me-2"></i>
                             <strong>Nota:</strong> Al iniciar el inventario, se enviará una notificación a todos los usuarios asignados y se crearán registros para todos los productos que serán parte de este inventario.
