@@ -377,6 +377,138 @@ namespace API.Controllers
             }
         }
 
+        /// <summary>
+        /// Solicita el reconteo de un producto y notifica al usuario que hizo el conteo original
+        /// </summary>
+        [HttpPost("{inventarioId}/productos/{productoId}/solicitar-reconteo")]
+        public async Task<IActionResult> SolicitarReconteoProducto(int inventarioId, int productoId, [FromBody] SolicitudReconteoDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 === SOLICITANDO RECONTEO ===");
+                _logger.LogInformation("🔄 Inventario: {InventarioId}, Producto: {ProductoId}", inventarioId, productoId);
+
+                // ✅ VALIDAR QUE EL INVENTARIO EXISTE Y ESTÁ EN PROGRESO
+                var inventario = await _context.InventariosProgramados
+                    .Include(i => i.AsignacionesUsuarios)
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    return BadRequest(new { message = "Inventario no encontrado" });
+                }
+
+                if (inventario.Estado != "En Progreso")
+                {
+                    return BadRequest(new { message = "El inventario no está en progreso" });
+                }
+
+                // ✅ VALIDAR QUE EL PRODUCTO EXISTE
+                var producto = await _context.Productos.FirstOrDefaultAsync(p => p.ProductoId == productoId);
+                if (producto == null)
+                {
+                    return BadRequest(new { message = "Producto no encontrado" });
+                }
+
+                // ✅ BUSCAR EL ÚLTIMO CONTEO DEL PRODUCTO PARA ENCONTRAR AL USUARIO QUE LO CONTÓ
+                var ultimoConteo = await _context.DetalleInventarioProgramados
+                    .Include(d => d.UsuarioConteo)
+                    .Where(d => d.InventarioProgramadoId == inventarioId && d.ProductoId == productoId)
+                    .OrderByDescending(d => d.FechaConteo)
+                    .FirstOrDefaultAsync();
+
+                if (ultimoConteo?.UsuarioConteoId == null)
+                {
+                    return BadRequest(new { message = "No se encontró el usuario que realizó el conteo original" });
+                }
+
+                 // ✅ OBTENER EL USUARIO QUE REALIZÓ EL CONTEO
+                 var usuarioConteo = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == ultimoConteo.UsuarioConteoId);
+
+                if (usuarioConteo == null)
+                {
+                     return BadRequest(new { message = "No se encontró el usuario que realizó el conteo original" });
+                }
+
+                // ✅ CREAR LA NOTIFICACIÓN DE RECONTEO
+                var notificacion = new Notificacion
+                {
+                    UsuarioId = ultimoConteo.UsuarioConteoId.Value,
+                    Titulo = "🔄 Solicitud de Reconteo",
+                    Mensaje = $"Se solicita recontar el producto '{producto.NombreProducto}' en el inventario '{inventario.Titulo}'. " +
+                             $"Motivo: {solicitud.Motivo}",
+                    Tipo = "warning",
+                    Icono = "bi-arrow-clockwise",
+                    UrlAccion = $"/TomaInventario/Ejecutar/{inventarioId}?recontar={productoId}",
+                    EntidadTipo = "InventarioReconteo",
+                    EntidadId = inventarioId,
+                    FechaCreacion = DateTime.Now,
+                    Leida = false
+                };
+
+                _context.Notificaciones.Add(notificacion);
+
+                // ✅ MARCAR EL PRODUCTO COMO PENDIENTE DE RECONTEO EN EL DETALLE
+                if (ultimoConteo != null)
+                {
+                    ultimoConteo.EstadoConteo = "PendienteReconteo";
+                    ultimoConteo.ObservacionesReconteo = solicitud.Motivo;
+                    ultimoConteo.FechaSolicitudReconteo = DateTime.Now;
+                    ultimoConteo.UsuarioSolicitudReconteoId = ObtenerIdUsuarioActual();
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Notificación de reconteo enviada al usuario {UsuarioId}", ultimoConteo.UsuarioConteoId);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Solicitud de reconteo enviada exitosamente",
+                    data = new
+                    {
+                        inventarioId = inventarioId,
+                        productoId = productoId,
+                        usuarioNotificado = ultimoConteo.UsuarioConteoId,
+                        fechaSolicitud = DateTime.Now
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al solicitar reconteo");
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene los ajustes pendientes por inventario
+        /// </summary>
+        [HttpGet("{inventarioId}/ajustes-pendientes")]
+        public async Task<ActionResult<List<AjusteInventarioPendienteDTO>>> ObtenerAjustesPendientes(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📋 === OBTENIENDO AJUSTES PENDIENTES ===");
+                _logger.LogInformation("📋 Inventario ID: {InventarioId}", inventarioId);
+
+                var ajustes = await _ajustesService.ObtenerAjustesPendientesAsync(inventarioId);
+
+                _logger.LogInformation("📋 Ajustes pendientes encontrados: {Count}", ajustes.Count);
+
+                return Ok(ajustes);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener ajustes pendientes del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new
+                {
+                    message = "Error interno del servidor al obtener ajustes pendientes",
+                    timestamp = DateTime.Now
+                });
+            }
+        }
+
 
         // =====================================
         // MÉTODOS PARA GESTIÓN DE INVENTARIOS
@@ -711,7 +843,7 @@ namespace API.Controllers
             // ✅ OBTENER PRODUCTOS SEGÚN CONFIGURACIÓN DEL INVENTARIO
             var productosQuery = _context.Productos.AsQueryable();
 
-            // 🔍 FILTRAR POR UBICACIÓN SI SE ESPECIFICÓ
+            // 🔍 FILTRAR POR UBicación SI SE ESPECIFICÓ
             if (!string.IsNullOrEmpty(inventario.UbicacionEspecifica))
             {
                 _logger.LogInformation("🏢 Filtrando por ubicación: {Ubicacion}", inventario.UbicacionEspecifica);
@@ -1046,6 +1178,20 @@ namespace API.Controllers
             }
         }
 
+        //DTO necesario para el metodo de diagnostico
+        public class DiagnosticoDetalleDTO
+        {
+            public int DetalleId { get; set; }
+            public int InventarioProgramadoId { get; set; }
+            public int ProductoId { get; set; }
+            public int CantidadSistema { get; set; }
+            public int? CantidadFisica { get; set; }
+            public int? Diferencia { get; set; }
+            public string? Observaciones { get; set; }
+            public int? UsuarioConteoId { get; set; }
+            public DateTime? FechaConteo { get; set; }
+        }
+
 
         /// <summary>
         /// MÉTODO DE DIAGNÓSTICO MEJORADO - Usando SQL RAW para evitar mapeo de EF
@@ -1329,7 +1475,7 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO AL CREADOR ===");
-                
+
                 var inventario = await _context.InventariosProgramados
                     .Include(i => i.UsuarioCreador)
                     .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
@@ -1550,6 +1696,30 @@ namespace API.Controllers
             }
         }
 
+        /// <summary>
+        /// Obtiene el ID del usuario actual desde los claims
+        /// </summary>
+        private int ObtenerUsuarioIdActual()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst("UserId")?.Value ??
+                                  User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (int.TryParse(userIdClaim, out int userId))
+                {
+                    return userId;
+                }
+
+                _logger.LogWarning("⚠️ No se pudo obtener el ID del usuario desde los claims");
+                return 1; // Fallback - en producción esto debería manejarse mejor
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener ID del usuario");
+                return 1; // Fallback
+            }
+        }
 
 
         /// <summary>
@@ -1610,5 +1780,10 @@ namespace API.Controllers
         }
 
 
+    }
+
+    public class SolicitudReconteoDTO
+    {
+        public string Motivo { get; set; }
     }
 }
