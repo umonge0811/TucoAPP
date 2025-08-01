@@ -1104,7 +1104,6 @@ function crearFilaAjustePendiente(ajuste) {
 function obtenerTextoTipoAjuste(tipo) {
     const tipos = {
         'sistema_a_fisico': '📦 Sistema→Físico',
-        'reconteo': '🔄 Reconteo',
         'validado': '✅ Validado'
     };
     return tipos[tipo] || tipo;
@@ -1115,7 +1114,6 @@ function obtenerTextoTipoAjuste(tipo) {
 function obtenerClaseBadgeTipo(tipo) {
     const clases = {
         'sistema_a_fisico': 'bg-success',
-        'reconteo': 'bg-warning',
         'validado': 'bg-info'
     };
     return clases[tipo] || 'bg-secondary';
@@ -5232,7 +5230,6 @@ window.verDetallesProducto = verDetallesProducto;
 window.editarAjustePendiente = editarAjustePendiente;
 window.eliminarAjustePendiente = eliminarAjustePendiente;
 window.limpiarModalAjustePendiente = limpiarModalAjustePendiente;
-window.enviarNotificacionReconteo = enviarNotificacionReconteo;
 
 
 
@@ -5617,10 +5614,6 @@ function actualizarVistaPreviaAjustePendiente(producto) {
                 stockPropuesto = conteoFisico;
                 tipoTexto = '📦 Sistema→Físico';
                 break;
-            case 'reconteo':
-                stockPropuesto = stockActual; // Mantener actual, solicitar reconteo
-                tipoTexto = '🔄 Reconteo';
-                break;
             case 'validado':
                 stockPropuesto = stockActual; // Mantener actual, marcar como válido
                 tipoTexto = '✅ Validado';
@@ -5730,18 +5723,7 @@ async function guardarNuevoAjustePendiente() {
         if (resultado.success) {
             let mensajeExito = `Ajuste pendiente registrado exitosamente para ${producto.nombreProducto}`;
             
-            // ✅ NUEVA FUNCIONALIDAD: Si es reconteo, enviar notificación
-            if (tipoAjuste === 'reconteo') {
-                console.log('🔔 Enviando notificación de reconteo...');
-                
-                try {
-                    await enviarNotificacionReconteo(inventarioId, productoId, producto.nombreProducto);
-                    mensajeExito += '. Se ha notificado al usuario responsable para recontar este producto.';
-                } catch (notifError) {
-                    console.error('❌ Error enviando notificación:', notifError);
-                    mensajeExito += '. NOTA: No se pudo enviar la notificación automática.';
-                }
-            }
+            
             
             mostrarExito(mensajeExito);
 
@@ -5774,49 +5756,7 @@ async function guardarNuevoAjustePendiente() {
     }
 }
 
-/**
- * ✅ NUEVA FUNCIÓN: Enviar notificación de reconteo al usuario responsable
- */
-async function enviarNotificacionReconteo(inventarioId, productoId, nombreProducto) {
-    try {
-        console.log('🔔 === ENVIANDO NOTIFICACIÓN DE RECONTEO ===');
-        console.log(`📧 Inventario: ${inventarioId}, Producto: ${productoId} (${nombreProducto})`);
 
-        const solicitudNotificacion = {
-            inventarioProgramadoId: parseInt(inventarioId),
-            productoId: parseInt(productoId),
-            nombreProducto: nombreProducto,
-            usuarioSolicitante: window.inventarioConfig.usuarioId || 1
-        };
-
-        const response = await fetch('/TomaInventario/SolicitarReconteoProducto', {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(solicitudNotificacion)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(`Error ${response.status}: ${errorData}`);
-        }
-
-        const resultado = await response.json();
-
-        if (resultado.success) {
-            console.log('✅ Notificación de reconteo enviada exitosamente');
-            console.log('📧 Detalles:', resultado.data || resultado.message);
-        } else {
-            throw new Error(resultado.message || 'Error al enviar notificación');
-        }
-
-    } catch (error) {
-        console.error('❌ Error enviando notificación de reconteo:', error);
-        throw error; // Re-lanzar para que el caller pueda manejarlo
-    }
-}
 
 
 /**
