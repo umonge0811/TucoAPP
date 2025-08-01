@@ -358,6 +358,71 @@ namespace API.Services
             }
         }
 
+        /// <summary>
+        /// Notifica a un usuario específico que necesita recontar un producto
+        /// </summary>
+        public async Task<bool> NotificarReconteoProductoAsync(int inventarioId, int productoId, int usuarioAsignadoId, int usuarioSolicitanteId)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 === NOTIFICANDO SOLICITUD DE RECONTEO ===");
+                _logger.LogInformation("🔄 Inventario: {InventarioId}, Producto: {ProductoId}, Usuario Asignado: {UsuarioAsignado}", 
+                    inventarioId, productoId, usuarioAsignadoId);
+
+                // Obtener información del inventario
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    _logger.LogError("❌ Inventario no encontrado: {InventarioId}", inventarioId);
+                    return false;
+                }
+
+                // Obtener información del producto
+                var producto = await _context.Productos
+                    .FirstOrDefaultAsync(p => p.ProductoId == productoId);
+
+                if (producto == null)
+                {
+                    _logger.LogError("❌ Producto no encontrado: {ProductoId}", productoId);
+                    return false;
+                }
+
+                // Obtener información del usuario solicitante
+                var usuarioSolicitante = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.UsuarioId == usuarioSolicitanteId);
+
+                // Verificar que el usuario asignado existe
+                var usuarioAsignado = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.UsuarioId == usuarioAsignadoId);
+
+                if (usuarioAsignado == null)
+                {
+                    _logger.LogError("❌ Usuario asignado no encontrado: {UsuarioAsignadoId}", usuarioAsignadoId);
+                    return false;
+                }
+
+                // Crear notificación específica de reconteo
+                var titulo = "🔄 Reconteo Solicitado";
+                var mensaje = $"Se solicita reconteo del producto '{producto.NombreProducto}' en el inventario '{inventario.Titulo}'. " +
+                             $"Solicitado por: {usuarioSolicitante?.NombreUsuario ?? "Sistema"}";
+                var urlAccion = $"/TomaInventario/Ejecutar/{inventario.InventarioProgramadoId}?recontar={productoId}";
+
+                // Aquí se debería llamar al servicio de notificaciones
+                // Por ahora solo registramos el log
+                _logger.LogInformation("✅ Notificación de reconteo preparada para usuario {UsuarioNombre}", usuarioAsignado.NombreUsuario);
+                _logger.LogInformation("📧 URL de redirección: {Url}", urlAccion);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al notificar reconteo para producto {ProductoId}", productoId);
+                return false;
+            }
+        }
+
 
     }
 

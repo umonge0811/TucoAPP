@@ -13,18 +13,7 @@ namespace API.Services.Interfaces  // ← CORREGIDO: API.Services.Interfaces (no
         Task<bool> UsuarioTieneAccesoAsync(int inventarioId, int usuarioId);
         Task<List<InventarioProgramadoDTO>> ObtenerInventariosAsignadosAsync(int usuarioId);
         Task<EstadisticasInventarioDTO> ObtenerEstadisticasAsync(int inventarioId);
-
-        // =====================================
-        // NOTIFICACIONES
-        // =====================================
-
-        /// <summary>
-        /// Notifica a los supervisores que un usuario completó su parte del conteo
-        /// </summary>
-        /// <param name="inventarioId">ID del inventario</param>
-        /// <param name="usuarioId">ID del usuario que completó el conteo</param>
-        /// <returns>True si se envió la notificación correctamente</returns>
         Task<bool> NotificarConteoCompletadoAsync(int inventarioId, int usuarioId);
-
+        Task<bool> NotificarReconteoProductoAsync(int inventarioId, int productoId, int usuarioAsignadoId, int usuarioSolicitanteId);
     }
 }
