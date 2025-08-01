@@ -7264,57 +7264,6 @@ function marcarProductoParaReconteo(productoId) {
 }
 
 /**
- * ✅ FUNCIÓN: Resolver reconteo con nuevo conteo
- */
-async function resolverReconteo(inventarioId, productoId, nuevaCantidad, observaciones = '') {
-    try {
-        console.log('✅ Resolviendo reconteo:', { inventarioId, productoId, nuevaCantidad });
-
-        const response = await fetch(`/api/TomaInventario/${inventarioId}/productos/${productoId}/resolver-reconteo`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            },
-            body: JSON.stringify({
-                InventarioProgramadoId: inventarioId,
-                ProductoId: productoId,
-                CantidadFisica: parseInt(nuevaCantidad),
-                Observaciones: observaciones,
-                UsuarioId: 1 // Se obtendrá del token en el backend
-            })
-        });
-
-        const resultado = await response.json();
-
-        if (resultado.success) {
-            mostrarToast('Éxito', 'Reconteo completado exitosamente', 'success');
-            
-            // Actualizar la fila en la tabla
-            const fila = $(`tr[data-producto-id="${productoId}"]`);
-            if (fila.length) {
-                fila.find('.cantidad-fisica').text(nuevaCantidad);
-                fila.find('.estado-conteo').html('<span class="badge bg-success">Recontado</span>');
-                fila.removeClass('table-warning');
-            }
-            
-            // Recargar estadísticas
-            await cargarEstadisticasInventario();
-            
-            return true;
-        } else {
-            mostrarToast('Error', resultado.message || 'Error al resolver reconteo', 'error');
-            return false;
-        }
-
-    } catch (error) {
-        console.error('❌ Error resolviendo reconteo:', error);
-        mostrarToast('Error', 'Error de conexión al resolver reconteo', 'error');
-        return false;
-    }
-}
-
-/**
  * ✅ FUNCIÓN: Verificar si viene parámetro de reconteo en URL
  */
 function verificarParametroReconteo() {

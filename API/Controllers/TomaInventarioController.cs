@@ -253,7 +253,7 @@ namespace API.Controllers
                 _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioId);
                 _logger.LogInformation("🔥 Usuario: {Usuario}", User.Identity?.Name);
 
-                // ✅ VALIDAR AJUSTES PENDIENTES
+                // ✅ AGREGAR ESTA VALIDACIÓN DE AJUSTES
                 var ajustesPendientes = await _ajustesService.ObtenerAjustesPorInventarioAsync(inventarioId);
                 _logger.LogInformation("📋 Ajustes encontrados: {Count}", ajustesPendientes.Count);
 
@@ -263,32 +263,8 @@ namespace API.Controllers
                     return BadRequest(new { success = false, message = "No hay ajustes pendientes para aplicar" });
                 }
 
-                // ✅ VALIDAR QUE NO HAY RECONTEOS PENDIENTES
-                var reconteosPendientes = ajustesPendientes.Where(a => a.TipoAjuste == "reconteo").ToList();
-                if (reconteosPendientes.Any())
-                {
-                    _logger.LogWarning("🔄 Se encontraron {Count} reconteos pendientes - No se puede completar el inventario", reconteosPendientes.Count);
-                    
-                    var productosReconteo = reconteosPendientes.Select(r => new
-                    {
-                        ProductoId = r.ProductoId,
-                        NombreProducto = r.NombreProducto ?? $"Producto ID: {r.ProductoId}",
-                        Observaciones = r.Observaciones
-                    }).ToList();
-
-                    return BadRequest(new 
-                    { 
-                        success = false, 
-                        message = "No se puede completar el inventario mientras haya reconteos pendientes",
-                        reconteosPendientes = productosReconteo.Count,
-                        productos = productosReconteo
-                    });
-                }
-
-                // ✅ VALIDACIONES DE PERMISOS ESPECÍFICOS
-                var validacion = await this.ValidarPermisoAsync(_permisosService, "Completar Inventario",
-                    "Solo usuarios con permiso 'Completar Inventario' pueden aplicar ajustes");
-                if (validacion != null) return validacion;
+                // ✅ AQUÍ PUEDES AGREGAR VALIDACIONES DE PERMISOS ESPECÍFICOS
+                // Por ejemplo, verificar que el usuario tenga permiso "Completar Inventario"
 
                 var aplicado = await _ajustesService.AplicarAjustesPendientesAsync(inventarioId);
 
@@ -303,8 +279,11 @@ namespace API.Controllers
                         message = "Todos los ajustes pendientes han sido aplicados al stock del sistema",
                         inventarioId = inventarioId,
                         fechaAplicacion = DateTime.Now,
-                        nota = "Los cambios en el stock son irreversibles"
+                        nota = "Los cambios en el stock son irreversibles",
+
+
                     });
+
                 }
                 else
                 {
@@ -1402,21 +1381,7 @@ namespace API.Controllers
                     return BadRequest(new { success = false, message = "Usuario destinatario no encontrado" });
                 }
 
-                // ✅ CREAR REGISTRO DE RECONTEO PENDIENTE EN LA BASE DE DATOS
-                var solicitudAjusteReconteo = new SolicitudAjusteInventarioDTO
-                {
-                    InventarioProgramadoId = inventarioId,
-                    ProductoId = productoId,
-                    TipoAjuste = "reconteo",
-                    CantidadSistemaOriginal = detalleInventario.CantidadSistema,
-                    CantidadFisicaContada = detalleInventario.CantidadFisica ?? detalleInventario.CantidadSistema,
-                    Observaciones = $"RECONTEO SOLICITADO - Motivo: {solicitud.Motivo ?? "No especificado"}",
-                    UsuarioId = usuarioSolicitanteId
-                };
-
-                var ajusteId = await _ajustesService.CrearAjustePendienteAsync(solicitudAjusteReconteo);
-
-                // ✅ CREAR NOTIFICACIÓN REAL
+                // Crear notificación de reconteo
                 var titulo = "🔄 Solicitud de Reconteo";
                 var mensaje = $"Se solicita recontar el producto '{detalleInventario.Producto?.NombreProducto}' en el inventario '{inventario.Titulo}'. " +
                              $"Motivo: {solicitud.Motivo ?? "No especificado"}";
@@ -1436,15 +1401,12 @@ namespace API.Controllers
                 _logger.LogInformation("✅ Notificación de reconteo enviada a {UsuarioNombre} (ID: {UsuarioId})", 
                     usuarioDestino.NombreUsuario, usuarioANotificar);
 
-                _logger.LogInformation("✅ Ajuste de reconteo creado con ID: {AjusteId}", ajusteId);
-
                 return Ok(new { 
                     success = true, 
                     message = $"Solicitud de reconteo enviada a {usuarioDestino.NombreUsuario}",
                     usuarioNotificado = usuarioDestino.NombreUsuario,
                     productoNombre = detalleInventario.Producto?.NombreProducto,
-                    urlRedireccion = urlAccion,
-                    ajusteId = ajusteId
+                    urlRedireccion = urlAccion
                 });
             }
             catch (Exception ex)
@@ -1715,60 +1677,6 @@ namespace API.Controllers
                     success = false,
                     message = "Error verificando acceso al inventario"
                 });
-            }
-        }
-
-        /// <summary>
-        /// Resuelve un reconteo con el nuevo valor contado
-        /// </summary>
-        [HttpPost("{inventarioId}/productos/{productoId}/resolver-reconteo")]
-        [Authorize]
-        public async Task<IActionResult> ResolverReconteo(int inventarioId, int productoId, [FromBody] ConteoProductoDTO nuevoConteo)
-        {
-            try
-            {
-                _logger.LogInformation("✅ === RESOLVIENDO RECONTEO ===");
-                _logger.LogInformation("✅ Inventario: {InventarioId}, Producto: {ProductoId}, Nueva cantidad: {Cantidad}", 
-                    inventarioId, productoId, nuevoConteo.CantidadFisica);
-
-                var usuarioId = ObtenerIdUsuarioActual();
-
-                // Buscar ajuste de reconteo pendiente
-                var ajustesReconteo = await _ajustesService.ObtenerAjustesPorProductoAsync(inventarioId, productoId);
-                var ajusteReconteo = ajustesReconteo.FirstOrDefault(a => a.TipoAjuste == "reconteo" && a.Estado == "Pendiente");
-
-                if (ajusteReconteo == null)
-                {
-                    return BadRequest(new { success = false, message = "No se encontró un reconteo pendiente para este producto" });
-                }
-
-                // Actualizar el conteo del producto
-                var resultado = await RegistrarConteo(inventarioId, productoId, nuevoConteo);
-                
-                if (resultado is OkObjectResult)
-                {
-                    // Eliminar el ajuste de reconteo ya que fue resuelto
-                    await _ajustesService.EliminarAjustePendienteAsync(ajusteReconteo.AjusteId);
-                    
-                    _logger.LogInformation("✅ Reconteo resuelto exitosamente - Ajuste eliminado");
-
-                    return Ok(new
-                    {
-                        success = true,
-                        message = "Reconteo completado exitosamente",
-                        nuevoConteo = nuevoConteo.CantidadFisica,
-                        ajusteResuelto = ajusteReconteo.AjusteId
-                    });
-                }
-                else
-                {
-                    return BadRequest(new { success = false, message = "Error al registrar el nuevo conteo" });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error resolviendo reconteo para producto {ProductoId}", productoId);
-                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
 
