@@ -1,4 +1,4 @@
-// tuco.Clases.Models/DetalleInventarioProgramado.cs
+﻿// tuco.Clases.Models/DetalleInventarioProgramado.cs
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -25,12 +25,10 @@ namespace tuco.Clases.Models
 
         [StringLength(500)]
         public string? Observaciones { get; set; }
-        public DateTime? FechaConteo { get; set; }
 
-        // ✅ CAMPOS PARA MANEJO DE RECONTEOS
-        public string? ObservacionesReconteo { get; set; }
-        public DateTime? FechaSolicitudReconteo { get; set; }
-        public int? UsuarioSolicitudReconteoId { get; set; }
+        public int? UsuarioConteoId { get; set; }
+
+        public DateTime? FechaConteo { get; set; }
 
         // Relaciones
         [ForeignKey("InventarioProgramadoId")]
