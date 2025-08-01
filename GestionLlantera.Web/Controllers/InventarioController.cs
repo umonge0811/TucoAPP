@@ -2167,6 +2167,27 @@ namespace GestionLlantera.Web.Controllers
                     }
                 }
 
+                // ✅ OBTENER DISCREPANCIAS REALES SI EL INVENTARIO ESTÁ EN PROGRESO O COMPLETADO
+                if (inventario.Estado == "En Progreso" || inventario.Estado == "Completado")
+                {
+                    try
+                    {
+                        var discrepancias = await _inventarioService.ObtenerDiscrepanciasInventarioAsync(id, token);
+                        ViewBag.DiscrepanciasReales = discrepancias ?? new List<dynamic>();
+                        _logger.LogInformation("✅ Se obtuvieron {Count} discrepancias para el inventario {Id}", 
+                            discrepancias?.Count ?? 0, id);
+                    }
+                    catch (Exception discEx)
+                    {
+                        _logger.LogError(discEx, "Error al obtener discrepancias del inventario {Id}", id);
+                        ViewBag.DiscrepanciasReales = new List<dynamic>();
+                    }
+                }
+                else
+                {
+                    ViewBag.DiscrepanciasReales = new List<dynamic>();
+                }
+
                 return View(inventario);
             }
             catch (Exception ex)
