@@ -1321,18 +1321,17 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Notifica a los supervisores que un usuario completó su conteo
+        /// Notifica al creador del inventario que un usuario completó su conteo
         /// </summary>
         [HttpPost("NotificarConteoCompletado/{inventarioId}")]
         public async Task<IActionResult> NotificarConteoCompletado(int inventarioId)
         {
             try
             {
-                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO ===");
+                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO AL CREADOR ===");
                 
                 var inventario = await _context.InventariosProgramados
-                    .Include(i => i.AsignacionesUsuarios)
-                    .ThenInclude(a => a.Usuario)
+                    .Include(i => i.UsuarioCreador)
                     .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
 
                 if (inventario == null)
@@ -1340,47 +1339,30 @@ namespace API.Controllers
                     return NotFound(new { success = false, message = "Inventario no encontrado" });
                 }
 
-                // Obtener información del usuario actual desde los claims
+                // ✅ VERIFICAR QUE TENGA CREADOR
+                if (inventario.UsuarioCreadorId == 0 || inventario.UsuarioCreador == null)
+                {
+                    _logger.LogWarning("⚠️ Inventario {InventarioId} no tiene creador asignado", inventarioId);
+                    return BadRequest(new { success = false, message = "El inventario no tiene un creador asignado" });
+                }
+
+                // Obtener información del usuario que completó el conteo
                 var usuarioActualId = ObtenerIdUsuarioActual();
                 var usuarioActual = await _context.Usuarios
                     .FirstOrDefaultAsync(u => u.UsuarioId == usuarioActualId);
 
                 if (usuarioActual == null)
                 {
-                    return BadRequest(new { success = false, message = "Usuario no encontrado" });
+                    return BadRequest(new { success = false, message = "Usuario que realizó el conteo no encontrado" });
                 }
 
-                // Obtener usuarios con permisos de validación/supervisión
-                var usuariosSupervisores = await _context.UsuarioPermiso
-                    .Include(up => up.Permiso)
-                    .Where(up => up.Permiso.NombrePermiso.Contains("Finalizar") || 
-                                up.Permiso.NombrePermiso.Contains("Validar") ||
-                                up.Permiso.NombrePermiso.Contains("Supervisor"))
-                    .Select(up => up.UsuarioID)
-                    .Distinct()
-                    .ToListAsync();
+                // ✅ NOTIFICAR ÚNICAMENTE AL CREADOR DEL INVENTARIO
+                var titulo = "📝 Conteo Completado - Requiere Supervisión";
+                var mensaje = $"El usuario {usuarioActual.NombreUsuario} ha completado su parte del conteo en el inventario '{inventario.Titulo}'. Como creador de este inventario, puedes revisarlo y finalizarlo.";
+                var urlAccion = $"/TomaInventario/Ejecutar/{inventario.InventarioProgramadoId}";
 
-                // También incluir al creador del inventario
-                if (inventario.UsuarioCreadorId != null)
-                {
-                    usuariosSupervisores.Add(inventario.UsuarioCreadorId);
-                }
-
-                usuariosSupervisores = usuariosSupervisores.Distinct().ToList();
-
-                if (!usuariosSupervisores.Any())
-                {
-                    _logger.LogWarning("⚠️ No se encontraron supervisores para notificar");
-                    return Ok(new { success = true, message = "No hay supervisores disponibles para notificar", notificados = 0 });
-                }
-
-                // Crear notificaciones
-                var titulo = "📝 Conteo Completado por Usuario";
-                var mensaje = $"El usuario {usuarioActual.NombreUsuario} ha completado su parte del conteo en el inventario '{inventario.Titulo}'. Puedes revisar y finalizar el inventario.";
-                var urlAccion = $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}";
-
-                await _notificacionService.CrearNotificacionesAsync(
-                    usuariosIds: usuariosSupervisores,
+                await _notificacionService.CrearNotificacionAsync(
+                    usuarioId: inventario.UsuarioCreadorId,
                     titulo: titulo,
                     mensaje: mensaje,
                     tipo: "info",
@@ -1390,12 +1372,14 @@ namespace API.Controllers
                     entidadId: inventario.InventarioProgramadoId
                 );
 
-                _logger.LogInformation("✅ Notificaciones de conteo completado enviadas a {Count} supervisores", usuariosSupervisores.Count);
+                _logger.LogInformation("✅ Notificación enviada al creador del inventario: {CreadorNombre} (ID: {CreadorId})", 
+                    inventario.UsuarioCreador.NombreUsuario, inventario.UsuarioCreadorId);
 
                 return Ok(new { 
                     success = true, 
-                    message = "Supervisores notificados exitosamente",
-                    notificados = usuariosSupervisores.Count
+                    message = $"Creador del inventario '{inventario.UsuarioCreador.NombreUsuario}' notificado exitosamente",
+                    creadorNotificado = inventario.UsuarioCreador.NombreUsuario,
+                    urlRedireccion = urlAccion
                 });
             }
             catch (Exception ex)

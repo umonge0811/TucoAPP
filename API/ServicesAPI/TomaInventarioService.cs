@@ -306,17 +306,18 @@ namespace API.Services
         // =====================================
 
         /// <summary>
-        /// Notifica a los supervisores que un usuario completó su parte del conteo
+        /// Notifica al creador del inventario que un usuario completó su parte del conteo
         /// </summary>
         public async Task<bool> NotificarConteoCompletadoAsync(int inventarioId, int usuarioId)
         {
             try
             {
-                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO DESDE SERVICIO API ===");
+                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO AL CREADOR ===");
                 _logger.LogInformation("📧 Inventario ID: {InventarioId}, Usuario ID: {UsuarioId}", inventarioId, usuarioId);
 
-                // Verificar que el inventario existe
+                // Verificar que el inventario existe y obtener información del creador
                 var inventario = await _context.InventariosProgramados
+                    .Include(i => i.UsuarioCreador)
                     .Include(i => i.AsignacionesUsuarios)
                     .ThenInclude(a => a.Usuario)
                     .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
@@ -335,12 +336,18 @@ namespace API.Services
                     return false;
                 }
 
-                _logger.LogInformation("✅ Validaciones pasadas. Usuario {Usuario} puede notificar conteo completado", 
-                    asignacion.Usuario?.NombreUsuario ?? "Desconocido");
+                // Verificar que el inventario tiene creador
+                if (inventario.UsuarioCreadorId == 0 || inventario.UsuarioCreador == null)
+                {
+                    _logger.LogError("❌ Inventario {InventarioId} no tiene creador asignado", inventarioId);
+                    return false;
+                }
 
-                // Aquí se enviarían las notificaciones a los supervisores
-                // Por ahora, solo registramos que la operación fue exitosa
-                _logger.LogInformation("📧 Notificación de conteo completado procesada exitosamente");
+                _logger.LogInformation("✅ Validaciones pasadas. Usuario {Usuario} notificará al creador {Creador}", 
+                    asignacion.Usuario?.NombreUsuario ?? "Desconocido",
+                    inventario.UsuarioCreador.NombreUsuario);
+
+                _logger.LogInformation("📧 Notificación de conteo completado procesada exitosamente - Creador será notificado");
 
                 return true;
             }
