@@ -231,12 +231,15 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="stat-card @(Model.Discrepancias > 0 ? "bg-danger" : "bg-info") text-white">
+                                @{
+                                    var discrepanciasRealesCount = ((List<dynamic>)ViewBag.DiscrepanciasReales)?.Count ?? 0;
+                                }
+                                <div class="stat-card @(discrepanciasRealesCount > 0 ? "bg-danger" : "bg-success") text-white">
                                     <div class="stat-icon">
-                                        <i class="bi @(Model.Discrepancias > 0 ? "bi-exclamation-triangle" : "bi-shield-check")"></i>
+                                        <i class="bi @(discrepanciasRealesCount > 0 ? "bi-exclamation-triangle" : "bi-shield-check")"></i>
                                     </div>
                                     <div class="stat-content">
-                                        <h4>@Model.Discrepancias</h4>
+                                        <h4>@discrepanciasRealesCount</h4>
                                         <span>Discrepancias</span>
                                     </div>
                                 </div>
@@ -288,81 +291,96 @@
                     </div>
                 </div>
 
-                <!-- Tabla de Productos con Discrepancias -->
-                @if (Model.Discrepancias > 0)
+                <!-- ✅ TABLA DE PRODUCTOS CON DISCREPANCIAS - USAR DISCREPANCIAS REALES -->
+                @{
+                    var discrepanciasReales = ViewBag.DiscrepanciasReales as List<dynamic>;
+                    bool hayDiscrepanciasReales = discrepanciasReales != null && discrepanciasReales.Any();
+                }
+
+                @if (hayDiscrepanciasReales || (Model.Estado == "En Progreso" || Model.Estado == "Completado"))
                 {
                     <div class="dashboard-card mb-4">
                         <div class="card-header">
                             <h3>
                                 <i class="bi bi-exclamation-triangle me-2"></i>
                                 Productos con Discrepancias
+                                @if (hayDiscrepanciasReales)
+                                {
+                                    <span class="badge bg-warning ms-2">@discrepanciasReales.Count</span>
+                                }
                             </h3>
                         </div>
                         <div class="card-body">
-                            <!-- ✅ DISCREPANCIAS REALES OBTENIDAS DEL CONTROLADOR -->
-                        @if (ViewBag.DiscrepanciasReales != null && ((List<dynamic>)ViewBag.DiscrepanciasReales).Any())
-                        {
-                            <div class="row">
-                                @foreach (var discrepancia in (List<dynamic>)ViewBag.DiscrepanciasReales)
-                                {
-                                    <div class="col-md-6 mb-3">
-                                        <div class="card border-warning">
-                                            <div class="card-body">
-                                                <h6 class="card-title text-warning">
-                                                    <i class="bi bi-exclamation-triangle me-2"></i>
-                                                    @((string)discrepancia.nombreProducto ?? "Producto sin nombre")
-                                                </h6>
-                                                <div class="row">
-                                                    <div class="col-4">
-                                                        <small class="text-muted">Sistema:</small>
-                                                        <div class="fw-bold">@((int?)discrepancia.cantidadSistema ?? 0)</div>
+                            @if (hayDiscrepanciasReales)
+                            {
+                                <div class="alert alert-warning mb-3">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Se encontraron @discrepanciasReales.Count discrepancia(s) en este inventario.</strong>
+                                    Revise los detalles a continuación y proceda con las correcciones necesarias.
+                                </div>
+
+                                <div class="row">
+                                    @foreach (var discrepancia in discrepanciasReales)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card border-warning">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-warning">
+                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                        @((string)discrepancia.nombreProducto ?? "Producto sin nombre")
+                                                    </h6>
+                                                    <div class="row">
+                                                        <div class="col-4">
+                                                            <small class="text-muted">Sistema:</small>
+                                                            <div class="fw-bold">@((int?)discrepancia.cantidadSistema ?? 0)</div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <small class="text-muted">Físico:</small>
+                                                            <div class="fw-bold">@((int?)discrepancia.cantidadFisica ?? 0)</div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <small class="text-muted">Diferencia:</small>
+                                                            @{
+                                                                int diferencia = ((int?)discrepancia.diferencia ?? 0);
+                                                                string claseColor = diferencia < 0 ? "text-danger" : (diferencia > 0 ? "text-success" : "text-muted");
+                                                                string signo = diferencia > 0 ? "+" : "";
+                                                            }
+                                                            <div class="fw-bold @claseColor">@(signo)@diferencia</div>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-4">
-                                                        <small class="text-muted">Físico:</small>
-                                                        <div class="fw-bold">@((int?)discrepancia.cantidadFisica ?? 0)</div>
-                                                    </div>
-                                                    <div class="col-4">
-                                                        <small class="text-muted">Diferencia:</small>
-                                                        @{
-                                                            int diferencia = ((int?)discrepancia.diferencia ?? 0);
-                                                            string claseColor = diferencia < 0 ? "text-danger" : (diferencia > 0 ? "text-success" : "text-muted");
-                                                            string signo = diferencia > 0 ? "+" : "";
-                                                        }
-                                                        <div class="fw-bold @claseColor">@(signo)@diferencia</div>
-                                                    </div>
+                                                    @if (discrepancia.usuarioConteo != null)
+                                                    {
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">Contado por: @((string)discrepancia.usuarioConteo)</small>
+                                                        </div>
+                                                    }
+                                                    @if (discrepancia.fechaConteo != null)
+                                                    {
+                                                        <div class="mt-1">
+                                                            <small class="text-muted">Fecha: @(((DateTime?)discrepancia.fechaConteo)?.ToString("dd/MM/yyyy HH:mm") ?? "No disponible")</small>
+                                                        </div>
+                                                    }
                                                 </div>
-                                                @if (discrepancia.usuarioConteo != null)
-                                                {
-                                                    <div class="mt-2">
-                                                        <small class="text-muted">Contado por: @((string)discrepancia.usuarioConteo)</small>
-                                                    </div>
-                                                }
-                                                @if (discrepancia.fechaConteo != null)
-                                                {
-                                                    <div class="mt-1">
-                                                        <small class="text-muted">Fecha: @(((DateTime?)discrepancia.fechaConteo)?.ToString("dd/MM/yyyy HH:mm") ?? "No disponible")</small>
-                                                    </div>
-                                                }
                                             </div>
                                         </div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
-                                @if (Model.Estado == "Programado")
-                                {
-                                    <text>El inventario aún no ha iniciado. Las discrepancias se mostrarán una vez que comience el conteo.</text>
-                                }
-                                else
-                                {
-                                    <text>No se encontraron discrepancias en este inventario. ¡Excelente trabajo!</text>
-                                }
-                            </div>
-                        }</div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-success">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    @if (Model.Estado == "Programado")
+                                    {
+                                        <text>El inventario aún no ha iniciado. Las discrepancias se mostrarán una vez que comience el conteo.</text>
+                                    }
+                                    else
+                                    {
+                                        <text>¡Excelente! No se encontraron discrepancias en este inventario. Todos los productos coinciden entre el sistema y el conteo físico.</text>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 }
             }
