@@ -619,7 +619,7 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var resultado = JsonSerializer.Deserialize<dynamic>(jsonResponse);
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<dynamic>(jsonResponse);
 
                     _logger.LogInformation("✅ Notificación enviada exitosamente para inventario {InventarioId}", inventarioId);
                     return true;
