@@ -1550,7 +1550,7 @@ function configurarEventListenersPanelConteoCompletado() {
     try {
         // Botón notificar supervisor
         $('#btnNotificarSupervisor').off('click').on('click', function () {
-            notificarSupervisorConteoCompletado();  //ESTO FALTA DE TRABAJAR PARA ESA NOTIFICACION!
+            notificarSupervisorConteoCompletado();  //ESTO FALTA DE TRABAJAR PARA ESA NOTIFICACION!.
         });
 
         // Botón ver resumen
