@@ -74,7 +74,7 @@
                                                     .GroupBy(p => p.Modulo ?? "General")
                                                     .OrderBy(g => g.Key);
                                             }
-                                            
+
                                             @if (permisosPorModulo.Any())
                                             {
                                                 <div class="permisos-modulos-container">
@@ -143,7 +143,7 @@
                                                     .GroupBy(p => p.Modulo ?? "General")
                                                     .OrderBy(g => g.Key);
                                             }
-                                            
+
                                             @if (permisosPorModuloMovil.Any())
                                             {
                                                 <div class="permissions-by-module">
@@ -219,7 +219,7 @@
                                 var collapseId = $"collapse{accordionIndex}";
                                 var headingId = $"heading{accordionIndex}";
                                 var isFirstItem = accordionIndex == 0;
-                            
+
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="@headingId">
                                     <button class="accordion-button @(isFirstItem ? "" : "collapsed")" type="button" 
@@ -328,59 +328,46 @@
 
 <!-- Los modales se mantienen igual -->
 <!-- Modal Nuevo/Editar Rol -->
-<div class="modal fade" id="modalNuevoRol" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+<div class="modal fade" id="modalNuevoRol" tabindex="-1" aria-labelledby="modalNuevoRolLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-shield-plus"></i>
-                    Nuevo Rol
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalNuevoRolLabel">Nuevo Rol</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form id="formRol">
-                    <input type="hidden" id="rolId" value="0" />
-                    <div class="row">
-                        <!-- Columna izquierda: Información básica del rol -->
-                        <div class="col-md-4">
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Nombre del Rol</label>
-                                <input type="text" class="form-control" id="nombreRol" required>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">Descripción</label>
-                                <textarea class="form-control" id="descripcionRol" rows="4" placeholder="Describe las responsabilidades de este rol..."></textarea>
-                            </div>
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>
-                                <small>Selecciona los permisos que tendrá este rol en cada módulo del sistema.</small>
-                            </div>
-                        </div>
+            <form id="formRol">
+                <div class="modal-body">
+                    <input type="hidden" id="rolId" value="0">
 
-                        <!-- Columna derecha: Permisos por módulo -->
-                        <div class="col-md-8">
-                            <label class="form-label fw-semibold mb-3">
-                                <i class="bi bi-key me-2"></i>
-                                Permisos por Módulo
-                            </label>
-                            <div id="listaPermisos" class="permisos-modulos-modal" style="max-height: 450px; overflow-y: auto;">
-                                <!-- Se cargará dinámicamente vía JavaScript -->
-                            </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="nombreRol" class="form-label">Nombre del Rol</label>
+                            <input type="text" class="form-control" id="nombreRol" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="descripcionRol" class="form-label">Descripción</label>
+                            <input type="text" class="form-control" id="descripcionRol">
                         </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-x-lg me-1"></i>
-                    Cancelar
-                </button>
-                <button type="button" class="btn-new" id="btnGuardarRol">
-                    <i class="bi bi-check-lg me-1"></i>
-                    Guardar Rol
-                </button>
-            </div>
+
+                    <div class="mt-4">
+                        <h6 class="fw-bold text-primary mb-3">
+                            <i class="bi bi-key-fill me-2"></i>
+                            Permisos Disponibles
+                        </h6>
+                        <div id="listaPermisos" class="border rounded p-4 bg-light permisos-modal-container">
+                            <!-- Los permisos se cargan dinámicamente aquí -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="btnGuardarRol" class="btn btn-primary btn-primary-custom">
+                        <i class="bi bi-check-lg me-1"></i>
+                        Guardar Rol
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

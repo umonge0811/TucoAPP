@@ -915,6 +915,75 @@
     gap: 6px;
 }
 
+/* Estilos específicos para el modal ampliado de roles */
+.permisos-modal-container {
+    min-height: 500px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Mejor distribución en el modal XL */
+@media (min-width: 1200px) {
+    .permisos-modal-container {
+        min-height: 550px;
+        max-height: 650px;
+    }
+    
+    .permisos-modal-container .accordion-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .permisos-modal-container .row.g-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+}
+
+/* Mejoras para visualización en el modal */
+.permisos-modal-container .form-check {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.permisos-modal-container .form-check:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.permisos-modal-container .form-check-label {
+    cursor: pointer;
+    user-select: none;
+    width: 100%;
+    display: block;
+}
+
+.permisos-modal-container .badge {
+    white-space: nowrap;
+    margin-top: 0.25rem;
+    display: inline-block;
+}
+
+/* Scrollbar personalizado para el modal */
+.permisos-modal-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.permisos-modal-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.permisos-modal-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.permisos-modal-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
 /* Mejoras para scroll horizontal en móvil si es necesario */
 @media (max-width: 576px) {
     .table-responsive {
@@ -948,6 +1017,16 @@
 
     .permisos-modulos-container .accordion-item {
         width: 100%;
+    }
+    
+    /* Modal responsive en móvil */
+    .permisos-modal-container {
+        min-height: 400px;
+        max-height: 450px;
+    }
+    
+    .permisos-modal-container .row.g-2 {
+        display: block;
     }
 }
 
