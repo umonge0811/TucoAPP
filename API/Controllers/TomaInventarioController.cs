@@ -1341,7 +1341,7 @@ namespace API.Controllers
                 }
 
                 // Obtener información del usuario actual desde los claims
-                var usuarioActualId = this.GetUsuarioId();
+                var usuarioActualId = ObtenerIdUsuarioActual();
                 var usuarioActual = await _context.Usuarios
                     .FirstOrDefaultAsync(u => u.UsuarioId == usuarioActualId);
 
@@ -1352,6 +1352,7 @@ namespace API.Controllers
 
                 // Obtener usuarios con permisos de validación/supervisión
                 var usuariosSupervisores = await _context.UsuarioPermisoREs
+                    .Include(up => up.Permiso)
                     .Where(up => up.Permiso.NombrePermiso.Contains("Finalizar") || 
                                 up.Permiso.NombrePermiso.Contains("Validar") ||
                                 up.Permiso.NombrePermiso.Contains("Supervisor"))
@@ -1360,7 +1361,7 @@ namespace API.Controllers
                     .ToListAsync();
 
                 // También incluir al creador del inventario
-                if (inventario.UsuarioCreadorId.HasValue)
+                if (inventario.UsuarioCreadorId != null)
                 {
                     usuariosSupervisores.Add(inventario.UsuarioCreadorId.Value);
                 }
