@@ -543,23 +543,6 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
         function activarDependencias(permisoId, isChecked) {
             console.log(`🔄 Activando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
 
-            // CASO ESPECIAL: Gestión Completa (1032) - Marcar/desmarcar TODOS los permisos
-            if (permisoId === 1032) {
-                const todosLosCheckboxes = document.querySelectorAll('.permiso-checkbox');
-                todosLosCheckboxes.forEach(checkbox => {
-                    const checkboxPermisoId = parseInt(checkbox.getAttribute('data-permiso-id'));
-                    if (checkboxPermisoId !== 1032) { // No marcarse a sí mismo
-                        checkbox.checked = isChecked;
-                        if (isChecked) {
-                            console.log(`✅ [GESTIÓN COMPLETA] Activando permiso: ${checkboxPermisoId}`);
-                        } else {
-                            console.log(`❌ [GESTIÓN COMPLETA] Desactivando permiso: ${checkboxPermisoId}`);
-                        }
-                    }
-                });
-                return; // Salir de la función para evitar procesamiento adicional
-            }
-
             if (isChecked && dependenciasPermisos[permisoId]) {
                 // Si se marca el permiso, marcar también sus dependencias
                 dependenciasPermisos[permisoId].forEach(dependenciaId => {
@@ -851,28 +834,6 @@ async function cargarPermisosParaRol(rolId) {
         // Función para activar las dependencias de un permiso (en edición)
         function activarDependenciasEditar(permisoId, isChecked) {
             console.log(`🔄 [EDITAR] Activando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
-
-            // CASO ESPECIAL: Gestión Completa (1032) - Marcar/desmarcar TODOS los permisos
-            if (permisoId === 1032) {
-                const todosLosCheckboxes = document.querySelectorAll('.permiso-checkbox-editar');
-                todosLosCheckboxes.forEach(checkbox => {
-                    const checkboxPermisoId = parseInt(checkbox.getAttribute('data-permiso-id'));
-                    if (checkboxPermisoId !== 1032) { // No marcarse a sí mismo
-                        checkbox.checked = isChecked;
-                        if (isChecked) {
-                            console.log(`✅ [EDITAR - GESTIÓN COMPLETA] Activando permiso: ${checkboxPermisoId}`);
-                            // Efecto visual para mostrar que se activó automáticamente
-                            checkbox.classList.add('permiso-activado-automaticamente');
-                            setTimeout(() => {
-                                checkbox.classList.remove('permiso-activado-automaticamente');
-                            }, 1000);
-                        } else {
-                            console.log(`❌ [EDITAR - GESTIÓN COMPLETA] Desactivando permiso: ${checkboxPermisoId}`);
-                        }
-                    }
-                });
-                return; // Salir de la función para evitar procesamiento adicional
-            }
 
             if (isChecked && dependenciasPermisosEditar[permisoId]) {
                 // Si se marca el permiso, marcar también sus dependencias
