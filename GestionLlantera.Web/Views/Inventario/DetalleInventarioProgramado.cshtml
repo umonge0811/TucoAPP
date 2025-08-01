@@ -292,57 +292,36 @@
                 @if (Model.Discrepancias > 0)
                 {
                     <div class="dashboard-card mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="card-header">
                             <h3>
                                 <i class="bi bi-exclamation-triangle me-2"></i>
-                                Productos con Discrepancias (@Model.Discrepancias)
+                                Productos con Discrepancias
                             </h3>
-                            <button class="btn btn-sm btn-outline-primary" onclick="cargarDiscrepanciasReales(@Model.InventarioProgramadoId)">
-                                <i class="bi bi-arrow-clockwise me-1"></i>
-                                Actualizar
-                            </button>
                         </div>
                         <div class="card-body">
-                            <div id="loadingDiscrepancias" class="text-center py-3" style="display: none;">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Cargando...</span>
-                                </div>
-                                <p class="mt-2 text-muted">Cargando discrepancias...</p>
-                            </div>
-                            
-                            <div id="tablaDiscrepancias" class="table-responsive">
+                            <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Código</th>
                                             <th>Producto</th>
-                                            <th class="text-center">Cantidad Sistema</th>
-                                            <th class="text-center">Cantidad Física</th>
-                                            <th class="text-center">Diferencia</th>
-                                            <th>Usuario Conteo</th>
-                                            <th>Fecha Conteo</th>
+                                            <th>Cantidad Sistema</th>
+                                            <th>Cantidad Física</th>
+                                            <th>Diferencia</th>
                                             <th>Observaciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="cuerpoTablaDiscrepancias">
+                                    <tbody>
+                                        <!-- Esta parte se llenaría dinámicamente con datos reales -->
                                         <tr>
-                                            <td colspan="8" class="text-center text-muted py-3">
-                                                <i class="bi bi-info-circle me-2"></i>
-                                                Haga clic en "Actualizar" para cargar las discrepancias reales
-                                            </td>
+                                            <td>Llanta ejemplo con discrepancia</td>
+                                            <td>10</td>
+                                            <td>8</td>
+                                            <td class="text-danger">-2</td>
+                                            <td>Se encontraron 2 unidades con daños</td>
                                         </tr>
+                                        <!-- Aquí pueden ir más filas de ejemplo -->
                                     </tbody>
                                 </table>
-                            </div>
-                            
-                            <div id="noDiscrepancias" class="alert alert-success" style="display: none;">
-                                <i class="bi bi-check-circle me-2"></i>
-                                No se encontraron discrepancias en este inventario.
-                            </div>
-                            
-                            <div id="errorDiscrepancias" class="alert alert-danger" style="display: none;">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                Error al cargar las discrepancias. Inténtelo nuevamente.
                             </div>
                         </div>
                     </div>
@@ -446,118 +425,4 @@
 
 @section Scripts {
     <script src="~/js/views/Inventario/detalle-inventario-programado.js" asp-append-version="true"></script>
-    <script>
-        // =====================================
-        // FUNCIÓN PARA CARGAR DISCREPANCIAS REALES
-        // =====================================
-        
-        async function cargarDiscrepanciasReales(inventarioId) {
-            try {
-                console.log('🔍 Cargando discrepancias reales para inventario:', inventarioId);
-                
-                // Mostrar loading
-                $('#loadingDiscrepancias').show();
-                $('#tablaDiscrepancias').hide();
-                $('#noDiscrepancias').hide();
-                $('#errorDiscrepancias').hide();
-                
-                // Hacer petición al controlador
-                const response = await fetch(`/TomaInventario/ObtenerDiscrepancias/${inventarioId}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Error HTTP: ${response.status}`);
-                }
-                
-                const resultado = await response.json();
-                
-                if (!resultado.success) {
-                    throw new Error(resultado.message || 'Error al obtener discrepancias');
-                }
-                
-                // Ocultar loading
-                $('#loadingDiscrepancias').hide();
-                
-                const discrepancias = resultado.data || [];
-                
-                if (discrepancias.length === 0) {
-                    $('#noDiscrepancias').show();
-                    $('#tablaDiscrepancias').hide();
-                } else {
-                    renderizarDiscrepancias(discrepancias);
-                    $('#tablaDiscrepancias').show();
-                }
-                
-                console.log('✅ Discrepancias cargadas exitosamente:', discrepancias.length);
-                
-            } catch (error) {
-                console.error('❌ Error cargando discrepancias:', error);
-                
-                $('#loadingDiscrepancias').hide();
-                $('#errorDiscrepancias').show();
-                $('#tablaDiscrepancias').hide();
-                $('#noDiscrepancias').hide();
-            }
-        }
-        
-        function renderizarDiscrepancias(discrepancias) {
-            const tbody = $('#cuerpoTablaDiscrepancias');
-            tbody.empty();
-            
-            discrepancias.forEach(item => {
-                const diferencia = item.diferencia || 0;
-                const claseTexto = diferencia > 0 ? 'text-success' : (diferencia < 0 ? 'text-danger' : 'text-muted');
-                const iconoDiferencia = diferencia > 0 ? '+' : '';
-                
-                const fila = `
-                    <tr>
-                        <td class="fw-bold">${item.productoId}</td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div>
-                                    <div class="fw-medium">${item.nombreProducto}</div>
-                                    ${item.medidasLlanta ? `<small class="text-muted">${item.medidasLlanta}</small>` : ''}
-                                    ${item.marcaLlanta ? `<small class="text-muted d-block">${item.marcaLlanta}</small>` : ''}
-                                </div>
-                            </div>
-                        </td>
-                        <td class="text-center fw-medium">${item.cantidadSistema}</td>
-                        <td class="text-center fw-medium">${item.cantidadFisica || 'Sin contar'}</td>
-                        <td class="text-center">
-                            <span class="badge ${diferencia > 0 ? 'bg-success' : (diferencia < 0 ? 'bg-danger' : 'bg-secondary')} fs-6">
-                                ${iconoDiferencia}${diferencia}
-                            </span>
-                        </td>
-                        <td>${item.nombreUsuarioConteo || 'Sin asignar'}</td>
-                        <td>${item.fechaConteo ? new Date(item.fechaConteo).toLocaleDateString('es-ES') : 'Sin fecha'}</td>
-                        <td>
-                            ${item.observaciones ? 
-                                `<span class="text-muted">${item.observaciones}</span>` : 
-                                '<span class="text-muted fst-italic">Sin observaciones</span>'
-                            }
-                        </td>
-                    </tr>
-                `;
-                
-                tbody.append(fila);
-            });
-        }
-        
-        // Cargar automáticamente al cargar la página si hay discrepancias
-        $(document).ready(function() {
-            @if (Model.Discrepancias > 0)
-            {
-                <text>
-                setTimeout(() => {
-                    cargarDiscrepanciasReales(@Model.InventarioProgramadoId);
-                }, 1000);
-                </text>
-            }
-        });
-    </script>
 }
