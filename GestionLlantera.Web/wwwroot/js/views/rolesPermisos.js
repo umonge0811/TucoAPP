@@ -531,9 +531,9 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
 
         console.log('Permisos por módulo:', permisosPorModulo);
 
-        // Definir las dependencias entre permisos
+        // Definir las dependencias entre permisos basado en los datos reales
         const dependenciasPermisos = {
-            11: [1],  // Gestion Usuarios depende de Administracion
+            11: [6],  // Gestion Usuarios depende de Gestion Completa
             8: [7],   // Eliminar Productos depende de Editar Productos
             9: [7],   // Ajustar Stock depende de Editar Productos
             4: [3]    // Ver Utilidades depende de Ver Costos
@@ -541,11 +541,27 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
 
         // Función para activar las dependencias de un permiso
         function activarDependencias(permisoId, isChecked) {
-            if (dependenciasPermisos[permisoId]) {
+            console.log(`🔄 Activando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
+            
+            if (isChecked && dependenciasPermisos[permisoId]) {
+                // Si se marca el permiso, marcar también sus dependencias
                 dependenciasPermisos[permisoId].forEach(dependenciaId => {
                     const checkboxDependencia = document.getElementById(`permiso_${dependenciaId}`);
-                    if (checkboxDependencia) {
-                        checkboxDependencia.checked = isChecked;
+                    if (checkboxDependencia && !checkboxDependencia.checked) {
+                        console.log(`✅ Activando dependencia: permiso ${dependenciaId}`);
+                        checkboxDependencia.checked = true;
+                    }
+                });
+            } else if (!isChecked) {
+                // Si se desmarca el permiso, desmarcar los que dependen de él
+                Object.keys(dependenciasPermisos).forEach(permisoIdStr => {
+                    const permisoIdNum = parseInt(permisoIdStr);
+                    if (dependenciasPermisos[permisoIdNum].includes(permisoId)) {
+                        const checkboxDependiente = document.getElementById(`permiso_${permisoIdNum}`);
+                        if (checkboxDependiente && checkboxDependiente.checked) {
+                            console.log(`❌ Desactivando permiso dependiente: ${permisoIdNum}`);
+                            checkboxDependiente.checked = false;
+                        }
                     }
                 });
             }
@@ -579,9 +595,14 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
                                     // 🏷️ Determinar si es un permiso especial para mostrar badge
                                     let badgeHtml = '';
                                     if (permiso.permisoId === 6) {
-                                        badgeHtml = '<span class="badge bg-warning text-dark ms-2">MAESTRO</span>';
+                                        badgeHtml = '<span class="badge bg-warning text-dark ms-2">ADMINISTRACIÓN COMPLETA</span>';
                                     } else if (dependenciasPermisos[permiso.permisoId] && dependenciasPermisos[permiso.permisoId].length > 0) {
-                                        badgeHtml = '<span class="badge bg-info ms-2">DEPENDIENTE</span>';
+                                        const dependencias = dependenciasPermisos[permiso.permisoId];
+                                        const nombresDependencias = dependencias.map(id => {
+                                            const permisoRequerido = permisos.find(p => p.permisoId === id);
+                                            return permisoRequerido ? permisoRequerido.nombrePermiso : `ID ${id}`;
+                                        }).join(', ');
+                                        badgeHtml = `<span class="badge bg-info ms-2" title="Requiere: ${nombresDependencias}">REQUIERE DEPENDENCIAS</span>`;
                                     }
 
                                     return `
@@ -748,9 +769,9 @@ async function cargarPermisosParaRol(rolId) {
             return grupos;
         }, {});
 
-        // Definir las dependencias entre permisos (para la edición)
+        // Definir las dependencias entre permisos (para la edición) - DATOS REALES
         const dependenciasPermisosEditar = {
-            11: [1],  // Gestion Usuarios depende de Administracion
+            11: [6],  // Gestion Usuarios depende de Gestion Completa
             8: [7],   // Eliminar Productos depende de Editar Productos
             9: [7],   // Ajustar Stock depende de Editar Productos
             4: [3]    // Ver Utilidades depende de Ver Costos
@@ -758,11 +779,32 @@ async function cargarPermisosParaRol(rolId) {
 
         // Función para activar las dependencias de un permiso (en edición)
         function activarDependenciasEditar(permisoId, isChecked) {
-            if (dependenciasPermisosEditar[permisoId]) {
+            console.log(`🔄 [EDITAR] Activando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
+            
+            if (isChecked && dependenciasPermisosEditar[permisoId]) {
+                // Si se marca el permiso, marcar también sus dependencias
                 dependenciasPermisosEditar[permisoId].forEach(dependenciaId => {
                     const checkboxDependencia = document.getElementById(`permiso_${dependenciaId}`);
-                    if (checkboxDependencia) {
-                        checkboxDependencia.checked = isChecked;
+                    if (checkboxDependencia && !checkboxDependencia.checked) {
+                        console.log(`✅ [EDITAR] Activando dependencia: permiso ${dependenciaId}`);
+                        checkboxDependencia.checked = true;
+                        // Efecto visual para mostrar que se activó automáticamente
+                        checkboxDependencia.classList.add('permiso-activado-automaticamente');
+                        setTimeout(() => {
+                            checkboxDependencia.classList.remove('permiso-activado-automaticamente');
+                        }, 1000);
+                    }
+                });
+            } else if (!isChecked) {
+                // Si se desmarca el permiso, desmarcar los que dependen de él
+                Object.keys(dependenciasPermisosEditar).forEach(permisoIdStr => {
+                    const permisoIdNum = parseInt(permisoIdStr);
+                    if (dependenciasPermisosEditar[permisoIdNum].includes(permisoId)) {
+                        const checkboxDependiente = document.getElementById(`permiso_${permisoIdNum}`);
+                        if (checkboxDependiente && checkboxDependiente.checked) {
+                            console.log(`❌ [EDITAR] Desactivando permiso dependiente: ${permisoIdNum}`);
+                            checkboxDependiente.checked = false;
+                        }
                     }
                 });
             }
@@ -798,9 +840,14 @@ async function cargarPermisosParaRol(rolId) {
                                     // 🏷️ Determinar si es un permiso especial para mostrar badge
                                     let badgeHtml = '';
                                     if (permiso.permisoId === 6) {
-                                        badgeHtml = '<span class="badge bg-warning text-dark ms-2">MAESTRO</span>';
+                                        badgeHtml = '<span class="badge bg-warning text-dark ms-2">ADMINISTRACIÓN COMPLETA</span>';
                                     } else if (dependenciasPermisosEditar[permiso.permisoId] && dependenciasPermisosEditar[permiso.permisoId].length > 0) {
-                                        badgeHtml = '<span class="badge bg-info ms-2">DEPENDIENTE</span>';
+                                        const dependencias = dependenciasPermisosEditar[permiso.permisoId];
+                                        const nombresDependencias = dependencias.map(id => {
+                                            const permisoRequerido = permisos.find(p => p.permisoId === id);
+                                            return permisoRequerido ? permisoRequerido.nombrePermiso : `ID ${id}`;
+                                        }).join(', ');
+                                        badgeHtml = `<span class="badge bg-info ms-2" title="Requiere: ${nombresDependencias}">REQUIERE DEPENDENCIAS</span>`;
                                     }
 
                                     return `

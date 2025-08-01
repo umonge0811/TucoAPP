@@ -846,6 +846,24 @@
     100% { transform: scale(1); }
 }
 
+/* Efecto visual para permisos activados automáticamente */
+.permiso-activado-automaticamente {
+    background-color: #d4edda !important;
+    border-color: #28a745 !important;
+    transition: all 0.5s ease-in-out;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+}
+
+/* Mejorar la visualización de badges de dependencias */
+.badge[title] {
+    cursor: help;
+}
+
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
+}
+
 /* Estilos para acordeones en tabla de roles */
 .permisos-modulos-container .accordion-item {
     border: 1px solid #e5e7eb;
