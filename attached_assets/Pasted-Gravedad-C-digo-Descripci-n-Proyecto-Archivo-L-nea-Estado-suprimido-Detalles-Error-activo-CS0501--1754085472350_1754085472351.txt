@@ -1,0 +1,105 @@
+Gravedad	Código	Descripción	Proyecto	Archivo	Línea	Estado suprimido	Detalles
+Error (activo)	CS0501	'InventarioController.InventarioController(?, ?)' debe declarar un cuerpo porque no se marcó como abstracto, externo o parcial	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS0106	El modificador 'private' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1047		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	848		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	903		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	959		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1013		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1063		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1085		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1107		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1131		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1163		
+Error (activo)	CS0106	El modificador 'public' no es válido para este elemento	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1187		
+Error (activo)	CS1520	El método debe tener un tipo de valor devuelto	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS0103	El nombre 'BadRequest' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	971		
+Error (activo)	CS0103	El nombre 'BadRequest' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1029		
+Error (activo)	IDE1007	El nombre 'ex' no existe en el contexto actual.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	842		
+Error (activo)	CS0103	El nombre 'inventario' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	836		
+Error (activo)	IDE1007	El nombre 'LogError' no existe en el contexto actual.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	842		
+Error (activo)	IDE1007	El nombre 'message' no existe en el contexto actual.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS0103	El nombre 'NotFound' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	947		
+Error (activo)	CS0103	El nombre 'NotFound' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	968		
+Error (activo)	CS0103	El nombre 'NotFound' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1026		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	893		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	949		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1003		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1034		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1074		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1096		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1120		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1152		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1176		
+Error (activo)	CS0103	El nombre 'Ok' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1200		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	898		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	954		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1008		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1039		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1079		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1101		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1125		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1157		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1181		
+Error (activo)	CS0103	El nombre 'StatusCode' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1205		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	852		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	866		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	884		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	886		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	888		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	907		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	938		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	940		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	942		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	963		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	982		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	998		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1002		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1021		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1031		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1032		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1067		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1089		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1111		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1135		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1142		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1167		
+Error (activo)	CS0103	El nombre '_context' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1191		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	897		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	953		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1007		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1038		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1078		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1100		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1124		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1156		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1180		
+Error (activo)	CS0103	El nombre '_logger' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1204		
+Error (activo)	IDE1007	El nombre '_logger' no existe en el contexto actual.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	842		
+Error (activo)	IDE1007	El nombre '_logger.LogError' no existe en el contexto actual.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	842		
+Error (activo)	CS0103	El nombre '_permisosService' no existe en el contexto actual	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1015		
+Error (activo)	CS1519	Invalid token '"Error al crear inventario programado"' in a member declaration	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	842		
+Error (activo)	CS1519	Invalid token '(' in a member declaration	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	842		
+Error (activo)	CS1519	Invalid token '=' in a member declaration	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1519	Invalid token 'catch' in a member declaration	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	840		
+Error (activo)	CS1519	Invalid token '{' in a member declaration	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	841		
+Error (activo)	CS1519	Invalid token '{' in a member declaration	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS0026	La palabra clave 'this' no es válida en una propiedad, método o inicializador de campo estáticos	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1015		
+Error (activo)	CS8803	Las instrucciones de nivel superior deben preceder a las declaraciones de espacio de nombres y de tipos.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	847		
+Error (activo)	CS8801	No se puede usar la variable local ni la función local "CalcularPrecioFinal" declarada en una instrucción de nivel superior en este contexto.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	218		
+Error (activo)	CS8801	No se puede usar la variable local ni la función local "CalcularPrecioFinal" declarada en una instrucción de nivel superior en este contexto.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	293		
+Error (activo)	CS1026	Se esperaba )	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	842		
+Error (activo)	CS1026	Se esperaba )	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1002	Se esperaba ;	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1524	Se esperaba catch o finally	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	831		
+Error (activo)	CS1001	Se esperaba un identificador	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1001	Se esperaba un identificador	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1001	Se esperaba un identificador	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1031	Se esperaba un tipo	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	842		
+Error (activo)	CS1031	Se esperaba un tipo	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1031	Se esperaba un tipo	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1022	Se esperaba una definición de tipo o espacio de nombres, o el fin del archivo	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	843		
+Error (activo)	CS1022	Se esperaba una definición de tipo o espacio de nombres, o el fin del archivo	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	845		
+Error (activo)	CS1022	Se esperaba una definición de tipo o espacio de nombres, o el fin del archivo	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1208		
+Error (activo)	CS1022	Se esperaba una definición de tipo o espacio de nombres, o el fin del archivo	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	1209		
+Error (activo)	CS8802	Solo una unidad de compilación puede tener instrucciones de nivel superior.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	847		
+Error (activo)	CS8124	Una tupla debe contener al menos dos elementos.	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\InventarioController.cs	840		
