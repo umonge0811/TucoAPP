@@ -1351,19 +1351,19 @@ namespace API.Controllers
                 }
 
                 // Obtener usuarios con permisos de validación/supervisión
-                var usuariosSupervisores = await _context.UsuarioPermisoREs
+                var usuariosSupervisores = await _context.UsuarioPermiso
                     .Include(up => up.Permiso)
                     .Where(up => up.Permiso.NombrePermiso.Contains("Finalizar") || 
                                 up.Permiso.NombrePermiso.Contains("Validar") ||
                                 up.Permiso.NombrePermiso.Contains("Supervisor"))
-                    .Select(up => up.UsuarioId)
+                    .Select(up => up.UsuarioID)
                     .Distinct()
                     .ToListAsync();
 
                 // También incluir al creador del inventario
                 if (inventario.UsuarioCreadorId != null)
                 {
-                    usuariosSupervisores.Add(inventario.UsuarioCreadorId.Value);
+                    usuariosSupervisores.Add(inventario.UsuarioCreadorId);
                 }
 
                 usuariosSupervisores = usuariosSupervisores.Distinct().ToList();
