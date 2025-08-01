@@ -1,0 +1,463 @@
+pedidos-proveedor.js:6 🚀 Inicializando módulo de pedidos a proveedores...
+pedidos-proveedor.js:1539 ✅ Módulo de pedidos a proveedores cargado completamente
+pedidos-proveedor.js:30 📚 DOM cargado, inicializando pedidos a proveedores...
+pedidos-proveedor.js:48 🔧 Configurando event listeners...
+pedidos-proveedor.js:596 🔧 Configurando ordenamiento de tabla de productos...
+pedidos-proveedor.js:83 📋 Cargando datos iniciales completos...
+pedidos-proveedor.js:97 👥 Cargando proveedores...
+pedidos-proveedor.js:137 📦 Cargando TODOS los pedidos...
+pedidos-proveedor.js:290 📦 Cargando productos del inventario...
+pedidos-proveedor.js:36 ✅ Módulo de pedidos a proveedores inicializado correctamente
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+pedidos-proveedor.js:154 📦 Respuesta completa del servidor: Object
+pedidos-proveedor.js:155 📦 Tipo de data: object
+pedidos-proveedor.js:156 📦 Es array: false
+pedidos-proveedor.js:157 📦 Tiene success: true
+pedidos-proveedor.js:158 📦 Estructura de data: {
+  "success": true,
+  "data": [
+    [
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        [
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ],
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        [
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        [
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ],
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ],
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        [
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ],
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ],
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        [
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ],
+          [
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ],
+            [
+              []
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+      ],
+      [
+        []
+  
+pedidos-proveedor.js:166 📦 Usando data.data (formato estructurado), cantidad: 12
+pedidos-proveedor.js:183 📦 Primer pedido (estructura): Array(10)
+pedidos-proveedor.js:184 📦 Propiedades del primer pedido: Array(10)
+pedidos-proveedor.js:190 📊 Total de pedidos procesados: 12
+pedidos-proveedor.js:196 ✅ Mostrando pedidos en la tabla
+pedidos-proveedor.js:392 📋 Iniciando mostrarPedidos...
+pedidos-proveedor.js:393 📊 pedidosFiltrados: Array(12)
+pedidos-proveedor.js:403 📋 Renderizando 12 pedidos en la tabla
+pedidos-proveedor.js:407 📦 Procesando pedido 1: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 2: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 3: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 4: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 5: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 6: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 7: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 8: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 9: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 10: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 11: Array(10)
+pedidos-proveedor.js:407 📦 Procesando pedido 12: Array(10)
+pedidos-proveedor.js:463 ✅ 12 pedidos renderizados en la tabla
+pedidos-proveedor.js:201 ✅ 12 pedidos cargados exitosamente
+pedidos-proveedor.js:113 📋 Respuesta del servidor: Object
+pedidos-proveedor.js:315 🔄 Iniciando llenarSelectProveedores...
+pedidos-proveedor.js:316 📋 proveedoresDisponibles: Array(3)
+pedidos-proveedor.js:330 🔢 Total proveedores a procesar: 3
+pedidos-proveedor.js:337 🔍 Procesando proveedor 1: Object
+pedidos-proveedor.js:340 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:365 ➕ Agregando opción: <option value="1002">Distribuidora  Tuco</option>
+pedidos-proveedor.js:337 🔍 Procesando proveedor 2: Object
+pedidos-proveedor.js:340 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:365 ➕ Agregando opción: <option value="1005">Distribuidora El carmen S.A</option>
+pedidos-proveedor.js:337 🔍 Procesando proveedor 3: Object
+pedidos-proveedor.js:340 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:365 ➕ Agregando opción: <option value="1007">Distribuidora Tucan S.A</option>
+pedidos-proveedor.js:381 ✅ 3 de 3 proveedores agregados a los selects
+pedidos-proveedor.js:384 📊 Opciones en select: 4
+pedidos-proveedor.js:385 📊 Opciones en filtro: 4
+pedidos-proveedor.js:118 ✅ 3 proveedores cargados
+pedidos-proveedor.js:304 ✅ 6 productos del inventario cargados

@@ -1,0 +1,199 @@
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1753
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-17",
+  "horaActual": "11:28",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 2 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 2
+ 🔄 Construyendo HTML para 2 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png
+ 🔄 Actualizando DOM (longitud HTML: 9142 caracteres)
+facturacion.js:752 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:497 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:500 📦 Productos mostrados exitosamente
+facturacion.js:513 🔍 === FIN buscarProductos ===
+facturacion.js:5322 📦 Búsqueda inicial ejecutada
+facturacion.js:5324 📦 === FIN cargarProductosIniciales (exitosa) ===
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:2793 📋 === ABRIENDO MODAL DE PROFORMAS ===
+facturacion.js:2833 📋 === CARGANDO PROFORMAS ===
+facturacion.js:2834 📋 Página: 1
+facturacion.js:2865 📋 Resultado obtenido: Object
+facturacion.js:2887 📋 Mostrando proformas: 12
+facturacion.js:3040 📋 Configurando paginación - Página: 1 Total: 1
+facturacion.js:3013 🔄 Convirtiendo proforma con datos: Object
+facturacion.js:3014 🔄 Tipo de datos: object
+facturacion.js:3273 🔄 === CONVIRTIENDO PROFORMA A FACTURA ===
+facturacion.js:3274 🔄 Proforma escapada recibida: Object
+facturacion.js:3275 🔄 Tipo de dato recibido: object
+facturacion.js:3294 🔄 Proforma recibida como objeto directo
+facturacion.js:3299 🔄 Proforma deserializada: Object
+facturacion.js:3345 🔄 === CARGANDO DATOS DE PROFORMA EN EL CARRITO ===
+facturacion.js:3357 👤 Cliente cargado desde proforma: Object
+facturacion.js:3361 📦 Cargando productos desde proforma: 3
+facturacion.js:3375 📦 Producto 1 cargado: Llanta Kumho Mobile x 1
+facturacion.js:3375 📦 Producto 2 cargado: Llanta Agregar Marca Agrega Modelo x 1
+facturacion.js:3375 📦 Producto 3 cargado: Prueba de Stock 3 Despues de eliminar imagen x 1
+facturacion.js:3379 📦 Total productos cargados en carrito: 3
+facturacion.js:5511 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:5511 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:3392 🔄 Interfaz actualizada con datos de la proforma
+facturacion.js:3406 📋 Referencia de proforma guardada: Object
+facturacion.js:3410 🎯 === ABRIENDO MODAL FINALIZAR VENTA ===
+facturacion.js:3411 🎯 Productos en carrito: 3
+facturacion.js:3412 🎯 Cliente seleccionado: Isaias Barboza
+facturacion.js:1374 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+facturacion.js:1375 📋 Cliente completo: Object
+facturacion.js:1376 📋 Propiedades disponibles: Array(6)
+facturacion.js:1377 📋 Factura pendiente actual: null
+facturacion.js:1378 📋 Proforma original para conversión: Object
+facturacion.js:1390 📋 Mostrando información de conversión de proforma
+facturacion.js:1564 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+facturacion.js:1565 🎯 Permisos del usuario: Object
+facturacion.js:1566 🎯 puedeCompletarFacturas: true
+facturacion.js:1567 🎯 puedeCrearFacturas: true
+facturacion.js:1568 🎯 esAdmin: true
+facturacion.js:1569 🎯 Es conversión de proforma: true
+facturacion.js:1589 📄 Modal configurado para conversión de proforma
+facturacion.js:1632 🎯 Estado final del modal: Object
+facturacion.js:1445 📋 Datos mapeados para formulario: Object
+facturacion.js:3417 ✅ Modal de finalizar venta mostrado correctamente
+facturacion.js:1944 🔍 === DETERMINANDO TIPO DE OPERACIÓN ===
+facturacion.js:1945 🔍 Número de referencia recibido: null
+facturacion.js:1953 🔍 Es conversión de proforma: Object
+facturacion.js:1954 🔍 Es factura pendiente: false
+facturacion.js:1955 🔍 Factura ID: null
+facturacion.js:1959 🔄 Procesando conversión de proforma
+facturacion.js:1967 🔄 ID de proforma capturado: 1256
+facturacion.js:2356 🆕 === CREANDO NUEVO DOCUMENTO ===
+facturacion.js:2357 🆕 Tipo de documento: Factura
+facturacion.js:2358 🆕 Es conversión de proforma: true
+facturacion.js:2376 🔐 === VERIFICACIÓN DE PERMISOS ===
+facturacion.js:2377 🔐 puedeCompletarFacturas: true
+facturacion.js:2378 🔐 puedeCrearFacturas: true
+facturacion.js:2379 🔐 tipoDocumento: Factura
+facturacion.js:2397 👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock
+facturacion.js:2409 📋 Estado determinado: Object
+facturacion.js:5394 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+facturacion.js:5395 👤 facturaConfig disponible: true
+facturacion.js:5399 👤 Usuario encontrado en facturaConfig: Object
+facturacion.js:5400 👤 Tipo de usuario obtenido: object
+facturacion.js:5401 👤 Propiedades del usuario: Array(5)
+facturacion.js:5402 👤 ID de usuario: 4
+facturacion.js:5403 👤 Nombre de usuario: Julissa Mejias
+facturacion.js:2420 👤 Usuario actual para documento: Object
+facturacion.js:2454 📝 Observaciones con información de proforma: Convertido desde proforma PROF-202507-000009
+facturacion.js:2500 📋 Datos de documento preparados: Object
+facturacion.js:2516 ✅ Documento creado: Object
+facturacion.js:2019 💰 === COMPLETANDO FACTURA EXISTENTE ===
+facturacion.js:2020 💰 Factura ID: 1256
+facturacion.js:2037 📋 Es proforma detectada: Object
+facturacion.js:2038 📋 Proforma original para conversión: Object
+facturacion.js:2039 📋 Factura pendiente actual: null
+facturacion.js:2058 📋 Datos adicionales de proforma agregados
+facturacion.js:2061 📋 Datos de completamiento finales: Object
+facturacion.js:2063 📋 Datos de completamiento: Object
+Facturacion/CompletarFactura:1  Failed to load resource: the server responded with a status of 400 ()
+facturacion.js:2167 ❌ Error completando factura existente: Error: Los datos de la solicitud son inválidos
+    at completarFacturaExistente (facturacion.js:2163:19)
+    at async procesarVentaFinal (facturacion.js:1984:13)
+completarFacturaExistente @ facturacion.js:2167
+await in completarFacturaExistente
+procesarVentaFinal @ facturacion.js:1984
+await in procesarVentaFinal
+(anonymous) @ facturacion.js:425
+dispatch @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+facturacion.js:1997 ❌ Error procesando venta: Error: Los datos de la solicitud son inválidos
+    at completarFacturaExistente (facturacion.js:2163:19)
+    at async procesarVentaFinal (facturacion.js:1984:13)
+procesarVentaFinal @ facturacion.js:1997
+await in procesarVentaFinal
+(anonymous) @ facturacion.js:425
+dispatch @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+Facturacion:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <button.btn-close btn-close-white>
+Ancestor with aria-hidden: <div.admin-wrapper> <div class=​"admin-wrapper" aria-hidden=​"true">​…​</div>​flex

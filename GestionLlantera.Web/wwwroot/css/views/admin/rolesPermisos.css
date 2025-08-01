@@ -739,6 +739,14 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
+/* Contenedor de permisos en modal */
+.permisos-modulos-modal {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: #f8fafc;
+    padding: 1rem;
+}
+
 /* Estilos para acordeón en modales */
 #accordionPermisosModal .accordion-item,
 #accordionPermisosModalEditar .accordion-item {
@@ -801,6 +809,59 @@
     font-size: 0.9rem;
     line-height: 1.4;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Estilos para badges de dependencias */
+#accordionPermisosModal .badge,
+#accordionPermisosModalEditar .badge {
+    font-size: 0.65rem;
+    font-weight: 500;
+    margin-left: 0.25rem;
+}
+
+#accordionPermisosModal .badge.bg-warning,
+#accordionPermisosModalEditar .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+#accordionPermisosModal .badge.bg-info,
+#accordionPermisosModalEditar .badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000 !important;
+}
+
+/* Animación sutil para checkboxes que se activan automáticamente */
+.permiso-checkbox:checked,
+.permiso-checkbox-editar:checked {
+    animation: checkboxActivated 0.3s ease-in-out;
+}
+
+@keyframes checkboxActivated {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Efecto visual para permisos activados automáticamente */
+.permiso-activado-automaticamente {
+    background-color: #d4edda !important;
+    border-color: #28a745 !important;
+    transition: all 0.5s ease-in-out;
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);
+}
+
+/* Mejorar la visualización de badges de dependencias */
+.badge[title] {
+    cursor: help;
+}
+
+.badge.bg-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
 }
 
 /* Estilos para acordeones en tabla de roles */
@@ -854,6 +915,75 @@
     gap: 6px;
 }
 
+/* Estilos específicos para el modal ampliado de roles */
+.permisos-modal-container {
+    min-height: 500px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* Mejor distribución en el modal XL */
+@media (min-width: 1200px) {
+    .permisos-modal-container {
+        min-height: 550px;
+        max-height: 650px;
+    }
+    
+    .permisos-modal-container .accordion-body {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .permisos-modal-container .row.g-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+}
+
+/* Mejoras para visualización en el modal */
+.permisos-modal-container .form-check {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.permisos-modal-container .form-check:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.permisos-modal-container .form-check-label {
+    cursor: pointer;
+    user-select: none;
+    width: 100%;
+    display: block;
+}
+
+.permisos-modal-container .badge {
+    white-space: nowrap;
+    margin-top: 0.25rem;
+    display: inline-block;
+}
+
+/* Scrollbar personalizado para el modal */
+.permisos-modal-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.permisos-modal-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.permisos-modal-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.permisos-modal-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
 /* Mejoras para scroll horizontal en móvil si es necesario */
 @media (max-width: 576px) {
     .table-responsive {
@@ -887,6 +1017,16 @@
 
     .permisos-modulos-container .accordion-item {
         width: 100%;
+    }
+    
+    /* Modal responsive en móvil */
+    .permisos-modal-container {
+        min-height: 400px;
+        max-height: 450px;
+    }
+    
+    .permisos-modal-container .row.g-2 {
+        display: block;
     }
 }
 

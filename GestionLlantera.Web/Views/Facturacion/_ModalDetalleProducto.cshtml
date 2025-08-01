@@ -1,4 +1,3 @@
-
 <!-- Modal Detalle de Producto -->
 <div class="modal fade" id="modalDetalleProducto" tabindex="-1" aria-labelledby="modalDetalleProductoLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -25,6 +24,34 @@
                         <div class="product-info">
                             <h4 id="productoNombre" class="text-primary mb-2"></h4>
                             <p id="productoDescripcion" class="text-muted mb-3"></p>
+
+                            <!-- Sección de Imágenes del Producto -->
+                        <div class="mb-3">
+                            <h6><i class="bi bi-images me-2"></i>Imágenes del Producto:</h6>
+                            <div id="contenedorImagenesDetalles" class="position-relative">
+                                <!-- Las imágenes se cargarán aquí dinámicamente -->
+                                <div class="text-center text-muted">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    Cargando imágenes...
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6><i class="bi bi-info-circle me-2"></i>Información General:</h6>
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">SKU:</small><br>
+                                    <strong id="detallesSku">-</strong>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Estado:</small><br>
+                                    <span id="detallesEstado" class="badge bg-success">Activo</span>
+                                </div>
+                            </div>
+                        </div>
 
                             <div class="row mb-3">
                                 <div class="col-6">

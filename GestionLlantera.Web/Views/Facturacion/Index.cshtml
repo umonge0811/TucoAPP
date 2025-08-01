@@ -61,7 +61,7 @@
                                         <i class="bi bi-clock-history me-2"></i>
                                         <span class="btn-text">Facturas Pendientes</span>
                                     </button>
-                                    
+
                                     <button type="button" 
                                             id="btnProformas" 
                                             class="btn btn-outline-success"
@@ -69,14 +69,14 @@
                                         <i class="bi bi-file-earmark-text me-2"></i>
                                         <span class="btn-text">Proformas</span>
                                     </button>
-                                    
+
                                     <a href="@Url.Action("EntregasPendientes", "Facturacion")" 
                                        class="btn btn-outline-info"
                                        title="Ver entregas pendientes">
                                         <i class="bi bi-truck me-2"></i>
                                         <span class="btn-text">Entregas Pendientes</span>
                                     </a>
-                                    
+
                                     <button type="button" 
                                             id="btnAbrirInventario" 
                                             class="btn btn-outline-secondary"
@@ -278,57 +278,130 @@
     </div>
 </div>
 
-<!-- Modal de Facturas Pendientes -->
-<div class="modal fade" id="facturasPendientesModal" tabindex="-1" aria-labelledby="facturasPendientesModalLabel" aria-hidden="true">
+<!-- Modal Facturas Pendientes -->
+<div class="modal fade" id="facturasPendientesModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="facturasPendientesModalLabel">
-                    <i class="bi bi-clock-history me-2"></i>Facturas Pendientes
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="bi bi-clock-history me-2"></i>Facturas Pendientes de Pago
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body">
-                <div class="alert alert-info">
-                    <h6><i class="bi bi-info-circle me-2"></i>Instrucciones:</h6>
-                    <ul class="mb-0">
-                        <li><strong>Completar:</strong> Marca la factura como pagada directamente</li>
-                        <li><strong>Procesar:</strong> Abre el modal de finalización para configurar el pago</li>
-                        <li><strong>Click en fila:</strong> Selecciona la factura (visual)</li>
-                    </ul>
+                <!-- Filtros de Búsqueda -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label for="busquedaFacturasPendientes" class="form-label">
+                            <i class="bi bi-search me-1"></i>Buscar
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="busquedaFacturasPendientes"
+                               placeholder="Buscar por número, cliente...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="estadoFacturasPendientes" class="form-label">
+                            <i class="bi bi-funnel me-1"></i>Estado
+                        </label>
+                        <select class="form-select" id="estadoFacturasPendientes">
+                            <option value="todos">Todos los estados</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Pagada">Pagada</option>
+                            <option value="Anulada">Anulada</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="fechaDesdeFacturas" class="form-label">
+                            <i class="bi bi-calendar me-1"></i>Desde
+                        </label>
+                        <input type="date" class="form-control" id="fechaDesdeFacturas">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="fechaHastaFacturas" class="form-label">
+                            <i class="bi bi-calendar me-1"></i>Hasta
+                        </label>
+                        <input type="date" class="form-control" id="fechaHastaFacturas">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-white">.</label>
+                        <div class="d-flex gap-2">
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    id="btnLimpiarFiltrosFacturas"
+                                    title="Limpiar filtros">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div id="facturasPendientesLoading" class="text-center py-4">
+
+                <!-- Loading -->
+                <div id="facturasPendientesLoading" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Cargando facturas pendientes...</span>
                     </div>
+                    <p class="mt-2 text-muted">Cargando facturas pendientes...</p>
                 </div>
+
+                <!-- Contenido -->
                 <div id="facturasPendientesContent" style="display: none;">
+                    <!-- Tabla de Facturas Pendientes -->
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped">
-                            <thead class="table-primary">
+                        <table class="table table-hover">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Número de Factura</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha y Cajero</th>
-                                    <th>Total y Método</th>
-                                    <th>Estado</th>
-                                    <th class="text-center">Acciones</th>
+                                    <th style="width: 15%;">Número</th>
+                                    <th style="width: 25%;">Cliente</th>
+                                    <th style="width: 20%;">Información</th>
+                                    <th style="width: 15%;">Total</th>
+                                    <th style="width: 10%;">Estado</th>
+                                    <th style="width: 15%;" class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="facturasPendientesTableBody">
-                                <!-- Facturas se cargan dinámicamente -->
+                                <!-- Se llena dinámicamente -->
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div id="facturasPendientesEmpty" class="text-center py-4" style="display: none;">
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3">No hay facturas pendientes</h5>
-                    <p class="text-muted">Todas las facturas han sido procesadas</p>
+
+                <!-- Sin resultados -->
+                <div id="facturasPendientesEmpty" style="display: none;" class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No hay facturas pendientes</h5>
+                    <p class="text-muted">Todas las facturas han sido procesadas o no coinciden con los filtros aplicados.</p>
+                </div>
+
+                <!-- Footer con paginación -->
+                <div class="modal-pagination-footer d-flex justify-content-between align-items-center mt-3">
+                    <div class="pagination-info">
+                        <span id="facturasPendientesInfo" class="text-muted">Mostrando 0 productos</span>
+                    </div>
+
+                    <div class="pagination-controls d-flex align-items-center">
+                        <label for="facturasPendientesPorPagina" class="form-label me-2 mb-0">Productos por página:</label>
+                        <select id="facturasPendientesPorPagina" class="form-select me-3" style="width: auto;">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+
+                        <nav id="paginacionFacturas" style="display: none;">
+                            <ul class="pagination pagination-sm mb-0">
+                                <!-- Se genera dinámicamente -->
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cerrar
+                </button>
             </div>
         </div>
     </div>
@@ -354,22 +427,57 @@
                     </ul>
                 </div>
 
-                <!-- Filtros -->
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label for="filtroEstadoProforma" class="form-label">Estado:</label>
-                        <select id="filtroEstadoProforma" class="form-select">
-                            <option value="">Todos los estados</option>
-                            <option value="Vigente">Vigente</option>
-                            <option value="Vencida">Vencida</option>
-                            <option value="Convertida">Convertida</option>
-                        </select>
+                <!-- Filtros de Búsqueda -->
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="bi bi-funnel me-2"></i>Filtros de Búsqueda
+                        </h6>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">&nbsp;</label>
-                        <button type="button" id="btnFiltrarProformas" class="btn btn-primary d-block w-100">
-                            <i class="bi bi-search me-1"></i>Filtrar
-                        </button>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Búsqueda General -->
+                            <div class="col-md-8">
+                                <label for="busquedaProformas" class="form-label">
+                                    <i class="bi bi-search me-1"></i>Búsqueda General:
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="busquedaProformas" 
+                                           placeholder="Buscar por número, cliente, fecha..."
+                                           autocomplete="off">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    Busca en número de proforma, nombre del cliente, fecha de creación
+                                </small>
+                            </div>
+
+                            <!-- Estado -->
+                            <div class="col-md-4">
+                                <label for="estadoProformas" class="form-label">
+                                    <i class="bi bi-filter me-1"></i>Estado:
+                                </label>
+                                <select class="form-select" id="estadoProformas">
+                                    <option value="todos">Todos los estados</option>
+                                    <option value="Vigente">Vigente</option>
+                                    <option value="Facturada">Facturada</option>
+                                    <option value="Expirada">Expirada</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Botón Limpiar -->
+                        <div class="row mt-3">
+                            <div class="col-12 text-end">
+                                <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltrosProformas">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Limpiar
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -408,18 +516,34 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- Paginación -->
-                    <nav aria-label="Navegación de proformas" id="paginacionProformas" style="display: none;">
-                        <ul class="pagination justify-content-center">
-                            <!-- Se genera dinámicamente -->
-                        </ul>
-                    </nav>
                 </div>
                 <div id="proformasEmpty" class="text-center py-4" style="display: none;">
                     <i class="bi bi-file-earmark-text text-muted" style="font-size: 3rem;"></i>
                     <h5 class="mt-3">No hay proformas</h5>
                     <p class="text-muted">No se encontraron proformas con los filtros aplicados</p>
+                </div>
+
+                <!-- Footer con paginación -->
+                <div class="modal-pagination-footer d-flex justify-content-between align-items-center mt-3">
+                    <div class="pagination-info">
+                        <span id="proformasInfo" class="text-muted">Mostrando 0 proformas</span>
+                    </div>
+
+                    <div class="pagination-controls d-flex align-items-center">
+                        <label for="proformasPorPagina" class="form-label me-2 mb-0">Proformas por página:</label>
+                        <select id="proformasPorPagina" class="form-select me-3" style="width: auto;">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+
+                        <nav id="paginacionProformas" style="display: none;">
+                            <ul class="pagination pagination-sm mb-0">
+                                <!-- Se genera dinámicamente -->
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -433,7 +557,12 @@
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
 
     @section Scripts {
+        <!-- Scripts específicos para facturación -->
+        <script src="~/js/views/facturacion/zoomImagenes.js"></script>
         <script src="~/js/views/facturacion/facturacion.js"></script>
+        <script src="~/js/views/facturacion/facturasPendientesFilter.js"></script>
+        <script src="~/js/views/facturacion/proformasFilter.js"></script>
+        <script src="~/js/views/facturacion/InventarioFacturacion.js"></script>
 
     <script>
         // ===== CONFIGURACIÓN GLOBAL PARA FACTURACIÓN =====
@@ -461,6 +590,17 @@
         console.log('🔧 Permisos disponibles:', window.facturaConfig?.Permisos);
         console.log('🔧 Token disponible:', window.facturaConfig?.TokenDisponible);
     </script>
-
+<button asp-permiso="Ver Facturación" type="button" class="btn btn-info me-2" onclick="abrirProformas()">
+                        <i class="bi bi-file-earmark-text me-1"></i>
+                        Proformas
+                    </button>
+<button asp-permiso="Ver Facturación" type="button" class="btn btn-info me-2" onclick="abrirProformas()">
+                        <i class="bi bi-file-earmark-text me-1"></i>
+                        Proformas
+                    </button>
+<button asp-permiso="Crear Clientes" type="button" class="btn btn-outline-primary btn-sm" onclick="abrirModalAgregarCliente()">
+                            <i class="bi bi-person-plus me-1"></i>
+                            Agregar Cliente Rápido
+                        </button>
 
     }

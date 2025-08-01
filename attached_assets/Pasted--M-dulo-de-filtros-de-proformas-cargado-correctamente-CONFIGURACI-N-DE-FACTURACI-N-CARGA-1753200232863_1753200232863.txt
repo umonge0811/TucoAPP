@@ -1,0 +1,162 @@
+ 📋 Módulo de filtros de proformas cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1789
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-22",
+  "horaActual": "10:03",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+facturacion.js:97 🔐 esAdmin: true
+facturacion.js:120 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+facturacion.js:121 🎯 Permisos actuales del usuario: Object
+facturacion.js:122 🎯 puedeCompletarFacturas: true (tipo: boolean )
+facturacion.js:123 🎯 puedeCrearFacturas: true (tipo: boolean )
+facturacion.js:142 🎯 Evaluación de permisos:
+facturacion.js:143 🎯   - puedeCompletar (CompletarFacturas): true
+facturacion.js:144 🎯   - puedeCrear (CrearFacturas): true
+facturacion.js:154 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+facturacion.js:155 👑 Botón: Verde - "Completar Venta"
+facturacion.js:156 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+facturacion.js:193 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+facturacion.js:230 🚀 Inicializando modales...
+facturacion.js:234 🚀 Configurando eventos...
+facturacion.js:238 🚀 Actualizando totales...
+facturacion.js:5333 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:245 🚀 Iniciando carga de productos iniciales...
+facturacion.js:5111 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:5112 📦 cargaInicialCompletada: false
+facturacion.js:5128 📦 Iniciando carga de productos iniciales...
+facturacion.js:436 🔍 === INICIO buscarProductos ===
+facturacion.js:437 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:438 🔍 Término recibido: ""
+facturacion.js:439 🔍 busquedaEnProceso: false
+facturacion.js:440 🔍 ultimaBusqueda: ""
+facturacion.js:455 🔍 Iniciando búsqueda válida...
+facturacion.js:248 ✅ Facturación inicializada correctamente
+facturacion.js:249 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:207 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:208 🎯 Clases CSS: btn w-100 btn-outline-secondary
+facturacion.js:209 🎯 Deshabilitado: true
+facturacion.js:210 🎯 Texto: Completar Venta
+facturacion.js:211 🎯 Título: Agrega productos y selecciona un cliente
+facturacion.js:212 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+facturacion.js:477 📋 Respuesta del servidor recibida
+facturacion.js:480 ✅ Se encontraron 5 productos disponibles
+facturacion.js:519 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:520 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:521 🔄 Productos recibidos: 5
+facturacion.js:556 🔄 Construyendo HTML para 5 productos
+facturacion.js:570 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:571 🖼️ Datos del producto: Object
+facturacion.js:584 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:589 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:608 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:620 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+facturacion.js:570 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:571 🖼️ Datos del producto: Object
+facturacion.js:584 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:589 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:608 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:620 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:570 🖼️ Procesando imágenes para producto: Llanta Test
+facturacion.js:571 🖼️ Datos del producto: Object
+facturacion.js:584 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:589 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:608 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:620 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+facturacion.js:570 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:571 🖼️ Datos del producto: Object
+facturacion.js:584 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:589 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:608 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:620 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:570 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+facturacion.js:571 🖼️ Datos del producto: Object
+facturacion.js:584 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:589 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:608 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:620 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:719 🔄 Actualizando DOM (longitud HTML: 23564 caracteres)
+facturacion.js:752 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:497 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:500 📦 Productos mostrados exitosamente
+facturacion.js:513 🔍 === FIN buscarProductos ===
+facturacion.js:5144 📦 Búsqueda inicial ejecutada
+facturacion.js:5146 📦 === FIN cargarProductosIniciales (exitosa) ===
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:2579 📋 === ABRIENDO MODAL DE PROFORMAS ===
+facturacion.js:2585 📋 *** MODAL DE PROFORMAS COMPLETAMENTE VISIBLE ***
+facturacion.js:2586 📋 Elementos disponibles en el DOM:
+facturacion.js:2587 📋 - Input búsqueda: 1
+facturacion.js:2588 📋 - Select estado: 1
+facturacion.js:2589 📋 - Tabla body: 1
+facturacion.js:2590 📋 - Loading: 1
+facturacion.js:2591 📋 - Content: 1
+facturacion.js:2598 ❌ Función inicializarFiltrosProformasForzado no está disponible
+(anonymous) @ facturacion.js:2598
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+trigger @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+each @ jquery.min.js:2
+each @ jquery.min.js:2
+trigger @ jquery.min.js:2
+trigger @ event-handler.js:306
+(anonymous) @ modal.js:245
+g @ index.js:251
+r @ index.js:273
+n @ index.js:100
+(anonymous) @ index.js:279
+setTimeout
+_ @ index.js:277
+_queueCallback @ base-component.js:45
+_showElement @ modal.js:250
+(anonymous) @ modal.js:142
+g @ index.js:251
+(anonymous) @ backdrop.js:54
+g @ index.js:251
+r @ index.js:273
+n @ index.js:100
+(anonymous) @ index.js:279
+setTimeout
+_ @ index.js:277
+_emulateAnimation @ backdrop.js:126
+show @ backdrop.js:53
+_showBackdrop @ modal.js:308
+show @ modal.js:142
+abrirProformas @ facturacion.js:2602
+(anonymous) @ facturacion.js:405
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2

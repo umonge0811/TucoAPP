@@ -1,9 +1,9 @@
-
 using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using tuco.Clases.Models;
+using Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -31,11 +31,30 @@ namespace GestionLlantera.Web.Controllers
                 // Verificar permisos
                 if (!await this.TienePermisoAsync("Ver Clientes"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Clientes' intentó acceder al módulo de clientes");
+                    TempData["AccesoNoAutorizado"] = "Ver Clientes";
+                    TempData["ModuloAcceso"] = "Clientes";
                     return RedirectToAction("AccessDenied", "Account");
                 }
 
+                // Cargar clientes para mostrar en la vista (como en inventario)
+                var jwtToken = this.ObtenerTokenJWT();
+                var clientes = await _clientesService.ObtenerTodosAsync(jwtToken);
+
+                // Transformar datos para la vista usando ClienteDTO
+                var clientesViewModel = clientes.Select(c => new Tuco.Clases.DTOs.ClienteDTO
+                {
+                    ClienteId = c.ClienteId,
+                    NombreCliente = c.NombreCliente,
+                    Contacto = c.Contacto ?? "",
+                    Email = c.Email ?? "",
+                    Telefono = c.Telefono ?? "",
+                    Direccion = c.Direccion ?? "",
+                    UsuarioId = c.UsuarioId
+                }).ToList();
+
                 ViewData["Title"] = "Gestión de Clientes";
-                return View();
+                return View(clientesViewModel);
             }
             catch (Exception ex)
             {

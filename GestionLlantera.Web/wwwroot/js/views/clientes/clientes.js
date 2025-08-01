@@ -1,4 +1,3 @@
-
 // ===== GESTIÓN DE CLIENTES - JAVASCRIPT =====
 
 let modalCliente = null;
@@ -21,10 +20,10 @@ function inicializarClientes() {
 
         // Configurar eventos
         configurarEventos();
-        
-        // Cargar clientes iniciales
-        cargarClientes();
-        
+
+        // Los clientes ya están cargados desde el servidor
+        console.log('✅ Clientes cargados desde el servidor');
+
         console.log('✅ Gestión de clientes inicializada correctamente');
     } catch (error) {
         console.error('❌ Error inicializando gestión de clientes:', error);
@@ -34,16 +33,24 @@ function inicializarClientes() {
 function configurarEventos() {
     // Búsqueda de clientes
     $('#buscarClientes').on('input', debounce(function() {
-        const termino = $(this).val().trim();
-        if (termino.length >= 2 || termino.length === 0) {
-            buscarClientes(termino);
+        try {
+            const elemento = $(this);
+            const termino = elemento.val() || '';
+            const terminoLimpio = String(termino).trim();
+            
+            if (terminoLimpio.length >= 2 || terminoLimpio.length === 0) {
+                buscarClientes(terminoLimpio);
+            }
+        } catch (error) {
+            console.error('❌ Error en configurarEventos búsqueda:', error);
         }
     }, 300));
 
     // Limpiar filtros
     $('#btnLimpiarFiltros').on('click', function() {
         $('#buscarClientes').val('');
-        cargarClientes();
+        mostrarTodosLosClientes();
+        console.log('🧹 Filtros limpiados - Mostrando todos los clientes');
     });
 
     // Nuevo cliente
@@ -61,107 +68,106 @@ function configurarEventos() {
         limpiarFormularioCliente();
     });
 
-    // Validación en tiempo real
-    $('#nombreCliente, #emailCliente, #telefonoCliente').on('input', function() {
-        limpiarValidacion($(this));
+    // Validación en tiempo real mejorada
+    $('#nombreCliente, #emailCliente, #telefonoCliente, #contactoCliente, #direccionCliente').on('input blur', function() {
+        validarCampoEnTiempoReal($(this));
     });
 }
 
 // ===== CARGA DE DATOS =====
 async function cargarClientes() {
-    try {
-        mostrarEstadoCarga(true);
-        console.log('📋 Cargando clientes...');
-
-        const response = await fetch('/Clientes/ObtenerClientes');
-        
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const resultado = await response.json();
-
-        if (resultado.success && resultado.data) {
-            clientes = resultado.data;
-            mostrarClientes(clientes);
-        } else {
-            mostrarSinResultados();
-        }
-
-    } catch (error) {
-        console.error('❌ Error cargando clientes:', error);
-        mostrarError('Error al cargar clientes');
-    } finally {
-        mostrarEstadoCarga(false);
-    }
+    // Recargar la página para obtener los datos actualizados del servidor
+    window.location.reload();
 }
 
 async function buscarClientes(termino) {
     try {
-        mostrarEstadoCarga(true);
         console.log(`🔍 Buscando clientes: "${termino}"`);
-
-        const response = await fetch(`/Clientes/BuscarClientes?termino=${encodeURIComponent(termino)}`);
         
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        // Si el término está vacío, mostrar todos los clientes
+        if (!termino || termino.trim() === '') {
+            mostrarTodosLosClientes();
+            return;
         }
 
-        const resultado = await response.json();
-
-        if (resultado.success && resultado.data) {
-            clientes = resultado.data;
-            mostrarClientes(clientes);
-        } else {
-            mostrarSinResultados();
-        }
+        // Filtrar clientes localmente (más rápido y responsivo)
+        filtrarClientesEnTabla(termino.trim().toLowerCase());
 
     } catch (error) {
         console.error('❌ Error buscando clientes:', error);
         mostrarError('Error al buscar clientes');
-    } finally {
-        mostrarEstadoCarga(false);
     }
+}
+
+// Nueva función para filtrar clientes directamente en la tabla
+function filtrarClientesEnTabla(termino) {
+    let clientesVisibles = 0;
+    
+    // Obtener todas las filas de la tabla
+    $("tbody tr").each(function() {
+        const $fila = $(this);
+        let coincide = false;
+        
+        if (!termino) {
+            // Si no hay término, mostrar todas las filas
+            coincide = true;
+        } else {
+            // Buscar en el nombre del cliente (columna 2)
+            const nombre = $fila.find("td:eq(1)").text().toLowerCase();
+            
+            // Buscar en la identificación (columna 3)  
+            const identificacion = $fila.find("td:eq(2)").text().toLowerCase();
+            
+            // Buscar en el email (columna 4)
+            const email = $fila.find("td:eq(3)").text().toLowerCase();
+            
+            // Buscar en el teléfono (columna 5)
+            const telefono = $fila.find("td:eq(4)").text().toLowerCase();
+            
+            // Verificar si el término coincide con algún campo
+            coincide = nombre.includes(termino) || 
+                      identificacion.includes(termino) || 
+                      email.includes(termino) || 
+                      telefono.includes(termino);
+        }
+        
+        // Mostrar u ocultar la fila según si coincide
+        if (coincide) {
+            $fila.show();
+            clientesVisibles++;
+        } else {
+            $fila.hide();
+        }
+    });
+    
+    // Actualizar el estado de la tabla
+    if (clientesVisibles === 0) {
+        mostrarSinResultados();
+    } else {
+        ocultarEstadosEspeciales();
+        console.log(`✅ Mostrando ${clientesVisibles} clientes que coinciden con "${termino}"`);
+    }
+}
+
+// Nueva función para mostrar todos los clientes
+function mostrarTodosLosClientes() {
+    $("tbody tr").show();
+    ocultarEstadosEspeciales();
+    console.log('✅ Mostrando todos los clientes');
 }
 
 // ===== MOSTRAR DATOS =====
 function mostrarClientes(clientesData) {
-    const tbody = $('#tablaClientes tbody');
-    tbody.empty();
-
-    if (!clientesData || clientesData.length === 0) {
-        mostrarSinResultados();
-        return;
-    }
-
-    clientesData.forEach(cliente => {
-        const fila = `
-            <tr>
-                <td><strong>${cliente.nombre}</strong></td>
-                <td>${cliente.contacto}</td>
-                <td>${cliente.email}</td>
-                <td>${cliente.telefono}</td>
-                <td>${cliente.direccion}</td>
-                <td class="text-center">
-                    <button type="button" 
-                            class="btn btn-sm btn-editar btn-accion"
-                            onclick="editarCliente(${cliente.id})"
-                            title="Editar cliente">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" 
-                            class="btn btn-sm btn-eliminar btn-accion"
-                            onclick="eliminarCliente(${cliente.id})"
-                            title="Eliminar cliente">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        tbody.append(fila);
-    });
-
+    // La tabla ya está renderizada desde el servidor, no necesitamos recrearla
+    console.log('✅ Clientes cargados desde el servidor - No se requiere recrear tabla');
     ocultarEstadosEspeciales();
+}
+
+// Función para contar clientes visibles
+function contarClientesVisibles() {
+    const clientesVisibles = $("tbody tr:visible").length;
+    console.log(`📊 Clientes visibles: ${clientesVisibles}`);
+    return clientesVisibles;
 }
 
 // ===== MODAL DE CLIENTE =====
@@ -169,7 +175,7 @@ function abrirModalNuevoCliente() {
     clienteEditando = null;
     $('#modalClienteLabel').text('Nuevo Cliente');
     $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Crear Cliente');
-    
+
     if (modalCliente) {
         modalCliente.show();
     }
@@ -180,7 +186,7 @@ async function editarCliente(clienteId) {
         console.log(`✏️ Editando cliente: ${clienteId}`);
 
         const response = await fetch(`/Clientes/ObtenerClientePorId?id=${clienteId}`);
-        
+
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
@@ -188,12 +194,14 @@ async function editarCliente(clienteId) {
         const resultado = await response.json();
 
         if (resultado.success && resultado.data) {
+            // Asegurar que el cliente tiene el ID correcto
+            resultado.data.clienteId = resultado.data.id || resultado.data.clienteId || clienteId;
             clienteEditando = resultado.data;
             llenarFormularioCliente(resultado.data);
-            
+
             $('#modalClienteLabel').text('Editar Cliente');
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
-            
+
             if (modalCliente) {
                 modalCliente.show();
             }
@@ -203,17 +211,31 @@ async function editarCliente(clienteId) {
 
     } catch (error) {
         console.error('❌ Error cargando cliente para editar:', error);
-        mostrarError('Error al cargar cliente');
+        mostrarError('Error al cargar cliente para editar');
     }
 }
 
 function llenarFormularioCliente(cliente) {
-    $('#clienteId').val(cliente.id);
-    $('#nombreCliente').val(cliente.nombre);
-    $('#contactoCliente').val(cliente.contacto);
-    $('#emailCliente').val(cliente.email);
-    $('#telefonoCliente').val(cliente.telefono);
-    $('#direccionCliente').val(cliente.direccion);
+    // Asegurar que tenemos el ID correcto
+    clienteEditando = {
+        id: cliente.id || cliente.clienteId || cliente.ClienteId,
+        clienteId: cliente.id || cliente.clienteId || cliente.ClienteId,
+        nombre: cliente.nombre || cliente.nombreCliente || cliente.NombreCliente,
+        contacto: cliente.contacto || cliente.Contacto || '',
+        email: cliente.email || cliente.Email || '',
+        telefono: cliente.telefono || cliente.Telefono || '',
+        direccion: cliente.direccion || cliente.Direccion || ''
+    };
+
+    $('#nombreCliente').val(clienteEditando.nombre);
+    $('#contactoCliente').val(clienteEditando.contacto);
+    $('#emailCliente').val(clienteEditando.email);
+    $('#telefonoCliente').val(clienteEditando.telefono);
+    $('#direccionCliente').val(clienteEditando.direccion);
+
+    // Limpiar validaciones previas
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
 }
 
 async function guardarCliente() {
@@ -222,37 +244,45 @@ async function guardarCliente() {
             return;
         }
 
+        // Formatear teléfono con código de país
+        const codigoPais = $('#codigoPaisCliente').val();
+        const numeroTelefono = $('#telefonoCliente').val().trim();
+        const telefonoCompleto = `${codigoPais} ${numeroTelefono}`;
+
         const clienteData = {
-            ClienteId: clienteEditando ? clienteEditando.id : 0,
+            ClienteId: parseInt($('#clienteId').val()) || 0,
             NombreCliente: $('#nombreCliente').val().trim(),
-            Contacto: $('#contactoCliente').val().trim() || null,
-            Email: $('#emailCliente').val().trim() || null,
-            Telefono: $('#telefonoCliente').val().trim() || null,
-            Direccion: $('#direccionCliente').val().trim() || null
+            Contacto: $('#contactoCliente').val().trim(),
+            Email: $('#emailCliente').val().trim(),
+            Telefono: telefonoCompleto,
+            Direccion: $('#direccionCliente').val().trim()
         };
 
         $('#btnGuardarCliente').prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>Guardando...');
 
         let response;
+        let url;
+        let method;
+
         if (clienteEditando) {
             // Actualizar cliente existente
-            response = await fetch(`/Clientes/ActualizarCliente?id=${clienteEditando.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(clienteData)
-            });
+            const clienteId = clienteEditando.clienteId || clienteEditando.id;
+            clienteData.ClienteId = clienteId;
+            url = `/Clientes/ActualizarCliente?id=${clienteId}`;
+            method = 'PUT';
         } else {
             // Crear nuevo cliente
-            response = await fetch('/Clientes/CrearCliente', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(clienteData)
-            });
+            url = '/Clientes/CrearCliente';
+            method = 'POST';
         }
+
+        response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(clienteData)
+        });
 
         if (!response.ok) {
             throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -262,11 +292,11 @@ async function guardarCliente() {
 
         if (resultado.success) {
             mostrarExito(resultado.message);
-            
+
             if (modalCliente) {
                 modalCliente.hide();
             }
-            
+
             // Recargar lista de clientes
             cargarClientes();
         } else {
@@ -278,7 +308,7 @@ async function guardarCliente() {
         mostrarError('Error al guardar cliente');
     } finally {
         $('#btnGuardarCliente').prop('disabled', false);
-        
+
         if (clienteEditando) {
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
         } else {
@@ -333,24 +363,127 @@ async function eliminarCliente(clienteId) {
 }
 
 // ===== VALIDACIÓN =====
+// Función para validar campos en tiempo real
+function validarCampoEnTiempoReal(campo) {
+    const valor = campo.val().trim();
+    const id = campo.attr('id');
+    let esValido = true;
+    let mensaje = '';
+
+    // Limpiar validación previa
+    campo.removeClass('is-invalid is-valid');
+    campo.siblings('.invalid-feedback').text('');
+
+    switch (id) {
+        case 'nombreCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El nombre del cliente es obligatorio';
+            } else if (valor.length < 2) {
+                esValido = false;
+                mensaje = 'El nombre debe tener al menos 2 caracteres';
+            } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El nombre solo puede contener letras y espacios';
+            }
+            break;
+
+        case 'contactoCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'La identificación es obligatoria';
+            } else if (!/^[\d\-\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'La identificación solo puede contener números y guiones';
+            }
+            break;
+
+        case 'emailCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El email es obligatorio';
+            } else if (!validarEmail(valor)) {
+                esValido = false;
+                mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
+            }
+            break;
+
+        case 'telefonoCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El teléfono es obligatorio';
+            } else if (!/^[\d\-\s\+\(\)]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El teléfono solo puede contener números, espacios y guiones';
+            } else if (valor.replace(/[\D]/g, '').length < 8) {
+                esValido = false;
+                mensaje = 'El teléfono debe tener al menos 8 dígitos';
+            }
+            break;
+
+        case 'direccionCliente':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'La dirección es obligatoria';
+            } else if (valor.length > 500) {
+                esValido = false;
+                mensaje = 'La dirección no puede exceder 500 caracteres';
+            }
+            break;
+    }
+
+    if (!esValido) {
+        campo.addClass('is-invalid');
+        campo.siblings('.invalid-feedback').text(mensaje);
+    } else if (valor) {
+        campo.addClass('is-valid');
+    }
+
+    return esValido;
+}
+
 function validarFormularioCliente() {
     let esValido = true;
 
     // Limpiar validaciones previas
-    $('.form-control').removeClass('is-invalid');
-    $('.invalid-feedback').text('');
+    $('#modalCliente .form-control').removeClass('is-invalid');
+    $('#modalCliente .invalid-feedback').text('');
 
-    // Validar nombre (requerido)
+    // Validar nombre (obligatorio)
     const nombre = $('#nombreCliente').val().trim();
     if (!nombre) {
-        mostrarErrorCampo('#nombreCliente', 'El nombre del cliente es requerido');
+        mostrarErrorCampo('#nombreCliente', 'El nombre del cliente es obligatorio');
         esValido = false;
     }
 
-    // Validar email (formato)
+    // Validar identificación (obligatoria)
+    const contacto = $('#contactoCliente').val().trim();
+    if (!contacto) {
+        mostrarErrorCampo('#contactoCliente', 'La identificación es obligatoria');
+        esValido = false;
+    }
+
+    // Validar email (obligatorio y formato)
     const email = $('#emailCliente').val().trim();
-    if (email && !validarEmail(email)) {
+    if (!email) {
+        mostrarErrorCampo('#emailCliente', 'El email es obligatorio');
+        esValido = false;
+    } else if (!validarEmail(email)) {
         mostrarErrorCampo('#emailCliente', 'El formato del email no es válido');
+        esValido = false;
+    }
+
+    // Validar teléfono (obligatorio)
+    const telefono = $('#telefonoCliente').val().trim();
+    if (!telefono) {
+        mostrarErrorCampo('#telefonoCliente', 'El teléfono es obligatorio');
+        esValido = false;
+    }
+
+    // Validar dirección (obligatoria)
+    const direccion = $('#direccionCliente').val().trim();
+    if (!direccion) {
+        mostrarErrorCampo('#direccionCliente', 'La dirección es obligatoria');
         esValido = false;
     }
 
@@ -375,10 +508,10 @@ function validarEmail(email) {
 // ===== UTILIDADES =====
 function limpiarFormularioCliente() {
     $('#formCliente')[0].reset();
-    $('#clienteId').val('0');
-    $('.form-control').removeClass('is-invalid');
-    $('.invalid-feedback').text('');
-    clienteEditando = null;
+    $('#clienteId').val(0);
+    $('#codigoPaisCliente').val('+506'); // Reset a Costa Rica por defecto
+    $('#modalCliente .form-control, #modalCliente .form-select').removeClass('is-invalid is-valid');
+    $('#modalCliente .invalid-feedback').text('');
 }
 
 function mostrarEstadoCarga(mostrar) {
@@ -423,7 +556,11 @@ function debounce(func, wait) {
     return function executedFunction(...args) {
         const later = () => {
             clearTimeout(timeout);
-            func(...args);
+            try {
+                func.apply(this, args);
+            } catch (error) {
+                console.error('❌ Error en función debounced:', error);
+            }
         };
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);

@@ -1,0 +1,34 @@
+proveedores.js:6 🚀 Inicializando módulo de gestión de proveedores...
+proveedores.js:1022 ✅ Módulo de gestión de proveedores cargado completamente
+proveedores.js:21 📚 DOM cargado, inicializando gestión de proveedores...
+proveedores.js:39 🔧 Configurando event listeners...
+proveedores.js:83 📋 🔄 INICIANDO CARGA DE TODOS LOS PROVEEDORES...
+proveedores.js:87 🌐 URL a consultar: /Proveedores/ObtenerProveedores
+proveedores.js:27 ✅ Módulo de gestión de proveedores inicializado correctamente
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+proveedores.js:98 📡 Status de respuesta: 200 
+proveedores.js:105 📋 📊 RESPUESTA COMPLETA DEL SERVIDOR:
+proveedores.js:106    ✅ Success: true
+proveedores.js:107    📦 Data type: object
+proveedores.js:108    📊 Data length: 3
+proveedores.js:109    📋 Data content: Array(3)
+proveedores.js:115 🔍 ANÁLISIS DE DATOS RECIBIDOS:
+proveedores.js:116    📦 proveedoresData length: 3
+proveedores.js:117    📦 proveedoresFiltrados length: 3
+proveedores.js:121    🏪 Proveedor 1: Object
+proveedores.js:121    🏪 Proveedor 2: Object
+proveedores.js:121    🏪 Proveedor 3: Object
+proveedores.js:131 ✅ ✨ 3 PROVEEDORES CARGADOS EXITOSAMENTE
+proveedores.js:143 🏁 Finalizando carga de proveedores
+proveedores.js:328 ✏️ Editando proveedor - ID: 1002 proveedorEditando: Object
+proveedores.js:368 📋 Datos a crear: Object
+proveedores.js:380 📋 Respuesta HTTP: 200 
+proveedores.js:389 📋 Resultado crear: Object
+proveedores.js:909 🔔 Toast: [danger] Error - Error creando proveedor
+proveedores.js:913 ✅ Usando toastr para mostrar notificación
+proveedores.js:368 📋 Datos a crear: Object
+proveedores.js:380 📋 Respuesta HTTP: 200 
+proveedores.js:389 📋 Resultado crear: Object
+proveedores.js:909 🔔 Toast: [danger] Error - Error creando proveedor
+proveedores.js:913 ✅ Usando toastr para mostrar notificación

@@ -1,0 +1,68 @@
+pedidos-proveedor.js:6 🚀 Inicializando módulo de pedidos a proveedores...
+pedidos-proveedor.js:1394 ✅ Módulo de pedidos a proveedores cargado completamente
+pedidos-proveedor.js:30 📚 DOM cargado, inicializando pedidos a proveedores...
+pedidos-proveedor.js:48 🔧 Configurando event listeners...
+pedidos-proveedor.js:513 🔧 Configurando ordenamiento de tabla de productos...
+pedidos-proveedor.js:83 📋 Cargando datos iniciales completos...
+pedidos-proveedor.js:97 👥 Cargando proveedores...
+pedidos-proveedor.js:137 📦 Cargando TODOS los pedidos...
+pedidos-proveedor.js:236 📦 Cargando productos del inventario...
+pedidos-proveedor.js:36 ✅ Módulo de pedidos a proveedores inicializado correctamente
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+pedidos-proveedor.js:165 ℹ️ No hay pedidos disponibles
+pedidos-proveedor.js:113 📋 Respuesta del servidor: Object
+pedidos-proveedor.js:261 🔄 Iniciando llenarSelectProveedores...
+pedidos-proveedor.js:262 📋 proveedoresDisponibles: Array(3)
+pedidos-proveedor.js:276 🔢 Total proveedores a procesar: 3
+pedidos-proveedor.js:283 🔍 Procesando proveedor 1: Object
+pedidos-proveedor.js:286 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:311 ➕ Agregando opción: <option value="1002">Distribuidora  Tuco</option>
+pedidos-proveedor.js:283 🔍 Procesando proveedor 2: Object
+pedidos-proveedor.js:286 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:311 ➕ Agregando opción: <option value="1005">Distribuidora El carmen S.A</option>
+pedidos-proveedor.js:283 🔍 Procesando proveedor 3: Object
+pedidos-proveedor.js:286 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:311 ➕ Agregando opción: <option value="1007">Distribuidora Tucan S.A</option>
+pedidos-proveedor.js:327 ✅ 3 de 3 proveedores agregados a los selects
+pedidos-proveedor.js:330 📊 Opciones en select: 4
+pedidos-proveedor.js:331 📊 Opciones en filtro: 4
+pedidos-proveedor.js:118 ✅ 3 proveedores cargados
+pedidos-proveedor.js:250 ✅ 6 productos del inventario cargados
+pedidos-proveedor.js:471 📋 Mostrando información del proveedor: Object
+pedidos-proveedor.js:605 🔍 Datos de productos recibidos: Array(6)
+pedidos-proveedor.js:609 📦 Producto: Object
+pedidos-proveedor.js:609 📦 Producto: Object
+pedidos-proveedor.js:609 📦 Producto: Object
+pedidos-proveedor.js:609 📦 Producto: Object
+pedidos-proveedor.js:609 📦 Producto: Object
+pedidos-proveedor.js:609 📦 Producto: Object
+pedidos-proveedor.js:731 📋 === HTML DE PRODUCTOS CARGADO ===
+pedidos-proveedor.js:732 📊 Productos renderizados: 6
+pedidos-proveedor.js:737 🔍 === VERIFICANDO ELEMENTOS SORTABLE ===
+pedidos-proveedor.js:738 📊 Elementos .sortable encontrados: 5
+pedidos-proveedor.js:741 📋 Elemento 1: Object
+pedidos-proveedor.js:741 📋 Elemento 2: Object
+pedidos-proveedor.js:741 📋 Elemento 3: Object
+pedidos-proveedor.js:741 📋 Elemento 4: Object
+pedidos-proveedor.js:741 📋 Elemento 5: Object
+pedidos-proveedor.js:513 🔧 Configurando ordenamiento de tabla de productos...
+pedidos-proveedor.js:754 🔧 === VERIFICANDO EVENT LISTENERS ===
+pedidos-proveedor.js:757 📋 Eventos en elemento 1: Object
+pedidos-proveedor.js:757 📋 Eventos en elemento 2: Object
+pedidos-proveedor.js:757 📋 Eventos en elemento 3: Object
+pedidos-proveedor.js:757 📋 Eventos en elemento 4: Object
+pedidos-proveedor.js:757 📋 Eventos en elemento 5: Object
+pedidos-proveedor.js:958 📦 Respuesta del servidor: Object
+pedidos-proveedor.js:967 ❌ Error creando pedido: undefined
+finalizarPedido @ pedidos-proveedor.js:967
+await in finalizarPedido
+onclick @ PedidosProveedor:715
+pedidos-proveedor.js:1201 ❌ Error: Error al crear el pedido
+mostrarError @ pedidos-proveedor.js:1201
+finalizarPedido @ pedidos-proveedor.js:968
+await in finalizarPedido
+onclick @ PedidosProveedor:715
+PedidosProveedor:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <button.btn-close>
+Ancestor with aria-hidden: <div.admin-wrapper> <div class=​"admin-wrapper" aria-hidden=​"true">​…​</div>​flex

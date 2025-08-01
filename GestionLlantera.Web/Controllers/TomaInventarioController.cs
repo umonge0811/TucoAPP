@@ -264,10 +264,15 @@ namespace GestionLlantera.Web.Controllers
 
                 if (asignacion == null)
                 {
+                    _logger.LogWarning("🚫 Usuario no asignado intentó acceder al inventario {InventarioId}", inventarioId);
+
                     return Json(new
                     {
                         success = false,
-                        message = "Usuario no asignado a este inventario",
+                        message = "🔒 Acceso restringido: No estás asignado a este inventario programado",
+                        details = "Solo los usuarios asignados pueden ejecutar este inventario",
+                        inventario_id = inventarioId,
+                        timestamp = DateTime.Now.ToString("HH:mm:ss"),
                         permisos = new
                         {
                             permisoConteo = false,
@@ -860,7 +865,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Completa un inventario
+        /// Completa un inventario```tool_code
         /// </summary>
         [HttpPost]
         [Route("TomaInventario/CompletarInventario/{inventarioId}")]
@@ -924,12 +929,26 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
-                // ✅ VERIFICAR PERMISOS
+                // 🔒 VERIFICACIÓN DE PERMISOS PARA HISTORIAL
+
+                // ✅ VERIFICAR QUE TENGA UNO DE LOS DOS PERMISOS
+                var puedeVerHistorial = await this.TienePermisoAsync("Ver Historial Inventarios");
                 var puedeVerHistorialCompleto = await this.TienePermisoAsync("Ver Historial Inventarios Completo");
+
+                // El usuario debe tener AL MENOS UNO de los dos permisos
+                if (!puedeVerHistorial && !puedeVerHistorialCompleto)
+                {
+                    _logger.LogWarning("🚫 Usuario {Usuario} sin permisos para ver historial de inventarios", User.Identity?.Name);
+                    TempData["AccesoNoAutorizado"] = "Ver Historial Inventarios";
+                    TempData["ModuloAcceso"] = "Historial de Inventarios";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 var usuarioId = ObtenerIdUsuarioActual();
 
                 _logger.LogInformation("🔐 === PERMISOS DE HISTORIAL ===");
                 _logger.LogInformation("🔐 Usuario ID: {UsuarioId}", usuarioId);
+                _logger.LogInformation("🔐 Puede ver historial básico: {PuedeVer}", puedeVerHistorial);
                 _logger.LogInformation("🔐 Puede ver historial completo: {PuedeVer}", puedeVerHistorialCompleto);
 
                 List<InventarioProgramadoDTO> inventarios;

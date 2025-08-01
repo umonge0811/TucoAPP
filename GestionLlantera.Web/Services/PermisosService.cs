@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using System.Net.Http;
 using System.Text.Json;
 using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
@@ -15,7 +15,7 @@ namespace GestionLlantera.Web.Services
 
         private PermisosUsuarioActual? _permisosCache;
         private DateTime _ultimaActualizacion = DateTime.MinValue;
-        private readonly TimeSpan _tiempoCache = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan _tiempoCache = TimeSpan.FromMinutes(1); // ✅ REDUCIR A 1 MINUTO
 
         public PermisosUsuarioActual PermisosActuales => _permisosCache ?? new PermisosUsuarioActual();
 
@@ -126,12 +126,16 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                // ✅ Verificar caché
-                if (_permisosCache != null && DateTime.Now - _ultimaActualizacion < _tiempoCache)
+                // ✅ Verificar caché - FORZAR RENOVACIÓN MÁS FRECUENTE
+                var tiempoCacheEfectivo = TimeSpan.FromSeconds(30); // ✅ 30 segundos para desarrollo
+                if (_permisosCache != null && DateTime.Now - _ultimaActualizacion < tiempoCacheEfectivo)
                 {
-                    _logger.LogDebug("Usando permisos desde caché");
+                    _logger.LogDebug("Usando permisos desde caché (expira en {Segundos}s)", 
+                        (tiempoCacheEfectivo - (DateTime.Now - _ultimaActualizacion)).TotalSeconds);
                     return _permisosCache;
                 }
+
+                _logger.LogInformation("🔄 Caché de permisos expirado - Renovando desde API");
 
                 // ✅ SOLUCIÓN TEMPORAL: Verificar directamente en el contexto HTTP
                 var context = _httpContextAccessor.HttpContext;
@@ -242,6 +246,39 @@ namespace GestionLlantera.Web.Services
             _permisosCache = null;
             _ultimaActualizacion = DateTime.MinValue;
             await ObtenerPermisosUsuarioActualAsync();
+        }
+
+        /// <summary>
+        /// Fuerza la renovación inmediata de permisos (ignora caché completamente)
+        /// </summary>
+        public async Task<PermisosUsuarioActual> ForzarRenovacionPermisosAsync()
+        {
+            _logger.LogInformation("🔄 FORZANDO renovación inmediata de permisos (ignorando caché)");
+            
+            // Limpiar caché completamente
+            LimpiarCacheCompleto();
+            
+            // Obtener permisos frescos
+            return await ObtenerPermisosUsuarioActualAsync();
+        }
+
+        /// <summary>
+        /// Limpia completamente el caché de permisos (útil al cambiar de usuario)
+        /// </summary>
+        public void LimpiarCacheCompleto()
+        {
+            _logger.LogInformation("🧹 Limpiando caché completo de permisos");
+            _permisosCache = null;
+            _ultimaActualizacion = DateTime.MinValue;
+        }
+
+        /// <summary>
+        /// Verifica si el usuario actual es administrador
+        /// </summary>
+        public async Task<bool> EsAdministradorAsync()
+        {
+            var permisos = await ObtenerPermisosUsuarioActualAsync();
+            return permisos.EsAdministrador;
         }
 
         /// <summary>

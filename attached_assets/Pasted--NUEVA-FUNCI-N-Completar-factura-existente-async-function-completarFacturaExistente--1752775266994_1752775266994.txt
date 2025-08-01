@@ -1,0 +1,166 @@
+/**
+ * ✅ NUEVA FUNCIÓN: Completar factura existente
+ */
+async function completarFacturaExistente(facturaId) {
+    try {
+        console.log('💰 === COMPLETANDO FACTURA EXISTENTE ===');
+        console.log('💰 Factura ID:', facturaId);
+
+        // ✅ VALIDACIÓN INICIAL
+        if (!facturaId) {
+            console.error('❌ FacturaId es requerido');
+            mostrarToast('Error', 'ID de factura no válido', 'danger');
+            return;
+        }
+
+
+        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+        
+        // ✅ DETERMINAR SI ES PROFORMA BASADO EN MÚLTIPLES FUENTES
+        const esProforma = window.proformaOriginalParaConversion ||
+            (facturaPendienteActual && facturaPendienteActual.numeroFactura && facturaPendienteActual.numeroFactura.startsWith('PROF')) ||
+            (facturaId && facturaId.toString().includes('PROF'));
+
+        console.log('📋 Es proforma detectada:', esProforma);
+        console.log('📋 Proforma original para conversión:', window.proformaOriginalParaConversion);
+        console.log('📋 Factura pendiente actual:', facturaPendienteActual);
+        // ✅ DATOS COMPLETOS Y VALIDADOS PARA EL CONTROLADOR
+        const datosCompletamiento = {
+            facturaId: parseInt(facturaId), // Asegurar que sea número
+            metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
+            observaciones: $('#observacionesVenta').val() || '',
+            forzarVerificacionStock: false,
+            esProforma: esProforma
+        };
+
+        // ✅ AGREGAR DETALLES DE PAGO SOLO SI ES PAGO MÚLTIPLE
+        if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 0) {
+            datosCompletamiento.detallesPago = detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || '',
+                fechaPago: new Date().toISOString()
+            }));
+        }
+
+        // ✅ SI ES CONVERSIÓN DE PROFORMA, AGREGAR INFORMACIÓN ADICIONAL
+        if (window.proformaOriginalParaConversion) {
+            datosCompletamiento.numeroFacturaGenerada = `FAC-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}-TEMP`;
+            datosCompletamiento.observaciones = (datosCompletamiento.observaciones || '') +
+                ` | Convertido desde proforma ${window.proformaOriginalParaConversion.numeroProforma}`;
+            datosCompletamiento.facturaGeneradaId = null;
+
+            console.log('📋 Datos adicionales de proforma agregados');
+        }
+
+        console.log('📋 Datos de completamiento finales:', datosCompletamiento);
+
+        console.log('📋 Datos de completamiento:', datosCompletamiento);
+
+        const response = await fetch('/Facturacion/CompletarFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(datosCompletamiento),
+            credentials: 'include'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('✅ Factura completada exitosamente:', result);
+            
+            // ✅ PRESERVAR INFORMACIÓN COMPLETA DE FACTURA ANTES DE PROCESAR
+            console.log('📋 === PRESERVANDO INFORMACIÓN DE FACTURA PARA RECIBO ===');
+            if (facturaPendienteActual) {
+                window.facturaParaRecibo = {
+                    numeroFactura: facturaPendienteActual.numeroFactura || `FAC-${facturaId}`,
+                    nombreCliente: facturaPendienteActual.nombreCliente || 
+                                  facturaPendienteActual.NombreCliente ||
+                                  clienteSeleccionado?.nombre || 
+                                  clienteSeleccionado?.nombreCliente ||
+                                  'Cliente General',
+                    usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre ||
+                                         facturaPendienteActual.UsuarioCreadorNombre ||
+                                         obtenerUsuarioActual()?.nombre ||
+                                         'Sistema'
+                };
+                console.log('📋 Información preservada:', window.facturaParaRecibo);
+            }
+            
+            // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN
+            if (window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
+                console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE COMPLETAR FACTURA ===');
+                console.log('📦 Productos pendientes:', window.productosPendientesEntrega);
+                console.log('📦 Factura completada ID:', facturaId);
+                
+                await registrarProductosPendientesEntrega(facturaId, window.productosPendientesEntrega);
+            }
+            
+            // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
+            const productosParaRecibo = [...productosEnVenta];
+            
+            // ✅ CERRAR MODAL INMEDIATAMENTE
+            modalFinalizarVenta.hide();
+            
+            // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR CON DATOS COMPLETOS
+            console.log('🖨️ Llamando a generarReciboFacturaCompletada con:', {
+                result: result,
+                productos: productosParaRecibo.length,
+                metodoPago: metodoPagoSeleccionado,
+                facturaPendiente: facturaPendienteActual
+            });
+            
+            generarReciboFacturaCompletada(result, productosParaRecibo, metodoPagoSeleccionado);
+            
+            // ✅ LIMPIAR CARRITO COMPLETAMENTE
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+            facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+            
+            // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES
+            if (window.productosPendientesEntrega) {
+                delete window.productosPendientesEntrega;
+            }
+            if (window.facturaConPendientes) {
+                delete window.facturaConPendientes;
+            }
+
+            // ✅ LIMPIAR ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
+            window.lastProductsHash = null;
+            ultimaBusqueda = '';
+            busquedaEnProceso = false;
+            cargaInicialCompletada = false;
+
+            // ✅ ACTUALIZAR VISTA DE PRODUCTOS
+            await actualizarVistaProductosPostAjuste();
+
+            // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
+            Swal.fire({
+                icon: 'success',
+                title: '¡Factura Completada!',
+                text: `La factura ha sido completada exitosamente y marcada como pagada`,
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#28a745',
+                timer: 4000,
+                timerProgressBar: true,
+                showConfirmButton: true
+            });
+
+        } else {
+            throw new Error(result.message || 'Error al completar la factura');
+        }
+
+    } catch (error) {
+        console.error('❌ Error completando factura existente:', error);
+        throw error;
+    }
+}

@@ -396,7 +396,7 @@ namespace API.Controllers
                     inventarioId, User.Identity?.Name ?? "Anónimo");
 
                 // ✅ VERIFICAR ACCESO AL INVENTARIO
-                var tieneAcceso = await VerificarAccesoInventario(inventarioId);
+                var tieneAcceso = await VerificarAccesoInventarioInternal(inventarioId);
                 if (!tieneAcceso)
                 {
                     _logger.LogWarning("🚫 Usuario {Usuario} sin acceso al inventario {InventarioId}",
@@ -667,7 +667,7 @@ namespace API.Controllers
         /// <summary>
         /// Verifica si el usuario actual tiene acceso al inventario
         /// </summary>
-        private async Task<bool> VerificarAccesoInventario(int inventarioId)
+        private async Task<bool> VerificarAccesoInventarioInternal(int inventarioId)
         {
             try
             {
@@ -762,7 +762,7 @@ namespace API.Controllers
                     inventarioId, User.Identity?.Name ?? "Anónimo");
 
                 // ✅ VERIFICAR ACCESO AL INVENTARIO
-                var tieneAcceso = await VerificarAccesoInventario(inventarioId);
+                var tieneAcceso = await VerificarAccesoInventarioInternal(inventarioId);
                 if (!tieneAcceso)
                 {
                     return Forbid("No tienes acceso a este inventario");
@@ -1567,6 +1567,38 @@ namespace API.Controllers
         }
 
 
+
+        /// <summary>
+        /// Verifica si el usuario tiene acceso a un inventario específico
+        /// GET: api/TomaInventario/VerificarAccesoInventario/{inventarioId}
+        /// </summary>
+        [HttpGet("VerificarAccesoInventario/{inventarioId}")]
+        public async Task<IActionResult> VerificarAccesoInventario(int inventarioId)
+        {
+            try
+            {
+                var tieneAcceso = await VerificarAccesoInventarioInternal(inventarioId);
+                var usuarioId = ObtenerIdUsuarioActual();
+
+                return Ok(new
+                {
+                    success = true,
+                    tieneAcceso = tieneAcceso,
+                    inventarioId = inventarioId,
+                    usuarioId = usuarioId,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verificando acceso al inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error verificando acceso al inventario"
+                });
+            }
+        }
 
         /// <summary>
         /// Obtiene el ID del usuario actual desde los claims

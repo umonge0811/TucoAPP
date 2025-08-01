@@ -90,7 +90,7 @@ public partial class TucoContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
 
-        // ✅ CONFIGURACIÓN DE AjustesInventarioPendientes
+        // ✅ CONFIGURACIÓN DE AjustesInventarioPendientesd
         modelBuilder.Entity<AjusteInventarioPendiente>(entity =>
         {
             entity.HasKey(e => e.AjusteId);
@@ -497,6 +497,11 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.Telefono)
                 .HasMaxLength(15)
                 .IsUnicode(false);
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true);
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -542,6 +547,19 @@ public partial class TucoContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime");
             entity.Property(e => e.UsuarioId).HasColumnName("UsuarioID");
+
+            // ✅ CONFIGURACIÓN DE NUEVAS PROPIEDADES
+            entity.Property(e => e.TokenHash)
+                .HasMaxLength(255)
+                .IsRequired(false);
+
+            entity.Property(e => e.EstaActiva)
+                .IsRequired()
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.FechaInvalidacion)
+                .HasColumnType("datetime")
+                .IsRequired(false);
 
             entity.HasOne(d => d.Usuario).WithMany(p => p.SesionUsuarios)
                 .HasForeignKey(d => d.UsuarioId)

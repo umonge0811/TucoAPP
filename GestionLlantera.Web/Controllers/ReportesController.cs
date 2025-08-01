@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Services.Interfaces;
 using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
+using GestionLlantera.Web.Extensions;
 
 
 namespace GestionLlantera.Web.Controllers
@@ -45,6 +46,15 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ VERIFICAR PERMISO PARA VER REPORTES
+                if (!await this.TienePermisoAsync("Ver Reportes"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Reportes' intentó descargar reporte Excel");
+                    TempData["AccesoNoAutorizado"] = "Ver Reportes";
+                    TempData["ModuloAcceso"] = "Reportes";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 // ✅ OBTENER TOKEN JWT
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
@@ -73,25 +83,54 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // ✅ OBTENER TOKEN JWT
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
+                _logger.LogInformation("📋 Solicitud de descarga PDF para inventario {InventarioId}", inventarioId);
+
+                // ✅ OBTENER TOKEN JWT DESDE LAS COOKIES
+                var jwtToken = Request.Cookies["JWTToken"];
+                if (string.IsNullOrEmpty(jwtToken))
                 {
-                    _logger.LogError("❌ Token JWT no encontrado para DescargarPdf");
-                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
-                    return RedirectToAction("Login", "Account");
+                    _logger.LogWarning("❌ No se encontró token JWT en las cookies");
+                    return Unauthorized("Token de autenticación requerido");
                 }
 
-                // ✅ LLAMAR AL SERVICIO CON TOKEN
-                var archivo = await _reportesService.DescargarPdfAsync(inventarioId, token);
+                // ✅ DELEGAR AL SERVICIO
+                var archivoBytes = await _reportesService.DescargarPdfAsync(inventarioId, jwtToken);
 
-                return File(archivo, "application/pdf", $"Reporte_Inventario_{inventarioId}.pdf");
+                // ✅ RETORNAR ARCHIVO PDF
+                return File(archivoBytes, "application/pdf", $"Reporte_Inventario_{inventarioId}_{DateTime.Now:yyyyMMdd}.pdf");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error descargando PDF para inventario {InventarioId}", inventarioId);
-                TempData["Error"] = "Error al descargar el reporte PDF";
-                return StatusCode(500, new { message = ex.Message });
+                _logger.LogError(ex, "❌ Error al descargar PDF del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, "Error interno del servidor al generar el PDF");
+            }
+        }
+
+        [HttpGet("pedido/{pedidoId}/pdf")]
+        public async Task<IActionResult> DescargarPedidoPdf(int pedidoId)
+        {
+            try
+            {
+                _logger.LogInformation("📋 Solicitud de descarga PDF para pedido {PedidoId}", pedidoId);
+
+                // ✅ OBTENER TOKEN JWT DESDE LAS COOKIES
+                var jwtToken = Request.Cookies["JWTToken"];
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    _logger.LogWarning("❌ No se encontró token JWT en las cookies");
+                    return Unauthorized("Token de autenticación requerido");
+                }
+
+                // ✅ DELEGAR AL SERVICIO (necesitamos crear este método)
+                var archivoBytes = await _reportesService.DescargarPedidoPdfAsync(pedidoId, jwtToken);
+
+                // ✅ RETORNAR ARCHIVO PDF
+                return File(archivoBytes, "application/pdf", $"Reporte_Pedido_{pedidoId}_{DateTime.Now:yyyyMMdd}.pdf");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al descargar PDF del pedido {PedidoId}", pedidoId);
+                return StatusCode(500, "Error interno del servidor al generar el PDF");
             }
         }
 

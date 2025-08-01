@@ -1,9 +1,9 @@
-
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "_AdminLayout";
 }
 
+<link rel="stylesheet" href="~/css/views/admin/dashboard.css" asp-append-version="true" />
 
 
 <div class="dashboard-container">
@@ -31,11 +31,11 @@
                         <div class="stat-comparison">
                             <span>₡850,000 este mes</span>
                         </div>
-                      
+
                     </div>
-                    
+
                 </div>
-                
+
             </div>
 
 
@@ -191,37 +191,37 @@
     @* Accesos Rápidos *@
     <div class="dashboard-section">
         <div class="quick-access-grid">
-            <a href="@Url.Action("Index", "Facturacion")" class="quick-access-card">
+            <a asp-permiso="Ver Facturación" href="@Url.Action("Index", "Facturacion")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-cart-plus"></i>
                 </div>
                 <span>Nueva Venta</span>
             </a>
-            <a href="@Url.Action("Index", "Inventario")" class="quick-access-card">
+            <a asp-permiso="Ver Productos" href="@Url.Action("Index", "Inventario")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-box-seam"></i>
                 </div>
                 <span>Inventario</span>
             </a>
-            <a href="@Url.Action("EntregasPendientes", "Facturacion")" class="quick-access-card">
+            <a asp-permiso="Entregar Pendientes" href="@Url.Action("EntregasPendientes", "Facturacion")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-truck"></i>
                 </div>
                 <span>Entregas Pendientes</span>
             </a>
-            <a href="@Url.Action("Index", "Clientes")" class="quick-access-card">
+            <a asp-permiso="Ver Clientes" href="@Url.Action("Index", "Clientes")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-people"></i>
                 </div>
                 <span>Clientes</span>
             </a>
-            <a href="#" class="quick-access-card">
+            <a asp-permiso="Ver Reportes" href="#" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-graph-up"></i>
                 </div>
                 <span>Reportes</span>
             </a>
-            <a href="@Url.Action("RolesPermisos", "Configuracion")" class="quick-access-card">
+            <a asp-permiso="Configuracion Sistema" href="@Url.Action("RolesPermisos", "Configuracion")" class="quick-access-card">
                 <div class="quick-access-icon">
                     <i class="bi bi-gear"></i>
                 </div>

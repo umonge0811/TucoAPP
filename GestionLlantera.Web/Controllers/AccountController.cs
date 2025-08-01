@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using GestionLlantera.Web.Models;
 using GestionLlantera.Web.Models.ViewModels;
@@ -16,15 +16,18 @@ namespace GestionLlantera.Web.Controllers
         // Declaración de servicios que usaremos
         private readonly IAuthService _authService;
         private readonly ILogger<AccountController> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         // Constructor: Inyección de dependencias
         // ASP.NET Core se encarga de crear las instancias de estos servicios
         public AccountController(
             IAuthService authService,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            IHttpClientFactory httpClientFactory)
         {
             _authService = authService;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         public IActionResult AccessDenied()
@@ -171,6 +174,16 @@ namespace GestionLlantera.Web.Controllers
                         });
 
                     _logger.LogInformation("Login exitoso para usuario: {Email}", model.Email);
+
+                    // ✅ LIMPIAR CACHÉ DE PERMISOS AL INICIAR NUEVA SESIÓN
+                    var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
+                    permisosService?.LimpiarCacheCompleto();
+
+                    // ✅ AGREGAR HEADERS PARA EVITAR CACHÉ DEL NAVEGADOR
+                    Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                    Response.Headers["Pragma"] = "no-cache";
+                    Response.Headers["Expires"] = "0";
+
                     return RedirectToAction("Index", "Dashboard");
                 }
 
@@ -195,6 +208,32 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                // ✅ INVALIDAR SESIÓN EN BASE DE DATOS
+                var token = Request.Cookies["JwtToken"];
+                if (!string.IsNullOrEmpty(token))
+                {
+                    try
+                    {
+                        // Llamar al API para invalidar la sesión
+                        var client = _httpClientFactory.CreateClient("APIClient");
+                        var response = await client.PostAsJsonAsync("/api/auth/logout", new { token = token });
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            _logger.LogInformation("Sesión invalidada correctamente en la base de datos");
+                        }
+                        else
+                        {
+                            _logger.LogWarning("No se pudo invalidar la sesión en la base de datos");
+                        }
+                    }
+                    catch (Exception dbEx)
+                    {
+                        _logger.LogError(dbEx, "Error al invalidar sesión en base de datos");
+                        // Continuar con el logout aunque falle la invalidación en BD
+                    }
+                }
+
                 // Registrar el evento de logout
                 _logger.LogInformation("Usuario cerró sesión");
 
@@ -209,6 +248,15 @@ namespace GestionLlantera.Web.Controllers
                 {
                     Response.Cookies.Delete(cookie);
                 }
+
+                // ✅ LIMPIAR CACHÉ DE PERMISOS
+                var permisosService = HttpContext.RequestServices.GetService<IPermisosService>();
+                permisosService?.LimpiarCacheCompleto();
+
+                // ✅ AGREGAR HEADERS PARA EVITAR CACHÉ DEL NAVEGADOR
+                Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+                Response.Headers["Pragma"] = "no-cache";
+                Response.Headers["Expires"] = "0";
 
                 // Redirigir al usuario a la página de inicio
                 return RedirectToAction("Index", "Home");

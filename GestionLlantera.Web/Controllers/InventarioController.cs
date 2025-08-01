@@ -148,6 +148,16 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
+                if (!await this.TienePermisoAsync("Ver Productos"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Productos' intentó acceder al inventario");
+
+                    TempData["AccesoNoAutorizado"] = "Ver Productos";
+                    TempData["ModuloAcceso"] = "Inventario";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
+
                 // 🔑 OBTENER TOKEN USANDO EL MÉTODO AUXILIAR
                 var token = ObtenerTokenJWT();
 
@@ -205,6 +215,15 @@ namespace GestionLlantera.Web.Controllers
 
             try
             {
+                // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
+                if (!await this.TienePermisoAsync("Ver Detalle Producto"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Detalle Producto' intentó acceder al inventario");
+
+                    TempData["AccesoNoAutorizado"] = "Ver Detalle Producto";
+                    TempData["ModuloAcceso"] = "Inventario";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
                 _logger.LogInformation("🔍 === INICIANDO DETALLE PRODUCTO ===");
                 _logger.LogInformation("📋 Producto ID solicitado: {Id}", id);
 
@@ -317,16 +336,24 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // ✅ VERIFICACIÓN DE PERMISOS
-                var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
-                    "No tienes permisos para editar productos.");
-                if (validacion != null) return validacion;
+
+                 // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
+                if (!await this.TienePermisoAsync("Editar Productos"))
+                {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Editar Productos' intentó acceder al inventario");
+
+                    TempData["AccesoNoAutorizado"] = "Editar Productos";
+                    TempData["ModuloAcceso"] = "Inventario";
+                    return RedirectToAction("AccessDenied", "Account");
+                }
 
                 ViewData["Title"] = "Editar Producto";
                 ViewData["Layout"] = "_AdminLayout";
 
                 _logger.LogInformation("🔧 === INICIANDO EDICIÓN DE PRODUCTO ===");
                 _logger.LogInformation("📋 Producto ID a editar: {Id}", id);
+
+
 
                 // ✅ VALIDACIÓN BÁSICA
                 if (id <= 0)
@@ -634,10 +661,15 @@ namespace GestionLlantera.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> AgregarProducto()
         {
-            // ✅ RESTRICCIÓN PARA AGREGAR PRODUCTOS
-            var validacion = await this.ValidarPermisoMvcAsync("Editar Productos",
-                "No tienes permisos para agregar productos.");
-            if (validacion != null) return validacion;
+            // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
+            if (!await this.TienePermisoAsync("Editar Productos"))
+            {
+                _logger.LogWarning("🚫 Usuario sin permiso 'Editar Productos' intentó acceder al inventario");
+
+                TempData["AccesoNoAutorizado"] = "Editar Productos";
+                TempData["ModuloAcceso"] = "Inventario";
+                return RedirectToAction("AccessDenied", "Account");
+            }
 
             ViewData["Title"] = "Agregar Producto";
             ViewData["Layout"] = "_AdminLayout";
@@ -1732,16 +1764,23 @@ namespace GestionLlantera.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> ProgramarInventario()
         {
+
+            // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
+            if (!await this.TienePermisoAsync("Programar Inventario"))
+            {
+                _logger.LogWarning("🚫 Usuario sin permiso 'Programar Inventario' intentó acceder al inventario");
+
+                TempData["AccesoNoAutorizado"] = "Programar Inventario";
+                TempData["ModuloAcceso"] = "Inventario";
+                return RedirectToAction("AccessDenied", "Account");
+            }
+
             ViewData["Title"] = "Programar Inventario";
             ViewData["Layout"] = "_AdminLayout";
 
             try
             {
-                // ✅ PASO 1: VERIFICACIÓN DE PERMISOS (SEGURIDAD PRINCIPAL)
-                var validacion = await this.ValidarPermisoMvcAsync("Programar Inventario",
-                    "No tienes permisos para programar inventarios. Contacta al administrador.");
-                if (validacion != null) return validacion;
-
+                
                 // ✅ PASO 2: OBTENER TOKEN JWT
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))

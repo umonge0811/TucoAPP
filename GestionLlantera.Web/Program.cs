@@ -17,6 +17,15 @@ builder.Services.AddDbContext<TucoContext>(options =>
 // Agregar servicios al contenedor
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
+
+// ✅ CONFIGURACIÓN DE SESIONES
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 // ✅ REGISTRO DEL NUEVO SERVICIO DE TOMA DE INVENTARIO
 builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 // ✅ AGREGAR ESTA LÍNEA donde registras los otros servicios
@@ -24,6 +33,7 @@ builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>(
 // ✅ AGREGAR SERVICIO DE REPORTES
 builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IFacturacionService, FacturacionService>();
+builder.Services.AddScoped<IProveedoresService, ProveedoresService>();
 
 // ✅ SOLO EL SERVICIO DIRECTO (sin HTTP)
 builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
@@ -89,6 +99,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+
+// ✅ HABILITAR SESIONES (debe ir antes de autenticación)
+app.UseSession();
 
 // Pipeline de autenticación y autorización
 app.UseAuthentication();

@@ -1,4 +1,4 @@
-
+@model List<Tuco.Clases.DTOs.ClienteDTO>
 @{
     ViewData["Title"] = "Gestión de Clientes";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -32,7 +32,7 @@
                         </h4>
                         <button type="button" 
                                 id="btnNuevoCliente" 
-                                class="btn btn-light btn-sm">
+                                class="btn btn-light btn-sm" asp-permiso="Crear Clientes">
                             <i class="bi bi-person-plus me-1"></i>Nuevo Cliente
                         </button>
                     </div>
@@ -63,20 +63,208 @@
 
                     <!-- Tabla de clientes -->
                     <div class="table-responsive">
-                        <table class="table table-hover" id="tablaClientes">
-                            <thead class="table-light">
+                        <table class="table table-hover table-striped align-middle" id="tablaClientes">
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Nombre</th>
-                                    <th>Identificación</th>
-                                    <th>Email</th>
-                                    <th>Teléfono</th>
-                                    <th>Dirección</th>
-                                    <th class="text-center">Acciones</th>
+                                    <th class="text-center sortable" data-column="id" data-type="number" style="width: 80px;">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            ID
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
+                                    </th>
+                                    <th class="sortable" data-column="nombre" data-type="text" style="min-width: 200px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person me-2"></i>
+                                            Nombre Cliente
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
+                                    </th>
+                                    <th class="sortable d-none d-md-table-cell" data-column="contacto" data-type="text" style="min-width: 140px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person-badge me-2"></i>
+                                            Identificación
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
+                                    </th>
+                                    <th class="sortable d-none d-lg-table-cell" data-column="email" data-type="text" style="min-width: 200px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-envelope me-2"></i>
+                                            Email
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
+                                    </th>
+                                    <th class="sortable d-none d-sm-table-cell" data-column="telefono" data-type="text" style="min-width: 120px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-telephone me-2"></i>
+                                            Teléfono
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
+                                    </th>
+                                    <th class="sortable d-none d-xl-table-cell" data-column="direccion" data-type="text" style="min-width: 250px;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-geo-alt me-2"></i>
+                                            Dirección
+                                            <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-75"></i>
+                                        </div>
+                                    </th>
+                                    <th class="text-center" style="width: 120px;">
+                                        <i class="bi bi-gear me-1"></i>Acciones
+                                    </th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <!-- Se llena dinámicamente -->
-                            </tbody>
+                            
+                            <tbody id="clientesTableBody">
+                            @foreach (var cliente in Model)
+                            {
+                                <tr data-id="@cliente.ClienteId" class="cliente-row">
+                                    <!-- 1. ID -->
+                                    <td class="text-center">
+                                        @cliente.ClienteId
+                                    </td>
+
+                                    <!-- 2. Nombre -->
+                                    <td>
+                                        @cliente.NombreCliente
+                                        <!-- Info móvil: mostrar datos importantes en pantallas pequeñas -->
+                                        <div class="d-md-none small text-muted mt-1">
+                                            @if (!string.IsNullOrEmpty(cliente.Contacto))
+                                            {
+                                                <div><i class="bi bi-person-badge me-1"></i>@cliente.Contacto</div>
+                                            }
+                                            @if (!string.IsNullOrEmpty(cliente.Telefono))
+                                            {
+                                                var telefonoMovil = cliente.Telefono;
+                                                var codigoPaisMovil = "";
+                                                var numeroLimpioMovil = "";
+                                                
+                                                if (telefonoMovil.StartsWith("+"))
+                                                {
+                                                    var partesMovil = telefonoMovil.Split(' ', 2);
+                                                    codigoPaisMovil = partesMovil[0];
+                                                    numeroLimpioMovil = partesMovil.Length > 1 ? partesMovil[1].Replace("-", "").Replace(" ", "") : "";
+                                                }
+                                                else
+                                                {
+                                                    codigoPaisMovil = "+506";
+                                                    numeroLimpioMovil = telefonoMovil.Replace("-", "").Replace(" ", "");
+                                                }
+                                                
+                                                var whatsappUrlMovil = $"https://wa.me/{codigoPaisMovil.Replace("+", "")}{numeroLimpioMovil}";
+                                                <div>
+                                                    <a href="@whatsappUrlMovil" target="_blank" class="text-decoration-none">
+                                                        <i class="bi bi-whatsapp text-success me-1"></i>@cliente.Telefono
+                                                    </a>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="d-lg-none d-md-block small text-muted mt-1">
+                                            @if (!string.IsNullOrEmpty(cliente.Email))
+                                            {
+                                                <div><i class="bi bi-envelope me-1"></i>@cliente.Email</div>
+                                            }
+                                        </div>
+                                    </td>
+
+                                    <!-- 3. Identificación (oculta en móvil) -->
+                                    <td class="d-none d-md-table-cell">
+                                        @if (!string.IsNullOrEmpty(cliente.Contacto))
+                                        {
+                                            @cliente.Contacto
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No especificada</span>
+                                        }
+                                    </td>
+
+                                    <!-- 4. Email (oculta en tablet y móvil) -->
+                                    <td class="d-none d-lg-table-cell">
+                                        @if (!string.IsNullOrEmpty(cliente.Email))
+                                        {
+                                            <a href="mailto:@cliente.Email" class="text-decoration-none">
+                                                @cliente.Email
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No especificado</span>
+                                        }
+                                    </td>
+
+                                    <!-- 5. Teléfono (oculta en móvil) -->
+                                    <td class="d-none d-sm-table-cell">
+                                        @if (!string.IsNullOrEmpty(cliente.Telefono))
+                                        {
+                                            // Extraer código de país y número
+                                            var telefonoCompleto = cliente.Telefono;
+                                            var codigoPais = "";
+                                            var numeroLimpio = "";
+                                            
+                                            if (telefonoCompleto.StartsWith("+"))
+                                            {
+                                                var partes = telefonoCompleto.Split(' ', 2);
+                                                codigoPais = partes[0];
+                                                numeroLimpio = partes.Length > 1 ? partes[1].Replace("-", "").Replace(" ", "") : "";
+                                            }
+                                            else
+                                            {
+                                                codigoPais = "+506"; // Default Costa Rica
+                                                numeroLimpio = telefonoCompleto.Replace("-", "").Replace(" ", "");
+                                            }
+                                            
+                                            var whatsappUrl = $"https://wa.me/{codigoPais.Replace("+", "")}{numeroLimpio}";
+                                            <a href="@whatsappUrl" 
+                                               class="text-decoration-none" 
+                                               target="_blank"
+                                               title="Enviar WhatsApp a @cliente.Telefono">
+                                                <i class="bi bi-whatsapp text-success me-1"></i>@cliente.Telefono
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No especificado</span>
+                                        }
+                                    </td>
+
+                                    <!-- 6. Dirección (solo en desktop) -->
+                                    <td class="d-none d-xl-table-cell">
+                                        @if (!string.IsNullOrEmpty(cliente.Direccion))
+                                        {
+                                            <span class="text-truncate d-inline-block" style="max-width: 200px;" 
+                                                  title="@cliente.Direccion">
+                                                @cliente.Direccion
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No especificada</span>
+                                        }
+                                    </td>
+
+                                    <!-- 7. Acciones -->
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary editar-cliente-btn"
+                                                    data-id="@cliente.ClienteId" 
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Editar cliente"
+                                                    onclick="editarCliente(@cliente.ClienteId)"
+                                                    asp-permiso="Editar Clientes">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger eliminar-cliente-btn"
+                                                    data-id="@cliente.ClienteId" 
+                                                    data-bs-toggle="tooltip" 
+                                                    title="Eliminar cliente"
+                                                    onclick="eliminarCliente(@cliente.ClienteId)"
+                                                    asp-permiso="Eliminar Clientes">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
                         </table>
                     </div>
 
@@ -110,35 +298,87 @@
             <div class="modal-body">
                 <form id="formCliente">
                     <input type="hidden" id="clienteId" value="0">
-                    
+
                     <div class="mb-3">
-                        <label for="nombreCliente" class="form-label">Nombre Completo *</label>
-                        <input type="text" class="form-control" id="nombreCliente" required>
+                        <label for="nombreCliente" class="form-label">
+                            <i class="bi bi-person me-1"></i>Nombre Completo *
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="nombreCliente" 
+                               placeholder="Juan Pérez González"
+                               required>
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Ingrese el nombre completo del cliente</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="contactoCliente" class="form-label">Identificación</label>
-                        <input type="text" class="form-control" id="contactoCliente">
+                        <label for="contactoCliente" class="form-label">
+                            <i class="bi bi-person-badge me-1"></i>Identificación
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="contactoCliente"
+                               placeholder="1-2345-6789"
+                               maxlength="20">
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Cédula o documento de identidad</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="emailCliente" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="emailCliente">
+                        <label for="emailCliente" class="form-label">
+                            <i class="bi bi-envelope me-1"></i>Email
+                        </label>
+                        <input type="email" 
+                               class="form-control" 
+                               id="emailCliente"
+                               placeholder="cliente@ejemplo.com">
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Correo electrónico válido</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="telefonoCliente" class="form-label">Teléfono</label>
-                        <input type="text" class="form-control" id="telefonoCliente">
+                        <label for="telefonoCliente" class="form-label">
+                            <i class="bi bi-telephone me-1"></i>Teléfono / WhatsApp
+                        </label>
+                        <div class="input-group">
+                            <select class="form-select" id="codigoPaisCliente" style="max-width: 120px;">
+                                <option value="+506" data-pais="CR" selected>🇨🇷 +506</option>
+                                <option value="+1" data-pais="US">🇺🇸 +1</option>
+                                <option value="+52" data-pais="MX">🇲🇽 +52</option>
+                                <option value="+57" data-pais="CO">🇨🇴 +57</option>
+                                <option value="+58" data-pais="VE">🇻🇪 +58</option>
+                                <option value="+507" data-pais="PA">🇵🇦 +507</option>
+                                <option value="+503" data-pais="SV">🇸🇻 +503</option>
+                                <option value="+502" data-pais="GT">🇬🇹 +502</option>
+                                <option value="+504" data-pais="HN">🇭🇳 +504</option>
+                                <option value="+505" data-pais="NI">🇳🇮 +505</option>
+                                <option value="+34" data-pais="ES">🇪🇸 +34</option>
+                            </select>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="telefonoCliente"
+                                   placeholder="8888-8888"
+                                   maxlength="15">
+                        </div>
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">
+                            <i class="bi bi-whatsapp text-success me-1"></i>
+                            Formato para Costa Rica: 8888-8888 (sin espacios adicionales)
+                        </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="direccionCliente" class="form-label">Dirección</label>
-                        <textarea class="form-control" id="direccionCliente" rows="3"></textarea>
+                        <label for="direccionCliente" class="form-label">
+                            <i class="bi bi-geo-alt me-1"></i>Dirección
+                        </label>
+                        <textarea class="form-control" 
+                                  id="direccionCliente" 
+                                  rows="3"
+                                  placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
+                                  maxlength="500"></textarea>
                         <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Dirección completa del cliente</small>
                     </div>
                 </form>
             </div>

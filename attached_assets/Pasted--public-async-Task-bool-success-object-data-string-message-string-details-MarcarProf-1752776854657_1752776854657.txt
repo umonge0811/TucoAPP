@@ -1,0 +1,38 @@
+        public async Task<(bool success, object? data, string? message, string? details)> MarcarProformaComoFacturadaAsync(int proformaId, object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 === MARCANDO PROFORMA COMO FACTURADA ===");
+                _logger.LogInformation("🔄 Proforma ID: {ProformaId}", proformaId);
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.PutAsync($"api/Facturacion/marcar-proforma-facturada/{proformaId}", 
+                    new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"));
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    return (success: true, data: resultado, message: "Proforma marcada como facturada exitosamente", details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error marcando proforma como facturada: {StatusCode} - {Content}", 
+                        response.StatusCode, responseContent);
+                    return (success: false, data: null, message: "Error al marcar proforma como facturada", details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando proforma como facturada");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+            }
+        }

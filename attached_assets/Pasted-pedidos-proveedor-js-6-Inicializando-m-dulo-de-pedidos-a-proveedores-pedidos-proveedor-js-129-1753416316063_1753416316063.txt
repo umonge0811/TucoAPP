@@ -1,0 +1,61 @@
+pedidos-proveedor.js:6 🚀 Inicializando módulo de pedidos a proveedores...
+pedidos-proveedor.js:1294 ✅ Módulo de pedidos a proveedores cargado completamente
+pedidos-proveedor.js:30 📚 DOM cargado, inicializando pedidos a proveedores...
+pedidos-proveedor.js:48 🔧 Configurando event listeners...
+pedidos-proveedor.js:513 🔧 Configurando ordenamiento de tabla de productos...
+pedidos-proveedor.js:83 📋 Cargando datos iniciales completos...
+pedidos-proveedor.js:97 👥 Cargando proveedores...
+pedidos-proveedor.js:137 📦 Cargando TODOS los pedidos...
+pedidos-proveedor.js:236 📦 Cargando productos del inventario...
+pedidos-proveedor.js:36 ✅ Módulo de pedidos a proveedores inicializado correctamente
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+pedidos-proveedor.js:165 ℹ️ No hay pedidos disponibles
+pedidos-proveedor.js:113 📋 Respuesta del servidor: Object
+pedidos-proveedor.js:261 🔄 Iniciando llenarSelectProveedores...
+pedidos-proveedor.js:262 📋 proveedoresDisponibles: Array(3)
+pedidos-proveedor.js:276 🔢 Total proveedores a procesar: 3
+pedidos-proveedor.js:283 🔍 Procesando proveedor 1: Object
+pedidos-proveedor.js:286 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:311 ➕ Agregando opción: <option value="1002">Distribuidora  Tuco</option>
+pedidos-proveedor.js:283 🔍 Procesando proveedor 2: Object
+pedidos-proveedor.js:286 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:311 ➕ Agregando opción: <option value="1005">Distribuidora El carmen S.A</option>
+pedidos-proveedor.js:283 🔍 Procesando proveedor 3: Object
+pedidos-proveedor.js:286 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js:311 ➕ Agregando opción: <option value="1007">Distribuidora Tucan S.A</option>
+pedidos-proveedor.js:327 ✅ 3 de 3 proveedores agregados a los selects
+pedidos-proveedor.js:330 📊 Opciones en select: 4
+pedidos-proveedor.js:331 📊 Opciones en filtro: 4
+pedidos-proveedor.js:118 ✅ 3 proveedores cargados
+pedidos-proveedor.js:250 ✅ 6 productos del inventario cargados
+pedidos-proveedor.js:471 📋 Mostrando información del proveedor: Object
+pedidos-proveedor.js:664 🔍 Datos de productos recibidos: Array(6)
+pedidos-proveedor.js:668 📦 Producto: Object
+pedidos-proveedor.js:668 📦 Producto: Object
+pedidos-proveedor.js:668 📦 Producto: Object
+pedidos-proveedor.js:668 📦 Producto: Object
+pedidos-proveedor.js:668 📦 Producto: Object
+pedidos-proveedor.js:668 📦 Producto: Object
+pedidos-proveedor.js:790 📋 === HTML DE PRODUCTOS CARGADO ===
+pedidos-proveedor.js:791 📊 Productos renderizados: 6
+pedidos-proveedor.js:796 🔍 === VERIFICANDO ELEMENTOS SORTABLE ===
+pedidos-proveedor.js:797 📊 Elementos .sortable encontrados: 5
+pedidos-proveedor.js:800 📋 Elemento 1: Object
+pedidos-proveedor.js:800 📋 Elemento 2: Object
+pedidos-proveedor.js:800 📋 Elemento 3: Object
+pedidos-proveedor.js:800 📋 Elemento 4: Object
+pedidos-proveedor.js:800 📋 Elemento 5: Object
+pedidos-proveedor.js:513 🔧 Configurando ordenamiento de tabla de productos...
+pedidos-proveedor.js:813 🔧 === VERIFICANDO EVENT LISTENERS ===
+pedidos-proveedor.js:816 📋 Eventos en elemento 1: Object
+pedidos-proveedor.js:816 📋 Eventos en elemento 2: Object
+pedidos-proveedor.js:816 📋 Eventos en elemento 3: Object
+pedidos-proveedor.js:816 📋 Eventos en elemento 4: Object
+pedidos-proveedor.js:816 📋 Eventos en elemento 5: Object
+pedidos-proveedor.js:516 🚀 === INICIO FUNCIÓN DE ORDENAMIENTO ===
+pedidos-proveedor.js:523 📊 DATOS DEL CLICK: Object
+pedidos-proveedor.js:539 ⚠️ NO HAY FILAS PARA ORDENAR
+(anonymous) @ pedidos-proveedor.js:539
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2

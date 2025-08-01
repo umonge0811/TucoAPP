@@ -1,0 +1,549 @@
+ 📋 Módulo de filtros de proformas cargado correctamente
+ 📋 Funciones exportadas a window: Array(8)
+ 📋 Función inicializarFiltrosProformas disponible: function
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anonymous) @ Facturacion:1789
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-07-22",
+  "horaActual": "10:06",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 5 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 5
+ 🔄 Construyendo HTML para 5 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Test
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🔄 Actualizando DOM (longitud HTML: 23564 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ 📦 Búsqueda inicial ejecutada
+ 📦 === FIN cargarProductosIniciales (exitosa) ===
+0e9d09cd-a549-404d-a59a-77477f6de47f_profile-pic.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 📋 === ABRIENDO MODAL DE PROFORMAS ===
+ 📋 *** MODAL DE PROFORMAS COMPLETAMENTE VISIBLE ***
+ 📋 Elementos disponibles en el DOM:
+ 📋 - Input búsqueda: 1
+ 📋 - Select estado: 1
+ 📋 - Tabla body: 1
+ 📋 - Loading: 1
+ 📋 - Content: 1
+ ✅ Inicializando filtros de proformas...
+ 🔍 === INICIALIZANDO FILTROS DE PROFORMAS ===
+ 🔍 Estado DOM ready: 
+ 🔍 Modal visible: true
+ 🔍 Buscando elementos del DOM...
+ 🔍 Input de búsqueda encontrado: true
+ 🔍 Input de búsqueda elemento: 
+ ✅ Evento de búsqueda configurado correctamente
+ 🔍 Select de estado encontrado: true
+ ✅ Evento de estado configurado
+ 🔍 Botón limpiar encontrado: true
+ ✅ Botón limpiar configurado
+ 🔍 Cargando proformas iniciales...
+ 🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***
+ 🔍 Filtro actual completo: {
+  "busqueda": "",
+  "estado": "todos",
+  "pagina": 1,
+  "tamano": 20
+}
+ 🔍 busquedaProformasEnProceso: false
+ 🔍 ultimaBusquedaProformas: 
+ 🔍 Término actual: |todos
+ 🔍 Última búsqueda: 
+ 🔍 Página actual: 1
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20
+ ✅ Filtros de proformas inicializados correctamente
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 *** KEYPRESS DETECTADO *** 2 
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 2
+ 🔍 Elemento que disparó evento: 
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 2
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***
+ 🔍 Filtro actualizado: Object
+ 🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***
+ 🔍 Filtro actual completo: {
+  "busqueda": "2",
+  "estado": "todos",
+  "pagina": 1,
+  "tamano": 20
+}
+ 🔍 busquedaProformasEnProceso: false
+ 🔍 ultimaBusquedaProformas: |todos
+ 🔍 Término actual: 2|todos
+ 🔍 Última búsqueda: |todos
+ 🔍 Página actual: 1
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 🔍 Agregando filtro búsqueda: 2
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=2
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 *** KEYPRESS DETECTADO *** 0 2
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 20
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 20
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** KEYPRESS DETECTADO *** 2 20
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 202
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 202
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***
+ 🔍 Filtro actualizado: Object
+ 🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***
+ 🔍 Filtro actual completo: {
+  "busqueda": "202",
+  "estado": "todos",
+  "pagina": 1,
+  "tamano": 20
+}
+ 🔍 busquedaProformasEnProceso: false
+ 🔍 ultimaBusquedaProformas: 2|todos
+ 🔍 Término actual: 202|todos
+ 🔍 Última búsqueda: 2|todos
+ 🔍 Página actual: 1
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 🔍 Agregando filtro búsqueda: 202
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=202
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 *** KEYPRESS DETECTADO *** 7 202
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 2027
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 2027
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***
+ 🔍 Filtro actualizado: Object
+ 🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***
+ 🔍 Filtro actual completo: {
+  "busqueda": "2027",
+  "estado": "todos",
+  "pagina": 1,
+  "tamano": 20
+}
+ 🔍 busquedaProformasEnProceso: false
+ 🔍 ultimaBusquedaProformas: 202|todos
+ 🔍 Término actual: 2027|todos
+ 🔍 Última búsqueda: 202|todos
+ 🔍 Página actual: 1
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 🔍 Agregando filtro búsqueda: 2027
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=2027
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 202
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 202
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***
+ 🔍 Filtro actualizado: Object
+ 🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***
+ 🔍 Filtro actual completo: {
+  "busqueda": "202",
+  "estado": "todos",
+  "pagina": 1,
+  "tamano": 20
+}
+ 🔍 busquedaProformasEnProceso: false
+ 🔍 ultimaBusquedaProformas: 2027|todos
+ 🔍 Término actual: 202|todos
+ 🔍 Última búsqueda: 2027|todos
+ 🔍 Página actual: 1
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 🔍 Agregando filtro búsqueda: 202
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=202
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 20
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 20
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 2
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 2
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: 
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***
+ 🔍 Filtro actualizado: Object
+ 🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***
+ 🔍 Filtro actual completo: {
+  "busqueda": "",
+  "estado": "todos",
+  "pagina": 1,
+  "tamano": 20
+}
+ 🔍 busquedaProformasEnProceso: false
+ 🔍 ultimaBusquedaProformas: 202|todos
+ 🔍 Término actual: |todos
+ 🔍 Última búsqueda: 202|todos
+ 🔍 Página actual: 1
+ 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+ 🔍 Filtro actual: Object
+ 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20
+ 📋 Respuesta recibida, status: 200
+ 📋 Datos recibidos: Object
+ ✅ Proformas encontradas: 12
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 12
+ ✅ Proformas mostradas en tabla
+ 🔍 *** KEYPRESS DETECTADO *** i 
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: i
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: i
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** KEYPRESS DETECTADO *** a i
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: ia
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: ia
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** KEYPRESS DETECTADO *** s ia
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: ias
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** KEYPRESS DETECTADO *** a ias
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: iasa
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: iasa
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: iasa
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: ias
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: ias
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: ia
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: ia
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: i
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: i
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** KEYPRESS DETECTADO *** s i
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: is
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** KEYPRESS DETECTADO *** a is
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: isa
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: isa
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: isa
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** KEYPRESS DETECTADO *** s isa
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: isas
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: isas
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+ 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+ 🔍 Término de búsqueda proformas: isa
+ 🔍 Elemento que disparó evento: 
+ 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isa
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:63 🔍 *** KEYPRESS DETECTADO *** i isa
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isai
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isai
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:63 🔍 *** KEYPRESS DETECTADO *** s isai
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isais
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:63 🔍 *** KEYPRESS DETECTADO *** a isais
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isaisa
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isaisa
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isaisa
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isais
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isais
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isai
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isai
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:63 🔍 *** KEYPRESS DETECTADO *** a isai
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isaia
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:63 🔍 *** KEYPRESS DETECTADO *** s isaia
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isaias
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isaias
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isaias
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:52 🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***
+proformasFilter.js:55 🔍 Filtro actualizado: Object
+proformasFilter.js:121 🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***
+proformasFilter.js:122 🔍 Filtro actual completo: {
+  "busqueda": "isaias",
+  "estado": "todos",
+  "pagina": 1,
+  "tamano": 20
+}
+proformasFilter.js:123 🔍 busquedaProformasEnProceso: false
+proformasFilter.js:124 🔍 ultimaBusquedaProformas: |todos
+proformasFilter.js:134 🔍 Término actual: isaias|todos
+proformasFilter.js:135 🔍 Última búsqueda: |todos
+proformasFilter.js:136 🔍 Página actual: 1
+proformasFilter.js:144 🔍 === APLICANDO FILTROS DE PROFORMAS ===
+proformasFilter.js:145 🔍 Filtro actual: Object
+proformasFilter.js:169 🔍 Agregando filtro búsqueda: isaias
+proformasFilter.js:173 📋 URL completa de consulta: /Facturacion/ObtenerProformas?pagina=1&tamano=20&busqueda=isaias
+proformasFilter.js:185 📋 Respuesta recibida, status: 200
+proformasFilter.js:192 📋 Datos recibidos: Object
+proformasFilter.js:208 ✅ Proformas encontradas: 12
+proformasFilter.js:246 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+proformasFilter.js:247 📋 Proformas a mostrar: 12
+proformasFilter.js:315 ✅ Proformas mostradas en tabla
+proformasFilter.js:40 🔍 *** EVENTO DE BÚSQUEDA DISPARADO ***
+proformasFilter.js:41 🔍 Término de búsqueda proformas: isaias
+proformasFilter.js:42 🔍 Elemento que disparó evento: <input type=​"text" class=​"form-control" id=​"busquedaProformas" placeholder=​"Buscar por número, cliente, fecha..." autocomplete=​"off">​
+proformasFilter.js:47 🔍 Timeout anterior limpiado
+proformasFilter.js:67 🔍 *** CHANGE DETECTADO *** isaias
+proformasFilter.js:52 🔍 *** EJECUTANDO BÚSQUEDA CON TIMEOUT ***
+proformasFilter.js:55 🔍 Filtro actualizado: {busqueda: 'isaias', estado: 'todos', pagina: 1, tamano: 20}
+proformasFilter.js:121 🔍 *** FUNCIÓN APLICAR FILTROS LLAMADA ***
+proformasFilter.js:122 🔍 Filtro actual completo: {
+  "busqueda": "isaias",
+  "estado": "todos",
+  "pagina": 1,
+  "tamano": 20
+}
+proformasFilter.js:123 🔍 busquedaProformasEnProceso: false
+proformasFilter.js:124 🔍 ultimaBusquedaProformas: isaias|todos
+proformasFilter.js:134 🔍 Término actual: isaias|todos
+proformasFilter.js:135 🔍 Última búsqueda: isaias|todos
+proformasFilter.js:136 🔍 Página actual: 1
+proformasFilter.js:139 ⏸️ Búsqueda duplicada del mismo filtro omitida: isaias|todos

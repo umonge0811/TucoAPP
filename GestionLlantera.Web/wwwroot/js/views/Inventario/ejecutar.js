@@ -1628,7 +1628,7 @@ function configurarEventListenersPanelConteoCompletado() {
     try {
         // Botón notificar supervisor
         $('#btnNotificarSupervisor').off('click').on('click', function () {
-            notificarSupervisorConteoCompletado();
+            notificarSupervisorConteoCompletado();  //ESTO FALTA DE TRABAJAR PARA ESA NOTIFICACION!.
         });
 
         // Botón ver resumen
@@ -2478,6 +2478,37 @@ async function actualizarAjustePendiente(ajusteId) {
  * ✅ SISTEMA DE PERMISOS GRANULAR PARA INVENTARIOS
  */
 
+/**
+ * ✅ FUNCIÓN DE DEPURACIÓN: Mostrar estado actual de permisos
+ */
+function mostrarEstadoPermisos() {
+    console.log('🔍 === ESTADO ACTUAL DE PERMISOS ===');
+    console.log('🔍 Configuración global:', window.inventarioConfig?.permisos);
+    console.log('🔍 Permisos inventario actual:', permisosInventarioActual);
+    console.log('🔍 Usuario ID:', window.inventarioConfig?.usuarioId);
+    console.log('🔍 Inventario ID:', window.inventarioConfig?.inventarioId);
+    
+    // ✅ MOSTRAR EN CONSOLA Y TAMBIÉN EN UI PARA DEPURACIÓN
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '🔍 Estado de Permisos',
+            html: `
+                <div class="text-start">
+                    <p><strong>Usuario ID:</strong> ${window.inventarioConfig?.usuarioId || 'No definido'}</p>
+                    <p><strong>Es Admin (Global):</strong> ${window.inventarioConfig?.permisos?.esAdmin ? '✅ Sí' : '❌ No'}</p>
+                    <p><strong>Es Admin (Actual):</strong> ${permisosInventarioActual.esAdmin ? '✅ Sí' : '❌ No'}</p>
+                    <p><strong>Puede Contar:</strong> ${permisosInventarioActual.puedeContar ? '✅ Sí' : '❌ No'}</p>
+                    <p><strong>Puede Ajustar:</strong> ${permisosInventarioActual.puedeAjustar ? '✅ Sí' : '❌ No'}</p>
+                    <p><strong>Puede Validar:</strong> ${permisosInventarioActual.puedeValidar ? '✅ Sí' : '❌ No'}</p>
+                    <p><strong>Puede Completar:</strong> ${permisosInventarioActual.puedeCompletar ? '✅ Sí' : '❌ No'}</p>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Cerrar'
+        });
+    }
+}
+
 // Variable global para almacenar los permisos específicos del usuario en este inventario
 let permisosInventarioActual = {
     puedeContar: false,
@@ -2498,21 +2529,43 @@ async function cargarPermisosInventarioActual(inventarioId) {
         const usuarioId = window.inventarioConfig?.usuarioId || ObtenerIdUsuarioActual();
         console.log('🔒 Usuario ID:', usuarioId);
 
-        // ✅ VERIFICAR SI ES ADMINISTRADOR (SIEMPRE TIENE TODOS LOS PERMISOS)
+        // ✅ VERIFICAR SI ES ADMINISTRADOR (VERIFICACIÓN ESTRICTA)
         const esAdmin = await verificarEsAdministrador();
+        console.log('🔐 Resultado verificación admin:', esAdmin);
 
         if (esAdmin) {
-            // ✅ ADMIN TIENE TODOS LOS PERMISOS
-            permisosInventarioActual = {
-                puedeContar: true,
-                puedeAjustar: true,
-                puedeValidar: true,
-                puedeCompletar: true,
-                esAdmin: true,
-                usuarioId: usuarioId
-            };
-            console.log('✅ Usuario es administrador - Todos los permisos concedidos');
-            return permisosInventarioActual;
+            // ✅ ADMIN TIENE TODOS LOS PERMISOS PERO VERIFICAMOS TAMBIÉN ASIGNACIÓN AL INVENTARIO
+            console.log('👑 Usuario detectado como administrador');
+            
+            // ✅ VERIFICAR TAMBIÉN QUE TENGA ACCESO AL INVENTARIO ESPECÍFICO
+            try {
+                const responseAcceso = await fetch(`/TomaInventario/VerificarAccesoInventario/${inventarioId}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (responseAcceso.ok) {
+                    const resultadoAcceso = await responseAcceso.json();
+                    if (resultadoAcceso.tieneAcceso) {
+                        permisosInventarioActual = {
+                            puedeContar: true,
+                            puedeAjustar: true,
+                            puedeValidar: true,
+                            puedeCompletar: true,
+                            esAdmin: true,
+                            usuarioId: usuarioId
+                        };
+                        console.log('✅ Admin con acceso al inventario - Todos los permisos concedidos');
+                        return permisosInventarioActual;
+                    } else {
+                        console.warn('⚠️ Admin sin acceso específico al inventario');
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Error verificando acceso de admin al inventario:', error);
+            }
         }
 
         // ✅ OBTENER PERMISOS ESPECÍFICOS DEL INVENTARIO
@@ -2582,15 +2635,46 @@ async function cargarPermisosInventarioActual(inventarioId) {
 }
 
 /**
- * ✅ FUNCIÓN AUXILIAR: Verificar si el usuario es administrador
+ * ✅ FUNCIÓN AUXILIAR: Verificar si el usuario es administrador (MEJORADA)
  */
 async function verificarEsAdministrador() {
     try {
-        // ✅ VERIFICAR DESDE LA CONFIGURACIÓN GLOBAL
-        const esAdmin = window.inventarioConfig?.permisos?.esAdmin || false;
+        console.log('🔐 === VERIFICANDO PERMISOS DE ADMINISTRADOR ===');
         
-        console.log('🔐 Verificando si es admin desde configuración:', esAdmin);
-        return esAdmin;
+        // ✅ PASO 1: Verificar configuración local primero
+        const configLocal = window.inventarioConfig?.permisos?.esAdmin || false;
+        console.log('🔐 Configuración local esAdmin:', configLocal);
+        
+        // ✅ PASO 2: Verificar contra el servidor para confirmar
+        try {
+            const response = await fetch('/api/permisos/verificar-admin', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const resultado = await response.json();
+                const esAdminServidor = resultado.esAdmin || false;
+                
+                console.log('🔐 Verificación servidor esAdmin:', esAdminServidor);
+                
+                // ✅ DEBE COINCIDIR TANTO LOCAL COMO SERVIDOR
+                const esAdminFinal = configLocal && esAdminServidor;
+                console.log('🔐 Resultado final esAdmin:', esAdminFinal);
+                
+                return esAdminFinal;
+            } else {
+                console.warn('⚠️ No se pudo verificar con servidor, usando configuración local');
+                return configLocal;
+            }
+        } catch (serverError) {
+            console.warn('⚠️ Error consultando servidor, usando configuración local:', serverError);
+            return configLocal;
+        }
+        
     } catch (error) {
         console.error('❌ Error verificando permisos de administrador:', error);
         return false;

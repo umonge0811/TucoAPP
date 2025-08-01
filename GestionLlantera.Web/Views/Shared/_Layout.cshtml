@@ -31,7 +31,13 @@
     @* Librerías de terceros *@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100" data-authenticated="@User.Identity.IsAuthenticated.ToString().ToLower()">
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <!-- Sistema de monitoreo automático de permisos -->
+        <script src="~/js/permisosMonitor.js" asp-append-version="true"></script>
+    }
     @* Navbar *@
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container">
@@ -81,26 +87,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="~/js/utils/buttonUtils.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="~/js/views/account/recuperarContrasena.js"></script>
 
-    @* Notificaciones *@
-    @if (TempData["Success"] != null)
-    {
-        <script>
-            $(document).ready(function() {
-                toastr.success('@TempData["Success"]');
-            });
-        </script>
-    }
+    <script>
+        // ✅ LIMPIAR CACHÉ LOCAL AL CAMBIAR DE USUARIO
+        window.addEventListener('beforeunload', function() {
+            // Limpiar cualquier caché local del navegador relacionado con permisos
+            if (typeof(Storage) !== "undefined") {
+                localStorage.removeItem('permisosCache');
+                localStorage.removeItem('userPermissions');
+                sessionStorage.clear();
+            }
+        });
 
-    @if (TempData["Error"] != null)
-    {
-        <script>
-            $(document).ready(function() {
-                toastr.error('@TempData["Error"]');
-            });
-        </script>
-    }
+        // ✅ FUNCIÓN GLOBAL PARA FORZAR RECARGA DE PERMISOS
+        window.forzarRecargaPermisos = function() {
+            if (typeof(Storage) !== "undefined") {
+                localStorage.removeItem('permisosCache');
+                localStorage.removeItem('userPermissions');
+                sessionStorage.clear();
+            }
+            location.reload();
+        };
+    </script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

@@ -1,4 +1,4 @@
-﻿using API.Extensions;
+using API.Extensions;
 using API.ServicesAPI.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,16 +14,19 @@ namespace API.Controllers
     [Authorize]
     public class ReportesController : ControllerBase
     {
-        private readonly IReporteInventarioService _reporteService;
+        private readonly IReporteInventarioService _reporteInventarioService;
+        private readonly IReportePedidosService _reportePedidosService;
         private readonly IPermisosService _permisosService;
         private readonly ILogger<ReportesController> _logger;
 
         public ReportesController(
-            IReporteInventarioService reporteService,
+            IReporteInventarioService reporteInventarioService,
+            IReportePedidosService reportePedidosService,
             IPermisosService permisosService,
             ILogger<ReportesController> logger)
         {
-            _reporteService = reporteService;
+            _reporteInventarioService = reporteInventarioService;
+            _reportePedidosService = reportePedidosService;
             _permisosService = permisosService;
             _logger = logger;
         }
@@ -44,7 +47,7 @@ namespace API.Controllers
 
                 _logger.LogInformation("📊 Generando reporte para inventario {InventarioId}", inventarioId);
 
-                var reporte = await _reporteService.GenerarReporteAsync(inventarioId);
+                var reporte = await _reporteInventarioService.GenerarReporteAsync(inventarioId);
 
                 return Ok(reporte);
             }
@@ -76,7 +79,7 @@ namespace API.Controllers
 
                 _logger.LogInformation("📥 Descargando reporte Excel para inventario {InventarioId}", inventarioId);
 
-                var excelBytes = await _reporteService.GenerarReporteExcelAsync(inventarioId);
+                var excelBytes = await _reporteInventarioService.GenerarReporteExcelAsync(inventarioId);
                 var fileName = $"Reporte_Inventario_{inventarioId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
 
                 return File(excelBytes,
@@ -111,7 +114,7 @@ namespace API.Controllers
 
                 _logger.LogInformation("📄 Descargando reporte PDF para inventario {InventarioId}", inventarioId);
 
-                var pdfBytes = await _reporteService.GenerarReportePdfAsync(inventarioId);
+                var pdfBytes = await _reporteInventarioService.GenerarReportePdfAsync(inventarioId);
                 var fileName = $"Reporte_Inventario_{inventarioId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
                 return File(pdfBytes, "application/pdf", fileName);
@@ -156,6 +159,41 @@ namespace API.Controllers
             {
                 _logger.LogError(ex, "💥 Error generando resumen de inventarios");
                 return StatusCode(500, new { message = "Error interno al generar resumen" });
+            }
+        }
+
+        /// <summary>
+        /// Generar PDF de un pedido a proveedor
+        /// </summary>
+        /// <param name="pedidoId">ID del pedido</param>
+        /// <returns>Archivo PDF del pedido</returns>
+        [HttpGet("pedido/{pedidoId}/pdf")]
+        public async Task<IActionResult> GenerarPedidoPdf(int pedidoId)
+        {
+            try
+            {
+                // ✅ VERIFICAR PERMISOS - TODO: Implementar permisos para reportes de pedidos
+                // var validacion = await this.ValidarPermisoAsync(_permisosService, "Ver Reportes",
+                //    "Solo usuarios con permiso 'Ver Reportes' pueden generar reportes");
+                // if (validacion != null) return validacion;
+
+                _logger.LogInformation("📄 Generando PDF para pedido ID: {PedidoId}", pedidoId);
+
+                var pdfBytes = await _reportePedidosService.GenerarPedidoPdfAsync(pedidoId);
+
+                var fileName = $"Pedido_{pedidoId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning("Pedido no encontrado: {Message}", ex.Message);
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al generar PDF para pedido ID: {PedidoId}", pedidoId);
+                return StatusCode(500, new { message = "Error interno del servidor al generar el PDF" });
             }
         }
     }

@@ -1,0 +1,26 @@
+
+/* Estilos para SweetAlert en detalle de inventario programado */
+.swal-wide {
+    width: 600px !important;
+}
+
+.swal2-html-container ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.swal2-html-container ul li {
+    margin-bottom: 5px;
+    text-align: left;
+}
+
+.swal2-confirm {
+    margin-right: 10px !important;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .swal-wide {
+        width: 95% !important;
+    }
+}
