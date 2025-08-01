@@ -750,11 +750,35 @@ namespace API.Controllers
                 _context.InventariosProgramados.Add(inventario);
                 await _context.SaveChangesAsync();
 
-                // Crear asignaciones de usuarios
+                // ✅ PRIMERO: Asignar automáticamente al creador con TODOS los permisos
+                _logger.LogInformation("📋 Asignando automáticamente al creador (Usuario ID: {CreadorId}) con todos los permisos", 
+                    inventario.UsuarioCreadorId);
+
+                var asignacionCreador = new AsignacionUsuarioInventario
+                {
+                    InventarioProgramadoId = inventario.InventarioProgramadoId,
+                    UsuarioId = inventario.UsuarioCreadorId,
+                    PermisoConteo = true,
+                    PermisoAjuste = true,
+                    PermisoCompletar = true,
+                    PermisoValidacion = true,
+                    FechaAsignacion = DateTime.Now
+                };
+                _context.AsignacionesUsuariosInventario.Add(asignacionCreador);
+
+                // ✅ SEGUNDO: Crear asignaciones de otros usuarios (evitando duplicar al creador)
                 if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
                 {
                     foreach (var asignacion in dto.AsignacionesUsuarios)
                     {
+                        // ✅ EVITAR DUPLICAR AL CREADOR
+                        if (asignacion.UsuarioId == inventario.UsuarioCreadorId)
+                        {
+                            _logger.LogInformation("⚠️ Saltando asignación duplicada del creador (Usuario ID: {CreadorId})", 
+                                inventario.UsuarioCreadorId);
+                            continue;
+                        }
+
                         var nuevaAsignacion = new AsignacionUsuarioInventario
                         {
                             InventarioProgramadoId = inventario.InventarioProgramadoId,
@@ -767,22 +791,42 @@ namespace API.Controllers
                         };
                         _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);
                     }
+                }
 
-                    await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-                    // Enviar notificaciones
-                    foreach (var asignacion in dto.AsignacionesUsuarios)
+                    // ✅ NOTIFICAR AL CREADOR
+                    await _notificacionService.CrearNotificacionAsync(
+                        usuarioId: inventario.UsuarioCreadorId,
+                        titulo: "✅ Inventario Creado",
+                        mensaje: $"Has creado exitosamente el inventario: {inventario.Titulo}. Tienes permisos completos para gestionarlo.",
+                        tipo: "success",
+                        icono: "fas fa-clipboard-check",
+                        urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
+                        entidadTipo: "InventarioProgramado",
+                        entidadId: inventario.InventarioProgramadoId
+                    );
+
+                    // ✅ NOTIFICAR A OTROS USUARIOS ASIGNADOS (excluyendo al creador)
+                    if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
                     {
-                        await _notificacionService.CrearNotificacionAsync(
-                            usuarioId: asignacion.UsuarioId,
-                            titulo: "📋 Inventario Asignado",
-                            mensaje: $"Te han asignado al inventario: {inventario.Titulo}",
-                            tipo: "info",
-                            icono: "fas fa-clipboard-list",
-                            urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
-                            entidadTipo: "InventarioProgramado",
-                            entidadId: inventario.InventarioProgramadoId
-                        );
+                        foreach (var asignacion in dto.AsignacionesUsuarios)
+                        {
+                            // ✅ NO NOTIFICAR AL CREADOR NUEVAMENTE
+                            if (asignacion.UsuarioId == inventario.UsuarioCreadorId)
+                                continue;
+
+                            await _notificacionService.CrearNotificacionAsync(
+                                usuarioId: asignacion.UsuarioId,
+                                titulo: "📋 Inventario Asignado",
+                                mensaje: $"Te han asignado al inventario: {inventario.Titulo}",
+                                tipo: "info",
+                                icono: "fas fa-clipboard-list",
+                                urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
+                                entidadTipo: "InventarioProgramado",
+                                entidadId: inventario.InventarioProgramadoId
+                            );
+                        }
                     }
                 }
 
