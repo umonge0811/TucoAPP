@@ -1329,7 +1329,7 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO AL CREADOR ===");
-                
+
                 var inventario = await _context.InventariosProgramados
                     .Include(i => i.UsuarioCreador)
                     .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
@@ -1606,6 +1606,93 @@ namespace API.Controllers
             {
                 _logger.LogError(ex, "❌ Error al obtener ID del usuario");
                 return 1; // Fallback
+            }
+        }
+
+        /// <summary>
+        /// Obtiene estadísticas del inventario
+        /// </summary>
+        [HttpGet("{inventarioId}/estadisticas")]
+        public async Task<ActionResult<EstadisticasInventarioDTO>> ObtenerEstadisticas(int inventarioId)
+        {
+            try
+            {
+                var estadisticas = await _tomaInventarioService.ObtenerEstadisticasAsync(inventarioId);
+                return Ok(estadisticas);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo estadísticas del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene las discrepancias reales de un inventario específico
+        /// </summary>
+        [HttpGet("{inventarioId}/discrepancias")]
+        [Authorize]
+        public async Task<ActionResult<List<object>>> ObtenerDiscrepanciasInventario(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 === OBTENIENDO DISCREPANCIAS REALES ===");
+                _logger.LogInformation("📋 Inventario ID: {InventarioId}", inventarioId);
+
+                // ✅ OBTENER INVENTARIO PARA VALIDAR EXISTENCIA
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    _logger.LogWarning("❌ Inventario {InventarioId} no encontrado", inventarioId);
+                    return NotFound(new { message = "Inventario no encontrado" });
+                }
+
+                // ✅ OBTENER DISCREPANCIAS REALES (DONDE DIFERENCIA != 0)
+                var discrepancias = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId && 
+                                d.CantidadFisica != null && 
+                                d.Diferencia != null && 
+                                d.Diferencia != 0)
+                    .Include(d => d.Producto)
+                    .Include(d => d.UsuarioConteo)
+                    .Select(d => new
+                    {
+                        productoId = d.ProductoId,
+                        nombreProducto = d.Producto != null ? d.Producto.NombreProducto : "Producto no encontrado",
+                        cantidadSistema = d.CantidadSistema,
+                        cantidadFisica = d.CantidadFisica ?? 0,
+                        diferencia = d.Diferencia ?? 0,
+                        observaciones = d.Observaciones,
+                        fechaConteo = d.FechaConteo,
+                        usuarioConteo = d.UsuarioConteo != null ? d.UsuarioConteo.NombreUsuario : "Sin asignar",
+                        usuarioConteoId = d.UsuarioConteoId,
+                        esExceso = (d.Diferencia ?? 0) > 0,
+                        esFaltante = (d.Diferencia ?? 0) < 0,
+                        impactoEconomico = d.Producto != null ? (d.Diferencia ?? 0) * d.Producto.Precio : 0
+                    })
+                    .OrderByDescending(d => Math.Abs(d.diferencia))
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} discrepancias reales", discrepancias.Count);
+
+                foreach (var disc in discrepancias.Take(5)) // Log primeras 5 para debug
+                {
+                    _logger.LogInformation("📊 Producto: {Producto}, Sistema: {Sistema}, Físico: {Fisico}, Diferencia: {Diferencia}",
+                        disc.nombreProducto, disc.cantidadSistema, disc.cantidadFisica, disc.diferencia);
+                }
+
+                return Ok(discrepancias);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico obteniendo discrepancias del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { message = "Error interno del servidor", error = ex.Message });
             }
         }
 

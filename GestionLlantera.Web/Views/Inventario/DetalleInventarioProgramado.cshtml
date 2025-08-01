@@ -232,8 +232,9 @@
                             </div>
                             <div class="col-md-4">
                                 @{
-                                    var discrepanciasRealesCount = ((List<dynamic>)ViewBag.DiscrepanciasReales)?.Count ?? 0;
-                                }
+                    var discrepanciasReales = ViewBag.DiscrepanciasReales as List<dynamic>;
+                    var discrepanciasRealesCount = discrepanciasReales?.Count ?? 0;
+                }
                                 <div class="stat-card @(discrepanciasRealesCount > 0 ? "bg-danger" : "bg-success") text-white">
                                     <div class="stat-icon">
                                         <i class="bi @(discrepanciasRealesCount > 0 ? "bi-exclamation-triangle" : "bi-shield-check")"></i>
@@ -292,10 +293,10 @@
                 </div>
 
                 <!-- ✅ TABLA DE PRODUCTOS CON DISCREPANCIAS - USAR DISCREPANCIAS REALES -->
-                
+                @{
                     var discrepanciasReales = ViewBag.DiscrepanciasReales as List<dynamic>;
                     bool hayDiscrepanciasReales = discrepanciasReales != null && discrepanciasReales.Any();
-                
+                }
 
                 @if (hayDiscrepanciasReales || (Model.Estado == "En Progreso" || Model.Estado == "Completado"))
                 {
