@@ -1,3 +1,4 @@
+
 using API.Data;
 using API.Extensions;
 using API.ServicesAPI;
@@ -35,7 +36,8 @@ namespace API.Controllers
             IWebHostEnvironment webHostEnvironment,
             ILogger<InventarioController> logger,
             INotificacionService notificacionService,
-            IPermisosService permisosService, IAjustesInventarioPendientesService ajustesService)
+            IPermisosService permisosService, 
+            IAjustesInventarioPendientesService ajustesService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
@@ -649,7 +651,7 @@ namespace API.Controllers
         /// </summary>
         private async Task<IActionResult> ProcesarAjusteIndividual(int id, AjusteStockRapidoDTO ajusteDto)
         {
-           try
+            try
             {
                 _logger.LogInformation("🔧 === AJUSTE STOCK API ===");
                 _logger.LogInformation("🔧 Producto ID: {ProductoId}", id);
@@ -795,38 +797,37 @@ namespace API.Controllers
 
                 await _context.SaveChangesAsync();
 
-                    // ✅ NOTIFICAR AL CREADOR
-                    await _notificacionService.CrearNotificacionAsync(
-                        usuarioId: inventario.UsuarioCreadorId,
-                        titulo: "✅ Inventario Creado",
-                        mensaje: $"Has creado exitosamente el inventario: {inventario.Titulo}. Tienes permisos completos para gestionarlo.",
-                        tipo: "success",
-                        icono: "fas fa-clipboard-check",
-                        urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
-                        entidadTipo: "InventarioProgramado",
-                        entidadId: inventario.InventarioProgramadoId
-                    );
+                // ✅ NOTIFICAR AL CREADOR
+                await _notificacionService.CrearNotificacionAsync(
+                    usuarioId: inventario.UsuarioCreadorId,
+                    titulo: "✅ Inventario Creado",
+                    mensaje: $"Has creado exitosamente el inventario: {inventario.Titulo}. Tienes permisos completos para gestionarlo.",
+                    tipo: "success",
+                    icono: "fas fa-clipboard-check",
+                    urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: inventario.InventarioProgramadoId
+                );
 
-                    // ✅ NOTIFICAR A OTROS USUARIOS ASIGNADOS (excluyendo al creador)
-                    if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
+                // ✅ NOTIFICAR A OTROS USUARIOS ASIGNADOS (excluyendo al creador)
+                if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
+                {
+                    foreach (var asignacion in dto.AsignacionesUsuarios)
                     {
-                        foreach (var asignacion in dto.AsignacionesUsuarios)
-                        {
-                            // ✅ NO NOTIFICAR AL CREADOR NUEVAMENTE
-                            if (asignacion.UsuarioId == inventario.UsuarioCreadorId)
-                                continue;
+                        // ✅ NO NOTIFICAR AL CREADOR NUEVAMENTE
+                        if (asignacion.UsuarioId == inventario.UsuarioCreadorId)
+                            continue;
 
-                            await _notificacionService.CrearNotificacionAsync(
-                                usuarioId: asignacion.UsuarioId,
-                                titulo: "📋 Inventario Asignado",
-                                mensaje: $"Te han asignado al inventario: {inventario.Titulo}",
-                                tipo: "info",
-                                icono: "fas fa-clipboard-list",
-                                urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
-                                entidadTipo: "InventarioProgramado",
-                                entidadId: inventario.InventarioProgramadoId
-                            );
-                        }
+                        await _notificacionService.CrearNotificacionAsync(
+                            usuarioId: asignacion.UsuarioId,
+                            titulo: "📋 Inventario Asignado",
+                            mensaje: $"Te han asignado al inventario: {inventario.Titulo}",
+                            tipo: "info",
+                            icono: "fas fa-clipboard-list",
+                            urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
+                            entidadTipo: "InventarioProgramado",
+                            entidadId: inventario.InventarioProgramadoId
+                        );
                     }
                 }
 
