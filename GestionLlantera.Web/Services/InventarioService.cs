@@ -1994,6 +1994,57 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        /// <summary>
+        /// Obtiene las discrepancias reales de un inventario específico
+        /// </summary>
+        public async Task<List<dynamic>> ObtenerDiscrepanciasInventarioAsync(int inventarioId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("⚠️ Obteniendo discrepancias del inventario {InventarioId}", inventarioId);
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para obtener discrepancias");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener discrepancias");
+                }
+
+                // ✅ REALIZAR PETICIÓN A LA API DE TOMA DE INVENTARIO
+                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/discrepancias");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error obteniendo discrepancias: {StatusCode} - {Content}", 
+                        response.StatusCode, errorContent);
+                    return new List<dynamic>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("✅ Contenido de discrepancias recibido de la API");
+
+                // ✅ DESERIALIZAR RESPUESTA
+                var discrepancias = JsonConvert.DeserializeObject<List<dynamic>>(content);
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} discrepancias del inventario {InventarioId}", 
+                    discrepancias?.Count ?? 0, inventarioId);
+
+                return discrepancias ?? new List<dynamic>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener discrepancias del inventario {InventarioId}", inventarioId);
+                return new List<dynamic>();
+            }
+        }
+
 
     }
 }
