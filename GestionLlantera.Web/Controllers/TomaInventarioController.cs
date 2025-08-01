@@ -865,7 +865,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Completa un inventario```tool_code
+        /// Completa un inventario
         /// </summary>
         [HttpPost]
         [Route("TomaInventario/CompletarInventario/{inventarioId}")]
@@ -899,6 +899,87 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogError(ex, "Error al completar inventario {InventarioId}", inventarioId);
                 return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Notifica al supervisor que el usuario completó su parte del conteo
+        /// POST: /TomaInventario/NotificarConteoCompletado/5
+        /// </summary>
+        [HttpPost]
+        [Route("TomaInventario/NotificarConteoCompletado/{inventarioId}")]
+        public async Task<IActionResult> NotificarConteoCompletado(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO DESDE WEB ===");
+                _logger.LogInformation("📧 Inventario ID: {InventarioId}, Usuario: {Usuario}", 
+                    inventarioId, User.Identity?.Name ?? "Anónimo");
+
+                // ✅ VERIFICAR SESIÓN
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ VERIFICAR QUE EL INVENTARIO EXISTE Y EL USUARIO TIENE ACCESO
+                var inventario = await _inventarioService.ObtenerInventarioProgramadoPorIdAsync(inventarioId, token);
+                if (inventario == null)
+                {
+                    _logger.LogError("❌ Inventario no encontrado: {InventarioId}", inventarioId);
+                    return Json(new { success = false, message = "Inventario no encontrado" });
+                }
+
+                // ✅ VERIFICAR QUE EL INVENTARIO ESTÉ EN PROGRESO
+                if (inventario.Estado != "En Progreso")
+                {
+                    _logger.LogWarning("⚠️ Inventario no está en progreso: {Estado}", inventario.Estado);
+                    return Json(new { success = false, message = "El inventario no está en progreso" });
+                }
+
+                // ✅ VERIFICAR QUE EL USUARIO ESTÉ ASIGNADO AL INVENTARIO
+                var usuarioId = ObtenerIdUsuarioActual();
+                var estaAsignado = inventario.AsignacionesUsuarios?.Any(a => a.UsuarioId == usuarioId) ?? false;
+                
+                if (!estaAsignado)
+                {
+                    _logger.LogWarning("🚫 Usuario {UsuarioId} no está asignado al inventario {InventarioId}", 
+                        usuarioId, inventarioId);
+                    return Json(new { success = false, message = "No tienes acceso a este inventario" });
+                }
+
+                // ✅ LLAMAR AL SERVICIO PARA NOTIFICAR
+                var resultado = await _tomaInventarioService.NotificarConteoCompletadoAsync(inventarioId, token);
+
+                if (resultado)
+                {
+                    _logger.LogInformation("✅ Notificación enviada exitosamente para inventario {InventarioId}", inventarioId);
+                    
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Supervisor notificado exitosamente. Se le informó que completaste tu parte del conteo.",
+                        inventarioId = inventarioId,
+                        usuario = User.Identity?.Name,
+                        timestamp = DateTime.Now
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error al enviar notificación para inventario {InventarioId}", inventarioId);
+                    return Json(new { success = false, message = "No se pudo enviar la notificación al supervisor" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al notificar conteo completado para inventario {InventarioId}", inventarioId);
+                return Json(new 
+                { 
+                    success = false, 
+                    message = "Error interno del servidor al enviar la notificación" 
+                });
             }
         }
 
