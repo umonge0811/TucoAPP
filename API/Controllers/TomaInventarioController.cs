@@ -1643,9 +1643,9 @@ namespace API.Controllers
                     tieneAcceso = tieneAcceso,
                     inventarioId = inventarioId,
                     usuarioId = usuarioId,
-                    ```text
- timestamp = DateTime.Now
-                });
+                    timestamp = DateTime.Now
+                });```python
+
             }
             catch (Exception ex)
             {

@@ -400,6 +400,40 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        /// <summary>
+        /// Obtiene los productos con discrepancias de un inventario específico
+        /// </summary>
+        public async Task<List<DetalleInventarioDTO>?> ObtenerDiscrepanciasAsync(int inventarioId, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Obteniendo discrepancias del inventario {InventarioId}", inventarioId);
+
+                ConfigurarAutenticacion(jwtToken);
+
+                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/discrepancias");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al obtener discrepancias: {StatusCode} - {Error}", 
+                        response.StatusCode, errorContent);
+                    return null;
+                }
+
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                var discrepancias = JsonSerializer.Deserialize<List<DetalleInventarioDTO>>(jsonContent, _jsonOptions);
+
+                _logger.LogInformation("✅ Discrepancias obtenidas: {Count}", discrepancias?.Count ?? 0);
+                return discrepancias ?? new List<DetalleInventarioDTO>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener discrepancias del inventario {InventarioId}", inventarioId);
+                return null;
+            }
+        }
+
         // =====================================
         // FINALIZACIÓN Y VALIDACIÓN
         // =====================================
