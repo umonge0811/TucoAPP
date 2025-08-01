@@ -1544,13 +1544,91 @@ function actualizarPanelConteoCompletado() {
 }
 
 /**
+ * ✅ FUNCIÓN: Notificar al supervisor que el conteo está completado
+ */
+async function notificarSupervisorConteoCompletado() {
+    try {
+        const inventarioId = window.inventarioConfig.inventarioId;
+        
+        console.log('📧 Notificando supervisor - conteo completado');
+
+        // Mostrar confirmación
+        const confirmacion = await Swal.fire({
+            title: '📧 ¿Notificar Supervisor?',
+            html: `
+                <div class="text-center">
+                    <i class="bi bi-envelope-check display-1 text-primary mb-3"></i>
+                    <p>Se enviará una notificación al supervisor informando que has completado tu parte del conteo.</p>
+                    <p class="text-muted">El supervisor será notificado para que pueda revisar y finalizar el inventario.</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#007bff',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, Notificar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) return;
+
+        // Llamar al endpoint para notificar
+        const response = await fetch(`/TomaInventario/NotificarConteoCompletado/${inventarioId}`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error en la petición: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success) {
+            // Mostrar éxito
+            await Swal.fire({
+                title: '✅ Notificación Enviada',
+                text: 'El supervisor ha sido notificado de que completaste tu parte del conteo.',
+                icon: 'success',
+                confirmButtonColor: '#28a745',
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            // Deshabilitar el botón para evitar spam
+            $('#btnNotificarSupervisor').prop('disabled', true)
+                .removeClass('btn-primary')
+                .addClass('btn-success')
+                .html('<i class="bi bi-check-circle me-2"></i>Supervisor Notificado');
+
+            console.log('✅ Supervisor notificado exitosamente');
+        } else {
+            throw new Error(resultado.message || 'Error al enviar notificación');
+        }
+
+    } catch (error) {
+        console.error('❌ Error notificando supervisor:', error);
+        
+        Swal.fire({
+            title: 'Error al Notificar',
+            text: error.message || 'No se pudo enviar la notificación al supervisor',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+/**
  * ✅ FUNCIÓN NUEVA: Configurar event listeners del panel de conteo completado
  */
 function configurarEventListenersPanelConteoCompletado() {
     try {
         // Botón notificar supervisor
         $('#btnNotificarSupervisor').off('click').on('click', function () {
-            notificarSupervisorConteoCompletado();  //ESTO FALTA DE TRABAJAR PARA ESA NOTIFICACION!
+            notificarSupervisorConteoCompletado();
         });
 
         // Botón ver resumen
