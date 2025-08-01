@@ -542,7 +542,7 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
         // Función para activar las dependencias de un permiso
         function activarDependencias(permisoId, isChecked) {
             console.log(`🔄 Activando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
-            
+
             if (isChecked && dependenciasPermisos[permisoId]) {
                 // Si se marca el permiso, marcar también sus dependencias
                 dependenciasPermisos[permisoId].forEach(dependenciaId => {
@@ -798,6 +798,7 @@ async function cargarPermisosParaRol(rolId) {
             1027: [1019],   // 1027 depende de 1019
 
             // GRUPO 5 (Azul Medio) - Cadena con Bifurcación
+            1039: [1037],       // 1039 depende de 1037
             1018: [1039],   // 1018 depende de 1039 (base)
             2: [1018],      // 2 depende de 1018
             1023: [1018],   // 1023 depende de 1018
@@ -833,12 +834,12 @@ async function cargarPermisosParaRol(rolId) {
         // Función para activar las dependencias de un permiso (en edición)
         function activarDependenciasEditar(permisoId, isChecked) {
             console.log(`🔄 [EDITAR] Activando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
-            
+
             if (isChecked && dependenciasPermisosEditar[permisoId]) {
                 // Si se marca el permiso, marcar también sus dependencias
                 const dependencias = dependenciasPermisosEditar[permisoId];
                 const dependenciasArray = Array.isArray(dependencias) ? dependencias : [dependencias];
-                
+
                 dependenciasArray.forEach(dependenciaId => {
                     const checkboxDependencia = document.getElementById(`permiso_${dependenciaId}`);
                     if (checkboxDependencia && !checkboxDependencia.checked) {
@@ -849,7 +850,7 @@ async function cargarPermisosParaRol(rolId) {
                         setTimeout(() => {
                             checkboxDependencia.classList.remove('permiso-activado-automaticamente');
                         }, 1000);
-                        
+
                         // Recursivamente activar dependencias de la dependencia
                         activarDependenciasEditar(dependenciaId, true);
                     }
@@ -860,7 +861,7 @@ async function cargarPermisosParaRol(rolId) {
                     const permisoIdNum = parseInt(permisoIdStr);
                     const dependencias = dependenciasPermisosEditar[permisoIdNum];
                     const dependenciasArray = Array.isArray(dependencias) ? dependencias : [dependencias];
-                    
+
                     if (dependenciasArray.includes(permisoId)) {
                         const checkboxDependiente = document.getElementById(`permiso_${permisoIdNum}`);
                         if (checkboxDependiente && checkboxDependiente.checked) {
