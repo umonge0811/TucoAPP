@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Tuco.Clases.DTOs.Inventario;
@@ -298,6 +298,56 @@ namespace API.Services
             {
                 _logger.LogError(ex, "Error al obtener estadísticas del inventario {InventarioId}", inventarioId);
                 return new EstadisticasInventarioDTO();
+            }
+        }
+
+        // =====================================
+        // NOTIFICACIONES
+        // =====================================
+
+        /// <summary>
+        /// Notifica a los supervisores que un usuario completó su parte del conteo
+        /// </summary>
+        public async Task<bool> NotificarConteoCompletadoAsync(int inventarioId, int usuarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO DESDE SERVICIO API ===");
+                _logger.LogInformation("📧 Inventario ID: {InventarioId}, Usuario ID: {UsuarioId}", inventarioId, usuarioId);
+
+                // Verificar que el inventario existe
+                var inventario = await _context.InventariosProgramados
+                    .Include(i => i.AsignacionesUsuarios)
+                    .ThenInclude(a => a.Usuario)
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    _logger.LogError("❌ Inventario no encontrado: {InventarioId}", inventarioId);
+                    return false;
+                }
+
+                // Verificar que el usuario está asignado al inventario
+                var asignacion = inventario.AsignacionesUsuarios?.FirstOrDefault(a => a.UsuarioId == usuarioId);
+                if (asignacion == null)
+                {
+                    _logger.LogError("❌ Usuario {UsuarioId} no está asignado al inventario {InventarioId}", usuarioId, inventarioId);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Validaciones pasadas. Usuario {Usuario} puede notificar conteo completado", 
+                    asignacion.Usuario?.NombreUsuario ?? "Desconocido");
+
+                // Aquí se enviarían las notificaciones a los supervisores
+                // Por ahora, solo registramos que la operación fue exitosa
+                _logger.LogInformation("📧 Notificación de conteo completado procesada exitosamente");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al notificar conteo completado para inventario {InventarioId}", inventarioId);
+                return false;
             }
         }
 
