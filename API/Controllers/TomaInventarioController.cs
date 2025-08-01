@@ -749,16 +749,89 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Obtiene los productos de un inventario para realizar conteo
-        /// GET: api/TomaInventario/{inventarioId}/productos
+        /// Obtiene los productos con discrepancias del inventario
+        /// </summary>
+        [HttpGet("{inventarioId}/discrepancias")]
+        public async Task<ActionResult<List<DetalleInventarioDTO>>> ObtenerDiscrepancias(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 === OBTENIENDO DISCREPANCIAS DEL INVENTARIO ===");
+                _logger.LogInformation("📋 Inventario ID: {InventarioId}", inventarioId);
+
+                // ✅ VERIFICAR QUE EL INVENTARIO EXISTE
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    _logger.LogWarning("⚠️ Inventario {InventarioId} no encontrado", inventarioId);
+                    return NotFound($"Inventario {inventarioId} no encontrado");
+                }
+
+                // ✅ OBTENER PRODUCTOS CON DISCREPANCIAS
+                var productosConDiscrepancias = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId 
+                            && d.CantidadFisica.HasValue 
+                            && d.Diferencia.HasValue 
+                            && d.Diferencia.Value != 0)
+                    .Include(d => d.Producto)
+                        .ThenInclude(p => p.Llanta)
+                    .Include(d => d.UsuarioConteo)
+                    .OrderByDescending(d => Math.Abs(d.Diferencia.Value))
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Encontrados {Count} productos con discrepancias", productosConDiscrepancias.Count);
+
+                // ✅ CONVERTIR A DTO
+                var discrepanciasDto = productosConDiscrepancias.Select(detalle => new DetalleInventarioDTO
+                {
+                    DetalleId = detalle.DetalleId,
+                    InventarioProgramadoId = detalle.InventarioProgramadoId,
+                    ProductoId = detalle.ProductoId,
+                    CantidadSistema = detalle.CantidadSistema,
+                    CantidadFisica = detalle.CantidadFisica,
+                    Diferencia = detalle.Diferencia,
+                    Observaciones = detalle.Observaciones,
+                    FechaConteo = detalle.FechaConteo,
+                    UsuarioConteoId = detalle.UsuarioConteoId,
+                    NombreUsuarioConteo = detalle.UsuarioConteo?.NombreUsuario,
+
+                    // Información del producto
+                    NombreProducto = detalle.Producto?.NombreProducto ?? "Producto no disponible",
+                    DescripcionProducto = detalle.Producto?.Descripcion,
+                    EsLlanta = detalle.Producto?.EsLlanta ?? false,
+
+                    // Información de llanta si aplica
+                    MedidasLlanta = detalle.Producto?.EsLlanta == true && detalle.Producto.Llanta != null
+                        ? $"{detalle.Producto.Llanta.Ancho}/{detalle.Producto.Llanta.Perfil}R{detalle.Producto.Llanta.Diametro}"
+                        : null,
+                    MarcaLlanta = detalle.Producto?.Llanta?.Marca,
+                    ModeloLlanta = detalle.Producto?.Llanta?.Modelo,
+
+                    // Estados calculados
+                    EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente",
+                    TieneDiscrepancia = detalle.Diferencia.HasValue && detalle.Diferencia.Value != 0
+                }).ToList();
+
+                return Ok(discrepanciasDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error obteniendo discrepancias del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, "Error interno del servidor");
+            }
+        }
+
+        /// <summary>
+        /// Obtiene los productos del inventario
         /// </summary>
         [HttpGet("{inventarioId}/productos")]
         public async Task<ActionResult<List<DetalleInventarioDTO>>> ObtenerProductosInventario(int inventarioId)
         {
             try
             {
-                _logger.LogInformation("📦 === OBTENIENDO PRODUCTOS DEL INVENTARIO ===");
-                _logger.LogInformation("📦 Inventario ID: {InventarioId}, Usuario: {Usuario}",
+                _logger.LogInformation("📦 === OBTENIENDO PRODUCTOS DEL INVENTARIO ===");                _logger.LogInformation("📦 Inventario ID: {InventarioId}, Usuario: {Usuario}",
                     inventarioId, User.Identity?.Name ?? "Anónimo");
 
                 // ✅ VERIFICAR ACCESO AL INVENTARIO
@@ -1329,7 +1402,7 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO AL CREADOR ===");
-                
+
                 var inventario = await _context.InventariosProgramados
                     .Include(i => i.UsuarioCreador)
                     .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
@@ -1367,7 +1440,7 @@ namespace API.Controllers
                     mensaje: mensaje,
                     tipo: "info",
                     icono: "fas fa-clipboard-check",
-                    urlAccion: urlAccion,
+                    urlAccion = urlAccion,
                     entidadTipo: "InventarioProgramado",
                     entidadId: inventario.InventarioProgramadoId
                 );
@@ -1571,7 +1644,8 @@ namespace API.Controllers
                     inventarioId = inventarioId,
                     usuarioId = usuarioId,
                     timestamp = DateTime.Now
-                });
+                });```python
+
             }
             catch (Exception ex)
             {
