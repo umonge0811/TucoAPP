@@ -1392,8 +1392,8 @@ async function cambiarEstadoPedido(pedidoId, estadoActual) {
     console.log(`🔄 Cambiando estado del pedido ${pedidoId} de ${estadoActual} a...`);
     
     try {
-        // Estados disponibles
-        const estadosDisponibles = ['Pendiente', 'Enviado', 'Recibido', 'Cancelado'];
+        // Estados disponibles - Solo Recibido y Cancelado
+        const estadosDisponibles = ['Recibido', 'Cancelado'];
         const estadosOpciones = estadosDisponibles
             .filter(estado => estado !== estadoActual)
             .reduce((opciones, estado) => {
@@ -1487,7 +1487,7 @@ async function cambiarEstadoPedido(pedidoId, estadoActual) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ nuevoEstado: nuevoEstado })
+            body: JSON.stringify({ estado: nuevoEstado })
         });
 
         if (!response.ok) {
