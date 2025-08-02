@@ -500,6 +500,10 @@
                                             {
                                                 <i class="bi bi-exclamation-triangle-fill ms-1" data-bs-toggle="tooltip" title="Stock bajo"></i>
                                             }
+                                            @if (producto.TienePedidoPendiente)
+                                            {
+                                                <i class="bi bi-truck ms-1 text-info" data-bs-toggle="tooltip" title="Pedido pendiente de ingresar"></i>
+                                            }
                                         </span>
                                     </td>
 
