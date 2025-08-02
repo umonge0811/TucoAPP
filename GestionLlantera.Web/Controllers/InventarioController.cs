@@ -20,7 +20,6 @@ using Tuco.Clases.DTOs.Inventario;
 using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
 using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 
 namespace GestionLlantera.Web.Controllers
 {
