@@ -84,6 +84,10 @@ namespace API.Controllers
                         p.CantidadEnInventario,
                         p.StockMinimo,
                         p.FechaUltimaActualizacion,
+                        TienePedidoPendiente = _context.DetallePedidos
+                            .Any(dp => dp.ProductoId == p.ProductoId && 
+                                      dp.Pedido != null && 
+                                      dp.Pedido.Estado == "Pendiente"),
                         Permisos = new
                         {
                             PuedeVerCostos = puedeVerCostos,
