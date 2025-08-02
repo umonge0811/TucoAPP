@@ -436,7 +436,7 @@ function mostrarPedidos() {
  */
 function obtenerBadgeEstado(estado) {
     const badges = {
-        'Pendiente': 'bg-warning',
+        'Pendiente': 'bg-warning text-dark',
         'Enviado': 'bg-info',
         'Recibido': 'bg-success',
         'Cancelado': 'bg-danger'
@@ -914,7 +914,7 @@ function filtrarProductosPedido() {
 
                     // Buscar en marca de llanta
                     if (llantaInfo.marca) {
-                        cumpleBusqueda = llantaInfo.marca.toLowerCase().includes(busqueda);
+                        cumpleBusqueda = llantaInfo.marcatoLowerCase().includes(busqueda);
                     }
 
                     // Buscar en modelo de llanta
@@ -1374,10 +1374,10 @@ async function verDetallePedido(pedidoId) {
     `;
 
         $('#contenidoDetallePedido').html(html);
-        
+
         // Configurar el botón PDF del modal con el ID del pedido actual
         $('#btnPdfModalDetalle').attr('onclick', `generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')`);
-        
+
         $('#modalDetallePedido').modal('show');
     } catch (error) {
         console.error('❌ Error viendo detalle del pedido:', error);
@@ -1388,10 +1388,42 @@ async function verDetallePedido(pedidoId) {
 /**
  * Cambiar estado de un pedido
  */
-function cambiarEstadoPedido(pedidoId, estadoActual) {
-    // Implementar cambio de estado
-    console.log('🔄 Cambiando estado del pedido:', pedidoId, estadoActual);
-    // Por ahora solo log, se puede implementar un modal para cambiar estado
+async function cambiarEstadoPedido(pedidoId, estadoActual) {
+    console.log(`🔄 Cambiando estado del pedido ${pedidoId} de ${estadoActual} a...`);
+    try {
+        const nuevoEstado = prompt(`Ingrese el nuevo estado para el pedido ${pedidoId}:`, estadoActual);
+
+        if (!nuevoEstado || nuevoEstado.trim() === "") {
+            mostrarError("El estado no puede estar vacío.");
+            return;
+        }
+
+        const response = await fetch(`/api/PedidosProveedor/${pedidoId}/estado`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nuevoEstado: nuevoEstado.trim() })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Error al actualizar el estado: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            mostrarExito(`Estado del pedido ${pedidoId} actualizado a ${nuevoEstado.trim()}`);
+            await cargarPedidos();
+        } else {
+            mostrarError(data.message || `No se pudo actualizar el estado del pedido ${pedidoId}.`);
+        }
+
+    } catch (error) {
+        console.error("❌ Error al cambiar el estado del pedido:", error);
+        mostrarError(`Error al cambiar el estado del pedido: ${error.message}`);
+    }
 }
 
 // =====================================
