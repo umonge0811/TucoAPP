@@ -1,4 +1,4 @@
-﻿// Ubicación: tuco.Clases/DTOs/Inventario/ProductoDTO.cs
+// Ubicación: tuco.Clases/DTOs/Inventario/ProductoDTO.cs
 
 using System;
 using System.Collections.Generic;
@@ -76,5 +76,8 @@ namespace Tuco.Clases.DTOs.Inventario
 
         // ✅ NUEVO: Propiedad para saber si usar cálculo automático
         public bool UsarCalculoAutomatico => Costo.HasValue && PorcentajeUtilidad.HasValue;
+
+        // Indica si el producto tiene pedidos pendientes de ingresar
+        public bool TienePedidoPendiente { get; set; } = false;
     }
 }

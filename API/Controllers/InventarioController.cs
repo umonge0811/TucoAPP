@@ -57,11 +57,40 @@ namespace API.Controllers
         {
             try
             {
+                _logger.LogInformation("🚀 === INICIANDO OBTENCIÓN DE PRODUCTOS ===");
+                _logger.LogInformation("🚀 Usuario: {Usuario}", User.Identity?.Name ?? "Anónimo");
+
                 var puedeVerCostos = await this.TienePermisoAsync(_permisosService, "VerCostos");
                 var puedeVerUtilidades = await this.TienePermisoAsync(_permisosService, "VerUtilidades");
 
                 _logger.LogInformation("🔍 Usuario {Usuario} - VerCostos: {VerCostos}, VerUtilidades: {VerUtilidades}",
                     User.Identity?.Name ?? "Anónimo", puedeVerCostos, puedeVerUtilidades);
+
+                // Primero verificar cuántos productos hay en total
+                var totalProductos = await _context.Productos.CountAsync();
+                _logger.LogInformation("📊 Total de productos en base de datos: {Total}", totalProductos);
+
+                // Verificar cuántos pedidos hay en total
+                var totalPedidos = await _context.PedidosProveedores.CountAsync();
+                var pedidosPendientes = await _context.PedidosProveedores.CountAsync(p => p.Estado == "Pendiente");
+                _logger.LogInformation("📦 Total de pedidos: {Total}, Pendientes: {Pendientes}", totalPedidos, pedidosPendientes);
+
+                // Verificar detalles de pedidos
+                var totalDetallesPedidos = await _context.DetallePedidos.CountAsync();
+                _logger.LogInformation("📋 Total de detalles de pedidos: {Total}", totalDetallesPedidos);
+
+                // Obtener algunos ejemplos de pedidos pendientes
+                var ejemplosPedidosPendientes = await _context.PedidosProveedores
+                    .Where(p => p.Estado == "Pendiente")
+                    .Take(5)
+                    .Select(p => new { p.PedidoId, p.Estado, p.FechaPedido })
+                    .ToListAsync();
+                
+                foreach (var ejemplo in ejemplosPedidosPendientes)
+                {
+                    _logger.LogInformation("🔗 Pedido pendiente ejemplo: ID={PedidoId}, Estado={Estado}, Fecha={Fecha}", 
+                        ejemplo.PedidoId, ejemplo.Estado, ejemplo.FechaPedido);
+                }
 
                 var productos = await _context.Productos
                     .Include(p => p.ImagenesProductos)
@@ -84,6 +113,11 @@ namespace API.Controllers
                         p.CantidadEnInventario,
                         p.StockMinimo,
                         p.FechaUltimaActualizacion,
+                        TienePedidoPendiente = _context.DetallePedidos
+                            .Where(dp => dp.ProductoId == p.ProductoId && 
+                                        dp.Pedido != null && 
+                                        dp.Pedido.Estado == "Pendiente")
+                            .Any(),
                         Permisos = new
                         {
                             PuedeVerCostos = puedeVerCostos,
@@ -110,6 +144,45 @@ namespace API.Controllers
                         }).FirstOrDefault()
                     })
                     .ToListAsync();
+
+                _logger.LogInformation("📦 Productos obtenidos de la consulta: {Cantidad}", productos.Count);
+
+                // Log detallado de algunos productos para verificar TienePedidoPendiente
+                var productosConPedidoPendiente = productos.Where(p => p.TienePedidoPendiente).ToList();
+                _logger.LogInformation("🔥 Productos con pedido pendiente: {Cantidad}", productosConPedidoPendiente.Count);
+
+                foreach (var prod in productosConPedidoPendiente.Take(3))
+                {
+                    _logger.LogInformation("✅ Producto con pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}", 
+                        prod.ProductoId, prod.NombreProducto, prod.TienePedidoPendiente);
+                    
+                    // Verificar manualmente los detalles de pedidos para este producto
+                    var detallesParaEsteProducto = await _context.DetallePedidos
+                        .Include(dp => dp.Pedido)
+                        .Where(dp => dp.ProductoId == prod.ProductoId)
+                        .Select(dp => new { dp.DetalleId, dp.ProductoId, PedidoId = dp.Pedido.PedidoId, Estado = dp.Pedido.Estado })
+                        .ToListAsync();
+                    
+                    _logger.LogInformation("📋 Detalles encontrados para producto {ProductoId}: {Cantidad}", 
+                        prod.ProductoId, detallesParaEsteProducto.Count);
+                    
+                    foreach (var detalle in detallesParaEsteProducto)
+                    {
+                        _logger.LogInformation("   - Detalle ID={DetalleId}, PedidoId={PedidoId}, Estado={Estado}", 
+                            detalle.DetalleId, detalle.PedidoId, detalle.Estado);
+                    }
+                }
+
+                // Log de algunos productos sin pedido pendiente para comparar
+                var productosSinPedidoPendiente = productos.Where(p => !p.TienePedidoPendiente).Take(2).ToList();
+                foreach (var prod in productosSinPedidoPendiente)
+                {
+                    _logger.LogInformation("❌ Producto SIN pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}", 
+                        prod.ProductoId, prod.NombreProducto, prod.TienePedidoPendiente);
+                }
+
+                _logger.LogInformation("✅ === PRODUCTOS OBTENIDOS EXITOSAMENTE ===");
+                _logger.LogInformation("✅ Total enviado al cliente: {Cantidad} productos", productos.Count);
 
                 return Ok(productos);
             }

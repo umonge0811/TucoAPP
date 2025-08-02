@@ -263,6 +263,10 @@
                     <span class="badge bg-danger me-1">Stock Bajo</span>
                     <span id="contadorStockBajo">@Model.Count(p => p.CantidadEnInventario <= p.StockMinimo)</span>
                 </div>
+                <div class="pedidos-indicator">
+                    <span class="badge bg-warning text-dark me-1">Pedidos Pendientes</span>
+                    <span id="contadorPedidosPendientes">@Model.Count(p => p.TienePedidoPendiente)</span>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -500,12 +504,25 @@
                                             {
                                                 <i class="bi bi-exclamation-triangle-fill ms-1" data-bs-toggle="tooltip" title="Stock bajo"></i>
                                             }
+                                            @if (producto.TienePedidoPendiente)
+                                            {
+                                                <i class="bi bi-truck ms-1 text-info" data-bs-toggle="tooltip" title="Pedido pendiente de ingresar" style="font-size: 1.1rem;"></i>
+                                            }
                                         </span>
                                     </td>
 
                                     <!-- 10. Stock Mín -->
                                     <td class="text-center">
                                         @producto.StockMinimo
+                                        @if (producto.TienePedidoPendiente)
+                                        {
+                                            <div class="mt-1">
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-truck me-1"></i>
+                                                    Pedido Pendiente
+                                                </span>
+                                            </div>
+                                        }
                                     </td>
 
                                     <!-- 11. Acciones -->
@@ -657,6 +674,13 @@
                                         {
                                             <span class="badge bg-danger">⚠️ Stock Bajo</span>
                                         }
+                                        @if (producto.TienePedidoPendiente)
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-truck me-1"></i>
+                                                Pedido Pendiente
+                                            </span>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -684,6 +708,12 @@
                                     <div class="producto-detalle-valor @(producto.CantidadEnInventario <= producto.StockMinimo ? "stock-bajo" : "stock-normal")">
                                         @producto.CantidadEnInventario
                                         <small class="d-block" style="font-size: 0.7rem;">Mín: @producto.StockMinimo</small>
+                                        @if (producto.TienePedidoPendiente)
+                                        {
+                                            <small class="d-block text-warning" style="font-size: 0.7rem;">
+                                                <i class="bi bi-truck me-1"></i>Pedido pendiente
+                                            </small>
+                                        }
                                     </div>
                                 </div>
                             </div>
