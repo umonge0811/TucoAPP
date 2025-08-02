@@ -2062,7 +2062,6 @@ namespace GestionLlantera.Web.Services
                     {
                         var disc = discrepanciasDinamicas[i];
                         var discObj = JsonConvert.DeserializeObject(disc.ToString());
-                        _logger.LogInformation("📝 Discrepancia {Index}: {Objeto}", i + 1, discObj);
                     }
                     catch (Exception ex)
                     {

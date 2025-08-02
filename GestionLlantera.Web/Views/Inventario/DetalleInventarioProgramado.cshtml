@@ -36,9 +36,9 @@
             @if (Model.Estado == "Completado")
             {
                 <div class="btn-group">
-                    <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                   @*  <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-download me-1"></i> Exportar
-                    </button>
+                    </button> *@
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li>
                             <a class="dropdown-item" href="@Url.Action("ExportarResultadosInventario", "Inventario", new { id = Model.InventarioProgramadoId, formato = "excel" })">
@@ -293,11 +293,9 @@
                 </div>
 
                 <!-- ✅ TABLA DE PRODUCTOS CON DISCREPANCIAS - USAR DISCREPANCIAS REALES -->
-                @{
-                    var discrepanciasReales = ViewBag.DiscrepanciasReales as List<dynamic>;
+                
                     bool hayDiscrepanciasReales = discrepanciasReales != null && discrepanciasReales.Any();
-                }
-
+                
                 @if (hayDiscrepanciasReales || (Model.Estado == "En Progreso" || Model.Estado == "Completado"))
                 {
                     <div class="dashboard-card mb-4">
