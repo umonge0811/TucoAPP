@@ -1,8 +1,9 @@
+
 // /wwwroot/js/views/inventario/detalle-inventario-programado.js
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('🔧 JavaScript cargado para detalle inventario programado');
-
+    
     // Configurar botón de iniciar inventario
     configurarBotonIniciarInventario();
 });
@@ -10,14 +11,14 @@ document.addEventListener('DOMContentLoaded', function () {
 function configurarBotonIniciarInventario() {
     const iniciarInventarioBtn = document.querySelector('.iniciar-inventario-btn');
     console.log('🔧 Botón encontrado:', iniciarInventarioBtn);
-
+    
     if (iniciarInventarioBtn) {
         console.log('🔧 Agregando event listener al botón');
         iniciarInventarioBtn.addEventListener('click', function() {
             console.log('🔧 ¡CLICK DETECTADO!');
             const inventarioId = this.getAttribute('data-id');
             console.log('🔧 ID del inventario:', inventarioId);
-
+            
             // Mostrar SweetAlert de confirmación
             mostrarConfirmacionIniciarInventario(inventarioId);
         });
@@ -59,7 +60,7 @@ function mostrarConfirmacionIniciarInventario(inventarioId) {
 async function iniciarInventario(inventarioId) {
     try {
         console.log('🚀 Iniciando inventario:', inventarioId);
-
+        
         // Mostrar loading
         Swal.fire({
             title: 'Iniciando inventario...',
@@ -70,7 +71,7 @@ async function iniciarInventario(inventarioId) {
                 Swal.showLoading();
             }
         });
-
+        
         // Llamar al controlador para iniciar el inventario
         const response = await fetch(`/TomaInventario/IniciarInventario/${inventarioId}`, {
             method: 'POST',
@@ -79,13 +80,13 @@ async function iniciarInventario(inventarioId) {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         });
-
+        
         const resultado = await response.json();
         console.log('📡 Respuesta del servidor:', resultado);
-
+        
         if (resultado.success) {
             console.log('✅ Inventario iniciado exitosamente');
-
+            
             // Mostrar mensaje de éxito con opción de redirección
             Swal.fire({
                 title: '¡Éxito!',
@@ -107,7 +108,7 @@ async function iniciarInventario(inventarioId) {
             });
         } else {
             console.error('❌ Error al iniciar inventario:', resultado.message);
-
+            
             // Mostrar error
             Swal.fire({
                 title: 'Error',
@@ -116,71 +117,16 @@ async function iniciarInventario(inventarioId) {
                 confirmButtonText: 'Entendido'
             });
         }
-
+        
     } catch (error) {
         console.error('💥 Error crítico:', error);
-
+        
         // Mostrar error crítico
         Swal.fire({
             title: 'Error de Conexión',
             text: 'Error de conexión. Inténtelo nuevamente.',
             icon: 'error',
             confirmButtonText: 'Entendido'
-        });
-    }
-}
-
-// ✅ FUNCIONES DE EXPORTACIÓN (usando reportesUtils.js)
-async function descargarReporteExcel(inventarioId, titulo) {
-    try {
-        console.log('📊 Iniciando descarga Excel para inventario:', inventarioId);
-
-        // Usar la función global de reportesUtils.js
-        if (typeof window.descargarReporteExcel === 'function') {
-            await window.descargarReporteExcel(inventarioId, titulo);
-        } else {
-            console.error('❌ Función descargarReporteExcel no disponible en reportesUtils');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'La función de descarga no está disponible',
-                confirmButtonColor: '#d33'
-            });
-        }
-    } catch (error) {
-        console.error('❌ Error descargando Excel:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error al descargar Excel',
-            text: error.message || 'No se pudo descargar el archivo Excel',
-            confirmButtonColor: '#d33'
-        });
-    }
-}
-
-async function descargarReportePdf(inventarioId, titulo) {
-    try {
-        console.log('📊 Iniciando descarga PDF para inventario:', inventarioId);
-
-        // Usar la función global de reportesUtils.js
-        if (typeof window.descargarReportePdf === 'function') {
-            await window.descargarReportePdf(inventarioId, titulo);
-        } else {
-            console.error('❌ Función descargarReportePdf no disponible en reportesUtils');
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'La función de descarga no está disponible',
-                confirmButtonColor: '#d33'
-            });
-        }
-    } catch (error) {
-        console.error('❌ Error descargando PDF:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error al descargar PDF',
-            text: error.message || 'No se pudo descargar el archivo PDF',
-            confirmButtonColor: '#d33'
         });
     }
 }
