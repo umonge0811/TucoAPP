@@ -155,11 +155,19 @@ namespace GestionLlantera.Web.Services
                 }
 
                 _logger.LogInformation($"🎉 PROCESO COMPLETADO: {productos.Count} productos procesados exitosamente");
+                
+                // Log adicional para verificar que se están devolviendo productos
+                if (productos.Count == 0)
+                {
+                    _logger.LogWarning("⚠️ ADVERTENCIA: Se procesaron 0 productos - verificar datos en API");
+                }
+                
                 return productos;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error general al obtener productos");
+                _logger.LogError(ex, "💥 Error general al obtener productos: {Message}", ex.Message);
+                _logger.LogError("💥 Stack trace: {StackTrace}", ex.StackTrace);
                 return new List<ProductoDTO>();
             }
         }

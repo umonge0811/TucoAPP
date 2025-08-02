@@ -172,6 +172,22 @@ namespace GestionLlantera.Web.Controllers
                 var productos = await _inventarioService.ObtenerProductosAsync(token);
 
                 _logger.LogInformation("✅ Se obtuvieron {Cantidad} productos para mostrar", productos.Count);
+                
+                // Log adicional para debug
+                if (productos == null)
+                {
+                    _logger.LogError("❌ La lista de productos es NULL");
+                    productos = new List<ProductoDTO>();
+                }
+                else if (productos.Count == 0)
+                {
+                    _logger.LogWarning("⚠️ La lista de productos está vacía pero inicializada");
+                }
+                else
+                {
+                    _logger.LogInformation("📦 Primeros productos: {Productos}", 
+                        string.Join(", ", productos.Take(3).Select(p => $"{p.ProductoId}-{p.NombreProducto}")));
+                }
 
                 return View(productos);
             }
