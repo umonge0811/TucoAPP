@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace GestionLlantera.Web.Models.DTOs.Inventario
@@ -39,5 +39,8 @@ namespace GestionLlantera.Web.Models.DTOs.Inventario
 
         // Para llantas (opcional si el producto es una llanta)
         public LlantaDTO Llanta { get; set; }
+
+        // Indica si el producto tiene pedidos pendientes de ingresar
+        public bool TienePedidoPendiente { get; set; } = false;
     }
 }
