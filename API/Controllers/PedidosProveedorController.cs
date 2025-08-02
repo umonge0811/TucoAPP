@@ -295,7 +295,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id}/estado")]
-        public async Task<IActionResult> ActualizarEstadoPedido(int id, [FromBody] dynamic estadoRequest)
+        public async Task<IActionResult> ActualizarEstadoPedido(int id, [FromBody] ActualizarEstadoRequest estadoRequest)
         {
             try
             {
