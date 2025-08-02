@@ -517,6 +517,15 @@
                                     <!-- 10. Stock Mín -->
                                     <td class="text-center">
                                         @producto.StockMinimo
+                                        @if (producto.TienePedidoPendiente)
+                                        {
+                                            <div class="mt-1">
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-truck me-1"></i>
+                                                    Pedido Pendiente
+                                                </span>
+                                            </div>
+                                        }
                                     </td>
 
                                     <!-- 11. Pedidos Pendientes -->
@@ -683,6 +692,13 @@
                                         {
                                             <span class="badge bg-danger">⚠️ Stock Bajo</span>
                                         }
+                                        @if (producto.TienePedidoPendiente)
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-truck me-1"></i>
+                                                Pedido Pendiente
+                                            </span>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -710,6 +726,12 @@
                                     <div class="producto-detalle-valor @(producto.CantidadEnInventario <= producto.StockMinimo ? "stock-bajo" : "stock-normal")">
                                         @producto.CantidadEnInventario
                                         <small class="d-block" style="font-size: 0.7rem;">Mín: @producto.StockMinimo</small>
+                                        @if (producto.TienePedidoPendiente)
+                                        {
+                                            <small class="d-block text-warning" style="font-size: 0.7rem;">
+                                                <i class="bi bi-truck me-1"></i>Pedido pendiente
+                                            </small>
+                                        }
                                     </div>
                                 </div>
                             </div>
