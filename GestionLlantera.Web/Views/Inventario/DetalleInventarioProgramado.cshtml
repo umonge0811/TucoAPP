@@ -293,10 +293,9 @@
                 </div>
 
                 <!-- ✅ TABLA DE PRODUCTOS CON DISCREPANCIAS - USAR DISCREPANCIAS REALES -->
-                @{
-                    var discrepanciasReales = ViewBag.DiscrepanciasReales as List<dynamic>;
+                
                     bool hayDiscrepanciasReales = discrepanciasReales != null && discrepanciasReales.Any();
-                }
+                
 
                 @if (hayDiscrepanciasReales || (Model.Estado == "En Progreso" || Model.Estado == "Completado"))
                 {
