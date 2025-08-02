@@ -27,9 +27,28 @@
                     </div>
                     <div class="stat-content">
                         <h3>Top Vendedor</h3>
-                        <div class="stat-value">Carlos Mora</div>
+                        <div class="stat-value" id="topVendedorNombre">
+                            @if (ViewBag.TopVendedor != null)
+                            {
+                                @((ViewBag.TopVendedor as dynamic)?.nombre ?? "Sin datos")
+                            }
+                            else
+                            {
+                                <span class="text-muted">Cargando...</span>
+                            }
+                        </div>
                         <div class="stat-comparison">
-                            <span>₡850,000 este mes</span>
+                            <span id="topVendedorMonto">
+                                @if (ViewBag.TopVendedor != null)
+                                {
+                                    var vendedor = ViewBag.TopVendedor as dynamic;
+                                    @($"₡{vendedor?.totalVentas:N0} este mes")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin ventas</span>
+                                }
+                            </span>
                         </div>
 
                     </div>
@@ -337,3 +356,24 @@
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    // Función para actualizar el top vendedor
+    function actualizarTopVendedor() {
+        $.get('@Url.Action("ObtenerTopVendedor", "Dashboard")')
+            .done(function(response) {
+                if (response.success && response.data) {
+                    $('#topVendedorNombre').text(response.data.nombre);
+                    $('#topVendedorMonto').text('₡' + response.data.totalVentas.toLocaleString() + ' este mes');
+                }
+            })
+            .fail(function() {
+                console.log('Error al actualizar top vendedor');
+            });
+    }
+
+    // Actualizar cada 5 minutos (opcional)
+    setInterval(actualizarTopVendedor, 300000);
+});
+</script>
