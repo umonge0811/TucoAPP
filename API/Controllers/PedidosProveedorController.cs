@@ -419,4 +419,9 @@ namespace API.Controllers
         public int ProveedorId { get; set; }
         public List<ProductoPedidoRequest> Productos { get; set; } = new List<ProductoPedidoRequest>();
     }
+
+    public class ActualizarEstadoRequest
+    {
+        public string estado { get; set; } = string.Empty;
+    }
 }
