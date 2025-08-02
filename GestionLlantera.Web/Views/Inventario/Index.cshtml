@@ -325,9 +325,6 @@
                                     Stock Mín
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
-                                <th class="text-center">
-                                    Pedidos Pendientes
-                                </th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -528,22 +525,7 @@
                                         }
                                     </td>
 
-                                    <!-- 11. Pedidos Pendientes -->
-                                    <td class="text-center">
-                                        @if (producto.TienePedidoPendiente)
-                                        {
-                                            <span class="badge bg-warning text-dark">
-                                                <i class="bi bi-truck me-1"></i>
-                                                Pendiente
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="text-muted">-</span>
-                                        }
-                                    </td>
-
-                                    <!-- 12. Acciones -->
+                                    <!-- 11. Acciones -->
                                     <td>
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-sm btn-info ver-detalles-btn"
