@@ -451,5 +451,56 @@ namespace GestionLlantera.Web.Services
                 return (false, null, $"Error: {ex.Message}");
             }
         }
+
+        public async Task<(bool success, object data, string message)> CambiarEstadoPedidoAsync(int pedidoId, string estado, string token)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Cambiando estado del pedido {PedidoId} a {Estado}", pedidoId, estado);
+
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+
+                var estadoData = new { estado = estado };
+                var json = JsonConvert.SerializeObject(estadoData);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"api/PedidosProveedor/{pedidoId}/estado", content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📦 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = string.IsNullOrWhiteSpace(responseContent) ? 
+                        new { message = "Estado actualizado exitosamente" } : 
+                        JsonConvert.DeserializeObject<dynamic>(responseContent);
+
+                    return (success: true, data: resultado, message: resultado?.message?.ToString() ?? "Estado actualizado exitosamente");
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorResponse?.message?.ToString() ?? "Error del servidor";
+                        return (success: false, data: null, message: errorMessage);
+                    }
+                    catch
+                    {
+                        return (success: false, data: null, message: "Error del servidor");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error cambiando estado del pedido");
+                return (success: false, data: null, message: "Error interno: " + ex.Message);
+            }
+        }
     }
 }

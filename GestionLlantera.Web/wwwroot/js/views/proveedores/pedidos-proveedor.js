@@ -1481,11 +1481,12 @@ async function cambiarEstadoPedido(pedidoId, estadoActual) {
             }
         });
 
-        // Realizar la petición
-        const response = await fetch(`/api/PedidosProveedor/${pedidoId}/estado`, {
+        // Realizar la petición a través del controlador web
+        const response = await fetch(`/Proveedores/CambiarEstadoPedido?id=${pedidoId}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({ estado: nuevoEstado })
         });

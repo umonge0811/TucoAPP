@@ -431,6 +431,61 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpPut]
+        public async Task<IActionResult> CambiarEstadoPedido(int id, [FromBody] CambiarEstadoPedidoRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Cambiando estado del pedido {Id} a {Estado}", id, request?.Estado);
+
+                if (id <= 0)
+                {
+                    return Json(new { success = false, message = "ID del pedido inválido" });
+                }
+
+                if (request == null || string.IsNullOrWhiteSpace(request.Estado))
+                {
+                    return Json(new { success = false, message = "Estado requerido" });
+                }
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _proveedoresService.CambiarEstadoPedidoAsync(id, request.Estado, token);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Estado del pedido cambiado exitosamente: {Id} -> {Estado}", id, request.Estado);
+                    return Json(new
+                    {
+                        success = true,
+                        message = resultado.message ?? "Estado del pedido actualizado exitosamente"
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Error cambiando estado del pedido: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message ?? "Error al cambiar estado del pedido"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error cambiando estado del pedido {Id}", id);
+                return Json(new
+                {
+                    success = false,
+                    message = "Error interno del servidor: " + ex.Message
+                });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> CrearPedidoProveedor([FromBody] CrearPedidoProveedorRequest request)
         {
@@ -553,5 +608,10 @@ namespace GestionLlantera.Web.Controllers
     public class CambiarEstadoProveedorRequest
     {
         public bool Activo { get; set; }
+    }
+
+    public class CambiarEstadoPedidoRequest
+    {
+        public string Estado { get; set; } = string.Empty;
     }
 }
