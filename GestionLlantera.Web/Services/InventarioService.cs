@@ -91,6 +91,9 @@ namespace GestionLlantera.Web.Services
 
                             EsLlanta = item.llanta != null, // Se determina por la presencia de datos de llanta
 
+                            // ✅ AGREGAR EL CAMPO QUE FALTABA
+                            TienePedidoPendiente = item.tienePedidoPendiente != null ? (bool)item.tienePedidoPendiente : false,
+
                             Imagenes = new List<ImagenProductoDTO>()
                         };
 
@@ -145,7 +148,8 @@ namespace GestionLlantera.Web.Services
                         // Log cada producto procesado
                         _logger.LogInformation($"✅ Producto procesado: {producto.NombreProducto} " +
                             $"(ID: {producto.ProductoId}, Precio: {producto.Precio}, " +
-                            $"Stock: {producto.CantidadEnInventario}, Es Llanta: {producto.EsLlanta})");
+                            $"Stock: {producto.CantidadEnInventario}, Es Llanta: {producto.EsLlanta}, " +
+                            $"Tiene Pedido Pendiente: {producto.TienePedidoPendiente})");
                     }
                     catch (Exception ex)
                     {
