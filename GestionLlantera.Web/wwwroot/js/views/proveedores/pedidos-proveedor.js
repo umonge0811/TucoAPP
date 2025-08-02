@@ -436,7 +436,7 @@ function mostrarPedidos() {
  */
 function obtenerBadgeEstado(estado) {
     const badges = {
-        'Pendiente': 'bg-warning',
+        'Pendiente': 'bg-warning text-dark',
         'Enviado': 'bg-info',
         'Recibido': 'bg-success',
         'Cancelado': 'bg-danger'
@@ -914,7 +914,7 @@ function filtrarProductosPedido() {
 
                     // Buscar en marca de llanta
                     if (llantaInfo.marca) {
-                        cumpleBusqueda = llantaInfo.marca.toLowerCase().includes(busqueda);
+                        cumpleBusqueda = llantaInfo.marcatoLowerCase().includes(busqueda);
                     }
 
                     // Buscar en modelo de llanta
@@ -1374,10 +1374,10 @@ async function verDetallePedido(pedidoId) {
     `;
 
         $('#contenidoDetallePedido').html(html);
-        
+
         // Configurar el botón PDF del modal con el ID del pedido actual
         $('#btnPdfModalDetalle').attr('onclick', `generarReportePedido(${pedido.pedidoId}, 'Pedido ${pedido.pedidoId}')`);
-        
+
         $('#modalDetallePedido').modal('show');
     } catch (error) {
         console.error('❌ Error viendo detalle del pedido:', error);
@@ -1388,10 +1388,151 @@ async function verDetallePedido(pedidoId) {
 /**
  * Cambiar estado de un pedido
  */
-function cambiarEstadoPedido(pedidoId, estadoActual) {
-    // Implementar cambio de estado
-    console.log('🔄 Cambiando estado del pedido:', pedidoId, estadoActual);
-    // Por ahora solo log, se puede implementar un modal para cambiar estado
+async function cambiarEstadoPedido(pedidoId, estadoActual) {
+    console.log(`🔄 Cambiando estado del pedido ${pedidoId} de ${estadoActual} a...`);
+    
+    try {
+        // Estados disponibles - Solo Recibido y Cancelado
+        const estadosDisponibles = ['Recibido', 'Cancelado'];
+        const estadosOpciones = estadosDisponibles
+            .filter(estado => estado !== estadoActual)
+            .reduce((opciones, estado) => {
+                opciones[estado] = estado;
+                return opciones;
+            }, {});
+
+        if (Object.keys(estadosOpciones).length === 0) {
+            mostrarError('No hay otros estados disponibles para este pedido.');
+            return;
+        }
+
+        // Mostrar modal de SweetAlert para seleccionar estado
+        const { value: nuevoEstado } = await Swal.fire({
+            title: 'Cambiar Estado del Pedido',
+            html: `
+                <div class="text-start">
+                    <p><strong>Pedido ID:</strong> ${pedidoId}</p>
+                    <p><strong>Estado actual:</strong> <span class="badge bg-secondary">${estadoActual}</span></p>
+                    <hr>
+                    <p class="mb-3"><strong>Seleccione el nuevo estado:</strong></p>
+                </div>
+            `,
+            input: 'select',
+            inputOptions: estadosOpciones,
+            inputPlaceholder: 'Seleccione un estado...',
+            showCancelButton: true,
+            confirmButtonText: '✅ Cambiar Estado',
+            cancelButtonText: '❌ Cancelar',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Debe seleccionar un estado';
+                }
+            },
+            width: '500px'
+        });
+
+        if (!nuevoEstado) {
+            console.log('🚫 Cambio de estado cancelado por el usuario');
+            return;
+        }
+
+        // Mostrar confirmación adicional
+        const confirmacion = await Swal.fire({
+            title: '¿Confirmar cambio de estado?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Pedido:</strong> ${pedidoId}</p>
+                    <p><strong>De:</strong> <span class="badge bg-secondary">${estadoActual}</span></p>
+                    <p><strong>A:</strong> <span class="badge bg-primary">${nuevoEstado}</span></p>
+                    <hr>
+                    <p class="text-warning"><strong>⚠️ Atención:</strong></p>
+                    <ul class="text-muted">
+                        <li>Este cambio se registrará en el sistema</li>
+                        <li>Se actualizará el estado del pedido</li>
+                        <li>La acción no se puede deshacer</li>
+                    </ul>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '✅ Sí, cambiar',
+            cancelButtonText: '❌ Cancelar',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        });
+
+        if (!confirmacion.isConfirmed) {
+            console.log('🚫 Confirmación de cambio de estado cancelada');
+            return;
+        }
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando estado...',
+            text: `Cambiando estado del pedido ${pedidoId}`,
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Realizar la petición a través del controlador web
+        const response = await fetch(`/Proveedores/CambiarEstadoPedido?id=${pedidoId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ estado: nuevoEstado })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Error al actualizar el estado: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Mostrar éxito
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Estado actualizado!',
+                html: `
+                    <div class="text-center">
+                        <p><strong>Pedido ${pedidoId}</strong></p>
+                        <p>Estado cambiado exitosamente</p>
+                        <p><span class="badge bg-secondary">${estadoActual}</span> → <span class="badge bg-success">${nuevoEstado}</span></p>
+                    </div>
+                `,
+                confirmButtonText: 'Continuar',
+                confirmButtonColor: '#28a745',
+                timer: 3000,
+                timerProgressBar: true
+            });
+
+            // Recargar la lista
+            await cargarPedidos();
+        } else {
+            throw new Error(data.message || 'No se pudo actualizar el estado del pedido');
+        }
+
+    } catch (error) {
+        console.error("❌ Error al cambiar el estado del pedido:", error);
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al cambiar estado',
+            text: error.message,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#dc3545'
+        });
+    }
 }
 
 // =====================================

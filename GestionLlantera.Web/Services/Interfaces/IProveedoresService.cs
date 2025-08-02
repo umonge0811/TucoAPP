@@ -14,5 +14,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<(bool success, object data, string message)> CambiarEstadoProveedorAsync(int proveedorId, bool activo, string token);
         Task<(bool success, object data, string message)> ObtenerPedidosProveedorAsync(int? proveedorId, string token);
         Task<(bool success, object data, string message)> CrearPedidoProveedorAsync(CrearPedidoProveedorRequest pedidoData, string token);
+        Task<(bool success, object data, string message)> CambiarEstadoPedidoAsync(int pedidoId, string estado, string token);
     }
 }

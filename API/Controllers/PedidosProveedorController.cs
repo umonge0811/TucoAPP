@@ -295,7 +295,7 @@ namespace API.Controllers
         }
 
         [HttpPut("{id}/estado")]
-        public async Task<IActionResult> ActualizarEstadoPedido(int id, [FromBody] dynamic estadoRequest)
+        public async Task<IActionResult> ActualizarEstadoPedido(int id, [FromBody] ActualizarEstadoRequest estadoRequest)
         {
             try
             {
@@ -418,5 +418,10 @@ namespace API.Controllers
     {
         public int ProveedorId { get; set; }
         public List<ProductoPedidoRequest> Productos { get; set; } = new List<ProductoPedidoRequest>();
+    }
+
+    public class ActualizarEstadoRequest
+    {
+        public string estado { get; set; } = string.Empty;
     }
 }
