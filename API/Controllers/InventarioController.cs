@@ -85,9 +85,12 @@ namespace API.Controllers
                         p.StockMinimo,
                         p.FechaUltimaActualizacion,
                         TienePedidoPendiente = _context.DetallePedidos
-                            .Any(dp => dp.ProductoId == p.ProductoId && 
-                                      dp.Pedido != null && 
-                                      dp.Pedido.Estado == "Pendiente"),
+                            .Where(dp => dp.ProductoId == p.ProductoId)
+                            .Join(_context.PedidosProveedores,
+                                  dp => dp.PedidoId,
+                                  ped => ped.PedidoId,
+                                  (dp, ped) => ped.Estado)
+                            .Any(estado => estado == "Pendiente"),
                         Permisos = new
                         {
                             PuedeVerCostos = puedeVerCostos,
