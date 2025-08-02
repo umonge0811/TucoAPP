@@ -162,5 +162,17 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <param name="jwtToken">Token JWT para autenticación</param>
         /// <returns>Lista de inventarios asignados al usuario</returns>
         Task<List<InventarioProgramadoDTO>?> ObtenerInventariosAsignadosAsync(int usuarioId, string jwtToken);
+
+        // =====================================
+        // NOTIFICACIONES
+        // =====================================
+
+        /// <summary>
+        /// Notifica a los supervisores que un usuario completó su parte del conteo
+        /// </summary>
+        /// <param name="inventarioId">ID del inventario</param>
+        /// <param name="jwtToken">Token JWT para autenticación</param>
+        /// <returns>True si se envió la notificación correctamente</returns>
+        Task<bool> NotificarConteoCompletadoAsync(int inventarioId, string jwtToken);
     }
 }

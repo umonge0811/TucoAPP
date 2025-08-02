@@ -1321,18 +1321,17 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Notifica a los supervisores que un usuario completó su conteo
+        /// Notifica al creador del inventario que un usuario completó su conteo
         /// </summary>
         [HttpPost("NotificarConteoCompletado/{inventarioId}")]
         public async Task<IActionResult> NotificarConteoCompletado(int inventarioId)
         {
             try
             {
-                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO ===");
-                
+                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO AL CREADOR ===");
+
                 var inventario = await _context.InventariosProgramados
-                    .Include(i => i.AsignacionesUsuarios)
-                    .ThenInclude(a => a.Usuario)
+                    .Include(i => i.UsuarioCreador)
                     .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
 
                 if (inventario == null)
@@ -1340,47 +1339,30 @@ namespace API.Controllers
                     return NotFound(new { success = false, message = "Inventario no encontrado" });
                 }
 
-                // Obtener información del usuario actual desde los claims
+                // ✅ VERIFICAR QUE TENGA CREADOR
+                if (inventario.UsuarioCreadorId == 0 || inventario.UsuarioCreador == null)
+                {
+                    _logger.LogWarning("⚠️ Inventario {InventarioId} no tiene creador asignado", inventarioId);
+                    return BadRequest(new { success = false, message = "El inventario no tiene un creador asignado" });
+                }
+
+                // Obtener información del usuario que completó el conteo
                 var usuarioActualId = ObtenerIdUsuarioActual();
                 var usuarioActual = await _context.Usuarios
                     .FirstOrDefaultAsync(u => u.UsuarioId == usuarioActualId);
 
                 if (usuarioActual == null)
                 {
-                    return BadRequest(new { success = false, message = "Usuario no encontrado" });
+                    return BadRequest(new { success = false, message = "Usuario que realizó el conteo no encontrado" });
                 }
 
-                // Obtener usuarios con permisos de validación/supervisión
-                var usuariosSupervisores = await _context.UsuarioPermiso
-                    .Include(up => up.Permiso)
-                    .Where(up => up.Permiso.NombrePermiso.Contains("Finalizar") || 
-                                up.Permiso.NombrePermiso.Contains("Validar") ||
-                                up.Permiso.NombrePermiso.Contains("Supervisor"))
-                    .Select(up => up.UsuarioID)
-                    .Distinct()
-                    .ToListAsync();
+                // ✅ NOTIFICAR ÚNICAMENTE AL CREADOR DEL INVENTARIO
+                var titulo = "📝 Conteo Completado - Requiere Supervisión";
+                var mensaje = $"El usuario {usuarioActual.NombreUsuario} ha completado su parte del conteo en el inventario '{inventario.Titulo}'. Como creador de este inventario, puedes revisarlo y finalizarlo.";
+                var urlAccion = $"/TomaInventario/Ejecutar/{inventario.InventarioProgramadoId}";
 
-                // También incluir al creador del inventario
-                if (inventario.UsuarioCreadorId != null)
-                {
-                    usuariosSupervisores.Add(inventario.UsuarioCreadorId);
-                }
-
-                usuariosSupervisores = usuariosSupervisores.Distinct().ToList();
-
-                if (!usuariosSupervisores.Any())
-                {
-                    _logger.LogWarning("⚠️ No se encontraron supervisores para notificar");
-                    return Ok(new { success = true, message = "No hay supervisores disponibles para notificar", notificados = 0 });
-                }
-
-                // Crear notificaciones
-                var titulo = "📝 Conteo Completado por Usuario";
-                var mensaje = $"El usuario {usuarioActual.NombreUsuario} ha completado su parte del conteo en el inventario '{inventario.Titulo}'. Puedes revisar y finalizar el inventario.";
-                var urlAccion = $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}";
-
-                await _notificacionService.CrearNotificacionesAsync(
-                    usuariosIds: usuariosSupervisores,
+                await _notificacionService.CrearNotificacionAsync(
+                    usuarioId: inventario.UsuarioCreadorId,
                     titulo: titulo,
                     mensaje: mensaje,
                     tipo: "info",
@@ -1390,12 +1372,14 @@ namespace API.Controllers
                     entidadId: inventario.InventarioProgramadoId
                 );
 
-                _logger.LogInformation("✅ Notificaciones de conteo completado enviadas a {Count} supervisores", usuariosSupervisores.Count);
+                _logger.LogInformation("✅ Notificación enviada al creador del inventario: {CreadorNombre} (ID: {CreadorId})", 
+                    inventario.UsuarioCreador.NombreUsuario, inventario.UsuarioCreadorId);
 
                 return Ok(new { 
                     success = true, 
-                    message = "Supervisores notificados exitosamente",
-                    notificados = usuariosSupervisores.Count
+                    message = $"Creador del inventario '{inventario.UsuarioCreador.NombreUsuario}' notificado exitosamente",
+                    creadorNotificado = inventario.UsuarioCreador.NombreUsuario,
+                    urlRedireccion = urlAccion
                 });
             }
             catch (Exception ex)
@@ -1622,6 +1606,93 @@ namespace API.Controllers
             {
                 _logger.LogError(ex, "❌ Error al obtener ID del usuario");
                 return 1; // Fallback
+            }
+        }
+
+        /// <summary>
+        /// Obtiene estadísticas del inventario
+        /// </summary>
+        [HttpGet("{inventarioId}/estadisticas")]
+        public async Task<ActionResult<EstadisticasInventarioDTO>> ObtenerEstadisticas(int inventarioId)
+        {
+            try
+            {
+                var estadisticas = await _tomaInventarioService.ObtenerEstadisticasAsync(inventarioId);
+                return Ok(estadisticas);
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo estadísticas del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene las discrepancias reales de un inventario específico
+        /// </summary>
+        [HttpGet("{inventarioId}/discrepancias")]
+        [Authorize]
+        public async Task<ActionResult<List<object>>> ObtenerDiscrepanciasInventario(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 === OBTENIENDO DISCREPANCIAS REALES ===");
+                _logger.LogInformation("📋 Inventario ID: {InventarioId}", inventarioId);
+
+                // ✅ OBTENER INVENTARIO PARA VALIDAR EXISTENCIA
+                var inventario = await _context.InventariosProgramados
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    _logger.LogWarning("❌ Inventario {InventarioId} no encontrado", inventarioId);
+                    return NotFound(new { message = "Inventario no encontrado" });
+                }
+
+                // ✅ OBTENER DISCREPANCIAS REALES (DONDE DIFERENCIA != 0)
+                var discrepancias = await _context.DetallesInventarioProgramado
+                    .Where(d => d.InventarioProgramadoId == inventarioId && 
+                                d.CantidadFisica != null && 
+                                d.Diferencia != null && 
+                                d.Diferencia != 0)
+                    .Include(d => d.Producto)
+                    .Include(d => d.UsuarioConteo)
+                    .Select(d => new
+                    {
+                        productoId = d.ProductoId,
+                        nombreProducto = d.Producto != null ? d.Producto.NombreProducto : "Producto no encontrado",
+                        cantidadSistema = d.CantidadSistema,
+                        cantidadFisica = d.CantidadFisica ?? 0,
+                        diferencia = d.Diferencia ?? 0,
+                        observaciones = d.Observaciones,
+                        fechaConteo = d.FechaConteo,
+                        usuarioConteo = d.UsuarioConteo != null ? d.UsuarioConteo.NombreUsuario : "Sin asignar",
+                        usuarioConteoId = d.UsuarioConteoId,
+                        esExceso = (d.Diferencia ?? 0) > 0,
+                        esFaltante = (d.Diferencia ?? 0) < 0,
+                        impactoEconomico = d.Producto != null ? (d.Diferencia ?? 0) * d.Producto.Precio : 0
+                    })
+                    .OrderByDescending(d => Math.Abs(d.diferencia))
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} discrepancias reales", discrepancias.Count);
+
+                foreach (var disc in discrepancias.Take(5)) // Log primeras 5 para debug
+                {
+                    _logger.LogInformation("📊 Producto: {Producto}, Sistema: {Sistema}, Físico: {Fisico}, Diferencia: {Diferencia}",
+                        disc.nombreProducto, disc.cantidadSistema, disc.cantidadFisica, disc.diferencia);
+                }
+
+                return Ok(discrepancias);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico obteniendo discrepancias del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { message = "Error interno del servidor", error = ex.Message });
             }
         }
 

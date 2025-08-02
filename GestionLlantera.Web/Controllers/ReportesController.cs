@@ -106,31 +106,96 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        /// <summary>
+        /// Descarga el reporte PDF del pedido especificado
+        /// </summary>
+        /// <param name="pedidoId">ID del pedido</param>
+        /// <returns>Archivo PDF</returns>
         [HttpGet("pedido/{pedidoId}/pdf")]
         public async Task<IActionResult> DescargarPedidoPdf(int pedidoId)
         {
             try
             {
-                _logger.LogInformation("📋 Solicitud de descarga PDF para pedido {PedidoId}", pedidoId);
+                _logger.LogInformation("📄 Descargando PDF de pedido {PedidoId}", pedidoId);
 
-                // ✅ OBTENER TOKEN JWT DESDE LAS COOKIES
-                var jwtToken = Request.Cookies["JWTToken"];
-                if (string.IsNullOrEmpty(jwtToken))
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogWarning("❌ No se encontró token JWT en las cookies");
-                    return Unauthorized("Token de autenticación requerido");
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Unauthorized(new { message = "Sesión expirada" });
                 }
 
-                // ✅ DELEGAR AL SERVICIO (necesitamos crear este método)
-                var archivoBytes = await _reportesService.DescargarPedidoPdfAsync(pedidoId, jwtToken);
+                var pdfBytes = await _reportesService.DescargarPedidoPdfAsync(pedidoId, token);
+                var fileName = $"Pedido_{pedidoId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
-                // ✅ RETORNAR ARCHIVO PDF
-                return File(archivoBytes, "application/pdf", $"Reporte_Pedido_{pedidoId}_{DateTime.Now:yyyyMMdd}.pdf");
+                return File(pdfBytes, "application/pdf", fileName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al descargar PDF del pedido {PedidoId}", pedidoId);
-                return StatusCode(500, "Error interno del servidor al generar el PDF");
+                _logger.LogError(ex, "💥 Error descargando PDF de pedido {PedidoId}", pedidoId);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Descarga el reporte Excel de un inventario programado
+        /// </summary>
+        /// <param name="inventarioId">ID del inventario programado</param>
+        /// <returns>Archivo Excel</returns>
+        [HttpGet("inventario/{inventarioId}/excel")]
+        public async Task<IActionResult> DescargarInventarioExcel(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📊 Descargando Excel de inventario {InventarioId}", inventarioId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Unauthorized(new { message = "Sesión expirada" });
+                }
+
+                var excelBytes = await _reportesService.DescargarExcelAsync(inventarioId, token);
+                var fileName = $"Inventario_{inventarioId}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                return File(excelBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error descargando Excel de inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Descarga el reporte PDF de un inventario programado
+        /// </summary>
+        /// <param name="inventarioId">ID del inventario programado</param>
+        /// <returns>Archivo PDF</returns>
+        [HttpGet("inventario/{inventarioId}/pdf")]
+        public async Task<IActionResult> DescargarInventarioPdf(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📄 Descargando PDF de inventario {InventarioId}", inventarioId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado");
+                    return Unauthorized(new { message = "Sesión expirada" });
+                }
+
+                var pdfBytes = await _reportesService.DescargarPdfAsync(inventarioId, token);
+                var fileName = $"Inventario_{inventarioId}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+                return File(pdfBytes, "application/pdf", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error descargando PDF de inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
 

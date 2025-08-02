@@ -1104,7 +1104,6 @@ function crearFilaAjustePendiente(ajuste) {
 function obtenerTextoTipoAjuste(tipo) {
     const tipos = {
         'sistema_a_fisico': '📦 Sistema→Físico',
-        'reconteo': '🔄 Reconteo',
         'validado': '✅ Validado'
     };
     return tipos[tipo] || tipo;
@@ -1115,7 +1114,6 @@ function obtenerTextoTipoAjuste(tipo) {
 function obtenerClaseBadgeTipo(tipo) {
     const clases = {
         'sistema_a_fisico': 'bg-success',
-        'reconteo': 'bg-warning',
         'validado': 'bg-info'
     };
     return clases[tipo] || 'bg-secondary';
@@ -5616,10 +5614,6 @@ function actualizarVistaPreviaAjustePendiente(producto) {
                 stockPropuesto = conteoFisico;
                 tipoTexto = '📦 Sistema→Físico';
                 break;
-            case 'reconteo':
-                stockPropuesto = stockActual; // Mantener actual, solicitar reconteo
-                tipoTexto = '🔄 Reconteo';
-                break;
             case 'validado':
                 stockPropuesto = stockActual; // Mantener actual, marcar como válido
                 tipoTexto = '✅ Validado';
@@ -5727,7 +5721,11 @@ async function guardarNuevoAjustePendiente() {
         const resultado = await response.json();
 
         if (resultado.success) {
-            mostrarExito(`Ajuste pendiente registrado exitosamente para ${producto.nombreProducto}`);
+            let mensajeExito = `Ajuste pendiente registrado exitosamente para ${producto.nombreProducto}`;
+            
+            
+            
+            mostrarExito(mensajeExito);
 
             // ✅ CERRAR MODAL
             const modal = bootstrap.Modal.getInstance(document.getElementById('ajustePendienteModal'));
@@ -5757,6 +5755,8 @@ async function guardarNuevoAjustePendiente() {
         $btn.find('.normal-state').show();
     }
 }
+
+
 
 
 /**

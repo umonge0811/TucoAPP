@@ -1,3 +1,4 @@
+
 using API.Data;
 using API.Extensions;
 using API.ServicesAPI;
@@ -35,7 +36,8 @@ namespace API.Controllers
             IWebHostEnvironment webHostEnvironment,
             ILogger<InventarioController> logger,
             INotificacionService notificacionService,
-            IPermisosService permisosService, IAjustesInventarioPendientesService ajustesService)
+            IPermisosService permisosService, 
+            IAjustesInventarioPendientesService ajustesService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
@@ -649,7 +651,7 @@ namespace API.Controllers
         /// </summary>
         private async Task<IActionResult> ProcesarAjusteIndividual(int id, AjusteStockRapidoDTO ajusteDto)
         {
-           try
+            try
             {
                 _logger.LogInformation("🔧 === AJUSTE STOCK API ===");
                 _logger.LogInformation("🔧 Producto ID: {ProductoId}", id);
@@ -750,11 +752,35 @@ namespace API.Controllers
                 _context.InventariosProgramados.Add(inventario);
                 await _context.SaveChangesAsync();
 
-                // Crear asignaciones de usuarios
+                // ✅ PRIMERO: Asignar automáticamente al creador con TODOS los permisos
+                _logger.LogInformation("📋 Asignando automáticamente al creador (Usuario ID: {CreadorId}) con todos los permisos", 
+                    inventario.UsuarioCreadorId);
+
+                var asignacionCreador = new AsignacionUsuarioInventario
+                {
+                    InventarioProgramadoId = inventario.InventarioProgramadoId,
+                    UsuarioId = inventario.UsuarioCreadorId,
+                    PermisoConteo = true,
+                    PermisoAjuste = true,
+                    PermisoCompletar = true,
+                    PermisoValidacion = true,
+                    FechaAsignacion = DateTime.Now
+                };
+                _context.AsignacionesUsuariosInventario.Add(asignacionCreador);
+
+                // ✅ SEGUNDO: Crear asignaciones de otros usuarios (evitando duplicar al creador)
                 if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
                 {
                     foreach (var asignacion in dto.AsignacionesUsuarios)
                     {
+                        // ✅ EVITAR DUPLICAR AL CREADOR
+                        if (asignacion.UsuarioId == inventario.UsuarioCreadorId)
+                        {
+                            _logger.LogInformation("⚠️ Saltando asignación duplicada del creador (Usuario ID: {CreadorId})", 
+                                inventario.UsuarioCreadorId);
+                            continue;
+                        }
+
                         var nuevaAsignacion = new AsignacionUsuarioInventario
                         {
                             InventarioProgramadoId = inventario.InventarioProgramadoId,
@@ -767,12 +793,31 @@ namespace API.Controllers
                         };
                         _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);
                     }
+                }
 
-                    await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync();
 
-                    // Enviar notificaciones
+                // ✅ NOTIFICAR AL CREADOR
+                await _notificacionService.CrearNotificacionAsync(
+                    usuarioId: inventario.UsuarioCreadorId,
+                    titulo: "✅ Inventario Creado",
+                    mensaje: $"Has creado exitosamente el inventario: {inventario.Titulo}. Tienes permisos completos para gestionarlo.",
+                    tipo: "success",
+                    icono: "fas fa-clipboard-check",
+                    urlAccion: $"/Inventario/DetalleInventarioProgramado/{inventario.InventarioProgramadoId}",
+                    entidadTipo: "InventarioProgramado",
+                    entidadId: inventario.InventarioProgramadoId
+                );
+
+                // ✅ NOTIFICAR A OTROS USUARIOS ASIGNADOS (excluyendo al creador)
+                if (dto.AsignacionesUsuarios != null && dto.AsignacionesUsuarios.Any())
+                {
                     foreach (var asignacion in dto.AsignacionesUsuarios)
                     {
+                        // ✅ NO NOTIFICAR AL CREADOR NUEVAMENTE
+                        if (asignacion.UsuarioId == inventario.UsuarioCreadorId)
+                            continue;
+
                         await _notificacionService.CrearNotificacionAsync(
                             usuarioId: asignacion.UsuarioId,
                             titulo: "📋 Inventario Asignado",

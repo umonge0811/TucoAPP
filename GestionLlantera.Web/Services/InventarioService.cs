@@ -1994,6 +1994,90 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        /// <summary>
+        /// Obtiene las discrepancias reales de un inventario específico
+        /// </summary>
+        public async Task<List<dynamic>> ObtenerDiscrepanciasInventarioAsync(int inventarioId, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("⚠️ === INICIANDO OBTENCIÓN DE DISCREPANCIAS ===");
+                _logger.LogInformation("📋 Inventario ID: {InventarioId}", inventarioId);
+
+                // ✅ CONFIGURAR TOKEN JWT SI SE PROPORCIONA
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado correctamente");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT");
+                }
+
+                // ✅ REALIZAR PETICIÓN A LA API
+                _logger.LogInformation("📤 Enviando petición a: api/TomaInventario/{InventarioId}/discrepancias", inventarioId);
+                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/discrepancias");
+
+                _logger.LogInformation("📥 Respuesta recibida - Status: {StatusCode}", response.StatusCode);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error en API: {StatusCode} - {Content}", 
+                        response.StatusCode, errorContent);
+                    return new List<dynamic>();
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📄 Contenido recibido: {Length} caracteres", content?.Length ?? 0);
+
+                if (string.IsNullOrEmpty(content))
+                {
+                    _logger.LogWarning("⚠️ Respuesta vacía de la API");
+                    return new List<dynamic>();
+                }
+
+                // ✅ DESERIALIZAR RESPUESTA COMO LISTA DE OBJETOS DINÁMICOS
+                var discrepancias = JsonConvert.DeserializeObject<List<object>>(content);
+                
+                if (discrepancias == null)
+                {
+                    _logger.LogWarning("⚠️ No se pudo deserializar la respuesta");
+                    return new List<dynamic>();
+                }
+
+                // ✅ CONVERTIR A LISTA DE DINÁMICOS
+                var discrepanciasDinamicas = discrepancias.Cast<dynamic>().ToList();
+
+                _logger.LogInformation("✅ === DISCREPANCIAS PROCESADAS ===");
+                _logger.LogInformation("📊 Total discrepancias: {Count}", discrepanciasDinamicas.Count);
+
+                // ✅ LOG DETALLADO DE PRIMERAS 3 DISCREPANCIAS
+                for (int i = 0; i < Math.Min(3, discrepanciasDinamicas.Count); i++)
+                {
+                    try
+                    {
+                        var disc = discrepanciasDinamicas[i];
+                        var discObj = JsonConvert.DeserializeObject(disc.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("⚠️ Error loggeando discrepancia {Index}: {Error}", i + 1, ex.Message);
+                    }
+                }
+
+                return discrepanciasDinamicas;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al obtener discrepancias del inventario {InventarioId}", inventarioId);
+                return new List<dynamic>();
+            }
+        }
+
 
     }
 }

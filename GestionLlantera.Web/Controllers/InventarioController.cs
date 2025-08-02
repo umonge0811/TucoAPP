@@ -20,6 +20,7 @@ using Tuco.Clases.DTOs.Inventario;
 using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -2165,6 +2166,60 @@ namespace GestionLlantera.Web.Controllers
                     {
                         return RedirectToAction("Index", "Dashboard");
                     }
+                }
+
+                // ✅ OBTENER DISCREPANCIAS REALES SI EL INVENTARIO ESTÁ EN PROGRESO O COMPLETADO
+                _logger.LogInformation("🔍 === VERIFICANDO ESTADO PARA DISCREPANCIAS ===");
+                _logger.LogInformation("📋 Estado del inventario: '{Estado}'", inventario.Estado);
+
+                if (inventario.Estado == "En Progreso" || inventario.Estado == "Completado")
+                {
+                    try
+                    {
+                        _logger.LogInformation("📤 Solicitando discrepancias para inventario {Id}", id);
+                        var discrepancias = await _inventarioService.ObtenerDiscrepanciasInventarioAsync(id, token);
+                        
+                        ViewBag.DiscrepanciasReales = discrepancias ?? new List<dynamic>();
+                        
+                        _logger.LogInformation("✅ === RESULTADO DISCREPANCIAS ===");
+                        _logger.LogInformation("📊 Total discrepancias obtenidas: {Count}", discrepancias?.Count ?? 0);
+                        
+                        if (discrepancias != null && discrepancias.Any())
+                        {
+                            _logger.LogInformation("📝 Tipos de discrepancias encontradas:");
+                            var tipos = discrepancias.GroupBy(d => {
+                                try
+                                {
+                                    var obj = JsonConvert.DeserializeObject<dynamic>(d.ToString());
+                                    int diferencia = (int)(obj.diferencia ?? 0);
+                                    return diferencia > 0 ? "Exceso" : diferencia < 0 ? "Faltante" : "Neutro";
+                                }
+                                catch
+                                {
+                                    return "Desconocido";
+                                }
+                            }).ToList();
+
+                            foreach (var grupo in tipos)
+                            {
+                                _logger.LogInformation("   - {Tipo}: {Count} productos", grupo.Key, grupo.Count());
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogInformation("ℹ️ No se encontraron discrepancias");
+                        }
+                    }
+                    catch (Exception discEx)
+                    {
+                        _logger.LogError(discEx, "💥 Error crítico al obtener discrepancias del inventario {Id}", id);
+                        ViewBag.DiscrepanciasReales = new List<dynamic>();
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("ℹ️ Inventario en estado '{Estado}' - No se buscan discrepancias", inventario.Estado);
+                    ViewBag.DiscrepanciasReales = new List<dynamic>();
                 }
 
                 return View(inventario);

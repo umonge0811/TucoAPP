@@ -8,11 +8,12 @@ using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
 using Tuco.Clases.DTOs.Inventario;
+using System.Text.Json;
 
 // ✅ CLASE PARA DESERIALIZAR LA RESPUESTA DEL API
 public class ApiResponse
 {
-    public List<DetalleInventarioDTO> productos { get; set; } = new List<DetalleInventarioDTO>();
+    public List<DetalleInventarioDTO> productos { get;set; } = new List<DetalleInventarioDTO>();
     public ApiEstadisticas estadisticas { get; set; } = new ApiEstadisticas();
 }
 
@@ -596,5 +597,58 @@ namespace GestionLlantera.Web.Services
                 return null;
             }
         }
+
+        // =====================================
+        // NOTIFICACIONES
+        // =====================================
+
+        /// <summary>
+        /// Notifica a los supervisores que un usuario completó su parte del conteo
+        /// </summary>
+        public async Task<bool> NotificarConteoCompletadoAsync(int inventarioId, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO DESDE SERVICIO WEB ===");
+                _logger.LogInformation("📧 Inventario ID: {InventarioId}", inventarioId);
+
+                ConfigurarAutenticacion(jwtToken);
+
+                var response = await _httpClient.PostAsync($"api/TomaInventario/NotificarConteoCompletado/{inventarioId}", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonResponse = await response.Content.ReadAsStringAsync();
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<dynamic>(jsonResponse);
+
+                    _logger.LogInformation("✅ Notificación enviada exitosamente para inventario {InventarioId}", inventarioId);
+                    return true;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al notificar conteo completado. Status: {StatusCode}, Error: {Error}", 
+                        response.StatusCode, errorContent);
+                    return false;
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                _logger.LogError(httpEx, "🌐 Error de conexión al notificar conteo completado para inventario {InventarioId}", inventarioId);
+                return false;
+            }
+            catch (TaskCanceledException timeoutEx)
+            {
+                _logger.LogError(timeoutEx, "⏱️ Timeout al notificar conteo completado para inventario {InventarioId}", inventarioId);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al notificar conteo completado para inventario {InventarioId}", inventarioId);
+                return false;
+            }
+        }
+
+
     }
 }

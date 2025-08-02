@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Tuco.Clases.DTOs.Inventario;
@@ -298,6 +298,63 @@ namespace API.Services
             {
                 _logger.LogError(ex, "Error al obtener estadísticas del inventario {InventarioId}", inventarioId);
                 return new EstadisticasInventarioDTO();
+            }
+        }
+
+        // =====================================
+        // NOTIFICACIONES
+        // =====================================
+
+        /// <summary>
+        /// Notifica al creador del inventario que un usuario completó su parte del conteo
+        /// </summary>
+        public async Task<bool> NotificarConteoCompletadoAsync(int inventarioId, int usuarioId)
+        {
+            try
+            {
+                _logger.LogInformation("📧 === NOTIFICANDO CONTEO COMPLETADO AL CREADOR ===");
+                _logger.LogInformation("📧 Inventario ID: {InventarioId}, Usuario ID: {UsuarioId}", inventarioId, usuarioId);
+
+                // Verificar que el inventario existe y obtener información del creador
+                var inventario = await _context.InventariosProgramados
+                    .Include(i => i.UsuarioCreador)
+                    .Include(i => i.AsignacionesUsuarios)
+                    .ThenInclude(a => a.Usuario)
+                    .FirstOrDefaultAsync(i => i.InventarioProgramadoId == inventarioId);
+
+                if (inventario == null)
+                {
+                    _logger.LogError("❌ Inventario no encontrado: {InventarioId}", inventarioId);
+                    return false;
+                }
+
+                // Verificar que el usuario está asignado al inventario
+                var asignacion = inventario.AsignacionesUsuarios?.FirstOrDefault(a => a.UsuarioId == usuarioId);
+                if (asignacion == null)
+                {
+                    _logger.LogError("❌ Usuario {UsuarioId} no está asignado al inventario {InventarioId}", usuarioId, inventarioId);
+                    return false;
+                }
+
+                // Verificar que el inventario tiene creador
+                if (inventario.UsuarioCreadorId == 0 || inventario.UsuarioCreador == null)
+                {
+                    _logger.LogError("❌ Inventario {InventarioId} no tiene creador asignado", inventarioId);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Validaciones pasadas. Usuario {Usuario} notificará al creador {Creador}", 
+                    asignacion.Usuario?.NombreUsuario ?? "Desconocido",
+                    inventario.UsuarioCreador.NombreUsuario);
+
+                _logger.LogInformation("📧 Notificación de conteo completado procesada exitosamente - Creador será notificado");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error crítico al notificar conteo completado para inventario {InventarioId}", inventarioId);
+                return false;
             }
         }
 
