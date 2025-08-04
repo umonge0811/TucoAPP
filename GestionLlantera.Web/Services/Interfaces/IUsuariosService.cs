@@ -12,5 +12,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<bool> ActivarUsuarioAsync(int id);
         Task<bool> DesactivarUsuarioAsync(int id);
         Task<bool> EditarUsuarioAsync(int id, CreateUsuarioDTO modelo);
+        Task<UsuarioCreationResult> ActualizarUsuarioAsync(UsuarioDTO usuario);
     }
 }
