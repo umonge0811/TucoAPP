@@ -68,6 +68,9 @@ builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IPermisosInfoService, PermisosInfoService>();
 
+// ✅ NUEVO: Servicio de Dashboard
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
 // ✅ NUEVO: Agregar cache en memoria para optimización
 builder.Services.AddMemoryCache();
 
