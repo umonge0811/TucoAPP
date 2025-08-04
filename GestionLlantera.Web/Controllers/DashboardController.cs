@@ -125,5 +125,38 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerTopVendedor()
+        {
+            try
+            {
+                _logger.LogInformation("📊 Obteniendo top vendedor para dashboard");
+
+                // ✅ OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para Dashboard");
+                    return Json(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
+                }
+
+                var resultado = await _dashboardService.ObtenerTopVendedorAsync(token);
+
+                if (!resultado.success)
+                {
+                    _logger.LogError("❌ Error obteniendo top vendedor: {Mensaje}", resultado.mensaje);
+                    return Json(new { success = false, message = resultado.mensaje });
+                }
+
+                _logger.LogInformation("✅ Top vendedor obtenido correctamente");
+                return Json(new { success = true, data = resultado.data });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo top vendedor");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
     }
 }
