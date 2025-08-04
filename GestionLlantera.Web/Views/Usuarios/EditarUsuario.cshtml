@@ -77,8 +77,8 @@
                             {
                                 @foreach (var rol in ViewBag.Roles)
                                 {
-                                    <option value="@rol.RolId" 
-                                            @(Model.RolId == rol.RolId ? "selected" : "")>
+                                    var isSelected = Model.RolId == rol.RolId ? "selected" : "";
+                                    <option value="@rol.RolId" @isSelected>
                                         @rol.NombreRol
                                     </option>
                                 }
