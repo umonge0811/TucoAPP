@@ -433,28 +433,51 @@ async function editarUsuarioModal(usuarioId) {
             }
         });
 
-        // Petición para obtener datos del usuario
-        const response = await fetch(`/Usuarios/ObtenerUsuarioPorId?id=${usuarioId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        // Cargar datos del usuario y roles en paralelo
+        const [responseUsuario, responseRoles] = await Promise.all([
+            fetch(`/Usuarios/ObtenerUsuarioPorId?id=${usuarioId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            }),
+            fetch('/Configuracion/roles', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+        ]);
 
-        if (!response.ok) {
+        if (!responseUsuario.ok) {
             throw new Error('Error al obtener datos del usuario');
         }
 
-        const resultado = await response.json();
+        if (!responseRoles.ok) {
+            throw new Error('Error al obtener roles');
+        }
 
-        if (resultado.success && resultado.data) {
-            usuarioEditando = resultado.data;
-            llenarFormularioUsuario(resultado.data);
+        const resultadoUsuario = await responseUsuario.json();
+        const roles = await responseRoles.json();
+
+        if (resultadoUsuario.success && resultadoUsuario.data) {
+            usuarioEditando = resultadoUsuario.data;
+            
+            // Llenar select de roles
+            const rolSelect = document.getElementById('rolUsuarioEditar');
+            rolSelect.innerHTML = '<option value="">Seleccione un rol</option>';
+            
+            if (roles && Array.isArray(roles)) {
+                roles.forEach(rol => {
+                    const option = document.createElement('option');
+                    option.value = rol.rolId;
+                    option.textContent = rol.nombreRol;
+                    rolSelect.appendChild(option);
+                });
+            }
+            
+            llenarFormularioUsuario(resultadoUsuario.data);
             
             Swal.close();
             modalEditarUsuario.show();
         } else {
-            throw new Error(resultado.message || 'No se pudo cargar la información del usuario');
+            throw new Error(resultadoUsuario.message || 'No se pudo cargar la información del usuario');
         }
 
     } catch (error) {
@@ -506,11 +529,11 @@ async function guardarUsuarioEditado() {
         btnGuardar.disabled = true;
         btnGuardar.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Actualizando...';
 
-        // Preparar datos
+        // Preparar datos - NO incluir email ya que no se puede cambiar
         const datosUsuario = {
             usuarioId: parseInt(document.getElementById('usuarioIdEditar').value),
             nombreUsuario: document.getElementById('nombreUsuarioEditar').value.trim(),
-            email: document.getElementById('emailUsuarioEditar').value.trim(),
+            // email: No se incluye porque no se puede cambiar
             rolId: parseInt(document.getElementById('rolUsuarioEditar').value) || null,
             activo: document.getElementById('activoUsuarioEditar').checked,
             esTopVendedor: document.getElementById('topVendedorUsuarioEditar').checked
@@ -574,16 +597,7 @@ function validarFormularioEditarUsuario() {
         esValido = false;
     }
 
-    // Validar email
-    const email = document.getElementById('emailUsuarioEditar');
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.value.trim()) {
-        mostrarErrorCampo(email, 'El email es requerido');
-        esValido = false;
-    } else if (!emailRegex.test(email.value.trim())) {
-        mostrarErrorCampo(email, 'Ingrese un email válido');
-        esValido = false;
-    }
+    // No validar email ya que está readonly y no se puede cambiar
 
     return esValido;
 }

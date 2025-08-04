@@ -234,7 +234,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> ActualizarUsuario([FromBody] UsuarioDTO usuarioDto)
+        public async Task<IActionResult> ActualizarUsuario([FromBody] ActualizarUsuarioDTO usuarioDto)
         {
             try
             {

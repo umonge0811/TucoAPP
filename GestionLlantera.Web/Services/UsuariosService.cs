@@ -259,7 +259,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<UsuarioCreationResult> ActualizarUsuarioAsync(UsuarioDTO usuario)
+        public async Task<UsuarioCreationResult> ActualizarUsuarioAsync(ActualizarUsuarioDTO usuario)
         {
             try
             {

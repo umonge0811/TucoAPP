@@ -217,22 +217,15 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="emailUsuarioEditar" class="form-label">
-                            <i class="bi bi-envelope me-1"></i>Email *
-                        </label>
-                        <input type="email" 
-                               class="form-control" 
-                               id="emailUsuarioEditar"
-                               placeholder="usuario@ejemplo.com"
-                               required>
+                        <label for="emailUsuarioEditar" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="emailUsuarioEditar" readonly 
+                               style="background-color: #f8f9fa; cursor: not-allowed;">
+                        <small class="text-muted">El email no se puede modificar</small>
                         <div class="invalid-feedback"></div>
-                        <small class="form-text text-muted">Correo electrónico válido</small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="rolUsuarioEditar" class="form-label">
-                            <i class="bi bi-shield me-1"></i>Rol Principal
-                        </label>
+                        <label for="rolUsuarioEditar" class="form-label">Rol Principal</label>
                         <select class="form-select" id="rolUsuarioEditar">
                             <option value="">Seleccione un rol...</option>
                             @if (ViewBag.Roles != null)
@@ -244,7 +237,7 @@
                             }
                         </select>
                         <div class="invalid-feedback"></div>
-                        <small class="form-text text-muted">Rol principal del usuario</small>
+                        <small class="text-muted">Para cambiar roles adicionales, use el botón "Editar Roles"</small>
                     </div>
 
                     <div class="mb-3">
