@@ -69,7 +69,11 @@ builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IPermisosInfoService, PermisosInfoService>();
 
 // ✅ NUEVO: Servicio de Dashboard
-builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddHttpClient<IDashboardService, DashboardService>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5049/");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // ✅ NUEVO: Agregar cache en memoria para optimización
 builder.Services.AddMemoryCache();
