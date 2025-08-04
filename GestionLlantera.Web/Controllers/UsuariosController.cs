@@ -105,7 +105,7 @@ namespace GestionLlantera.Web.Controllers
                             Field = x.Key, 
                             Errors = x.Value.Errors.Select(e => e.ErrorMessage) 
                         });
-                    
+
                     return BadRequest(new
                     {
                         message = "Datos inválidos. Por favor, corrija los errores.",
@@ -164,42 +164,75 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GuardarRoles(int id, [FromBody] List<int> rolesIds)
+        public async Task<IActionResult> AsignarRoles(int id, [FromBody] List<int> rolesIds)
         {
             try
             {
-                // Log para debugging
-                _logger.LogInformation("Recibiendo solicitud de guardar roles. Usuario: {Id}, Roles: {@RolesIds}",
-                    id, rolesIds);
-
-                // Validaciones
-                if (id <= 0)
-                {
-                    return BadRequest(new { message = "ID de usuario inválido" });
-                }
-
-                if (rolesIds == null || !rolesIds.Any() || rolesIds.Any(r => r <= 0))
-                {
-                    return BadRequest(new { message = "Debe proporcionar al menos un rol válido" });
-                }
-
-                // Llamar al servicio
                 var resultado = await _usuariosService.AsignarRolesAsync(id, rolesIds);
-
-                // Log del resultado
-                _logger.LogInformation("Resultado de asignación de roles: {Resultado}", resultado);
 
                 if (resultado)
                 {
-                    return Ok(new { message = "Roles actualizados exitosamente" });
+                    return Json(new { success = true, message = "Roles asignados correctamente" });
                 }
-
-                return BadRequest(new { message = "Error al actualizar roles" });
+                else
+                {
+                    return Json(new { success = false, message = "Error al asignar roles" });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al guardar roles para usuario {Id}", id);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                _logger.LogError(ex, "Error al asignar roles al usuario {Id}", id);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditarUsuario(int id)
+        {
+            try
+            {
+                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                if (validacion != null) return validacion;
+
+                var usuario = await _usuariosService.ObtenerUsuarioPorIdAsync(id);
+                if (usuario == null)
+                {
+                    return NotFound();
+                }
+
+                // Obtener roles para la vista
+                var roles = await _rolesService.ObtenerTodosLosRoles();
+                ViewBag.Roles = roles;
+
+                return View(usuario);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuario para editar: {Id}", id);
+                return View("Error");
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditarUsuario(int id, [FromBody] CreateUsuarioDTO modelo)
+        {
+            try
+            {
+                var resultado = await _usuariosService.EditarUsuarioAsync(id, modelo);
+
+                if (resultado)
+                {
+                    return Json(new { success = true, message = "Usuario editado correctamente" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Error al editar usuario" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al editar usuario {Id}", id);
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
@@ -263,4 +296,3 @@ namespace GestionLlantera.Web.Controllers
         }
     }
 }
-
