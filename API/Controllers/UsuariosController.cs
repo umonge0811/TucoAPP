@@ -233,6 +233,46 @@ public class UsuariosController : ControllerBase
     }
     #endregion
 
+    #region Endpoint para obtener un usuario por su ID
+    [HttpGet("{id}")]
+    public async Task<IActionResult> ObtenerPorId(int id)
+    {
+        try
+        {
+            _logger.LogInformation("Obteniendo usuario con ID: {Id}", id);
+
+            var usuario = await _context.Usuarios
+                .Include(u => u.UsuarioRoles)
+                    .ThenInclude(ur => ur.Rol)
+                .FirstOrDefaultAsync(u => u.UsuarioId == id);
+
+            if (usuario == null)
+            {
+                _logger.LogWarning("Usuario con ID {Id} no encontrado", id);
+                return NotFound(new { message = "Usuario no encontrado" });
+            }
+
+            var usuarioDTO = new
+            {
+                UsuarioId = usuario.UsuarioId,
+                NombreUsuario = usuario.NombreUsuario,
+                Email = usuario.Email,
+                EsTopVendedor = usuario.EsTopVendedor,
+                Activo = usuario.Activo,
+                Roles = usuario.UsuarioRoles.Select(ur => ur.Rol.NombreRol).ToList()
+            };
+
+            _logger.LogInformation("Usuario {Id} obtenido exitosamente", id);
+            return Ok(usuarioDTO);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener usuario {Id}", id);
+            return StatusCode(500, new { message = "Error interno del servidor" });
+        }
+    }
+    #endregion
+
     //#region Cambio de Contraseña
     //[HttpPost("CambiarContrasena")]
     //public async Task<IActionResult> CambiarContraseña(CambiarContraseñaRequest request)
