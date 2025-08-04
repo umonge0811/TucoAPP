@@ -7,5 +7,6 @@ namespace GestionLlantera.Web.Services.Interfaces
     {
         Task<(bool success, object data, string mensaje)> ObtenerAlertasStockAsync(string jwtToken);
         Task<(bool success, object data, string mensaje)> ObtenerInventarioTotalAsync(string jwtToken);
+        Task<(bool success, object data, string mensaje)> ObtenerTopVendedorAsync(string jwtToken);
     }
 }

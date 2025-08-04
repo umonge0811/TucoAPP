@@ -106,5 +106,51 @@ namespace GestionLlantera.Web.Services
                 return (false, null, "Error interno al obtener estadísticas de inventario");
             }
         }
+
+        public async Task<(bool success, object data, string mensaje)> ObtenerTopVendedorAsync(string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("📊 Solicitando top vendedor desde dashboard service");
+
+                // 🔑 CONFIGURAR TOKEN JWT SI SE PROPORCIONA (mismo patrón que otros servicios)
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para obtener top vendedor");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener top vendedor");
+                }
+
+                var response = await _httpClient.GetAsync("api/dashboard/top-vendedor");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error en respuesta de API: {StatusCode}", response.StatusCode);
+                    return (false, null, "Error al obtener información del top vendedor");
+                }
+
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📊 Respuesta de top vendedor recibida: {Response}", jsonContent);
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var resultado = JsonSerializer.Deserialize<dynamic>(jsonContent, options);
+
+                return (true, resultado, "Top vendedor obtenido correctamente");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener top vendedor");
+                return (false, null, "Error interno al obtener top vendedor");
+            }
+        }
     }
 }
