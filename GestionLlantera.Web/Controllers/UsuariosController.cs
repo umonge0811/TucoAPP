@@ -128,7 +128,8 @@ namespace GestionLlantera.Web.Controllers
                 return BadRequest(new
                 {
                     message = resultado.Message,
-                    errorType = resultado.ErrorType
+                    errorType = resultado.ErrorType,
+                    field = resultado.Field
                 });
             }
             catch (Exception ex)
