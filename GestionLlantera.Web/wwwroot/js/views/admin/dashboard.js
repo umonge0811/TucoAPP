@@ -315,7 +315,7 @@ function mostrarTopVendedor(data) {
             const montoTotal = data.montoTotal || 0;
 
             // Formatear monto
-            const montoFormateado = new Intl.NumberFormat('es-HN', {
+            const montoFormateado = new Intl.NumberFormat('es-CR', {
                 style: 'currency',
                 currency: 'CRC'
             }).format(montoTotal);
