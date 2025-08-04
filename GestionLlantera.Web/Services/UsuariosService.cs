@@ -33,49 +33,21 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("Obteniendo todos los usuarios desde la API");
-                var response = await _httpClient.GetAsync("usuarios");
+                _logger.LogInformation("Obteniendo todos los usuarios");
+                var response = await _httpClient.GetAsync("api/Usuarios/usuarios");
+                response.EnsureSuccessStatusCode();
 
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var usuarios = JsonSerializer.Deserialize<List<UsuarioDTO>>(json, _jsonOptions);
-                    _logger.LogInformation("Usuarios obtenidos exitosamente: {Count}", usuarios?.Count ?? 0);
-                    return usuarios ?? new List<UsuarioDTO>();
-                }
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta recibida para ObtenerTodosAsync: {Length} caracteres", content.Length);
 
-                _logger.LogWarning("Error al obtener usuarios: {StatusCode}", response.StatusCode);
-                return new List<UsuarioDTO>();
+                var usuarios = JsonSerializer.Deserialize<List<UsuarioDTO>>(content, _jsonOptions);
+
+                return usuarios ?? new List<UsuarioDTO>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener usuarios desde la API");
-                return new List<UsuarioDTO>();
-            }
-        }
-
-        public async Task<UsuarioDTO?> ObtenerUsuarioPorIdAsync(int id)
-        {
-            try
-            {
-                _logger.LogInformation("Obteniendo usuario {Id} desde la API", id);
-                var response = await _httpClient.GetAsync($"usuarios/{id}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var usuario = JsonSerializer.Deserialize<UsuarioDTO>(json, _jsonOptions);
-                    _logger.LogInformation("Usuario {Id} obtenido exitosamente", id);
-                    return usuario;
-                }
-
-                _logger.LogWarning("Error al obtener usuario {Id}: {StatusCode}", id, response.StatusCode);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener usuario {Id} desde la API", id);
-                return null;
+                _logger.LogError(ex, "Error al obtener usuarios");
+                throw;
             }
         }
 

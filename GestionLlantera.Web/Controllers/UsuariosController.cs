@@ -144,36 +144,6 @@ namespace GestionLlantera.Web.Controllers
 
 
         /// <summary>
-        /// Obtiene los datos de un usuario específico para edición
-        /// </summary>
-        /// <param name="id">ID del usuario</param>
-        [HttpGet]
-        public async Task<IActionResult> ObtenerUsuario(int id)
-        {
-            try
-            {
-                var usuario = await _usuariosService.ObtenerUsuarioPorIdAsync(id);
-                if (usuario == null)
-                {
-                    return NotFound(new { message = "Usuario no encontrado" });
-                }
-
-                return Ok(new { 
-                    usuarioId = usuario.UsuarioId,
-                    nombreUsuario = usuario.NombreUsuario,
-                    email = usuario.Email,
-                    esTopVendedor = usuario.EsTopVendedor,
-                    activo = usuario.Activo
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener usuario {Id}", id);
-                return StatusCode(500, new { message = "Error al obtener usuario" });
-            }
-        }
-
-        /// <summary>
         /// Obtiene los roles asignados y disponibles para un usuario específico
         /// </summary>
         /// <param name="id">ID del usuario</param>

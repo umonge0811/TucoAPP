@@ -66,15 +66,10 @@
                                         <span class="badge bg-primary me-1">@rol</span>
                                     }
                                 </div>
-                                <div class="btn-group w-100 mb-2">
+                                <div class="btn-group w-100">
                                     <button class="btn btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
                                         <i class="bi bi-shield"></i> Roles
                                     </button>
-                                    <button class="btn btn-outline-secondary" onclick="editarUsuario(@usuario.UsuarioId)">
-                                        <i class="bi bi-pencil"></i> Editar
-                                    </button>
-                                </div>
-                                <div class="btn-group w-100">
                                     @if (usuario.Activo)
                                     {
                                         <button class="btn btn-outline-danger" onclick="desactivarUsuario(@usuario.UsuarioId)">
@@ -142,10 +137,6 @@
                                                 data-bs-toggle="tooltip" title="Editar Roles">
                                             <i class="bi bi-shield"></i>
                                         </button>
-                                        <button class="btn btn-secondary" onclick="editarUsuario(@usuario.UsuarioId)"
-                                                data-bs-toggle="tooltip" title="Editar Usuario">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
                                         @if (usuario.Activo)
                                         {
                                             <button class="btn btn-danger" onclick="desactivarUsuario(@usuario.UsuarioId)"
@@ -188,59 +179,6 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="guardarRoles()">Guardar Cambios</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal para editar usuario -->
-<div class="modal fade" id="modalEditarUsuario" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Editar Usuario</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="editUserForm">
-                    <input type="hidden" id="editUsuarioId" />
-                    
-                    <div class="mb-3">
-                        <label for="editNombreUsuario" class="form-label">
-                            <i class="bi bi-person-fill me-2"></i>Nombre de Usuario
-                        </label>
-                        <input type="text" class="form-control" id="editNombreUsuario" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="editEmail" class="form-label">
-                            <i class="bi bi-envelope-fill me-2"></i>Correo Electrónico
-                        </label>
-                        <input type="email" class="form-control" id="editEmail" required>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="editEsTopVendedor">
-                            <label class="form-check-label" for="editEsTopVendedor">
-                                <i class="bi bi-trophy me-2"></i>
-                                Habilitar como candidato a Top Vendedor
-                            </label>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="guardarEdicionUsuario()">
-                    <span class="normal-state">
-                        <i class="bi bi-save me-2"></i>Guardar Cambios
-                    </span>
-                    <span class="loading-state" style="display: none;">
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        Guardando...
-                    </span>
-                </button>
             </div>
         </div>
     </div>

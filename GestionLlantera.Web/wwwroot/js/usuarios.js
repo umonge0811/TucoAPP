@@ -11,23 +11,16 @@ toastr.options = {
 
 // Variables globales
 let modalRoles = null;
-let modalEditarUsuario = null; // Declaración de la variable para el modal de edición
 
 // Un solo event listener para la inicialización
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM Cargado');
     console.log('Función editarRoles disponible:', typeof editarRoles);
 
-    // Inicializar modal de roles usando getElementById
-    const modalRolesElement = document.getElementById('modalRoles');
-    if (modalRolesElement) {
-        modalRoles = new bootstrap.Modal(modalRolesElement);
-    }
-
-    // Inicializar modal de edición de usuario
-    const modalEditarUsuarioElement = document.getElementById('modalEditarUsuario');
-    if (modalEditarUsuarioElement) {
-        modalEditarUsuario = new bootstrap.Modal(modalEditarUsuarioElement);
+    // Inicializar modal usando getElementById
+    const modalElement = document.getElementById('modalRoles');
+    if (modalElement) {
+        modalRoles = new bootstrap.Modal(modalElement);
     }
 
     // Inicializar DataTables en desktop
@@ -70,20 +63,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (createUserForm) {
         console.log('Formulario encontrado');
         createUserForm.addEventListener('submit', crearUsuario);
-    }
-
-    // Asignar eventos a los botones de editar usuario (se cargarán dinámicamente o se asocian aquí)
-    // Se usa delegación de eventos para los botones dentro de la tabla
-    $('#tablaUsuarios tbody').on('click', '.btn-editar-usuario', function () {
-        const usuarioId = $(this).data('usuario-id');
-        console.log('Boton editar clickeado', usuarioId);
-        editarUsuario(usuarioId);
-    });
-
-    // Asociar evento al botón de guardar del modal de edición
-    const btnGuardarEdicion = document.getElementById('btnGuardarEdicion');
-    if (btnGuardarEdicion) {
-        btnGuardarEdicion.addEventListener('click', guardarEdicionUsuario);
     }
 });
 
@@ -417,151 +396,20 @@ async function crearUsuario(e) {
     }
 }
 
-// ===== FUNCIONES DE EDICIÓN DE USUARIO =====
-
-// Función para abrir el modal de editar usuario
-async function editarUsuario(usuarioId) {
-    try {
-        console.log('Editando usuario:', usuarioId);
-
-        // Obtener datos del usuario
-        const response = await fetch(`/Usuarios/ObtenerUsuario/${usuarioId}`);
-
-        if (!response.ok) {
-            throw new Error('Error al obtener datos del usuario');
-        }
-
-        const usuario = await response.json();
-
-        // Llenar el formulario
-        document.getElementById('editUsuarioId').value = usuario.usuarioId;
-        document.getElementById('editNombreUsuario').value = usuario.nombreUsuario;
-        document.getElementById('editEmail').value = usuario.email;
-        document.getElementById('editEsTopVendedor').checked = usuario.esTopVendedor;
-
-        // Si hay roles, llenar el select de roles (esto puede requerir una llamada adicional o que los roles vengan en la respuesta principal)
-        // Suponiendo que 'usuario.rolId' contiene el ID del rol actual
-        const selectRol = document.getElementById('editRolId');
-        if (selectRol) {
-            selectRol.value = usuario.rolId;
-        }
-
-
-        // Mostrar modal
-        if (modalEditarUsuario) {
-            modalEditarUsuario.show();
-        }
-
-    } catch (error) {
-        console.error('Error al cargar usuario:', error);
-        mostrarMensaje('Error al cargar los datos del usuario', 'error');
-    }
-}
-
-// Función para guardar los cambios del usuario
-async function guardarEdicionUsuario() {
-    const botonGuardar = document.querySelector('#modalEditarUsuario .btn-primary');
-    if (!botonGuardar) return; // Salir si el botón no existe
-
-    const normalState = botonGuardar.querySelector('.normal-state');
-    const loadingState = botonGuardar.querySelector('.loading-state');
-
-    try {
-        // Mostrar estado de carga
-        if (normalState) normalState.style.display = 'none';
-        if (loadingState) loadingState.style.display = 'inline-flex';
-        botonGuardar.disabled = true;
-
-        const usuarioId = document.getElementById('editUsuarioId').value;
-        const datosUsuario = {
-            usuarioId: parseInt(usuarioId), // Asegurarse que sea un número
-            nombreUsuario: document.getElementById('editNombreUsuario').value,
-            email: document.getElementById('editEmail').value,
-            rolId: parseInt(document.getElementById('editRolId').value), // Asegurarse que sea un número
-            esTopVendedor: document.getElementById('editEsTopVendedor').checked
-        };
-
-        const response = await fetch(`/Usuarios/EditarUsuario/${usuarioId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(datosUsuario)
-        });
-
-        const resultado = await response.json();
-
-        if (response.ok) {
-            mostrarMensaje(resultado.message || 'Usuario actualizado exitosamente', 'success');
-            if (modalEditarUsuario) {
-                modalEditarUsuario.hide();
-            }
-            // Recargar la página para mostrar los cambios
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            // Manejar errores de validación o del servidor
-            let errorMessage = resultado.message || 'Error al actualizar usuario';
-            if (resultado.errors) {
-                // Si hay errores de validación, mostrarlos de forma más específica
-                errorMessage = Object.values(resultado.errors).flat().join(' ');
-            }
-            mostrarMensaje(errorMessage, 'error');
-        }
-
-    } catch (error) {
-        console.error('Error al guardar usuario:', error);
-        mostrarMensaje('Error de red o del servidor al guardar los cambios', 'error');
-    } finally {
-        // Restaurar estado normal del botón
-        if (normalState) normalState.style.display = 'inline-flex';
-        if (loadingState) loadingState.style.display = 'none';
-        botonGuardar.disabled = false;
-    }
-}
-
-// Función auxiliar para mostrar mensajes (reemplaza toastr o Swal.fire para mensajes simples)
-function mostrarMensaje(mensaje, tipo) {
-    if (typeof Swal !== 'undefined') {
-        Swal.fire({
-            icon: tipo,
-            title: tipo.charAt(0).toUpperCase() + tipo.slice(1), // Capitaliza el tipo (success, error, etc.)
-            text: mensaje,
-            timer: tipo === 'success' ? 1500 : null,
-            confirmButtonColor: tipo === 'success' ? '#10b981' : '#dc3545'
-        });
-    } else if (typeof toastr !== 'undefined') {
-        if (tipo === 'success') {
-            toastr.success(mensaje);
-        } else if (tipo === 'error') {
-            toastr.error(mensaje);
-        } else if (tipo === 'warning') {
-            toastr.warning(mensaje);
-        }
+// Función auxiliar para mostrar mensajes de éxito (si no existe globalmente)
+function showSuccess(message) {
+    if (typeof toastr !== 'undefined') {
+        toastr.success(message);
     } else {
-        console.log(`${tipo.toUpperCase()}: ${mensaje}`);
+        console.log('Éxito:', message);
     }
 }
 
-
-// Función para mostrar errores de validación en el formulario de edición
-function mostrarErroresEdicion(errores) {
-    // Limpiar errores previos
-    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-    document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
-
-    for (const campo in errores) {
-        const inputElement = document.querySelector(`#modalEditarUsuario input[name="${campo}"], #modalEditarUsuario select[name="${campo}"]`);
-        if (inputElement) {
-            inputElement.classList.add('is-invalid');
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'invalid-feedback';
-            errorDiv.textContent = errores[campo].join(' ');
-            inputElement.parentNode.insertBefore(errorDiv, inputElement.nextSibling);
-        }
+// Función para manejar errores de AJAX globalmente
+$(document).ajaxError(function (event, jqXHR) {
+    if (jqXHR.status === 401) {
+        window.location.href = '/Account/Login';
+    } else if (jqXHR.status === 403) {
+        toastr.error('No tiene permisos para realizar esta acción');
     }
-}
-
-
-// Función para aplicar filtros en móvil
+});
