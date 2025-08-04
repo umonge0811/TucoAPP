@@ -69,15 +69,17 @@
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card alerts">
+                <div class="stat-card alerts" id="alertas-stock-card">
                     <div class="stat-icon">
                         <i class="bi bi-exclamation-triangle"></i>
                     </div>
                     <div class="stat-content">
                         <h3>Alertas Stock</h3>
-                        <div class="stat-value">5</div>
-                        <div class="stat-comparison text-warning">
-                            <span>Productos por agotarse</span>
+                        <div class="stat-value" id="alertas-stock-valor">
+                            <i class="spinner-border spinner-border-sm" role="status"></i>
+                        </div>
+                        <div class="stat-comparison text-warning" id="alertas-stock-detalle">
+                            <span>Cargando...</span>
                         </div>
                     </div>
                 </div>
@@ -337,3 +339,98 @@
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    console.log('📊 Dashboard - Inicializando carga de alertas de stock');
+    
+    // Cargar alertas de stock al cargar la página
+    cargarAlertasStock();
+});
+
+/**
+ * Función para cargar las alertas de stock desde el servidor
+ */
+async function cargarAlertasStock() {
+    try {
+        console.log('📊 Cargando alertas de stock...');
+        
+        const response = await fetch('/Dashboard/ObtenerAlertasStock', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📊 Respuesta recibida:', resultado);
+
+        if (resultado.success) {
+            actualizarVistaAlertasStock(resultado.data);
+        } else {
+            console.error('❌ Error en respuesta:', resultado.message);
+            mostrarErrorAlertasStock();
+        }
+
+    } catch (error) {
+        console.error('❌ Error al cargar alertas de stock:', error);
+        mostrarErrorAlertasStock();
+    }
+}
+
+/**
+ * Actualizar la vista con los datos de alertas de stock
+ */
+function actualizarVistaAlertasStock(data) {
+    console.log('📊 Actualizando vista con datos:', data);
+    
+    const $valor = $('#alertas-stock-valor');
+    const $detalle = $('#alertas-stock-detalle');
+    const $card = $('#alertas-stock-card');
+    
+    // Actualizar el valor principal
+    $valor.text(data.totalAlertas || 0);
+    
+    // Actualizar el detalle y estilos según la cantidad
+    if (data.totalAlertas > 0) {
+        let mensaje = 'Productos requieren atención';
+        let claseDetalle = 'text-warning';
+        
+        if (data.productosAgotados > 0) {
+            mensaje = `${data.productosAgotados} agotados, ${data.productosCriticos} críticos`;
+            claseDetalle = 'text-danger';
+        } else if (data.productosCriticos > 0) {
+            mensaje = `${data.productosCriticos} productos por agotarse`;
+            claseDetalle = 'text-warning';
+        }
+        
+        $detalle.html(`<span>${mensaje}</span>`).attr('class', `stat-comparison ${claseDetalle}`);
+        
+        // Agregar clase de alerta a la card
+        $card.addClass('alert-danger-border');
+        
+    } else {
+        $detalle.html('<span>Stock en buen estado</span>').attr('class', 'stat-comparison text-success');
+        $card.removeClass('alert-danger-border');
+    }
+    
+    console.log('✅ Vista de alertas de stock actualizada correctamente');
+}
+
+/**
+ * Mostrar error en la carga de alertas
+ */
+function mostrarErrorAlertasStock() {
+    const $valor = $('#alertas-stock-valor');
+    const $detalle = $('#alertas-stock-detalle');
+    
+    $valor.text('--');
+    $detalle.html('<span class="text-muted">Error al cargar</span>').attr('class', 'stat-comparison text-muted');
+    
+    console.log('❌ Error mostrado en vista de alertas');
+}
+</script>
