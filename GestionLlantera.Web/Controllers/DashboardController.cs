@@ -79,8 +79,8 @@ namespace GestionLlantera.Web.Controllers
 
                 if (!resultado.success)
                 {
-                    _logger.LogError("❌ Error obteniendo alertas: {Mensaje}", resultado.mensaje);
-                    return Json(new { success = false, message = resultado.mensaje });
+                    _logger.LogError("❌ Error obteniendo alertas: {Mensaje}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
                 }
 
                 _logger.LogInformation("✅ Alertas de stock obtenidas correctamente");
@@ -93,7 +93,7 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("ObtenerInventarioTotal")]
         public async Task<IActionResult> ObtenerInventarioTotal()
         {
             try
@@ -112,8 +112,8 @@ namespace GestionLlantera.Web.Controllers
 
                 if (!resultado.success)
                 {
-                    _logger.LogError("❌ Error obteniendo inventario total: {Mensaje}", resultado.mensaje);
-                    return Json(new { success = false, message = resultado.mensaje });
+                    _logger.LogError("❌ Error obteniendo inventario total: {Mensaje}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
                 }
 
                 _logger.LogInformation("✅ Estadísticas de inventario total obtenidas correctamente");
@@ -145,8 +145,8 @@ namespace GestionLlantera.Web.Controllers
 
                 if (!resultado.success)
                 {
-                    _logger.LogError("❌ Error obteniendo top vendedor: {Mensaje}", resultado.mensaje);
-                    return Json(new { success = false, message = resultado.mensaje });
+                    _logger.LogError("❌ Error obteniendo top vendedor: {Mensaje}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
                 }
 
                 _logger.LogInformation("✅ Top vendedor obtenido correctamente");
