@@ -317,7 +317,7 @@ function mostrarTopVendedor(data) {
             // Formatear monto
             const montoFormateado = new Intl.NumberFormat('es-HN', {
                 style: 'currency',
-                currency: 'HNL'
+                currency: 'CRC'
             }).format(montoTotal);
 
             detalleElement.innerHTML = `
