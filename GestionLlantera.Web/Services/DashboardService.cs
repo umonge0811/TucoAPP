@@ -60,5 +60,51 @@ namespace GestionLlantera.Web.Services
                 return (false, null, "Error interno al obtener alertas");
             }
         }
+
+        public async Task<(bool success, object data, string mensaje)> ObtenerInventarioTotalAsync(string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("📊 Solicitando estadísticas de inventario total desde dashboard service");
+
+                // 🔑 CONFIGURAR TOKEN JWT SI SE PROPORCIONA (mismo patrón que otros servicios)
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para obtener inventario total");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener inventario total");
+                }
+
+                var response = await _httpClient.GetAsync("api/dashboard/inventario-total");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error en respuesta de API: {StatusCode}", response.StatusCode);
+                    return (false, null, "Error al obtener estadísticas de inventario");
+                }
+
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📊 Respuesta de inventario total recibida: {Response}", jsonContent);
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var resultado = JsonSerializer.Deserialize<dynamic>(jsonContent, options);
+
+                return (true, resultado, "Estadísticas de inventario obtenidas correctamente");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener estadísticas de inventario total");
+                return (false, null, "Error interno al obtener estadísticas de inventario");
+            }
+        }
     }
 }
