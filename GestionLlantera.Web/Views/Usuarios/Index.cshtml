@@ -67,6 +67,9 @@
                                     }
                                 </div>
                                 <div class="btn-group w-100">
+                                    <a asp-controller="Usuarios" asp-action="EditarUsuario" asp-route-id="@usuario.UsuarioId" class="btn btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </a>
                                     <button class="btn btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
                                         <i class="bi bi-shield"></i> Roles
                                     </button>
@@ -133,6 +136,10 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="btn-group" role="group">
+                                        <a asp-controller="Usuarios" asp-action="EditarUsuario" asp-route-id="@usuario.UsuarioId" 
+                                           class="btn btn-secondary" data-bs-toggle="tooltip" title="Editar Usuario">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
                                         <button class="btn btn-primary" onclick="editarRoles(@usuario.UsuarioId)"
                                                 data-bs-toggle="tooltip" title="Editar Roles">
                                             <i class="bi bi-shield"></i>
