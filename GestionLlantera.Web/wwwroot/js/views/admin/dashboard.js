@@ -28,18 +28,12 @@ function inicializarDashboard() {
     console.log('📊 Dashboard - Inicializando módulo principal');
 
     try {
-        // Cargar alertas de stock al inicializar
-        cargarAlertasStock();
-        // Cargar inventario total al inicializar
-        cargarInventarioTotal();
-
-        // Inicializar otros componentes del dashboard
-        inicializarEventosFormularios();
-        inicializarRefrescoAutomatico();
-
-        dashboardInicializado = true;
-        console.log('✅ Dashboard inicializado correctamente');
-
+        // Cargar datos iniciales del dashboard
+        await Promise.all([
+            cargarAlertasStock(),
+            cargarInventarioTotal(),
+            cargarTopVendedor()
+        ]);
     } catch (error) {
         console.error('❌ Error inicializando dashboard:', error);
     }
@@ -198,7 +192,7 @@ async function cargarInventarioTotal() {
 
     } catch (error) {
         console.error('❌ Error cargando inventario total:', error);
-        mostrarErrorInventarioTotal('Error de conexión al cargar inventario');
+        mostrarErrorInventarioTotal();
     }
 }
 
@@ -229,7 +223,7 @@ function actualizarTarjetaInventarioTotal(data) {
         const unidades = data.totalCantidad || 0;
 
         detalleElement.innerHTML = `<span>${productos} productos (${unidades} unidades)</span>`;
-        console.log('✅ Detalle actualizado:', `${productos} productos (${unidades} unidades)`);
+        console.log('✅ Detalle actualizado:', `${productos} (${unidades} unidades)`);
     }
 }
 
@@ -249,6 +243,119 @@ function mostrarErrorInventarioTotal(mensaje) {
     }
 }
 
+/**
+ * 🏆 FUNCIÓN: Cargar información del top vendedor
+ */
+async function cargarTopVendedor() {
+    try {
+        console.log('🏆 Cargando información del top vendedor...');
+
+        const response = await fetch('/Dashboard/ObtenerTopVendedor', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success && resultado.data) {
+            mostrarTopVendedor(resultado.data);
+            console.log('✅ Top vendedor cargado correctamente:', resultado.data);
+        } else {
+            console.warn('⚠️ No se pudo obtener información del top vendedor');
+            mostrarErrorTopVendedor();
+        }
+    } catch (error) {
+        console.error('❌ Error cargando top vendedor:', error);
+        mostrarErrorTopVendedor();
+    }
+}
+
+/**
+ * 🏆 FUNCIÓN: Mostrar información del top vendedor
+ */
+function mostrarTopVendedor(data) {
+    try {
+        console.log('🏆 Mostrando datos del top vendedor:', data);
+
+        // Buscar el contenedor del top vendedor
+        const container = document.querySelector('[data-section="top-vendedor"]');
+        if (!container) {
+            console.warn('⚠️ Contenedor de top vendedor no encontrado');
+            return;
+        }
+
+        // Actualizar nombre del vendedor
+        const nombreElement = container.querySelector('.stat-value');
+        if (nombreElement) {
+            nombreElement.textContent = data.vendedor || 'No disponible';
+        }
+
+        // Actualizar información adicional
+        const detalleElement = container.querySelector('.stat-comparison');
+        if (detalleElement) {
+            const totalVentas = data.totalVentas || 0;
+            const montoTotal = data.montoTotal || 0;
+
+            // Formatear monto
+            const montoFormateado = new Intl.NumberFormat('es-HN', {
+                style: 'currency',
+                currency: 'HNL'
+            }).format(montoTotal);
+
+            detalleElement.innerHTML = `
+                <i class="fas fa-trophy text-warning me-1"></i>
+                ${totalVentas} ventas • ${montoFormateado}
+            `;
+        }
+
+        // Agregar clase de éxito
+        container.classList.remove('error');
+        container.classList.add('loaded');
+
+        console.log('✅ Top vendedor mostrado correctamente');
+    } catch (error) {
+        console.error('❌ Error mostrando top vendedor:', error);
+        mostrarErrorTopVendedor();
+    }
+}
+
+/**
+ * 🏆 FUNCIÓN: Mostrar error en top vendedor
+ */
+function mostrarErrorTopVendedor() {
+    try {
+        const container = document.querySelector('[data-section="top-vendedor"]');
+        if (!container) return;
+
+        // Mostrar mensaje de error
+        const nombreElement = container.querySelector('.stat-value');
+        if (nombreElement) {
+            nombreElement.textContent = 'Error al cargar';
+        }
+
+        const detalleElement = container.querySelector('.stat-comparison');
+        if (detalleElement) {
+            detalleElement.innerHTML = `
+                <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                No se pudo cargar la información
+            `;
+        }
+
+        // Agregar clase de error
+        container.classList.remove('loaded');
+        container.classList.add('error');
+
+        console.log('⚠️ Error mostrado en sección de top vendedor');
+    } catch (error) {
+        console.error('❌ Error mostrando error de top vendedor:', error);
+    }
+}
 
 // ========================================
 // GESTIÓN DE FORMULARIOS
@@ -349,11 +456,12 @@ function eliminarNota(noteItem) {
 function inicializarRefrescoAutomatico() {
     console.log('🔄 Configurando refresco automático...');
 
-    // Refrescar alertas de stock y inventario total cada 5 minutos
+    // Refrescar alertas de stock, inventario total y top vendedor cada 5 minutos
     setInterval(() => {
         console.log('🔄 Refrescando datos del dashboard automáticamente...');
         cargarAlertasStock();
         cargarInventarioTotal();
+        cargarTopVendedor();
     }, 5 * 60 * 1000); // 5 minutos
 }
 
@@ -379,9 +487,10 @@ async function obtenerEstadisticasDashboard() {
     // Actualmente, las estadísticas se cargan al inicializar el dashboard y se refrescan periódicamente.
     // Podría agregarse aquí la lógica para refrescar manualmente todas las estadísticas si fuera necesario.
     try {
-        // Ejemplo: podrías llamar a cargarAlertasStock() y cargarInventarioTotal() aquí si quisieras un refresco manual forzado.
-        // cargarAlertasStock();
-        // cargarInventarioTotal();
+        // Ejemplo: podrías llamar a cargarAlertasStock(), cargarInventarioTotal() y cargarTopVendedor() aquí si quisieras un refresco manual forzado.
+        cargarAlertasStock();
+        cargarInventarioTotal();
+        cargarTopVendedor();
         console.log('✅ Estadísticas del dashboard (actuales) disponibles.');
     } catch (error) {
         console.error('❌ Error obteniendo estadísticas del dashboard:', error);

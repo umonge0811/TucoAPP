@@ -1,4 +1,4 @@
-﻿/* Dashboard Container */
+/* Dashboard Container */
 .dashboard-container {
     display: flex;
     flex-direction: column;
@@ -82,6 +82,10 @@
 
 .stat-card.inventory .stat-icon {
     background: #10b981;
+
+.stat-card.sales .stat-icon {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
 }
 
 .stat-card.alerts .stat-icon {
