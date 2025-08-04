@@ -357,6 +357,16 @@ async function crearUsuario(e) {
                         if (feedbackDiv) feedbackDiv.remove();
                     }, 5000);
                 }
+
+                // Mostrar SweetAlert específico para email duplicado
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Email ya registrado',
+                    text: errorData.message,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#f59e0b'
+                });
+                return; // Salir sin lanzar excepción para evitar el catch
             }
 
             throw new Error(errorData.message || 'Error al crear usuario');
@@ -378,8 +388,10 @@ async function crearUsuario(e) {
         // Mostrar mensaje de error con SweetAlert
         Swal.fire({
             icon: 'error',
-            title: 'Error',
-            text: error.message || 'Error al crear el usuario'
+            title: 'Error al crear usuario',
+            text: error.message || 'No se pudo crear el usuario. Por favor, intente nuevamente.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#dc3545'
         });
     }
 }
