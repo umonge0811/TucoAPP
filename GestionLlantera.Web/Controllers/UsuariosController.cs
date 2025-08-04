@@ -213,28 +213,6 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> EditarUsuario(int id, [FromBody] CreateUsuarioDTO modelo)
-        {
-            try
-            {
-                var resultado = await _usuariosService.EditarUsuarioAsync(id, modelo);
-
-                if (resultado)
-                {
-                    return Json(new { success = true, message = "Usuario editado correctamente" });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "Error al editar usuario" });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al editar usuario {Id}", id);
-                return Json(new { success = false, message = "Error interno del servidor" });
-            }
-        }
 
         [HttpPost]
         public async Task<IActionResult> ActivarUsuario(int id)
