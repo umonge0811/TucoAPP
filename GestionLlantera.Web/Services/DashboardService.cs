@@ -106,49 +106,34 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string message)> ObtenerTopVendedorAsync(string jwtToken)
+        public async Task<(bool success, object data, string message)> ObtenerTopVendedorAsync()
         {
             try
             {
-                _logger.LogInformation("🏆 Obteniendo top vendedor desde dashboard service");
+                _logger.LogInformation("🏆 Obteniendo top vendedor desde servicio");
 
-                // 🔑 CONFIGURAR TOKEN JWT SI SE PROPORCIONA (mismo patrón que otros servicios)
-                if (!string.IsNullOrEmpty(jwtToken))
-                {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                    _logger.LogInformation("🔐 Token JWT configurado para obtener top vendedor");
-                }
-                else
-                {
-                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener top vendedor");
-                }
+                var response = await _httpClient.GetAsync("api/Dashboard/top-vendedor");
 
-                var response = await _httpClient.GetAsync("api/dashboard/top-vendedor");
-
-                if (!response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("❌ Error en respuesta de API: {StatusCode}", response.StatusCode);
-                    return (false, null, "Error al obtener top vendedor");
+                    var content = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ApiResponse<object>>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    if (result?.Success == true)
+                    {
+                        return (success: true, data: result.Data, message: "Top vendedor obtenido correctamente");
+                    }
                 }
 
-                var jsonContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("🏆 Respuesta de top vendedor recibida: {Response}", jsonContent);
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var resultado = JsonSerializer.Deserialize<dynamic>(jsonContent, options);
-
-                return (true, resultado, "Top vendedor obtenido correctamente");
+                return (success: false, data: null, message: "Error al obtener top vendedor");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al obtener top vendedor");
-                return (false, null, "Error interno al obtener top vendedor");
+                _logger.LogError(ex, "❌ Error obteniendo top vendedor");
+                return (success: false, data: null, message: "Error interno al obtener top vendedor");
             }
         }
     }
