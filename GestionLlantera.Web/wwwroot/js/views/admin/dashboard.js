@@ -19,7 +19,7 @@ let dashboardInicializado = false;
 /**
  * Función principal de inicialización del dashboard
  */
-function inicializarDashboard() {
+async function inicializarDashboard() {
     if (dashboardInicializado) {
         console.log('📊 Dashboard ya inicializado, omitiendo...');
         return;
@@ -28,14 +28,26 @@ function inicializarDashboard() {
     console.log('📊 Dashboard - Inicializando módulo principal');
 
     try {
+        // Marcar como inicializado para evitar múltiples inicializaciones
+        dashboardInicializado = true;
+
         // Cargar datos iniciales del dashboard
         await Promise.all([
             cargarAlertasStock(),
             cargarInventarioTotal(),
             cargarTopVendedor()
         ]);
+
+        // Inicializar eventos de formularios
+        inicializarEventosFormularios();
+
+        // Inicializar refresco automático
+        inicializarRefrescoAutomatico();
+
+        console.log('✅ Dashboard inicializado correctamente');
     } catch (error) {
         console.error('❌ Error inicializando dashboard:', error);
+        dashboardInicializado = false; // Permitir reintentos
     }
 }
 
@@ -502,7 +514,7 @@ async function obtenerEstadisticasDashboard() {
 // ========================================
 
 // Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('📊 DOM cargado, verificando disponibilidad de jQuery...');
 
     // Verificar si jQuery está disponible
@@ -510,9 +522,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('⏳ Esperando a que jQuery se cargue...');
 
         // Intentar nuevamente después de un pequeño delay
-        setTimeout(function() {
+        setTimeout(async function() {
             if (typeof $ !== 'undefined') {
-                inicializarDashboard();
+                await inicializarDashboard();
             } else {
                 console.error('❌ jQuery no disponible después de esperar');
                 // Intentar inicializar sin jQuery (funcionalidad limitada)
@@ -520,7 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 500);
     } else {
-        inicializarDashboard();
+        await inicializarDashboard();
     }
 });
 
