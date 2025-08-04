@@ -388,31 +388,105 @@ async function obtenerEstadisticasDashboard() {
     }
 }
 
+/**
+ * Cargar el top vendedor desde el backend
+ */
+async function cargarTopVendedor() {
+    try {
+        console.log('📊 Cargando top vendedor...');
+
+        const response = await fetch('/Dashboard/ObtenerTopVendedor', {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log(`📡 Respuesta del servidor (top vendedor): ${response.status}`);
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('✅ Datos de top vendedor recibidos:', resultado);
+
+        if (resultado.success && resultado.data) {
+            actualizarTarjetaTopVendedor(resultado.data);
+        } else {
+            mostrarErrorTopVendedor(resultado.message || 'Error al cargar top vendedor');
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando top vendedor:', error);
+        mostrarErrorTopVendedor('Error de conexión al cargar top vendedor');
+    }
+}
+
+/**
+ * Actualizar la tarjeta del top vendedor con datos del backend
+ */
+function actualizarTarjetaTopVendedor(data) {
+    console.log('📊 Actualizando tarjeta de top vendedor:', data);
+
+    const $cardBody = $('#top-vendedor-card .card-body');
+
+    if (!$cardBody.length) {
+        console.warn('⚠️ Elemento card-body para top vendedor no encontrado en el DOM');
+        return;
+    }
+
+    // Limpiar contenido anterior
+    $cardBody.empty();
+
+    if (data.length > 0) {
+        // Ordenar por monto de facturas (descendente) como criterio principal
+        data.sort((a, b) => b.montoFacturas - a.montoFacturas);
+
+        // Generar HTML para cada vendedor en el top
+        data.forEach((vendedor, index) => {
+            const rankClass = index === 0 ? 'text-primary font-weight-bold' : '';
+            const html = `
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="lead ${rankClass}">${index + 1}. ${vendedor.nombre}</span>
+                    <span class="text-muted">${vendedor.montoFacturas.toLocaleString('es-CR', { style: 'currency', currency: 'CRC', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                </div>
+            `;
+            $cardBody.append(html);
+        });
+        console.log('✅ Tarjeta de top vendedor actualizada correctamente');
+    } else {
+        $cardBody.html('<p class="text-muted">No hay datos de vendedores disponibles.</p>');
+        console.log('ℹ️ No se encontraron datos para el top vendedor.');
+    }
+}
+
+/**
+ * Mostrar error en la tarjeta del top vendedor
+ */
+function mostrarErrorTopVendedor(mensaje) {
+    const $cardBody = $('#top-vendedor-card .card-body');
+
+    if ($cardBody.length) {
+        $cardBody.html(`<p class="text-danger"><i class="bi bi-exclamation-triangle"></i> ${mensaje}</p>`);
+    }
+}
+
 // ========================================
 // EVENTOS DE INICIALIZACIÓN
 // ========================================
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📊 DOM cargado, verificando disponibilidad de jQuery...');
+    console.log('📊 Dashboard cargado, iniciando servicios...');
 
-    // Verificar si jQuery está disponible
-    if (typeof $ === 'undefined') {
-        console.log('⏳ Esperando a que jQuery se cargue...');
+    // Cargar datos del dashboard
+    cargarInventarioTotal();
+    cargarAlertasStock();
+    cargarTopVendedor();
 
-        // Intentar nuevamente después de un pequeño delay
-        setTimeout(function() {
-            if (typeof $ !== 'undefined') {
-                inicializarDashboard();
-            } else {
-                console.error('❌ jQuery no disponible después de esperar');
-                // Intentar inicializar sin jQuery (funcionalidad limitada)
-                inicializarDashboardSinJQuery();
-            }
-        }, 500);
-    } else {
-        inicializarDashboard();
-    }
+    console.log('✅ Dashboard inicializado correctamente');
 });
 
 /**

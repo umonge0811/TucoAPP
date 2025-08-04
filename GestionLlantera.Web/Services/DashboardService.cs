@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Services.Interfaces;
 using System.Text.Json;
 
@@ -104,6 +103,37 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, "❌ Error al obtener estadísticas de inventario total");
                 return (false, null, "Error interno al obtener estadísticas de inventario");
+            }
+        }
+
+        public async Task<(bool success, object data, string message)> ObtenerTopVendedorAsync()
+        {
+            try
+            {
+                _logger.LogInformation("🏆 Obteniendo top vendedor desde servicio");
+
+                var response = await _httpClient.GetAsync("api/Dashboard/top-vendedor");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<ApiResponse<object>>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    if (result?.Success == true)
+                    {
+                        return (success: true, data: result.Data, message: "Top vendedor obtenido correctamente");
+                    }
+                }
+
+                return (success: false, data: null, message: "Error al obtener top vendedor");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo top vendedor");
+                return (success: false, data: null, message: "Error interno al obtener top vendedor");
             }
         }
     }
