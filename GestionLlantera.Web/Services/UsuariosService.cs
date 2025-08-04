@@ -82,23 +82,34 @@ namespace GestionLlantera.Web.Services
 
                 try
                 {
-                    var errorResponse = JsonSerializer.Deserialize<JsonElement>(errorContent);
+                    // Intentar deserializar a la estructura esperada de error de la API
+                    var apiErrorResponse = JsonSerializer.Deserialize<ApiErrorResponse>(errorContent, _jsonOptions);
 
-                    return new UsuarioCreationResult
+                    if (apiErrorResponse != null)
                     {
-                        Success = false,
-                        Message = errorResponse.TryGetProperty("Message", out var msg)
-                            ? msg.GetString() ?? "Error al crear usuario"
-                            : "Error al crear usuario",
-                        ErrorType = errorResponse.TryGetProperty("ErrorType", out var errorType)
-                            ? errorType.GetString()
-                            : null,
-                        Field = errorResponse.TryGetProperty("Field", out var field)
-                            ? field.GetString()
-                            : null
-                    };
+                        return new UsuarioCreationResult
+                        {
+                            Success = false,
+                            Message = apiErrorResponse.Message ?? "Error al crear usuario",
+                            Field = apiErrorResponse.Field,
+                            ErrorType = apiErrorResponse.ErrorType
+                        };
+                    }
+                    else
+                    {
+                        // Si no se puede deserializar a ApiErrorResponse, intentar con JsonElement genérico
+                        var errorObj = JsonSerializer.Deserialize<JsonElement>(errorContent);
+
+                        return new UsuarioCreationResult
+                        {
+                            Success = false,
+                            Message = errorObj.TryGetProperty("message", out var msgProp) ? msgProp.GetString() : "Error al crear usuario",
+                            Field = errorObj.TryGetProperty("field", out var fieldProp) ? fieldProp.GetString() : null,
+                            ErrorType = errorObj.TryGetProperty("errorType", out var errorTypeProp) ? errorTypeProp.GetString() : null
+                        };
+                    }
                 }
-                catch
+                catch (JsonException)
                 {
                     // Si no se puede parsear la respuesta, devolver mensaje genérico
                     return new UsuarioCreationResult
@@ -231,5 +242,59 @@ namespace GestionLlantera.Web.Services
                 return false;
             }
         }
+    }
+}
+
+// Definición de la clase ApiErrorResponse para deserializar errores de la API
+// Asegúrate de que esta clase esté en el mismo namespace o en uno accesible, por ejemplo, en GestionLlantera.Web.Models.DTOs
+namespace GestionLlantera.Web.Models.DTOs
+{
+    public class ApiErrorResponse
+    {
+        public string Message { get; set; }
+        public string Field { get; set; }
+        public string ErrorType { get; set; }
+    }
+
+    // Clase UsuarioCreationResult (ya existente en tu código, pero la incluyo para completitud del ejemplo)
+    public class UsuarioCreationResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
+        public string Field { get; set; }
+        public string ErrorType { get; set; }
+    }
+
+    // Definiciones de DTOs y otros tipos necesarios
+    public class CreateUsuarioDTO {
+        public string NombreUsuario { get; set; }
+        public string Email { get; set; }
+        public int RolId { get; set; }
+        public bool EsTopVendedor { get; set; }
+    }
+
+    public class UsuarioDTO {
+        public int Id { get; set; }
+        public string NombreUsuario { get; set; }
+        public string Email { get; set; }
+        public string NombreRol { get; set; }
+        public bool EsTopVendedor { get; set; }
+    }
+
+    public class RolUsuarioDTO {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+    }
+
+    public class RolesResponseDTO {
+        public List<RolUsuarioDTO> Roles { get; set; }
+    }
+
+    public class RegistroUsuarioRequestDTO
+    {
+        public string NombreUsuario { get; set; }
+        public string Email { get; set; }
+        public int RolId { get; set; }
+        public bool EsTopVendedor { get; set; }
     }
 }
