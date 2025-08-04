@@ -30,12 +30,25 @@ namespace GestionLlantera.Web.Controllers
         /// <returns>El token JWT o null si no se encuentra</returns>
         private string? ObtenerTokenJWT()
         {
-            var token = User.FindFirst("JwtToken")?.Value;
+            // Intentar diferentes métodos para obtener el token, igual que otros controladores
+            var token = User.FindFirst("jwt_token")?.Value;
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                token = User.FindFirst("JwtToken")?.Value;
+            }
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                token = User.FindFirst("access_token")?.Value;
+            }
 
             if (string.IsNullOrEmpty(token))
             {
                 _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
                     User.Identity?.Name ?? "Anónimo");
+                _logger.LogDebug("📋 Claims disponibles: {Claims}", 
+                    string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
             }
             else
             {
@@ -58,9 +71,8 @@ namespace GestionLlantera.Web.Controllers
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogError("❌ Token JWT no encontrado para DetalleProducto");
-                    TempData["Error"] = "Sesión expirada. Por favor, inicie sesión nuevamente.";
-                    return RedirectToAction("Login", "Account");
+                    _logger.LogError("❌ Token JWT no encontrado para Dashboard");
+                    return Json(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
                 }
 
                 var resultado = await _dashboardService.ObtenerAlertasStockAsync(token);
