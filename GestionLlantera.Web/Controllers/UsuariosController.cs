@@ -125,7 +125,12 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // Manejar errores específicos del servicio
-                return BadRequest(resultado);
+                return Json(new { 
+                    success = false,
+                    message = resultado.Message,
+                    errorType = resultado.ErrorType,
+                    field = resultado.Field
+                });
             }
             catch (Exception ex)
             {
