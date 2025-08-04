@@ -139,11 +139,11 @@ namespace API.Controllers
 
                 var topVendedor = await _context.Facturas
                     .Where(f => f.FechaFactura >= fechaInicio && f.FechaFactura <= fechaFin)
-                    .GroupBy(f => new { f.UsuarioId, f.Usuario.NombreCompleto })
+                    .GroupBy(f => new { f.UsuarioCreadorId, f.UsuarioCreador.NombreUsuario })
                     .Select(g => new
                     {
-                        UsuarioId = g.Key.UsuarioId,
-                        NombreVendedor = g.Key.NombreCompleto,
+                        UsuarioId = g.Key.UsuarioCreadorId,
+                        NombreVendedor = g.Key.NombreUsuario,
                         TotalVentas = g.Count(),
                         MontoTotal = g.Sum(f => f.Total),
                         PromedioVenta = g.Average(f => f.Total)
