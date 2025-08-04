@@ -20,14 +20,17 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("📊 Solicitando alertas de stock desde dashboard service");
+                _logger.LogInformation("🔗 BaseAddress configurada: {BaseAddress}", _httpClient.BaseAddress);
 
                 // 🔑 CONFIGURAR EL TOKEN EN EL HEADER DE AUTORIZACIÓN
-                _httpClient.DefaultRequestHeaders.Clear();
+                // Solo limpiar el header de autorización, no todos los headers
+                _httpClient.DefaultRequestHeaders.Authorization = null;
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
                     _httpClient.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                     _logger.LogInformation("🔐 Token JWT configurado en headers de autorización");
+                    _logger.LogDebug("🔍 URL completa: {BaseAddress}{RelativePath}", _httpClient.BaseAddress, "api/dashboard/alertas-stock");
                 }
 
                 var response = await _httpClient.GetAsync("api/dashboard/alertas-stock");
