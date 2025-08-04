@@ -179,8 +179,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
-// Usar la política de CORS
+// Usar la política de CORS - DEBE IR DESPUÉS DE UseRouting()
 app.UseCors("AllowAll");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
