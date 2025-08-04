@@ -339,6 +339,53 @@ public class UsuariosController : ControllerBase
     //}
     //#endregion
 
+    #region Obtener Usuario por ID
+    /// <summary>
+    /// Endpoint para obtener un usuario específico por ID.
+    /// </summary>
+    /// <param name="id">ID del usuario.</param>
+    /// <returns>Información del usuario.</returns>
+    [HttpGet("usuarios/{id}")]
+    public async Task<IActionResult> ObtenerUsuarioPorId(int id)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios
+                .Select(u => new
+                {
+                    u.UsuarioId,
+                    u.NombreUsuario,
+                    u.Email,
+                    u.Activo,
+                    u.EsTopVendedor,
+                    Roles = u.UsuarioRoles
+                            .Select(ur => ur.Rol.NombreRol)
+                            .ToList()
+                })
+                .FirstOrDefaultAsync(u => u.UsuarioId == id);
+
+            if (usuario == null)
+                return NotFound(new { Message = "Usuario no encontrado" });
+
+            return Ok(usuario);
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Consulta de Usuario",
+                modulo: "Usuarios",
+                detalle: "Error al obtener usuario por ID",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al obtener usuario" });
+        }
+    }
+    #endregion
+
     #region Obtener Roles de Usuario
     /// <summary>
     /// Endpoint para obtener los roles de un usuario.
