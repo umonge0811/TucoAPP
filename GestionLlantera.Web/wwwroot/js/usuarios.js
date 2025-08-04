@@ -11,6 +11,8 @@ toastr.options = {
 
 // Variables globales
 let modalRoles = null;
+let modalEditarUsuario = null;
+let usuarioEditando = null;
 
 // Un solo event listener para la inicialización
 document.addEventListener('DOMContentLoaded', function () {
@@ -21,6 +23,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalElement = document.getElementById('modalRoles');
     if (modalElement) {
         modalRoles = new bootstrap.Modal(modalElement);
+    }
+
+    // Inicializar modal de editar usuario
+    const modalEditarElement = document.getElementById('modalEditarUsuario');
+    if (modalEditarElement) {
+        modalEditarUsuario = new bootstrap.Modal(modalEditarElement);
+    }
+
+    // Configurar evento para guardar usuario editado
+    const btnGuardarUsuarioEditar = document.getElementById('btnGuardarUsuarioEditar');
+    if (btnGuardarUsuarioEditar) {
+        btnGuardarUsuarioEditar.addEventListener('click', guardarUsuarioEditado);
     }
 
     // Inicializar DataTables en desktop
@@ -403,6 +417,192 @@ function showSuccess(message) {
     } else {
         console.log('Éxito:', message);
     }
+}
+
+/**
+ * Función para abrir el modal de editar usuario
+ */
+async function editarUsuarioModal(usuarioId) {
+    try {
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Cargando datos del usuario...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Petición para obtener datos del usuario
+        const response = await fetch(`/Usuarios/ObtenerUsuarioPorId?id=${usuarioId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al obtener datos del usuario');
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success && resultado.data) {
+            usuarioEditando = resultado.data;
+            llenarFormularioUsuario(resultado.data);
+            
+            Swal.close();
+            modalEditarUsuario.show();
+        } else {
+            throw new Error(resultado.message || 'No se pudo cargar la información del usuario');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'No se pudieron cargar los datos del usuario'
+        });
+    }
+}
+
+/**
+ * Función para llenar el formulario de editar usuario con los datos
+ */
+function llenarFormularioUsuario(usuario) {
+    // Limpiar validaciones previas
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
+
+    // Llenar campos
+    document.getElementById('usuarioIdEditar').value = usuario.usuarioId || usuario.id;
+    document.getElementById('nombreUsuarioEditar').value = usuario.nombreUsuario || '';
+    document.getElementById('emailUsuarioEditar').value = usuario.email || '';
+    document.getElementById('activoUsuarioEditar').checked = usuario.activo || false;
+    document.getElementById('topVendedorUsuarioEditar').checked = usuario.esTopVendedor || false;
+
+    // Seleccionar rol si existe
+    const rolSelect = document.getElementById('rolUsuarioEditar');
+    if (usuario.rolId) {
+        rolSelect.value = usuario.rolId;
+    } else {
+        rolSelect.value = '';
+    }
+}
+
+/**
+ * Función para guardar los cambios del usuario editado
+ */
+async function guardarUsuarioEditado() {
+    try {
+        // Validar formulario
+        if (!validarFormularioEditarUsuario()) {
+            return;
+        }
+
+        // Deshabilitar botón y mostrar carga
+        const btnGuardar = document.getElementById('btnGuardarUsuarioEditar');
+        btnGuardar.disabled = true;
+        btnGuardar.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Actualizando...';
+
+        // Preparar datos
+        const datosUsuario = {
+            usuarioId: parseInt(document.getElementById('usuarioIdEditar').value),
+            nombreUsuario: document.getElementById('nombreUsuarioEditar').value.trim(),
+            email: document.getElementById('emailUsuarioEditar').value.trim(),
+            rolId: parseInt(document.getElementById('rolUsuarioEditar').value) || null,
+            activo: document.getElementById('activoUsuarioEditar').checked,
+            esTopVendedor: document.getElementById('topVendedorUsuarioEditar').checked
+        };
+
+        // Llamada a la API
+        const response = await fetch('/Usuarios/ActualizarUsuario', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosUsuario)
+        });
+
+        if (response.ok) {
+            const resultado = await response.json();
+            
+            modalEditarUsuario.hide();
+
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Usuario actualizado!',
+                text: resultado.message || 'Los datos del usuario se han actualizado correctamente',
+                timer: 1500
+            });
+
+            // Recargar página para mostrar cambios
+            window.location.reload();
+
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error al actualizar usuario');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al actualizar usuario',
+            text: error.message || 'No se pudo actualizar el usuario. Por favor, intente nuevamente.'
+        });
+    } finally {
+        // Restaurar botón
+        const btnGuardar = document.getElementById('btnGuardarUsuarioEditar');
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = '<i class="bi bi-check-circle me-1"></i>Actualizar Usuario';
+    }
+}
+
+/**
+ * Función para validar el formulario de editar usuario
+ */
+function validarFormularioEditarUsuario() {
+    let esValido = true;
+
+    // Validar nombre de usuario
+    const nombreUsuario = document.getElementById('nombreUsuarioEditar');
+    if (!nombreUsuario.value.trim()) {
+        mostrarErrorCampo(nombreUsuario, 'El nombre de usuario es requerido');
+        esValido = false;
+    }
+
+    // Validar email
+    const email = document.getElementById('emailUsuarioEditar');
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.value.trim()) {
+        mostrarErrorCampo(email, 'El email es requerido');
+        esValido = false;
+    } else if (!emailRegex.test(email.value.trim())) {
+        mostrarErrorCampo(email, 'Ingrese un email válido');
+        esValido = false;
+    }
+
+    return esValido;
+}
+
+/**
+ * Función auxiliar para mostrar errores en campos
+ */
+function mostrarErrorCampo(campo, mensaje) {
+    campo.classList.add('is-invalid');
+    const feedback = campo.parentNode.querySelector('.invalid-feedback');
+    if (feedback) {
+        feedback.textContent = mensaje;
+    }
+
+    // Remover error después de 5 segundos
+    setTimeout(() => {
+        campo.classList.remove('is-invalid');
+        if (feedback) feedback.textContent = '';
+    }, 5000);
 }
 
 // Función para manejar errores de AJAX globalmente
