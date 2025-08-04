@@ -1,0 +1,29 @@
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:515 📊 Módulo Dashboard cargado correctamente
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:482 📊 Dashboard cargado, iniciando servicios...
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:174 📊 Cargando estadísticas de inventario total...
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:57 📊 Cargando alertas de stock...
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:396 📊 Cargando top vendedor...
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:489 ✅ Dashboard inicializado correctamente
+Dashboard/ObtenerAlertasStock:1  Failed to load resource: the server responded with a status of 404 ()
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:67 📡 Respuesta del servidor: 404
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:83 ❌ Error cargando alertas de stock: Error: Error 404: 
+    at cargarAlertasStock (dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:70:19)
+cargarAlertasStock @ dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:83
+await in cargarAlertasStock
+(anonymous) @ dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:486
+Dashboard/ObtenerInventarioTotal:1  Failed to load resource: the server responded with a status of 404 ()
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:184 📡 Respuesta del servidor (inventario): 404
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:200 ❌ Error cargando inventario total: Error: Error 404: 
+    at cargarInventarioTotal (dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:187:19)
+cargarInventarioTotal @ dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:200
+await in cargarInventarioTotal
+(anonymous) @ dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:485
+Dashboard/ObtenerTopVendedor:1  Failed to load resource: the server responded with a status of 404 ()
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:406 📡 Respuesta del servidor (top vendedor): 404
+dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:422 ❌ Error cargando top vendedor: Error: Error 404: 
+    at cargarTopVendedor (dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:409:19)
+cargarTopVendedor @ dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:422
+await in cargarTopVendedor
+(anonymous) @ dashboard.js?v=yC5XGFncVAddT8yW_FbUYkYmw_1U8_gnHKuU0tMFVww:487
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
