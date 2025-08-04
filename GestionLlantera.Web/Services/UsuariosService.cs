@@ -263,7 +263,7 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("Actualizando usuario {Id} con email: {Email}", usuario.UsuarioId, usuario.Email);
+                _logger.LogInformation("Actualizando usuario {Id}", usuario.UsuarioId);
 
                 var json = JsonSerializer.Serialize(usuario, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
