@@ -5,6 +5,6 @@ namespace GestionLlantera.Web.Services.Interfaces
 {
     public interface IDashboardService
     {
-        Task<(bool success, object data, string mensaje)> ObtenerAlertasStockAsync();
+        Task<(bool success, object data, string mensaje)> ObtenerAlertasStockAsync(string jwtToken);
     }
 }

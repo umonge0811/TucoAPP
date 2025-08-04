@@ -31,7 +31,22 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("📊 Obteniendo alertas de stock para dashboard");
 
-                var resultado = await _dashboardService.ObtenerAlertasStockAsync();
+                // 🔑 Obtener el token JWT del usuario autenticado
+                var token = HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                
+                if (string.IsNullOrEmpty(token))
+                {
+                    // Intentar obtener el token de las claims si no está en el header
+                    token = User.FindFirst("jwt_token")?.Value;
+                }
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ No se encontró token JWT para la petición");
+                    return Json(new { success = false, message = "Token de autenticación requerido" });
+                }
+
+                var resultado = await _dashboardService.ObtenerAlertasStockAsync(token);
 
                 if (!resultado.success)
                 {

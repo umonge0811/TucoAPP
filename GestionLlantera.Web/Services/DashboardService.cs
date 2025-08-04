@@ -15,11 +15,20 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
         }
 
-        public async Task<(bool success, object data, string mensaje)> ObtenerAlertasStockAsync()
+        public async Task<(bool success, object data, string mensaje)> ObtenerAlertasStockAsync(string jwtToken)
         {
             try
             {
                 _logger.LogInformation("📊 Solicitando alertas de stock desde dashboard service");
+
+                // 🔑 CONFIGURAR EL TOKEN EN EL HEADER DE AUTORIZACIÓN
+                _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado en headers de autorización");
+                }
 
                 var response = await _httpClient.GetAsync("api/dashboard/alertas-stock");
 
