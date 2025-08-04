@@ -9,9 +9,9 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<DashboardService> _logger;
 
-        public DashboardService(HttpClient httpClient, ILogger<DashboardService> logger)
+        public DashboardService(IHttpClientFactory httpClientFactory, ILogger<DashboardService> logger)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
         }
 
@@ -20,17 +20,18 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("📊 Solicitando alertas de stock desde dashboard service");
-                _logger.LogInformation("🔗 BaseAddress configurada: {BaseAddress}", _httpClient.BaseAddress);
 
-                // 🔑 CONFIGURAR EL TOKEN EN EL HEADER DE AUTORIZACIÓN
-                // Solo limpiar el header de autorización, no todos los headers
-                _httpClient.DefaultRequestHeaders.Authorization = null;
+                // 🔑 CONFIGURAR TOKEN JWT SI SE PROPORCIONA (mismo patrón que otros servicios)
                 if (!string.IsNullOrEmpty(jwtToken))
                 {
+                    _httpClient.DefaultRequestHeaders.Clear();
                     _httpClient.DefaultRequestHeaders.Authorization =
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                    _logger.LogInformation("🔐 Token JWT configurado en headers de autorización");
-                    _logger.LogDebug("🔍 URL completa: {BaseAddress}{RelativePath}", _httpClient.BaseAddress, "api/dashboard/alertas-stock");
+                    _logger.LogInformation("🔐 Token JWT configurado para obtener alertas de stock");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener alertas de stock");
                 }
 
                 var response = await _httpClient.GetAsync("api/dashboard/alertas-stock");
