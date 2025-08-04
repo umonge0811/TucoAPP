@@ -125,5 +125,68 @@ namespace API.Controllers
                 });
             }
         }
+
+        [HttpGet("top-vendedor")]
+        public async Task<IActionResult> ObtenerTopVendedor()
+        {
+            try
+            {
+                _logger.LogInformation("📊 Obteniendo top vendedor para dashboard");
+
+                // Obtener el vendedor con más ventas del mes actual
+                var fechaInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+                var fechaFin = fechaInicio.AddMonths(1).AddDays(-1);
+
+                var topVendedor = await _context.Facturas
+                    .Where(f => f.FechaFactura >= fechaInicio && f.FechaFactura <= fechaFin)
+                    .GroupBy(f => new { f.UsuarioId, f.Usuario.NombreCompleto })
+                    .Select(g => new
+                    {
+                        UsuarioId = g.Key.UsuarioId,
+                        NombreVendedor = g.Key.NombreCompleto,
+                        TotalVentas = g.Count(),
+                        MontoTotal = g.Sum(f => f.Total),
+                        PromedioVenta = g.Average(f => f.Total)
+                    })
+                    .OrderByDescending(v => v.TotalVentas)
+                    .ThenByDescending(v => v.MontoTotal)
+                    .FirstOrDefaultAsync();
+
+                if (topVendedor == null)
+                {
+                    _logger.LogInformation("📊 No se encontraron ventas para el mes actual");
+                    return Ok(new
+                    {
+                        success = true,
+                        vendedor = "Sin ventas",
+                        totalVentas = 0,
+                        montoTotal = 0m,
+                        promedioVenta = 0m,
+                        mensaje = "No hay ventas registradas este mes"
+                    });
+                }
+
+                _logger.LogInformation("📊 Top vendedor: {Vendedor} con {Ventas} ventas por ₡{Monto:N0}", 
+                    topVendedor.NombreVendedor, topVendedor.TotalVentas, topVendedor.MontoTotal);
+
+                return Ok(new
+                {
+                    success = true,
+                    vendedor = topVendedor.NombreVendedor,
+                    totalVentas = topVendedor.TotalVentas,
+                    montoTotal = topVendedor.MontoTotal,
+                    promedioVenta = topVendedor.PromedioVenta,
+                    mensaje = $"{topVendedor.NombreVendedor} lidera con {topVendedor.TotalVentas} ventas"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener top vendedor");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al obtener estadísticas de vendedor" 
+                });
+            }
+        }
     }
 }
