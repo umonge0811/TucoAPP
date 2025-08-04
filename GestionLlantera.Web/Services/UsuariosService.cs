@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Nodes;
+using Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Services
 {
