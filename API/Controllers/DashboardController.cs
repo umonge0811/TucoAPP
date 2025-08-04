@@ -138,7 +138,8 @@ namespace API.Controllers
                 var fechaFin = fechaInicio.AddMonths(1).AddDays(-1);
 
                 var topVendedor = await _context.Facturas
-                    .Where(f => f.FechaFactura >= fechaInicio && f.FechaFactura <= fechaFin)
+                    .Where(f => f.FechaFactura >= fechaInicio && f.FechaFactura <= fechaFin 
+                            && f.UsuarioCreador.EsTopVendedor == true) // Solo usuarios habilitados como top vendedor
                     .GroupBy(f => new { f.UsuarioCreadorId, f.UsuarioCreador.NombreUsuario })
                     .Select(g => new
                     {
@@ -154,7 +155,7 @@ namespace API.Controllers
 
                 if (topVendedor == null)
                 {
-                    _logger.LogInformation("📊 No se encontraron ventas para el mes actual");
+                    _logger.LogInformation("📊 No se encontraron ventas de usuarios habilitados como top vendedor para el mes actual");
                     return Ok(new
                     {
                         success = true,
@@ -162,7 +163,7 @@ namespace API.Controllers
                         totalVentas = 0,
                         montoTotal = 0m,
                         promedioVenta = 0m,
-                        mensaje = "No hay ventas registradas este mes"
+                        mensaje = "No hay ventas de usuarios habilitados como top vendedor este mes"
                     });
                 }
 
