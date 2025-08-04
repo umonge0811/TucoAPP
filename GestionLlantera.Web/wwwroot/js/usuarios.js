@@ -286,26 +286,26 @@ async function desactivarUsuario(usuarioId) {
     }
 }
 
-// En el evento de submit del formulario
+// Función para manejar la creación de usuario
 async function crearUsuario(e) {
     e.preventDefault();
 
-    // Obtener referencias
+    // Obtener referencias al botón y sus estados
     const submitButton = document.querySelector('#submitButton');
     if (!submitButton) {
         console.error('El botón de submit no fue encontrado');
         return;
     }
-
     const normalState = submitButton.querySelector('.normal-state');
     const loadingState = submitButton.querySelector('.loading-state');
 
     try {
         // Deshabilitar botón y mostrar estado de carga
         submitButton.disabled = true;
-        normalState.style.display = 'none';
-        loadingState.style.display = 'inline-flex';
+        if (normalState) normalState.style.display = 'none';
+        if (loadingState) loadingState.style.display = 'inline-flex';
 
+        // Preparar datos del formulario
         const formData = {
             nombreUsuario: document.getElementById('NombreUsuario').value,
             email: document.getElementById('Email').value,
@@ -313,6 +313,7 @@ async function crearUsuario(e) {
             esTopVendedor: document.getElementById('EsTopVendedor').checked
         };
 
+        // Llamada a la API para crear usuario
         const response = await fetch('/Usuarios/CrearUsuario', {
             method: 'POST',
             headers: {
@@ -321,32 +322,74 @@ async function crearUsuario(e) {
             body: JSON.stringify(formData)
         });
 
-        if (!response.ok) {
+        if (response.ok) {
+            const data = await response.json();
+            showSuccess(data.message); // Asumiendo que existe una función showSuccess
+
+            // Limpiar formulario
+            const userForm = document.getElementById('userForm');
+            if (userForm) {
+                userForm.reset();
+            }
+
+        } else {
             const errorData = await response.json();
+
+            // Manejar errores específicos
+            if (errorData.errorType === 'DuplicateEmail') {
+                // Resaltar el campo de email
+                const emailField = document.getElementById('Email');
+                if (emailField) {
+                    emailField.classList.add('is-invalid');
+
+                    // Crear o actualizar mensaje de error específico
+                    let feedbackDiv = emailField.parentNode.querySelector('.invalid-feedback');
+                    if (!feedbackDiv) {
+                        feedbackDiv = document.createElement('div');
+                        feedbackDiv.className = 'invalid-feedback';
+                        emailField.parentNode.appendChild(feedbackDiv);
+                    }
+                    feedbackDiv.textContent = errorData.message;
+
+                    // Remover la clase de error después de 5 segundos
+                    setTimeout(() => {
+                        emailField.classList.remove('is-invalid');
+                        if (feedbackDiv) feedbackDiv.remove();
+                    }, 5000);
+                }
+            }
+
             throw new Error(errorData.message || 'Error al crear usuario');
         }
 
-        await Swal.fire({
-            icon: 'success',
-            title: 'Usuario Creado',
-            text: 'El usuario ha sido creado exitosamente. Se ha enviado un correo de activación.',
-            showConfirmButton: true
-        });
-
+        // Redirigir después de un éxito
         window.location.href = '/Usuarios/Index';
+
     } catch (error) {
         console.error('Error:', error);
 
-        // Restaurar estado del botón
-        submitButton.disabled = false;
-        normalState.style.display = 'inline-flex';
-        loadingState.style.display = 'none';
+        // Restaurar estado del botón en caso de error
+        if (submitButton) {
+            submitButton.disabled = false;
+            if (normalState) normalState.style.display = 'inline-flex';
+            if (loadingState) loadingState.style.display = 'none';
+        }
 
+        // Mostrar mensaje de error con SweetAlert
         Swal.fire({
             icon: 'error',
             title: 'Error',
             text: error.message || 'Error al crear el usuario'
         });
+    }
+}
+
+// Función auxiliar para mostrar mensajes de éxito (si no existe globalmente)
+function showSuccess(message) {
+    if (typeof toastr !== 'undefined') {
+        toastr.success(message);
+    } else {
+        console.log('Éxito:', message);
     }
 }
 

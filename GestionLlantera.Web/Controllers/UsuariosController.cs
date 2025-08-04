@@ -96,29 +96,39 @@ namespace GestionLlantera.Web.Controllers
                 var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
                 if (validacion != null) return validacion;
 
-
                 // Validación básica
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .Select(x => new { 
+                            Field = x.Key, 
+                            Errors = x.Value.Errors.Select(e => e.ErrorMessage) 
+                        });
+                    
+                    return BadRequest(new
+                    {
+                        message = "Datos inválidos. Por favor, corrija los errores.",
+                        errors = errors
+                    });
                 }
 
                 // Llamada al servicio para crear el usuario
                 var resultado = await _usuariosService.CrearUsuarioAsync(modelo);
 
-                if (resultado)
+                if (resultado.Success)
                 {
-                    // Si la creación fue exitosa
                     return Ok(new
                     {
-                        message = "Usuario creado exitosamente. Se ha enviado un correo de activación."
+                        message = "Usuario creado exitosamente. Se ha enviado un correo de activación al email proporcionado."
                     });
                 }
 
-                // Si hubo un error en la creación
+                // Manejar errores específicos del servicio
                 return BadRequest(new
                 {
-                    message = "No se pudo crear el usuario. Por favor, intente nuevamente."
+                    message = resultado.Message,
+                    errorType = resultado.ErrorType
                 });
             }
             catch (Exception ex)

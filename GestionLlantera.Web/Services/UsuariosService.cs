@@ -50,41 +50,71 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<bool> CrearUsuarioAsync(CreateUsuarioDTO modelo)
+        public async Task<UsuarioCreationResult> CrearUsuarioAsync(CreateUsuarioDTO usuario)
         {
             try
             {
-                _logger.LogInformation("Creando usuario con email: {Email}", modelo.Email);
+                var requestDto = new RegistroUsuarioRequestDTO
+                {
+                    NombreUsuario = usuario.NombreUsuario,
+                    Email = usuario.Email,
+                    RolId = usuario.RolId,
+                    EsTopVendedor = usuario.EsTopVendedor
+                };
 
-                var response = await _httpClient.PostAsJsonAsync("api/usuarios/registrar-usuario", modelo);
+                var json = JsonSerializer.Serialize(requestDto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // Log de la respuesta para diagnóstico
-                var contenido = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Respuesta de la API: Status: {StatusCode}, Contenido: {Contenido}",
-                    response.StatusCode, contenido);
+                var response = await _httpClient.PostAsync("/api/usuarios/registrar-usuario", content);
 
-                // Verificar si la petición fue exitosa
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("Usuario creado exitosamente");
-                    return true;
+                    return new UsuarioCreationResult
+                    {
+                        Success = true,
+                        Message = "Usuario creado exitosamente. Se ha enviado un correo de activación."
+                    };
                 }
 
-                _logger.LogWarning("Error al crear usuario. Código: {StatusCode}, Respuesta: {Respuesta}",
-                    response.StatusCode, contenido);
-                return false;
+                // Leer el contenido del error para obtener detalles específicos
+                var errorContent = await response.Content.ReadAsStringAsync();
+
+                try
+                {
+                    var errorResponse = JsonSerializer.Deserialize<JsonElement>(errorContent);
+
+                    return new UsuarioCreationResult
+                    {
+                        Success = false,
+                        Message = errorResponse.TryGetProperty("Message", out var msg)
+                            ? msg.GetString() ?? "Error al crear usuario"
+                            : "Error al crear usuario",
+                        ErrorType = errorResponse.TryGetProperty("ErrorType", out var errorType)
+                            ? errorType.GetString()
+                            : null,
+                        Field = errorResponse.TryGetProperty("Field", out var field)
+                            ? field.GetString()
+                            : null
+                    };
+                }
+                catch
+                {
+                    // Si no se puede parsear la respuesta, devolver mensaje genérico
+                    return new UsuarioCreationResult
+                    {
+                        Success = false,
+                        Message = "Error al crear usuario. Por favor, intente nuevamente."
+                    };
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear usuario con email: {Email}", modelo.Email);
-
-                // Loguear también la excepción interna si existe
-                if (ex.InnerException != null)
+                _logger.LogError(ex, "Error al crear usuario");
+                return new UsuarioCreationResult
                 {
-                    _logger.LogError("Excepción interna: {Message}", ex.InnerException.Message);
-                }
-
-                return false;
+                    Success = false,
+                    Message = "Error de conexión al crear el usuario. Por favor, intente nuevamente."
+                };
             }
         }
 

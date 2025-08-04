@@ -5,7 +5,7 @@ namespace GestionLlantera.Web.Services.Interfaces
     public interface IUsuariosService
     {
         Task<List<UsuarioDTO>> ObtenerTodosAsync();
-        Task<bool> CrearUsuarioAsync(CreateUsuarioDTO usuario);
+        Task<UsuarioCreationResult> CrearUsuarioAsync(CreateUsuarioDTO usuario);
         Task<List<RolUsuarioDTO>> ObtenerRolesUsuarioAsync(int usuarioId);
         Task<bool> AsignarRolesAsync(int usuarioId, List<int> rolesIds);
         Task<bool> ActivarUsuarioAsync(int id);

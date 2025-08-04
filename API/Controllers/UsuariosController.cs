@@ -66,7 +66,11 @@ public class UsuariosController : ControllerBase
                     errorDetalle: "El email ya está registrado."
                 );
 
-                return BadRequest(new { Message = "El email ya está registrado." });
+                return BadRequest(new { 
+                    Message = $"El correo electrónico '{request.Email}' ya está registrado en el sistema. Por favor, utilice un correo diferente.",
+                    Field = "Email",
+                    ErrorType = "DuplicateEmail"
+                });
             }
 
             // Crear token de activación
