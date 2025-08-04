@@ -1,0 +1,63 @@
+        public async Task<UsuarioCreationResult> ActualizarUsuarioAsync(ActualizarUsuarioDTO usuario)
+        {
+            try
+            {
+                _logger.LogInformation("Actualizando usuario {Id}", usuario.UsuarioId);
+
+                var json = JsonSerializer.Serialize(usuario, _jsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"api/usuarios/usuarios/{usuario.UsuarioId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return new UsuarioCreationResult
+                    {
+                        Success = true,
+                        Message = "Usuario actualizado exitosamente"
+                    };
+                }
+
+                // Leer el contenido del error para obtener detalles específicos
+                var errorContent = await response.Content.ReadAsStringAsync();
+
+                try
+                {
+                    var errorResponse = JsonSerializer.Deserialize<JsonElement>(errorContent);
+
+                    return new UsuarioCreationResult
+                    {
+                        Success = false,
+                        Message = errorResponse.TryGetProperty("Message", out var msg)
+                            ? msg.GetString() ?? "Error al actualizar usuario"
+                            : "Error al actualizar usuario",
+                        ErrorType = errorResponse.TryGetProperty("ErrorType", out var errorType)
+                            ? errorType.GetString()
+                            : null,
+                        Field = errorResponse.TryGetProperty("Field", out var field)
+                            ? field.GetString()
+                            : null
+                    };
+                }
+                catch
+                {
+                    // Si no se puede parsear la respuesta, devolver mensaje genérico
+                    return new UsuarioCreationResult
+                    {
+                        Success = false,
+                        Message = "Error al actualizar usuario. Por favor, intente nuevamente."
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar usuario {Id}", usuario.UsuarioId);
+                return new UsuarioCreationResult
+                {
+                    Success = false,
+                    Message = "Error de conexión al actualizar el usuario. Por favor, intente nuevamente."
+                };
+            }
+        }
+    }
+}
