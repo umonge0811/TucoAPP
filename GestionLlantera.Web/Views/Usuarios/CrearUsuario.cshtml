@@ -1,3 +1,4 @@
+
 @model GestionLlantera.Web.Models.DTOs.CreateUsuarioDTO
 @{
     ViewData["Title"] = "Crear Nuevo Usuario";
@@ -78,39 +79,37 @@
                         </div>
                     </div>
                 </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex flex-column flex-md-row justify-content-end gap-3">
+                    <a asp-controller="Usuarios" asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-lg me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary-custom" id="submitButton">
+                        <span class="normal-state">
+                            <i class="bi bi-save me-2"></i>Guardar Usuario
+                        </span>
+                        <span class="loading-state" style="display: none;">
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Guardando...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="mt-4 alert alert-info">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle-fill me-3 fs-4"></i>
+            <div>
+                <h5 class="alert-heading">Información Importante</h5>
+                <p class="mb-0">Al crear un usuario, se enviará un correo electrónico de activación a la dirección proporcionada. El usuario deberá acceder al enlace incluido en el correo para activar su cuenta y establecer su contraseña.</p>
             </div>
         </div>
     </div>
-
-    <hr class="my-4">
-
-    <div class="d-flex flex-column flex-md-row justify-content-end gap-3">
-        <a asp-controller="Usuarios" asp-action="Index" class="btn btn-secondary">
-            <i class="bi bi-x-lg me-2"></i>Cancelar
-        </a>
-        <button type="submit" class="btn btn-primary-custom" id="submitButton">
-            <span class="normal-state">
-                <i class="bi bi-save me-2"></i>Guardar Usuario
-            </span>
-            <span class="loading-state" style="display: none;">
-                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                Guardando...
-            </span>
-        </button>
-    </div>
-</form>
-</div>
-
-<!-- Información adicional -->
-<div class="mt-4 alert alert-info">
-    <div class="d-flex align-items-center">
-        <i class="bi bi-info-circle-fill me-3 fs-4"></i>
-        <div>
-            <h5 class="alert-heading">Información Importante</h5>
-            <p class="mb-0">Al crear un usuario, se enviará un correo electrónico de activación a la dirección proporcionada. El usuario deberá acceder al enlace incluido en el correo para activar su cuenta y establecer su contraseña.</p>
-        </div>
-    </div>
-</div>
 </div>
 
 @section Scripts {

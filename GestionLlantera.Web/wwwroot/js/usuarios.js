@@ -309,7 +309,8 @@ async function crearUsuario(e) {
         const formData = {
             nombreUsuario: document.getElementById('NombreUsuario').value,
             email: document.getElementById('Email').value,
-            rolId: parseInt(document.getElementById('RolId').value)
+            rolId: parseInt(document.getElementById('RolId').value),
+            esTopVendedor: document.getElementById('EsTopVendedor').checked
         };
 
         const response = await fetch('/Usuarios/CrearUsuario', {
