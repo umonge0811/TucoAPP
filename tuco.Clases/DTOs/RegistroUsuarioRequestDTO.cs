@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations; // Necesario para DataAnnotations
 
 namespace Tuco.Clases.DTOs
 {
@@ -12,21 +13,28 @@ namespace Tuco.Clases.DTOs
     public class RegistroUsuarioRequestDTO
     {
         /// <summary>
-        /// Nombre del usuario.
+        /// Nombre de usuario único.
         /// </summary>
+        [Required(ErrorMessage = "El nombre de usuario es requerido.")]
+        [StringLength(50, ErrorMessage = "El nombre de usuario no puede exceder 50 caracteres.")]
         public string NombreUsuario { get; set; }
 
         /// <summary>
-        /// Correo electrónico del usuario.
+        /// Email del usuario (también será usado como identificador).
         /// </summary>
+        [Required(ErrorMessage = "El email es requerido.")]
+        [EmailAddress(ErrorMessage = "El formato del email no es válido.")]
         public string Email { get; set; }
 
+        /// <summary>
+        /// ID del rol que se asignará al usuario.
+        /// </summary>
+        [Required(ErrorMessage = "El rol es requerido.")]
+        public int RolId { get; set; }
 
         /// <summary>
-        /// Estado activo del usuario (opcional).
+        /// Indica si el usuario puede ser considerado para el ranking de top vendedor.
         /// </summary>
-        public bool? Activo { get; set; } = false;
-
-        public int RolId { get; set; }
+        public bool EsTopVendedor { get; set; } = false;
     }
 }

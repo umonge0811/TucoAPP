@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Models.DTOs;
+using GestionLlantera.Web.Models.DTOs;
 
 namespace GestionLlantera.Web.Services.Interfaces
 {
@@ -10,5 +10,6 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<bool> AsignarRolesAsync(int usuarioId, List<int> rolesIds);
         Task<bool> ActivarUsuarioAsync(int id);
         Task<bool> DesactivarUsuarioAsync(int id);
+        Task<bool> EditarUsuarioAsync(int id, CreateUsuarioDTO modelo);
     }
 }

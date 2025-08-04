@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -222,6 +222,31 @@ namespace GestionLlantera.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al desactivar usuario");
+                return StatusCode(500, new { message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> EditarUsuario(int id, [FromBody] CreateUsuarioDTO modelo)
+        {
+            try
+            {
+                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                if (validacion != null) return validacion;
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var resultado = await _usuariosService.EditarUsuarioAsync(id, modelo);
+                return resultado
+                    ? Ok(new { message = "Usuario editado exitosamente" })
+                    : BadRequest(new { message = "Error al editar usuario" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al editar usuario {Id}", id);
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }

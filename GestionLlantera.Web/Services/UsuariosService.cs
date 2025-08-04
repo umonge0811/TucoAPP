@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Models.DTOs;
+using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using System.Text.Json;
 using System.Text;
@@ -177,6 +177,27 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, "Error al desactivar usuario {Id}", id);
                 throw;
+            }
+        }
+
+        public async Task<bool> EditarUsuarioAsync(int id, CreateUsuarioDTO modelo)
+        {
+            try
+            {
+                _logger.LogInformation("Editando usuario {Id} con email: {Email}", id, modelo.Email);
+
+                var response = await _httpClient.PutAsJsonAsync($"api/usuarios/usuarios/{id}", modelo);
+
+                var contenido = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta al editar usuario: Status: {Status}, Contenido: {Contenido}",
+                    response.StatusCode, contenido);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al editar usuario {Id}", id);
+                return false;
             }
         }
     }

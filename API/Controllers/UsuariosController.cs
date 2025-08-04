@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.ServicesAPI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -80,6 +80,7 @@ public class UsuariosController : ControllerBase
                 Contrasena = HashContrasena.HashearContrasena(Guid.NewGuid().ToString()), // Contraseña temporal
                 FechaCreacion = DateTime.Now,
                 Activo = false,
+                EsTopVendedor = request.EsTopVendedor,
                 Token = tokenActivacion,
                 PropositoToken = PropositoTokenEnum.ActivarCuenta,
                 FechaExpiracionToken = DateTime.Now.AddHours(24) // Para 24 horas            };
@@ -217,6 +218,7 @@ public class UsuariosController : ControllerBase
                 u.NombreUsuario,
                 u.Email,
                 u.Activo,
+                u.EsTopVendedor,
                 Roles = u.UsuarioRoles
                         .Select(ur => ur.Rol.NombreRol)
                         .ToList()
@@ -532,6 +534,65 @@ public class UsuariosController : ControllerBase
             );
 
             return StatusCode(500, new { Message = "Error al desactivar usuario" });
+        }
+    }
+    #endregion
+
+    #region Editar Usuario
+    /// <summary>
+    /// Endpoint para editar un usuario existente.
+    /// </summary>
+    /// <param name="id">ID del usuario a editar.</param>
+    /// <param name="request">Datos actualizados del usuario.</param>
+    /// <returns>Confirmación de la edición o mensaje de error.</returns>
+    [HttpPut("usuarios/{id}")]
+    public async Task<IActionResult> EditarUsuario(int id, [FromBody] RegistroUsuarioRequestDTO request)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound(new { Message = "Usuario no encontrado" });
+
+            // Verificar si el email ya está en uso por otro usuario
+            var existeEmail = await _context.Usuarios
+                .AnyAsync(u => u.Email == request.Email && u.UsuarioId != id);
+            if (existeEmail)
+                return BadRequest(new { Message = "El email ya está en uso por otro usuario" });
+
+            // Actualizar datos del usuario
+            usuario.NombreUsuario = request.NombreUsuario;
+            usuario.Email = request.Email;
+            usuario.EsTopVendedor = request.EsTopVendedor;
+
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            // Registrar en historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Edición de Usuario",
+                modulo: "Usuarios",
+                detalle: $"Usuario editado exitosamente. Email: {usuario.Email}, Top Vendedor: {usuario.EsTopVendedor}",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Usuario editado exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Edición de Usuario",
+                modulo: "Usuarios",
+                detalle: "Error al editar usuario",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al editar usuario" });
         }
     }
     #endregion

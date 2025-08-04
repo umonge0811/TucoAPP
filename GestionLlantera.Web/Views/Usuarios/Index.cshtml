@@ -98,7 +98,8 @@
                             <th>Email</th>
                             <th>Roles</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <th>Top Vendedor</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,7 +120,19 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="btn-group">
+                                    <span class="badge @(usuario.EsTopVendedor ? "bg-warning text-dark" : "bg-secondary")">
+                                        @if (usuario.EsTopVendedor)
+                                        {
+                                            <i class="bi bi-trophy me-1"></i>@:Habilitado
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-dash-circle me-1"></i>@:No habilitado
+                                        }
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
                                         <button class="btn btn-primary" onclick="editarRoles(@usuario.UsuarioId)"
                                                 data-bs-toggle="tooltip" title="Editar Roles">
                                             <i class="bi bi-shield"></i>
