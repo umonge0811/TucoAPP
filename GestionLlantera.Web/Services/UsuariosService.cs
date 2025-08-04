@@ -211,6 +211,33 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<UsuarioDTO?> ObtenerUsuarioPorIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo usuario por ID: {Id}", id);
+
+                var response = await _httpClient.GetAsync($"api/Usuarios/usuarios/{id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("Usuario obtenido correctamente para ID: {Id}", id);
+
+                    var usuario = JsonSerializer.Deserialize<UsuarioDTO>(content, _jsonOptions);
+                    return usuario;
+                }
+
+                _logger.LogWarning("Usuario no encontrado para ID: {Id}. Status: {Status}", id, response.StatusCode);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuario por ID: {Id}", id);
+                return null;
+            }
+        }
+
         public async Task<bool> EditarUsuarioAsync(int id, CreateUsuarioDTO modelo)
         {
             try
