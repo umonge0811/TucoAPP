@@ -593,6 +593,10 @@ public partial class TucoContext : DbContext
                 v => (PropositoTokenEnum)Enum.Parse(typeof(PropositoTokenEnum), v) // De string a enum
             );
 
+            entity.Property(e => e.EsTopVendedor)
+                .HasDefaultValue(false)
+                .HasComment("Indica si el usuario puede ser considerado para el ranking de top vendedor");
+
             entity.HasMany(d => d.Rols).WithMany(p => p.Usuarios)
                 .UsingEntity<Dictionary<string, object>>(
                     "UsuarioRol",

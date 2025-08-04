@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Tuco.Clases.Enums;
@@ -26,6 +26,9 @@ public partial class Usuario
 
     // Nuevo campo para el token de activación
     public string? Token { get; set; }
+
+    // Campo para marcar si el usuario puede ser considerado para top vendedor
+    public bool EsTopVendedor { get; set; } = false;
 
     public virtual ICollection<Cliente> Clientes { get; set; } = new List<Cliente>();
 
