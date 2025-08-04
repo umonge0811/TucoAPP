@@ -341,12 +341,29 @@
 </div>
 
 <script>
-$(document).ready(function() {
+// Asegurar que jQuery esté disponible
+document.addEventListener('DOMContentLoaded', function() {
+    // Verificar si jQuery está disponible, si no, esperar un poco más
+    if (typeof $ === 'undefined') {
+        console.log('⏳ Esperando a que jQuery se cargue...');
+        setTimeout(function() {
+            if (typeof $ !== 'undefined') {
+                inicializarDashboard();
+            } else {
+                console.error('❌ jQuery no disponible después de esperar');
+            }
+        }, 500);
+    } else {
+        inicializarDashboard();
+    }
+});
+
+function inicializarDashboard() {
     console.log('📊 Dashboard - Inicializando carga de alertas de stock');
     
     // Cargar alertas de stock al cargar la página
     cargarAlertasStock();
-});
+}
 
 /**
  * Función para cargar las alertas de stock desde el servidor
