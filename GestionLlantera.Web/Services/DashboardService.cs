@@ -14,7 +14,7 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
         }
 
-        public async Task<(bool success, object data, string mensaje)> ObtenerAlertasStockAsync(string jwtToken)
+        public async Task<(bool success, object data, string message)> ObtenerAlertasStockAsync(string jwtToken)
         {
             try
             {
@@ -60,7 +60,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string mensaje)> ObtenerInventarioTotalAsync(string jwtToken)
+        public async Task<(bool success, object data, string message)> ObtenerInventarioTotalAsync(string jwtToken)
         {
             try
             {
