@@ -60,7 +60,8 @@ namespace GestionLlantera.Web.Controllers
         }
 
 
-        [HttpGet("ObtenerAlertasStock")]
+        [HttpGet]
+        [Route("ObtenerAlertasStock")]
         public async Task<IActionResult> ObtenerAlertasStock()
         {
             try
@@ -93,7 +94,8 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet("ObtenerInventarioTotal")]
+        [HttpGet]
+        [Route("ObtenerInventarioTotal")]
         public async Task<IActionResult> ObtenerInventarioTotal()
         {
             try
@@ -126,7 +128,8 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpGet("ObtenerTopVendedor")]
+        [HttpGet]
+        [Route("ObtenerTopVendedor")]
         public async Task<IActionResult> ObtenerTopVendedor()
         {
             try
