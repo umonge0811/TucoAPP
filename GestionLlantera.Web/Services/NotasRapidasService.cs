@@ -14,9 +14,9 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<NotasRapidasService> _logger;
 
-        public NotasRapidasService(HttpClient httpClient, ILogger<NotasRapidasService> logger)
+        public NotasRapidasService(IHttpClientFactory httpClientFactory, ILogger<NotasRapidasService> logger)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
         }
 
