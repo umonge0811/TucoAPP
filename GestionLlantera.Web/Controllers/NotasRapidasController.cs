@@ -1,9 +1,8 @@
-
+using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using GestionLlantera.Web.Services.Interfaces;
-using tuco.Clases.DTOs;
 using System.Security.Claims;
+using tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -13,44 +12,42 @@ namespace GestionLlantera.Web.Controllers
         private readonly INotasRapidasService _notasRapidasService;
         private readonly ILogger<NotasRapidasController> _logger;
 
-        public NotasRapidasController(
-            INotasRapidasService notasRapidasService,
-            ILogger<NotasRapidasController> logger)
+        public NotasRapidasController(INotasRapidasService notasRapidasService, ILogger<NotasRapidasController> logger)
         {
             _notasRapidasService = notasRapidasService;
             _logger = logger;
         }
 
-        /// <summary>
-        /// Obtener todas las notas del usuario actual
-        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerNotas()
+        public async Task<IActionResult> ObtenerMisNotas()
         {
             try
             {
-                var usuarioId = GetUsuarioId();
-                var resultado = await _notasRapidasService.ObtenerNotasUsuarioAsync(usuarioId);
-
-                if (resultado.success)
+                var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioId))
                 {
-                    return Json(new { success = true, notas = resultado.notas });
+                    return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
-                return Json(new { success = false, message = resultado.mensaje });
+                var jwtToken = HttpContext.Session.GetString("JWTToken");
+                var resultado = await _notasRapidasService.ObtenerNotasUsuarioAsync(int.Parse(usuarioId), jwtToken);
+
+                return Json(new
+                {
+                    success = resultado.success,
+                    data = resultado.data,
+                    message = resultado.mensaje
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error obteniendo notas del usuario");
+                _logger.LogError(ex, "Error al obtener notas del usuario");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
-        /// <summary>
-        /// Crear una nueva nota
-        /// </summary>
         [HttpPost]
-        public async Task<IActionResult> CrearNota([FromBody] CrearNotaRapidaDTO request)
+        public async Task<IActionResult> Crear([FromBody] CrearNotaRapidaDTO notaDto)
         {
             try
             {
@@ -59,142 +56,55 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos inválidos" });
                 }
 
-                request.UsuarioId = GetUsuarioId();
-                var resultado = await _notasRapidasService.CrearNotaAsync(request);
-
-                if (resultado.success)
+                var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioId))
                 {
-                    return Json(new { 
-                        success = true, 
-                        message = "Nota creada exitosamente",
-                        nota = resultado.nota 
-                    });
+                    return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
-                return Json(new { success = false, message = resultado.mensaje });
+                notaDto.UsuarioId = int.Parse(usuarioId);
+                var jwtToken = HttpContext.Session.GetString("JWTToken");
+                var resultado = await _notasRapidasService.CrearNotaAsync(notaDto, jwtToken);
+
+                return Json(new
+                {
+                    success = resultado.success,
+                    data = resultado.data,
+                    message = resultado.mensaje
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creando nota");
+                _logger.LogError(ex, "Error al crear nota rápida");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
-        /// <summary>
-        /// Actualizar una nota existente
-        /// </summary>
-        [HttpPut]
-        public async Task<IActionResult> ActualizarNota([FromBody] ActualizarNotaRapidaDTO request)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return Json(new { success = false, message = "Datos inválidos" });
-                }
-
-                var usuarioId = GetUsuarioId();
-                var resultado = await _notasRapidasService.ActualizarNotaAsync(request, usuarioId);
-
-                if (resultado.success)
-                {
-                    return Json(new { 
-                        success = true, 
-                        message = "Nota actualizada exitosamente",
-                        nota = resultado.nota 
-                    });
-                }
-
-                return Json(new { success = false, message = resultado.mensaje });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error actualizando nota");
-                return Json(new { success = false, message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
-        /// Eliminar una nota
-        /// </summary>
         [HttpDelete]
-        public async Task<IActionResult> EliminarNota(int notaId)
+        public async Task<IActionResult> Eliminar(int id)
         {
             try
             {
-                var usuarioId = GetUsuarioId();
-                var resultado = await _notasRapidasService.EliminarNotaAsync(notaId, usuarioId);
-
-                if (resultado.success)
+                var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioId))
                 {
-                    return Json(new { 
-                        success = true, 
-                        message = "Nota eliminada exitosamente" 
-                    });
+                    return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
-                return Json(new { success = false, message = resultado.message });
+                var jwtToken = HttpContext.Session.GetString("JWTToken");
+                var resultado = await _notasRapidasService.EliminarNotaAsync(id, int.Parse(usuarioId), jwtToken);
+
+                return Json(new
+                {
+                    success = resultado.success,
+                    message = resultado.mensaje
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error eliminando nota");
+                _logger.LogError(ex, "Error al eliminar nota rápida");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
-
-        /// <summary>
-        /// Marcar/desmarcar nota como favorita
-        /// </summary>
-        [HttpPatch]
-        public async Task<IActionResult> CambiarFavorita([FromBody] CambiarFavoritaDTO request)
-        {
-            try
-            {
-                var usuarioId = GetUsuarioId();
-                var resultado = await _notasRapidasService.CambiarFavoritaAsync(request.NotaId, request.EsFavorita, usuarioId);
-
-                if (resultado.success)
-                {
-                    return Json(new { 
-                        success = true, 
-                        message = resultado.EsFavorita ? "Nota marcada como favorita" : "Nota desmarcada como favorita",
-                        nota = resultado.nota 
-                    });
-                }
-
-                return Json(new { success = false, message = resultado.mensaje });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error cambiando estado favorita");
-                return Json(new { success = false, message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
-        /// Obtener el ID del usuario actual desde los claims
-        /// </summary>
-        private int GetUsuarioId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
-                             User.FindFirst("UserId")?.Value ??
-                             User.FindFirst("sub")?.Value;
-
-            if (int.TryParse(userIdClaim, out int userId))
-            {
-                return userId;
-            }
-
-            throw new UnauthorizedAccessException("No se pudo obtener el ID del usuario");
-        }
-    }
-
-    /// <summary>
-    /// DTO para cambiar estado favorita
-    /// </summary>
-    public class CambiarFavoritaDTO
-    {
-        public int NotaId { get; set; }
-        public bool EsFavorita { get; set; }
     }
 }

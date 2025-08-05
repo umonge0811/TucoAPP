@@ -574,19 +574,48 @@ function inicializarEventosFormularios() {
 /**
  * Manejar envío de nueva nota
  */
-function manejarNuevaNota(e) {
+async function manejarNuevaNota(e) {
     e.preventDefault();
     console.log('📝 Creando nueva nota...');
 
-    // Aquí se implementaría la lógica para crear una nueva nota
-    // Por ahora solo cerramos el modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('newNoteModal'));
-    if (modal) {
-        modal.hide();
-    }
+    try {
+        const formData = new FormData(e.target);
+        const notaData = {
+            titulo: formData.get('titulo'),
+            contenido: formData.get('contenido'),
+            color: formData.get('color') || '#ffd700'
+        };
 
-    // Limpiar formulario
-    e.target.reset();
+        const response = await fetch('/NotasRapidas/Crear', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(notaData)
+        });
+
+        if (response.ok) {
+            console.log('✅ Nota creada correctamente');
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newNoteModal'));
+            if (modal) {
+                modal.hide();
+            }
+
+            // Limpiar formulario
+            e.target.reset();
+
+            // Recargar notas
+            cargarNotasRapidas();
+        } else {
+            throw new Error('Error al crear la nota');
+        }
+    } catch (error) {
+        console.error('❌ Error creando nota:', error);
+        alert('Error al crear la nota');
+    }
 }
 
 /**
@@ -713,6 +742,168 @@ function actualizarContadorSidebar(totalUsuarios) {
 
 
 // ========================================
+// GESTIÓN DE NOTAS RÁPIDAS
+// ========================================
+
+/**
+ * 📝 FUNCIÓN: Cargar notas rápidas del usuario actual
+ */
+async function cargarNotasRapidas() {
+    try {
+        console.log('📝 Cargando notas rápidas...');
+
+        const response = await fetch('/NotasRapidas/ObtenerMisNotas', {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success && resultado.data) {
+            mostrarNotasRapidas(resultado.data);
+            console.log('✅ Notas rápidas cargadas correctamente:', resultado.data);
+        } else {
+            console.warn('⚠️ No se pudieron obtener las notas rápidas');
+            mostrarErrorNotasRapidas();
+        }
+    } catch (error) {
+        console.error('❌ Error cargando notas rápidas:', error);
+        mostrarErrorNotasRapidas();
+    }
+}
+
+/**
+ * 📝 FUNCIÓN: Mostrar notas rápidas en el dashboard
+ */
+function mostrarNotasRapidas(notas) {
+    try {
+        console.log('📝 Mostrando notas rápidas:', notas);
+
+        const container = document.querySelector('.quick-notes-list, #quick-notes-container, .notes-container');
+        if (!container) {
+            console.warn('⚠️ Contenedor de notas rápidas no encontrado');
+            return;
+        }
+
+        // Limpiar contenido actual
+        container.innerHTML = '';
+
+        if (!notas || notas.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-sticky fs-1 mb-2 d-block"></i>
+                    <p>No tienes notas rápidas</p>
+                    <button class="btn btn-sm btn-outline-primary" onclick="abrirModalNuevaNota()">
+                        <i class="bi bi-plus"></i> Crear primera nota
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Generar elementos de notas
+        notas.forEach(nota => {
+            const notaElement = document.createElement('div');
+            notaElement.className = 'note-item mb-2';
+            notaElement.style.backgroundColor = nota.color || '#ffd700';
+            notaElement.innerHTML = `
+                <div class="note-content">
+                    <h6 class="note-title">${nota.titulo || 'Sin título'}</h6>
+                    <p class="note-text">${nota.contenido || ''}</p>
+                    <small class="note-date text-muted">
+                        ${new Date(nota.fechaCreacion).toLocaleDateString()}
+                        ${nota.esFavorita ? '<i class="bi bi-star-fill text-warning ms-1"></i>' : ''}
+                    </small>
+                </div>
+                <div class="note-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editarNota(${nota.notaId})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarNotaRapida(${nota.notaId})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(notaElement);
+        });
+
+        console.log('✅ Notas rápidas mostradas correctamente');
+    } catch (error) {
+        console.error('❌ Error mostrando notas rápidas:', error);
+        mostrarErrorNotasRapidas();
+    }
+}
+
+/**
+ * 📝 FUNCIÓN: Mostrar error en notas rápidas
+ */
+function mostrarErrorNotasRapidas() {
+    try {
+        const container = document.querySelector('.quick-notes-list, #quick-notes-container, .notes-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="text-center py-4 text-danger">
+                <i class="bi bi-exclamation-triangle fs-1 mb-2 d-block"></i>
+                <p>Error al cargar notas</p>
+                <button class="btn btn-sm btn-outline-secondary" onclick="cargarNotasRapidas()">
+                    <i class="bi bi-arrow-clockwise"></i> Reintentar
+                </button>
+            </div>
+        `;
+
+        console.log('⚠️ Error mostrado en sección de notas rápidas');
+    } catch (error) {
+        console.error('❌ Error mostrando error de notas rápidas:', error);
+    }
+}
+
+/**
+ * 📝 FUNCIÓN: Abrir modal para nueva nota
+ */
+function abrirModalNuevaNota() {
+    const modal = document.getElementById('newNoteModal');
+    if (modal) {
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+    }
+}
+
+/**
+ * 📝 FUNCIÓN: Eliminar nota rápida
+ */
+async function eliminarNotaRapida(notaId) {
+    if (!confirm('¿Estás seguro de que deseas eliminar esta nota?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/NotasRapidas/Eliminar/${notaId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            console.log('✅ Nota eliminada correctamente');
+            cargarNotasRapidas(); // Recargar las notas
+        } else {
+            throw new Error('Error al eliminar la nota');
+        }
+    } catch (error) {
+        console.error('❌ Error eliminando nota:', error);
+        alert('Error al eliminar la nota');
+    }
+}
+
+// ========================================
 // EVENTOS DE INICIALIZACIÓN
 // ========================================
 
@@ -731,8 +922,10 @@ document.addEventListener('DOMContentLoaded', function () {
         newAnnouncementForm.addEventListener('submit', manejarNuevoAnuncio);
     }
 
-    // Cargar notas rápidas al inicializar
-    cargarNotasRapidas();
+    // Cargar todas las funcionalidades del dashboard
+    setTimeout(() => {
+        inicializarDashboard();
+    }, 500);
 
     // Aquí se pueden agregar más inicializaciones según sea necesario
 });
