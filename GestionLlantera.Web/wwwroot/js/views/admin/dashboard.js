@@ -618,6 +618,10 @@ async function manejarNuevaNota(e) {
             body: JSON.stringify(notaData)
         });
 
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.success) {
