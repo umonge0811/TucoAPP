@@ -101,7 +101,7 @@
                                         <i class="bi bi-receipt-cutoff"></i> Facturación
                                     </a>
                                 </li>
-                                
+
                                 <li class="nav-item" asp-permiso="Sub_Menu_EntregasPendientes">
                                     <a class="nav-link" asp-controller="Facturacion" asp-action="EntregasPendientes">
                                         <i class="bi bi-truck"></i> Entregas Pendientes
@@ -206,7 +206,7 @@
 
                 @* ✅ Usuarios Conectados - Solo si puede ver reportes o gestión completa *@
                 <div class="online-users-section mt-auto" asp-permiso="Ver Reportes">
-                    <button class="online-users-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#usersPanel">
+                    <button class="online-users-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#usersPanelBottom" aria-controls="usersPanelBottom">
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-circle-fill text-success"></i>
                             <span>Usuarios Conectados (4)</span>
@@ -508,39 +508,20 @@
     </div>
 
     @* Panel de Usuarios Conectados *@
-    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="usersPanel">
+    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="usersPanelBottom" aria-labelledby="usersPanelBottomLabel">
         <div class="offcanvas-header">
-            <h5 class="offcanvas-title">
-                <i class="bi bi-circle-fill text-success me-2"></i>
+            <h5 class="offcanvas-title" id="usersPanelBottomLabel">
+                <i class="bi bi-people-fill me-2"></i>
                 Usuarios Conectados
             </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
             <div class="connected-users-list">
-                <div class="user-item">
-                    <div class="user-avatar">CM</div>
-                    <div class="user-info">
-                        <div class="user-name">Carlos Mora</div>
-                        <div class="user-role">Vendedor</div>
-                        <div class="user-status">Activo hace 5 min</div>
-                    </div>
-                </div>
-                <div class="user-item">
-                    <div class="user-avatar">MR</div>
-                    <div class="user-info">
-                        <div class="user-name">María Rodríguez</div>
-                        <div class="user-role">Admin</div>
-                        <div class="user-status">Activo hace 2 min</div>
-                    </div>
-                </div>
-                <div class="user-item">
-                    <div class="user-avatar">JG</div>
-                    <div class="user-info">
-                        <div class="user-name">Juan González</div>
-                        <div class="user-role">Técnico</div>
-                        <div class="user-status">Activo hace 10 min</div>
-                    </div>
+                <!-- Los usuarios se cargarán dinámicamente aquí -->
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    Cargando usuarios conectados...
                 </div>
             </div>
         </div>
@@ -594,6 +575,7 @@
     <script src="~/js/utils/buttonUtils.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/views/permisosInfo.js" asp-append-version="true"></script>
+    <script src="~/js/sidebarUsuarios.js" asp-append-version="true"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @await RenderSectionAsync("Scripts", required: false)

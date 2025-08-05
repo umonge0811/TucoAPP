@@ -152,5 +152,51 @@ namespace GestionLlantera.Web.Services
                 return (false, null, "Error interno al obtener top vendedor");
             }
         }
+
+        public async Task<(bool success, object data, string mensaje)> ObtenerUsuariosConectadosAsync(string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("👥 Solicitando usuarios conectados desde dashboard service");
+
+                // 🔑 CONFIGURAR TOKEN JWT SI SE PROPORCIONA (mismo patrón que otros servicios)
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para obtener usuarios conectados");
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener usuarios conectados");
+                }
+
+                var response = await _httpClient.GetAsync("api/dashboard/usuarios-conectados");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error en respuesta de API: {StatusCode}", response.StatusCode);
+                    return (false, null, "Error al obtener información de usuarios conectados");
+                }
+
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("👥 Respuesta de usuarios conectados recibida: {Response}", jsonContent);
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var resultado = JsonSerializer.Deserialize<dynamic>(jsonContent, options);
+
+                return (true, resultado, "Usuarios conectados obtenidos correctamente");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener usuarios conectados");
+                return (false, null, "Error interno al obtener usuarios conectados");
+            }
+        }
     }
 }
