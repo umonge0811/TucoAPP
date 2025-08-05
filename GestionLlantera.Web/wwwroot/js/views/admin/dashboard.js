@@ -585,11 +585,12 @@ async function manejarNuevaNota(e) {
 
     try {
         const formData = new FormData(form);
+        const checkboxFavorita = document.getElementById('esFavorita');
         const notaData = {
             titulo: formData.get('titulo'),
             contenido: formData.get('contenido'),
             color: formData.get('color') || '#ffd700',
-            esFavorita: formData.get('esFavorita') === 'on'
+            esFavorita: checkboxFavorita ? checkboxFavorita.checked : false
         };
 
         let url, method;
@@ -635,9 +636,27 @@ async function manejarNuevaNota(e) {
                 modal.hide();
             }
 
-            // Limpiar formulario
+            // Limpiar formulario completamente
             form.reset();
             form.removeAttribute('data-editing');
+            
+            // Limpiar campos manualmente para asegurar limpieza completa
+            document.getElementById('titulo').value = '';
+            document.getElementById('contenido').value = '';
+            document.getElementById('color').value = '#ffd700';
+            document.getElementById('esFavorita').checked = false;
+            
+            // Restaurar título del modal para próximo uso
+            const modalTitle = modal.querySelector('.modal-title');
+            if (modalTitle) {
+                modalTitle.innerHTML = '<i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida';
+            }
+            
+            // Restaurar texto del botón
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar Nota';
+            }
 
             // Recargar notas
             cargarNotasRapidas();
@@ -1034,10 +1053,15 @@ async function editarNota(notaId, titulo, contenido, color, esFavorita) {
         }
 
         // Llenar los campos del formulario
-        document.getElementById('titulo').value = titulo;
-        document.getElementById('contenido').value = contenido;
+        document.getElementById('titulo').value = titulo || '';
+        document.getElementById('contenido').value = contenido || '';
         document.getElementById('color').value = color || '#ffd700';
-        document.getElementById('esFavorita').checked = esFavorita;
+        
+        // Manejar correctamente el checkbox esFavorita
+        const checkboxFavorita = document.getElementById('esFavorita');
+        if (checkboxFavorita) {
+            checkboxFavorita.checked = esFavorita === true || esFavorita === 'true';
+        }
 
         // Cambiar el texto del botón
         const submitButton = form.querySelector('button[type="submit"]');
@@ -1073,7 +1097,7 @@ function abrirModalNuevaNota() {
     const form = document.getElementById('newNoteForm');
     
     if (modal && form) {
-        // Resetear el formulario
+        // Resetear completamente el formulario
         form.reset();
         form.removeAttribute('data-editing');
 
@@ -1088,6 +1112,12 @@ function abrirModalNuevaNota() {
         if (submitButton) {
             submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar Nota';
         }
+
+        // Asegurar que los campos estén limpios
+        document.getElementById('titulo').value = '';
+        document.getElementById('contenido').value = '';
+        document.getElementById('color').value = '#ffd700';
+        document.getElementById('esFavorita').checked = false;
 
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
@@ -1111,6 +1141,37 @@ document.addEventListener('DOMContentLoaded', function () {
     const newAnnouncementForm = document.getElementById('newAnnouncementForm');
     if (newAnnouncementForm) {
         newAnnouncementForm.addEventListener('submit', manejarNuevoAnuncio);
+    }
+
+    // Configurar evento para resetear modal cuando se cierre
+    const newNoteModal = document.getElementById('newNoteModal');
+    if (newNoteModal) {
+        newNoteModal.addEventListener('hidden.bs.modal', function () {
+            const form = document.getElementById('newNoteForm');
+            if (form) {
+                // Resetear formulario completamente
+                form.reset();
+                form.removeAttribute('data-editing');
+                
+                // Limpiar campos manualmente
+                document.getElementById('titulo').value = '';
+                document.getElementById('contenido').value = '';
+                document.getElementById('color').value = '#ffd700';
+                document.getElementById('esFavorita').checked = false;
+                
+                // Restaurar título del modal
+                const modalTitle = newNoteModal.querySelector('.modal-title');
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida';
+                }
+                
+                // Restaurar texto del botón
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar Nota';
+                }
+            }
+        });
     }
 
     // Cargar todas las funcionalidades del dashboard
