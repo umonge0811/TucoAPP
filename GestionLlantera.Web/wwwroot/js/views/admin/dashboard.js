@@ -1121,7 +1121,7 @@ function abrirModalNuevoAnuncio() {
         const tituloField = form.querySelector('input[name="tituloAnuncio"]');
         const contenidoField = form.querySelector('textarea[name="contenidoAnuncio"]');
         const fechaField = form.querySelector('input[name="fechaExpiracionAnuncio"]');
-
+        
         if (tituloField) tituloField.value = '';
         if (contenidoField) contenidoField.value = '';
         if (fechaField) fechaField.value = '';
@@ -1479,7 +1479,7 @@ async function manejarNuevoAnuncio(e) {
             const tituloField = form.querySelector('input[name="tituloAnuncio"]');
             const contenidoField = form.querySelector('textarea[name="contenidoAnuncio"]');
             const fechaField = form.querySelector('input[name="fechaExpiracionAnuncio"]');
-
+            
             if (tituloField) tituloField.value = '';
             if (contenidoField) contenidoField.value = '';
             if (fechaField) fechaField.value = '';
