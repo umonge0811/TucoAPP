@@ -36,7 +36,8 @@ async function inicializarDashboard() {
             cargarAlertasStock(),
             cargarInventarioTotal(),
             cargarTopVendedor(),
-            cargarUsuariosConectados()
+            cargarUsuariosConectados(),
+            cargarNotasRapidas()
         ]);
 
         // Inicializar eventos de formularios
