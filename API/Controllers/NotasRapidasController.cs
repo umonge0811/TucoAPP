@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -43,7 +42,7 @@ namespace API.Controllers
                 var notas = await _context.NotasRapidas
                     .Where(n => n.UsuarioId == usuarioId && !n.Eliminada)
                     .OrderByDescending(n => n.EsFavorita)
-                    .ThenByDescending(n => n.FechaActualizacion)
+                    .ThenByDescending(n => n.FechaModificacion)
                     .Select(n => new NotaRapidaDTO
                     {
                         NotaId = n.NotaId,
@@ -53,7 +52,7 @@ namespace API.Controllers
                         Color = n.Color,
                         EsFavorita = n.EsFavorita,
                         FechaCreacion = n.FechaCreacion,
-                        FechaActualizacion = n.FechaActualizacion
+                        FechaModificacion = n.FechaModificacion
                     })
                     .ToListAsync();
 
@@ -80,7 +79,7 @@ namespace API.Controllers
                 }
 
                 var currentUserId = GetUsuarioId();
-                
+
                 _logger.LogInformation("Creando nueva nota para usuario: {UsuarioId}", currentUserId);
 
                 var nota = new NotaRapida
@@ -91,7 +90,7 @@ namespace API.Controllers
                     Color = request.Color ?? "#ffd700",
                     EsFavorita = request.EsFavorita,
                     FechaCreacion = DateTime.Now,
-                    FechaActualizacion = DateTime.Now,
+                    FechaModificacion = DateTime.Now,
                     Eliminada = false
                 };
 
@@ -107,7 +106,7 @@ namespace API.Controllers
                     Color = nota.Color,
                     EsFavorita = nota.EsFavorita,
                     FechaCreacion = nota.FechaCreacion,
-                    FechaActualizacion = nota.FechaActualizacion
+                    FechaModificacion = nota.FechaModificacion
                 };
 
                 return Ok(new { success = true, data = notaDto, message = "Nota creada exitosamente" });
@@ -133,7 +132,7 @@ namespace API.Controllers
                 }
 
                 var currentUserId = GetUsuarioId();
-                
+
                 _logger.LogInformation("Actualizando nota {NotaId} para usuario: {UsuarioId}", notaId, currentUserId);
 
                 var nota = await _context.NotasRapidas
@@ -147,7 +146,7 @@ namespace API.Controllers
                 nota.Titulo = request.Titulo;
                 nota.Contenido = request.Contenido;
                 nota.Color = request.Color;
-                nota.FechaActualizacion = DateTime.Now;
+                nota.FechaModificacion = DateTime.Now;
 
                 await _context.SaveChangesAsync();
 
@@ -160,7 +159,7 @@ namespace API.Controllers
                     Color = nota.Color,
                     EsFavorita = nota.EsFavorita,
                     FechaCreacion = nota.FechaCreacion,
-                    FechaActualizacion = nota.FechaActualizacion
+                    FechaModificacion = nota.FechaModificacion
                 };
 
                 return Ok(new { success = true, data = notaDto, message = "Nota actualizada exitosamente" });
@@ -181,7 +180,7 @@ namespace API.Controllers
             try
             {
                 var currentUserId = GetUsuarioId();
-                
+
                 // Verificar que el usuario elimina su propia nota
                 if (currentUserId != usuarioId)
                 {
@@ -200,7 +199,7 @@ namespace API.Controllers
 
                 // Eliminación lógica
                 nota.Eliminada = true;
-                nota.FechaActualizacion = DateTime.Now;
+                nota.FechaModificacion = DateTime.Now;
 
                 await _context.SaveChangesAsync();
 
@@ -222,7 +221,7 @@ namespace API.Controllers
             try
             {
                 var currentUserId = GetUsuarioId();
-                
+
                 // Verificar que el usuario modifica su propia nota
                 if (currentUserId != request.UsuarioId)
                 {
@@ -241,7 +240,7 @@ namespace API.Controllers
                 }
 
                 nota.EsFavorita = request.EsFavorita;
-                nota.FechaActualizacion = DateTime.Now;
+                nota.FechaModificacion = DateTime.Now;
 
                 await _context.SaveChangesAsync();
 
@@ -254,7 +253,7 @@ namespace API.Controllers
                     Color = nota.Color,
                     EsFavorita = nota.EsFavorita,
                     FechaCreacion = nota.FechaCreacion,
-                    FechaActualizacion = nota.FechaActualizacion
+                    FechaModificacion = nota.FechaModificacion
                 };
 
                 return Ok(new { 

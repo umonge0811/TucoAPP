@@ -1,4 +1,3 @@
-
 using System.ComponentModel.DataAnnotations;
 
 namespace tuco.Clases.DTOs
@@ -16,7 +15,7 @@ namespace tuco.Clases.DTOs
         public DateTime? FechaModificacion { get; set; }
         public string Color { get; set; } = "#ffd700";
         public bool EsFavorita { get; set; }
-        
+
         // Propiedades calculadas
         public string TiempoTranscurrido 
         { 
@@ -34,7 +33,7 @@ namespace tuco.Clases.DTOs
                 return FechaCreacion.ToString("dd/MM/yyyy");
             }
         }
-        
+
         public string ContenidoResumido 
         { 
             get 
