@@ -257,12 +257,34 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("🔔 Creando nuevo anuncio: {Titulo}", anuncioDto.Titulo);
+                _logger.LogInformation("🔔 Creando nuevo anuncio - Datos recibidos: {@AnuncioDto}", anuncioDto);
+
+                if (anuncioDto == null)
+                {
+                    _logger.LogWarning("⚠️ AnuncioDto es null");
+                    return Json(new { success = false, message = "No se recibieron datos del anuncio" });
+                }
 
                 if (!ModelState.IsValid)
                 {
-                    return Json(new { success = false, message = "Datos de entrada inválidos" });
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                    _logger.LogWarning("⚠️ ModelState inválido: {Errors}", string.Join(", ", errors));
+                    return Json(new { success = false, message = "Datos de entrada inválidos: " + string.Join(", ", errors) });
                 }
+
+                if (string.IsNullOrWhiteSpace(anuncioDto.Titulo))
+                {
+                    _logger.LogWarning("⚠️ Título del anuncio está vacío");
+                    return Json(new { success = false, message = "El título del anuncio es requerido" });
+                }
+
+                if (string.IsNullOrWhiteSpace(anuncioDto.Contenido))
+                {
+                    _logger.LogWarning("⚠️ Contenido del anuncio está vacío");
+                    return Json(new { success = false, message = "El contenido del anuncio es requerido" });
+                }
+
+                _logger.LogInformation("🔔 Creando nuevo anuncio: {Titulo}", anuncioDto.Titulo);
 
                 var (success, anuncio, message) = await _anunciosService.CrearAnuncioAsync(anuncioDto);
 
