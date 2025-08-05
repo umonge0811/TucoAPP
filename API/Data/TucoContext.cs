@@ -85,7 +85,7 @@ public partial class TucoContext : DbContext
 
     public DbSet<PendientesEntrega> PendientesEntrega { get; set; }
 
-    public DbSet<NotasRapida> NotasRapidas { get; set; }
+    public DbSet<NotaRapida> NotasRapidas { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -892,7 +892,7 @@ public partial class TucoContext : DbContext
         });
 
         // ✅ CONFIGURACIÓN DE LA TABLA NOTAS RAPIDAS
-        modelBuilder.Entity<NotasRapida>(entity =>
+        modelBuilder.Entity<NotaRapida>(entity =>
         {
             entity.HasKey(e => e.NotaId);
 

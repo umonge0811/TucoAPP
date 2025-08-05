@@ -1,9 +1,11 @@
+
 using System;
 using System.ComponentModel.DataAnnotations;
+using tuco.Clases.Models;
 
-namespace Backend.Models
+namespace tuco.Clases.Models
 {
-    public class NotasRapidas
+    public class NotaRapida
     {
         [Key]
         public int NotaId { get; set; }
@@ -13,11 +15,11 @@ namespace Backend.Models
 
         [Required]
         [StringLength(100)]
-        public string Titulo { get; set; }
+        public string Titulo { get; set; } = string.Empty;
 
         [Required]
         [StringLength(1000)]
-        public string Contenido { get; set; }
+        public string Contenido { get; set; } = string.Empty;
 
         public DateTime? FechaModificacion { get; set; }
 
@@ -30,6 +32,7 @@ namespace Backend.Models
 
         public bool Eliminada { get; set; } = false;
 
-        public virtual Usuarios Usuario { get; set; }
+        // Relación con Usuario
+        public virtual Usuario Usuario { get; set; }
     }
 }
