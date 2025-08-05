@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Extensions;
+using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -96,29 +96,40 @@ namespace GestionLlantera.Web.Controllers
                 var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
                 if (validacion != null) return validacion;
 
-
                 // Validación básica
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .Select(x => new {
+                            Field = x.Key,
+                            Errors = x.Value.Errors.Select(e => e.ErrorMessage)
+                        });
+
+                    return BadRequest(new
+                    {
+                        message = "Datos inválidos. Por favor, corrija los errores.",
+                        errors = errors
+                    });
                 }
 
                 // Llamada al servicio para crear el usuario
                 var resultado = await _usuariosService.CrearUsuarioAsync(modelo);
 
-                if (resultado)
+                if (resultado.Success)
                 {
-                    // Si la creación fue exitosa
                     return Ok(new
                     {
-                        message = "Usuario creado exitosamente. Se ha enviado un correo de activación."
+                        message = "Usuario creado exitosamente. Se ha enviado un correo de activación al email proporcionado."
                     });
                 }
 
-                // Si hubo un error en la creación
+                // Manejar errores específicos del servicio
                 return BadRequest(new
                 {
-                    message = "No se pudo crear el usuario. Por favor, intente nuevamente."
+                    message = resultado.Message,
+                    errorType = resultado.ErrorType,
+                    field = resultado.Field
                 });
             }
             catch (Exception ex)
@@ -153,42 +164,123 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GuardarRoles(int id, [FromBody] List<int> rolesIds)
+        public async Task<IActionResult> AsignarRoles(int id, [FromBody] List<int> rolesIds)
         {
             try
             {
-                // Log para debugging
-                _logger.LogInformation("Recibiendo solicitud de guardar roles. Usuario: {Id}, Roles: {@RolesIds}",
-                    id, rolesIds);
-
-                // Validaciones
-                if (id <= 0)
-                {
-                    return BadRequest(new { message = "ID de usuario inválido" });
-                }
-
-                if (rolesIds == null || !rolesIds.Any() || rolesIds.Any(r => r <= 0))
-                {
-                    return BadRequest(new { message = "Debe proporcionar al menos un rol válido" });
-                }
-
-                // Llamar al servicio
                 var resultado = await _usuariosService.AsignarRolesAsync(id, rolesIds);
-
-                // Log del resultado
-                _logger.LogInformation("Resultado de asignación de roles: {Resultado}", resultado);
 
                 if (resultado)
                 {
-                    return Ok(new { message = "Roles actualizados exitosamente" });
+                    return Json(new { success = true, message = "Roles asignados correctamente" });
                 }
-
-                return BadRequest(new { message = "Error al actualizar roles" });
+                else
+                {
+                    return Json(new { success = false, message = "Error al asignar roles" });
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al guardar roles para usuario {Id}", id);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                _logger.LogError(ex, "Error al asignar roles al usuario {Id}", id);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditarUsuario(int id)
+        {
+            try
+            {
+                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                if (validacion != null) return validacion;
+
+                var usuario = await _usuariosService.ObtenerUsuarioPorIdAsync(id);
+                if (usuario == null)
+                {
+                    return NotFound();
+                }
+
+                // Obtener roles para la vista
+                var roles = await _rolesService.ObtenerTodosLosRoles();
+                ViewBag.Roles = roles;
+
+                return View(usuario);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuario para editar: {Id}", id);
+                return View("Error");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerUsuarioPorId(int id)
+        {
+            try
+            {
+                var usuario = await _usuariosService.ObtenerUsuarioPorIdAsync(id);
+                if (usuario == null)
+                {
+                    return Json(new { success = false, message = "Usuario no encontrado" });
+                }
+
+                return Json(new { success = true, data = usuario });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuario por ID: {UsuarioId}", id);
+                return Json(new { success = false, message = "Error al obtener los datos del usuario" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ActualizarUsuario([FromBody] ActualizarUsuarioDTO usuarioDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    var errores = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage);
+                    return Json(new { success = false, message = string.Join(", ", errores) });
+                }
+
+                var resultado = await _usuariosService.ActualizarUsuarioAsync(usuarioDto);
+                if (resultado.Success)
+                {
+                    return Json(new { success = true, message = "Usuario actualizado correctamente" });
+                }
+
+                return Json(new { success = false, message = resultado.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar usuario: {UsuarioId}", usuarioDto.UsuarioId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GuardarRoles(int id, [FromBody] List<int> rolesSeleccionados)
+        {
+            try
+            {
+                var resultado = await _usuariosService.AsignarRolesAsync(id, rolesSeleccionados);
+
+                if (resultado)
+                {
+                    return Json(new { success = true, message = "Roles asignados correctamente" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Error al asignar roles" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al asignar roles al usuario {Id}", id);
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
@@ -225,6 +317,36 @@ namespace GestionLlantera.Web.Controllers
                 return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> EditarUsuario(int id, [FromBody] ActualizarUsuarioDTO modelo)
+        {
+            try
+            {
+                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                if (validacion != null) return validacion;
+
+                if (!ModelState.IsValid)
+                {
+                    var errores = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage);
+                    return Json(new { success = false, message = string.Join(", ", errores) });
+                }
+
+                var resultado = await _usuariosService.ActualizarUsuarioAsync(modelo);
+                if (resultado.Success)
+                {
+                    return Json(new { success = true, message = "Usuario editado exitosamente" });
+                }
+
+                return Json(new { success = false, message = resultado.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al editar usuario {Id}", id);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
     }
 }
-

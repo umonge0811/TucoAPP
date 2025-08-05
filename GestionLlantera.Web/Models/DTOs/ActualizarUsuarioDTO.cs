@@ -1,17 +1,17 @@
+
 using System.ComponentModel.DataAnnotations;
 
 namespace GestionLlantera.Web.Models.DTOs
 {
-    // UsuarioDTO.cs
-    public class UsuarioDTO
+    public class ActualizarUsuarioDTO
     {
         public int UsuarioId { get; set; }
+        
+        [Required(ErrorMessage = "El nombre de usuario es requerido.")]
+        [StringLength(50, ErrorMessage = "El nombre de usuario no puede exceder 50 caracteres.")]
         public string NombreUsuario { get; set; }
-        public string Email { get; set; }
+        
         public bool Activo { get; set; }
         public bool EsTopVendedor { get; set; }
-        public int RolId { get; set; }
-        public DateTime? FechaRegistro { get; set; }
-        public List<string> Roles { get; set; } = new List<string>();
     }
 }

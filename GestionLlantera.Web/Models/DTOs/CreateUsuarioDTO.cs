@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace GestionLlantera.Web.Models.DTOs
 {
@@ -14,5 +14,7 @@ namespace GestionLlantera.Web.Models.DTOs
 
         [Required(ErrorMessage = "Debe seleccionar un rol")]
         public int RolId { get; set; }
+
+        public bool EsTopVendedor { get; set; } = false;
     }
 }

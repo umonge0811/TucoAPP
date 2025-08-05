@@ -21,21 +21,20 @@
             @await Html.PartialAsync("_AlertasSistema")
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card sales">
+                <div class="stat-card sales" data-section="top-vendedor">
                     <div class="stat-icon">
                         <i class="bi bi-trophy"></i>
                     </div>
                     <div class="stat-content">
                         <h3>Top Vendedor</h3>
-                        <div class="stat-value">Carlos Mora</div>
-                        <div class="stat-comparison">
-                            <span>₡850,000 este mes</span>
+                        <div class="stat-value">
+                            <i class="spinner-border spinner-border-sm" role="status"></i>
                         </div>
-
+                        <div class="stat-comparison">
+                            <span>Cargando...</span>
+                        </div>
                     </div>
-
                 </div>
-
             </div>
 
 
@@ -55,29 +54,33 @@
 
 
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card inventory">
+                <div class="stat-card inventory" id="inventario-total-card">
                     <div class="stat-icon">
                         <i class="bi bi-box-seam"></i>
                     </div>
                     <div class="stat-content">
                         <h3>Inventario Total</h3>
-                        <div class="stat-value">₡12,500,000</div>
-                        <div class="stat-comparison">
-                            <span>248 productos</span>
+                        <div class="stat-value" id="inventario-total-valor">
+                            <i class="spinner-border spinner-border-sm" role="status"></i>
+                        </div>
+                        <div class="stat-comparison" id="inventario-total-detalle">
+                            <span>Cargando...</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card alerts">
+                <div class="stat-card alerts" id="alertas-stock-card">
                     <div class="stat-icon">
                         <i class="bi bi-exclamation-triangle"></i>
                     </div>
                     <div class="stat-content">
                         <h3>Alertas Stock</h3>
-                        <div class="stat-value">5</div>
-                        <div class="stat-comparison text-warning">
-                            <span>Productos por agotarse</span>
+                        <div class="stat-value" id="alertas-stock-valor">
+                            <i class="spinner-border spinner-border-sm" role="status"></i>
+                        </div>
+                        <div class="stat-comparison text-warning" id="alertas-stock-detalle">
+                            <span>Cargando...</span>
                         </div>
                     </div>
                 </div>
@@ -188,7 +191,7 @@
         </div>
     </div>
 
-    @* Accesos Rápidos *@
+    @* Acceso Rápido *@
     <div class="dashboard-section">
         <div class="quick-access-grid">
             <a asp-permiso="Ver Facturación" href="@Url.Action("Index", "Facturacion")" class="quick-access-card">
@@ -337,3 +340,5 @@
         </div>
     </div>
 </div>
+
+<script src="~/js/views/admin/dashboard.js" asp-append-version="true"></script>

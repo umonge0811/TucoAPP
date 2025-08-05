@@ -1,0 +1,88 @@
+<div class="dashboard-section">
+
+    <div class="row g-4">
+
+        @await Html.PartialAsync("_AlertasSistema")
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card sales">
+                <div class="stat-icon">
+                    <i class="bi bi-trophy"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Top Vendedor</h3>
+                    <div class="stat-value">Carlos Mora</div>
+                    <div class="stat-comparison">
+                        <span>₡850,000 este mes</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        @* <div class="alert alert-info mb-3">
+            <h5>🔍 Debug Info del Usuario:</h5>
+            <p><strong>Autenticado:</strong> @User.Identity.IsAuthenticated</p>
+            <p><strong>Nombre:</strong> @(User.Identity.Name ?? "Sin nombre")</p>
+            <p><strong>Roles:</strong> @string.Join(", ", User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value))</p>
+            <p><strong>Claims totales:</strong> @User.Claims.Count()</p>
+        </div>
+
+        <div asp-solo-admin="true">
+            <div class="alert alert-danger">
+                <p>🔒 Solo los administradores ven esto</p>
+            </div>
+        </div> *@
+
+
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card inventory">
+                <div class="stat-icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Inventario Total</h3>
+                    <div class="stat-value">₡12,500,000</div>
+                    <div class="stat-comparison">
+                        <span>248 productos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card alerts" id="alertas-stock-card">
+                <div class="stat-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Alertas Stock</h3>
+                    <div class="stat-value" id="alertas-stock-valor">
+                        <i class="spinner-border spinner-border-sm" role="status"></i>
+                    </div>
+                    <div class="stat-comparison text-warning" id="alertas-stock-detalle">
+                        <span>Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="stat-card pending">
+                <div class="stat-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>Usuarios Activos</h3>
+                    <div class="stat-value">4</div>
+                    <div class="stat-comparison">
+                        <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#usersPanel">
+                            Ver conectados <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

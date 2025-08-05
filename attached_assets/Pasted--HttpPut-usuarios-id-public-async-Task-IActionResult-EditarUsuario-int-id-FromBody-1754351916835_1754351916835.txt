@@ -1,0 +1,50 @@
+    [HttpPut("usuarios/{id}")]
+    public async Task<IActionResult> EditarUsuario(int id, [FromBody] RegistroUsuarioRequestDTO request)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound(new { Message = "Usuario no encontrado" });
+
+            // Verificar si el email ya está en uso por otro usuario
+            var existeEmail = await _context.Usuarios
+                .AnyAsync(u => u.Email == request.Email && u.UsuarioId != id);
+            if (existeEmail)
+                return BadRequest(new { Message = "El email ya está en uso por otro usuario" });
+
+            // Actualizar datos del usuario
+            usuario.NombreUsuario = request.NombreUsuario;
+            usuario.Email = request.Email;
+            usuario.EsTopVendedor = request.EsTopVendedor;
+
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            // Registrar en historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Edición de Usuario",
+                modulo: "Usuarios",
+                detalle: $"Usuario editado exitosamente. Email: {usuario.Email}, Top Vendedor: {usuario.EsTopVendedor}",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Usuario editado exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Edición de Usuario",
+                modulo: "Usuarios",
+                detalle: "Error al editar usuario",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al editar usuario" });
+        }
+    }

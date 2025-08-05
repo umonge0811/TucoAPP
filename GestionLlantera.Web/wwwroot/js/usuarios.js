@@ -11,6 +11,8 @@ toastr.options = {
 
 // Variables globales
 let modalRoles = null;
+let modalEditarUsuario = null;
+let usuarioEditando = null;
 
 // Un solo event listener para la inicialización
 document.addEventListener('DOMContentLoaded', function () {
@@ -21,6 +23,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalElement = document.getElementById('modalRoles');
     if (modalElement) {
         modalRoles = new bootstrap.Modal(modalElement);
+    }
+
+    // Inicializar modal de editar usuario
+    const modalEditarElement = document.getElementById('modalEditarUsuario');
+    if (modalEditarElement) {
+        modalEditarUsuario = new bootstrap.Modal(modalEditarElement);
+    }
+
+    // Configurar evento para guardar usuario editado
+    const btnGuardarUsuarioEditar = document.getElementById('btnGuardarUsuarioEditar');
+    if (btnGuardarUsuarioEditar) {
+        btnGuardarUsuarioEditar.addEventListener('click', guardarUsuarioEditado);
     }
 
     // Inicializar DataTables en desktop
@@ -286,32 +300,34 @@ async function desactivarUsuario(usuarioId) {
     }
 }
 
-// En el evento de submit del formulario
+// Función para manejar la creación de usuario
 async function crearUsuario(e) {
     e.preventDefault();
 
-    // Obtener referencias
+    // Obtener referencias al botón y sus estados
     const submitButton = document.querySelector('#submitButton');
     if (!submitButton) {
         console.error('El botón de submit no fue encontrado');
         return;
     }
-
     const normalState = submitButton.querySelector('.normal-state');
     const loadingState = submitButton.querySelector('.loading-state');
 
     try {
         // Deshabilitar botón y mostrar estado de carga
         submitButton.disabled = true;
-        normalState.style.display = 'none';
-        loadingState.style.display = 'inline-flex';
+        if (normalState) normalState.style.display = 'none';
+        if (loadingState) loadingState.style.display = 'inline-flex';
 
+        // Preparar datos del formulario
         const formData = {
             nombreUsuario: document.getElementById('NombreUsuario').value,
             email: document.getElementById('Email').value,
-            rolId: parseInt(document.getElementById('RolId').value)
+            rolId: parseInt(document.getElementById('RolId').value),
+            esTopVendedor: document.getElementById('EsTopVendedor').checked
         };
 
+        // Llamada a la API para crear usuario
         const response = await fetch('/Usuarios/CrearUsuario', {
             method: 'POST',
             headers: {
@@ -320,33 +336,287 @@ async function crearUsuario(e) {
             body: JSON.stringify(formData)
         });
 
-        if (!response.ok) {
+        if (response.ok) {
+            const data = await response.json();
+            showSuccess(data.message); // Asumiendo que existe una función showSuccess
+
+            // Limpiar formulario
+            const userForm = document.getElementById('userForm');
+            if (userForm) {
+                userForm.reset();
+            }
+
+        } else {
             const errorData = await response.json();
+
+            // Manejar errores específicos
+            if (errorData.errorType === 'DuplicateEmail') {
+                // Resaltar el campo de email
+                const emailField = document.getElementById('Email');
+                if (emailField) {
+                    emailField.classList.add('is-invalid');
+
+                    // Crear o actualizar mensaje de error específico
+                    let feedbackDiv = emailField.parentNode.querySelector('.invalid-feedback');
+                    if (!feedbackDiv) {
+                        feedbackDiv = document.createElement('div');
+                        feedbackDiv.className = 'invalid-feedback';
+                        emailField.parentNode.appendChild(feedbackDiv);
+                    }
+                    feedbackDiv.textContent = errorData.message;
+
+                    // Remover la clase de error después de 5 segundos
+                    setTimeout(() => {
+                        emailField.classList.remove('is-invalid');
+                        if (feedbackDiv) feedbackDiv.remove();
+                    }, 5000);
+                }
+
+                // Mostrar SweetAlert específico para email duplicado
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Email ya registrado',
+                    text: errorData.message,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#f59e0b'
+                });
+                return; // Salir sin lanzar excepción para evitar el catch
+            }
+
             throw new Error(errorData.message || 'Error al crear usuario');
         }
 
-        await Swal.fire({
-            icon: 'success',
-            title: 'Usuario Creado',
-            text: 'El usuario ha sido creado exitosamente. Se ha enviado un correo de activación.',
-            showConfirmButton: true
-        });
-
+        // Redirigir después de un éxito
         window.location.href = '/Usuarios/Index';
+
     } catch (error) {
         console.error('Error:', error);
 
-        // Restaurar estado del botón
-        submitButton.disabled = false;
-        normalState.style.display = 'inline-flex';
-        loadingState.style.display = 'none';
+        // Restaurar estado del botón en caso de error
+        if (submitButton) {
+            submitButton.disabled = false;
+            if (normalState) normalState.style.display = 'inline-flex';
+            if (loadingState) loadingState.style.display = 'none';
+        }
 
+        // Mostrar mensaje de error con SweetAlert
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al crear usuario',
+            text: error.message || 'No se pudo crear el usuario. Por favor, intente nuevamente.',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+// Función auxiliar para mostrar mensajes de éxito (si no existe globalmente)
+function showSuccess(message) {
+    if (typeof toastr !== 'undefined') {
+        toastr.success(message);
+    } else {
+        console.log('Éxito:', message);
+    }
+}
+
+/**
+ * Función para abrir el modal de editar usuario
+ */
+async function editarUsuarioModal(usuarioId) {
+    try {
+        // Mostrar indicador de carga
+        Swal.fire({
+            title: 'Cargando datos del usuario...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Cargar datos del usuario y roles en paralelo
+        const [responseUsuario, responseRoles] = await Promise.all([
+            fetch(`/Usuarios/ObtenerUsuarioPorId?id=${usuarioId}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            }),
+            fetch('/Configuracion/roles', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+        ]);
+
+        if (!responseUsuario.ok) {
+            throw new Error('Error al obtener datos del usuario');
+        }
+
+        if (!responseRoles.ok) {
+            throw new Error('Error al obtener roles');
+        }
+
+        const resultadoUsuario = await responseUsuario.json();
+        const roles = await responseRoles.json();
+
+        if (resultadoUsuario.success && resultadoUsuario.data) {
+            usuarioEditando = resultadoUsuario.data;
+            
+            // Llenar select de roles
+            const rolSelect = document.getElementById('rolUsuarioEditar');
+            rolSelect.innerHTML = '<option value="">Seleccione un rol</option>';
+            
+            if (roles && Array.isArray(roles)) {
+                roles.forEach(rol => {
+                    const option = document.createElement('option');
+                    option.value = rol.rolId;
+                    option.textContent = rol.nombreRol;
+                    rolSelect.appendChild(option);
+                });
+            }
+            
+            llenarFormularioUsuario(resultadoUsuario.data);
+            
+            Swal.close();
+            modalEditarUsuario.show();
+        } else {
+            throw new Error(resultadoUsuario.message || 'No se pudo cargar la información del usuario');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: error.message || 'Error al crear el usuario'
+            text: error.message || 'No se pudieron cargar los datos del usuario'
         });
     }
+}
+
+/**
+ * Función para llenar el formulario de editar usuario con los datos
+ */
+function llenarFormularioUsuario(usuario) {
+    // Limpiar validaciones previas
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
+
+    // Llenar campos
+    document.getElementById('usuarioIdEditar').value = usuario.usuarioId || usuario.id;
+    document.getElementById('nombreUsuarioEditar').value = usuario.nombreUsuario || '';
+    document.getElementById('emailUsuarioEditar').value = usuario.email || '';
+    document.getElementById('activoUsuarioEditar').checked = usuario.activo || false;
+    document.getElementById('topVendedorUsuarioEditar').checked = usuario.esTopVendedor || false;
+
+    // Seleccionar rol si existe
+    const rolSelect = document.getElementById('rolUsuarioEditar');
+    if (usuario.rolId) {
+        rolSelect.value = usuario.rolId;
+    } else {
+        rolSelect.value = '';
+    }
+}
+
+/**
+ * Función para guardar los cambios del usuario editado
+ */
+async function guardarUsuarioEditado() {
+    try {
+        // Validar formulario
+        if (!validarFormularioEditarUsuario()) {
+            return;
+        }
+
+        // Deshabilitar botón y mostrar carga
+        const btnGuardar = document.getElementById('btnGuardarUsuarioEditar');
+        btnGuardar.disabled = true;
+        btnGuardar.innerHTML = '<i class="spinner-border spinner-border-sm me-1"></i>Actualizando...';
+
+        // Preparar datos - NO incluir email ya que no se puede cambiar
+        const datosUsuario = {
+            usuarioId: parseInt(document.getElementById('usuarioIdEditar').value),
+            nombreUsuario: document.getElementById('nombreUsuarioEditar').value.trim(),
+            // email: No se incluye porque no se puede cambiar
+            rolId: parseInt(document.getElementById('rolUsuarioEditar').value) || null,
+            activo: document.getElementById('activoUsuarioEditar').checked,
+            esTopVendedor: document.getElementById('topVendedorUsuarioEditar').checked
+        };
+
+        // Llamada a la API
+        const response = await fetch('/Usuarios/ActualizarUsuario', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datosUsuario)
+        });
+
+        if (response.ok) {
+            const resultado = await response.json();
+            
+            modalEditarUsuario.hide();
+
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Usuario actualizado!',
+                text: resultado.message || 'Los datos del usuario se han actualizado correctamente',
+                timer: 1500
+            });
+
+            // Recargar página para mostrar cambios
+            window.location.reload();
+
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Error al actualizar usuario');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al actualizar usuario',
+            text: error.message || 'No se pudo actualizar el usuario. Por favor, intente nuevamente.'
+        });
+    } finally {
+        // Restaurar botón
+        const btnGuardar = document.getElementById('btnGuardarUsuarioEditar');
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = '<i class="bi bi-check-circle me-1"></i>Actualizar Usuario';
+    }
+}
+
+/**
+ * Función para validar el formulario de editar usuario
+ */
+function validarFormularioEditarUsuario() {
+    let esValido = true;
+
+    // Validar nombre de usuario
+    const nombreUsuario = document.getElementById('nombreUsuarioEditar');
+    if (!nombreUsuario.value.trim()) {
+        mostrarErrorCampo(nombreUsuario, 'El nombre de usuario es requerido');
+        esValido = false;
+    }
+
+    // No validar email ya que está readonly y no se puede cambiar
+
+    return esValido;
+}
+
+/**
+ * Función auxiliar para mostrar errores en campos
+ */
+function mostrarErrorCampo(campo, mensaje) {
+    campo.classList.add('is-invalid');
+    const feedback = campo.parentNode.querySelector('.invalid-feedback');
+    if (feedback) {
+        feedback.textContent = mensaje;
+    }
+
+    // Remover error después de 5 segundos
+    setTimeout(() => {
+        campo.classList.remove('is-invalid');
+        if (feedback) feedback.textContent = '';
+    }, 5000);
 }
 
 // Función para manejar errores de AJAX globalmente

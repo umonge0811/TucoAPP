@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.ServicesAPI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -66,7 +66,11 @@ public class UsuariosController : ControllerBase
                     errorDetalle: "El email ya está registrado."
                 );
 
-                return BadRequest(new { Message = "El email ya está registrado." });
+                return BadRequest(new { 
+                    Message = $"El correo electrónico '{request.Email}' ya está registrado en el sistema. Por favor, utilice un correo diferente.",
+                    Field = "Email",
+                    ErrorType = "DuplicateEmail"
+                });
             }
 
             // Crear token de activación
@@ -80,6 +84,7 @@ public class UsuariosController : ControllerBase
                 Contrasena = HashContrasena.HashearContrasena(Guid.NewGuid().ToString()), // Contraseña temporal
                 FechaCreacion = DateTime.Now,
                 Activo = false,
+                EsTopVendedor = request.EsTopVendedor,
                 Token = tokenActivacion,
                 PropositoToken = PropositoTokenEnum.ActivarCuenta,
                 FechaExpiracionToken = DateTime.Now.AddHours(24) // Para 24 horas            };
@@ -217,6 +222,7 @@ public class UsuariosController : ControllerBase
                 u.NombreUsuario,
                 u.Email,
                 u.Activo,
+                u.EsTopVendedor,
                 Roles = u.UsuarioRoles
                         .Select(ur => ur.Rol.NombreRol)
                         .ToList()
@@ -332,6 +338,53 @@ public class UsuariosController : ControllerBase
     //    }
     //}
     //#endregion
+
+    #region Obtener Usuario por ID
+    /// <summary>
+    /// Endpoint para obtener un usuario específico por ID.
+    /// </summary>
+    /// <param name="id">ID del usuario.</param>
+    /// <returns>Información del usuario.</returns>
+    [HttpGet("usuarios/{id}")]
+    public async Task<IActionResult> ObtenerUsuarioPorId(int id)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios
+                .Select(u => new
+                {
+                    u.UsuarioId,
+                    u.NombreUsuario,
+                    u.Email,
+                    u.Activo,
+                    u.EsTopVendedor,
+                    Roles = u.UsuarioRoles
+                            .Select(ur => ur.Rol.NombreRol)
+                            .ToList()
+                })
+                .FirstOrDefaultAsync(u => u.UsuarioId == id);
+
+            if (usuario == null)
+                return NotFound(new { Message = "Usuario no encontrado" });
+
+            return Ok(usuario);
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Consulta de Usuario",
+                modulo: "Usuarios",
+                detalle: "Error al obtener usuario por ID",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al obtener usuario" });
+        }
+    }
+    #endregion
 
     #region Obtener Roles de Usuario
     /// <summary>
@@ -532,6 +585,59 @@ public class UsuariosController : ControllerBase
             );
 
             return StatusCode(500, new { Message = "Error al desactivar usuario" });
+        }
+    }
+    #endregion
+
+    #region Editar Usuario
+    /// <summary>
+    /// Endpoint para editar un usuario existente.
+    /// </summary>
+    /// <param name="id">ID del usuario a editar.</param>
+    /// <param name="request">Datos actualizados del usuario.</param>
+    /// <returns>Confirmación de la edición o mensaje de error.</returns>
+    [HttpPut("usuarios/{id}")]
+    public async Task<IActionResult> EditarUsuario(int id, [FromBody] EditarUsuarioRequestDTO request)
+    {
+        try
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound(new { Message = "Usuario no encontrado" });
+
+            // Actualizar datos del usuario (no incluir email ya que no se puede cambiar)
+            usuario.NombreUsuario = request.NombreUsuario;
+            usuario.Activo = request.Activo;
+            usuario.EsTopVendedor = request.EsTopVendedor;
+
+            _context.Usuarios.Update(usuario);
+            await _context.SaveChangesAsync();
+
+            // Registrar en historial
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Edición de Usuario",
+                modulo: "Usuarios",
+                detalle: $"Usuario editado exitosamente. Activo: {usuario.Activo}, Top Vendedor: {usuario.EsTopVendedor}",
+                estadoAccion: "Éxito"
+            );
+
+            return Ok(new { Message = "Usuario editado exitosamente" });
+        }
+        catch (Exception ex)
+        {
+            await HistorialHelper.RegistrarHistorial(
+                httpClient: _httpClient,
+                usuarioId: id,
+                tipoAccion: "Edición de Usuario",
+                modulo: "Usuarios",
+                detalle: "Error al editar usuario",
+                estadoAccion: "Error",
+                errorDetalle: ex.Message
+            );
+
+            return StatusCode(500, new { Message = "Error al editar usuario" });
         }
     }
     #endregion

@@ -1,9 +1,10 @@
-﻿using GestionLlantera.Web.Models.DTOs;
+using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using System.Text.Json;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Nodes;
+using Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Services
 {
@@ -50,41 +51,70 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<bool> CrearUsuarioAsync(CreateUsuarioDTO modelo)
+        public async Task<UsuarioCreationResult> CrearUsuarioAsync(CreateUsuarioDTO usuario)
         {
             try
             {
-                _logger.LogInformation("Creando usuario con email: {Email}", modelo.Email);
+                var requestDto = new RegistroUsuarioRequestDTO
+                {
+                    NombreUsuario = usuario.NombreUsuario,
+                    Email = usuario.Email,
+                    RolId = usuario.RolId
+                };
 
-                var response = await _httpClient.PostAsJsonAsync("api/usuarios/registrar-usuario", modelo);
+                var json = JsonSerializer.Serialize(requestDto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                // Log de la respuesta para diagnóstico
-                var contenido = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Respuesta de la API: Status: {StatusCode}, Contenido: {Contenido}",
-                    response.StatusCode, contenido);
+                var response = await _httpClient.PostAsync("/api/usuarios/registrar-usuario", content);
 
-                // Verificar si la petición fue exitosa
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("Usuario creado exitosamente");
-                    return true;
+                    return new UsuarioCreationResult
+                    {
+                        Success = true,
+                        Message = "Usuario creado exitosamente. Se ha enviado un correo de activación."
+                    };
                 }
 
-                _logger.LogWarning("Error al crear usuario. Código: {StatusCode}, Respuesta: {Respuesta}",
-                    response.StatusCode, contenido);
-                return false;
+                // Leer el contenido del error para obtener detalles específicos
+                var errorContent = await response.Content.ReadAsStringAsync();
+
+                try
+                {
+                    var errorResponse = JsonSerializer.Deserialize<JsonElement>(errorContent);
+
+                    return new UsuarioCreationResult
+                    {
+                        Success = false,
+                        Message = errorResponse.TryGetProperty("Message", out var msg)
+                            ? msg.GetString() ?? "Error al crear usuario"
+                            : "Error al crear usuario",
+                        ErrorType = errorResponse.TryGetProperty("ErrorType", out var errorType)
+                            ? errorType.GetString()
+                            : null,
+                        Field = errorResponse.TryGetProperty("Field", out var field)
+                            ? field.GetString()
+                            : null
+                    };
+                }
+                catch
+                {
+                    // Si no se puede parsear la respuesta, devolver mensaje genérico
+                    return new UsuarioCreationResult
+                    {
+                        Success = false,
+                        Message = "Error al crear usuario. Por favor, intente nuevamente."
+                    };
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear usuario con email: {Email}", modelo.Email);
-
-                // Loguear también la excepción interna si existe
-                if (ex.InnerException != null)
+                _logger.LogError(ex, "Error al crear usuario");
+                return new UsuarioCreationResult
                 {
-                    _logger.LogError("Excepción interna: {Message}", ex.InnerException.Message);
-                }
-
-                return false;
+                    Success = false,
+                    Message = "Error de conexión al crear el usuario. Por favor, intente nuevamente."
+                };
             }
         }
 
@@ -177,6 +207,124 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogError(ex, "Error al desactivar usuario {Id}", id);
                 throw;
+            }
+        }
+
+        public async Task<UsuarioDTO?> ObtenerUsuarioPorIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Obteniendo usuario por ID: {Id}", id);
+
+                var response = await _httpClient.GetAsync($"api/Usuarios/usuarios/{id}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("Usuario obtenido correctamente para ID: {Id}", id);
+
+                    var usuario = JsonSerializer.Deserialize<UsuarioDTO>(content, _jsonOptions);
+                    return usuario;
+                }
+
+                _logger.LogWarning("Usuario no encontrado para ID: {Id}. Status: {Status}", id, response.StatusCode);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener usuario por ID: {Id}", id);
+                return null;
+            }
+        }
+
+        public async Task<bool> EditarUsuarioAsync(int id, CreateUsuarioDTO modelo)
+        {
+            try
+            {
+                _logger.LogInformation("Editando usuario {Id} con email: {Email}", id, modelo.Email);
+
+                var response = await _httpClient.PutAsJsonAsync($"api/usuarios/usuarios/{id}", modelo);
+
+                var contenido = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta al editar usuario: Status: {Status}, Contenido: {Contenido}",
+                    response.StatusCode, contenido);
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al editar usuario {Id}", id);
+                return false;
+            }
+        }
+
+        public async Task<UsuarioCreationResult> ActualizarUsuarioAsync(ActualizarUsuarioDTO usuario)
+        {
+            try
+            {
+                _logger.LogInformation("Actualizando usuario {Id}", usuario.UsuarioId);
+
+                // Mapear a EditarUsuarioRequestDTO
+                var editarRequest = new
+                {
+                    NombreUsuario = usuario.NombreUsuario,
+                    Activo = usuario.Activo,
+                    EsTopVendedor = usuario.EsTopVendedor
+                };
+
+                var json = JsonSerializer.Serialize(editarRequest, _jsonOptions);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"api/usuarios/usuarios/{usuario.UsuarioId}", content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return new UsuarioCreationResult
+                    {
+                        Success = true,
+                        Message = "Usuario actualizado exitosamente"
+                    };
+                }
+
+                // Leer el contenido del error para obtener detalles específicos
+                var errorContent = await response.Content.ReadAsStringAsync();
+
+                try
+                {
+                    var errorResponse = JsonSerializer.Deserialize<JsonElement>(errorContent);
+
+                    return new UsuarioCreationResult
+                    {
+                        Success = false,
+                        Message = errorResponse.TryGetProperty("Message", out var msg)
+                            ? msg.GetString() ?? "Error al actualizar usuario"
+                            : "Error al actualizar usuario",
+                        ErrorType = errorResponse.TryGetProperty("ErrorType", out var errorType)
+                            ? errorType.GetString()
+                            : null,
+                        Field = errorResponse.TryGetProperty("Field", out var field)
+                            ? field.GetString()
+                            : null
+                    };
+                }
+                catch
+                {
+                    // Si no se puede parsear la respuesta, devolver mensaje genérico
+                    return new UsuarioCreationResult
+                    {
+                        Success = false,
+                        Message = "Error al actualizar usuario. Por favor, intente nuevamente."
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar usuario {Id}", usuario.UsuarioId);
+                return new UsuarioCreationResult
+                {
+                    Success = false,
+                    Message = "Error de conexión al actualizar el usuario. Por favor, intente nuevamente."
+                };
             }
         }
     }

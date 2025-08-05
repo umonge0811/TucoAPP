@@ -1,0 +1,28 @@
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:562 📊 Módulo Dashboard cargado correctamente
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:518 📊 DOM cargado, verificando disponibilidad de jQuery...
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:28 📊 Dashboard - Inicializando módulo principal
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:63 📊 Cargando alertas de stock...
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:180 📊 Cargando estadísticas de inventario total...
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:263 🏆 Cargando información del top vendedor...
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:190 📡 Respuesta del servidor (inventario): 200
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:197 ✅ Datos de inventario total recibidos: Object
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:215 📊 Actualizando tarjeta de inventario total: Object
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:230 ✅ Valor total actualizado: ₡1 898 300
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:238 ✅ Detalle actualizado: 7 (48 unidades)
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:73 📡 Respuesta del servidor: 200
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:80 ✅ Datos de alertas recibidos: Object
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:111 📊 Actualizando vista con datos: Object
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:152 ✅ Vista de alertas de stock actualizada correctamente
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:296 🏆 Mostrando datos del top vendedor: Object
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:301 ⚠️ Contenedor de top vendedor no encontrado
+mostrarTopVendedor @ dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:301
+cargarTopVendedor @ dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:279
+await in cargarTopVendedor
+inicializarDashboard @ dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:38
+(anonymous) @ dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:535
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:280 ✅ Top vendedor cargado correctamente: Object
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:380 📊 Inicializando eventos de formularios...
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:469 🔄 Configurando refresco automático...
+dashboard.js?v=LU5Ys56BNgF1iVyTIJKCnMS7olSf_iXPCOAU15spBe8:47 ✅ Dashboard inicializado correctamente

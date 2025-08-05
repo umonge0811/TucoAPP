@@ -67,6 +67,9 @@
                                     }
                                 </div>
                                 <div class="btn-group w-100">
+                                    <button class="btn btn-outline-secondary" onclick="editarUsuarioModal(@usuario.UsuarioId)">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </button>
                                     <button class="btn btn-outline-primary" onclick="editarRoles(@usuario.UsuarioId)">
                                         <i class="bi bi-shield"></i> Roles
                                     </button>
@@ -98,7 +101,8 @@
                             <th>Email</th>
                             <th>Roles</th>
                             <th>Estado</th>
-                            <th>Acciones</th>
+                            <th>Top Vendedor</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -119,7 +123,23 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="btn-group">
+                                    <span class="badge @(usuario.EsTopVendedor ? "bg-warning text-dark" : "bg-secondary")">
+                                        @if (usuario.EsTopVendedor)
+                                        {
+                                            <i class="bi bi-trophy me-1"></i>@:Habilitado
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-dash-circle me-1"></i>@:No habilitado
+                                        }
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-secondary" onclick="editarUsuarioModal(@usuario.UsuarioId)" 
+                                                data-bs-toggle="tooltip" title="Editar Usuario">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
                                         <button class="btn btn-primary" onclick="editarRoles(@usuario.UsuarioId)"
                                                 data-bs-toggle="tooltip" title="Editar Roles">
                                             <i class="bi bi-shield"></i>
@@ -166,6 +186,86 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" onclick="guardarRoles()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar usuario -->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarUsuarioLabel">Editar Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEditarUsuario">
+                    <input type="hidden" id="usuarioIdEditar" value="0">
+
+                    <div class="mb-3">
+                        <label for="nombreUsuarioEditar" class="form-label">
+                            <i class="bi bi-person me-1"></i>Nombre de Usuario *
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="nombreUsuarioEditar" 
+                               placeholder="Nombre de usuario"
+                               required>
+                        <div class="invalid-feedback"></div>
+                        <small class="form-text text-muted">Nombre único del usuario en el sistema</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="emailUsuarioEditar" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="emailUsuarioEditar" readonly 
+                               style="background-color: #f8f9fa; cursor: not-allowed;">
+                        <small class="text-muted">El email no se puede modificar</small>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="rolUsuarioEditar" class="form-label">Rol Principal</label>
+                        <select class="form-select" id="rolUsuarioEditar">
+                            <option value="">Seleccione un rol...</option>
+                            @if (ViewBag.Roles != null)
+                            {
+                                @foreach (var rol in ViewBag.Roles)
+                                {
+                                    <option value="@rol.RolId">@rol.NombreRol</option>
+                                }
+                            }
+                        </select>
+                        <div class="invalid-feedback"></div>
+                        <small class="text-muted">Para cambiar roles adicionales, use el botón "Editar Roles"</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="activoUsuarioEditar">
+                            <label class="form-check-label" for="activoUsuarioEditar">
+                                <i class="bi bi-check-circle me-1"></i>Usuario activo
+                            </label>
+                            <small class="form-text text-muted d-block">Determina si el usuario puede acceder al sistema</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="topVendedorUsuarioEditar">
+                            <label class="form-check-label" for="topVendedorUsuarioEditar">
+                                <i class="bi bi-trophy me-1"></i>Top Vendedor
+                            </label>
+                            <small class="form-text text-muted d-block">Marcar como vendedor destacado</small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarUsuarioEditar">
+                    <i class="bi bi-check-circle me-1"></i>Actualizar Usuario
+                </button>
             </div>
         </div>
     </div>
