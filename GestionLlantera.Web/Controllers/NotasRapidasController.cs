@@ -134,7 +134,12 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
                 var response = await _notasRapidasService.ActualizarNotaAsync(request, id, token);
 
                 return Json(new { success = response.success, message = response.mensaje, data = response.nota });

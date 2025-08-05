@@ -601,13 +601,17 @@ async function manejarNuevaNota(e) {
             method = 'POST';
         }
 
+        // Obtener el token JWT de las cookies o localStorage si es necesario
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+
+        // Si es una actualización, podemos usar credentials include ya que el controlador usa ObtenerTokenJWT()
         const response = await fetch(url, {
             method: method,
             credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: headers,
             body: JSON.stringify(notaData)
         });
 
