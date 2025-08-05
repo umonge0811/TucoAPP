@@ -1,4 +1,4 @@
-﻿/* Variables */
+/* Variables */
 :root {
     --admin-sidebar-width: 280px;
     --admin-header-height: 64px;
@@ -387,6 +387,26 @@
 
     #usersPanel .btn-close {
         filter: brightness(0) invert(1);
+    }
+
+/* Panel de Usuarios desde abajo */
+#usersPanelBottom {
+    height: 60vh;
+    max-height: 500px;
+}
+
+    #usersPanelBottom .offcanvas-header {
+        background: var(--admin-dark);
+        color: white;
+        border-bottom: 1px solid var(--admin-border);
+    }
+
+    #usersPanelBottom .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    #usersPanelBottom .offcanvas-body {
+        padding: 1rem;
     }
 
 .connected-users-list {

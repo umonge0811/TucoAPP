@@ -427,9 +427,9 @@ function mostrarUsuariosConectados(data) {
             const totalSesiones = data.totalSesiones || 0;
 
             detalleElement.innerHTML = `
-                <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#usersPanel">
-                    ${totalUsuarios > 0 ? 
-                        `${totalSesiones} sesiones activas` : 
+                <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#usersPanelBottom">
+                    ${totalUsuarios > 0 ?
+                        `${totalSesiones} sesiones activas` :
                         'No hay usuarios conectados'
                     } <i class="bi bi-chevron-right"></i>
                 </button>
@@ -438,6 +438,11 @@ function mostrarUsuariosConectados(data) {
 
         // Actualizar el panel lateral con la lista de usuarios
         actualizarPanelUsuariosConectados(data.usuarios || []);
+
+        // Actualizar el contador del sidebar si la función existe
+        if (typeof actualizarContadorSidebar === 'function') {
+            actualizarContadorSidebar(data.totalUsuarios || 0);
+        }
 
         console.log('✅ Usuarios conectados mostrados correctamente');
     } catch (error) {
@@ -451,9 +456,9 @@ function mostrarUsuariosConectados(data) {
  */
 function actualizarPanelUsuariosConectados(usuarios) {
     try {
-        const panelUsuarios = document.querySelector('#usersPanel .connected-users-list');
+        const panelUsuarios = document.querySelector('#usersPanelBottom .connected-users-list');
         if (!panelUsuarios) {
-            console.warn('⚠️ Panel de usuarios conectados no encontrado');
+            console.warn('⚠️ Panel de usuarios conectados (bottom) no encontrado');
             return;
         }
 
@@ -474,15 +479,15 @@ function actualizarPanelUsuariosConectados(usuarios) {
         usuarios.forEach(usuario => {
             const estadoClase = {
                 'Activo': 'success',
-                'Inactivo': 'warning', 
+                'Inactivo': 'warning',
                 'Desconectado': 'secondary'
             }[usuario.estado] || 'secondary';
 
-            const iniciales = usuario.nombreUsuario 
+            const iniciales = usuario.nombreUsuario
                 ? usuario.nombreUsuario.substring(0, 2).toUpperCase()
                 : 'US';
 
-            const tiempoTexto = usuario.tiempoConectadoMinutos <= 30 
+            const tiempoTexto = usuario.tiempoConectadoMinutos <= 30
                 ? `Activo hace ${Math.round(usuario.tiempoConectadoMinutos)} min`
                 : `${usuario.estado} hace ${Math.round(usuario.tiempoConectadoMinutos)} min`;
 
@@ -503,9 +508,9 @@ function actualizarPanelUsuariosConectados(usuarios) {
             panelUsuarios.appendChild(userElement);
         });
 
-        console.log('✅ Panel de usuarios conectados actualizado');
+        console.log('✅ Panel de usuarios conectados (bottom) actualizado');
     } catch (error) {
-        console.error('❌ Error actualizando panel de usuarios:', error);
+        console.error('❌ Error actualizando panel de usuarios (bottom):', error);
     }
 }
 
@@ -672,6 +677,38 @@ async function obtenerEstadisticasDashboard() {
         console.error('❌ Error obteniendo estadísticas del dashboard:', error);
     }
 }
+
+/**
+ * Actualizar contador para usar el nuevo panel
+ */
+function actualizarContadorSidebar(totalUsuarios) {
+    try {
+        // Buscar el botón del sidebar que muestra usuarios conectados
+        const sidebarButton = document.querySelector('.online-users-toggle');
+        if (sidebarButton) {
+            // Actualizar el texto del botón con el número dinámico
+            const iconHtml = '<i class="bi bi-circle-fill text-success me-2"></i>';
+            const chevronHtml = '<i class="bi bi-chevron-up"></i>';
+
+            sidebarButton.innerHTML = `
+                ${iconHtml}
+                Usuarios Conectados (${totalUsuarios})
+                ${chevronHtml}
+            `;
+
+            // Asegurar que el botón apunte al panel correcto
+            sidebarButton.setAttribute('data-bs-target', '#usersPanelBottom');
+            sidebarButton.setAttribute('aria-controls', 'usersPanelBottom');
+
+            console.log(`✅ Contador del sidebar actualizado: ${totalUsuarios} usuarios`);
+        } else {
+            console.warn('⚠️ Botón de usuarios conectados del sidebar no encontrado');
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando contador del sidebar:', error);
+    }
+}
+
 
 // ========================================
 // EVENTOS DE INICIALIZACIÓN
