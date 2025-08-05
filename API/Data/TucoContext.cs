@@ -87,6 +87,8 @@ public partial class TucoContext : DbContext
 
     public DbSet<NotaRapida> NotasRapidas { get; set; }
 
+    public DbSet<Anuncio> Anuncios { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -938,6 +940,69 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.Eliminada)
                 .HasDefaultValue(false)
                 .HasColumnName("Eliminada");
+        });
+
+        // ✅ CONFIGURACIÓN DE LA TABLA ANUNCIOS
+        modelBuilder.Entity<Anuncio>(entity =>
+        {
+            entity.HasKey(e => e.AnuncioId);
+
+            entity.ToTable("Anuncios");
+
+            entity.Property(e => e.Titulo)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(e => e.Contenido)
+                .IsRequired()
+                .HasMaxLength(2000);
+
+            entity.Property(e => e.TipoAnuncio)
+                .IsRequired()
+                .HasMaxLength(50)
+                .HasDefaultValue("General");
+
+            entity.Property(e => e.Prioridad)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue("Normal");
+
+            entity.Property(e => e.EsImportante)
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.Activo)
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.FechaCreacion)
+                .HasDefaultValueSql("GETDATE()");
+
+            entity.Property(e => e.FechaModificacion)
+                .IsRequired(false);
+
+            entity.Property(e => e.FechaVencimiento)
+                .IsRequired(false);
+
+            entity.HasOne(d => d.UsuarioCreador)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioCreadorId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_Anuncios_Usuario");
+
+            // Índices para optimización
+            entity.HasIndex(e => e.UsuarioCreadorId)
+                .HasDatabaseName("IX_Anuncios_UsuarioCreadorId");
+
+            entity.HasIndex(e => e.Activo)
+                .HasDatabaseName("IX_Anuncios_Activo");
+
+            entity.HasIndex(e => e.EsImportante)
+                .HasDatabaseName("IX_Anuncios_EsImportante");
+
+            entity.HasIndex(e => e.FechaCreacion)
+                .HasDatabaseName("IX_Anuncios_FechaCreacion");
+
+            entity.HasIndex(e => e.FechaVencimiento)
+                .HasDatabaseName("IX_Anuncios_FechaVencimiento");
         });
 
         OnModelCreatingPartial(modelBuilder);
