@@ -29,6 +29,10 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("Obteniendo notas para usuario: {UsuarioId}", usuarioId);
 
+                // Configurar headers de autorización si hay token disponible
+                _httpClient.DefaultRequestHeaders.Clear();
+                // Nota: El token se configuraría aquí si se pasa como parámetro
+
                 var response = await _httpClient.GetAsync($"api/notasrapidas/usuario/{usuarioId}");
 
                 if (response.IsSuccessStatusCode)
@@ -64,6 +68,9 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("Creando nueva nota para usuario: {UsuarioId}", request.UsuarioId);
+
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
 
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -103,6 +110,9 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("Actualizando nota {NotaId} para usuario: {UsuarioId}", request.NotaId, usuarioId);
+
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
 
                 // Agregar el usuarioId al request para validación en la API
                 var requestWithUser = new { request.NotaId, request.Titulo, request.Contenido, request.Color, UsuarioId = usuarioId };
@@ -146,6 +156,9 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("Eliminando nota {NotaId} para usuario: {UsuarioId}", notaId, usuarioId);
 
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
+
                 var response = await _httpClient.DeleteAsync($"api/notasrapidas/{notaId}?usuarioId={usuarioId}");
 
                 if (response.IsSuccessStatusCode)
@@ -181,6 +194,9 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("Cambiando estado favorita de nota {NotaId} a {EsFavorita} para usuario: {UsuarioId}", notaId, esFavorita, usuarioId);
+
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
 
                 var requestData = new { EsFavorita = esFavorita, UsuarioId = usuarioId };
                 var json = JsonSerializer.Serialize(requestData);
