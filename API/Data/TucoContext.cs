@@ -41,6 +41,8 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<Notificacion> Notificaciones { get; set; }
 
+    public virtual DbSet<NotaRapida> NotasRapidas { get; set; }
+
     public virtual DbSet<Cliente> Clientes { get; set; }
 
     public virtual DbSet<DetalleDocumento> DetalleDocumentos { get; set; }
@@ -164,6 +166,37 @@ public partial class TucoContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.UsuarioId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<NotaRapida>(entity =>
+        {
+            entity.HasKey(e => e.NotaId);
+
+            entity.ToTable("NotasRapidas");
+
+            entity.Property(e => e.Titulo)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Contenido)
+                .IsRequired()
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.Color)
+                .HasMaxLength(20)
+                .HasDefaultValue("#ffd700");
+
+            entity.Property(e => e.EsFavorita)
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.FechaCreacion)
+                .HasDefaultValueSql("(getdate())");
+
+            // Relación con Usuario
+            entity.HasOne(d => d.Usuario)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Cliente>(entity =>
