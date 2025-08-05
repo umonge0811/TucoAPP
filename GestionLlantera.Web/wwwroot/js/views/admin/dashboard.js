@@ -17,41 +17,24 @@ let dashboardInicializado = false;
 // ========================================
 
 /**
- * Función principal de inicialización del dashboard
+ * Inicializar todas las funcionalidades del dashboard
  */
-async function inicializarDashboard() {
-    if (dashboardInicializado) {
-        console.log('📊 Dashboard ya inicializado, omitiendo...');
-        return;
-    }
+function inicializarDashboard() {
+    console.log('🚀 Inicializando dashboard completo...');
 
-    console.log('📊 Dashboard - Inicializando módulo principal');
+    // Cargar datos iniciales
+    cargarNotasRapidas();
+    cargarAnuncios();
+    cargarAlertasStock();
+    cargarInventarioTotal();
+    cargarTopVendedor();
+    cargarUsuariosConectados();
 
-    try {
-        // Marcar como inicializado para evitar múltiples inicializaciones
-        dashboardInicializado = true;
+    // Inicializar eventos
+    inicializarEventosFormularios();
+    inicializarRefrescoAutomatico();
 
-        // Cargar datos iniciales del dashboard
-        await Promise.all([
-            cargarAlertasStock(),
-            cargarInventarioTotal(),
-            cargarTopVendedor(),
-            cargarUsuariosConectados(),
-            cargarNotasRapidas(),
-            cargarAnuncios()
-        ]);
-
-        // Inicializar eventos de formularios
-        inicializarEventosFormularios();
-
-        // Inicializar refresco automático
-        inicializarRefrescoAutomatico();
-
-        console.log('✅ Dashboard inicializado correctamente');
-    } catch (error) {
-        console.error('❌ Error inicializando dashboard:', error);
-        dashboardInicializado = false; // Permitir reintentos
-    }
+    console.log('✅ Dashboard inicializado correctamente');
 }
 
 // ========================================
@@ -709,6 +692,8 @@ function inicializarRefrescoAutomatico() {
         // También podrías querer refrescar los anuncios si la lista es dinámica
         // cargarAnuncios();
     }, 5 * 60 * 1000); // 5 minutos
+
+    console.log('🔄 Refresco automático configurado (5 minutos)');
 }
 
 // ========================================
@@ -991,26 +976,29 @@ async function marcarFavorita(notaId, esFavorita) {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ notaId, esFavorita })
+            body: JSON.stringify({
+                notaId: notaId,
+                esFavorita: esFavorita
+            })
         });
 
         const data = await response.json();
 
         if (data.success) {
-            console.log('✅ Estado favorita actualizado');
+            console.log('✅ Estado favorita cambiado correctamente');
 
             // Recargar notas para reflejar el cambio
             cargarNotasRapidas();
         } else {
-            throw new Error(data.message || 'Error al actualizar estado favorita');
+            throw new Error(data.message || 'Error al cambiar estado favorita');
         }
 
     } catch (error) {
-        console.error('❌ Error actualizando favorita:', error);
+        console.error('❌ Error cambiando estado favorita:', error);
 
         await Swal.fire({
             title: '❌ Error',
-            text: 'No se pudo actualizar el estado de la nota.',
+            text: 'No se pudo cambiar el estado de favorita. Inténtalo de nuevo.',
             icon: 'error',
             confirmButtonText: 'Entendido'
         });
@@ -1150,7 +1138,7 @@ function mostrarAnuncios(anuncios) {
     try {
         console.log('📢 Mostrando anuncios:', anuncios);
 
-        const container = document.querySelector('.announcements-list');
+        const container = document.querySelector('.announcements-list, #announcements-container, .anuncios-container');
         if (!container) {
             console.warn('⚠️ Contenedor de anuncios no encontrado');
             return;
@@ -1380,11 +1368,11 @@ async function manejarNuevoAnuncio(e) {
 
     try {
         const formData = new FormData(form);
-        
+
         // Validar que los campos requeridos estén presentes
         const titulo = formData.get('tituloAnuncio');
         const contenido = formData.get('contenidoAnuncio');
-        
+
         if (!titulo || !contenido) {
             await Swal.fire({
                 title: '❌ Error',
