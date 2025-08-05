@@ -137,7 +137,7 @@ namespace GestionLlantera.Web.Controllers
                 var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
                 var response = await _notasRapidasService.ActualizarNotaAsync(request, id, token);
 
-                return Json(new { success = response.success, message = response.message, data = response.data });
+                return Json(new { success = response.success, message = response.mensaje, data = response.nota });
             }
             catch (Exception ex)
             {
