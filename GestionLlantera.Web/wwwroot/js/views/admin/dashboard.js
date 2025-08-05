@@ -430,9 +430,9 @@ function mostrarUsuariosConectados(data) {
             detalleElement.innerHTML = `
                 <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#usersPanelBottom">
                     ${totalUsuarios > 0 ?
-                        `${totalSesiones} sesiones activas` :
-                        'No hay usuarios conectados'
-                    } <i class="bi bi-chevron-right"></i>
+                    `${totalSesiones} sesiones activas` :
+                    'No hay usuarios conectados'
+                } <i class="bi bi-chevron-right"></i>
                 </button>
             `;
         }
@@ -562,7 +562,7 @@ function inicializarEventosFormularios() {
     }
 
     // Botones de acciones de notas
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         if (e.target.closest('.note-actions .btn-success')) {
             marcarNotaCompletada(e.target.closest('.note-item'));
         } else if (e.target.closest('.note-actions .btn-danger')) {
@@ -716,27 +716,25 @@ function actualizarContadorSidebar(totalUsuarios) {
 // EVENTOS DE INICIALIZACIÓN
 // ========================================
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('📊 DOM cargado, verificando disponibilidad de jQuery...');
+// Inicialización cuando el DOM está listo
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('🚀 Dashboard cargado exitosamente');
 
-    // Verificar si jQuery está disponible
-    if (typeof $ === 'undefined') {
-        console.log('⏳ Esperando a que jQuery se cargue...');
-
-        // Intentar nuevamente después de un pequeño delay
-        setTimeout(async function() {
-            if (typeof $ !== 'undefined') {
-                await inicializarDashboard();
-            } else {
-                console.error('❌ jQuery no disponible después de esperar');
-                // Intentar inicializar sin jQuery (funcionalidad limitada)
-                inicializarDashboardSinJQuery();
-            }
-        }, 500);
-    } else {
-        await inicializarDashboard();
+    // Configurar event listeners para formularios
+    const newNoteForm = document.getElementById('newNoteForm');
+    if (newNoteForm) {
+        newNoteForm.addEventListener('submit', manejarNuevaNota);
     }
+
+    const newAnnouncementForm = document.getElementById('newAnnouncementForm');
+    if (newAnnouncementForm) {
+        newAnnouncementForm.addEventListener('submit', manejarNuevoAnuncio);
+    }
+
+    // Cargar notas rápidas al inicializar
+    cargarNotasRapidas();
+
+    // Aquí se pueden agregar más inicializaciones según sea necesario
 });
 
 /**
