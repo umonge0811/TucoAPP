@@ -18,6 +18,41 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Método auxiliar para obtener el token JWT del usuario autenticado
+        /// </summary>
+        /// <returns>El token JWT o null si no se encuentra</returns>
+        private string? ObtenerTokenJWT()
+        {
+            // Intentar diferentes métodos para obtener el token, igual que otros controladores
+            var token = User.FindFirst("jwt_token")?.Value;
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                token = User.FindFirst("JwtToken")?.Value;
+            }
+            
+            if (string.IsNullOrEmpty(token))
+            {
+                token = User.FindFirst("access_token")?.Value;
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+                _logger.LogDebug("📋 Claims disponibles: {Claims}", 
+                    string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
+            }
+            else
+            {
+                _logger.LogDebug("✅ Token JWT obtenido correctamente para usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+            }
+
+            return token;
+        }
+
         [HttpGet]
         public async Task<IActionResult> ObtenerMisNotas()
         {
@@ -29,7 +64,13 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
-                var resultado = await _notasRapidasService.ObtenerNotasUsuarioAsync(int.Parse(usuarioId));
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
+                var resultado = await _notasRapidasService.ObtenerNotasUsuarioAsync(int.Parse(usuarioId), token);
 
                 return Json(new
                 {
@@ -61,8 +102,14 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
                 notaDto.UsuarioId = int.Parse(usuarioId);
-                var resultado = await _notasRapidasService.CrearNotaAsync(notaDto);
+                var resultado = await _notasRapidasService.CrearNotaAsync(notaDto, token);
 
                 return Json(new
                 {
@@ -89,7 +136,13 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
-                var resultado = await _notasRapidasService.EliminarNotaAsync(id, int.Parse(usuarioId));
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
+                var resultado = await _notasRapidasService.EliminarNotaAsync(id, int.Parse(usuarioId), token);
 
                 return Json(new
                 {
