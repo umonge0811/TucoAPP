@@ -936,7 +936,8 @@ public partial class TucoContext : DbContext
                 .HasDefaultValue(false);
 
             entity.Property(e => e.Eliminada)
-                .HasDefaultValue(false);
+                .HasDefaultValue(false)
+                .HasColumnName("Eliminada");
         });
 
         OnModelCreatingPartial(modelBuilder);
