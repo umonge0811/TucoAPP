@@ -6,6 +6,7 @@ using API.Data;
 using Tuco.Clases.Models;
 using Tuco.Clases.DTOs;
 using API.Extensions;
+using System.Security.Claims;
 
 namespace API.Controllers
 {
@@ -331,6 +332,60 @@ namespace API.Controllers
             {
                 _logger.LogError(ex, "❌ Error al cambiar estado del anuncio {AnuncioId}", id);
                 return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el ID del usuario actual desde los claims
+        /// </summary>
+        private int? ObtenerIdUsuarioActual()
+        {
+            try
+            {
+                // Debug: Mostrar todos los claims disponibles
+                _logger.LogInformation("=== CLAIMS DISPONIBLES ===");
+                foreach (var claim in User.Claims)
+                {
+                    _logger.LogInformation("Claim - Tipo: {Type}, Valor: {Value}", claim.Type, claim.Value);
+                }
+                _logger.LogInformation("=== FIN CLAIMS ===");
+
+                // Intentar obtener el userId del claim personalizado primero
+                var userIdClaim = User.FindFirst("userId")?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+                {
+                    _logger.LogInformation("Usuario ID obtenido del claim 'userId': {UserId}", userId);
+                    return userId;
+                }
+
+                // Si no está, intentar con NameIdentifier
+                var nameIdentifierClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(nameIdentifierClaim) && int.TryParse(nameIdentifierClaim, out int userIdFromNameIdentifier))
+                {
+                    _logger.LogInformation("Usuario ID obtenido del claim 'NameIdentifier': {UserId}", userIdFromNameIdentifier);
+                    return userIdFromNameIdentifier;
+                }
+
+                // Como último recurso, buscar por email
+                var emailClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+                if (!string.IsNullOrEmpty(emailClaim))
+                {
+                    _logger.LogInformation("Buscando usuario por email: {Email}", emailClaim);
+                    var usuario = _context.Usuarios.FirstOrDefault(u => u.Email == emailClaim);
+                    if (usuario != null)
+                    {
+                        _logger.LogInformation("Usuario encontrado por email. ID: {UserId}", usuario.UsuarioId);
+                        return usuario.UsuarioId;
+                    }
+                }
+
+                _logger.LogWarning("No se pudo obtener el ID del usuario de ningún claim");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener ID del usuario del token");
+                return null;
             }
         }
     }
