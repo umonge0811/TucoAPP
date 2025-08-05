@@ -3,6 +3,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using tuco.Clases.DTOs;
 using System.Text.Json;
 using System.Text;
+using System.Net.Http.Headers;
 
 namespace GestionLlantera.Web.Services
 {
@@ -23,15 +24,18 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Obtener todas las notas de un usuario
         /// </summary>
-        public async Task<(bool success, List<NotaRapidaDTO> notas, string mensaje)> ObtenerNotasUsuarioAsync(int usuarioId)
+        public async Task<(bool success, List<NotaRapidaDTO> notas, string mensaje)> ObtenerNotasUsuarioAsync(int usuarioId, string jwtToken)
         {
             try
             {
                 _logger.LogInformation("Obteniendo notas para usuario: {UsuarioId}", usuarioId);
 
-                // Configurar headers de autorización si hay token disponible
+                // Configurar headers de autorización
                 _httpClient.DefaultRequestHeaders.Clear();
-                // Nota: El token se configuraría aquí si se pasa como parámetro
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                }
 
                 var response = await _httpClient.GetAsync($"api/notasrapidas/usuario/{usuarioId}");
 
@@ -63,7 +67,7 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Crear una nueva nota
         /// </summary>
-        public async Task<(bool success, NotaRapidaDTO nota, string mensaje)> CrearNotaAsync(CrearNotaRapidaDTO request)
+        public async Task<(bool success, NotaRapidaDTO nota, string mensaje)> CrearNotaAsync(CrearNotaRapidaDTO request, string jwtToken)
         {
             try
             {
@@ -71,6 +75,10 @@ namespace GestionLlantera.Web.Services
 
                 // Configurar headers de autorización
                 _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                }
 
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -105,7 +113,7 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Actualizar una nota existente
         /// </summary>
-        public async Task<(bool success, NotaRapidaDTO nota, string mensaje)> ActualizarNotaAsync(ActualizarNotaRapidaDTO request, int usuarioId)
+        public async Task<(bool success, NotaRapidaDTO nota, string mensaje)> ActualizarNotaAsync(ActualizarNotaRapidaDTO request, int usuarioId, string jwtToken)
         {
             try
             {
@@ -113,6 +121,10 @@ namespace GestionLlantera.Web.Services
 
                 // Configurar headers de autorización
                 _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                }
 
                 // Agregar el usuarioId al request para validación en la API
                 var requestWithUser = new { request.NotaId, request.Titulo, request.Contenido, request.Color, UsuarioId = usuarioId };
@@ -150,7 +162,7 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Eliminar una nota
         /// </summary>
-        public async Task<(bool success, string message)> EliminarNotaAsync(int notaId, int usuarioId)
+        public async Task<(bool success, string message)> EliminarNotaAsync(int notaId, int usuarioId, string jwtToken)
         {
             try
             {
@@ -158,6 +170,10 @@ namespace GestionLlantera.Web.Services
 
                 // Configurar headers de autorización
                 _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                }
 
                 var response = await _httpClient.DeleteAsync($"api/notasrapidas/{notaId}?usuarioId={usuarioId}");
 
@@ -189,7 +205,7 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Cambiar estado favorita de una nota
         /// </summary>
-        public async Task<(bool success, NotaRapidaDTO nota, bool EsFavorita, string mensaje)> CambiarFavoritaAsync(int notaId, bool esFavorita, int usuarioId)
+        public async Task<(bool success, NotaRapidaDTO nota, bool EsFavorita, string mensaje)> CambiarFavoritaAsync(int notaId, bool esFavorita, int usuarioId, string jwtToken)
         {
             try
             {
@@ -197,6 +213,10 @@ namespace GestionLlantera.Web.Services
 
                 // Configurar headers de autorización
                 _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                }
 
                 var requestData = new { EsFavorita = esFavorita, UsuarioId = usuarioId };
                 var json = JsonSerializer.Serialize(requestData);
