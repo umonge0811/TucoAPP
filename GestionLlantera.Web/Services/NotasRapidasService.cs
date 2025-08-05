@@ -7,24 +7,17 @@ using System.Text;
 namespace GestionLlantera.Web.Services
 {
     /// <summary>
-    /// Servicio para manejar las notas rápidas en la capa Web
+    /// Servicio para gestionar notas rápidas en la capa Web
     /// </summary>
     public class NotasRapidasService : INotasRapidasService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<NotasRapidasService> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly string _apiBaseUrl;
 
-        public NotasRapidasService(
-            HttpClient httpClient,
-            ILogger<NotasRapidasService> logger,
-            IConfiguration configuration)
+        public NotasRapidasService(HttpClient httpClient, ILogger<NotasRapidasService> logger)
         {
             _httpClient = httpClient;
             _logger = logger;
-            _configuration = configuration;
-            _apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5049";
         }
 
         /// <summary>
@@ -36,32 +29,30 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("Obteniendo notas para usuario: {UsuarioId}", usuarioId);
 
-                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/NotasRapidas/usuario/{usuarioId}");
+                var response = await _httpClient.GetAsync($"api/notasrapidas/usuario/{usuarioId}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<ApiResponse<List<NotaRapidaDTO>>>(content, new JsonSerializerOptions
+                    var result = JsonSerializer.Deserialize<ApiResponse<List<NotaRapidaDTO>>>(content, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
-                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    if (result?.Success == true && result.Data != null)
                     {
-                        return (true, apiResponse.Data, "Notas obtenidas exitosamente");
+                        return (true, result.Data, "Notas obtenidas exitosamente");
                     }
-
-                    return (false, new List<NotaRapidaDTO>(), apiResponse?.Message ?? "Error desconocido");
+                    
+                    return (false, new List<NotaRapidaDTO>(), result?.Message ?? "Error al obtener notas");
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al obtener notas: {StatusCode} - {Content}", response.StatusCode, errorContent);
-                return (false, new List<NotaRapidaDTO>(), "Error al obtener las notas");
+                return (false, new List<NotaRapidaDTO>(), $"Error en la respuesta: {response.StatusCode}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener notas del usuario {UsuarioId}", usuarioId);
-                return (false, new List<NotaRapidaDTO>(), "Error interno al obtener las notas");
+                _logger.LogError(ex, "Error obteniendo notas para usuario: {UsuarioId}", usuarioId);
+                return (false, new List<NotaRapidaDTO>(), "Error interno del servidor");
             }
         }
 
@@ -77,32 +68,30 @@ namespace GestionLlantera.Web.Services
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync($"{_apiBaseUrl}/api/NotasRapidas", content);
+                var response = await _httpClient.PostAsync("api/notasrapidas", content);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<ApiResponse<NotaRapidaDTO>>(responseContent, new JsonSerializerOptions
+                    var result = JsonSerializer.Deserialize<ApiResponse<NotaRapidaDTO>>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
-                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    if (result?.Success == true && result.Data != null)
                     {
-                        return (true, apiResponse.Data, apiResponse.Message ?? "Nota creada exitosamente");
+                        return (true, result.Data, "Nota creada exitosamente");
                     }
-
-                    return (false, null, apiResponse?.Message ?? "Error desconocido");
+                    
+                    return (false, new NotaRapidaDTO(), result?.Message ?? "Error al crear nota");
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al crear nota: {StatusCode} - {Content}", response.StatusCode, errorContent);
-                return (false, null, "Error al crear la nota");
+                return (false, new NotaRapidaDTO(), $"Error en la respuesta: {response.StatusCode}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear nota");
-                return (false, null, "Error interno al crear la nota");
+                _logger.LogError(ex, "Error creando nota para usuario: {UsuarioId}", request.UsuarioId);
+                return (false, new NotaRapidaDTO(), "Error interno del servidor");
             }
         }
 
@@ -115,35 +104,36 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("Actualizando nota {NotaId} para usuario: {UsuarioId}", request.NotaId, usuarioId);
 
-                var json = JsonSerializer.Serialize(request);
+                // Agregar el usuarioId al request para validación en la API
+                var requestWithUser = new { request.NotaId, request.Titulo, request.Contenido, request.Color, UsuarioId = usuarioId };
+                
+                var json = JsonSerializer.Serialize(requestWithUser);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"{_apiBaseUrl}/api/NotasRapidas/{request.NotaId}", content);
+                var response = await _httpClient.PutAsync($"api/notasrapidas/{request.NotaId}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<ApiResponse<NotaRapidaDTO>>(responseContent, new JsonSerializerOptions
+                    var result = JsonSerializer.Deserialize<ApiResponse<NotaRapidaDTO>>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
-                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    if (result?.Success == true && result.Data != null)
                     {
-                        return (true, apiResponse.Data, apiResponse.Message ?? "Nota actualizada exitosamente");
+                        return (true, result.Data, "Nota actualizada exitosamente");
                     }
-
-                    return (false, null, apiResponse?.Message ?? "Error desconocido");
+                    
+                    return (false, new NotaRapidaDTO(), result?.Message ?? "Error al actualizar nota");
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al actualizar nota: {StatusCode} - {Content}", response.StatusCode, errorContent);
-                return (false, null, "Error al actualizar la nota");
+                return (false, new NotaRapidaDTO(), $"Error en la respuesta: {response.StatusCode}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar nota {NotaId}", request.NotaId);
-                return (false, null, "Error interno al actualizar la nota");
+                _logger.LogError(ex, "Error actualizando nota {NotaId} para usuario: {UsuarioId}", request.NotaId, usuarioId);
+                return (false, new NotaRapidaDTO(), "Error interno del servidor");
             }
         }
 
@@ -156,27 +146,30 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("Eliminando nota {NotaId} para usuario: {UsuarioId}", notaId, usuarioId);
 
-                var response = await _httpClient.DeleteAsync($"{_apiBaseUrl}/api/NotasRapidas/{notaId}?usuarioId={usuarioId}");
+                var response = await _httpClient.DeleteAsync($"api/notasrapidas/{notaId}?usuarioId={usuarioId}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<ApiResponse<object>>(responseContent, new JsonSerializerOptions
+                    var result = JsonSerializer.Deserialize<ApiResponse<object>>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
-                    return (apiResponse?.Success == true, apiResponse?.Message ?? "Nota eliminada exitosamente");
+                    if (result?.Success == true)
+                    {
+                        return (true, "Nota eliminada exitosamente");
+                    }
+                    
+                    return (false, result?.Message ?? "Error al eliminar nota");
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al eliminar nota: {StatusCode} - {Content}", response.StatusCode, errorContent);
-                return (false, "Error al eliminar la nota");
+                return (false, $"Error en la respuesta: {response.StatusCode}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al eliminar nota {NotaId}", notaId);
-                return (false, "Error interno al eliminar la nota");
+                _logger.LogError(ex, "Error eliminando nota {NotaId} para usuario: {UsuarioId}", notaId, usuarioId);
+                return (false, "Error interno del servidor");
             }
         }
 
@@ -187,50 +180,47 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("Cambiando estado favorita de nota {NotaId} a {EsFavorita} para usuario: {UsuarioId}", 
-                    notaId, esFavorita, usuarioId);
+                _logger.LogInformation("Cambiando estado favorita de nota {NotaId} a {EsFavorita} para usuario: {UsuarioId}", notaId, esFavorita, usuarioId);
 
-                var request = new { EsFavorita = esFavorita, UsuarioId = usuarioId };
-                var json = JsonSerializer.Serialize(request);
+                var requestData = new { EsFavorita = esFavorita, UsuarioId = usuarioId };
+                var json = JsonSerializer.Serialize(requestData);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PatchAsync($"{_apiBaseUrl}/api/NotasRapidas/{notaId}/favorita", content);
+                var response = await _httpClient.PatchAsync($"api/notasrapidas/{notaId}/favorita", content);
 
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<ApiResponse<NotaRapidaDTO>>(responseContent, new JsonSerializerOptions
+                    var result = JsonSerializer.Deserialize<ApiResponse<NotaRapidaDTO>>(responseContent, new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     });
 
-                    if (apiResponse?.Success == true && apiResponse.Data != null)
+                    if (result?.Success == true && result.Data != null)
                     {
-                        return (true, apiResponse.Data, apiResponse.Data.EsFavorita, apiResponse.Message ?? "Estado actualizado");
+                        return (true, result.Data, result.Data.EsFavorita, esFavorita ? "Nota marcada como favorita" : "Nota desmarcada como favorita");
                     }
-
-                    return (false, null, false, apiResponse?.Message ?? "Error desconocido");
+                    
+                    return (false, new NotaRapidaDTO(), false, result?.Message ?? "Error al cambiar estado favorita");
                 }
 
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Error al cambiar estado favorita: {StatusCode} - {Content}", response.StatusCode, errorContent);
-                return (false, null, false, "Error al cambiar estado favorita");
+                return (false, new NotaRapidaDTO(), false, $"Error en la respuesta: {response.StatusCode}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cambiar estado favorita de nota {NotaId}", notaId);
-                return (false, null, false, "Error interno al cambiar estado favorita");
+                _logger.LogError(ex, "Error cambiando estado favorita de nota {NotaId} para usuario: {UsuarioId}", notaId, usuarioId);
+                return (false, new NotaRapidaDTO(), false, "Error interno del servidor");
             }
         }
-    }
 
-    /// <summary>
-    /// Clase para deserializar respuestas de la API
-    /// </summary>
-    public class ApiResponse<T>
-    {
-        public bool Success { get; set; }
-        public T Data { get; set; }
-        public string Message { get; set; } = string.Empty;
+        /// <summary>
+        /// Clase auxiliar para deserializar respuestas de la API
+        /// </summary>
+        private class ApiResponse<T>
+        {
+            public bool Success { get; set; }
+            public T? Data { get; set; }
+            public string? Message { get; set; }
+        }
     }
 }

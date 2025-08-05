@@ -274,57 +274,38 @@
 </div>
 
 @* Modal Nueva Nota *@
-<div class="modal fade" id="newNoteModal" tabindex="-1" aria-labelledby="newNoteModalLabel" aria-hidden="true">
+<div class="modal fade" id="newNoteModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="newNoteModalLabel">
-                    <i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Nueva Nota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="newNoteForm">
-                <div class="modal-body">
-                    @Html.AntiForgeryToken()
+            <div class="modal-body">
+                <form id="newNoteForm" onsubmit="event.preventDefault(); crearNota();">
                     <div class="mb-3">
-                        <label for="titulo" class="form-label">Título</label>
-                        <input type="text" class="form-control" id="titulo" name="titulo" required maxlength="100">
+                        <label class="form-label">Título</label>
+                        <input type="text" name="titulo" class="form-control" maxlength="100" required>
                     </div>
                     <div class="mb-3">
-                        <label for="contenido" class="form-label">Contenido</label>
-                        <textarea class="form-control" id="contenido" name="contenido" rows="4" required maxlength="1000"></textarea>
+                        <label class="form-label">Contenido</label>
+                        <textarea name="contenido" class="form-control" rows="4" maxlength="1000" required></textarea>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="color" class="form-label">Color</label>
-                            <select class="form-select" id="color" name="color">
-                                <option value="#ffd700">Amarillo (por defecto)</option>
-                                <option value="#87ceeb">Azul claro</option>
-                                <option value="#98fb98">Verde claro</option>
-                                <option value="#ffa07a">Naranja claro</option>
-                                <option value="#dda0dd">Morado claro</option>
-                                <option value="#f0e68c">Amarillo pálido</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="esFavorita" name="esFavorita">
-                                <label class="form-check-label" for="esFavorita">
-                                    <i class="fas fa-star text-warning"></i> Marcar como favorita
-                                </label>
-                            </div>
+                    <div class="mb-3">
+                        <label class="form-label">Color</label>
+                        <div class="d-flex gap-2">
+                            <input type="color" name="color" class="form-control form-control-color" value="#ffd700" style="width: 50px;">
+                            <small class="text-muted align-self-center">Elige un color para tu nota</small>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Guardar Nota
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="newNoteForm" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i>Crear Nota
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -369,6 +350,4 @@
     </div>
 </div>
 
-@section Scripts {
-    <script src="~/js/views/admin/dashboard.js"></script>
-}
+<script src="~/js/views/admin/dashboard.js" asp-append-version="true"></script>

@@ -716,25 +716,27 @@ function actualizarContadorSidebar(totalUsuarios) {
 // EVENTOS DE INICIALIZACIÓN
 // ========================================
 
-// Inicialización cuando el DOM está listo
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Dashboard cargado exitosamente');
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('📊 DOM cargado, verificando disponibilidad de jQuery...');
 
-    // Configurar event listeners para formularios
-    const newNoteForm = document.getElementById('newNoteForm');
-    if (newNoteForm) {
-        newNoteForm.addEventListener('submit', manejarNuevaNota);
+    // Verificar si jQuery está disponible
+    if (typeof $ === 'undefined') {
+        console.log('⏳ Esperando a que jQuery se cargue...');
+
+        // Intentar nuevamente después de un pequeño delay
+        setTimeout(async function() {
+            if (typeof $ !== 'undefined') {
+                await inicializarDashboard();
+            } else {
+                console.error('❌ jQuery no disponible después de esperar');
+                // Intentar inicializar sin jQuery (funcionalidad limitada)
+                inicializarDashboardSinJQuery();
+            }
+        }, 500);
+    } else {
+        await inicializarDashboard();
     }
-
-    const newAnnouncementForm = document.getElementById('newAnnouncementForm');
-    if (newAnnouncementForm) {
-        newAnnouncementForm.addEventListener('submit', manejarNuevoAnuncio);
-    }
-
-    // Cargar notas rápidas al inicializar
-    cargarNotasRapidas();
-
-    // Aquí se pueden agregar más inicializaciones según sea necesario
 });
 
 /**
