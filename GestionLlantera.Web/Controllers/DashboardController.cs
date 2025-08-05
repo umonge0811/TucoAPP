@@ -32,12 +32,12 @@ namespace GestionLlantera.Web.Controllers
         {
             // Intentar diferentes métodos para obtener el token, igual que otros controladores
             var token = User.FindFirst("jwt_token")?.Value;
-
+            
             if (string.IsNullOrEmpty(token))
             {
                 token = User.FindFirst("JwtToken")?.Value;
             }
-
+            
             if (string.IsNullOrEmpty(token))
             {
                 token = User.FindFirst("access_token")?.Value;
@@ -58,6 +58,7 @@ namespace GestionLlantera.Web.Controllers
 
             return token;
         }
+
 
         [HttpGet]
         public async Task<IActionResult> ObtenerAlertasStock()
@@ -130,7 +131,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("🏆 Solicitando top vendedor para dashboard");
+                _logger.LogInformation("📊 Obteniendo top vendedor para dashboard");
 
                 // ✅ OBTENER TOKEN JWT
                 var token = ObtenerTokenJWT();
@@ -154,39 +155,6 @@ namespace GestionLlantera.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error crítico obteniendo top vendedor");
-                return Json(new { success = false, message = "Error interno del servidor" });
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ObtenerUsuariosConectados()
-        {
-            try
-            {
-                _logger.LogInformation("👥 Solicitando usuarios conectados para dashboard");
-
-                // ✅ OBTENER TOKEN JWT
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    _logger.LogError("❌ Token JWT no encontrado para Dashboard");
-                    return Json(new { success = false, message = "Sesión expirada. Por favor, inicie sesión nuevamente." });
-                }
-
-                var resultado = await _dashboardService.ObtenerUsuariosConectadosAsync(token);
-
-                if (!resultado.success)
-                {
-                    _logger.LogError("❌ Error obteniendo usuarios conectados: {Mensaje}", resultado.mensaje);
-                    return Json(new { success = false, message = resultado.mensaje });
-                }
-
-                _logger.LogInformation("✅ Usuarios conectados obtenidos correctamente");
-                return Json(new { success = true, data = resultado.data });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error crítico obteniendo usuarios conectados");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
