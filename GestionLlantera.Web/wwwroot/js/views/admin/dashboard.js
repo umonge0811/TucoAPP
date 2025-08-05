@@ -585,12 +585,11 @@ async function manejarNuevaNota(e) {
 
     try {
         const formData = new FormData(form);
-        const checkboxFavorita = document.getElementById('esFavorita');
         const notaData = {
             titulo: formData.get('titulo'),
             contenido: formData.get('contenido'),
             color: formData.get('color') || '#ffd700',
-            esFavorita: checkboxFavorita ? checkboxFavorita.checked : false
+            esFavorita: false
         };
 
         console.log('📋 Datos de la nota a enviar:', notaData);
@@ -1059,15 +1058,6 @@ async function editarNota(notaId, titulo, contenido, color, esFavorita) {
         document.getElementById('titulo').value = titulo || '';
         document.getElementById('contenido').value = contenido || '';
         document.getElementById('color').value = color || '#ffd700';
-        
-        // Manejar correctamente el checkbox esFavorita
-        const checkboxFavorita = document.getElementById('esFavorita');
-        if (checkboxFavorita) {
-            // Convertir correctamente el valor a boolean
-            const esChecked = esFavorita === true || esFavorita === 'true' || esFavorita === '1' || esFavorita === 1;
-            checkboxFavorita.checked = esChecked;
-            console.log('🔧 Checkbox favorita configurado:', { esFavorita, esChecked });
-        }
 
         // Cambiar el texto del botón
         const submitButton = form.querySelector('button[type="submit"]');
@@ -1123,7 +1113,6 @@ function abrirModalNuevaNota() {
         document.getElementById('titulo').value = '';
         document.getElementById('contenido').value = '';
         document.getElementById('color').value = '#ffd700';
-        document.getElementById('esFavorita').checked = false;
 
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
@@ -1165,12 +1154,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const tituloField = document.getElementById('titulo');
                 const contenidoField = document.getElementById('contenido');
                 const colorField = document.getElementById('color');
-                const favoritaField = document.getElementById('esFavorita');
                 
                 if (tituloField) tituloField.value = '';
                 if (contenidoField) contenidoField.value = '';
                 if (colorField) colorField.value = '#ffd700';
-                if (favoritaField) favoritaField.checked = false;
                 
                 // Restaurar título del modal
                 const modalTitle = newNoteModal.querySelector('.modal-title');
