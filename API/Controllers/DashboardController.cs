@@ -189,5 +189,68 @@ namespace API.Controllers
                 });
             }
         }
+
+        [HttpGet("usuarios-conectados")]
+        public async Task<IActionResult> ObtenerUsuariosConectados()
+        {
+            try
+            {
+                _logger.LogInformation("📊 Obteniendo usuarios conectados para dashboard");
+
+                // Obtener sesiones activas de las últimas 24 horas
+                var fechaLimite = DateTime.Now.AddHours(-24);
+
+                var usuariosConectados = await _context.SesionUsuario
+                    .Where(s => s.EstaActiva == true && 
+                               s.FechaHoraInicio >= fechaLimite &&
+                               s.Usuario != null)
+                    .Include(s => s.Usuario)
+                    .GroupBy(s => s.UsuarioId)
+                    .Select(g => new
+                    {
+                        UsuarioId = g.Key,
+                        NombreUsuario = g.First().Usuario.NombreUsuario,
+                        UltimaSesion = g.Max(s => s.FechaHoraInicio),
+                        SesionesActivas = g.Count(),
+                        TiempoConectado = DateTime.Now.Subtract(g.Max(s => s.FechaHoraInicio) ?? DateTime.Now).TotalMinutes
+                    })
+                    .OrderByDescending(u => u.UltimaSesion)
+                    .ToListAsync();
+
+                var totalConectados = usuariosConectados.Count;
+                var totalSesiones = usuariosConectados.Sum(u => u.SesionesActivas);
+
+                _logger.LogInformation("📊 Usuarios conectados: {Total} usuarios con {Sesiones} sesiones activas", 
+                    totalConectados, totalSesiones);
+
+                return Ok(new
+                {
+                    success = true,
+                    totalUsuarios = totalConectados,
+                    totalSesiones = totalSesiones,
+                    usuarios = usuariosConectados.Select(u => new
+                    {
+                        usuarioId = u.UsuarioId,
+                        nombreUsuario = u.NombreUsuario,
+                        ultimaSesion = u.UltimaSesion,
+                        sesionesActivas = u.SesionesActivas,
+                        tiempoConectadoMinutos = Math.Round(u.TiempoConectado, 0),
+                        estado = u.TiempoConectado <= 30 ? "Activo" : 
+                                u.TiempoConectado <= 120 ? "Inactivo" : "Desconectado"
+                    }).ToList(),
+                    mensaje = totalConectados > 0 ? 
+                        $"{totalConectados} usuario{(totalConectados == 1 ? "" : "s")} conectado{(totalConectados == 1 ? "" : "s")}" :
+                        "No hay usuarios conectados"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener usuarios conectados");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al obtener usuarios conectados" 
+                });
+            }
+        }
     }
 }
