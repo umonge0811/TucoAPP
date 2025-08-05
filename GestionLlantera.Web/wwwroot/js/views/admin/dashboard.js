@@ -440,9 +440,10 @@ function mostrarUsuariosConectados(data) {
         actualizarPanelUsuariosConectados(data.usuarios || []);
 
         // Actualizar el contador del sidebar si la función existe
-        if (typeof actualizarContadorSidebar === 'function') {
-            actualizarContadorSidebar(data.totalUsuarios || 0);
+        if (window.sidebarUsuarios && typeof window.sidebarUsuarios.actualizar === 'function') {
+            window.sidebarUsuarios.actualizar(data.totalUsuarios || 0);
         }
+
 
         console.log('✅ Usuarios conectados mostrados correctamente');
     } catch (error) {
