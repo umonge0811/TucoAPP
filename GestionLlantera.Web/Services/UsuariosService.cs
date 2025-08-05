@@ -59,8 +59,7 @@ namespace GestionLlantera.Web.Services
                 {
                     NombreUsuario = usuario.NombreUsuario,
                     Email = usuario.Email,
-                    RolId = usuario.RolId,
-                    EsTopVendedor = usuario.EsTopVendedor
+                    RolId = usuario.RolId
                 };
 
                 var json = JsonSerializer.Serialize(requestDto);
@@ -265,16 +264,15 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("Actualizando usuario {Id}", usuario.UsuarioId);
 
-                // Convertir ActualizarUsuarioDTO a RegistroUsuarioRequestDTO que es lo que espera la API
-                var requestDto = new RegistroUsuarioRequestDTO
+                // Mapear a EditarUsuarioRequestDTO
+                var editarRequest = new
                 {
                     NombreUsuario = usuario.NombreUsuario,
-                    Email = "", // El email no se puede cambiar según los requerimientos
-                    RolId = usuario.RolId ?? 0,
+                    Activo = usuario.Activo,
                     EsTopVendedor = usuario.EsTopVendedor
                 };
 
-                var json = JsonSerializer.Serialize(requestDto, _jsonOptions);
+                var json = JsonSerializer.Serialize(editarRequest, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 var response = await _httpClient.PutAsync($"api/usuarios/usuarios/{usuario.UsuarioId}", content);

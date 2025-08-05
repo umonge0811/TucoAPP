@@ -597,7 +597,7 @@ public class UsuariosController : ControllerBase
     /// <param name="request">Datos actualizados del usuario.</param>
     /// <returns>Confirmación de la edición o mensaje de error.</returns>
     [HttpPut("usuarios/{id}")]
-    public async Task<IActionResult> EditarUsuario(int id, [FromBody] RegistroUsuarioRequestDTO request)
+    public async Task<IActionResult> EditarUsuario(int id, [FromBody] EditarUsuarioRequestDTO request)
     {
         try
         {
@@ -605,15 +605,9 @@ public class UsuariosController : ControllerBase
             if (usuario == null)
                 return NotFound(new { Message = "Usuario no encontrado" });
 
-            // Verificar si el email ya está en uso por otro usuario
-            var existeEmail = await _context.Usuarios
-                .AnyAsync(u => u.Email == request.Email && u.UsuarioId != id);
-            if (existeEmail)
-                return BadRequest(new { Message = "El email ya está en uso por otro usuario" });
-
-            // Actualizar datos del usuario
+            // Actualizar datos del usuario (no incluir email ya que no se puede cambiar)
             usuario.NombreUsuario = request.NombreUsuario;
-            usuario.Email = request.Email;
+            usuario.Activo = request.Activo;
             usuario.EsTopVendedor = request.EsTopVendedor;
 
             _context.Usuarios.Update(usuario);
@@ -625,7 +619,7 @@ public class UsuariosController : ControllerBase
                 usuarioId: id,
                 tipoAccion: "Edición de Usuario",
                 modulo: "Usuarios",
-                detalle: $"Usuario editado exitosamente. Email: {usuario.Email}, Top Vendedor: {usuario.EsTopVendedor}",
+                detalle: $"Usuario editado exitosamente. Activo: {usuario.Activo}, Top Vendedor: {usuario.EsTopVendedor}",
                 estadoAccion: "Éxito"
             );
 
