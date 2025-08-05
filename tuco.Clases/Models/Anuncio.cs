@@ -1,3 +1,4 @@
+
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,34 +7,40 @@ using tuco.Clases.Models;
 namespace Tuco.Clases.Models
 {
     [Table("Anuncios")]
-    public partial class Anuncio
+    public class Anuncio
     {
+        [Key]
         public int AnuncioId { get; set; }
 
-        public int UsuarioId { get; set; }
+        [Required]
+        public int UsuarioCreadorId { get; set; }
 
+        [Required]
         [StringLength(200)]
-        public string Titulo { get; set; } = null!;
+        public string Titulo { get; set; }
 
-        [StringLength(1000)]
-        public string Contenido { get; set; } = null!;
+        [Required]
+        [StringLength(2000)]
+        public string Contenido { get; set; }
 
         [StringLength(50)]
-        public string? TipoAnuncio { get; set; }
+        public string TipoAnuncio { get; set; } = "General";
 
         [StringLength(20)]
-        public string? Prioridad { get; set; }
+        public string Prioridad { get; set; } = "Normal";
 
-        public bool? EsImportante { get; set; }
+        public bool EsImportante { get; set; } = false;
 
-        public bool EsActivo { get; set; } = true;
+        public bool Activo { get; set; } = true;
 
-        public DateTime FechaCreacion { get; set; }
+        public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
         public DateTime? FechaModificacion { get; set; }
 
         public DateTime? FechaVencimiento { get; set; }
 
-        public virtual Usuario Usuario { get; set; } = null!;
+        // Navegación
+        [ForeignKey("UsuarioCreadorId")]
+        public virtual Usuario UsuarioCreador { get; set; }
     }
 }
