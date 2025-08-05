@@ -1,0 +1,14 @@
+Gravedad	Código	Descripción	Proyecto	Archivo	Línea	Estado suprimido	Detalles
+Error (activo)	CS0101	El espacio de nombres 'Tuco.Clases.DTOs' ya contiene una definición para 'CrearAnuncioDTO'	Tuco.Clases	C:\Users\UMA08\source\repos\Tuco\tuco.Clases\DTOs\CrearAnuncioDTO.cs	6		
+Error (activo)	CS0101	El espacio de nombres 'Tuco.Clases.DTOs' ya contiene una definición para 'ActualizarAnuncioDTO'	Tuco.Clases	C:\Users\UMA08\source\repos\Tuco\tuco.Clases\DTOs\AnuncioDTO.cs	33		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.Titulo' y 'CrearAnuncioDTO.Titulo'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\AnunciosController.cs	140		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.Titulo' y 'CrearAnuncioDTO.Titulo'	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	275		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.Titulo' y 'CrearAnuncioDTO.Titulo'	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	287		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.TipoAnuncio' y 'CrearAnuncioDTO.TipoAnuncio'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\AnunciosController.cs	142		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.Prioridad' y 'CrearAnuncioDTO.Prioridad'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\AnunciosController.cs	143		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.FechaVencimiento' y 'CrearAnuncioDTO.FechaVencimiento'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\AnunciosController.cs	145		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.EsImportante' y 'CrearAnuncioDTO.EsImportante'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\AnunciosController.cs	144		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.Contenido' y 'CrearAnuncioDTO.Contenido'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\AnunciosController.cs	141		
+Error (activo)	CS0229	Ambigüedad entre 'CrearAnuncioDTO.Contenido' y 'CrearAnuncioDTO.Contenido'	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	281		
+Error (activo)	CS0229	Ambigüedad entre 'ActualizarAnuncioDTO.Activo' y 'ActualizarAnuncioDTO.Activo'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\AnunciosController.cs	230		
+Error (activo)	CS0229	Ambigüedad entre 'ActualizarAnuncioDTO.Activo' y 'ActualizarAnuncioDTO.Activo'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\AnunciosController.cs	232		
