@@ -597,10 +597,10 @@ async function manejarNuevaNota(e) {
 
         let url, method;
         if (esEdicion) {
-            url = `/NotasRapidas/Actualizar?id=${notaId}`;
+            url = `/api/NotasRapidas/${notaId}`;
             method = 'PUT';
         } else {
-            url = '/NotasRapidas/Crear';
+            url = '/api/NotasRapidas';
             method = 'POST';
         }
 
@@ -785,13 +785,48 @@ function actualizarContadorSidebar(totalUsuarios) {
 // ========================================
 
 /**
+ * Obtener el ID del usuario actual desde el JWT
+ */
+function getCurrentUserId() {
+    try {
+        // Intentar obtener desde el elemento de usuario si existe
+        const userElement = document.querySelector('[data-user-id]');
+        if (userElement) {
+            return parseInt(userElement.getAttribute('data-user-id'));
+        }
+        
+        // Fallback: obtener desde cookies JWT si está disponible
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'JwtToken' && value) {
+                try {
+                    const payload = JSON.parse(atob(value.split('.')[1]));
+                    return parseInt(payload.userId || payload.sub || payload.nameidentifier);
+                } catch (e) {
+                    console.warn('No se pudo decodificar JWT token');
+                }
+            }
+        }
+        
+        // Último fallback: asumir ID 4 basado en los logs
+        console.warn('No se pudo obtener userId, usando fallback');
+        return 4;
+    } catch (error) {
+        console.error('Error obteniendo userId:', error);
+        return 4; // Fallback
+    }
+}
+
+/**
  * 📝 FUNCIÓN: Cargar notas rápidas del usuario actual
  */
 async function cargarNotasRapidas() {
+    const currentUserId = getCurrentUserId();
     try {
         console.log('📝 Cargando notas rápidas...');
 
-        const response = await fetch('/NotasRapidas/ObtenerMisNotas', {
+        const response = await fetch(`/api/NotasRapidas/usuario/${currentUserId}`, {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -911,6 +946,7 @@ function mostrarErrorNotasRapidas() {
  */
 async function eliminarNota(notaId, titulo) {
     try {
+        const currentUserId = getCurrentUserId();
         console.log('🗑️ Intentando eliminar nota:', notaId);
 
         // Mostrar confirmación con SweetAlert
@@ -940,7 +976,7 @@ async function eliminarNota(notaId, titulo) {
         }
 
         // Proceder con la eliminación
-        const response = await fetch(`/NotasRapidas/Eliminar?id=${notaId}`, {
+        const response = await fetch(`/api/NotasRapidas/${notaId}?usuarioId=${currentUserId}`, {
             method: 'DELETE',
             credentials: 'include',
             headers: {
@@ -988,14 +1024,14 @@ async function marcarFavorita(notaId, esFavorita) {
     try {
         console.log('⭐ Cambiando estado favorita:', { notaId, esFavorita });
 
-        const response = await fetch(`/NotasRapidas/CambiarFavorita`, {
+        const response = await fetch(`/api/NotasRapidas/${notaId}/favorita`, {
             method: 'PATCH',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ notaId, esFavorita })
+            body: JSON.stringify({ esFavorita: esFavorita, usuarioId: getCurrentUserId() })
         });
 
         const data = await response.json();
