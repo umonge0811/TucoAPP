@@ -650,7 +650,6 @@ async function manejarNuevaNota(e) {
             document.getElementById('titulo').value = '';
             document.getElementById('contenido').value = '';
             document.getElementById('color').value = '#ffd700';
-            document.getElementById('esFavorita').checked = false;
 
             // Restaurar título del modal para próximo uso
             const modalElement = document.getElementById('newNoteModal');
