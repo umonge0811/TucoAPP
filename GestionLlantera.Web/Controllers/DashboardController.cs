@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using tuco.Clases.DTOs; // Agregada esta directiva using
 using GestionLlantera.Web.Services.Interfaces;
-using Tuco.Clases.DTOs;
+using Microsoft.Extensions.Logging; // Asegurarse de que ILogger esté disponible
+using System.Linq; // Necesario para FirstOrDefault
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -12,7 +15,7 @@ namespace GestionLlantera.Web.Controllers
         private readonly ILogger<DashboardController> _logger;
         private readonly IDashboardService _dashboardService;
         // Se asume que tienes un servicio para gestionar anuncios
-        private readonly IAnunciosService _anunciosService; 
+        private readonly IAnunciosService _anunciosService;
 
         public DashboardController(ILogger<DashboardController> logger, IDashboardService dashboardService, IAnunciosService anunciosService)
         {
@@ -51,7 +54,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
                     User.Identity?.Name ?? "Anónimo");
-                _logger.LogDebug("📋 Claims disponibles: {Claims}", 
+                _logger.LogDebug("📋 Claims disponibles: {Claims}",
                     string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}")));
             }
             else
@@ -204,24 +207,24 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🔔 Obteniendo anuncios desde el servicio...");
+                var jwtToken = GetJwtToken();
+                var resultado = await _anunciosService.ObtenerAnunciosAsync(jwtToken);
 
-                var (success, anuncios, message) = await _anunciosService.ObtenerAnunciosAsync();
-
-                if (success)
+                if (resultado.success)
                 {
-                    _logger.LogInformation("✅ Anuncios obtenidos exitosamente. Total: {Count}", anuncios.Count);
-                    return Json(new { success = true, data = anuncios });
+                    _logger.LogInformation("✅ Anuncios obtenidos exitosamente. Total: {Count}", resultado.anuncios.Count);
+                    return Ok(new { success = true, data = resultado.anuncios });
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se pudieron obtener los anuncios: {Message}", message);
-                    return Json(new { success = false, message });
+                    _logger.LogWarning("⚠️ No se pudieron obtener los anuncios: {Message}", resultado.mensaje);
+                    return BadRequest(new { success = false, message = resultado.mensaje });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo anuncios");
-                return Json(new { success = false, message = "Error interno del servidor" });
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
 
@@ -231,110 +234,99 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🔔 Obteniendo anuncio {AnuncioId} desde el servicio...", id);
+                var jwtToken = GetJwtToken();
+                // Implementación temporal - necesitarás agregar este método a IAnunciosService para obtener un solo anuncio por ID
+                var resultado = await _anunciosService.ObtenerAnunciosAsync(jwtToken); // Se llama a ObtenerAnunciosAsync como placeholder
 
-                var (success, anuncio, message) = await _anunciosService.ObtenerAnuncioPorIdAsync(id);
-
-                if (success && anuncio != null)
+                if (resultado.success)
                 {
-                    _logger.LogInformation("✅ Anuncio obtenido exitosamente: {Titulo}", anuncio.Titulo);
-                    return Json(new { success = true, data = anuncio });
+                    var anuncio = resultado.anuncios.FirstOrDefault(a => a.AnuncioId == id);
+                    if (anuncio != null)
+                    {
+                        _logger.LogInformation("✅ Anuncio {AnuncioId} obtenido exitosamente: {Titulo}", id, anuncio.Titulo);
+                        return Ok(new { success = true, data = anuncio });
+                    }
+                    _logger.LogWarning("⚠️ Anuncio {AnuncioId} no encontrado.", id);
+                    return NotFound(new { success = false, message = "Anuncio no encontrado" });
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se pudo obtener el anuncio {AnuncioId}: {Message}", id, message);
-                    return Json(new { success = false, message });
+                    _logger.LogWarning("⚠️ No se pudieron obtener los anuncios para buscar el ID {AnuncioId}: {Message}", id, resultado.mensaje);
+                    return BadRequest(new { success = false, message = resultado.mensaje });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo anuncio {AnuncioId}", id);
-                return Json(new { success = false, message = "Error interno del servidor" });
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearAnuncio([FromBody] CrearAnuncioDTO anuncioDto)
+        public async Task<IActionResult> CrearAnuncio([FromBody] CrearAnuncioDTO request)
         {
             try
             {
-                _logger.LogInformation("🔔 Creando nuevo anuncio - Datos recibidos: {@AnuncioDto}", anuncioDto);
-
-                if (anuncioDto == null)
-                {
-                    _logger.LogWarning("⚠️ AnuncioDto es null");
-                    return Json(new { success = false, message = "No se recibieron datos del anuncio" });
-                }
-
+                _logger.LogInformation("🔔 Creando nuevo anuncio - Datos recibidos: {@Request}", request);
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
-                    _logger.LogWarning("⚠️ ModelState inválido: {Errors}", string.Join(", ", errors));
-                    return Json(new { success = false, message = "Datos de entrada inválidos: " + string.Join(", ", errors) });
+                    _logger.LogWarning("⚠️ ModelState inválido al crear anuncio: {Errors}", string.Join(", ", errors));
+                    return BadRequest(new { success = false, message = "Datos de entrada inválidos: " + string.Join(", ", errors) });
                 }
 
-                if (string.IsNullOrWhiteSpace(anuncioDto.Titulo))
+                var jwtToken = GetJwtToken();
+                var resultado = await _anunciosService.CrearAnuncioAsync(request, jwtToken);
+
+                if (resultado.success)
                 {
-                    _logger.LogWarning("⚠️ Título del anuncio está vacío");
-                    return Json(new { success = false, message = "El título del anuncio es requerido" });
-                }
-
-                if (string.IsNullOrWhiteSpace(anuncioDto.Contenido))
-                {
-                    _logger.LogWarning("⚠️ Contenido del anuncio está vacío");
-                    return Json(new { success = false, message = "El contenido del anuncio es requerido" });
-                }
-
-                _logger.LogInformation("🔔 Creando nuevo anuncio: {Titulo}", anuncioDto.Titulo);
-
-                var (success, anuncio, message) = await _anunciosService.CrearAnuncioAsync(anuncioDto);
-
-                if (success)
-                {
-                    _logger.LogInformation("✅ Anuncio creado exitosamente: {Titulo}", anuncio?.Titulo);
-                    return Json(new { success = true, data = anuncio, message });
+                    _logger.LogInformation("✅ Anuncio creado exitosamente: {Titulo}", resultado.anuncio?.Titulo);
+                    return Ok(new { success = true, data = resultado.anuncio, message = resultado.mensaje });
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se pudo crear el anuncio: {Message}", message);
-                    return Json(new { success = false, message });
+                    _logger.LogWarning("⚠️ No se pudo crear el anuncio: {Message}", resultado.mensaje);
+                    return BadRequest(new { success = false, message = resultado.mensaje });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error creando anuncio");
-                return Json(new { success = false, message = "Error interno del servidor" });
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
 
         [HttpPut]
-        public async Task<IActionResult> ActualizarAnuncio(int id, [FromBody] ActualizarAnuncioDTO anuncioDto)
+        public async Task<IActionResult> ActualizarAnuncio(int id, [FromBody] ActualizarAnuncioDTO request)
         {
             try
             {
-                _logger.LogInformation("🔔 Actualizando anuncio {AnuncioId}: {Titulo}", id, anuncioDto.Titulo);
-
+                _logger.LogInformation("🔔 Actualizando anuncio {AnuncioId}", id);
                 if (!ModelState.IsValid)
                 {
-                    return Json(new { success = false, message = "Datos de entrada inválidos" });
+                    var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                    _logger.LogWarning("⚠️ ModelState inválido al actualizar anuncio {AnuncioId}: {Errors}", id, string.Join(", ", errors));
+                    return BadRequest(new { success = false, message = "Datos de entrada inválidos: " + string.Join(", ", errors) });
                 }
 
-                var (success, message) = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto);
+                var jwtToken = GetJwtToken();
+                var resultado = await _anunciosService.ActualizarAnuncioAsync(request, id, jwtToken);
 
-                if (success)
+                if (resultado.success)
                 {
-                    _logger.LogInformation("✅ Anuncio actualizado exitosamente: {AnuncioId}", id);
-                    return Json(new { success = true, message });
+                    _logger.LogInformation("✅ Anuncio {AnuncioId} actualizado exitosamente", id);
+                    return Ok(new { success = true, data = resultado.anuncio, message = resultado.mensaje });
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se pudo actualizar el anuncio {AnuncioId}: {Message}", id, message);
-                    return Json(new { success = false, message });
+                    _logger.LogWarning("⚠️ No se pudo actualizar el anuncio {AnuncioId}: {Message}", id, resultado.mensaje);
+                    return BadRequest(new { success = false, message = resultado.mensaje });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error actualizando anuncio {AnuncioId}", id);
-                return Json(new { success = false, message = "Error interno del servidor" });
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
 
@@ -344,24 +336,90 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🔔 Eliminando anuncio {AnuncioId}", id);
+                var jwtToken = GetJwtToken();
+                var currentUserId = GetCurrentUserId(); // Asumiendo que GetCurrentUserId está implementado y es seguro llamarlo
+                var resultado = await _anunciosService.EliminarAnuncioAsync(id, currentUserId, jwtToken);
 
-                var (success, message) = await _anunciosService.EliminarAnuncioAsync(id);
-
-                if (success)
+                if (resultado.success)
                 {
-                    _logger.LogInformation("✅ Anuncio eliminado exitosamente: {AnuncioId}", id);
-                    return Json(new { success = true, message });
+                    _logger.LogInformation("✅ Anuncio {AnuncioId} eliminado exitosamente", id);
+                    return Ok(new { success = true, message = resultado.message });
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se pudo eliminar el anuncio {AnuncioId}: {Message}", id, message);
-                    return Json(new { success = false, message });
+                    _logger.LogWarning("⚠️ No se pudo eliminar el anuncio {AnuncioId}: {Message}", id, resultado.message);
+                    return BadRequest(new { success = false, message = resultado.message });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error eliminando anuncio {AnuncioId}", id);
-                return Json(new { success = false, message = "Error interno del servidor" });
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el nombre de usuario actual.
+        /// </summary>
+        /// <returns>El nombre de usuario o "Usuario" si no se puede determinar.</returns>
+        private string GetUserName()
+        {
+            return User.FindFirst(ClaimTypes.Name)?.Value ?? "Usuario";
+        }
+
+        /// <summary>
+        /// Obtiene el token JWT del usuario autenticado. Busca en cookies y encabezados.
+        /// </summary>
+        /// <returns>El token JWT o una cadena vacía si no se encuentra.</returns>
+        private string GetJwtToken()
+        {
+            // Prioridad: Cookies, luego encabezado Authorization
+            var token = Request.Cookies["jwt"]; // Intentar obtener de las cookies primero
+
+            if (string.IsNullOrEmpty(token))
+            {
+                token = Request.Headers["Authorization"].FirstOrDefault()?.Replace("Bearer ", ""); // Luego del encabezado Authorization
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ Token JWT no encontrado en cookies ni en encabezado Authorization.");
+            }
+            else
+            {
+                _logger.LogDebug("✅ Token JWT obtenido.");
+            }
+
+            return token ?? string.Empty; // Devolver cadena vacía si el token es nulo
+        }
+
+        /// <summary>
+        /// Obtiene el ID del usuario actual a partir de los claims del token.
+        /// </summary>
+        /// <returns>El ID del usuario.</returns>
+        /// <exception cref="UnauthorizedAccessException">Se lanza si el ID del usuario no se puede obtener.</exception>
+        private int GetCurrentUserId()
+        {
+            // Buscar el ID del usuario en varios claims comunes
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                             User.FindFirst("UserId")?.Value ??
+                             User.FindFirst("sub")?.Value; // 'sub' es común en JWT
+
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                _logger.LogError("❌ No se encontró el claim del ID de usuario en el token.");
+                throw new UnauthorizedAccessException("No se pudo obtener el ID del usuario.");
+            }
+
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                _logger.LogDebug("✅ ID de usuario obtenido: {UserId}", userId);
+                return userId;
+            }
+            else
+            {
+                _logger.LogError("❌ El claim del ID de usuario no es un entero válido: {UserIdClaim}", userIdClaim);
+                throw new FormatException($"El ID de usuario '{userIdClaim}' no tiene un formato numérico válido.");
             }
         }
     }

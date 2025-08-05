@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Tuco.Clases.Enums;
 using Tuco.Clases.Models;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace tuco.Clases.Models;
 
@@ -15,7 +16,7 @@ public partial class Usuario
     public string Email { get; set; } = null!;
 
     public string Contrasena { get; set; } = null!;
-    
+
     public DateTime? FechaCreacion { get; set; }
 
     public DateTime? FechaExpiracionToken { get; set; }
@@ -51,6 +52,10 @@ public partial class Usuario
 
     public virtual ICollection<AlertasInvProgramado> AlertasRecibidas { get; set; } = new List<AlertasInvProgramado>();
 
+    public virtual ICollection<Anuncio> Anuncios { get; set; } = new List<Anuncio>();
 
+    // Propiedad calculada para nombre completo
+    [NotMapped]
+    public string NombreCompleto => $"{Nombre} {Apellido}".Trim();
 
 }

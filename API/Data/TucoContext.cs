@@ -982,15 +982,16 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.FechaVencimiento)
                 .IsRequired(false);
 
-            entity.HasOne(d => d.UsuarioCreador)
-                .WithMany()
-                .HasForeignKey(d => d.UsuarioCreadorId)
-                .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("FK_Anuncios_Usuario");
+            entity.HasOne(d => d.Usuario).WithMany(p => p.Anuncios)
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Anuncios_Usuarios");
+
+            entity.Property(e => e.UsuarioId).IsRequired();
 
             // Índices para optimización
-            entity.HasIndex(e => e.UsuarioCreadorId)
-                .HasDatabaseName("IX_Anuncios_UsuarioCreadorId");
+            entity.HasIndex(e => e.UsuarioId)
+                .HasDatabaseName("IX_Anuncios_UsuarioId");
 
             entity.HasIndex(e => e.Activo)
                 .HasDatabaseName("IX_Anuncios_Activo");
