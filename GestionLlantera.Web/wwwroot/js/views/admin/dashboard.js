@@ -1475,7 +1475,7 @@ async function manejarNuevoAnuncio(e) {
             form.reset();
             form.removeAttribute('data-editing-anuncio-id');
 
-            // Limpiar campos manualmente
+            // Limpiar campos manualmente para asegurar limpieza completa
             const tituloField = form.querySelector('input[name="tituloAnuncio"]');
             const contenidoField = form.querySelector('textarea[name="contenidoAnuncio"]');
             const fechaField = form.querySelector('input[name="fechaExpiracionAnuncio"]');
