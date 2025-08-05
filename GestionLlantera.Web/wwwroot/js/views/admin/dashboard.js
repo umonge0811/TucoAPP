@@ -35,7 +35,8 @@ async function inicializarDashboard() {
         await Promise.all([
             cargarAlertasStock(),
             cargarInventarioTotal(),
-            cargarTopVendedor()
+            cargarTopVendedor(),
+            cargarUsuariosConectados()
         ]);
 
         // Inicializar eventos de formularios
@@ -370,6 +371,168 @@ function mostrarErrorTopVendedor() {
 }
 
 // ========================================
+// GESTIÓN DE USUARIOS CONECTADOS
+// ========================================
+
+/**
+ * 👥 FUNCIÓN: Cargar información de usuarios conectados
+ */
+async function cargarUsuariosConectados() {
+    try {
+        console.log('👥 Cargando información de usuarios conectados...');
+
+        const response = await fetch('/Dashboard/ObtenerUsuariosConectados', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success && resultado.data) {
+            mostrarUsuariosConectados(resultado.data);
+            console.log('✅ Usuarios conectados cargados correctamente:', resultado.data);
+        } else {
+            console.warn('⚠️ No se pudo obtener información de usuarios conectados');
+            mostrarErrorUsuariosConectados();
+        }
+    } catch (error) {
+        console.error('❌ Error cargando usuarios conectados:', error);
+        mostrarErrorUsuariosConectados();
+    }
+}
+
+/**
+ * 👥 FUNCIÓN: Mostrar información de usuarios conectados
+ */
+function mostrarUsuariosConectados(data) {
+    try {
+        console.log('👥 Mostrando datos de usuarios conectados:', data);
+
+        // Actualizar el número en la tarjeta principal
+        const valorElement = document.querySelector('.stat-card.pending .stat-value');
+        if (valorElement) {
+            valorElement.textContent = data.totalUsuarios || 0;
+        }
+
+        // Actualizar el botón con información adicional
+        const detalleElement = document.querySelector('.stat-card.pending .stat-comparison');
+        if (detalleElement) {
+            const totalUsuarios = data.totalUsuarios || 0;
+            const totalSesiones = data.totalSesiones || 0;
+
+            detalleElement.innerHTML = `
+                <button class="btn btn-link p-0 text-decoration-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#usersPanel">
+                    ${totalUsuarios > 0 ? 
+                        `${totalSesiones} sesiones activas` : 
+                        'No hay usuarios conectados'
+                    } <i class="bi bi-chevron-right"></i>
+                </button>
+            `;
+        }
+
+        // Actualizar el panel lateral con la lista de usuarios
+        actualizarPanelUsuariosConectados(data.usuarios || []);
+
+        console.log('✅ Usuarios conectados mostrados correctamente');
+    } catch (error) {
+        console.error('❌ Error mostrando usuarios conectados:', error);
+        mostrarErrorUsuariosConectados();
+    }
+}
+
+/**
+ * 👥 FUNCIÓN: Actualizar el panel lateral con usuarios conectados
+ */
+function actualizarPanelUsuariosConectados(usuarios) {
+    try {
+        const panelUsuarios = document.querySelector('#usersPanel .connected-users-list');
+        if (!panelUsuarios) {
+            console.warn('⚠️ Panel de usuarios conectados no encontrado');
+            return;
+        }
+
+        // Limpiar contenido actual
+        panelUsuarios.innerHTML = '';
+
+        if (usuarios.length === 0) {
+            panelUsuarios.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-person-x fs-1 mb-2 d-block"></i>
+                    <p>No hay usuarios conectados</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Generar elementos de usuarios
+        usuarios.forEach(usuario => {
+            const estadoClase = {
+                'Activo': 'success',
+                'Inactivo': 'warning', 
+                'Desconectado': 'secondary'
+            }[usuario.estado] || 'secondary';
+
+            const iniciales = usuario.nombreUsuario 
+                ? usuario.nombreUsuario.substring(0, 2).toUpperCase()
+                : 'US';
+
+            const tiempoTexto = usuario.tiempoConectadoMinutos <= 30 
+                ? `Activo hace ${Math.round(usuario.tiempoConectadoMinutos)} min`
+                : `${usuario.estado} hace ${Math.round(usuario.tiempoConectadoMinutos)} min`;
+
+            const userElement = document.createElement('div');
+            userElement.className = 'user-item';
+            userElement.innerHTML = `
+                <div class="user-avatar bg-${estadoClase}">${iniciales}</div>
+                <div class="user-info">
+                    <div class="user-name">${usuario.nombreUsuario || 'Usuario'}</div>
+                    <div class="user-role">
+                        <span class="badge bg-${estadoClase}">${usuario.estado}</span>
+                        ${usuario.sesionesActivas > 1 ? `<span class="badge bg-info ms-1">${usuario.sesionesActivas} sesiones</span>` : ''}
+                    </div>
+                    <div class="user-status">${tiempoTexto}</div>
+                </div>
+            `;
+
+            panelUsuarios.appendChild(userElement);
+        });
+
+        console.log('✅ Panel de usuarios conectados actualizado');
+    } catch (error) {
+        console.error('❌ Error actualizando panel de usuarios:', error);
+    }
+}
+
+/**
+ * 👥 FUNCIÓN: Mostrar error en usuarios conectados
+ */
+function mostrarErrorUsuariosConectados() {
+    try {
+        const valorElement = document.querySelector('.stat-card.pending .stat-value');
+        if (valorElement) {
+            valorElement.innerHTML = '<i class="bi bi-exclamation-triangle text-danger"></i>';
+        }
+
+        const detalleElement = document.querySelector('.stat-card.pending .stat-comparison');
+        if (detalleElement) {
+            detalleElement.innerHTML = `
+                <span class="text-danger">Error al cargar</span>
+            `;
+        }
+
+        console.log('⚠️ Error mostrado en sección de usuarios conectados');
+    } catch (error) {
+        console.error('❌ Error mostrando error de usuarios conectados:', error);
+    }
+}
+
+// ========================================
 // GESTIÓN DE FORMULARIOS
 // ========================================
 
@@ -468,12 +631,13 @@ function eliminarNota(noteItem) {
 function inicializarRefrescoAutomatico() {
     console.log('🔄 Configurando refresco automático...');
 
-    // Refrescar alertas de stock, inventario total y top vendedor cada 5 minutos
+    // Refrescar alertas de stock, inventario total, top vendedor y usuarios conectados cada 5 minutos
     setInterval(() => {
         console.log('🔄 Refrescando datos del dashboard automáticamente...');
         cargarAlertasStock();
         cargarInventarioTotal();
         cargarTopVendedor();
+        cargarUsuariosConectados();
     }, 5 * 60 * 1000); // 5 minutos
 }
 
