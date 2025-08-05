@@ -566,38 +566,65 @@ function inicializarEventosFormularios() {
         if (e.target.closest('.note-actions .btn-success')) {
             marcarNotaCompletada(e.target.closest('.note-item'));
         } else if (e.target.closest('.note-actions .btn-danger')) {
-            eliminarNota(e.target.closest('.note-item'));
+            // La llamada a eliminarNota ahora se encuentra en mostrarNotasRapidas
         }
     });
 }
 
 /**
- * Manejar envío de nueva nota
+ * Manejar envío de nueva nota o edición
  */
 async function manejarNuevaNota(e) {
     e.preventDefault();
-    console.log('📝 Creando nueva nota...');
+    
+    const form = e.target;
+    const notaId = form.getAttribute('data-editing');
+    const esEdicion = notaId !== null;
+    
+    console.log(esEdicion ? '✏️ Actualizando nota...' : '📝 Creando nueva nota...');
 
     try {
-        const formData = new FormData(e.target);
+        const formData = new FormData(form);
         const notaData = {
             titulo: formData.get('titulo'),
             contenido: formData.get('contenido'),
-            color: formData.get('color') || '#ffd700'
+            color: formData.get('color') || '#ffd700',
+            esFavorita: formData.get('esFavorita') === 'on'
         };
 
-        const response = await fetch('/NotasRapidas/Crear', {
-            method: 'POST',
+        let url, method;
+        if (esEdicion) {
+            url = `/NotasRapidas/Actualizar?id=${notaId}`;
+            method = 'PUT';
+        } else {
+            url = '/NotasRapidas/Crear';
+            method = 'POST';
+        }
+
+        const response = await fetch(url, {
+            method: method,
             credentials: 'include',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify(notaData)
         });
 
-        if (response.ok) {
-            console.log('✅ Nota creada correctamente');
-            
+        const data = await response.json();
+
+        if (data.success) {
+            console.log(esEdicion ? '✅ Nota actualizada correctamente' : '✅ Nota creada correctamente');
+
+            // Mostrar mensaje de éxito
+            await Swal.fire({
+                title: '✅ ¡Éxito!',
+                text: esEdicion ? 'La nota ha sido actualizada correctamente.' : 'La nota ha sido creada correctamente.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
             // Cerrar modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('newNoteModal'));
             if (modal) {
@@ -605,16 +632,23 @@ async function manejarNuevaNota(e) {
             }
 
             // Limpiar formulario
-            e.target.reset();
+            form.reset();
+            form.removeAttribute('data-editing');
 
             // Recargar notas
             cargarNotasRapidas();
         } else {
-            throw new Error('Error al crear la nota');
+            throw new Error(data.message || 'Error al procesar la nota');
         }
     } catch (error) {
-        console.error('❌ Error creando nota:', error);
-        alert('Error al crear la nota');
+        console.error('❌ Error procesando nota:', error);
+        
+        await Swal.fire({
+            title: '❌ Error',
+            text: esEdicion ? 'No se pudo actualizar la nota.' : 'No se pudo crear la nota.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
     }
 }
 
@@ -644,16 +678,6 @@ function marcarNotaCompletada(noteItem) {
         noteItem.style.opacity = '0.5';
         noteItem.style.textDecoration = 'line-through';
         console.log('✅ Nota marcada como completada');
-    }
-}
-
-/**
- * Eliminar nota
- */
-function eliminarNota(noteItem) {
-    if (noteItem && confirm('¿Estás seguro de que deseas eliminar esta nota?')) {
-        noteItem.remove();
-        console.log('🗑️ Nota eliminada');
     }
 }
 
@@ -823,13 +847,16 @@ function mostrarNotasRapidas(notas) {
                     </small>
                 </div>
                 <div class="note-actions">
-                    <button class="btn btn-sm btn-outline-primary" onclick="editarNota(${nota.notaId})">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarNotaRapida(${nota.notaId})">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
+                        <button class="btn btn-sm btn-link text-primary" onclick="editarNota(${nota.notaId}, '${nota.titulo.replace(/'/g, "\\'")}', '${nota.contenido.replace(/'/g, "\\'")}', '${nota.color}', ${nota.esFavorita})" title="Editar nota">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link text-warning" onclick="marcarFavorita(${nota.notaId}, ${!nota.esFavorita})" title="${nota.esFavorita ? 'Quitar de favoritas' : 'Marcar como favorita'}">
+                            <i class="bi ${nota.esFavorita ? 'bi-star-fill' : 'bi-star'}"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link text-danger" onclick="eliminarNota(${nota.notaId}, '${nota.titulo.replace(/'/g, "\\'")}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
             `;
 
             container.appendChild(notaElement);
@@ -859,10 +886,178 @@ function mostrarErrorNotasRapidas() {
                 </button>
             </div>
         `;
-
-        console.log('⚠️ Error mostrado en sección de notas rápidas');
     } catch (error) {
-        console.error('❌ Error mostrando error de notas rápidas:', error);
+        console.error('❌ Error mostrando mensaje de error:', error);
+    }
+}
+
+/**
+ * 🗑️ FUNCIÓN: Eliminar nota rápida con SweetAlert
+ */
+async function eliminarNota(notaId, titulo) {
+    try {
+        console.log('🗑️ Intentando eliminar nota:', notaId);
+
+        // Mostrar confirmación con SweetAlert
+        const resultado = await Swal.fire({
+            title: '🗑️ ¿Eliminar nota?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Título:</strong> ${titulo}</p>
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Esta acción no se puede deshacer.
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-trash me-2"></i>Eliminar',
+            cancelButtonText: '<i class="bi bi-x-lg me-2"></i>Cancelar',
+            reverseButtons: true
+        });
+
+        if (!resultado.isConfirmed) {
+            console.log('🚫 Usuario canceló la eliminación');
+            return;
+        }
+
+        // Proceder con la eliminación
+        const response = await fetch(`/NotasRapidas/Eliminar?id=${notaId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('✅ Nota eliminada correctamente');
+
+            // Mostrar mensaje de éxito
+            await Swal.fire({
+                title: '✅ ¡Eliminada!',
+                text: 'La nota ha sido eliminada correctamente.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Recargar notas
+            cargarNotasRapidas();
+        } else {
+            throw new Error(data.message || 'Error al eliminar la nota');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando nota:', error);
+
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'No se pudo eliminar la nota. Inténtalo de nuevo.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+    }
+}
+
+/**
+ * ⭐ FUNCIÓN: Marcar/desmarcar nota como favorita
+ */
+async function marcarFavorita(notaId, esFavorita) {
+    try {
+        console.log('⭐ Cambiando estado favorita:', { notaId, esFavorita });
+
+        const response = await fetch(`/NotasRapidas/CambiarFavorita`, {
+            method: 'PATCH',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ notaId, esFavorita })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('✅ Estado favorita actualizado');
+
+            // Recargar notas para reflejar el cambio
+            cargarNotasRapidas();
+        } else {
+            throw new Error(data.message || 'Error al actualizar estado favorita');
+        }
+
+    } catch (error) {
+        console.error('❌ Error actualizando favorita:', error);
+
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'No se pudo actualizar el estado de la nota.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+    }
+}
+
+
+/**
+ * ✏️ FUNCIÓN: Editar nota existente
+ */
+async function editarNota(notaId, titulo, contenido, color, esFavorita) {
+    try {
+        console.log('✏️ Editando nota:', { notaId, titulo, contenido, color, esFavorita });
+
+        // Llenar el formulario con los datos existentes
+        const modal = document.getElementById('newNoteModal');
+        const form = document.getElementById('newNoteForm');
+        
+        if (!modal || !form) {
+            console.error('❌ Modal o formulario no encontrado');
+            return;
+        }
+
+        // Cambiar el título del modal
+        const modalTitle = modal.querySelector('.modal-title');
+        if (modalTitle) {
+            modalTitle.innerHTML = '<i class="fas fa-edit text-primary me-2"></i>Editar Nota Rápida';
+        }
+
+        // Llenar los campos del formulario
+        document.getElementById('titulo').value = titulo;
+        document.getElementById('contenido').value = contenido;
+        document.getElementById('color').value = color || '#ffd700';
+        document.getElementById('esFavorita').checked = esFavorita;
+
+        // Cambiar el texto del botón
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.innerHTML = '<i class="fas fa-save"></i> Actualizar Nota';
+        }
+
+        // Agregar atributo para identificar que es edición
+        form.setAttribute('data-editing', notaId);
+
+        // Mostrar el modal
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        console.log('✅ Modal de edición preparado');
+    } catch (error) {
+        console.error('❌ Error preparando edición de nota:', error);
+        
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'No se pudo abrir el editor de notas.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
     }
 }
 
@@ -871,35 +1066,27 @@ function mostrarErrorNotasRapidas() {
  */
 function abrirModalNuevaNota() {
     const modal = document.getElementById('newNoteModal');
-    if (modal) {
+    const form = document.getElementById('newNoteForm');
+    
+    if (modal && form) {
+        // Resetear el formulario
+        form.reset();
+        form.removeAttribute('data-editing');
+
+        // Restaurar título del modal
+        const modalTitle = modal.querySelector('.modal-title');
+        if (modalTitle) {
+            modalTitle.innerHTML = '<i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida';
+        }
+
+        // Restaurar texto del botón
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar Nota';
+        }
+
         const bootstrapModal = new bootstrap.Modal(modal);
         bootstrapModal.show();
-    }
-}
-
-/**
- * 📝 FUNCIÓN: Eliminar nota rápida
- */
-async function eliminarNotaRapida(notaId) {
-    if (!confirm('¿Estás seguro de que deseas eliminar esta nota?')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`/NotasRapidas/Eliminar/${notaId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-
-        if (response.ok) {
-            console.log('✅ Nota eliminada correctamente');
-            cargarNotasRapidas(); // Recargar las notas
-        } else {
-            throw new Error('Error al eliminar la nota');
-        }
-    } catch (error) {
-        console.error('❌ Error eliminando nota:', error);
-        alert('Error al eliminar la nota');
     }
 }
 
