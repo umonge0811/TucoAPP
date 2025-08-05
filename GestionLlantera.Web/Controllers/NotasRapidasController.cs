@@ -29,13 +29,12 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
-                var jwtToken = HttpContext.Session.GetString("JWTToken");
-                var resultado = await _notasRapidasService.ObtenerNotasUsuarioAsync(int.Parse(usuarioId), jwtToken);
+                var resultado = await _notasRapidasService.ObtenerNotasUsuarioAsync(int.Parse(usuarioId));
 
                 return Json(new
                 {
                     success = resultado.success,
-                    data = resultado.data,
+                    data = resultado.notas,
                     message = resultado.mensaje
                 });
             }
@@ -63,13 +62,12 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 notaDto.UsuarioId = int.Parse(usuarioId);
-                var jwtToken = HttpContext.Session.GetString("JWTToken");
-                var resultado = await _notasRapidasService.CrearNotaAsync(notaDto, jwtToken);
+                var resultado = await _notasRapidasService.CrearNotaAsync(notaDto);
 
                 return Json(new
                 {
                     success = resultado.success,
-                    data = resultado.data,
+                    data = resultado.nota,
                     message = resultado.mensaje
                 });
             }
@@ -91,13 +89,12 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Usuario no autenticado" });
                 }
 
-                var jwtToken = HttpContext.Session.GetString("JWTToken");
-                var resultado = await _notasRapidasService.EliminarNotaAsync(id, int.Parse(usuarioId), jwtToken);
+                var resultado = await _notasRapidasService.EliminarNotaAsync(id, int.Parse(usuarioId));
 
                 return Json(new
                 {
                     success = resultado.success,
-                    message = resultado.mensaje
+                    message = resultado.message
                 });
             }
             catch (Exception ex)
