@@ -74,6 +74,9 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 // ✅ NUEVO: Servicio de Notas Rápidas
 builder.Services.AddScoped<INotasRapidasService, NotasRapidasService>();
 
+// ✅ NUEVO: Servicio de Anuncios
+builder.Services.AddScoped<IAnunciosService, AnunciosService>();
+
 // ✅ NUEVO: Agregar cache en memoria para optimización
 builder.Services.AddMemoryCache();
 

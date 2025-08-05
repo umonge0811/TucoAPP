@@ -29,6 +29,9 @@ builder.Services.AddScoped<IAjustesInventarioPendientesService, AjustesInventari
 builder.Services.AddScoped<IReporteInventarioService, ReporteInventarioService>();
 builder.Services.AddScoped<IReportePedidosService, ReportePedidosService>();
 
+// ✅ AGREGAR SERVICIOS DE ANUNCIOS (opcional - ya que usamos Entity Framework directamente)
+// Los anuncios se manejan directamente a través del DbContext en el controlador
+
 
 // ? SERVICIOS DE PERMISOS - Sistema completamente dinámico
 builder.Services.AddScoped<IPermisosService, PermisosService>();
