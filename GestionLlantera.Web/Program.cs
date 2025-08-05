@@ -71,6 +71,9 @@ builder.Services.AddScoped<IPermisosInfoService, PermisosInfoService>();
 // ✅ NUEVO: Servicio de Dashboard (usando el mismo patrón que otros servicios)
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
+// ✅ NUEVO: Servicio de Notas Rápidas
+builder.Services.AddScoped<INotasRapidasService, NotasRapidasService>();
+
 // ✅ NUEVO: Agregar cache en memoria para optimización
 builder.Services.AddMemoryCache();
 

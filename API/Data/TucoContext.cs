@@ -85,6 +85,7 @@ public partial class TucoContext : DbContext
 
     public DbSet<PendientesEntrega> PendientesEntrega { get; set; }
 
+    public DbSet<NotaRapida> NotasRapidas { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -765,9 +766,6 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.MontoImpuesto)
                 .HasColumnType("decimal(18,2)");
 
-            entity.Property(e => e.Total)
-                .HasColumnType("decimal(18,2)");
-
             entity.HasOne(d => d.Cliente)
                 .WithMany()
                 .HasForeignKey(d => d.ClienteId)
@@ -891,6 +889,55 @@ public partial class TucoContext : DbContext
             // Índice para búsquedas por código de seguimiento
             entity.HasIndex(e => e.CodigoSeguimiento)
                 .HasDatabaseName("IX_PendientesEntrega_CodigoSeguimiento");
+        });
+
+        // ✅ CONFIGURACIÓN DE LA TABLA NOTAS RAPIDAS
+        modelBuilder.Entity<NotaRapida>(entity =>
+        {
+            entity.HasKey(e => e.NotaId);
+
+            entity.ToTable("NotasRapidas");
+
+            entity.Property(e => e.Titulo)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(e => e.Contenido)
+                .IsRequired()
+                .HasMaxLength(1000);
+
+            entity.Property(e => e.FechaCreacion)
+                .HasDefaultValueSql("GETDATE()");
+
+            entity.Property(e => e.Color)
+                .HasDefaultValue("#ffd700");
+
+            entity.Property(e => e.FechaModificacion)
+                .IsRequired(false);
+
+            entity.HasOne(d => d.Usuario)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_NotasRapidas_Usuario");
+
+            // Índices para optimización
+            entity.HasIndex(e => e.UsuarioId)
+                .HasDatabaseName("IX_NotasRapidas_UsuarioId");
+
+            entity.HasIndex(e => e.EsFavorita)
+                .HasDatabaseName("IX_NotasRapidas_EsFavorita");
+
+            entity.HasIndex(e => e.FechaModificacion)
+                .HasDatabaseName("IX_NotasRapidas_FechaModificacion");
+
+            // Nueva propiedad de la tabla
+            entity.Property(e => e.EsFavorita)
+                .HasDefaultValue(false);
+
+            entity.Property(e => e.Eliminada)
+                .HasDefaultValue(false)
+                .HasColumnName("Eliminada");
         });
 
         OnModelCreatingPartial(modelBuilder);

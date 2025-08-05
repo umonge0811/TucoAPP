@@ -118,40 +118,7 @@
                     </div>
                     <div class="card-body">
                         <div class="notes-container">
-                            <div class="note-item">
-                                <div class="note-content">
-                                    <h5>Pedido de Llantas</h5>
-                                    <p>Llamar al proveedor para confirmar llegada de llantas 205/55R16</p>
-                                </div>
-                                <div class="note-footer">
-                                    <span class="note-date">Hoy, 10:30 AM</span>
-                                    <div class="note-actions">
-                                        <button class="btn btn-sm btn-link text-success">
-                                            <i class="bi bi-check-lg"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-link text-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="note-item">
-                                <div class="note-content">
-                                    <h5>Mantenimiento</h5>
-                                    <p>Programar mantenimiento de elevador hidráulico</p>
-                                </div>
-                                <div class="note-footer">
-                                    <span class="note-date">Ayer, 15:45 PM</span>
-                                    <div class="note-actions">
-                                        <button class="btn btn-sm btn-link text-success">
-                                            <i class="bi bi-check-lg"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-link text-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -274,29 +241,49 @@
 </div>
 
 @* Modal Nueva Nota *@
-<div class="modal fade" id="newNoteModal" tabindex="-1">
+<div class="modal fade" id="newNoteModal" tabindex="-1" aria-labelledby="newNoteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nueva Nota</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="newNoteModalLabel">
+                    <i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form id="newNoteForm">
+            <form id="newNoteForm">
+                <div class="modal-body">
+                    @Html.AntiForgeryToken()
                     <div class="mb-3">
-                        <label class="form-label">Título</label>
-                        <input type="text" class="form-control" required>
+                        <label for="titulo" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="titulo" name="titulo" required maxlength="100">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Contenido</label>
-                        <textarea class="form-control" rows="3" required></textarea>
+                        <label for="contenido" class="form-label">Contenido</label>
+                        <textarea class="form-control" id="contenido" name="contenido" rows="4" required maxlength="1000"></textarea>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="newNoteForm" class="btn btn-primary">Guardar</button>
-            </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="color" class="form-label">Color</label>
+                            <select class="form-select" id="color" name="color">
+                                <option value="#ffd700">Amarillo (por defecto)</option>
+                                <option value="#87ceeb">Azul claro</option>
+                                <option value="#98fb98">Verde claro</option>
+                                <option value="#ffa07a">Naranja claro</option>
+                                <option value="#dda0dd">Morado claro</option>
+                                <option value="#f0e68c">Amarillo pálido</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Nota
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -341,4 +328,6 @@
     </div>
 </div>
 
-<script src="~/js/views/admin/dashboard.js" asp-append-version="true"></script>
+@section Scripts {
+    <script src="~/js/views/admin/dashboard.js"></script>
+}
