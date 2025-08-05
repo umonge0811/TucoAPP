@@ -6,7 +6,6 @@ using API.Data;
 using tuco.Clases.Models;
 using tuco.Clases.DTOs;
 using System.Security.Claims;
-using Tuco.Clases.Models;
 
 namespace API.Controllers
 {
@@ -47,7 +46,7 @@ namespace API.Controllers
                         EsActivo = a.EsActivo,
                         FechaCreacion = a.FechaCreacion,
                         FechaModificacion = a.FechaModificacion,
-                        NombreUsuario = a.Usuario != null ? a.Usuario.NombreUsuario : "Usuario"
+                        NombreUsuario = a.Usuario != null ? a.Usuario.NombreCompleto : "Usuario"
                     })
                     .ToListAsync();
 
@@ -104,7 +103,7 @@ namespace API.Controllers
                     EsActivo = anuncio.EsActivo,
                     FechaCreacion = anuncio.FechaCreacion,
                     FechaModificacion = anuncio.FechaModificacion,
-                    NombreUsuario = anuncio.Usuario?.NombreUsuario ?? "Usuario"
+                    NombreUsuario = anuncio.Usuario?.NombreCompleto ?? "Usuario"
                 };
 
                 return Ok(new { success = true, data = anuncioDto, message = "Anuncio creado exitosamente" });
@@ -158,7 +157,7 @@ namespace API.Controllers
                     EsActivo = anuncio.EsActivo,
                     FechaCreacion = anuncio.FechaCreacion,
                     FechaModificacion = anuncio.FechaModificacion,
-                    NombreUsuario = anuncio.Usuario?.NombreUsuario ?? "Usuario"
+                    NombreUsuario = anuncio.Usuario?.NombreCompleto ?? "Usuario"
                 };
 
                 return Ok(new { success = true, data = anuncioDto, message = "Anuncio actualizado exitosamente" });
@@ -251,7 +250,7 @@ namespace API.Controllers
                     EsActivo = anuncio.EsActivo,
                     FechaCreacion = anuncio.FechaCreacion,
                     FechaModificacion = anuncio.FechaModificacion,
-                    NombreUsuario = anuncio.Usuario?.NombreUsuario ?? "Usuario"
+                    NombreUsuario = anuncio.Usuario?.NombreCompleto ?? "Usuario"
                 };
 
                 return Ok(new { 
