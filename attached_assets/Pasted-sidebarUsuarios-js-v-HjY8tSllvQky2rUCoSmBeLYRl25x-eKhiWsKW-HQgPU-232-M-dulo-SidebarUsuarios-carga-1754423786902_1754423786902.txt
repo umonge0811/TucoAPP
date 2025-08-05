@@ -1,0 +1,46 @@
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:232 👥 Módulo SidebarUsuarios cargado correctamente
+dashboard.js:1208 📊 Módulo Dashboard cargado correctamente
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:207 👥 DOM cargado, inicializando sidebar usuarios...
+dashboard.js:1133 🚀 Dashboard cargado exitosamente
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+dashboard.js:28 📊 Dashboard - Inicializando módulo principal
+dashboard.js:65 📊 Cargando alertas de stock...
+dashboard.js:182 📊 Cargando estadísticas de inventario total...
+dashboard.js:265 🏆 Cargando información del top vendedor...
+dashboard.js:383 👥 Cargando información de usuarios conectados...
+dashboard.js:800 📝 Cargando notas rápidas...
+dashboard.js:75 📡 Respuesta del servidor: 200
+dashboard.js:82 ✅ Datos de alertas recibidos: Object
+dashboard.js:113 📊 Actualizando vista con datos: Object
+dashboard.js:154 ✅ Vista de alertas de stock actualizada correctamente
+dashboard.js:834 📝 Mostrando notas rápidas: Array(2)
+dashboard.js:888 ✅ Notas rápidas mostradas correctamente
+dashboard.js:818 ✅ Notas rápidas cargadas correctamente: Array(2)
+dashboard.js:192 📡 Respuesta del servidor (inventario): 200
+dashboard.js:199 ✅ Datos de inventario total recibidos: Object
+dashboard.js:217 📊 Actualizando tarjeta de inventario total: Object
+dashboard.js:232 ✅ Valor total actualizado: ₡1 898 300
+dashboard.js:240 ✅ Detalle actualizado: 7 (48 unidades)
+dashboard.js:298 🏆 Mostrando datos del top vendedor: Object
+dashboard.js:335 ✅ Top vendedor mostrado correctamente
+dashboard.js:282 ✅ Top vendedor cargado correctamente: Object
+dashboard.js:416 👥 Mostrando datos de usuarios conectados: Object
+dashboard.js:513 ✅ Panel de usuarios conectados (bottom) actualizado
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+dashboard.js:449 ✅ Usuarios conectados mostrados correctamente
+dashboard.js:400 ✅ Usuarios conectados cargados correctamente: Object
+dashboard.js:550 📊 Inicializando eventos de formularios...
+dashboard.js:715 🔄 Configurando refresco automático...
+dashboard.js:49 ✅ Dashboard inicializado correctamente
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:30 👥 Inicializando módulo de usuarios conectados del sidebar
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:44 ✅ Módulo de usuarios conectados del sidebar inicializado
+dashboard.js:781 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+dashboard.js:1038 ✏️ Editando nota: Object
+dashboard.js:1079 ✅ Modal de edición preparado
+dashboard.js:584 ✏️ Actualizando nota...
+dashboard.js:622 ✅ Nota actualizada correctamente
+dashboard.js:667 ❌ Error procesando nota: TypeError: modal.querySelector is not a function
+    at HTMLFormElement.manejarNuevaNota (dashboard.js:650:38)
+manejarNuevaNota @ dashboard.js:667
