@@ -1378,34 +1378,17 @@ async function manejarNuevoAnuncio(e) {
     const anuncioId = form.getAttribute('data-editing-anuncio-id');
     const esEdicion = anuncioId !== null && anuncioId !== '';
 
+    const formData = new FormData(form);
+    const anuncioData = {
+        titulo: formData.get('tituloAnuncio'),
+        contenido: formData.get('contenidoAnuncio'),
+        fechaVencimiento: formData.get('fechaExpiracionAnuncio') || null,
+        tipoAnuncio: 'General',
+        prioridad: 'Normal',
+        esImportante: false
+    };
+
     try {
-        const formData = new FormData(form);
-        
-        // Validar que los campos requeridos estén presentes
-        const titulo = formData.get('tituloAnuncio');
-        const contenido = formData.get('contenidoAnuncio');
-        
-        if (!titulo || !contenido) {
-            await Swal.fire({
-                title: '❌ Error',
-                text: 'El título y contenido del anuncio son obligatorios.',
-                icon: 'error',
-                confirmButtonText: 'Entendido'
-            });
-            return;
-        }
-
-        const anuncioData = {
-            titulo: titulo.trim(),
-            contenido: contenido.trim(),
-            fechaVencimiento: formData.get('fechaExpiracionAnuncio') || null,
-            tipoAnuncio: 'General',
-            prioridad: 'Normal',
-            esImportante: false
-        };
-
-        console.log('📋 Datos del anuncio a enviar:', anuncioData);
-
         let response;
         let url;
         let method;
