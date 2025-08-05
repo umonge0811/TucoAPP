@@ -200,7 +200,7 @@ namespace API.Controllers
                 // Obtener sesiones activas de las últimas 24 horas
                 var fechaLimite = DateTime.Now.AddHours(-24);
 
-                var usuariosConectados = await _context.SesionUsuarios
+                var usuariosConectados = await _context.SesionUsuario
                     .Where(s => s.EstaActiva == true && 
                                s.FechaHoraInicio >= fechaLimite &&
                                s.Usuario != null)
