@@ -129,7 +129,7 @@
                 <div class="dashboard-card">
                     <div class="card-header">
                         <h2><i class="bi bi-megaphone text-primary"></i> Anuncios Internos</h2>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newAnnouncementModal">
+                        <button asp-permiso="Crear Anuncios" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newAnnouncementModal">
                             <i class="bi bi-plus-lg"></i> Nuevo Anuncio
                         </button>
                     </div>
@@ -293,37 +293,44 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nuevo Anuncio</h5>
+                <h5 class="modal-title">
+                    <i class="bi bi-megaphone text-primary me-2"></i>Nuevo Anuncio
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="newAnnouncementForm">
+            <form id="newAnnouncementForm">
+                <div class="modal-body">
+                    @Html.AntiForgeryToken()
                     <div class="mb-3">
-                        <label class="form-label">Título</label>
-                        <input type="text" class="form-control" required>
+                        <label for="anuncioTitulo" class="form-label">Título</label>
+                        <input type="text" class="form-control" id="anuncioTitulo" name="titulo" required maxlength="200">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Contenido</label>
-                        <textarea class="form-control" rows="3" required></textarea>
+                        <label for="anuncioContenido" class="form-label">Contenido</label>
+                        <textarea class="form-control" id="anuncioContenido" name="contenido" rows="4" required maxlength="1000"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Importancia</label>
-                        <select class="form-select">
-                            <option value="info">Informativo</option>
-                            <option value="warning">Importante</option>
-                            <option value="danger">Urgente</option>
+                        <label for="anuncioTipo" class="form-label">Importancia</label>
+                        <select class="form-select" id="anuncioTipo" name="tipoImportancia">
+                            <option value="Informativo">Informativo</option>
+                            <option value="Importante">Importante</option>
+                            <option value="Urgente">Urgente</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Fecha de Vencimiento</label>
-                        <input type="date" class="form-control">
+                        <label for="anuncioFechaVencimiento" class="form-label">Fecha de Vencimiento (Opcional)</label>
+                        <input type="date" class="form-control" id="anuncioFechaVencimiento" name="fechaVencimiento">
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="newAnnouncementForm" class="btn btn-primary">Publicar</button>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-megaphone"></i> Publicar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
