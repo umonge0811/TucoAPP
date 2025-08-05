@@ -26,12 +26,12 @@ namespace GestionLlantera.Web.Controllers
         {
             // Intentar diferentes métodos para obtener el token, igual que otros controladores
             var token = User.FindFirst("jwt_token")?.Value;
-            
+
             if (string.IsNullOrEmpty(token))
             {
                 token = User.FindFirst("JwtToken")?.Value;
             }
-            
+
             if (string.IsNullOrEmpty(token))
             {
                 token = User.FindFirst("access_token")?.Value;
@@ -53,24 +53,33 @@ namespace GestionLlantera.Web.Controllers
             return token;
         }
 
+        /// <summary>
+        /// Obtiene el ID del usuario autenticado.
+        /// </summary>
+        /// <returns>El ID del usuario como string, o null si no se encuentra.</returns>
+        private int GetUsuarioId()
+        {
+            var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(usuarioId))
+            {
+                throw new InvalidOperationException("Usuario no autenticado o ID de usuario no encontrado.");
+            }
+            return int.Parse(usuarioId);
+        }
+
         [HttpGet]
         public async Task<IActionResult> ObtenerMisNotas()
         {
             try
             {
-                var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(usuarioId))
-                {
-                    return Json(new { success = false, message = "Usuario no autenticado" });
-                }
-
+                var usuarioId = GetUsuarioId();
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
                     return Json(new { success = false, message = "Token de autenticación no válido" });
                 }
 
-                var resultado = await _notasRapidasService.ObtenerNotasUsuarioAsync(int.Parse(usuarioId), token);
+                var resultado = await _notasRapidasService.ObtenerNotasUsuarioAsync(usuarioId, token);
 
                 return Json(new
                 {
@@ -96,19 +105,14 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos inválidos" });
                 }
 
-                var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(usuarioId))
-                {
-                    return Json(new { success = false, message = "Usuario no autenticado" });
-                }
-
+                var usuarioId = GetUsuarioId();
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
                     return Json(new { success = false, message = "Token de autenticación no válido" });
                 }
 
-                notaDto.UsuarioId = int.Parse(usuarioId);
+                notaDto.UsuarioId = usuarioId;
                 var resultado = await _notasRapidasService.CrearNotaAsync(notaDto, token);
 
                 return Json(new
@@ -125,24 +129,36 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpPut]
+        public async Task<IActionResult> Actualizar(int id, [FromBody] ActualizarNotaRapidaDTO request)
+        {
+            try
+            {
+                var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+                var response = await _notasRapidasService.ActualizarNotaAsync(request, id, token);
+
+                return Json(new { success = response.success, message = response.message, data = response.data });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error actualizando nota rápida");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
         [HttpDelete]
         public async Task<IActionResult> Eliminar(int id)
         {
             try
             {
-                var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(usuarioId))
-                {
-                    return Json(new { success = false, message = "Usuario no autenticado" });
-                }
-
+                var usuarioId = GetUsuarioId();
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
                     return Json(new { success = false, message = "Token de autenticación no válido" });
                 }
 
-                var resultado = await _notasRapidasService.EliminarNotaAsync(id, int.Parse(usuarioId), token);
+                var resultado = await _notasRapidasService.EliminarNotaAsync(id, usuarioId, token);
 
                 return Json(new
                 {
@@ -162,19 +178,14 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(usuarioId))
-                {
-                    return Json(new { success = false, message = "Usuario no autenticado" });
-                }
-
+                var usuarioId = GetUsuarioId();
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
                     return Json(new { success = false, message = "Token de autenticación no válido" });
                 }
 
-                var resultado = await _notasRapidasService.CambiarFavoritaAsync(request.NotaId, request.EsFavorita, int.Parse(usuarioId), token);
+                var resultado = await _notasRapidasService.CambiarFavoritaAsync(request.NotaId, request.EsFavorita, usuarioId, token);
 
                 return Json(new
                 {
