@@ -873,7 +873,7 @@ function mostrarNotasRapidas(notas) {
                     </small>
                 </div>
                 <div class="note-actions">
-                        <button class="btn btn-sm btn-link text-primary" onclick="editarNota(${nota.notaId}, '${nota.titulo.replace(/'/g, "\\'")}', '${nota.contenido.replace(/'/g, "\\'")}', '${nota.color}', ${nota.esFavorita})" title="Editar nota">
+                        <button class="btn btn-sm btn-link text-primary" onclick="editarNota(${nota.notaId}, '${nota.titulo.replace(/'/g, "\\'")}', '${nota.contenido.replace(/'/g, "\\'")}', '${nota.color}', ${nota.esFavorita ? 'true' : 'false'})" title="Editar nota">
                             <i class="bi bi-pencil"></i>
                         </button>
                         <button class="btn btn-sm btn-link text-warning" onclick="marcarFavorita(${nota.notaId}, ${!nota.esFavorita})" title="${nota.esFavorita ? 'Quitar de favoritas' : 'Marcar como favorita'}">
@@ -1063,7 +1063,10 @@ async function editarNota(notaId, titulo, contenido, color, esFavorita) {
         // Manejar correctamente el checkbox esFavorita
         const checkboxFavorita = document.getElementById('esFavorita');
         if (checkboxFavorita) {
-            checkboxFavorita.checked = esFavorita === true || esFavorita === 'true';
+            // Convertir correctamente el valor a boolean
+            const esChecked = esFavorita === true || esFavorita === 'true' || esFavorita === '1' || esFavorita === 1;
+            checkboxFavorita.checked = esChecked;
+            console.log('🔧 Checkbox favorita configurado:', { esFavorita, esChecked });
         }
 
         // Cambiar el texto del botón
