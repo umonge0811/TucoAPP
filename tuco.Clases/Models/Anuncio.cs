@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using tuco.Clases.Models;
 
 namespace Tuco.Clases.Models
 {
