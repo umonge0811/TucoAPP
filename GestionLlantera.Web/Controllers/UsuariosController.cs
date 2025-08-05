@@ -318,8 +318,8 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
-        [HttpPut]
-        public async Task<IActionResult> EditarUsuario(int id, [FromBody] CreateUsuarioDTO modelo)
+        [HttpPost]
+        public async Task<IActionResult> EditarUsuario(int id, [FromBody] ActualizarUsuarioDTO modelo)
         {
             try
             {
@@ -328,18 +328,24 @@ namespace GestionLlantera.Web.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errores = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage);
+                    return Json(new { success = false, message = string.Join(", ", errores) });
                 }
 
-                var resultado = await _usuariosService.EditarUsuarioAsync(id, modelo);
-                return resultado
-                    ? Ok(new { message = "Usuario editado exitosamente" })
-                    : BadRequest(new { message = "Error al editar usuario" });
+                var resultado = await _usuariosService.ActualizarUsuarioAsync(modelo);
+                if (resultado.Success)
+                {
+                    return Json(new { success = true, message = "Usuario editado exitosamente" });
+                }
+
+                return Json(new { success = false, message = resultado.Message });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al editar usuario {Id}", id);
-                return StatusCode(500, new { message = "Error interno del servidor" });
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
     }

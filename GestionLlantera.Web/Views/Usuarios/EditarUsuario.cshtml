@@ -46,11 +46,25 @@
 
                     <div class="mb-3">
                         <label for="email" class="form-label">
-                            <i class="bi bi-envelope me-2"></i>Correo Electrónico <span class="text-danger">*</span>
+                            <i class="bi bi-envelope me-2"></i>Correo Electrónico
                         </label>
                         <input type="email" class="form-control" id="email" name="Email" 
-                               value="@Model.Email" required>
-                        <div class="invalid-feedback"></div>
+                               value="@Model.Email" readonly disabled>
+                        <small class="text-muted">El correo electrónico no se puede modificar</small>
+                    </div></small></div>
+
+                <div class="mb-3">
+                        <label for="activo" class="form-label">
+                            <i class="bi bi-toggle-on me-2"></i>Estado
+                        </label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="activo" name="Activo" 
+                                   @(Model.Activo ? "checked" : "")>
+                            <label class="form-check-label" for="activo">
+                                Usuario activo
+                            </label>
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -77,7 +91,8 @@
                             {
                                 @foreach (var rol in ViewBag.Roles)
                                 {
-                                    <option value="@rol.RolId" selected="@(Model.RolId == rol.RolId)">
+                                    var isSelected = Model.Roles != null && Model.Roles.Contains(rol.NombreRol);
+                                    <option value="@rol.RolId" @(isSelected ? "selected" : "")>
                                         @rol.NombreRol
                                     </option>
                                 }
@@ -174,9 +189,10 @@
 
                     const formData = new FormData(form);
                     const data = {
+                        UsuarioId: @Model.UsuarioId,
                         NombreUsuario: formData.get('NombreUsuario'),
-                        Email: formData.get('Email'),
-                        RolId: parseInt(formData.get('RolId')),
+                        RolId: parseInt(formData.get('RolId')) || null,
+                        Activo: formData.get('Activo') === 'on',
                         EsTopVendedor: formData.get('EsTopVendedor') === 'on'
                     };
 
