@@ -63,6 +63,11 @@ namespace tuco.Clases.DTOs
         public string Color { get; set; } = "#ffd700";
 
         public bool EsFavorita { get; set; } = false;
+
+        /// <summary>
+        /// ID del usuario que crea la nota (se asigna automáticamente en el controlador)
+        /// </summary>
+        public int UsuarioId { get; set; }
     }
 
     /// <summary>
