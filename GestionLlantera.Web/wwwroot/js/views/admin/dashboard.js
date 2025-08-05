@@ -593,6 +593,8 @@ async function manejarNuevaNota(e) {
             esFavorita: checkboxFavorita ? checkboxFavorita.checked : false
         };
 
+        console.log('📋 Datos de la nota a enviar:', notaData);
+
         let url, method;
         if (esEdicion) {
             url = `/NotasRapidas/Actualizar?id=${notaId}`;
@@ -647,7 +649,8 @@ async function manejarNuevaNota(e) {
             document.getElementById('esFavorita').checked = false;
             
             // Restaurar título del modal para próximo uso
-            const modalTitle = modal.querySelector('.modal-title');
+            const modalElement = document.getElementById('newNoteModal');
+            const modalTitle = modalElement ? modalElement.querySelector('.modal-title') : null;
             if (modalTitle) {
                 modalTitle.innerHTML = '<i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida';
             }
@@ -1147,6 +1150,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const newNoteModal = document.getElementById('newNoteModal');
     if (newNoteModal) {
         newNoteModal.addEventListener('hidden.bs.modal', function () {
+            console.log('🔄 Limpiando modal de nota al cerrarse...');
+            
             const form = document.getElementById('newNoteForm');
             if (form) {
                 // Resetear formulario completamente
@@ -1154,10 +1159,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 form.removeAttribute('data-editing');
                 
                 // Limpiar campos manualmente
-                document.getElementById('titulo').value = '';
-                document.getElementById('contenido').value = '';
-                document.getElementById('color').value = '#ffd700';
-                document.getElementById('esFavorita').checked = false;
+                const tituloField = document.getElementById('titulo');
+                const contenidoField = document.getElementById('contenido');
+                const colorField = document.getElementById('color');
+                const favoritaField = document.getElementById('esFavorita');
+                
+                if (tituloField) tituloField.value = '';
+                if (contenidoField) contenidoField.value = '';
+                if (colorField) colorField.value = '#ffd700';
+                if (favoritaField) favoritaField.checked = false;
                 
                 // Restaurar título del modal
                 const modalTitle = newNoteModal.querySelector('.modal-title');
@@ -1170,6 +1180,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (submitButton) {
                     submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar Nota';
                 }
+                
+                console.log('✅ Modal de nota limpiado correctamente');
             }
         });
     }
