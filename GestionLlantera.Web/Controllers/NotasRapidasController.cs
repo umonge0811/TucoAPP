@@ -156,5 +156,44 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
+
+        [HttpPatch]
+        public async Task<IActionResult> CambiarFavorita([FromBody] CambiarFavoritaRequest request)
+        {
+            try
+            {
+                var usuarioId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(usuarioId))
+                {
+                    return Json(new { success = false, message = "Usuario no autenticado" });
+                }
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
+
+                var resultado = await _notasRapidasService.CambiarFavoritaAsync(request.NotaId, request.EsFavorita, int.Parse(usuarioId), token);
+
+                return Json(new
+                {
+                    success = resultado.success,
+                    message = resultado.message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al cambiar estado favorita");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+    }
+
+    public class CambiarFavoritaRequest
+    {
+        public int NotaId { get; set; }
+        public bool EsFavorita { get; set; }
     }
 }
