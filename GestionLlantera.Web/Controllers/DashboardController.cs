@@ -232,7 +232,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔔 Obteniendo anuncio {AnuncioId} desde el servicio...", id);
 
-                var (bool success, var anuncio, string message) = await _anunciosService.ObtenerAnuncioPorIdAsync(id);
+                var (success, anuncio, message) = await _anunciosService.ObtenerAnuncioPorIdAsync(id);
 
                 if (success && anuncio != null)
                 {
@@ -253,7 +253,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CrearAnuncio([FromBody] AnuncioDTO anuncioDto)
+        public async Task<IActionResult> CrearAnuncio([FromBody] CrearAnuncioDTO anuncioDto)
         {
             try
             {
@@ -264,7 +264,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos de entrada inválidos" });
                 }
 
-                var (bool success, var anuncio, string message) = await _anunciosService.CrearAnuncioAsync(anuncioDto);
+                var (success, anuncio, message) = await _anunciosService.CrearAnuncioAsync(anuncioDto);
 
                 if (success)
                 {
@@ -285,7 +285,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpPut]
-        public async Task<IActionResult> ActualizarAnuncio(int id, [FromBody] AnuncioDTO anuncioDto)
+        public async Task<IActionResult> ActualizarAnuncio(int id, [FromBody] ActualizarAnuncioDTO anuncioDto)
         {
             try
             {
@@ -296,7 +296,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos de entrada inválidos" });
                 }
 
-                var (bool success, string message) = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto);
+                var (success, message) = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto);
 
                 if (success)
                 {
@@ -323,7 +323,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔔 Eliminando anuncio {AnuncioId}", id);
 
-                var (bool success, string message) = await _anunciosService.EliminarAnuncioAsync(id);
+                var (success, message) = await _anunciosService.EliminarAnuncioAsync(id);
 
                 if (success)
                 {
