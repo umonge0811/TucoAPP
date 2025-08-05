@@ -1,197 +1,187 @@
-using GestionLlantera.Web.Services.Interfaces;
+
+using System;
+using System.Text;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using GestionLlantera.Web.Services.Interfaces;
 
 namespace GestionLlantera.Web.Services
 {
     public class DashboardService : IDashboardService
     {
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<DashboardService> _logger;
+        private readonly string _apiBaseUrl;
 
-        // Se asume que _apiBaseUrl y _jsonOptions están definidos en alguna parte de esta clase o se pasan en el constructor.
-        // Para este ejemplo, se asumirán que existen para que el código de los cambios sea funcional.
-        private readonly string _apiBaseUrl = "https://api.example.com"; // Placeholder
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true }; // Placeholder
-
-        public DashboardService(IHttpClientFactory httpClientFactory, ILogger<DashboardService> logger)
+        public DashboardService(HttpClient httpClient, IConfiguration configuration, ILogger<DashboardService> logger)
         {
-            _httpClient = httpClientFactory.CreateClient("APIClient");
+            _httpClient = httpClient;
+            _configuration = configuration;
             _logger = logger;
+            _apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "http://localhost:5049/api";
         }
 
+        /// <summary>
+        /// Obtener alertas de stock bajo desde la API
+        /// </summary>
         public async Task<(bool success, object data, string mensaje)> ObtenerAlertasStockAsync(string jwtToken)
         {
             try
             {
-                _logger.LogInformation("📊 Solicitando alertas de stock desde dashboard service");
+                _logger.LogInformation("📊 DashboardService - Solicitando alertas de stock");
 
-                // 🔑 CONFIGURAR TOKEN JWT SI SE PROPORCIONA (mismo patrón que otros servicios)
-                if (!string.IsNullOrEmpty(jwtToken))
+                // Configurar headers de autenticación
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {jwtToken}");
+
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/Dashboard/alertas-stock");
+
+                if (response.IsSuccessStatusCode)
                 {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                    _logger.LogInformation("🔐 Token JWT configurado para obtener alertas de stock");
+                    var content = await response.Content.ReadAsStringAsync();
+                    var alertas = JsonSerializer.Deserialize<object>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    _logger.LogInformation("✅ Alertas de stock obtenidas correctamente");
+                    return (true, alertas, "Alertas de stock obtenidas correctamente");
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener alertas de stock");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error HTTP {StatusCode}: {Error}", response.StatusCode, errorContent);
+                    return (false, null, $"Error del servidor: {response.StatusCode}");
                 }
-
-                var response = await _httpClient.GetAsync("api/dashboard/alertas-stock");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("❌ Error en respuesta de API: {StatusCode}", response.StatusCode);
-                    return (false, null, "Error al obtener alertas de stock");
-                }
-
-                var jsonContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("📊 Respuesta recibida: {Response}", jsonContent);
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var resultado = JsonSerializer.Deserialize<dynamic>(jsonContent, options);
-
-                return (true, resultado, "Alertas obtenidas correctamente");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al obtener alertas de stock");
-                return (false, null, "Error interno al obtener alertas");
+                _logger.LogError(ex, "❌ Error crítico obteniendo alertas de stock");
+                return (false, null, "Error interno del servicio");
             }
         }
 
+        /// <summary>
+        /// Obtener estadísticas del inventario total
+        /// </summary>
         public async Task<(bool success, object data, string mensaje)> ObtenerInventarioTotalAsync(string jwtToken)
         {
             try
             {
-                _logger.LogInformation("📊 Solicitando estadísticas de inventario total desde dashboard service");
+                _logger.LogInformation("📊 DashboardService - Solicitando estadísticas de inventario total");
 
-                // 🔑 CONFIGURAR TOKEN JWT SI SE PROPORCIONA (mismo patrón que otros servicios)
-                if (!string.IsNullOrEmpty(jwtToken))
+                // Configurar headers de autenticación
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {jwtToken}");
+
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/Dashboard/inventario-total");
+
+                if (response.IsSuccessStatusCode)
                 {
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization =
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
-                    _logger.LogInformation("🔐 Token JWT configurado para obtener inventario total");
+                    var content = await response.Content.ReadAsStringAsync();
+                    var inventario = JsonSerializer.Deserialize<object>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    _logger.LogInformation("✅ Estadísticas de inventario total obtenidas correctamente");
+                    return (true, inventario, "Estadísticas de inventario obtenidas correctamente");
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener inventario total");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error HTTP {StatusCode}: {Error}", response.StatusCode, errorContent);
+                    return (false, null, $"Error del servidor: {response.StatusCode}");
                 }
-
-                var response = await _httpClient.GetAsync("api/dashboard/inventario-total");
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("❌ Error en respuesta de API: {StatusCode}", response.StatusCode);
-                    return (false, null, "Error al obtener estadísticas de inventario");
-                }
-
-                var jsonContent = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("📊 Respuesta de inventario total recibida: {Response}", jsonContent);
-
-                var options = new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                };
-
-                var resultado = JsonSerializer.Deserialize<dynamic>(jsonContent, options);
-
-                return (true, resultado, "Estadísticas de inventario obtenidas correctamente");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al obtener estadísticas de inventario total");
-                return (false, null, "Error interno al obtener estadísticas de inventario");
+                _logger.LogError(ex, "❌ Error crítico obteniendo estadísticas de inventario");
+                return (false, null, "Error interno del servicio");
             }
         }
 
+        /// <summary>
+        /// Obtener información del top vendedor
+        /// </summary>
         public async Task<(bool success, object data, string mensaje)> ObtenerTopVendedorAsync(string jwtToken)
         {
             try
             {
-                _logger.LogInformation("🏆 Consultando top vendedor desde API");
+                _logger.LogInformation("🏆 DashboardService - Solicitando top vendedor");
 
+                // Configurar headers de autenticación
                 _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {jwtToken}");
 
                 var response = await _httpClient.GetAsync($"{_apiBaseUrl}/Dashboard/top-vendedor");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var resultado = JsonSerializer.Deserialize<ApiResponse>(jsonResponse, _jsonOptions);
+                    var content = await response.Content.ReadAsStringAsync();
+                    var topVendedor = JsonSerializer.Deserialize<object>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
-                    if (resultado?.success == true)
-                    {
-                        _logger.LogInformation("✅ Top vendedor obtenido correctamente desde API");
-                        return (true, resultado.data, resultado.mensaje ?? "Top vendedor obtenido correctamente");
-                    }
-                    else
-                    {
-                        _logger.LogWarning("⚠️ API retornó success=false para top vendedor: {Mensaje}", resultado?.mensaje);
-                        return (false, null, resultado?.mensaje ?? "No se pudo obtener el top vendedor");
-                    }
+                    _logger.LogInformation("✅ Top vendedor obtenido correctamente");
+                    return (true, topVendedor, "Top vendedor obtenido correctamente");
                 }
                 else
                 {
-                    _logger.LogError("❌ Error HTTP al consultar top vendedor: {StatusCode}", response.StatusCode);
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Contenido del error: {ErrorContent}", errorContent);
-                    return (false, null, $"Error al consultar top vendedor: {response.StatusCode}");
+                    _logger.LogError("❌ Error HTTP {StatusCode}: {Error}", response.StatusCode, errorContent);
+                    return (false, null, $"Error del servidor: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Excepción al obtener top vendedor");
-                return (false, null, "Error interno al obtener estadísticas de vendedor");
+                _logger.LogError(ex, "❌ Error crítico obteniendo top vendedor");
+                return (false, null, "Error interno del servicio");
             }
         }
 
+        /// <summary>
+        /// Obtener usuarios actualmente conectados
+        /// </summary>
         public async Task<(bool success, object data, string mensaje)> ObtenerUsuariosConectadosAsync(string jwtToken)
         {
             try
             {
-                _logger.LogInformation("👥 Consultando usuarios conectados desde API");
+                _logger.LogInformation("👥 DashboardService - Solicitando usuarios conectados");
 
+                // Configurar headers de autenticación
                 _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {jwtToken}");
 
                 var response = await _httpClient.GetAsync($"{_apiBaseUrl}/Dashboard/usuarios-conectados");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var resultado = JsonSerializer.Deserialize<ApiResponse>(jsonResponse, _jsonOptions);
+                    var content = await response.Content.ReadAsStringAsync();
+                    var usuariosConectados = JsonSerializer.Deserialize<object>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
-                    if (resultado?.success == true)
-                    {
-                        _logger.LogInformation("✅ Usuarios conectados obtenidos correctamente desde API");
-                        return (true, resultado.data, resultado.mensaje ?? "Usuarios conectados obtenidos correctamente");
-                    }
-                    else
-                    {
-                        _logger.LogWarning("⚠️ API retornó success=false para usuarios conectados: {Mensaje}", resultado?.mensaje);
-                        return (false, null, resultado?.mensaje ?? "No se pudo obtener usuarios conectados");
-                    }
+                    _logger.LogInformation("✅ Usuarios conectados obtenidos correctamente");
+                    return (true, usuariosConectados, "Usuarios conectados obtenidos correctamente");
                 }
                 else
                 {
-                    _logger.LogError("❌ Error HTTP al consultar usuarios conectados: {StatusCode}", response.StatusCode);
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("Contenido del error: {ErrorContent}", errorContent);
-                    return (false, null, $"Error al consultar usuarios conectados: {response.StatusCode}");
+                    _logger.LogError("❌ Error HTTP {StatusCode}: {Error}", response.StatusCode, errorContent);
+                    return (false, null, $"Error del servidor: {response.StatusCode}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Excepción al obtener usuarios conectados");
-                return (false, null, "Error interno al obtener usuarios conectados");
+                _logger.LogError(ex, "❌ Error crítico obteniendo usuarios conectados");
+                return (false, null, "Error interno del servicio");
             }
         }
     }
