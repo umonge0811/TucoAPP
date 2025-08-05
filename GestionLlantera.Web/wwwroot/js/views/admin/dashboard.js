@@ -1367,14 +1367,12 @@ async function manejarNuevoAnuncio(e) {
     const esEdicion = anuncioId !== null && anuncioId !== '';
 
     try {
-        // Obtener valores directamente del formulario como en manejarNuevaNota
-        const titulo = form.querySelector('input[name="tituloAnuncio"]')?.value?.trim() || '';
-        const contenido = form.querySelector('textarea[name="contenidoAnuncio"]')?.value?.trim() || '';
-        const fechaExpiracion = form.querySelector('input[name="fechaExpiracionAnuncio"]')?.value || null;
-
-        console.log('📋 Valores obtenidos del formulario:', { titulo, contenido, fechaExpiracion });
+        const formData = new FormData(form);
 
         // Validar que los campos requeridos estén presentes
+        const titulo = formData.get('tituloAnuncio');
+        const contenido = formData.get('contenidoAnuncio');
+
         if (!titulo || !contenido) {
             await Swal.fire({
                 title: '❌ Error',
@@ -1386,9 +1384,9 @@ async function manejarNuevoAnuncio(e) {
         }
 
         const anuncioData = {
-            titulo: titulo,
-            contenido: contenido,
-            fechaVencimiento: fechaExpiracion,
+            titulo: titulo.trim(),
+            contenido: contenido.trim(),
+            fechaVencimiento: formData.get('fechaExpiracionAnuncio') || null,
             tipoAnuncio: 'General',
             prioridad: 'Normal',
             esImportante: false
@@ -1406,7 +1404,7 @@ async function manejarNuevoAnuncio(e) {
             method = 'PUT';
             console.log('✏️ Actualizando anuncio existente:', anuncioId);
         } else {
-            // Crear nuevo
+            // Crear nuevo anuncio
             url = '/Dashboard/CrearAnuncio';
             method = 'POST';
             console.log('🆕 Creando nuevo anuncio');
@@ -1473,10 +1471,102 @@ async function manejarNuevoAnuncio(e) {
 // EVENTOS DE INICIALIZACIÓN
 // ========================================
 
-// Cargar todas las funcionalidades del dashboard
-setTimeout(() => {
-    inicializarDashboard();
-}, 500);
+// Inicialización cuando el DOM está listo
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('🚀 Dashboard cargado exitosamente');
+
+    // Configurar event listeners para formularios
+    const newNoteForm = document.getElementById('newNoteForm');
+    if (newNoteForm) {
+        newNoteForm.addEventListener('submit', manejarNuevaNota);
+        console.log('✅ Evento de formulario de nueva nota configurado');
+    }
+
+    const newAnnouncementForm = document.getElementById('newAnnouncementForm');
+    if (newAnnouncementForm) {
+        newAnnouncementForm.addEventListener('submit', manejarNuevoAnuncio);
+        console.log('✅ Evento de formulario de nuevo anuncio configurado');
+    }
+
+    // Configurar evento para resetear modal cuando se cierre
+    const newNoteModal = document.getElementById('newNoteModal');
+    if (newNoteModal) {
+        newNoteModal.addEventListener('hidden.bs.modal', function () {
+            console.log('🔄 Limpiando modal de nota al cerrarse...');
+
+            const form = document.getElementById('newNoteForm');
+            if (form) {
+                // Resetear formulario completamente
+                form.reset();
+                form.removeAttribute('data-editing');
+
+                // Limpiar campos manualmente
+                const tituloField = document.getElementById('titulo');
+                const contenidoField = document.getElementById('contenido');
+                const colorField = document.getElementById('color');
+
+                if (tituloField) tituloField.value = '';
+                if (contenidoField) contenidoField.value = '';
+                if (colorField) colorField.value = '#ffd700';
+
+                // Restaurar título del modal
+                const modalTitle = newNoteModal.querySelector('.modal-title');
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida';
+                }
+
+                // Restaurar texto del botón
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar Nota';
+                }
+
+                console.log('✅ Modal de nota limpiado correctamente');
+            }
+        });
+    }
+
+    // Configurar evento para resetear modal de anuncio al cerrarse
+    const newAnnouncementModal = document.getElementById('newAnnouncementModal');
+    if (newAnnouncementModal) {
+        newAnnouncementModal.addEventListener('hidden.bs.modal', function () {
+            console.log('🔄 Limpiando modal de anuncio al cerrarse...');
+            const form = document.getElementById('newAnnouncementForm');
+            if (form) {
+                form.reset();
+                form.removeAttribute('data-editing-anuncio-id'); // Limpiar estado de edición
+
+                // Restaurar título del modal
+                const modalTitle = newAnnouncementModal.querySelector('.modal-title');
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<i class="fas fa-bullhorn text-primary me-2"></i>Nuevo Anuncio';
+                }
+
+                console.log('✅ Modal de anuncio limpiado correctamente');
+            }
+        });
+    }
+
+
+    // Cargar todas las funcionalidades del dashboard
+    setTimeout(() => {
+        inicializarDashboard();
+    }, 500);
+
+    // Aquí se pueden agregar más inicializaciones según sea necesario
+});
+
+/**
+ * Inicialización alternativa sin jQuery (funcionalidad básica)
+ */
+function inicializarDashboardSinJQuery() {
+    console.log('📊 Inicializando dashboard sin jQuery (modo básico)');
+
+    // Solo inicializar eventos básicos que no requieren jQuery
+    inicializarEventosFormularios();
+
+    console.warn('⚠️ Algunas funcionalidades del dashboard no estarán disponibles sin jQuery');
+}
 
 // ========================================
 // EXPORTAR FUNCIONES GLOBALES
