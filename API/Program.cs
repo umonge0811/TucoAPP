@@ -29,9 +29,6 @@ builder.Services.AddScoped<IAjustesInventarioPendientesService, AjustesInventari
 builder.Services.AddScoped<IReporteInventarioService, ReporteInventarioService>();
 builder.Services.AddScoped<IReportePedidosService, ReportePedidosService>();
 
-// ✅ AGREGAR SERVICIO DE NOTAS RÁPIDAS
-builder.Services.AddScoped<INotasRapidasService, NotasRapidasService>();
-
 
 // ? SERVICIOS DE PERMISOS - Sistema completamente dinámico
 builder.Services.AddScoped<IPermisosService, PermisosService>();
