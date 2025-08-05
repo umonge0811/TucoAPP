@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Application.DTOs.Anuncios; // Asegúrate de que esta línea esté presente para los DTOs
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -10,11 +11,14 @@ namespace GestionLlantera.Web.Controllers
     {
         private readonly ILogger<DashboardController> _logger;
         private readonly IDashboardService _dashboardService;
+        // Se asume que tienes un servicio para gestionar anuncios
+        private readonly IAnunciosService _anunciosService; 
 
-        public DashboardController(ILogger<DashboardController> logger, IDashboardService dashboardService)
+        public DashboardController(ILogger<DashboardController> logger, IDashboardService dashboardService, IAnunciosService anunciosService)
         {
             _logger = logger;
             _dashboardService = dashboardService;
+            _anunciosService = anunciosService; // Inicializar el servicio de anuncios
         }
 
         public IActionResult Index()
@@ -32,12 +36,12 @@ namespace GestionLlantera.Web.Controllers
         {
             // Intentar diferentes métodos para obtener el token, igual que otros controladores
             var token = User.FindFirst("jwt_token")?.Value;
-            
+
             if (string.IsNullOrEmpty(token))
             {
                 token = User.FindFirst("JwtToken")?.Value;
             }
-            
+
             if (string.IsNullOrEmpty(token))
             {
                 token = User.FindFirst("access_token")?.Value;
@@ -188,6 +192,153 @@ namespace GestionLlantera.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error crítico obteniendo usuarios conectados");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        // Métodos para la gestión de Anuncios
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerAnuncios()
+        {
+            try
+            {
+                _logger.LogInformation("🔔 Obteniendo anuncios desde el servicio...");
+
+                var (success, anuncios, message) = await _anunciosService.ObtenerAnunciosAsync();
+
+                if (success)
+                {
+                    _logger.LogInformation("✅ Anuncios obtenidos exitosamente. Total: {Count}", anuncios.Count);
+                    return Json(new { success = true, data = anuncios });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudieron obtener los anuncios: {Message}", message);
+                    return Json(new { success = false, message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo anuncios");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerAnuncioPorId(int id)
+        {
+            try
+            {
+                _logger.LogInformation("🔔 Obteniendo anuncio {AnuncioId} desde el servicio...", id);
+
+                var (success, anuncio, message) = await _anunciosService.ObtenerAnuncioPorIdAsync(id);
+
+                if (success && anuncio != null)
+                {
+                    _logger.LogInformation("✅ Anuncio obtenido exitosamente: {Titulo}", anuncio.Titulo);
+                    return Json(new { success = true, data = anuncio });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudo obtener el anuncio {AnuncioId}: {Message}", id, message);
+                    return Json(new { success = false, message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo anuncio {AnuncioId}", id);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CrearAnuncio([FromBody] CrearAnuncioDTO anuncioDto)
+        {
+            try
+            {
+                _logger.LogInformation("🔔 Creando nuevo anuncio: {Titulo}", anuncioDto.Titulo);
+
+                if (!ModelState.IsValid)
+                {
+                    return Json(new { success = false, message = "Datos de entrada inválidos" });
+                }
+
+                var (success, anuncio, message) = await _anunciosService.CrearAnuncioAsync(anuncioDto);
+
+                if (success)
+                {
+                    _logger.LogInformation("✅ Anuncio creado exitosamente: {Titulo}", anuncio?.Titulo);
+                    return Json(new { success = true, data = anuncio, message });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudo crear el anuncio: {Message}", message);
+                    return Json(new { success = false, message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error creando anuncio");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> ActualizarAnuncio(int id, [FromBody] ActualizarAnuncioDTO anuncioDto)
+        {
+            try
+            {
+                _logger.LogInformation("🔔 Actualizando anuncio {AnuncioId}: {Titulo}", id, anuncioDto.Titulo);
+
+                if (!ModelState.IsValid)
+                {
+                    return Json(new { success = false, message = "Datos de entrada inválidos" });
+                }
+
+                var (success, message) = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto);
+
+                if (success)
+                {
+                    _logger.LogInformation("✅ Anuncio actualizado exitosamente: {AnuncioId}", id);
+                    return Json(new { success = true, message });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudo actualizar el anuncio {AnuncioId}: {Message}", id, message);
+                    return Json(new { success = false, message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error actualizando anuncio {AnuncioId}", id);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> EliminarAnuncio(int id)
+        {
+            try
+            {
+                _logger.LogInformation("🔔 Eliminando anuncio {AnuncioId}", id);
+
+                var (success, message) = await _anunciosService.EliminarAnuncioAsync(id);
+
+                if (success)
+                {
+                    _logger.LogInformation("✅ Anuncio eliminado exitosamente: {AnuncioId}", id);
+                    return Json(new { success = true, message });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudo eliminar el anuncio {AnuncioId}: {Message}", id, message);
+                    return Json(new { success = false, message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error eliminando anuncio {AnuncioId}", id);
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
