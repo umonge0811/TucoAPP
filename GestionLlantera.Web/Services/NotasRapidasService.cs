@@ -113,11 +113,11 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Actualizar una nota existente
         /// </summary>
-        public async Task<(bool success, NotaRapidaDTO nota, string mensaje)> ActualizarNotaAsync(ActualizarNotaRapidaDTO request, int usuarioId, string jwtToken)
+        public async Task<(bool success, NotaRapidaDTO nota, string mensaje)> ActualizarNotaAsync(ActualizarNotaRapidaDTO request, int id, string jwtToken)
         {
             try
             {
-                _logger.LogInformation("Actualizando nota {NotaId} para usuario: {UsuarioId}", request.NotaId, usuarioId);
+                _logger.LogInformation("Actualizando nota {NotaId}", id);
 
                 // Configurar headers de autorización
                 _httpClient.DefaultRequestHeaders.Clear();
@@ -126,13 +126,10 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                // Agregar el usuarioId al request para validación en la API
-                var requestWithUser = new { request.NotaId, request.Titulo, request.Contenido, request.Color, UsuarioId = usuarioId };
-                
-                var json = JsonSerializer.Serialize(requestWithUser);
+                var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"api/notasrapidas/{request.NotaId}", content);
+                var response = await _httpClient.PutAsync($"api/notasrapidas/{id}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -154,7 +151,7 @@ namespace GestionLlantera.Web.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error actualizando nota {NotaId} para usuario: {UsuarioId}", request.NotaId, usuarioId);
+                _logger.LogError(ex, "Error actualizando nota {NotaId}", id);
                 return (false, new NotaRapidaDTO(), "Error interno del servidor");
             }
         }

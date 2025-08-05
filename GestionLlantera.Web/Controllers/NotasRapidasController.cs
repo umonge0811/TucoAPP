@@ -190,7 +190,7 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new
                 {
                     success = resultado.success,
-                    message = resultado.message
+                    message = resultado.mensaje
                 });
             }
             catch (Exception ex)

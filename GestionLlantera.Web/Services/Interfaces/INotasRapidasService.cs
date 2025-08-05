@@ -20,7 +20,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Actualizar una nota existente
         /// </summary>
-        Task<(bool success, NotaRapidaDTO nota, string mensaje)> ActualizarNotaAsync(ActualizarNotaRapidaDTO request, int usuarioId, string jwtToken);
+        Task<(bool success, NotaRapidaDTO nota, string mensaje)> ActualizarNotaAsync(ActualizarNotaRapidaDTO request, int id, string jwtToken);
 
         /// <summary>
         /// Eliminar una nota
