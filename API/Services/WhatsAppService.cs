@@ -1,6 +1,7 @@
 
 using RestSharp;
 using System.Text.Json;
+using System.Linq;
 
 namespace API.Services
 {
@@ -17,11 +18,42 @@ namespace API.Services
             _apiUrl = configuration["WhatsApp:ApiUrl"] ?? "https://script.google.com/macros/s/AKfycbyoBhxuklU5D3LTguTcYAS85klwFINHxxd-FroauC4CmFVvS0ua/exec";
         }
 
+        /// <summary>
+        /// Formatea un número de teléfono para Costa Rica (+506)
+        /// </summary>
+        /// <param name="numero">Número original</param>
+        /// <returns>Número formateado con código de país +506</returns>
+        private string FormatearNumeroCostaRica(string numero)
+        {
+            if (string.IsNullOrEmpty(numero))
+                return numero;
+
+            // Limpiar el número de espacios, guiones y otros caracteres
+            var numeroLimpio = numero.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("+", "");
+
+            // Si ya empieza con 506, agregar el +
+            if (numeroLimpio.StartsWith("506"))
+            {
+                return "+" + numeroLimpio;
+            }
+
+            // Si es un número local de 8 dígitos de Costa Rica, agregar +506
+            if (numeroLimpio.Length == 8 && numeroLimpio.All(char.IsDigit))
+            {
+                return "+506" + numeroLimpio;
+            }
+
+            // Si no cumple los criterios anteriores, devolver tal como llegó con + al inicio si no lo tiene
+            return numeroLimpio.StartsWith("+") ? numeroLimpio : "+" + numeroLimpio;
+        }
+
         public async Task<bool> EnviarMensajeAsync(string numero, string mensaje)
         {
             try
             {
-                _logger.LogInformation("📱 Enviando mensaje de WhatsApp a: {Numero}", numero);
+                // Formatear el número para Costa Rica
+                var numeroFormateado = FormatearNumeroCostaRica(numero);
+                _logger.LogInformation("📱 Enviando mensaje de WhatsApp a: {NumeroOriginal} -> {NumeroFormateado}", numero, numeroFormateado);
 
                 var client = new RestClient(_apiUrl);
                 var request = new RestRequest("", Method.Post);
@@ -34,7 +66,7 @@ namespace API.Services
                     token_qr = _token,
                     mensajes = new[]
                     {
-                        new { numero = numero, mensaje = mensaje }
+                        new { numero = numeroFormateado, mensaje = mensaje }
                     }
                 };
 
@@ -68,7 +100,9 @@ namespace API.Services
         {
             try
             {
-                _logger.LogInformation("📱🖼️ Enviando imagen de WhatsApp a: {Numero}", numero);
+                // Formatear el número para Costa Rica
+                var numeroFormateado = FormatearNumeroCostaRica(numero);
+                _logger.LogInformation("📱🖼️ Enviando imagen de WhatsApp a: {NumeroOriginal} -> {NumeroFormateado}", numero, numeroFormateado);
 
                 var client = new RestClient(_apiUrl);
                 var request = new RestRequest("", Method.Post);
@@ -81,7 +115,7 @@ namespace API.Services
                     token_qr = _token,
                     mensajes = new[]
                     {
-                        new { numero = numero, url = urlImagen }
+                        new { numero = numeroFormateado, url = urlImagen }
                     }
                 };
 

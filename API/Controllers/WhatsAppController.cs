@@ -98,8 +98,8 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🧪 Ejecutando prueba rápida de WhatsApp");
 
-                // Número de prueba (puedes cambiarlo por tu número)
-                var numeroTest = "51986321853";
+                // Número de prueba de Costa Rica (puedes cambiarlo por tu número)
+                var numeroTest = "64724275"; // Se formateará automáticamente a +50664724275
                 var mensajeTest = "Prueba desde la API de Gestión Llantera 🛞";
 
                 var resultado = await _whatsAppService.EnviarMensajeAsync(numeroTest, mensajeTest);
