@@ -1064,14 +1064,39 @@ async function finalizarPedido() {
 
         if (success) {
             console.log('✅ Pedido creado exitosamente con ID:', pedidoId);
-            mostrarExito(`${mensaje}${pedidoId ? `. ID del pedido: ${pedidoId}` : ''}`);
             $('#modalNuevoPedido').modal('hide');
+            
+            // Mostrar modal de confirmación para enviar por WhatsApp
+            const resultado = await Swal.fire({
+                icon: 'success',
+                title: '¡Pedido Creado!',
+                html: `
+                    <div class="text-center">
+                        <p class="mb-3">${mensaje}${pedidoId ? `. ID del pedido: ${pedidoId}` : ''}</p>
+                        <hr>
+                        <p class="mb-2"><strong>¿Desea enviar este pedido por WhatsApp al proveedor?</strong></p>
+                        <p class="text-muted small">Se abrirá WhatsApp con el mensaje del pedido listo para enviar</p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '📱 Enviar por WhatsApp',
+                cancelButtonText: '⏭️ Continuar sin enviar',
+                confirmButtonColor: '#25D366',
+                cancelButtonColor: '#6c757d',
+                reverseButtons: true,
+                allowOutsideClick: false
+            });
+
+            if (resultado.isConfirmed) {
+                // El usuario quiere enviar por WhatsApp
+                enviarPedidoPorWhatsApp();
+            } else {
+                // El usuario no quiere enviar por WhatsApp
+                mostrarExito('Pedido creado exitosamente');
+            }
+
             await cargarPedidos();
             limpiarFormulario();
-
-            // Si el pedido fue exitoso, se podría ofrecer enviar por WhatsApp
-            // Aquí se asume que hay un botón o una acción para llamar a enviarPedidoPorWhatsApp()
-            // Por ejemplo: Swal.fire({... confirmButtonText: 'Enviar por WhatsApp', preConfirm: enviarPedidoPorWhatsApp})
         } else {
             const errorMsg = resultado?.message || resultado?.details || resultado?.error || 'Error desconocido al crear el pedido';
             console.error('❌ Error creando pedido:', errorMsg);
