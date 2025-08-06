@@ -14,11 +14,16 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<AnunciosService> _logger;
+        private readonly ApiConfigurationService _apiConfig; // ✅ SERVICIO CENTRALIZADO
 
-        public AnunciosService(IHttpClientFactory httpClientFactory, ILogger<AnunciosService> logger)
+        public AnunciosService(
+            IHttpClientFactory httpClientFactory, 
+            ILogger<AnunciosService> logger,
+            ApiConfigurationService apiConfig) // ✅ INYECCIÓN DE DEPENDENCIA
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _apiConfig = apiConfig; // ✅ ASIGNAR SERVICIO
         }
 
         /// <summary>
