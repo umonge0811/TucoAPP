@@ -326,6 +326,11 @@ function compartirProducto() {
 function compartirPorWhatsApp() {
     try {
         const contexto = window.productoContexto;
+        if (!contexto) {
+            console.error('❌ No hay contexto del producto disponible');
+            return;
+        }
+
         const nombre = contexto.nombre;
         const precio = contexto.precio || '0';
         const stock = contexto.stock || 0;
@@ -338,7 +343,7 @@ function compartirPorWhatsApp() {
             urlImagen = `${window.location.origin}${primeraImagen}`;
         }
 
-        // ✅ USAR EL FORMATO CORRECTO QUE TE GUSTA
+        // ✅ USAR EL FORMATO CORRECTO Y UNIFICADO (IGUAL QUE INVENTARIO.JS)
         let mensaje = `¡Hola! Te comparto este producto:\n\n`;
         mensaje += `${nombre}\n`;
         mensaje += `Precio: ₡${precio}\n`;
@@ -354,20 +359,12 @@ function compartirPorWhatsApp() {
         window.open(whatsappUrl, '_blank');
         console.log('✅ Compartido por WhatsApp desde detalle producto');
 
-        // ✅ USAR LA NOTIFICACIÓN CORRECTA SIN TOAST DE ERROR
-        if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('Producto compartido por WhatsApp exitosamente', 'success');
-        } else if (typeof toastr !== 'undefined') {
-            toastr.success('Producto compartido por WhatsApp exitosamente');
-        }
+        // ✅ USAR LA MISMA NOTIFICACIÓN QUE INVENTARIO.JS
+        mostrarNotificacion('Producto compartido por WhatsApp exitosamente', 'success');
 
     } catch (error) {
         console.error('❌ Error al compartir por WhatsApp:', error);
-        if (typeof mostrarNotificacion === 'function') {
-            mostrarNotificacion('Error al compartir por WhatsApp', 'danger');
-        } else if (typeof toastr !== 'undefined') {
-            toastr.error('No se pudo compartir por WhatsApp');
-        }
+        mostrarNotificacion('Error al compartir por WhatsApp', 'danger');
     }
 }
 
