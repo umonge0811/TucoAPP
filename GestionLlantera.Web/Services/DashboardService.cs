@@ -92,7 +92,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener inventario total");
                 }
 
-                var response = await _httpClient.GetAsync("api/dashboard/inventario-total");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("dashboard/inventario-total");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -138,7 +142,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener top vendedor");
                 }
 
-                var response = await _httpClient.GetAsync("api/dashboard/top-vendedor");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("dashboard/top-vendedor");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -184,7 +192,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener usuarios conectados");
                 }
 
-                var response = await _httpClient.GetAsync("api/dashboard/usuarios-conectados");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("dashboard/usuarios-conectados");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
