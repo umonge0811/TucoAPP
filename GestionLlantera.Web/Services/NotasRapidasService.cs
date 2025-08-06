@@ -14,11 +14,19 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<NotasRapidasService> _logger;
+        // ✅ SERVICIO CENTRALIZADO PARA CONFIGURACIÓN DE API
+        private readonly ApiConfigurationService _apiConfig;
 
-        public NotasRapidasService(IHttpClientFactory httpClientFactory, ILogger<NotasRapidasService> logger)
+        public NotasRapidasService(IHttpClientFactory httpClientFactory, ILogger<NotasRapidasService> logger, ApiConfigurationService apiConfig)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            
+            /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+            _apiConfig = apiConfig;
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 NotasRapidasService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         /// <summary>
