@@ -1,4 +1,4 @@
-﻿// =========================================
+// =========================================
 // GESTIÓN DE ENTREGAS PENDIENTES
 // =========================================
 
@@ -80,6 +80,17 @@ function configurarEventos() {
         } else {
             btnConfirmar.prop('disabled', true);
         }
+    });
+
+    // Event listener para cambios de tamaño de ventana
+    $(window).on('resize', function() {
+        // Usar debounce para evitar llamadas excesivas
+        clearTimeout(window.resizeTimeout);
+        window.resizeTimeout = setTimeout(function() {
+            if (pendientesData && pendientesData.length > 0) {
+                mostrarPendientes(pendientesFiltrados.length > 0 ? pendientesFiltrados : pendientesData);
+            }
+        }, 250);
     });
 }
 
@@ -204,14 +215,24 @@ function mostrarPendientes(pendientes) {
         console.log('📦 No hay pendientes para mostrar');
         $('#sinResultados').show();
         $('#tablaEntregasPendientes').hide();
-        $('#entregasCardsMobile').hide(); // Ocultar contenedor de tarjetas también
+        $('#entregasCardsMobile').hide();
         actualizarPaginacionEntregas([]);
         return;
     }
 
     $('#sinResultados').hide();
-    $('#tablaEntregasPendientes').show();
-    $('#entregasCardsMobile').show(); // Mostrar contenedor de tarjetas
+
+    // Detectar si es móvil (ancho menor a 769px)
+    const esMobile = window.innerWidth <= 768;
+    
+    // Mostrar/ocultar contenedores según el dispositivo
+    if (esMobile) {
+        $('#tablaEntregasPendientes').hide();
+        $('#entregasCardsMobile').show();
+    } else {
+        $('#tablaEntregasPendientes').show();
+        $('#entregasCardsMobile').hide();
+    }
 
     // Calcular índices para paginación
     const inicio = (paginaActualEntregas - 1) * entregasPorPagina;
@@ -219,18 +240,22 @@ function mostrarPendientes(pendientes) {
     const pendientesPagina = pendientes.slice(inicio, fin);
 
     console.log(`📦 Mostrando pendientes ${inicio + 1}-${fin} de ${pendientes.length}`);
+    console.log(`📦 Dispositivo: ${esMobile ? 'Móvil' : 'Desktop'}`);
 
-    // Crear filas para tabla (desktop)
-    pendientesPagina.forEach(pendiente => {
-        const fila = crearFilaPendiente(pendiente);
-        tbody.appendChild(fila);
-    });
-
-    // Crear tarjetas para móvil
-    pendientesPagina.forEach(pendiente => {
-        const tarjeta = crearTarjetaPendienteMobile(pendiente);
-        cardsContainer.appendChild(tarjeta);
-    });
+    // Crear contenido según el dispositivo
+    if (esMobile) {
+        // Crear tarjetas para móvil
+        pendientesPagina.forEach(pendiente => {
+            const tarjeta = crearTarjetaPendienteMobile(pendiente);
+            cardsContainer.appendChild(tarjeta);
+        });
+    } else {
+        // Crear filas para tabla (desktop)
+        pendientesPagina.forEach(pendiente => {
+            const fila = crearFilaPendiente(pendiente);
+            tbody.appendChild(fila);
+        });
+    }
 
     // Actualizar paginación
     actualizarPaginacionEntregas(pendientes);
