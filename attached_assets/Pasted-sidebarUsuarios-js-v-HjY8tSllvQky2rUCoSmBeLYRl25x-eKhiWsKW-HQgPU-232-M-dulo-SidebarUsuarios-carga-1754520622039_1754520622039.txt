@@ -1,0 +1,35 @@
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:232 👥 Módulo SidebarUsuarios cargado correctamente
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:1030 🚚 Módulo de entregas pendientes cargado exitosamente
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:207 👥 DOM cargado, inicializando sidebar usuarios...
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:19 🚚 === INICIALIZANDO MÓDULO DE ENTREGAS PENDIENTES ===
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:92 🚚 Cargando pendientes de entrega...
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:105 🚚 Respuesta completa del servidor: Array(20)
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:113 ✅ Pendientes encontrados como array directo: 20
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:160 🚚 Pendientes cargados: 20
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:735 🔍 Aplicando filtros a entregas pendientes...
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:786 🔍 Filtros aplicados: 3 de 20 pendientes mostrados
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:186 📦 === MOSTRANDO PENDIENTES ===
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:187 📦 Total pendientes recibidos: 3
+entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:193 ❌ No se encontró el tbody de la tabla o el contenedor de tarjetas
+mostrarPendientes @ entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:193
+aplicarFiltros @ entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:789
+cargarPendientes @ entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:167
+await in cargarPendientes
+(anonymous) @ entregasPendientes.js?v=_iDLiFu8pkp3dkPwD3grFBFJZ1Ru5afUUUH4_MO6hXw:29
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:30 👥 Inicializando módulo de usuarios conectados del sidebar
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:44 ✅ Módulo de usuarios conectados del sidebar inicializado
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
