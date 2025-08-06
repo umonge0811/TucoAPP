@@ -1,0 +1,61 @@
+Gravedad	Código	Descripción	Proyecto	Archivo	Línea	Estado suprimido	Detalles
+Error (activo)	CS8199	La sintaxis 'var (...)' como valor L está reservada.	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS8199	La sintaxis 'var (...)' como valor L está reservada.	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS8199	La sintaxis 'var (...)' como valor L está reservada.	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS8199	La sintaxis 'var (...)' como valor L está reservada.	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	326		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	326		
+Error (activo)	CS1003	Error de sintaxis, se esperaba ','	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	326		
+Error (activo)	CS1525	El término de expresión 'string' no es válido	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS1525	El término de expresión 'string' no es válido	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS1525	El término de expresión 'string' no es válido	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS1525	El término de expresión 'string' no es válido	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	326		
+Error (activo)	CS1525	El término de expresión 'bool' no es válido	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS1525	El término de expresión 'bool' no es válido	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS1525	El término de expresión 'bool' no es válido	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS1525	El término de expresión 'bool' no es válido	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	326		
+Error (activo)	CS0103	El nombre 'var' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS0103	El nombre 'var' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS0103	El nombre 'var' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS0103	El nombre 'var' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS0103	El nombre 'var' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS0103	El nombre 'var' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	326		
+Error (activo)	CS0103	El nombre 'success' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS0103	El nombre 'success' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	237		
+Error (activo)	CS0103	El nombre 'success' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS0103	El nombre 'success' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	269		
+Error (activo)	CS0103	El nombre 'success' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS0103	El nombre 'success' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	301		
+Error (activo)	CS0103	El nombre 'success' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	326		
+Error (activo)	CS0103	El nombre 'success' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	328		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	244		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	245		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	272		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	276		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	277		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	304		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	308		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	309		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	326		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	331		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	335		
+Error (activo)	CS0103	El nombre 'message' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	336		
+Error (activo)	CS0103	El nombre 'anuncio' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	235		
+Error (activo)	CS0103	El nombre 'anuncio' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	237		
+Error (activo)	CS0103	El nombre 'anuncio' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	239		
+Error (activo)	CS0103	El nombre 'anuncio' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	240		
+Error (activo)	CS0103	El nombre 'anuncio' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		
+Error (activo)	CS0103	El nombre 'anuncio' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	271		
+Error (activo)	CS0103	El nombre 'anuncio' no existe en el contexto actual	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	272		
+Error (activo)	CS1503	Argumento 2: no se puede convertir de 'Tuco.Clases.DTOs.AnuncioDTO' a 'Tuco.Clases.DTOs.ActualizarAnuncioDTO'	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	299		
+Error (activo)	CS1503	Argumento 1: no se puede convertir de 'Tuco.Clases.DTOs.AnuncioDTO' a 'Tuco.Clases.DTOs.CrearAnuncioDTO'	GestionLlantera.Web	C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Controllers\DashboardController.cs	267		

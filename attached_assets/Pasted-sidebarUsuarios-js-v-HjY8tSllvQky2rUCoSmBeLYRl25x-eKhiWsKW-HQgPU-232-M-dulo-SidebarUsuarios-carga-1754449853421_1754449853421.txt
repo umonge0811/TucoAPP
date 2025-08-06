@@ -1,0 +1,106 @@
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:232 👥 Módulo SidebarUsuarios cargado correctamente
+dashboard.js:1907 📊 Módulo Dashboard cargado correctamente
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:207 👥 DOM cargado, inicializando sidebar usuarios...
+dashboard.js:1703 🚀 Dashboard cargado exitosamente
+dashboard.js:1709 ✅ Evento de formulario de nueva nota configurado
+dashboard.js:1715 ✅ Evento de formulario de nuevo anuncio configurado
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+dashboard.js:28 📊 Dashboard - Inicializando módulo principal
+dashboard.js:66 📊 Cargando alertas de stock...
+dashboard.js:183 📊 Cargando estadísticas de inventario total...
+dashboard.js:266 🏆 Cargando información del top vendedor...
+dashboard.js:384 👥 Cargando información de usuarios conectados...
+dashboard.js:812 No se pudo obtener userId, usando fallback
+getCurrentUserId @ dashboard.js:812
+cargarNotasRapidas @ dashboard.js:824
+inicializarDashboard @ dashboard.js:40
+(anonymous) @ dashboard.js:1817
+setTimeout
+(anonymous) @ dashboard.js:1816
+dashboard.js:826 📝 Cargando notas rápidas...
+dashboard.js:1156 📢 Cargando anuncios del sistema...
+dashboard.js:860 📝 Mostrando notas rápidas: Array(1)
+dashboard.js:914 ✅ Notas rápidas mostradas correctamente
+dashboard.js:844 ✅ Notas rápidas cargadas correctamente: Array(1)
+dashboard.js:299 🏆 Mostrando datos del top vendedor: Object
+dashboard.js:336 ✅ Top vendedor mostrado correctamente
+dashboard.js:283 ✅ Top vendedor cargado correctamente: Object
+dashboard.js:1190 📢 Mostrando anuncios: Array(3)
+dashboard.js:812 No se pudo obtener userId, usando fallback
+getCurrentUserId @ dashboard.js:812
+(anonymous) @ dashboard.js:1281
+mostrarAnuncios @ dashboard.js:1215
+cargarAnuncios @ dashboard.js:1173
+await in cargarAnuncios
+inicializarDashboard @ dashboard.js:41
+(anonymous) @ dashboard.js:1817
+setTimeout
+(anonymous) @ dashboard.js:1816
+dashboard.js:812 No se pudo obtener userId, usando fallback
+getCurrentUserId @ dashboard.js:812
+(anonymous) @ dashboard.js:1281
+mostrarAnuncios @ dashboard.js:1215
+cargarAnuncios @ dashboard.js:1173
+await in cargarAnuncios
+inicializarDashboard @ dashboard.js:41
+(anonymous) @ dashboard.js:1817
+setTimeout
+(anonymous) @ dashboard.js:1816
+dashboard.js:812 No se pudo obtener userId, usando fallback
+getCurrentUserId @ dashboard.js:812
+(anonymous) @ dashboard.js:1281
+mostrarAnuncios @ dashboard.js:1215
+cargarAnuncios @ dashboard.js:1173
+await in cargarAnuncios
+inicializarDashboard @ dashboard.js:41
+(anonymous) @ dashboard.js:1817
+setTimeout
+(anonymous) @ dashboard.js:1816
+dashboard.js:1296 ✅ Anuncios mostrados correctamente
+dashboard.js:1174 ✅ Anuncios cargados correctamente: Array(3)
+dashboard.js:193 📡 Respuesta del servidor (inventario): 200
+dashboard.js:417 👥 Mostrando datos de usuarios conectados: Object
+dashboard.js:514 ✅ Panel de usuarios conectados (bottom) actualizado
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+dashboard.js:450 ✅ Usuarios conectados mostrados correctamente
+dashboard.js:401 ✅ Usuarios conectados cargados correctamente: Object
+dashboard.js:200 ✅ Datos de inventario total recibidos: Object
+dashboard.js:218 📊 Actualizando tarjeta de inventario total: Object
+dashboard.js:233 ✅ Valor total actualizado: ₡1 898 300
+dashboard.js:241 ✅ Detalle actualizado: 7 (48 unidades)
+dashboard.js:76 📡 Respuesta del servidor: 200
+dashboard.js:83 ✅ Datos de alertas recibidos: Object
+dashboard.js:114 📊 Actualizando vista con datos: Object
+dashboard.js:155 ✅ Vista de alertas de stock actualizada correctamente
+dashboard.js:551 📊 Inicializando eventos de formularios...
+dashboard.js:703 🔄 Configurando refresco automático...
+dashboard.js:50 ✅ Dashboard inicializado correctamente
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:30 👥 Inicializando módulo de usuarios conectados del sidebar
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:44 ✅ Módulo de usuarios conectados del sidebar inicializado
+dashboard.js:772 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+dashboard.js:1330 🗑️ Intentando eliminar anuncio: 4
+dashboard.js:1369 ✅ Anuncio eliminado correctamente
+dashboard.js:1156 📢 Cargando anuncios del sistema...
+dashboard.js:1190 📢 Mostrando anuncios: Array(2)
+dashboard.js:812 No se pudo obtener userId, usando fallback
+getCurrentUserId @ dashboard.js:812
+(anonymous) @ dashboard.js:1281
+mostrarAnuncios @ dashboard.js:1215
+cargarAnuncios @ dashboard.js:1173
+await in cargarAnuncios
+eliminarAnuncio @ dashboard.js:1377
+await in eliminarAnuncio
+onclick @ Dashboard:1
+dashboard.js:812 No se pudo obtener userId, usando fallback
+getCurrentUserId @ dashboard.js:812
+(anonymous) @ dashboard.js:1281
+mostrarAnuncios @ dashboard.js:1215
+cargarAnuncios @ dashboard.js:1173
+await in cargarAnuncios
+eliminarAnuncio @ dashboard.js:1377
+await in eliminarAnuncio
+onclick @ Dashboard:1
+dashboard.js:1296 ✅ Anuncios mostrados correctamente
+dashboard.js:1174 ✅ Anuncios cargados correctamente: Array(2)

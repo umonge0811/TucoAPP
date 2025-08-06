@@ -3,6 +3,8 @@
     Layout = "_AdminLayout";
 }
 
+<meta name="user-id" content="@ViewBag.CurrentUserId" />
+
 <link rel="stylesheet" href="~/css/views/admin/dashboard.css" asp-append-version="true" />
 
 
@@ -129,28 +131,13 @@
                 <div class="dashboard-card">
                     <div class="card-header">
                         <h2><i class="bi bi-megaphone text-primary"></i> Anuncios Internos</h2>
-                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newAnnouncementModal">
+                        <button asp-permiso="Crear Anuncios" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newAnnouncementModal">
                             <i class="bi bi-plus-lg"></i> Nuevo Anuncio
                         </button>
                     </div>
                     <div class="card-body">
                         <div class="announcements-container">
-                            <div class="announcement-item important">
-                                <div class="announcement-header">
-                                    <span class="badge bg-danger">Importante</span>
-                                    <span class="announcement-date">15 Feb, 2024</span>
-                                </div>
-                                <h5>Actualización de Precios</h5>
-                                <p>Se han actualizado los precios de todas las llantas. Por favor revisar el nuevo catálogo en el sistema.</p>
-                            </div>
-                            <div class="announcement-item">
-                                <div class="announcement-header">
-                                    <span class="badge bg-info">Información</span>
-                                    <span class="announcement-date">14 Feb, 2024</span>
-                                </div>
-                                <h5>Capacitación Próxima</h5>
-                                <p>Recordatorio: Este viernes tendremos capacitación sobre el nuevo sistema de balanceo.</p>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -288,42 +275,127 @@
     </div>
 </div>
 
-@* Modal Nuevo Anuncio *@
-<div class="modal fade" id="newAnnouncementModal" tabindex="-1">
-    <div class="modal-dialog">
+<!-- Modal para Nuevo Anuncio -->
+<div class="modal fade" id="newAnnouncementModal" tabindex="-1" aria-labelledby="newAnnouncementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Nuevo Anuncio</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="newAnnouncementModalLabel">
+                    <i class="fas fa-bullhorn me-2"></i>Nuevo Anuncio
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <form id="newAnnouncementForm">
-                    <div class="mb-3">
-                        <label class="form-label">Título</label>
-                        <input type="text" class="form-control" required>
+            <form id="newAnnouncementForm">
+                <div class="modal-body">
+                    <!-- Título del Anuncio -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="tituloAnuncio" class="form-label required">
+                                <i class="fas fa-heading text-primary me-1"></i>Título del Anuncio
+                            </label>
+                            <input type="text" class="form-control" id="tituloAnuncio" name="titulo" 
+                                   required maxlength="200" placeholder="Ingresa el título del anuncio">
+                            <div class="form-text">Máximo 200 caracteres</div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Contenido</label>
-                        <textarea class="form-control" rows="3" required></textarea>
+
+                    <!-- Contenido del Anuncio -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="contenidoAnuncio" class="form-label required">
+                                <i class="fas fa-align-left text-primary me-1"></i>Contenido
+                            </label>
+                            <textarea class="form-control" id="contenidoAnuncio" name="contenido" rows="4" 
+                                      required maxlength="2000" placeholder="Describe el contenido del anuncio"></textarea>
+                            <div class="form-text">Máximo 2000 caracteres</div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Importancia</label>
-                        <select class="form-select">
-                            <option value="info">Informativo</option>
-                            <option value="warning">Importante</option>
-                            <option value="danger">Urgente</option>
-                        </select>
+
+                    <!-- Tipo de Anuncio y Prioridad -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="tipoAnuncio" class="form-label">
+                                <i class="fas fa-tags text-primary me-1"></i>Tipo de Anuncio
+                            </label>
+                            <select class="form-select" id="tipoAnuncio" name="tipoAnuncio">
+                                <option value="General">General</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Promocion">Promoción</option>
+                                <option value="Urgente">Urgente</option>
+                                <option value="Informativo">Informativo</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="prioridadAnuncio" class="form-label">
+                                <i class="fas fa-exclamation-triangle text-primary me-1"></i>Prioridad
+                            </label>
+                            <select class="form-select" id="prioridadAnuncio" name="prioridad">
+                                <option value="Baja">Baja</option>
+                                <option value="Normal" selected>Normal</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Critica">Crítica</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Fecha de Vencimiento</label>
-                        <input type="date" class="form-control">
+
+                    <!-- Fecha de Vencimiento y Configuración -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="fechaVencimientoAnuncio" class="form-label">
+                                <i class="fas fa-calendar-alt text-primary me-1"></i>Fecha de Vencimiento
+                            </label>
+                            <input type="date" class="form-control" id="fechaVencimientoAnuncio" name="fechaVencimiento">
+                            <div class="form-text">Opcional - Deja vacío para anuncio sin vencimiento</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-cog text-primary me-1"></i>Configuración
+                            </label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="esImportante" name="esImportante">
+                                <label class="form-check-label" for="esImportante">
+                                    <i class="fas fa-star text-warning me-1"></i>Marcar como importante
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="activoAnuncio" name="activo" checked>
+                                <label class="form-check-label" for="activoAnuncio">
+                                    <i class="fas fa-eye text-success me-1"></i>Anuncio activo
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="newAnnouncementForm" class="btn btn-primary">Publicar</button>
-            </div>
+
+                    <!-- Vista previa del anuncio -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <i class="fas fa-eye text-primary me-1"></i>Vista Previa
+                                </div>
+                                <div class="card-body">
+                                    <div id="previewAnuncio">
+                                        <h6 id="previewTitulo" class="text-muted">Título aparecerá aquí...</h6>
+                                        <p id="previewContenido" class="text-muted small">Contenido aparecerá aquí...</p>
+                                        <div id="previewMetadata" class="d-flex justify-content-between text-muted small">
+                                            <span id="previewTipo">Tipo: General</span>
+                                            <span id="previewPrioridad">Prioridad: Normal</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Guardar Anuncio
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

@@ -37,7 +37,8 @@ async function inicializarDashboard() {
             cargarInventarioTotal(),
             cargarTopVendedor(),
             cargarUsuariosConectados(),
-            cargarNotasRapidas()
+            cargarNotasRapidas(),
+            cargarAnuncios()
         ]);
 
         // Inicializar eventos de formularios
@@ -576,11 +577,11 @@ function inicializarEventosFormularios() {
  */
 async function manejarNuevaNota(e) {
     e.preventDefault();
-    
+
     const form = e.target;
     const notaId = form.getAttribute('data-editing');
     const esEdicion = notaId !== null;
-    
+
     console.log(esEdicion ? '✏️ Actualizando nota...' : '📝 Creando nueva nota...');
 
     try {
@@ -596,10 +597,10 @@ async function manejarNuevaNota(e) {
 
         let url, method;
         if (esEdicion) {
-            url = `/NotasRapidas/Actualizar?id=${notaId}`;
+            url = `/api/NotasRapidas/${notaId}`;
             method = 'PUT';
         } else {
-            url = '/NotasRapidas/Crear';
+            url = '/api/NotasRapidas';
             method = 'POST';
         }
 
@@ -616,6 +617,10 @@ async function manejarNuevaNota(e) {
             headers: headers,
             body: JSON.stringify(notaData)
         });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
 
         const data = await response.json();
 
@@ -640,20 +645,19 @@ async function manejarNuevaNota(e) {
             // Limpiar formulario completamente
             form.reset();
             form.removeAttribute('data-editing');
-            
+
             // Limpiar campos manualmente para asegurar limpieza completa
             document.getElementById('titulo').value = '';
             document.getElementById('contenido').value = '';
             document.getElementById('color').value = '#ffd700';
-            document.getElementById('esFavorita').checked = false;
-            
+
             // Restaurar título del modal para próximo uso
             const modalElement = document.getElementById('newNoteModal');
             const modalTitle = modalElement ? modalElement.querySelector('.modal-title') : null;
             if (modalTitle) {
                 modalTitle.innerHTML = '<i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida';
             }
-            
+
             // Restaurar texto del botón
             const submitButton = form.querySelector('button[type="submit"]');
             if (submitButton) {
@@ -667,7 +671,7 @@ async function manejarNuevaNota(e) {
         }
     } catch (error) {
         console.error('❌ Error procesando nota:', error);
-        
+
         await Swal.fire({
             title: '❌ Error',
             text: esEdicion ? 'No se pudo actualizar la nota.' : 'No se pudo crear la nota.',
@@ -675,24 +679,6 @@ async function manejarNuevaNota(e) {
             confirmButtonText: 'Entendido'
         });
     }
-}
-
-/**
- * Manejar envío de nuevo anuncio
- */
-function manejarNuevoAnuncio(e) {
-    e.preventDefault();
-    console.log('📢 Creando nuevo anuncio...');
-
-    // Aquí se implementaría la lógica para crear un nuevo anuncio
-    // Por ahora solo cerramos el modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('newAnnouncementModal'));
-    if (modal) {
-        modal.hide();
-    }
-
-    // Limpiar formulario
-    e.target.reset();
 }
 
 /**
@@ -723,6 +709,8 @@ function inicializarRefrescoAutomatico() {
         cargarInventarioTotal();
         cargarTopVendedor();
         cargarUsuariosConectados();
+        // También podrías querer refrescar los anuncios si la lista es dinámica
+        // cargarAnuncios();
     }, 5 * 60 * 1000); // 5 minutos
 }
 
@@ -752,6 +740,7 @@ async function obtenerEstadisticasDashboard() {
         cargarAlertasStock();
         cargarInventarioTotal();
         cargarTopVendedor();
+        cargarAnuncios(); // Agregar carga de anuncios para estadísticas
         console.log('✅ Estadísticas del dashboard (actuales) disponibles.');
     } catch (error) {
         console.error('❌ Error obteniendo estadísticas del dashboard:', error);
@@ -795,13 +784,68 @@ function actualizarContadorSidebar(totalUsuarios) {
 // ========================================
 
 /**
+ * Obtener el ID del usuario actual desde el JWT
+ */
+function getCurrentUserId() {
+    try {
+        // Intentar obtener desde el elemento de usuario si existe
+        const userElement = document.querySelector('[data-user-id]');
+        if (userElement) {
+            const userId = parseInt(userElement.getAttribute('data-user-id'));
+            console.log('👤 UserId obtenido desde data-user-id:', userId);
+            return userId;
+        }
+
+        // Intentar obtener desde meta tag si existe
+        const metaElement = document.querySelector('meta[name="user-id"]');
+        if (metaElement) {
+            const userId = parseInt(metaElement.getAttribute('content'));
+            console.log('👤 UserId obtenido desde meta tag:', userId);
+            return userId;
+        }
+
+        // Fallback: obtener desde cookies JWT si está disponible
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'JwtToken' && value) {
+                try {
+                    const payload = JSON.parse(atob(value.split('.')[1]));
+                    const userId = parseInt(payload.userId || payload.sub || payload.nameidentifier);
+                    console.log('👤 UserId obtenido desde JWT:', userId);
+                    return userId;
+                } catch (e) {
+                    console.warn('No se pudo decodificar JWT token');
+                }
+            }
+        }
+
+        // Fallback: obtener desde sessionStorage/localStorage si existe
+        const storedUserId = localStorage.getItem('currentUserId') || sessionStorage.getItem('currentUserId');
+        if (storedUserId) {
+            const userId = parseInt(storedUserId);
+            console.log('👤 UserId obtenido desde storage:', userId);
+            return userId;
+        }
+
+        // Último fallback: retornar null para indicar que no se pudo obtener
+        console.warn('⚠️ No se pudo obtener userId de ninguna fuente');
+        return null;
+    } catch (error) {
+        console.error('❌ Error obteniendo userId:', error);
+        return null;
+    }
+}
+
+/**
  * 📝 FUNCIÓN: Cargar notas rápidas del usuario actual
  */
 async function cargarNotasRapidas() {
+    const currentUserId = getCurrentUserId();
     try {
         console.log('📝 Cargando notas rápidas...');
 
-        const response = await fetch('/NotasRapidas/ObtenerMisNotas', {
+        const response = await fetch(`/api/NotasRapidas/usuario/${currentUserId}`, {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -921,6 +965,7 @@ function mostrarErrorNotasRapidas() {
  */
 async function eliminarNota(notaId, titulo) {
     try {
+        const currentUserId = getCurrentUserId();
         console.log('🗑️ Intentando eliminar nota:', notaId);
 
         // Mostrar confirmación con SweetAlert
@@ -950,7 +995,7 @@ async function eliminarNota(notaId, titulo) {
         }
 
         // Proceder con la eliminación
-        const response = await fetch(`/NotasRapidas/Eliminar?id=${notaId}`, {
+        const response = await fetch(`/api/NotasRapidas/${notaId}?usuarioId=${currentUserId}`, {
             method: 'DELETE',
             credentials: 'include',
             headers: {
@@ -998,14 +1043,14 @@ async function marcarFavorita(notaId, esFavorita) {
     try {
         console.log('⭐ Cambiando estado favorita:', { notaId, esFavorita });
 
-        const response = await fetch(`/NotasRapidas/CambiarFavorita`, {
+        const response = await fetch(`/api/NotasRapidas/${notaId}/favorita`, {
             method: 'PATCH',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ notaId, esFavorita })
+            body: JSON.stringify({ esFavorita: esFavorita, usuarioId: getCurrentUserId() })
         });
 
         const data = await response.json();
@@ -1042,7 +1087,7 @@ async function editarNota(notaId, titulo, contenido, color, esFavorita) {
         // Llenar el formulario con los datos existentes
         const modal = document.getElementById('newNoteModal');
         const form = document.getElementById('newNoteForm');
-        
+
         if (!modal || !form) {
             console.error('❌ Modal o formulario no encontrado');
             return;
@@ -1075,7 +1120,7 @@ async function editarNota(notaId, titulo, contenido, color, esFavorita) {
         console.log('✅ Modal de edición preparado');
     } catch (error) {
         console.error('❌ Error preparando edición de nota:', error);
-        
+
         await Swal.fire({
             title: '❌ Error',
             text: 'No se pudo abrir el editor de notas.',
@@ -1091,7 +1136,7 @@ async function editarNota(notaId, titulo, contenido, color, esFavorita) {
 function abrirModalNuevaNota() {
     const modal = document.getElementById('newNoteModal');
     const form = document.getElementById('newNoteForm');
-    
+
     if (modal && form) {
         // Resetear completamente el formulario
         form.reset();
@@ -1120,6 +1165,568 @@ function abrirModalNuevaNota() {
 }
 
 // ========================================
+// GESTIÓN DE ANUNCIOS
+// ========================================
+
+/**
+ * 📢 FUNCIÓN: Cargar lista de anuncios del sistema
+ */
+async function cargarAnuncios() {
+    try {
+        console.log('📢 Cargando anuncios del sistema...');
+
+        const response = await fetch('/Anuncios/ObtenerAnuncios', {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success && Array.isArray(resultado.anuncios)) {
+            mostrarAnuncios(resultado.anuncios);
+            console.log('✅ Anuncios cargados correctamente:', resultado.anuncios);
+        } else {
+            console.warn('⚠️ No se pudieron obtener los anuncios');
+            mostrarErrorAnuncios();
+        }
+    } catch (error) {
+        console.error('❌ Error cargando anuncios:', error);
+        mostrarErrorAnuncios();
+    }
+}
+
+/**
+ * 📢 FUNCIÓN: Mostrar lista de anuncios en el dashboard
+ */
+function mostrarAnuncios(anuncios) {
+    try {
+        console.log('📢 Mostrando anuncios:', anuncios);
+
+        const container = document.querySelector('.announcements-container'); // Corregido aquí
+        if (!container) {
+            console.warn('⚠️ Contenedor de anuncios no encontrado');
+            return;
+        }
+
+        // Limpiar contenido actual
+        container.innerHTML = '';
+
+        if (!anuncios || anuncios.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-megaphone fs-1 mb-2 d-block"></i>
+                    <p>No hay anuncios importantes</p>
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#newAnnouncementModal">
+                        <i class="bi bi-plus"></i> Crear primer anuncio
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Generar elementos de anuncios
+        anuncios.forEach(anuncio => {
+            const anuncioElement = document.createElement('div');
+
+            // Determinar clase CSS según prioridad
+            let priorityClass = '';
+            let priorityIcon = '';
+            switch (anuncio.prioridad) {
+                case 'Critica':
+                    priorityClass = 'border-danger';
+                    priorityIcon = '<i class="fas fa-exclamation-triangle text-danger me-1"></i>';
+                    break;
+                case 'Alta':
+                    priorityClass = 'border-warning';
+                    priorityIcon = '<i class="fas fa-exclamation text-warning me-1"></i>';
+                    break;
+                case 'Normal':
+                    priorityClass = 'border-info';
+                    priorityIcon = '<i class="fas fa-info-circle text-info me-1"></i>';
+                    break;
+                case 'Baja':
+                    priorityClass = 'border-secondary';
+                    priorityIcon = '<i class="fas fa-minus text-secondary me-1"></i>';
+                    break;
+            }
+
+            const esImportante = anuncio.esImportante;
+            const importanteIcon = esImportante ? '<i class="fas fa-star text-warning me-1" title="Anuncio importante"></i>' : '';
+            const fechaVencimiento = anuncio.fechaVencimiento ? new Date(anuncio.fechaVencimiento) : null;
+            const estaVencido = fechaVencimiento && fechaVencimiento < new Date();
+
+            anuncioElement.className = `announcement-item mb-3 p-3 border rounded shadow-sm ${priorityClass} ${estaVencido ? 'bg-light opacity-75' : ''}`;
+            anuncioElement.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="flex-grow-1">
+                        <h6 class="announcement-title mb-1 d-flex align-items-center">
+                            ${priorityIcon}
+                            ${importanteIcon}
+                            ${anuncio.titulo || 'Anuncio sin título'}
+                            ${estaVencido ? '<span class="badge bg-danger ms-2 small">VENCIDO</span>' : ''}
+                        </h6>
+                        <div class="announcement-meta small text-muted">
+                            <span class="me-3">
+                                <i class="fas fa-tag me-1"></i>${anuncio.tipoAnuncio || 'General'}
+                            </span>
+                            <span class="me-3">
+                                <i class="fas fa-user me-1"></i>${anuncio.nombreCreador || 'Sistema'}
+                            </span>
+                            <span>
+                                <i class="fas fa-calendar me-1"></i>${new Date(anuncio.fechaCreacion).toLocaleDateString()}
+                            </span>
+                        </div>
+                    </div>
+                    ${fechaVencimiento ? `<small class="text-muted">
+                        Expira: ${fechaVencimiento.toLocaleDateString()}
+                    </small>` : ''}
+                </div>
+                <p class="announcement-content mb-3">${anuncio.contenido || ''}</p>
+                <div class="announcement-actions d-flex justify-content-between align-items-center">
+                        <div class="announcement-badges">
+                            <span class="badge bg-${anuncio.prioridad === 'Critica' ? 'danger' : anuncio.prioridad === 'Alta' ? 'warning' : anuncio.prioridad === 'Normal' ? 'info' : 'secondary'} me-1">
+                                ${anuncio.prioridad}
+                            </span>
+                            <span class="badge bg-${anuncio.activo ? 'success' : 'secondary'}">
+                                ${anuncio.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </div>
+                        ${(() => {
+                            const currentUserId = getCurrentUserId();
+                            const esCreador = currentUserId !== null && anuncio.usuarioCreadorId === currentUserId;
+                            
+                            console.log('🔍 Verificando permisos anuncio:', {
+                                anuncioId: anuncio.anuncioId,
+                                usuarioCreadorId: anuncio.usuarioCreadorId,
+                                currentUserId: currentUserId,
+                                esCreador: esCreador
+                            });
+                            
+                            return esCreador ? `
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="editarAnuncio(${anuncio.anuncioId})" title="Editar anuncio">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarAnuncio(${anuncio.anuncioId}, '${(anuncio.titulo || 'Anuncio sin título').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" title="Eliminar anuncio">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            ` : '';
+                        })()}
+                    </div>
+            `;
+            container.appendChild(anuncioElement);
+        });
+
+        console.log('✅ Anuncios mostrados correctamente');
+    } catch (error) {
+        console.error('❌ Error mostrando anuncios:', error);
+        mostrarErrorAnuncios();
+    }
+}
+
+/**
+ * 📢 FUNCIÓN: Mostrar error en anuncios
+ */
+function mostrarErrorAnuncios() {
+    try {
+        const container = document.querySelector('.announcements-container'); // Corregido aquí
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="text-center py-4 text-danger">
+                <i class="bi bi-exclamation-triangle fs-1 mb-2 d-block"></i>
+                <p>Error al cargar anuncios</p>
+                <button class="btn btn-sm btn-outline-secondary" onclick="cargarAnuncios()">
+                    <i class="bi bi-arrow-clockwise"></i> Reintentar
+                </button>
+            </div>
+        `;
+    } catch (error) {
+        console.error('❌ Error mostrando mensaje de error de anuncios:', error);
+    }
+}
+
+/**
+ * 🗑️ FUNCIÓN: Eliminar anuncio con SweetAlert
+ */
+async function eliminarAnuncio(anuncioId, titulo) {
+    try {
+        console.log('🗑️ Intentando eliminar anuncio:', anuncioId);
+
+        const resultado = await Swal.fire({
+            title: '🗑️ ¿Eliminar anuncio?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Título:</strong> ${titulo}</p>
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Esta acción no se puede deshacer.
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-trash me-2"></i>Eliminar',
+            cancelButtonText: '<i class="bi bi-x-lg me-2"></i>Cancelar',
+            reverseButtons: true
+        });
+
+        if (!resultado.isConfirmed) {
+            console.log('🚫 Usuario canceló la eliminación del anuncio');
+            return;
+        }
+
+        const response = await fetch(`/Anuncios/EliminarAnuncio?id=${anuncioId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            console.log('✅ Anuncio eliminado correctamente');
+            await Swal.fire({
+                title: '✅ ¡Eliminado!',
+                text: 'El anuncio ha sido eliminado correctamente.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            cargarAnuncios(); // Recargar la lista de anuncios
+        } else {
+            throw new Error(data.message || 'Error al eliminar el anuncio');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando anuncio:', error);
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'No se pudo eliminar el anuncio. Inténtalo de nuevo.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+    }
+}
+
+/**
+ * ✏️ FUNCIÓN: Editar anuncio existente (abre modal con datos)
+ */
+async function editarAnuncio(anuncioId) {
+    try {
+        console.log('✏️ Editando anuncio con ID:', anuncioId);
+
+        const response = await fetch(`/Anuncios/ObtenerAnuncio?id=${anuncioId}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error al obtener anuncio ${anuncioId}: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+
+        if (!resultado.success || !resultado.anuncio) {
+            throw new Error(resultado.message || 'No se pudieron obtener los datos del anuncio.');
+        }
+
+        const anuncio = resultado.anuncio;
+
+        // Llenar el modal de nuevo anuncio con los datos del anuncio a editar
+        const modal = document.getElementById('newAnnouncementModal');
+        const form = document.getElementById('newAnnouncementForm');
+
+        if (!modal || !form) {
+            console.error('❌ Modal o formulario de anuncio no encontrado');
+            return;
+        }
+
+        // Cambiar título del modal
+        const modalTitle = modal.querySelector('.modal-title');
+        if (modalTitle) {
+            modalTitle.innerHTML = '<i class="fas fa-edit text-primary me-2"></i>Editar Anuncio';
+        }
+
+        // Llenar todos los campos del formulario usando los IDs correctos
+        const tituloField = document.getElementById('tituloAnuncio');
+        const contenidoField = document.getElementById('contenidoAnuncio');
+        const fechaField = document.getElementById('fechaVencimientoAnuncio');
+        const tipoField = document.getElementById('tipoAnuncio');
+        const prioridadField = document.getElementById('prioridadAnuncio');
+        const importanteField = document.getElementById('esImportante');
+        const activoField = document.getElementById('activoAnuncio');
+
+        if (tituloField) tituloField.value = anuncio.titulo || '';
+        if (contenidoField) contenidoField.value = anuncio.contenido || '';
+        if (tipoField) tipoField.value = anuncio.tipoAnuncio || 'General';
+        if (prioridadField) prioridadField.value = anuncio.prioridad || 'Normal';
+        if (importanteField) importanteField.checked = anuncio.esImportante || false;
+        if (activoField) activoField.checked = anuncio.activo ?? true;
+
+        // Formatear fecha para el input type="date"
+        if (anuncio.fechaVencimiento && fechaField) {
+            const fecha = new Date(anuncio.fechaVencimiento);
+            const year = fecha.getFullYear();
+            const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
+            const day = fecha.getDate().toString().padStart(2, '0');
+            fechaField.value = `${year}-${month}-${day}`;
+        }
+
+        // Actualizar vista previa con los datos cargados
+        actualizarVistaPrevia();
+
+        // Guardar el ID del anuncio para la actualización
+        form.setAttribute('data-editing-anuncio-id', anuncioId);
+
+        // Mostrar el modal
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        console.log('✅ Modal de edición de anuncio preparado');
+
+    } catch (error) {
+        console.error('❌ Error preparando edición de anuncio:', error);
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'No se pudo abrir el editor de anuncios.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+    }
+}
+
+/**
+ * 📢 FUNCIÓN: Manejar creación y edición de anuncios
+ */
+async function manejarNuevoAnuncio(e) {
+    e.preventDefault();
+    console.log('📢 === INICIANDO PROCESAMIENTO DE ANUNCIO ===');
+
+    const form = e.target;
+    console.log('📋 Formulario obtenido:', form);
+    console.log('📋 ID del formulario:', form.id);
+    console.log('📋 Elementos del formulario:', form.elements);
+
+    const anuncioId = form.getAttribute('data-editing-anuncio-id');
+    const esEdicion = anuncioId !== null && anuncioId !== '';
+    console.log('✏️ Modo edición:', esEdicion, 'ID:', anuncioId);
+
+    // Log detallado de todos los elementos del formulario
+    console.log('🔍 === ANALIZANDO ELEMENTOS DEL FORMULARIO ===');
+    for (let i = 0; i < form.elements.length; i++) {
+        const element = form.elements[i];
+        console.log(`Elemento ${i}:`, {
+            name: element.name,
+            id: element.id,
+            type: element.type,
+            value: element.value,
+            tagName: element.tagName
+        });
+    }
+
+    // Crear FormData y verificar contenido
+    const formData = new FormData(form);
+    console.log('📦 === CONTENIDO DE FORMDATA ===');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: "${value}"`);
+    }
+
+    // Intentar capturar datos de múltiples formas
+    console.log('🎯 === CAPTURA DE DATOS MÚLTIPLE ===');
+
+    // Capturar datos usando getElementById con los IDs correctos del nuevo modal
+    const titulo = document.getElementById('tituloAnuncio')?.value?.trim() || '';
+    const contenido = document.getElementById('contenidoAnuncio')?.value?.trim() || '';
+    const fechaVencimiento = document.getElementById('fechaVencimientoAnuncio')?.value || null;
+    const tipoAnuncio = document.getElementById('tipoAnuncio')?.value || 'General';
+    const prioridad = document.getElementById('prioridadAnuncio')?.value || 'Normal';
+    const esImportante = document.getElementById('esImportante')?.checked || false;
+    const activo = document.getElementById('activoAnuncio')?.checked ?? true;
+
+    console.log('🎯 === DATOS CAPTURADOS DEL FORMULARIO ===');
+    console.log('Título:', titulo);
+    console.log('Contenido:', contenido);
+    console.log('Fecha Vencimiento:', fechaVencimiento);
+    console.log('Tipo:', tipoAnuncio);
+    console.log('Prioridad:', prioridad);
+    console.log('Es Importante:', esImportante);
+    console.log('Activo:', activo);
+
+    const anuncioData = {
+        titulo: titulo,
+        contenido: contenido,
+        fechaVencimiento: fechaVencimiento,
+        tipoAnuncio: tipoAnuncio,
+        prioridad: prioridad,
+        esImportante: esImportante,
+        activo: activo
+    };
+
+    console.log('📋 === DATOS FINALES DEL ANUNCIO ===');
+    console.log('Datos finales a enviar:', anuncioData);
+
+    // Validación básica
+    if (!anuncioData.titulo || anuncioData.titulo.trim() === '') {
+        console.error('❌ ERROR: Título vacío');
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'El título del anuncio es obligatorio.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
+    if (!anuncioData.contenido || anuncioData.contenido.trim() === '') {
+        console.error('❌ ERROR: Contenido vacío');
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'El contenido del anuncio es obligatorio.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
+    try {
+        let response;
+        let url;
+        let method;
+
+        if (esEdicion) {
+            // Actualizar anuncio existente
+            url = `/Anuncios/ActualizarAnuncio?id=${anuncioId}`;
+            method = 'PUT';
+            console.log('✏️ Actualizando anuncio existente:', anuncioId);
+        } else {
+            // Crear nuevo anuncio
+            url = '/Anuncios/CrearAnuncio';
+            method = 'POST';
+            console.log('🆕 Creando nuevo anuncio');
+        }
+
+        console.log('🌐 === PREPARANDO PETICIÓN HTTP ===');
+        console.log('URL:', url);
+        console.log('Method:', method);
+        console.log('Body JSON:', JSON.stringify(anuncioData, null, 2));
+
+        const requestOptions = {
+            method: method,
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(anuncioData)
+        };
+
+        console.log('Opciones de petición:', requestOptions);
+
+        response = await fetch(url, requestOptions);
+
+        console.log('📡 === RESPUESTA DEL SERVIDOR ===');
+        console.log('Status:', response.status);
+        console.log('StatusText:', response.statusText);
+        console.log('Headers:', [...response.headers.entries()]);
+
+        if (!response.ok) {
+            console.error('❌ Respuesta no exitosa:', response.status, response.statusText);
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
+        const responseText = await response.text();
+        console.log('📄 Respuesta en texto crudo:', responseText);
+
+        let resultado;
+        try {
+            resultado = JSON.parse(responseText);
+            console.log('✅ JSON parseado correctamente:', resultado);
+        } catch (parseError) {
+            console.error('❌ Error parseando JSON:', parseError);
+            console.error('Texto que causó el error:', responseText);
+            throw new Error('Respuesta del servidor no es JSON válido');
+        }
+
+        console.log('🎯 === RESULTADO DEL SERVIDOR ===');
+        console.log('Success:', resultado.success);
+        console.log('Message:', resultado.message);
+        console.log('Data:', resultado.data);
+
+        if (resultado.success) {
+            console.log('✅ Operación exitosa en el servidor');
+
+            // Mostrar mensaje de éxito
+            await Swal.fire({
+                title: '✅ ¡Éxito!',
+                text: esEdicion ? 'Anuncio actualizado correctamente.' : 'Anuncio creado correctamente.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Cerrar modal y limpiar formulario
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newAnnouncementModal'));
+            if (modal) {
+                console.log('🚪 Cerrando modal...');
+                modal.hide();
+            }
+
+            // Limpiar formulario y resetear el estado de edición
+            console.log('🧹 Limpiando formulario...');
+            form.reset();
+            form.removeAttribute('data-editing-anuncio-id');
+
+            // Restaurar título del modal
+            const modalTitle = document.querySelector('#newAnnouncementModal .modal-title');
+            if (modalTitle) {
+                modalTitle.innerHTML = '<i class="fas fa-bullhorn text-primary me-2"></i>Nuevo Anuncio';
+                console.log('🔄 Título del modal restaurado');
+            }
+
+            // Recargar anuncios
+            console.log('🔄 Recargando lista de anuncios...');
+            cargarAnuncios();
+
+            console.log('✅ Anuncio procesado correctamente');
+        } else {
+            console.error('❌ Error reportado por el servidor:', resultado.message);
+            throw new Error(resultado.message || 'Error al procesar el anuncio');
+        }
+
+    } catch (error) {
+        console.error('❌ === ERROR PROCESANDO ANUNCIO ===');
+        console.error('Tipo de error:', error.constructor.name);
+        console.error('Mensaje:', error.message);
+        console.error('Stack:', error.stack);
+
+        await Swal.fire({
+            title: '❌ Error',
+            text: `No se pudo procesar el anuncio: ${error.message}`,
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+    }
+
+    console.log('📢 === FIN DEL PROCESAMIENTO DE ANUNCIO ===');
+}
+
+
+// ========================================
 // EVENTOS DE INICIALIZACIÓN
 // ========================================
 
@@ -1131,11 +1738,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const newNoteForm = document.getElementById('newNoteForm');
     if (newNoteForm) {
         newNoteForm.addEventListener('submit', manejarNuevaNota);
+        console.log('✅ Evento de formulario de nueva nota configurado');
     }
 
     const newAnnouncementForm = document.getElementById('newAnnouncementForm');
     if (newAnnouncementForm) {
         newAnnouncementForm.addEventListener('submit', manejarNuevoAnuncio);
+        console.log('✅ Evento de formulario de nuevo anuncio configurado');
     }
 
     // Configurar evento para resetear modal cuando se cierre
@@ -1143,38 +1752,97 @@ document.addEventListener('DOMContentLoaded', function () {
     if (newNoteModal) {
         newNoteModal.addEventListener('hidden.bs.modal', function () {
             console.log('🔄 Limpiando modal de nota al cerrarse...');
-            
+
             const form = document.getElementById('newNoteForm');
             if (form) {
                 // Resetear formulario completamente
                 form.reset();
                 form.removeAttribute('data-editing');
-                
+
                 // Limpiar campos manualmente
                 const tituloField = document.getElementById('titulo');
                 const contenidoField = document.getElementById('contenido');
                 const colorField = document.getElementById('color');
-                
+
                 if (tituloField) tituloField.value = '';
                 if (contenidoField) contenidoField.value = '';
                 if (colorField) colorField.value = '#ffd700';
-                
+
                 // Restaurar título del modal
                 const modalTitle = newNoteModal.querySelector('.modal-title');
                 if (modalTitle) {
                     modalTitle.innerHTML = '<i class="fas fa-sticky-note text-warning me-2"></i>Nueva Nota Rápida';
                 }
-                
+
                 // Restaurar texto del botón
                 const submitButton = form.querySelector('button[type="submit"]');
                 if (submitButton) {
                     submitButton.innerHTML = '<i class="fas fa-save"></i> Guardar Nota';
                 }
-                
+
                 console.log('✅ Modal de nota limpiado correctamente');
             }
         });
     }
+
+    // Configurar evento para resetear modal de anuncio al cerrarse
+    const newAnnouncementModal = document.getElementById('newAnnouncementModal');
+    if (newAnnouncementModal) {
+        newAnnouncementModal.addEventListener('hidden.bs.modal', function () {
+            console.log('🔄 Limpiando modal de anuncio al cerrarse...');
+
+            const form = document.getElementById('newAnnouncementForm');
+            if (form) {
+                // Resetear formulario completamente
+                form.reset();
+                form.removeAttribute('data-editing-anuncio-id');
+
+                // Limpiar campos manualmente - Usar nombres correctos
+                const tituloField = document.getElementById('tituloAnuncio');
+                const contenidoField = document.getElementById('contenidoAnuncio');
+                const fechaField = document.getElementById('fechaVencimientoAnuncio');
+                const tipoField = document.getElementById('tipoAnuncio');
+                const prioridadField = document.getElementById('prioridadAnuncio');
+                const importanteField = document.getElementById('esImportante');
+                const activoField = document.getElementById('activoAnuncio');
+
+                if (tituloField) tituloField.value = '';
+                if (contenidoField) contenidoField.value = '';
+                if (fechaField) fechaField.value = '';
+                if (tipoField) tipoField.value = 'General';
+                if (prioridadField) prioridadField.value = 'Normal';
+                if (importanteField) importanteField.checked = false;
+                if (activoField) activoField.checked = true;
+
+                // Limpiar vista previa
+                actualizarVistaPrevia();
+
+                // Restaurar título del modal
+                const modalTitle = newAnnouncementModal.querySelector('.modal-title');
+                if (modalTitle) {
+                    modalTitle.innerHTML = '<i class="fas fa-bullhorn me-2"></i>Nuevo Anuncio';
+                }
+
+                console.log('✅ Modal de anuncio limpiado correctamente');
+            }
+        });
+
+        // Configurar vista previa en tiempo real
+        const form = document.getElementById('newAnnouncementForm');
+        if (form) {
+            // Eventos para actualizar vista previa
+            const tituloField = document.getElementById('tituloAnuncio');
+            const contenidoField = document.getElementById('contenidoAnuncio');
+            const tipoField = document.getElementById('tipoAnuncio');
+            const prioridadField = document.getElementById('prioridadAnuncio');
+
+            if (tituloField) tituloField.addEventListener('input', actualizarVistaPrevia);
+            if (contenidoField) contenidoField.addEventListener('input', actualizarVistaPrevia);
+            if (tipoField) tipoField.addEventListener('change', actualizarVistaPrevia);
+            if (prioridadField) prioridadField.addEventListener('change', actualizarVistaPrevia);
+        }
+    }
+
 
     // Cargar todas las funcionalidades del dashboard
     setTimeout(() => {
@@ -1204,7 +1872,68 @@ function inicializarDashboardSinJQuery() {
 window.dashboardModule = {
     inicializar: inicializarDashboard,
     recargarAlertas: recargarAlertasStock,
-    obtenerEstadisticas: obtenerEstadisticasDashboard
+    obtenerEstadisticas: obtenerEstadisticasDashboard,
+    cargarAnuncios: cargarAnuncios // Exportar también la carga de anuncios
 };
+
+/**
+ * 👁️ FUNCIÓN: Actualizar vista previa del anuncio en tiempo real
+ */
+function actualizarVistaPrevia() {
+    try {
+        const tituloField = document.getElementById('tituloAnuncio');
+        const contenidoField = document.getElementById('contenidoAnuncio');
+        const tipoField = document.getElementById('tipoAnuncio');
+        const prioridadField = document.getElementById('prioridadAnuncio');
+
+        const previewTitulo = document.getElementById('previewTitulo');
+        const previewContenido = document.getElementById('previewContenido');
+        const previewTipo = document.getElementById('previewTipo');
+        const previewPrioridad = document.getElementById('previewPrioridad');
+
+        if (previewTitulo) {
+            const titulo = tituloField?.value || '';
+            previewTitulo.textContent = titulo || 'Título aparecerá aquí...';
+            previewTitulo.className = titulo ? 'fw-bold' : 'text-muted';
+        }
+
+        if (previewContenido) {
+            const contenido = contenidoField?.value || '';
+            previewContenido.textContent = contenido || 'Contenido aparecerá aquí...';
+            previewContenido.className = contenido ? 'small' : 'text-muted small';
+        }
+
+        if (previewTipo) {
+            const tipo = tipoField?.value || 'General';
+            previewTipo.textContent = `Tipo: ${tipo}`;
+        }
+
+        if (previewPrioridad) {
+            const prioridad = prioridadField?.value || 'Normal';
+            previewPrioridad.textContent = `Prioridad: ${prioridad}`;
+
+            // Cambiar color según prioridad
+            previewPrioridad.className = 'small';
+            switch (prioridad) {
+                case 'Critica':
+                    previewPrioridad.className += ' text-danger fw-bold';
+                    break;
+                case 'Alta':
+                    previewPrioridad.className += ' text-warning fw-bold';
+                    break;
+                case 'Normal':
+                    previewPrioridad.className += ' text-info';
+                    break;
+                case 'Baja':
+                    previewPrioridad.className += ' text-secondary';
+                    break;
+            }
+        }
+
+        console.log('👁️ Vista previa actualizada');
+    } catch (error) {
+        console.error('❌ Error actualizando vista previa:', error);
+    }
+}
 
 console.log('📊 Módulo Dashboard cargado correctamente');

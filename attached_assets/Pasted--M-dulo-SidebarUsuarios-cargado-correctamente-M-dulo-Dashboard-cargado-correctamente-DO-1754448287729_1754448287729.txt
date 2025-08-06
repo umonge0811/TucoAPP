@@ -1,0 +1,143 @@
+ 👥 Módulo SidebarUsuarios cargado correctamente
+ 📊 Módulo Dashboard cargado correctamente
+ 👥 DOM cargado, inicializando sidebar usuarios...
+ 🚀 Dashboard cargado exitosamente
+ ✅ Evento de formulario de nueva nota configurado
+ ✅ Evento de formulario de nuevo anuncio configurado
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 📊 Dashboard - Inicializando módulo principal
+ 📊 Cargando alertas de stock...
+ 📊 Cargando estadísticas de inventario total...
+ 🏆 Cargando información del top vendedor...
+ 👥 Cargando información de usuarios conectados...
+ No se pudo obtener userId, usando fallback
+getCurrentUserId @ dashboard.js:812
+cargarNotasRapidas @ dashboard.js:824
+inicializarDashboard @ dashboard.js:40
+(anonymous) @ dashboard.js:1815
+setTimeout
+(anonymous) @ dashboard.js:1814
+ 📝 Cargando notas rápidas...
+ 📢 Cargando anuncios del sistema...
+dashboard.js:860 📝 Mostrando notas rápidas: Array(1)
+dashboard.js:914 ✅ Notas rápidas mostradas correctamente
+dashboard.js:844 ✅ Notas rápidas cargadas correctamente: Array(1)
+dashboard.js:76 📡 Respuesta del servidor: 200
+dashboard.js:83 ✅ Datos de alertas recibidos: Object
+dashboard.js:114 📊 Actualizando vista con datos: Object
+dashboard.js:155 ✅ Vista de alertas de stock actualizada correctamente
+dashboard.js:417 👥 Mostrando datos de usuarios conectados: Object
+dashboard.js:514 ✅ Panel de usuarios conectados (bottom) actualizado
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+dashboard.js:450 ✅ Usuarios conectados mostrados correctamente
+dashboard.js:401 ✅ Usuarios conectados cargados correctamente: Object
+dashboard.js:299 🏆 Mostrando datos del top vendedor: Object
+dashboard.js:336 ✅ Top vendedor mostrado correctamente
+dashboard.js:283 ✅ Top vendedor cargado correctamente: Object
+dashboard.js:1190 📢 Mostrando anuncios: Array(2)
+dashboard.js:1194 ⚠️ Contenedor de anuncios no encontrado
+mostrarAnuncios @ dashboard.js:1194
+cargarAnuncios @ dashboard.js:1173
+await in cargarAnuncios
+inicializarDashboard @ dashboard.js:41
+(anonymous) @ dashboard.js:1815
+setTimeout
+(anonymous) @ dashboard.js:1814
+dashboard.js:1174 ✅ Anuncios cargados correctamente: Array(2)
+dashboard.js:193 📡 Respuesta del servidor (inventario): 200
+dashboard.js:200 ✅ Datos de inventario total recibidos: Object
+dashboard.js:218 📊 Actualizando tarjeta de inventario total: Object
+dashboard.js:233 ✅ Valor total actualizado: ₡1 898 300
+dashboard.js:241 ✅ Detalle actualizado: 7 (48 unidades)
+dashboard.js:551 📊 Inicializando eventos de formularios...
+dashboard.js:703 🔄 Configurando refresco automático...
+dashboard.js:50 ✅ Dashboard inicializado correctamente
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:30 👥 Inicializando módulo de usuarios conectados del sidebar
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:44 ✅ Módulo de usuarios conectados del sidebar inicializado
+dashboard.js:772 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1484 📢 === INICIANDO PROCESAMIENTO DE ANUNCIO ===
+dashboard.js:1487 📋 Formulario obtenido: <form id=​"newAnnouncementForm">​…​</form>​
+dashboard.js:1488 📋 ID del formulario: newAnnouncementForm
+dashboard.js:1489 📋 Elementos del formulario: HTMLFormControlsCollection(10)
+dashboard.js:1493 ✏️ Modo edición: false ID: null
+dashboard.js:1496 🔍 === ANALIZANDO ELEMENTOS DEL FORMULARIO ===
+dashboard.js:1499 Elemento 0: Object
+dashboard.js:1499 Elemento 1: Object
+dashboard.js:1499 Elemento 2: Object
+dashboard.js:1499 Elemento 3: Object
+dashboard.js:1499 Elemento 4: Object
+dashboard.js:1499 Elemento 5: Object
+dashboard.js:1499 Elemento 6: Object
+dashboard.js:1499 Elemento 7: Object
+dashboard.js:1499 Elemento 8: Object
+dashboard.js:1499 Elemento 9: Object
+dashboard.js:1510 📦 === CONTENIDO DE FORMDATA ===
+dashboard.js:1512 titulo: "Nota de Pruebas2w"
+dashboard.js:1512 contenido: "asdasd"
+dashboard.js:1512 tipoAnuncio: "General"
+dashboard.js:1512 prioridad: "Critica"
+dashboard.js:1512 fechaVencimiento: "2025-08-07"
+dashboard.js:1512 activo: "on"
+dashboard.js:1516 🎯 === CAPTURA DE DATOS MÚLTIPLE ===
+dashboard.js:1527 🎯 === DATOS CAPTURADOS DEL FORMULARIO ===
+dashboard.js:1528 Título: Nota de Pruebas2w
+dashboard.js:1529 Contenido: asdasd
+dashboard.js:1530 Fecha Vencimiento: 2025-08-07
+dashboard.js:1531 Tipo: General
+dashboard.js:1532 Prioridad: Critica
+dashboard.js:1533 Es Importante: false
+dashboard.js:1534 Activo: true
+dashboard.js:1546 📋 === DATOS FINALES DEL ANUNCIO ===
+dashboard.js:1547 Datos finales a enviar: Object
+dashboard.js:1586 🆕 Creando nuevo anuncio
+dashboard.js:1589 🌐 === PREPARANDO PETICIÓN HTTP ===
+dashboard.js:1590 URL: /Anuncios/CrearAnuncio
+dashboard.js:1591 Method: POST
+dashboard.js:1592 Body JSON: {
+  "titulo": "Nota de Pruebas2w",
+  "contenido": "asdasd",
+  "fechaVencimiento": "2025-08-07",
+  "tipoAnuncio": "General",
+  "prioridad": "Critica",
+  "esImportante": false,
+  "activo": true
+}
+dashboard.js:1604 Opciones de petición: Object
+dashboard.js:1608 📡 === RESPUESTA DEL SERVIDOR ===
+dashboard.js:1609 Status: 200
+dashboard.js:1610 StatusText: 
+dashboard.js:1611 Headers: Array(3)
+dashboard.js:1619 📄 Respuesta en texto crudo: {"success":true,"anuncio":{"anuncioId":3,"usuarioCreadorId":4,"nombreCreador":"Julissa Mejias","titulo":"Nota de Pruebas2w","contenido":"asdasd","tipoAnuncio":"General","prioridad":"Critica","esImportante":false,"activo":true,"fechaCreacion":"2025-08-05T20:44:16.1942259","fechaModificacion":null,"fechaVencimiento":"2025-08-07T00:00:00","estaVencido":false},"message":"Anuncio creado correctamente"}
+dashboard.js:1624 ✅ JSON parseado correctamente: Object
+dashboard.js:1631 🎯 === RESULTADO DEL SERVIDOR ===
+dashboard.js:1632 Success: true
+dashboard.js:1633 Message: Anuncio creado correctamente
+dashboard.js:1634 Data: undefined
+dashboard.js:1637 ✅ Operación exitosa en el servidor
+dashboard.js:1651 🚪 Cerrando modal...
+dashboard.js:1656 🧹 Limpiando formulario...
+dashboard.js:1664 🔄 Título del modal restaurado
+dashboard.js:1668 🔄 Recargando lista de anuncios...
+dashboard.js:1156 📢 Cargando anuncios del sistema...
+dashboard.js:1671 ✅ Anuncio procesado correctamente
+dashboard.js:1691 📢 === FIN DEL PROCESAMIENTO DE ANUNCIO ===
+dashboard.js:1190 📢 Mostrando anuncios: Array(3)
+dashboard.js:1194 ⚠️ Contenedor de anuncios no encontrado
+mostrarAnuncios @ dashboard.js:1194
+cargarAnuncios @ dashboard.js:1173
+await in cargarAnuncios
+manejarNuevoAnuncio @ dashboard.js:1669
+dashboard.js:1174 ✅ Anuncios cargados correctamente: Array(3)
+dashboard.js:1758 🔄 Limpiando modal de anuncio al cerrarse...
+dashboard.js:1899 👁️ Vista previa actualizada
+dashboard.js:1792 ✅ Modal de anuncio limpiado correctamente
