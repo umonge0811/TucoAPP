@@ -1,3 +1,4 @@
+
 // Ubicación: GestionLlantera.Web/Services/InventarioService.cs
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -70,8 +71,8 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT");
                 }
 
-                /// ✅ CONSTRUCCIÓN DE URL CENTRALIZADA
-                var url = _apiConfig.GetApiUrl("Inventario");
+                /// ✅ CONSTRUCCIÓN DE URL CENTRALIZADA - CORREGIDA
+                var url = _apiConfig.GetApiUrl("Inventario/productos");
                 _logger.LogInformation($"🌐 URL construida: {url}");
 
                 var response = await _httpClient.GetAsync(url);
@@ -135,17 +136,25 @@ namespace GestionLlantera.Web.Services
                             Imagenes = new List<ImagenProductoDTO>()
                         };
 
-                        /// ✅ PROCESAMIENTO: IMÁGENES DEL PRODUCTO
+                        /// ✅ PROCESAMIENTO: IMÁGENES DEL PRODUCTO - CORREGIDO
                         if (item.imagenesProductos != null)
                         {
                             foreach (var img in item.imagenesProductos)
                             {
                                 var imagenUrl = img.urlimagen?.ToString() ?? "";
 
-                                // Construir URL completa para las imágenes
+                                // ✅ CONSTRUIR URL COMPLETA USANDO EL SERVICIO CENTRALIZADO
                                 if (!string.IsNullOrEmpty(imagenUrl) && !imagenUrl.StartsWith("http"))
                                 {
-                                    string apiBaseUrl = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? "";
+                                    // Usar la URL base del servicio centralizado
+                                    string apiBaseUrl = _apiConfig.BaseUrl.TrimEnd('/');
+                                    
+                                    // Asegurar que la URL de imagen comience con "/"
+                                    if (!imagenUrl.StartsWith("/"))
+                                    {
+                                        imagenUrl = "/" + imagenUrl;
+                                    }
+                                    
                                     imagenUrl = $"{apiBaseUrl}{imagenUrl}";
                                 }
 
@@ -156,6 +165,8 @@ namespace GestionLlantera.Web.Services
                                     UrlImagen = imagenUrl,
                                     Descripcion = img.descripcion?.ToString() ?? ""
                                 });
+
+                                _logger.LogInformation($"🖼️ Imagen procesada: {imagenUrl}");
                             }
                         }
 
@@ -273,12 +284,12 @@ namespace GestionLlantera.Web.Services
 
                 _logger.LogInformation("✅ Producto base mapeado: {Nombre} (ID: {Id})", producto.NombreProducto, producto.ProductoId);
 
-                /// ✅ PROCESAMIENTO: IMÁGENES DE FORMA SEGURA
+                /// ✅ PROCESAMIENTO: IMÁGENES DE FORMA SEGURA - CORREGIDO
                 try
                 {
                     if (item.imagenesProductos != null)
                     {
-                        string apiBaseUrl = _httpClient.BaseAddress?.ToString()?.TrimEnd('/') ?? "";
+                        string apiBaseUrl = _apiConfig.BaseUrl.TrimEnd('/');
 
                         foreach (var img in item.imagenesProductos)
                         {
@@ -306,6 +317,7 @@ namespace GestionLlantera.Web.Services
                                     };
 
                                     producto.Imagenes.Add(imagen);
+                                    _logger.LogInformation($"🖼️ Imagen procesada: {imagenUrl}");
                                 }
                             }
                             catch (Exception imgEx)
