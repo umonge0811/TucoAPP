@@ -1,8 +1,4 @@
 
-// ✅ SERVICIO DE AUTENTICACIÓN - CENTRALIZADO CON ApiConfigurationService
-// Este servicio gestiona todas las operaciones de autenticación, activación y recuperación de contraseñas
-// utilizando URLs centralizadas desde appsettings.json
-
 using GestionLlantera.Web.Models;
 using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Models.ViewModels;
@@ -12,27 +8,32 @@ using Tuco.Clases.Models.Password;
 
 namespace GestionLlantera.Web.Services
 {
+    /// <summary>
+    /// Servicio para gestionar autenticación, activación y recuperación de contraseñas
+    /// Utiliza ApiConfigurationService para URLs centralizadas
+    /// </summary>
     public class AuthService : IAuthService
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
-        private readonly ApiConfigurationService _apiConfigService; // ✅ SERVICIO CENTRALIZADO PARA URLs
+        private readonly ApiConfigurationService _apiConfig;
 
-        // ✅ CONSTRUCTOR: Inyección de dependencias incluyendo el servicio de configuración centralizado
+        /// <summary>
+        /// Constructor con inyección del servicio de configuración centralizado
+        /// </summary>
         public AuthService(
             IHttpClientFactory clientFactory,
             IConfiguration configuration,
             ILogger<AuthService> logger,
-            ApiConfigurationService apiConfigService) // ✅ NUEVA DEPENDENCIA
+            ApiConfigurationService apiConfig)
         {
             _clientFactory = clientFactory;
             _configuration = configuration;
             _logger = logger;
-            _apiConfigService = apiConfigService; // ✅ ASIGNAR SERVICIO CENTRALIZADO
+            _apiConfig = apiConfig;
         }
 
-        #region Login
         /// <summary>
         /// ✅ OPERACIÓN: Autenticar usuario con email y contraseña
         /// Utiliza URL centralizada desde appsettings.json
@@ -47,10 +48,11 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint usando servicio de configuración
-                var loginUrl = _apiConfigService.BuildApiUrl("/api/auth/login");
+                var url = _apiConfig.GetApiUrl("auth/login");
+                _logger.LogInformation($"🌐 URL construida: {url}");
                 
                 // ✅ PETICIÓN: Enviar credenciales al endpoint de autenticación
-                var response = await client.PostAsJsonAsync(loginUrl, new
+                var response = await client.PostAsJsonAsync(url, new
                 {
                     email = model.Email,
                     contrasena = model.Contrasena
@@ -76,9 +78,7 @@ namespace GestionLlantera.Web.Services
                 return (false, null, "Error al intentar iniciar sesión");
             }
         }
-        #endregion
 
-        #region CheckUsuarioActivo
         /// <summary>
         /// ✅ OPERACIÓN: Verificar si el usuario está activo y el token no ha expirado
         /// Utiliza URL centralizada desde appsettings.json
@@ -93,10 +93,11 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint de verificación
-                var checkUrl = _apiConfigService.BuildApiUrl($"/api/auth/check-usuario-activo?token={token}");
+                var url = _apiConfig.GetApiUrl($"auth/check-usuario-activo?token={token}");
+                _logger.LogInformation($"🌐 URL construida: {url}");
                 
                 // ✅ PETICIÓN: Verificar estado del usuario
-                var response = await client.GetAsync(checkUrl);
+                var response = await client.GetAsync(url);
 
                 // ✅ PROCESAMIENTO: Analizar respuesta del servidor
                 if (response.IsSuccessStatusCode)
@@ -115,9 +116,7 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
-        #endregion
 
-        #region ActivarCuenta
         /// <summary>
         /// ✅ OPERACIÓN: Activar cuenta de usuario usando token de activación
         /// Utiliza URL centralizada desde appsettings.json
@@ -132,10 +131,11 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint de activación
-                var activarUrl = _apiConfigService.BuildApiUrl($"/api/auth/activar-cuenta?token={token}");
+                var url = _apiConfig.GetApiUrl($"auth/activar-cuenta?token={token}");
+                _logger.LogInformation($"🌐 URL construida: {url}");
                 
                 // ✅ PETICIÓN: Solicitar activación de cuenta
-                var response = await client.GetAsync(activarUrl);
+                var response = await client.GetAsync(url);
 
                 // ✅ PROCESAMIENTO: Verificar activación exitosa
                 if (response.IsSuccessStatusCode)
@@ -159,9 +159,7 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
-        #endregion
 
-        #region RegenerarToken
         /// <summary>
         /// ✅ OPERACIÓN: Solicitar regeneración de token de activación/recuperación
         /// Utiliza URL centralizada desde appsettings.json
@@ -176,10 +174,11 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint de regeneración
-                var regenerarUrl = _apiConfigService.BuildApiUrl("/api/auth/regenerar-token");
+                var url = _apiConfig.GetApiUrl("auth/regenerar-token");
+                _logger.LogInformation($"🌐 URL construida: {url}");
                 
                 // ✅ PETICIÓN: Solicitar nuevo token
-                var response = await client.PostAsJsonAsync(regenerarUrl, token);
+                var response = await client.PostAsJsonAsync(url, token);
 
                 // ✅ PROCESAMIENTO: Verificar regeneración exitosa
                 if (response.IsSuccessStatusCode)
@@ -198,9 +197,7 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
-        #endregion
 
-        #region CambiarContrasena ACTIVACION
         /// <summary>
         /// ✅ OPERACIÓN: Cambiar contraseña durante proceso de activación de cuenta
         /// Utiliza URL centralizada desde appsettings.json
@@ -229,10 +226,11 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation($"Request Content: Token={request.Token}, NuevaContrasena=[OCULTA]");
 
                 // ✅ URL CENTRALIZADA: Construir endpoint de cambio de contraseña
-                var cambiarUrl = _apiConfigService.BuildApiUrl("/api/auth/CambiarContrasenaActivacion");
+                var url = _apiConfig.GetApiUrl("auth/CambiarContrasenaActivacion");
+                _logger.LogInformation($"🌐 URL construida: {url}");
                 
                 // ✅ PETICIÓN: Enviar solicitud de cambio
-                var response = await client.PostAsJsonAsync(cambiarUrl, request);
+                var response = await client.PostAsJsonAsync(url, request);
 
                 // ✅ LOG DETALLADO: Registrar detalles de la respuesta
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -255,9 +253,7 @@ namespace GestionLlantera.Web.Services
                 throw;
             }
         }
-        #endregion
 
-        #region CambiarContrasena RECUPERACION
         /// <summary>
         /// ✅ OPERACIÓN: Solicitar recuperación de contraseña por email
         /// Utiliza URL centralizada desde appsettings.json
@@ -272,10 +268,11 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint de solicitud de recuperación
-                var recuperacionUrl = _apiConfigService.BuildApiUrl("/api/auth/solicitar-recuperacion");
+                var url = _apiConfig.GetApiUrl("auth/solicitar-recuperacion");
+                _logger.LogInformation($"🌐 URL construida: {url}");
                 
                 // ✅ PETICIÓN: Enviar solicitud de recuperación
-                var response = await client.PostAsJsonAsync(recuperacionUrl,
+                var response = await client.PostAsJsonAsync(url,
                     new { email = email });
 
                 // ✅ RESULTADO: Retornar éxito basado en código de respuesta
@@ -314,10 +311,11 @@ namespace GestionLlantera.Web.Services
                 };
 
                 // ✅ URL CENTRALIZADA: Construir endpoint de restablecimiento
-                var restablecerUrl = _apiConfigService.BuildApiUrl("/api/auth/restablecer-contrasena");
+                var url = _apiConfig.GetApiUrl("auth/restablecer-contrasena");
+                _logger.LogInformation($"🌐 URL construida: {url}");
                 
                 // ✅ PETICIÓN: Enviar solicitud de restablecimiento
-                var response = await client.PostAsJsonAsync(restablecerUrl, request);
+                var response = await client.PostAsJsonAsync(url, request);
 
                 // ✅ LOG DE RESPUESTA: Registrar detalles de la respuesta
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -341,6 +339,5 @@ namespace GestionLlantera.Web.Services
                 return false;
             }
         }
-        #endregion
     }
 }
