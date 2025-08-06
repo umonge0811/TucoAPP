@@ -42,7 +42,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync("api/Anuncios");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("api/Anuncios");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -91,7 +95,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync($"api/Anuncios/{anuncioId}");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/Anuncios/{anuncioId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
