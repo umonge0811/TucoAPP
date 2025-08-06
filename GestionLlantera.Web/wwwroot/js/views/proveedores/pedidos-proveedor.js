@@ -1066,6 +1066,15 @@ async function finalizarPedido() {
             console.log('✅ Pedido creado exitosamente con ID:', pedidoId);
             $('#modalNuevoPedido').modal('hide');
             
+            // GUARDAR información del proveedor y productos ANTES de limpiar formulario
+            const proveedorParaWhatsApp = { ...proveedorSeleccionado };
+            const productosParaWhatsApp = [...productosSeleccionados];
+            
+            console.log('💾 Guardando datos para WhatsApp:', {
+                proveedor: proveedorParaWhatsApp,
+                productos: productosParaWhatsApp.length
+            });
+            
             // Mostrar modal de confirmación para enviar por WhatsApp
             const resultado = await Swal.fire({
                 icon: 'success',
@@ -1088,8 +1097,8 @@ async function finalizarPedido() {
             });
 
             if (resultado.isConfirmed) {
-                // El usuario quiere enviar por WhatsApp
-                enviarPedidoPorWhatsApp();
+                // El usuario quiere enviar por WhatsApp - usar datos guardados
+                enviarPedidoPorWhatsApp(proveedorParaWhatsApp, productosParaWhatsApp);
             } else {
                 // El usuario no quiere enviar por WhatsApp
                 mostrarExito('Pedido creado exitosamente');
@@ -1592,34 +1601,47 @@ function generarMensajeWhatsAppPedido(data) {
 
 /**
  * Enviar pedido por WhatsApp
+ * @param {object} proveedor - Información del proveedor (opcional, usa proveedorSeleccionado si no se proporciona)
+ * @param {array} productos - Lista de productos (opcional, usa productosSeleccionados si no se proporciona)
  */
-function enviarPedidoPorWhatsApp() {
+function enviarPedidoPorWhatsApp(proveedor = null, productos = null) {
     console.log('📱 === ENVIANDO PEDIDO POR WHATSAPP ===');
 
     try {
-        // Verificar que tengamos proveedor seleccionado
-        if (!proveedorSeleccionado) {
+        // Usar los parámetros proporcionados o las variables globales como fallback
+        const proveedorAUsar = proveedor || proveedorSeleccionado;
+        const productosAUsar = productos || productosSeleccionados;
+
+        console.log('📋 Datos para WhatsApp:', {
+            proveedorAUsar: proveedorAUsar,
+            productosAUsar: productosAUsar?.length || 0,
+            tieneProveedor: !!proveedorAUsar,
+            tieneProductos: !!productosAUsar && productosAUsar.length > 0
+        });
+
+        // Verificar que tengamos proveedor
+        if (!proveedorAUsar) {
             mostrarError('No se pudo identificar el proveedor para enviar el mensaje');
             return;
         }
 
-        // Verificar que tengamos productos seleccionados
-        if (!productosSeleccionados || productosSeleccionados.length === 0) {
+        // Verificar que tengamos productos
+        if (!productosAUsar || productosAUsar.length === 0) {
             mostrarError('No hay productos en el pedido para enviar');
             return;
         }
 
         // Generar mensaje de WhatsApp
         const mensaje = generarMensajeWhatsAppPedido({
-            proveedor: proveedorSeleccionado,
-            productos: productosSeleccionados
+            proveedor: proveedorAUsar,
+            productos: productosAUsar
         });
 
         // Obtener número de WhatsApp del proveedor
         let numeroWhatsApp = '';
-        if (proveedorSeleccionado.telefono) {
+        if (proveedorAUsar.telefono) {
             // Limpiar el número eliminando caracteres no numéricos
-            numeroWhatsApp = proveedorSeleccionado.telefono.replace(/\D/g, '');
+            numeroWhatsApp = proveedorAUsar.telefono.replace(/\D/g, '');
 
             // Si el número tiene 8 dígitos, agregar código de país de Costa Rica
             if (numeroWhatsApp.length === 8) {
@@ -1631,9 +1653,11 @@ function enviarPedidoPorWhatsApp() {
         let whatsappUrl;
         if (numeroWhatsApp) {
             console.log(`📱 Enviando a número específico: ${numeroWhatsApp}`);
+            console.log(`📱 Proveedor: ${proveedorAUsar.nombre || proveedorAUsar.nombreProveedor}`);
             whatsappUrl = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
         } else {
             console.log('📱 Enviando sin número específico (compartir general)');
+            console.log(`📱 Proveedor sin teléfono: ${proveedorAUsar.nombre || proveedorAUsar.nombreProveedor}`);
             whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
         }
 
