@@ -118,7 +118,10 @@ namespace GestionLlantera.Web.Services
                 {
                     try
                     {
-                        var response = await _httpClient.GetAsync($"api/Inventario/productos/{producto.ProductoId}");
+                        var url = _apiConfig.GetApiUrl($"Inventario/productos/{producto.ProductoId}");
+                        _logger.LogInformation("🌐 URL construida: {url}", url);
+                        
+                        var response = await _httpClient.GetAsync(url);
 
                         if (!response.IsSuccessStatusCode)
                         {
@@ -194,11 +197,13 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("🛒 Obteniendo productos para venta desde FacturacionService");
 
-                var url = "/api/Facturacion/productos-venta?soloConStock=true";
+                var url = _apiConfig.GetApiUrl("Facturacion/productos-venta?soloConStock=true");
                 if (!string.IsNullOrWhiteSpace(busqueda))
                 {
                     url += $"&busqueda={Uri.EscapeDataString(busqueda)}";
                 }
+
+                _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);
 
@@ -297,7 +302,10 @@ namespace GestionLlantera.Web.Services
                             productoAjuste.ProductoId, productoAjuste.Cantidad);
 
                         // Llamar al endpoint de ajuste de stock en la API
-                        var httpResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock", content);
+                        var urlAjuste = _apiConfig.GetApiUrl($"Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock");
+                        _logger.LogInformation("🌐 URL construida: {url}", urlAjuste);
+                        
+                        var httpResponse = await _httpClient.PostAsync(urlAjuste, content);
 
                         if (httpResponse.IsSuccessStatusCode)
                         {
@@ -394,7 +402,10 @@ namespace GestionLlantera.Web.Services
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
-                var response = await client.GetAsync($"{_baseUrl}/api/Facturacion/facturas/pendientes");
+                var url = _apiConfig.GetApiUrl("Facturacion/facturas/pendientes");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -472,7 +483,8 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var queryString = string.Join("&", queryParams);
-                var url = $"{_baseUrl}/api/Facturacion/proformas?{queryString}";
+                var endpoint = $"Facturacion/proformas?{queryString}";
+                var url = _apiConfig.GetApiUrl(endpoint);
 
                 _logger.LogInformation("📋 URL construida: {Url}", url);
 
@@ -640,7 +652,10 @@ namespace GestionLlantera.Web.Services
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 // Usar el endpoint correcto de la API
-                var response = await _httpClient.PostAsync("api/Facturacion/facturas", content);
+                var url = _apiConfig.GetApiUrl("Facturacion/facturas");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -734,7 +749,10 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
 
                 // Llamar al endpoint del API para verificar stock
-                var response = await _httpClient.PostAsync("api/Facturacion/verificar-stock-factura", content);
+                var url = _apiConfig.GetApiUrl("Facturacion/verificar-stock-factura");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -1205,7 +1223,10 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
 
                 // Llamar al endpoint del API para eliminar productos
-                var response = await _httpClient.PostAsync("api/Facturacion/eliminar-productos-factura", content);
+                var url = _apiConfig.GetApiUrl("Facturacion/eliminar-productos-factura");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
