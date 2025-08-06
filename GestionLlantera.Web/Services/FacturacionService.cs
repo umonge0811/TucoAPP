@@ -572,15 +572,15 @@ namespace GestionLlantera.Web.Services
 
                 if (esProforma)
                 {
-                    // ✅ PARA PROFORMAS: Usar endpoint específico para marcar como facturada
-                    endpoint = $"api/Facturacion/proformas/{facturaId}/marcar-facturada";
+                    // ✅ PARA PROFORMAS: Usar servicio centralizado
+                    endpoint = _apiConfig.GetApiUrl($"Facturacion/proformas/{facturaId}/marcar-facturada");
                     tipoDocumento = "Proforma";
                     _logger.LogInformation("📋 Marcando proforma como facturada usando endpoint: {Endpoint}", endpoint);
                 }
                 else
                 {
-                    // ✅ PARA FACTURAS: Usar endpoint de completar factura
-                    endpoint = $"api/Facturacion/facturas/{facturaId}/completar";
+                    // ✅ PARA FACTURAS: Usar servicio centralizado
+                    endpoint = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}/completar");
                     tipoDocumento = "Factura";
                     _logger.LogInformation("📋 Completando factura usando endpoint: {Endpoint}", endpoint);
                 }
@@ -651,7 +651,7 @@ namespace GestionLlantera.Web.Services
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                // Usar el endpoint correcto de la API
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
                 var url = _apiConfig.GetApiUrl("Facturacion/facturas");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
                 
@@ -1287,7 +1287,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync("api/Facturacion/pendientes-entrega");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/pendientes-entrega");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.GetAsync(url);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📦 Respuesta de la API: {StatusCode}", response.StatusCode);
@@ -1411,7 +1415,11 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
 
-                var response = await _httpClient.PostAsJsonAsync("api/Facturacion/registrar-pendientes-entrega", datosParaAPI);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/registrar-pendientes-entrega");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsJsonAsync(url, datosParaAPI);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📦 Respuesta de API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -1473,7 +1481,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync($"api/Facturacion/facturas/{facturaId}");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
