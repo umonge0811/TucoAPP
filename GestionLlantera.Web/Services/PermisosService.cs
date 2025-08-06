@@ -12,6 +12,8 @@ namespace GestionLlantera.Web.Services
         private readonly ILogger<PermisosService> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly JsonSerializerOptions _jsonOptions;
+        // ✅ SERVICIO CENTRALIZADO PARA CONFIGURACIÓN DE API
+        private readonly ApiConfigurationService _apiConfigService;
 
         private PermisosUsuarioActual? _permisosCache;
         private DateTime _ultimaActualizacion = DateTime.MinValue;
@@ -19,23 +21,31 @@ namespace GestionLlantera.Web.Services
 
         public PermisosUsuarioActual PermisosActuales => _permisosCache ?? new PermisosUsuarioActual();
 
-        public PermisosService(HttpClient httpClient, IConfiguration configuration, ILogger<PermisosService> logger, IHttpContextAccessor httpContextAccessor)
+        public PermisosService(HttpClient httpClient, IConfiguration configuration, ILogger<PermisosService> logger, IHttpContextAccessor httpContextAccessor, ApiConfigurationService apiConfigService)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
+            // ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+            _apiConfigService = apiConfigService;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 WriteIndented = true
             };
         }
+        /// <summary>
+        /// Obtiene todos los permisos disponibles en el sistema
+        /// </summary>
         public async Task<List<PermisoDTO>> ObtenerTodosLosPermisos()
         {
             try
             {
-                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Permisos/obtener-todos";
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfigService.GetApiUrl("Permisos/obtener-todos");
+                _logger.LogDebug("Obteniendo todos los permisos desde: {Url}", url);
+                
                 var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync();
@@ -44,16 +54,22 @@ namespace GestionLlantera.Web.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener todos los permisos");
+                _logger.LogError(ex, "Error al obtener todos los permisos desde la API");
                 throw;
             }
         }
 
+        /// <summary>
+        /// Obtiene un permiso específico por su ID
+        /// </summary>
         public async Task<PermisoDTO> ObtenerPermisoPorId(int permisoId)
         {
             try
             {
-                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Permisos/obtener-por-id/{permisoId}";
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfigService.GetApiUrl($"Permisos/obtener-por-id/{permisoId}");
+                _logger.LogDebug("Obteniendo permiso ID {PermisoId} desde: {Url}", permisoId, url);
+                
                 var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
@@ -69,50 +85,68 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        /// <summary>
+        /// Crea un nuevo permiso en el sistema
+        /// </summary>
         public async Task<bool> CrearPermiso(PermisoDTO permiso)
         {
             try
             {
-                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Permisos/crear-permiso";
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfigService.GetApiUrl("Permisos/crear-permiso");
+                _logger.LogDebug("Creando permiso en: {Url}", url);
+                
                 var response = await _httpClient.PostAsJsonAsync(url, permiso);
 
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al crear permiso");
+                _logger.LogError(ex, "Error al crear permiso: {NombrePermiso}", permiso?.NombrePermiso);
                 throw;
             }
         }
 
+        /// <summary>
+        /// Actualiza un permiso existente
+        /// </summary>
         public async Task<bool> ActualizarPermiso(int permisoId, PermisoDTO permiso)
         {
             try
             {
-                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Permisos/actualizar/{permisoId}";
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfigService.GetApiUrl($"Permisos/actualizar/{permisoId}");
+                _logger.LogDebug("Actualizando permiso ID {PermisoId} en: {Url}", permisoId, url);
+                
                 var response = await _httpClient.PutAsJsonAsync(url, permiso);
 
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al actualizar permiso");
+                _logger.LogError(ex, "Error al actualizar permiso ID: {PermisoId}", permisoId);
                 throw;
             }
         }
 
+        /// <summary>
+        /// Elimina un permiso del sistema
+        /// </summary>
         public async Task<bool> EliminarPermiso(int permisoId)
         {
             try
             {
-                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Permisos/eliminar/{permisoId}";
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfigService.GetApiUrl($"Permisos/eliminar/{permisoId}");
+                _logger.LogDebug("Eliminando permiso ID {PermisoId} en: {Url}", permisoId, url);
+                
                 var response = await _httpClient.DeleteAsync(url);
 
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al eliminar permiso");
+                _logger.LogError(ex, "Error al eliminar permiso ID: {PermisoId}", permisoId);
                 throw;
             }
         }
@@ -178,8 +212,8 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
 
-                // Llamar a la API
-                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Inventario/mis-permisos";
+                // ✅ LLAMAR A LA API USANDO SERVICIO CENTRALIZADO
+                var url = _apiConfigService.GetApiUrl("Inventario/mis-permisos");
                 _logger.LogDebug("Obteniendo permisos desde API: {Url}", url);
 
                 var response = await _httpClient.GetAsync(url);
