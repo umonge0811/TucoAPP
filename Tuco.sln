@@ -8,6 +8,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tuco.Clases", "tuco.Clases\Tuco.Clases.csproj", "{90629A45-8636-4AB5-974A-06375C89A12D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GestionLlantera.Web", "GestionLlantera.Web\GestionLlantera.Web.csproj", "{84F9CE2C-38B0-4A61-9D09-A04D6B97353E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{90629A45-8636-4AB5-974A-06375C89A12D} = {90629A45-8636-4AB5-974A-06375C89A12D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
