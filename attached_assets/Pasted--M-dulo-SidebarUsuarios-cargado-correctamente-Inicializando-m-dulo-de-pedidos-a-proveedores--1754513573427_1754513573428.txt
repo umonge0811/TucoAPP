@@ -1,0 +1,142 @@
+ 👥 Módulo SidebarUsuarios cargado correctamente
+ 🚀 Inicializando módulo de pedidos a proveedores...
+ ✅ Módulo de pedidos a proveedores cargado completamente
+ 👥 DOM cargado, inicializando sidebar usuarios...
+ 📚 DOM cargado, inicializando pedidos a proveedores...
+ 🔧 Configurando event listeners...
+ 🔧 Configurando ordenamiento de tabla de productos...
+ 📋 Cargando datos iniciales completos...
+ 👥 Cargando proveedores...
+ 📦 Cargando TODOS los pedidos...
+ 📦 Cargando productos del inventario...
+ ✅ Módulo de pedidos a proveedores inicializado correctamente
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 📦 Respuesta del servidor: Object
+ ✅ 21 pedidos cargados
+ 📦 Primer pedido (estructura): Object
+ 📦 Propiedades del primer pedido: Array(10)
+ 📋 Iniciando mostrarPedidos...
+ 📊 pedidosFiltrados: Array(21)
+ 📋 Renderizando 21 pedidos en la tabla
+ 📦 Procesando pedido 1: Object
+ 📦 Procesando pedido 2: Object
+ 📦 Procesando pedido 3: Object
+ 📦 Procesando pedido 4: Object
+ 📦 Procesando pedido 5: Object
+ 📦 Procesando pedido 6: Object
+ 📦 Procesando pedido 7: Object
+ 📦 Procesando pedido 8: Object
+ 📦 Procesando pedido 9: Object
+ 📦 Procesando pedido 10: Object
+ 📦 Procesando pedido 11: Object
+ 📦 Procesando pedido 12: Object
+ 📦 Procesando pedido 13: Object
+ 📦 Procesando pedido 14: Object
+ 📦 Procesando pedido 15: Object
+ 📦 Procesando pedido 16: Object
+ 📦 Procesando pedido 17: Object
+ 📦 Procesando pedido 18: Object
+ 📦 Procesando pedido 19: Object
+ 📦 Procesando pedido 20: Object
+ 📦 Procesando pedido 21: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:431 ✅ 21 pedidos renderizados en la tabla
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:113 📋 Respuesta del servidor: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:280 🔄 Iniciando llenarSelectProveedores...
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:281 📋 proveedoresDisponibles: Array(3)
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:295 🔢 Total proveedores a procesar: 3
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:302 🔍 Procesando proveedor 1: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:305 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:330 ➕ Agregando opción: <option value="1002">Distribuidora  Tuco</option>
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:302 🔍 Procesando proveedor 2: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:305 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:330 ➕ Agregando opción: <option value="1005">Distribuidora El carmen S.A</option>
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:302 🔍 Procesando proveedor 3: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:305 📊 Propiedades del proveedor: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:330 ➕ Agregando opción: <option value="1007">Distribuidora Tucan S.A</option>
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:346 ✅ 3 de 3 proveedores agregados a los selects
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:349 📊 Opciones en select: 4
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:350 📊 Opciones en filtro: 4
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:118 ✅ 3 proveedores cargados
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:269 ✅ 9 productos del inventario cargados
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:30 👥 Inicializando módulo de usuarios conectados del sidebar
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:44 ✅ Módulo de usuarios conectados del sidebar inicializado
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:522 📋 Mostrando información del proveedor: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:649 🔍 Datos de productos recibidos: Array(9)
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:653 📦 Producto: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:775 📋 === HTML DE PRODUCTOS CARGADO ===
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:776 📊 Productos renderizados: 9
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:781 🔍 === VERIFICANDO ELEMENTOS SORTABLE ===
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:782 📊 Elementos .sortable encontrados: 5
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:785 📋 Elemento 1: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:785 📋 Elemento 2: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:785 📋 Elemento 3: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:785 📋 Elemento 4: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:785 📋 Elemento 5: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:564 🔧 Configurando ordenamiento de tabla de productos...
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:798 🔧 === VERIFICANDO EVENT LISTENERS ===
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:801 📋 Eventos en elemento 1: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:801 📋 Eventos en elemento 2: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:801 📋 Eventos en elemento 3: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:801 📋 Eventos en elemento 4: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:801 📋 Eventos en elemento 5: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1001 📦 Response completo: Response
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1002 📦 Response status: 200
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1003 📦 Response ok: true
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1012 📦 Response text crudo: {"success":true,"message":"Pedido creado exitosamente","data":{"pedidoId":[],"proveedorId":[],"proveedorNombre":[],"fechaPedido":[],"estado":[],"usuarioId":[],"usuarioNombre":[],"detallePedidos":[[[[]],[[]],[[]],[[]],[[]]],[[[]],[[]],[[]],[[]],[[]]],[[[]],[[]],[[]],[[]],[[]]],[[[]],[[]],[[]],[[]],[[]]],[[[]],[[]],[[]],[[]],[[]]],[[[]],[[]],[[]],[[]],[[]]],[[[]],[[]],[[]],[[]],[[]]],[[[]],[[]],[[]],[[]],[[]]],[[[]],[[]],[[]],[[]],[[]]]],"totalProductos":[],"montoTotal":[]}}
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1023 📦 Resultado parseado: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1024 📦 Propiedades del resultado: Array(3)
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1025 📦 resultado.success: true
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1026 📦 resultado.data: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1027 📦 resultado.message: Pedido creado exitosamente
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1044 ✅ Estructura tipo 1 detectada
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1063 📦 Variables finales: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1066 ✅ Pedido creado exitosamente con ID: Array(0)
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1597 📱 === ENVIANDO PEDIDO POR WHATSAPP ===
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1785 ❌ Error: No se pudo identificar el proveedor para enviar el mensaje
+mostrarError @ pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1785
+enviarPedidoPorWhatsApp @ pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1602
+finalizarPedido @ pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:1092
+await in finalizarPedido
+onclick @ PedidosProveedor:710
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:137 📦 Cargando TODOS los pedidos...
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:154 📦 Respuesta del servidor: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:160 ✅ 22 pedidos cargados
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:163 📦 Primer pedido (estructura): Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:164 📦 Propiedades del primer pedido: Array(10)
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:357 📋 Iniciando mostrarPedidos...
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:358 📊 pedidosFiltrados: Array(22)
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:368 📋 Renderizando 22 pedidos en la tabla
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 1: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 2: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 3: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 4: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 5: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 6: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 7: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 8: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 9: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 10: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 11: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 12: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 13: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 14: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 15: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 16: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 17: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 18: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 19: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 20: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 21: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:372 📦 Procesando pedido 22: Object
+pedidos-proveedor.js?v=kQHayUehENBkTNxv_33zu9YiNlDAChZz30--nSJBYN4:431 ✅ 22 pedidos renderizados en la tabla
