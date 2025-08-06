@@ -178,17 +178,28 @@ async function cargarProveedores() {
 }
 
 /**
- * Mostrar proveedores en la tabla
+ * Mostrar proveedores en la tabla y tarjetas móviles
  */
 function mostrarProveedores() {
-    const tbody = $('#cuerpoTablaProveedores');
-
     if (proveedoresFiltrados.length === 0) {
         mostrarSinDatos(true);
         return;
     }
 
     mostrarSinDatos(false);
+
+    // Mostrar tabla de escritorio
+    mostrarTablaProveedores();
+    
+    // Mostrar tarjetas móviles
+    mostrarTarjetasMoviles();
+}
+
+/**
+ * Mostrar proveedores en la tabla de escritorio
+ */
+function mostrarTablaProveedores() {
+    const tbody = $('#cuerpoTablaProveedores');
 
     const html = proveedoresFiltrados.map(proveedor => {
         const cantidadPedidos = proveedor.pedidosProveedors ? proveedor.pedidosProveedors.length : 0;
@@ -242,6 +253,125 @@ function mostrarProveedores() {
     }).join('');
 
     tbody.html(html);
+}
+
+/**
+ * Mostrar tarjetas móviles para proveedores
+ */
+function mostrarTarjetasMoviles() {
+    const contenedor = $('#proveedoresCardsMobile');
+
+    const html = proveedoresFiltrados.map(proveedor => {
+        const cantidadPedidos = proveedor.pedidosProveedors ? proveedor.pedidosProveedors.length : 0;
+        const tieneRegistros = cantidadPedidos > 0;
+
+        return generarTarjetaProveedor(proveedor, cantidadPedidos, tieneRegistros);
+    }).join('');
+
+    contenedor.html(html);
+}
+
+/**
+ * Generar HTML de tarjeta móvil para un proveedor
+ */
+function generarTarjetaProveedor(proveedor, cantidadPedidos, tieneRegistros) {
+    const claseEstado = proveedor.activo ? '' : 'proveedor-inactivo';
+    const clasePedidos = cantidadPedidos > 0 ? 'proveedor-con-pedidos' : 'proveedor-sin-pedidos';
+
+    return `
+        <div class="proveedor-card-mobile ${claseEstado} ${clasePedidos}" data-id="${proveedor.id}">
+            <!-- Header de la tarjeta -->
+            <div class="proveedor-card-header">
+                <div>
+                    <div class="proveedor-titulo-mobile">${proveedor.nombre || 'Sin nombre'}</div>
+                    <div class="proveedor-id-mobile">ID: ${proveedor.id}</div>
+                </div>
+                <div class="proveedor-estado-mobile">
+                    <span class="badge ${proveedor.activo ? 'bg-success' : 'bg-secondary'}">
+                        ${proveedor.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Información del proveedor -->
+            <div class="proveedor-info">
+                ${proveedor.contacto ? `
+                <div class="proveedor-info-row">
+                    <span class="proveedor-info-label">
+                        <i class="bi bi-person"></i>
+                        Contacto
+                    </span>
+                    <span class="proveedor-info-value">${proveedor.contacto}</span>
+                </div>` : ''}
+
+                ${proveedor.telefono ? `
+                <div class="proveedor-info-row">
+                    <span class="proveedor-info-label">
+                        <i class="bi bi-telephone"></i>
+                        Teléfono
+                    </span>
+                    <span class="proveedor-info-value">${proveedor.telefono}</span>
+                </div>` : ''}
+
+                ${proveedor.email ? `
+                <div class="proveedor-info-row">
+                    <span class="proveedor-info-label">
+                        <i class="bi bi-envelope"></i>
+                        Email
+                    </span>
+                    <span class="proveedor-info-value">${proveedor.email}</span>
+                </div>` : ''}
+
+                ${proveedor.direccion ? `
+                <div class="proveedor-info-row">
+                    <span class="proveedor-info-label">
+                        <i class="bi bi-geo-alt"></i>
+                        Dirección
+                    </span>
+                    <span class="proveedor-info-value direccion-mobile">${proveedor.direccion}</span>
+                </div>` : ''}
+            </div>
+
+            <!-- Badges y estadísticas -->
+            <div class="proveedor-badges-mobile">
+                <span class="badge bg-info">
+                    <i class="bi bi-box-seam me-1"></i>
+                    ${cantidadPedidos} Pedidos
+                </span>
+                ${tieneRegistros ? `
+                <span class="badge bg-warning text-dark">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Con registros
+                </span>` : ''}
+            </div>
+
+            <!-- Acciones -->
+            <div class="proveedor-acciones-mobile">
+                <div class="botones-accion-mobile cuatro-botones">
+                    <button type="button" class="btn btn-outline-primary" onclick="editarProveedor(${proveedor.id})" title="Editar">
+                        <i class="bi bi-pencil"></i>
+                        Editar
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="verPedidosProveedor(${proveedor.id})" title="Ver Pedidos">
+                        <i class="bi bi-box-seam"></i>
+                        Pedidos
+                    </button>
+                    <button type="button" class="btn ${proveedor.activo ? 'btn-outline-warning' : 'btn-outline-success'}" onclick="cambiarEstadoProveedor(${proveedor.id}, ${!proveedor.activo}, '${(proveedor.nombre || '').replace(/'/g, "\\'")}')" title="${proveedor.activo ? 'Desactivar' : 'Activar'}">
+                        <i class="bi ${proveedor.activo ? 'bi-pause-circle' : 'bi-play-circle'}"></i>
+                        ${proveedor.activo ? 'Desactivar' : 'Activar'}
+                    </button>
+                    <button type="button" 
+                            class="btn btn-outline-danger ${tieneRegistros ? 'disabled' : ''}" 
+                            onclick="${tieneRegistros ? '' : `eliminarProveedor(${proveedor.id}, '${(proveedor.nombre || '').replace(/'/g, "\\'")}')`}" 
+                            title="${tieneRegistros ? 'No se puede eliminar: tiene pedidos asociados' : 'Eliminar'}"
+                            ${tieneRegistros ? 'disabled' : ''}>
+                        <i class="bi bi-trash"></i>
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -994,7 +1124,8 @@ async function confirmarCambiarEstadoProveedor(id, nuevoEstado, nombre) {
  */
 function mostrarLoading(mostrar) {
     $('#loadingProveedores').toggle(mostrar);
-    $('#tablaProveedores').toggle(!mostrar);
+    $('.tabla-proveedores-responsive').toggle(!mostrar);
+    $('#proveedoresCardsMobile').toggle(!mostrar);
 }
 
 /**
@@ -1002,7 +1133,8 @@ function mostrarLoading(mostrar) {
  */
 function mostrarSinDatos(mostrar) {
     $('#sinDatosProveedores').toggle(mostrar);
-    $('#tablaProveedores').toggle(!mostrar);
+    $('.tabla-proveedores-responsive').toggle(!mostrar);
+    $('#proveedoresCardsMobile').toggle(!mostrar);
 }
 
 /**

@@ -3,6 +3,8 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
+<link rel="stylesheet" href="~/css/views/proveedores/proveedores.css" asp-append-version="true" />
+
 <!-- ✅ BREADCRUMBS -->
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
@@ -80,8 +82,8 @@
                         <p class="mt-2 text-muted">Cargando proveedores...</p>
                     </div>
 
-                    <!-- Tabla -->
-                    <div class="table-responsive">
+                    <!-- Tabla para desktop -->
+                    <div class="table-responsive tabla-proveedores-responsive">
                         <table class="table table-hover" id="tablaProveedores">
                             <thead class="table-light">
                                 <tr>
@@ -100,6 +102,11 @@
                                 <!-- Contenido dinámico -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Vista de tarjetas para móvil -->
+                    <div class="proveedores-cards" id="proveedoresCardsMobile" style="display: none;">
+                        <!-- Las tarjetas se generarán dinámicamente aquí -->
                     </div>
 
                     <!-- Mensaje cuando no hay datos -->
