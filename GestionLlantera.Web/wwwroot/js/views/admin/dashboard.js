@@ -1373,17 +1373,21 @@ async function editarAnuncio(anuncioId) {
             modalTitle.innerHTML = '<i class="fas fa-edit text-primary me-2"></i>Editar Anuncio';
         }
 
-        // Llenar campos del formulario
-        form.querySelector('input[name="tituloAnuncio"]').value = anuncio.titulo || '';
-        form.querySelector('textarea[name="contenidoAnuncio"]').value = anuncio.contenido || '';
+        // Llenar campos del formulario - Usar los nombres correctos del formulario
+        const tituloField = form.querySelector('input[name="titulo"]') || form.querySelector('input[name="tituloAnuncio"]');
+        const contenidoField = form.querySelector('textarea[name="contenido"]') || form.querySelector('textarea[name="contenidoAnuncio"]');
+        const fechaField = form.querySelector('input[name="fechaVencimiento"]') || form.querySelector('input[name="fechaExpiracionAnuncio"]');
+
+        if (tituloField) tituloField.value = anuncio.titulo || '';
+        if (contenidoField) contenidoField.value = anuncio.contenido || '';
 
         // Formatear fecha para el input type="date"
-        if (anuncio.fechaVencimiento) {
+        if (anuncio.fechaVencimiento && fechaField) {
             const fecha = new Date(anuncio.fechaVencimiento);
             const year = fecha.getFullYear();
             const month = (fecha.getMonth() + 1).toString().padStart(2, '0');
             const day = fecha.getDate().toString().padStart(2, '0');
-            form.querySelector('input[name="fechaExpiracionAnuncio"]').value = `${year}-${month}-${day}`;
+            fechaField.value = `${year}-${month}-${day}`;
         }
 
         // Guardar el ID del anuncio para la actualización
@@ -1445,10 +1449,10 @@ async function manejarNuevoAnuncio(e) {
     // Intentar capturar datos de múltiples formas
     console.log('🎯 === CAPTURA DE DATOS MÚLTIPLE ===');
     
-    // Método 1: FormData
-    const tituloFormData = formData.get('tituloAnuncio');
-    const contenidoFormData = formData.get('contenidoAnuncio');
-    const fechaFormData = formData.get('fechaExpiracionAnuncio');
+    // Método 1: FormData - Usando los nombres reales del formulario
+    const tituloFormData = formData.get('titulo') || formData.get('tituloAnuncio');
+    const contenidoFormData = formData.get('contenido') || formData.get('contenidoAnuncio');
+    const fechaFormData = formData.get('fechaVencimiento') || formData.get('fechaExpiracionAnuncio');
     
     console.log('Método FormData:', {
         titulo: tituloFormData,
@@ -1456,10 +1460,13 @@ async function manejarNuevoAnuncio(e) {
         fecha: fechaFormData
     });
 
-    // Método 2: querySelector por name
-    const tituloByName = form.querySelector('input[name="tituloAnuncio"]')?.value || '';
-    const contenidoByName = form.querySelector('textarea[name="contenidoAnuncio"]')?.value || '';
-    const fechaByName = form.querySelector('input[name="fechaExpiracionAnuncio"]')?.value || '';
+    // Método 2: querySelector por name - Probar ambos nombres
+    const tituloByName = form.querySelector('input[name="titulo"]')?.value || 
+                        form.querySelector('input[name="tituloAnuncio"]')?.value || '';
+    const contenidoByName = form.querySelector('textarea[name="contenido"]')?.value || 
+                           form.querySelector('textarea[name="contenidoAnuncio"]')?.value || '';
+    const fechaByName = form.querySelector('input[name="fechaVencimiento"]')?.value || 
+                       form.querySelector('input[name="fechaExpiracionAnuncio"]')?.value || '';
     
     console.log('Método querySelector by name:', {
         titulo: tituloByName,
@@ -1467,10 +1474,13 @@ async function manejarNuevoAnuncio(e) {
         fecha: fechaByName
     });
 
-    // Método 3: getElementById
-    const tituloById = document.getElementById('tituloAnuncio')?.value || '';
-    const contenidoById = document.getElementById('contenidoAnuncio')?.value || '';
-    const fechaById = document.getElementById('fechaExpiracionAnuncio')?.value || '';
+    // Método 3: getElementById - Probar ambos IDs
+    const tituloById = document.getElementById('titulo')?.value || 
+                      document.getElementById('tituloAnuncio')?.value || '';
+    const contenidoById = document.getElementById('contenido')?.value || 
+                         document.getElementById('contenidoAnuncio')?.value || '';
+    const fechaById = document.getElementById('fechaVencimiento')?.value || 
+                     document.getElementById('fechaExpiracionAnuncio')?.value || '';
     
     console.log('Método getElementById:', {
         titulo: tituloById,
@@ -1712,10 +1722,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 form.reset();
                 form.removeAttribute('data-editing-anuncio-id');
 
-                // Limpiar campos manualmente
-                const tituloField = document.getElementById('tituloAnuncio') || form.querySelector('input[name="tituloAnuncio"]');
-                const contenidoField = document.getElementById('contenidoAnuncio') || form.querySelector('textarea[name="contenidoAnuncio"]');
-                const fechaField = document.getElementById('fechaExpiracionAnuncio') || form.querySelector('input[name="fechaExpiracionAnuncio"]');
+                // Limpiar campos manualmente - Usar nombres correctos
+                const tituloField = document.getElementById('titulo') || document.getElementById('tituloAnuncio') || 
+                                   form.querySelector('input[name="titulo"]') || form.querySelector('input[name="tituloAnuncio"]');
+                const contenidoField = document.getElementById('contenido') || document.getElementById('contenidoAnuncio') || 
+                                      form.querySelector('textarea[name="contenido"]') || form.querySelector('textarea[name="contenidoAnuncio"]');
+                const fechaField = document.getElementById('fechaVencimiento') || document.getElementById('fechaExpiracionAnuncio') || 
+                                  form.querySelector('input[name="fechaVencimiento"]') || form.querySelector('input[name="fechaExpiracionAnuncio"]');
 
                 if (tituloField) tituloField.value = '';
                 if (contenidoField) contenidoField.value = '';
