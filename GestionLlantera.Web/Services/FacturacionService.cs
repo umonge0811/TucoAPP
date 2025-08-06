@@ -1,25 +1,51 @@
 using GestionLlantera.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Net.Http.Headers;
+using System.Text;
+using Tuco.Clases.DTOs.Facturacion;
+using Tuco.Clases.Models;
+using System.Text.Json; // Necesario para JsonSerializerOptions
+using GestionLlantera.Web.Services; // Asegura que ApiConfigurationService esté accesible
 
 namespace GestionLlantera.Web.Services
 {
+    /// <summary>
+    /// 💰 SERVICIO DE FACTURACIÓN - GESTIÓN COMPLETA DEL SISTEMA FINANCIERO
+    /// Utiliza ApiConfigurationService para URLs centralizadas y proporciona
+    /// funcionalidades completas para el manejo de facturas, proformas y ventas
+    /// </summary>
     public class FacturacionService : IFacturacionService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<FacturacionService> _logger;
-        private const decimal IVA_PORCENTAJE = 0.13m; // 13% IVA en Costa Rica
-        private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        private readonly string _baseUrl;
+        private readonly IConfiguration _configuration;
 
-        public FacturacionService(IHttpClientFactory httpClientFactory, ILogger<FacturacionService> logger, IConfiguration config)
+        /// ✅ SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+        /// Este servicio permite acceder a la URL base de la API de forma centralizada
+        /// y construir URLs completas para los endpoints de facturación
+        private readonly ApiConfigurationService _apiConfig;
+
+        /// ✅ CONSTRUCTOR: CONFIGURACIÓN DE DEPENDENCIAS
+        /// <summary>
+        /// Inicializa el servicio de facturación con todas las dependencias necesarias
+        /// </summary>
+        /// <param name="httpClient">Cliente HTTP para realizar peticiones a la API</param>
+        /// <param name="logger">Logger para registrar operaciones y errores</param>
+        /// <param name="configuration">Configuración de la aplicación</param>
+        /// <param name="apiConfig">Servicio centralizado para URLs de la API</param>
+        public FacturacionService(HttpClient httpClient, ILogger<FacturacionService> logger, IConfiguration configuration, ApiConfigurationService apiConfig)
         {
-            _httpClient = httpClientFactory.CreateClient("APIClient");
+            _httpClient = httpClient;
             _logger = logger;
-            _baseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
+            _configuration = configuration;
+
+            /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+            _apiConfig = apiConfig;
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 FacturacionService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         public async Task<decimal> CalcularTotalVentaAsync(List<ProductoVentaDTO> productos)
@@ -33,7 +59,7 @@ namespace GestionLlantera.Web.Services
                 var iva = subtotal * IVA_PORCENTAJE;
                 var total = subtotal + iva;
 
-                _logger.LogInformation("💰 Cálculo de venta - Subtotal: {Subtotal}, IVA: {IVA}, Total: {Total}", 
+                _logger.LogInformation("💰 Cálculo de venta - Subtotal: {Subtotal}, IVA: {IVA}, Total: {Total}",
                     subtotal, iva, total);
 
                 return total;
@@ -243,9 +269,9 @@ namespace GestionLlantera.Web.Services
 
                 if (request.Productos == null || !request.Productos.Any())
                 {
-                    return new AjusteStockResultado { 
-                        Success = false, 
-                        Message = "No se proporcionaron productos para ajustar" 
+                    return new AjusteStockResultado {
+                        Success = false,
+                        Message = "No se proporcionaron productos para ajustar"
                     };
                 }
 
@@ -278,7 +304,7 @@ namespace GestionLlantera.Web.Services
                         var jsonContent = JsonConvert.SerializeObject(ajusteDto);
                         var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                        _logger.LogInformation("📤 Enviando ajuste: ProductoId={ProductoId}, TipoAjuste=salida, Cantidad={Cantidad}", 
+                        _logger.LogInformation("📤 Enviando ajuste: ProductoId={ProductoId}, TipoAjuste=salida, Cantidad={Cantidad}",
                             productoAjuste.ProductoId, productoAjuste.Cantidad);
 
                         // Llamar al endpoint de ajuste de stock en la API
@@ -320,7 +346,7 @@ namespace GestionLlantera.Web.Services
                                 error = error
                             });
 
-                            _logger.LogError("❌ Error ajustando stock para {Producto}: {Error}", 
+                            _logger.LogError("❌ Error ajustando stock para {Producto}: {Error}",
                                 productoAjuste.NombreProducto, error);
                         }
                     }
@@ -335,7 +361,7 @@ namespace GestionLlantera.Web.Services
                             error = error
                         });
 
-                        _logger.LogError(ex, "❌ Error ajustando stock para producto {ProductoId}", 
+                        _logger.LogError(ex, "❌ Error ajustando stock para producto {ProductoId}",
                             productoAjuste.ProductoId);
                     }
                 }
@@ -343,8 +369,8 @@ namespace GestionLlantera.Web.Services
                 // Preparar respuesta
                 var response = new AjusteStockResultado {
                     Success = ajustesExitosos > 0,
-                    Message = ajustesExitosos > 0 ? 
-                        $"Stock ajustado para {ajustesExitosos} productos" : 
+                    Message = ajustesExitosos > 0 ?
+                        $"Stock ajustado para {ajustesExitosos} productos" :
                         "No se pudo ajustar el stock de ningún producto",
                     AjustesExitosos = ajustesExitosos,
                     TotalProductos = request.Productos.Count,
@@ -353,7 +379,7 @@ namespace GestionLlantera.Web.Services
                 };
 
                 _logger.LogInformation("📦 === FIN AJUSTE STOCK FACTURACIÓN ===");
-                _logger.LogInformation("📦 Resultados: {Exitosos}/{Total} productos actualizados", 
+                _logger.LogInformation("📦 Resultados: {Exitosos}/{Total} productos actualizados",
                     ajustesExitosos, request.Productos.Count);
                 _logger.LogInformation("📦 Thread ID: {ThreadId}", Thread.CurrentThread.ManagedThreadId);
                 _logger.LogInformation("📦 Timestamp: {Timestamp}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
@@ -363,9 +389,9 @@ namespace GestionLlantera.Web.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error general ajustando stock para facturación");
-                return new AjusteStockResultado { 
-                    Success = false, 
-                    Message = "Error interno al ajustar stock: " + ex.Message 
+                return new AjusteStockResultado {
+                    Success = false,
+                    Message = "Error interno al ajustar stock: " + ex.Message
                 };
             }
         }
@@ -374,64 +400,57 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 === OBTENIENDO FACTURAS PENDIENTES DESDE SERVICIO ===");
+                _logger.LogInformation("📋 === INICIANDO OBTENCIÓN DE FACTURAS PENDIENTES ===");
 
-                using var client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
-
-                var response = await client.GetAsync($"{_baseUrl}/api/Facturacion/facturas/pendientes");
-
-                if (response.IsSuccessStatusCode)
+                /// ✅ CONFIGURACIÓN: VALIDACIÓN Y AUTENTICACIÓN JWT
+                if (!string.IsNullOrEmpty(jwtToken))
                 {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogInformation("📋 Respuesta del API recibida exitosamente");
-
-                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(jsonContent);
-
-                    // Verificar si la respuesta tiene la estructura correcta
-                    if (apiResponse.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
-                    {
-                        _logger.LogInformation("📋 API confirmó éxito en obtener facturas pendientes");
-
-                        // Extraer las facturas del response
-                        if (apiResponse.TryGetProperty("facturas", out var facturasElement))
-                        {
-                            var facturas = System.Text.Json.JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
-                            var totalFacturas = apiResponse.TryGetProperty("totalFacturas", out var totalElement) ? totalElement.GetInt32() : 0;
-                            var mensaje = apiResponse.TryGetProperty("message", out var msgElement) ? msgElement.GetString() : "Facturas obtenidas";
-
-                            return (true, new
-                            {
-                                success = true,
-                                facturas = facturas,
-                                totalFacturas = totalFacturas,
-                                message = mensaje
-                            }, mensaje, null);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("📋 No se encontró propiedad 'facturas' en la respuesta del API");
-                            return (false, null, "Estructura de respuesta inválida", "Missing 'facturas' property");
-                        }
-                    }
-                    else
-                    {
-                        var errorMsg = apiResponse.TryGetProperty("message", out var msgElement) ? 
-                            msgElement.GetString() : "Error desconocido desde el API";
-                        return (false, null, errorMsg, "API returned success=false");
-                    }
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado correctamente");
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("📋 Error HTTP del API: {StatusCode} - {Content}", response.StatusCode, errorContent);
-                    return (false, null, $"Error HTTP {response.StatusCode}", errorContent);
+                    _logger.LogError("❌ TOKEN JWT REQUERIDO para obtener facturas pendientes");
+                    return (false, new List<object>(), "Token JWT requerido");
                 }
+
+                /// ✅ CONSTRUCCIÓN DE URL CENTRALIZADA
+                var url = _apiConfig.GetApiUrl("Facturacion/facturas-pendientes");
+                _logger.LogInformation($"🌐 URL construida: {url}");
+
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error obteniendo facturas pendientes: {StatusCode} - {Error}",
+                        response.StatusCode, errorContent);
+
+                    /// ✅ LOG ADICIONAL PARA DEBUGGING
+                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        _logger.LogWarning("🚫 Error 401: Token JWT inválido o expirado para facturas pendientes");
+                    }
+
+                    return (false, new List<object>(), $"Error {response.StatusCode}: {errorContent}");
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("📄 Respuesta recibida, procesando facturas pendientes...");
+
+                /// ✅ PROCESAMIENTO: DESERIALIZACIÓN SEGURA
+                var facturas = JsonConvert.DeserializeObject<List<object>>(content) ?? new List<object>();
+
+                _logger.LogInformation("✅ Se obtuvieron {Count} facturas pendientes", facturas.Count);
+                _logger.LogInformation("🎉 === FACTURAS PENDIENTES OBTENIDAS EXITOSAMENTE ===");
+
+                return (true, facturas, $"Se obtuvieron {facturas.Count} facturas pendientes");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes desde servicio");
-                return (false, null, "Error interno del servicio", ex.Message);
+                _logger.LogError(ex, "💥 Error al obtener facturas pendientes: {Message}", ex.Message);
+                return (false, new List<object>(), $"Error interno: {ex.Message}");
             }
         }
 
@@ -442,8 +461,11 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📋 === OBTENIENDO PROFORMAS DESDE SERVICIO ===");
                 _logger.LogInformation("📋 Parámetros: Estado={Estado}, Página={Pagina}, Tamaño={Tamano}", estado, pagina, tamano);
 
-                using var client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                }
 
                 var queryParams = new List<string>
                 {
@@ -461,7 +483,7 @@ namespace GestionLlantera.Web.Services
 
                 _logger.LogInformation("📋 URL construida: {Url}", url);
 
-                var response = await client.GetAsync(url);
+                var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -473,7 +495,7 @@ namespace GestionLlantera.Web.Services
                     // Verificar si la respuesta tiene la estructura correcta
                     if (apiResponse.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                     {
-                        _logger.LogInformation("📋 API confirmó éxito en obtener proformas");
+                        _logger.LogInformation("📋 API confirmed success in retrieving proformas");
 
                         // Extraer las proformas del response
                         if (apiResponse.TryGetProperty("proformas", out var proformasElement))
@@ -502,7 +524,7 @@ namespace GestionLlantera.Web.Services
                     }
                     else
                     {
-                        var errorMsg = apiResponse.TryGetProperty("message", out var msgElement) ? 
+                        var errorMsg = apiResponse.TryGetProperty("message", out var msgElement) ?
                             msgElement.GetString() : "Error desconocido desde el API";
                         return (false, null, errorMsg, "API returned success=false");
                     }
@@ -639,7 +661,7 @@ namespace GestionLlantera.Web.Services
                         JsonConvert.SerializeObject(resultado, Formatting.Indented);
 
                     return (
-                        success: true, 
+                        success: true,
                         data: resultado,
                         message: "Factura creada exitosamente",
                         details: null
@@ -909,14 +931,14 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📋 Estado de factura asignado: {Estado}", estadoFactura);
 
                 // ✅ 4. VALIDAR CAMPOS REQUERIDOS
-                var nombreCliente = factura.nombreCliente?.ToString() ?? 
-                                  factura.NombreCliente?.ToString() ?? 
-                                  factura.cliente?.ToString() ?? 
+                var nombreCliente = factura.nombreCliente?.ToString() ??
+                                  factura.NombreCliente?.ToString() ??
+                                  factura.cliente?.ToString() ??
                                   factura.Cliente?.ToString() ?? "";
 
                 if (string.IsNullOrEmpty(nombreCliente))
                 {
-                    _logger.LogError("❌ Validación fallida: No se encontró nombre del cliente. Propiedades disponibles: {Propiedades}", 
+                    _logger.LogError("❌ Validación fallida: No se encontró nombre del cliente. Propiedades disponibles: {Propiedades}",
                         string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p.Name)));
                     throw new ArgumentException("El nombre del cliente es requerido");
                 }
@@ -925,15 +947,16 @@ namespace GestionLlantera.Web.Services
                 factura.nombreCliente = nombreCliente;
 
                 // ✅ VALIDAR QUE EXISTAN PRODUCTOS - BÚSQUEDA ROBUSTA
-                var detallesFactura = factura.detallesFactura ?? 
-                                    factura.DetallesFactura ?? 
-                                    factura.productos ?? 
-                                    factura.Productos ?? 
-                                    factura.items ?? 
+                var detallesFactura = factura.detallesFactura ??
+                                    factura.DetallesFactura ??
+                                    factura.productos ??
+                                    factura.Productos ??
+                                    factura.items ??
                                     factura.Items;
 
                 if (detallesFactura == null)
-                {                    _logger.LogError("❌ No se encontraron productos en la factura. Propiedades disponibles: {Propiedades}", 
+                {
+                    _logger.LogError("❌ No se encontraron productos en la factura. Propiedades disponibles: {Propiedades}",
                         string.Join(", ", ((Newtonsoft.Json.Linq.JObject)factura).Properties().Select(p => p.Name)));
                     throw new ArgumentException("La factura debe tener al menos un producto");
                 }
@@ -1097,7 +1120,7 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("🔐 Permisos extraídos del token: {Permisos}", string.Join(", ", permisosEncontrados));
 
                 // Verificar si el usuario tiene el permiso "CompletarFacturas"
-                var tienePermisoCompletar = permisosEncontrados.Any(p => 
+                var tienePermisoCompletar = permisosEncontrados.Any(p =>
                     p.Equals("CompletarFacturas", StringComparison.OrdinalIgnoreCase) ||
                     p.Equals("Completar Facturas", StringComparison.OrdinalIgnoreCase) ||
                     p.Equals("CompletarFactura", StringComparison.OrdinalIgnoreCase));
@@ -1184,10 +1207,16 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var jsonContent = JsonConvert.SerializeObject(request);
-                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                var jsonContent = JsonConvert.SerializeObject(request, new JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
 
-                _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
+                _logger.LogInformation("📤 JSON enviado al API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 // Llamar al endpoint del API para eliminar productos
                 var response = await _httpClient.PostAsync("api/Facturacion/eliminar-productos-factura", content);
@@ -1266,9 +1295,9 @@ namespace GestionLlantera.Web.Services
                     }
 
                     // Deserializar la respuesta JSON completa
-                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions 
-                    { 
-                        PropertyNameCaseInsensitive = true 
+                    var apiResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(responseContent, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
                     });
 
                     _logger.LogInformation("📦 Respuesta del API deserializada. Kind: {Kind}", apiResponse.ValueKind);
@@ -1276,17 +1305,17 @@ namespace GestionLlantera.Web.Services
                     // El API de pendientes devuelve directamente la estructura con pendientes
                     if (apiResponse.TryGetProperty("pendientes", out var pendientesElement))
                     {
-                        var pendientesArray = System.Text.Json.JsonSerializer.Deserialize<object[]>(pendientesElement.GetRawText(), new JsonSerializerOptions 
-                        { 
-                            PropertyNameCaseInsensitive = true 
+                        var pendientesArray = System.Text.Json.JsonSerializer.Deserialize<object[]>(pendientesElement.GetRawText(), new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
                         });
 
                         _logger.LogInformation("📦 Pendientes deserializados: {Count}", pendientesArray?.Length ?? 0);
 
                         // Devolver la estructura exacta que espera el frontend (igual que facturas)
-                        return (success: true, 
-                               data: pendientesArray ?? new object[0], 
-                               message: "Pendientes de entrega obtenidos", 
+                        return (success: true,
+                               data: pendientesArray ?? new object[0],
+                               message: "Pendientes de entrega obtenidos",
                                details: null);
                     }
                     else
@@ -1294,31 +1323,31 @@ namespace GestionLlantera.Web.Services
                         // Si no tiene la propiedad pendientes, verificar si es directamente un array
                         if (apiResponse.ValueKind == JsonValueKind.Array)
                         {
-                            var pendientesArray = System.Text.Json.JsonSerializer.Deserialize<object[]>(responseContent, new JsonSerializerOptions 
-                            { 
-                                PropertyNameCaseInsensitive = true 
+                            var pendientesArray = System.Text.Json.JsonSerializer.Deserialize<object[]>(responseContent, new JsonSerializerOptions
+                            {
+                                PropertyNameCaseInsensitive = true
                             });
 
                             _logger.LogInformation("📦 Array directo de pendientes deserializado: {Count}", pendientesArray?.Length ?? 0);
 
-                            return (success: true, 
-                                   data: pendientesArray ?? new object[0], 
-                                   message: "Pendientes de entrega obtenidos", 
+                            return (success: true,
+                                   data: pendientesArray ?? new object[0],
+                                   message: "Pendientes de entrega obtenidos",
                                    details: null);
                         }
                         else
                         {
                             _logger.LogInformation("📦 No se encontró propiedad 'pendientes' en la respuesta");
-                            return (success: true, 
-                                   data: new object[0], 
-                                   message: "No hay pendientes de entrega", 
+                            return (success: true,
+                                   data: new object[0],
+                                   message: "No hay pendientes de entrega",
                                    details: null);
                         }
                     }
                 }
                 else
                 {
-                    _logger.LogError("❌ Error obteniendo pendientes de entrega: {StatusCode} - {Content}", 
+                    _logger.LogError("❌ Error obteniendo pendientes de entrega: {StatusCode} - {Content}",
                         response.StatusCode, responseContent);
                     return (success: false, data: null, message: "Error al obtener pendientes de entrega", details: responseContent);
                 }
@@ -1368,7 +1397,7 @@ namespace GestionLlantera.Web.Services
                     }).ToList()
                 };
 
-                _logger.LogInformation("📦 Datos estructurados para API: {Datos}", 
+                _logger.LogInformation("📦 Datos estructurados para API: {Datos}",
                     System.Text.Json.JsonSerializer.Serialize(datosParaAPI, new JsonSerializerOptions { WriteIndented = true }));
 
                 // ✅ CONFIGURAR HEADERS CON TOKEN JWT
@@ -1411,7 +1440,7 @@ namespace GestionLlantera.Web.Services
                 }
                 else
                 {
-                    _logger.LogError("❌ Error en API registrando pendientes: {StatusCode} - {Content}", 
+                    _logger.LogError("❌ Error en API registrando pendientes: {StatusCode} - {Content}",
                         response.StatusCode, responseContent);
 
                     return (false, $"Error del servidor: {response.StatusCode}", null, responseContent);
@@ -1502,7 +1531,7 @@ namespace GestionLlantera.Web.Services
                 }
                 else
                 {
-                    _logger.LogError("❌ Error marcando productos como entregados: {StatusCode} - {Content}", 
+                    _logger.LogError("❌ Error marcando productos como entregados: {StatusCode} - {Content}",
                         response.StatusCode, responseContent);
                     return (success: false, data: null, message: "Error al marcar productos como entregados", details: responseContent);
                 }
@@ -1528,7 +1557,7 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.PutAsync($"api/Facturacion/marcar-proforma-facturada/{proformaId}", 
+                var response = await _httpClient.PutAsync($"api/Facturacion/marcar-proforma-facturada/{proformaId}",
                     new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"));
 
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -1541,7 +1570,7 @@ namespace GestionLlantera.Web.Services
                 }
                 else
                 {
-                    _logger.LogError("❌ Error marcando proforma como facturada: {StatusCode} - {Content}", 
+                    _logger.LogError("❌ Error marcando proforma como facturada: {StatusCode} - {Content}",
                         response.StatusCode, responseContent);
                     return (success: false, data: null, message: "Error al marcar proforma como facturada", details: responseContent);
                 }
@@ -1558,7 +1587,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 _logger.LogInformation("🚚 === MARCANDO COMO ENTREGADO POR CÓDIGO EN SERVICIO ===");
-                _logger.LogInformation("🚚 Request recibido en servicio: {Request}", 
+                _logger.LogInformation("🚚 Request recibido en servicio: {Request}",
                     System.Text.Json.JsonSerializer.Serialize(request));
                 _logger.LogInformation("🚚 URL de API: {Url}", "api/Facturacion/marcar-entregado-por-codigo");
 
@@ -1587,7 +1616,7 @@ namespace GestionLlantera.Web.Services
                 }
                 else
                 {
-                    _logger.LogError("❌ Error marcando producto como entregado: {StatusCode} - {Content}", 
+                    _logger.LogError("❌ Error marcando producto como entregado: {StatusCode} - {Content}",
                         response.StatusCode, responseContent);
                     return (success: false, data: null, message: "Error al marcar producto como entregado", details: responseContent);
                 }
