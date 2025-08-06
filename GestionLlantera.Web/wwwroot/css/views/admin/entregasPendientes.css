@@ -326,12 +326,12 @@ code {
    TARJETAS MÓVILES PARA ENTREGAS PENDIENTES
    ======================================== */
 
-/* Contenedor de tarjetas móviles */
+/* Contenedor de tarjetas móviles - Solo visible en móvil */
 #entregasCardsMobile {
-    display: none; /* Oculto por defecto en desktop */
+    display: none;
 }
 
-/* Estilos de tarjetas individuales */
+/* Estilos de tarjetas individuales - Solo se aplicarán en móvil */
 .entrega-card-mobile {
     background: #fff;
     border-radius: 12px;
@@ -495,11 +495,61 @@ code {
     font-size: 0.9rem;
 }
 
-/* Responsividad para móvil */
+/* ========================================
+   ESTILOS ESPECÍFICOS PARA DESKTOP
+   ======================================== */
+
+@media (min-width: 769px) {
+    /* Asegurar que las tarjetas estén ocultas en desktop */
+    #entregasCardsMobile {
+        display: none !important;
+    }
+    
+    /* Asegurar que la tabla se muestre correctamente en desktop */
+    #tablaEntregasPendientes {
+        display: block !important;
+    }
+    
+    /* Mejorar el diseño de la tabla en desktop */
+    .table-responsive {
+        margin-top: 1rem;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table th {
+        background: #495057 !important;
+        color: white !important;
+        font-weight: 600;
+        border: none;
+        padding: 1rem 0.75rem;
+        white-space: nowrap;
+        font-size: 0.875rem;
+    }
+    
+    .table td {
+        padding: 0.75rem;
+        vertical-align: middle;
+        border-color: #e9ecef;
+        font-size: 0.875rem;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease;
+    }
+}
+
+/* ========================================
+   ESTILOS ESPECÍFICOS PARA MÓVIL
+   ======================================== */
+
 @media (max-width: 768px) {
     /* Mostrar tarjetas en móvil */
     #entregasCardsMobile {
         display: block !important;
+        padding: 0 0.5rem;
     }
     
     /* Ocultar tabla en móvil */
@@ -532,17 +582,15 @@ code {
         width: 100%;
         padding: 0.7rem;
     }
-}
-
-@media (min-width: 769px) {
-    /* Ocultar tarjetas en desktop */
-    #entregasCardsMobile {
-        display: none !important;
+    
+    /* Ajustar espaciado de filtros en móvil */
+    .card-body .row {
+        margin-bottom: 1rem;
     }
     
-    /* Mostrar tabla en desktop */
-    #tablaEntregasPendientes {
-        display: block !important;
+    .form-control, .form-select {
+        font-size: 1rem;
+        padding: 0.75rem;
     }
 }
 
