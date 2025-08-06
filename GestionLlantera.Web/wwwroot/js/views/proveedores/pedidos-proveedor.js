@@ -1065,16 +1065,16 @@ async function finalizarPedido() {
         if (success) {
             console.log('✅ Pedido creado exitosamente con ID:', pedidoId);
             $('#modalNuevoPedido').modal('hide');
-            
+
             // GUARDAR información del proveedor y productos ANTES de limpiar formulario
             const proveedorParaWhatsApp = { ...proveedorSeleccionado };
             const productosParaWhatsApp = [...productosSeleccionados];
-            
+
             console.log('💾 Guardando datos para WhatsApp:', {
                 proveedor: proveedorParaWhatsApp,
                 productos: productosParaWhatsApp.length
             });
-            
+
             // Mostrar modal de confirmación para enviar por WhatsApp
             const resultado = await Swal.fire({
                 icon: 'success',
@@ -1585,14 +1585,43 @@ function generarMensajeWhatsAppPedido(data) {
 
     mensaje += `*Detalle del Pedido:*\n`;
     productos.forEach((producto, index) => {
-        mensaje += `${index + 1}. ${producto.nombreProducto} - Cantidad: ${producto.cantidad} - Precio Unitario: ₡${(producto.precioUnitario || 0).toFixed(2)}\n`;
+        // Obtener información de llanta si es disponible
+        const obtenerInfoLlanta = (productoNombre) => {
+            const productoEnInventario = productosInventario.find(p =>
+                p.nombreProducto === productoNombre ||
+                p.nombreProducto.toLowerCase().includes(productoNombre.toLowerCase())
+            );
+
+            if (productoEnInventario && (productoEnInventario.llanta || (productoEnInventario.Llanta && productoEnInventario.Llanta.length > 0))) {
+                const llantaInfo = productoEnInventario.llanta || productoEnInventario.Llanta[0];
+
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        return `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        return `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
+                }
+            }
+            return null;
+        };
+
+        const medidaLlanta = obtenerInfoLlanta(producto.nombreProducto);
+
+        mensaje += `${index + 1}. *${producto.nombreProducto}*`;
+
+        if (medidaLlanta) {
+            mensaje += ` - *Medida:* ${medidaLlanta}`;
+        }
+
+        mensaje += ` - *Cantidad:* ${producto.cantidad} - *Precio Unitario:* ₡${(producto.precioUnitario || 0).toFixed(2)}\n`;
     });
 
     const cantidadTotal = productos.reduce((sum, p) => sum + p.cantidad, 0);
     const montoTotal = productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0);
 
-    mensaje += `\n*Total de productos: ${cantidadTotal}*\n`;
-    mensaje += `*Monto total estimado: ₡${montoTotal.toFixed(2)}*\n\n`;
+    mensaje += `\n*Total de productos:* ${cantidadTotal}\n`;
+    mensaje += `*Monto total estimado:* ₡${montoTotal.toFixed(2)}\n\n`;
     mensaje += `Por favor, confirme la recepción de este pedido y los detalles.\n`;
     mensaje += `Gracias.`;
 
