@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using System.Text.Json;
@@ -41,7 +40,7 @@ namespace GestionLlantera.Web.Services
             };
 
             // Log de diagnóstico para verificar la configuración
-            _logger.LogInformation("UsuariosService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
+            _logger.LogInformation("🔧 UsuariosService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         /// <summary>

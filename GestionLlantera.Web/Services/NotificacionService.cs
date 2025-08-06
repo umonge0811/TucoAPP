@@ -21,8 +21,8 @@ namespace GestionLlantera.Web.Services
         /// Constructor con inyección del servicio de configuración centralizado
         /// </summary>
         public NotificacionService(
-            HttpClient httpClient, 
-            ILogger<NotificacionService> logger, 
+            HttpClient httpClient,
+            ILogger<NotificacionService> logger,
             IHttpContextAccessor httpContextAccessor,
             ApiConfigurationService apiConfig)
         {
@@ -30,6 +30,9 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
             _apiConfig = apiConfig;
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 NotificacionService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         private void ConfigurarAuthorizationHeader()
@@ -69,7 +72,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
                 var url = _apiConfig.GetApiUrl("Notificaciones/mis-notificaciones");
                 _logger.LogInformation($"🌐 URL construida: {url}");
-                
+
                 var response = await _httpClient.GetAsync(url);
                 _logger.LogInformation($"Respuesta API: {response.StatusCode}");
 
@@ -105,7 +108,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
                 var url = _apiConfig.GetApiUrl("Notificaciones/conteo-no-leidas");
                 _logger.LogInformation($"🌐 URL construida: {url}");
-                
+
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -132,7 +135,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
                 var url = _apiConfig.GetApiUrl($"Notificaciones/{notificacionId}/marcar-leida");
                 _logger.LogInformation($"🌐 URL construida: {url}");
-                
+
                 var response = await _httpClient.PutAsync(url, null);
                 return response.IsSuccessStatusCode;
             }
@@ -152,7 +155,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
                 var url = _apiConfig.GetApiUrl("Notificaciones/marcar-todas-leidas");
                 _logger.LogInformation($"🌐 URL construida: {url}");
-                
+
                 var response = await _httpClient.PutAsync(url, null);
                 return response.IsSuccessStatusCode;
             }

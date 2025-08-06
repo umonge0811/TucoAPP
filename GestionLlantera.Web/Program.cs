@@ -50,22 +50,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// Registrar servicios
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IInventarioService, InventarioService>();
-builder.Services.AddScoped<IUsuariosService, UsuariosService>();
-builder.Services.AddScoped<IRolesService, RolesService>();
-builder.Services.AddScoped<IPermisosService, PermisosService>();
-builder.Services.AddScoped<IReportesService, ReportesService>();
-builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
-builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
-builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>();
-builder.Services.AddScoped<IFacturacionService, FacturacionService>();
-builder.Services.AddScoped<IClientesService, ClientesService>();
-
 // ✅ NUEVO: Servicio global de permisos
 builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();
-builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IPermisosInfoService, PermisosInfoService>();
 
 // ✅ NUEVO: Servicio de Dashboard (usando el mismo patrón que otros servicios)
@@ -73,9 +59,6 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // ✅ NUEVO: Servicio de Notas Rápidas
 builder.Services.AddScoped<INotasRapidasService, NotasRapidasService>();
-builder.Services.AddScoped<IAnunciosService, AnunciosService>();
-
-// ✅ NUEVO: Servicio de Anuncios
 builder.Services.AddScoped<IAnunciosService, AnunciosService>();
 
 // ✅ NUEVO: Agregar cache en memoria para optimización
@@ -89,10 +72,6 @@ builder.Services.AddHttpClient();
 builder.Services.Configure<GestionLlantera.Web.Services.ApiSettings>(
     builder.Configuration.GetSection("ApiSettings"));
 
-// ✅ REGISTRAR SERVICIO DE CONFIGURACIÓN DE API (CENTRALIZADO)
-// Este servicio permite acceder a la URL base de la API desde cualquier parte de la aplicación
-builder.Services.AddScoped<GestionLlantera.Web.Services.ApiConfigurationService>();
-
 // ✅ CONFIGURACIÓN ADICIONAL DE HTTP CLIENT (opcional - se puede mantener o eliminar)
 builder.Services.AddHttpClient("APIClient", client =>
 {
@@ -105,6 +84,32 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
 });
+
+// ✅ SERVICIO CENTRALIZADO DE CONFIGURACIÓN API (PRIMERO)
+builder.Services.AddSingleton<ApiConfigurationService>();
+
+// ✅ SERVICIOS DE NEGOCIO (ORDEN ALFABÉTICO)
+builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>();
+builder.Services.AddScoped<IAnunciosService, AnunciosService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IClientesService, ClientesService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IFacturacionService, FacturacionService>();
+builder.Services.AddScoped<IInventarioService, InventarioService>();
+builder.Services.AddScoped<INotasRapidasService, NotasRapidasService>();
+builder.Services.AddScoped<IProveedoresService, ProveedoresService>();
+builder.Services.AddScoped<IReportesService, ReportesService>();
+builder.Services.AddScoped<IRolesService, RolesService>();
+builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
+builder.Services.AddScoped<IUsuariosService, UsuariosService>();
+
+// ✅ SERVICIOS DE PERMISOS
+builder.Services.AddScoped<IPermisosService, PermisosService>();
+builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();
+builder.Services.AddScoped<IPermisosInfoService, PermisosInfoService>();
+
+// ✅ SERVICIO DE NOTIFICACIONES (ACCESO DIRECTO A BD)
+builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
 
 var app = builder.Build();
 
