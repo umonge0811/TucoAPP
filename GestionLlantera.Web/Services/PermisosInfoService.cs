@@ -10,6 +10,8 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
         private readonly ILogger<PermisosInfoService> _logger;
+        // ✅ SERVICIO CENTRALIZADO PARA CONFIGURACIÓN DE API
+        private readonly ApiConfigurationService _apiConfig;
 
         // Mapeo de funciones y sus permisos requeridos
         private readonly Dictionary<string, List<string>> _funcionesPermisos = new()
@@ -66,18 +68,22 @@ namespace GestionLlantera.Web.Services
             {"Configuración Sistema", "Permite acceder a configuraciones avanzadas"}
         };
 
-        public PermisosInfoService(HttpClient httpClient, IConfiguration configuration, ILogger<PermisosInfoService> logger)
+        public PermisosInfoService(HttpClient httpClient, IConfiguration configuration, ILogger<PermisosInfoService> logger, ApiConfigurationService apiConfig)
         {
             _httpClient = httpClient;
             _configuration = configuration;
             _logger = logger;
+            _apiConfig = apiConfig;
         }
 
         public async Task<Dictionary<string, List<PermisoDTO>>> ObtenerPermisosPorCategoriaAsync()
         {
             try
             {
-                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Permisos/obtener-todos";
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("api/Permisos/obtener-todos");
+                _logger.LogDebug("🌐 URL construida para obtener permisos por categoría: {url}", url);
+                
                 var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
@@ -119,7 +125,10 @@ namespace GestionLlantera.Web.Services
                     FechaSolicitud = DateTime.Now
                 };
 
-                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Permisos/solicitar-permiso";
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("api/Permisos/solicitar-permiso");
+                _logger.LogDebug("🌐 URL construida para solicitar permiso: {url}", url);
+                
                 var response = await _httpClient.PostAsJsonAsync(url, solicitud);
 
                 return response.IsSuccessStatusCode;
