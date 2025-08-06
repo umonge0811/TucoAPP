@@ -107,16 +107,13 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new Microsoft.OpenApi.Models.OpenApiReference
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
+                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                Id = "Bearer"
+            }
+        },
+        new string[] {}
     });
 });
 // Configurar HttpClient
@@ -166,6 +163,19 @@ builder.Services.AddAuthorization(options =>
     //    ? Sin tocar código nunca más
     //    ? Sistema escalable y mantenible
 });
+
+// Configurar servicios de negocio
+builder.Services.AddScoped<PermisosService>();
+builder.Services.AddScoped<NotificacionService>();
+builder.Services.AddScoped<TomaInventarioService>();
+builder.Services.AddScoped<ReporteInventarioService>();
+builder.Services.AddScoped<ReportePedidosService>();
+builder.Services.AddScoped<AjustesInventarioPendientesService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<VerificacionProformasService>();
+
+// Servicio de WhatsApp
+builder.Services.AddScoped<API.Services.WhatsAppService>();
 
 // Construir la aplicación
 var app = builder.Build();
