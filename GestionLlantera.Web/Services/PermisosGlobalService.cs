@@ -68,7 +68,7 @@ namespace GestionLlantera.Web.Services
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/Permisos/verificar/{permiso}");
+                var url = _apiConfig.GetApiUrl($"Permisos/verificar/{Uri.EscapeDataString(permiso)}");
                 _logger.LogDebug("🌐 URL construida para verificar permiso: {url}", url);
 
                 // Hacer petición a la API
@@ -120,7 +120,7 @@ namespace GestionLlantera.Web.Services
                 var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl("api/Permisos/verificar-multiples");
+                var url = _apiConfig.GetApiUrl("Permisos/verificar-multiples");
                 _logger.LogDebug("🌐 URL construida para verificar múltiples permisos: {url}", url);
 
                 var response = await _httpClient.PostAsync(url, content);
@@ -168,7 +168,7 @@ namespace GestionLlantera.Web.Services
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl("api/Permisos/es-administrador");
+                var url = _apiConfig.GetApiUrl("Permisos/es-administrador");
                 _logger.LogDebug("🌐 URL construida para verificar administrador: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);
@@ -204,7 +204,7 @@ namespace GestionLlantera.Web.Services
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl("api/Permisos/mis-permisos");
+                var url = _apiConfig.GetApiUrl("Permisos/mis-permisos");
                 _logger.LogDebug("🌐 URL construida para obtener mis permisos: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);

@@ -38,9 +38,9 @@ namespace GestionLlantera.Web.Services
         private readonly ILogger<TomaInventarioService> _logger;
         private readonly ApiConfigurationService _apiConfig; // ✅ AGREGADO: Servicio centralizado
 
-        public TomaInventarioService(HttpClient httpClient, ILogger<TomaInventarioService> logger, ApiConfigurationService apiConfig)
+        public TomaInventarioService(IHttpClientFactory httpClientFactory, ILogger<TomaInventarioService> logger, ApiConfigurationService apiConfig)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
             _apiConfig = apiConfig; // ✅ ASIGNADO: Servicio centralizado
 
