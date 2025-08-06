@@ -72,7 +72,7 @@ function configurarEventos() {
         if (cantidad < 1) {
             $(this).val(1);
         }
-
+        
         // ✅ ACTUALIZAR ESTADO DEL BOTÓN SEGÚN DISPONIBILIDAD
         const btnConfirmar = $('#btnConfirmarEntrega');
         if (cantidad > 0 && cantidad <= max) {
@@ -160,9 +160,9 @@ async function cargarPendientes() {
         console.log('🚚 Pendientes cargados:', pendientesData.length);
 
         // Aplicar filtros si hay alguno activo, sino mostrar todos
-        const hayFiltrosActivos = $('#filtroEstado').val() || $('#filtroCodigo').val() ||
+        const hayFiltrosActivos = $('#filtroEstado').val() || $('#filtroCodigo').val() || 
                                  $('#filtroFechaDesde').val() || $('#filtroFechaHasta').val();
-
+        
         if (hayFiltrosActivos) {
             aplicarFiltros();
         } else {
@@ -183,57 +183,57 @@ async function cargarPendientes() {
 // =========================================
 
 function mostrarPendientes(pendientes) {
-    console.log('📦 === MOSTRANDO PENDIENTES ===');
-    console.log('📦 Total pendientes recibidos:', pendientes.length);
+    console.log('📋 === MOSTRANDO PENDIENTES CON PAGINACIÓN ===');
+    console.log('📋 Total pendientes:', pendientes.length);
 
-    const tbody = document.getElementById('tablaEntregasPendientesBody');
-    const cardsContainer = document.getElementById('entregasCardsMobile');
-
-    if (!tbody || !cardsContainer) {
-        console.error('❌ No se encontró el tbody de la tabla o el contenedor de tarjetas');
-        return;
-    }
-
-    // Limpiar tabla y tarjetas
-    tbody.innerHTML = '';
-    cardsContainer.innerHTML = '';
+    // Guardar pendientes filtrados
+    pendientesFiltrados = pendientes;
 
     if (!pendientes || pendientes.length === 0) {
-        console.log('📦 No hay pendientes para mostrar');
         $('#sinResultados').show();
         $('#tablaPendientes').hide();
-        $('#entregasCardsMobile').hide(); // Ocultar contenedor de tarjetas también
-        actualizarPaginacionEntregas([]);
+        $('#contadorResultados').hide();
+        $('#paginacionEntregas').hide();
         return;
     }
 
     $('#sinResultados').hide();
     $('#tablaPendientes').show();
-    $('#entregasCardsMobile').show(); // Mostrar contenedor de tarjetas
+    $('#contadorResultados').show();
 
-    // Calcular índices para paginación
+    // Calcular paginación
+    const totalPaginas = Math.ceil(pendientes.length / entregasPorPagina);
     const inicio = (paginaActualEntregas - 1) * entregasPorPagina;
-    const fin = Math.min(inicio + entregasPorPagina, pendientes.length);
+    const fin = inicio + entregasPorPagina;
     const pendientesPagina = pendientes.slice(inicio, fin);
 
-    console.log(`📦 Mostrando pendientes ${inicio + 1}-${fin} de ${pendientes.length}`);
+    console.log('📋 Mostrando página:', paginaActualEntregas, 'de', totalPaginas);
+    console.log('📋 Pendientes en esta página:', pendientesPagina.length);
 
-    // Crear filas para tabla (desktop)
+    // Mostrar pendientes de la página actual
+    const tbody = $('#bodyPendientes');
+    tbody.empty();
+
     pendientesPagina.forEach(pendiente => {
         const fila = crearFilaPendiente(pendiente);
-        tbody.appendChild(fila);
+        tbody.append(fila);
     });
 
-    // Crear tarjetas para móvil
-    pendientesPagina.forEach(pendiente => {
-        const tarjeta = crearTarjetaPendienteMobile(pendiente);
-        cardsContainer.appendChild(tarjeta);
-    });
+    // Actualizar contador
+    actualizarContadorResultados(pendientes.length, pendientesData.length);
 
-    // Actualizar paginación
-    actualizarPaginacionEntregas(pendientes);
+    // Mostrar paginación si hay más de una página
+    if (totalPaginas > 1) {
+        mostrarPaginacionEntregas(paginaActualEntregas, totalPaginas);
+    } else {
+        $('#paginacionEntregas').hide();
+    }
 
-    console.log('📦 Tabla y tarjetas actualizadas exitosamente');
+    // Resaltar términos de búsqueda si hay filtro de código
+    const filtroCodigo = $('#filtroCodigo').val().trim();
+    if (filtroCodigo) {
+        resaltarTerminoBusqueda(filtroCodigo);
+    }
 }
 
 /**
@@ -348,163 +348,60 @@ function crearFilaPendiente(pendiente) {
 
     // Usar directamente el código de seguimiento de la base de datos
     const codigoSeguimiento = pendiente.codigoSeguimiento || 'Sin código';
-
+    
     // ✅ VALIDAR STOCK DISPONIBLE
     const stockActual = pendiente.stockActual || 0;
     const cantidadPendiente = pendiente.cantidadPendiente || 0;
     const stockSuficiente = stockActual >= cantidadPendiente;
-
+    
     // Determinar clase CSS para el stock
     const stockClass = stockSuficiente ? 'bg-success' : 'bg-danger';
-    const filaClass = stockSuficiente ? '' : 'table-danger';
+    const stockTitle = stockSuficiente ? 'Stock suficiente' : 'Stock insuficiente para completar la entrega';
 
-    const fila = document.createElement('tr');
-    if (filaClass) {
-        fila.classList.add(filaClass);
-    }
-
-    fila.innerHTML = `
-        <td><code>${codigoSeguimiento}</code></td>
-        <td>${pendiente.numeroFactura || 'FAC-' + pendiente.facturaId}</td>
-        <td>${pendiente.nombreCliente || 'Cliente desconocido'}</td>
-        <td>
-            <strong>${pendiente.nombreProducto || 'Producto desconocido'}</strong>
-        </td>
-        <td>
-            <span class="badge bg-info">${cantidadPendiente}</span>
-        </td>
-        <td>
-            <span class="badge ${stockClass}">${stockActual}</span>
-            ${!stockSuficiente ? '<br><small class="text-danger">Stock insuficiente</small>' : ''}
-        </td>
-        <td>
-            <span class="badge bg-${estadoClass}">${pendiente.estado}</span>
-        </td>
-        <td>${fechaCreacion}</td>
-        <td>
-            <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-outline-info btn-sm" 
-                        onclick="verDetalles('${pendiente.id}')" 
-                        title="Ver detalles">
-                    <i class="bi bi-eye"></i>
-                </button>
-                ${pendiente.estado !== 'Entregado' && stockSuficiente ? `
-                    <button type="button" class="btn btn-outline-success btn-sm" 
-                            onclick="abrirModalEntrega(${pendiente.id})" 
-                            title="Marcar como entregado">
-                        <i class="bi bi-check-circle"></i>
-                    </button>
-                ` : ''}
-            </div>
-        </td>
-    `;
-
-    return fila;
-}
-
-function crearTarjetaPendienteMobile(pendiente) {
-    const estadoClass = pendiente.estado === 'Entregado' ? 'success' : 'warning';
-    const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleDateString('es-ES');
-    const codigoSeguimiento = pendiente.codigoSeguimiento || 'Sin código';
-
-    // ✅ VALIDAR STOCK DISPONIBLE
-    const stockActual = pendiente.stockActual || 0;
-    const cantidadPendiente = pendiente.cantidadPendiente || 0;
-    const stockSuficiente = stockActual >= cantidadPendiente;
-
-    const stockClass = stockSuficiente ? 'bg-success' : 'bg-danger';
-    const cardClass = stockSuficiente ? 'stock-suficiente' : 'stock-critico';
-
-    const tarjeta = document.createElement('div');
-    tarjeta.className = `entrega-card-mobile ${cardClass}`;
-
-    tarjeta.innerHTML = `
-        <div class="entrega-card-header">
-            <div>
-                <h6 class="entrega-titulo-mobile">${pendiente.nombreProducto || 'Producto desconocido'}</h6>
-                <div class="entrega-codigo-mobile">
-                    <i class="bi bi-upc me-1"></i>
-                    <code>${codigoSeguimiento}</code>
-                </div>
-            </div>
-            <div class="entrega-estado-mobile">
+    return `
+        <tr>
+            <td>
+                <code>${codigoSeguimiento}</code>
+            </td>
+            <td>
+                <strong>${pendiente.numeroFactura || 'FAC-' + pendiente.facturaId}</strong>
+            </td>
+            <td>
+                ${pendiente.nombreProducto || 'Producto sin nombre'}
+                ${pendiente.esLlanta && pendiente.medidaLlanta ? `<br><small class="text-muted">${pendiente.medidaLlanta}</small>` : ''}
+            </td>
+            <td class="text-center">
+                <span class="badge bg-info">${pendiente.cantidadSolicitada || 0}</span>
+            </td>
+            <td class="text-center">
+                <span class="badge bg-warning">${cantidadPendiente}</span>
+            </td>
+            <td class="text-center">
+                <span class="badge ${stockClass}" title="${stockTitle}">${stockActual}</span>
+            </td>
+            <td>${fechaCreacion}</td>
+            <td>
                 <span class="badge bg-${estadoClass}">${pendiente.estado}</span>
-            </div>
-        </div>
-
-        <div class="entrega-card-body">
-            <div class="entrega-info-row">
-                <span class="entrega-info-label">
-                    <i class="bi bi-file-earmark-text me-1"></i>
-                    Factura:
-                </span>
-                <span class="entrega-info-value factura-numero">${pendiente.numeroFactura || 'FAC-' + pendiente.facturaId}</span>
-            </div>
-
-            <div class="entrega-info-row">
-                <span class="entrega-info-label">
-                    <i class="bi bi-person me-1"></i>
-                    Cliente:
-                </span>
-                <span class="entrega-info-value cliente-nombre">${pendiente.nombreCliente || 'Cliente desconocido'}</span>
-            </div>
-
-            <div class="entrega-info-row">
-                <span class="entrega-info-label">
-                    <i class="bi bi-box-seam me-1"></i>
-                    Cantidad:
-                </span>
-                <span class="entrega-info-value">
-                    <span class="badge entrega-badge-cantidad">${cantidadPendiente}</span>
-                </span>
-            </div>
-
-            <div class="entrega-info-row">
-                <span class="entrega-info-label">
-                    <i class="bi bi-inbox me-1"></i>
-                    Stock:
-                </span>
-                <span class="entrega-info-value">
-                    <span class="badge entrega-badge-stock ${stockClass}">${stockActual}</span>
-                    ${!stockSuficiente ? '<br><small class="text-danger">Stock insuficiente</small>' : ''}
-                </span>
-            </div>
-
-            <div class="entrega-info-row">
-                <span class="entrega-info-label">
-                    <i class="bi bi-calendar me-1"></i>
-                    Fecha:
-                </span>
-                <span class="entrega-info-value">${fechaCreacion}</span>
-            </div>
-        </div>
-
-        <div class="entrega-acciones-mobile">
-            <div class="botones-accion-mobile-entregas">
-                <button type="button" class="btn btn-outline-info" 
-                        onclick="verDetalles(${pendiente.id})" 
-                        title="Ver detalles">
-                    <i class="bi bi-eye"></i>
-                    Ver Detalles
-                </button>
-                ${pendiente.estado !== 'Entregado' && stockSuficiente ? `
-                    <button type="button" class="btn btn-outline-success" 
+            </td>
+            <td>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-info btn-sm" 
+                            onclick="verDetalles(${pendiente.id})" 
+                            title="Ver detalles">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    ${pendiente.estado === 'Pendiente' ? `
+                    <button type="button" class="btn btn-outline-success btn-sm ${!stockSuficiente ? 'disabled' : ''}" 
                             onclick="abrirModalEntrega(${pendiente.id})" 
-                            title="Marcar como entregado">
+                            title="${stockSuficiente ? 'Marcar como entregado' : 'Stock insuficiente - No se puede entregar'}"
+                            ${!stockSuficiente ? 'disabled' : ''}>
                         <i class="bi bi-check-circle"></i>
-                        Entregar
                     </button>
-                ` : `
-                    <button type="button" class="btn btn-secondary" disabled>
-                        <i class="bi bi-x-circle"></i>
-                        ${!stockSuficiente ? 'Sin Stock' : 'Entregado'}
-                    </button>
-                `}
-            </div>
-        </div>
+                    ` : ''}
+                </div>
+            </td>
+        </tr>
     `;
-
-    return tarjeta;
 }
 
 // =========================================
@@ -522,7 +419,7 @@ function abrirModalEntrega(pendienteId) {
     // ✅ VALIDAR STOCK ANTES DE ABRIR MODAL
     const stockActual = pendiente.stockActual || 0;
     const cantidadPendiente = pendiente.cantidadPendiente || 0;
-
+    
     if (stockActual < cantidadPendiente) {
         mostrarError(`❌ STOCK INSUFICIENTE: El producto "${pendiente.nombreProducto}" tiene ${stockActual} unidades disponibles, pero se requieren ${cantidadPendiente} unidades para completar la entrega.`);
         return;
@@ -559,7 +456,7 @@ async function confirmarEntrega() {
             return;
         }
 
-
+       
 
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
@@ -590,10 +487,10 @@ async function confirmarEntrega() {
 
         console.log('🌐 Respuesta HTTP status:', response.status);
         console.log('🌐 Respuesta HTTP headers:', response.headers);
-
+        
         const textoRespuesta = await response.text();
         console.log('🌐 Respuesta como texto:', textoRespuesta);
-
+        
         let resultado;
         try {
             resultado = JSON.parse(textoRespuesta);
@@ -651,7 +548,7 @@ function verDetalles(pendienteId) {
 
 function generarContenidoDetalles(pendiente) {
     const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleString('es-ES');
-    const fechaEntrega = pendiente.fechaEntrega ?
+    const fechaEntrega = pendiente.fechaEntrega ? 
         new Date(pendiente.fechaEntrega).toLocaleString('es-ES') : 'No entregado';
 
     return `
@@ -754,7 +651,7 @@ function aplicarFiltros() {
         if (filtroCodigo) {
             const codigo = (pendiente.codigoSeguimiento || '').toLowerCase();
             const numeroFactura = (pendiente.numeroFactura || '').toLowerCase();
-
+            
             // Buscar en código de seguimiento o número de factura
             if (!codigo.includes(filtroCodigo) && !numeroFactura.includes(filtroCodigo)) {
                 return false;
@@ -784,10 +681,10 @@ function aplicarFiltros() {
     });
 
     console.log(`🔍 Filtros aplicados: ${pendientesFiltrados.length} de ${pendientesData.length} pendientes mostrados`);
-
+    
     // Mostrar resultados filtrados
     mostrarPendientes(pendientesFiltrados);
-
+    
     // Actualizar contador de resultados
     actualizarContadorResultados(pendientesFiltrados.length, pendientesData.length);
 }
@@ -839,7 +736,6 @@ function mostrarIndicadorCarga(mostrar) {
         $('#loadingIndicator').show();
         $('#tablaPendientes').hide();
         $('#sinResultados').hide();
-        $('#entregasCardsMobile').hide(); // Ocultar tarjetas mientras carga
     } else {
         $('#loadingIndicator').hide();
     }
@@ -857,12 +753,12 @@ function obtenerUsuarioActual() {
 
 function resaltarTerminoBusqueda(termino) {
     if (!termino) return;
-
+    
     const regex = new RegExp(`(${termino.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-
+    
     $('#bodyPendientes tr').each(function() {
         const $fila = $(this);
-
+        
         // Resaltar en código de seguimiento y número de factura
         $fila.find('td:first-child code, td:nth-child(2) strong').each(function() {
             const $elemento = $(this);
@@ -1019,12 +915,5 @@ async function marcarComoEntregado(codigoSeguimiento) {
         mostrarError('Error de conexión al confirmar entrega');
     }
 }
-
-// Dummy function for cargarEntregasPendientes if it's not defined elsewhere
-function cargarEntregasPendientes() {
-    console.log('Recargando entregas pendientes...');
-    cargarPendientes(); // Call the main loading function
-}
-
 
 console.log('🚚 Módulo de entregas pendientes cargado exitosamente');
