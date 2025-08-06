@@ -47,33 +47,23 @@
 
     <!-- Filtros y búsqueda -->
     <div class="row mb-3">
-        <div class="col-md-8">
-            <div class="d-flex gap-2">
-                <div class="input-group flex-grow-1">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control" id="buscarProveedor" placeholder="Buscar por nombre, contacto o teléfono...">
-                </div>
-                <button class="btn btn-outline-secondary" id="btnToggleProveedores" onclick="alternarVistaProveedores()" data-mostrandoTodos="false">
-                    <i class="bi bi-eye me-1"></i>Ver Todos
-                </button>
-                <button class="btn btn-outline-secondary" onclick="limpiarFiltros()">
-                    <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
-                </button>
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="buscarProveedor" placeholder="Buscar por nombre, contacto o teléfono...">
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
-                <button type="button" class="btn btn-primary" onclick="abrirModalProveedor()">
-                    <i class="bi bi-plus-circle me-1"></i>Nuevo Proveedor
-                </button>
-                <a href="/Proveedores/PedidosProveedor" class="btn btn-outline-primary">
-                    <i class="bi bi-box-seam me-1"></i>Gestionar Pedidos
-                </a>
-            </div>
+        <div class="col-md-6 text-center">
+            <button class="btn btn-outline-secondary me-2" id="btnToggleProveedores" onclick="alternarVistaProveedores()" data-mostrandoTodos="false">
+                <i class="bi bi-eye me-1"></i>Ver Todos
+            </button>
+            <button class="btn btn-outline-secondary" onclick="limpiarFiltros()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
+            </button>
         </div>
     </div>
 
-    <!--Tabla de proveedores -->
+    <!-- Tabla de proveedores -->
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -152,9 +142,9 @@
                             <label for="nombreProveedor" class="form-label">
                                 <i class="bi bi-building me-1"></i>Nombre del Proveedor
                             </label>
-                            <input type="text"
-                                   class="form-control"
-                                   id="nombreProveedor"
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nombreProveedor" 
                                    name="nombre"
                                    placeholder="Ej: Distribuidora XYZ"
                                    maxlength="100">
@@ -165,9 +155,9 @@
                             <label for="contactoProveedor" class="form-label">
                                 <i class="bi bi-person me-1"></i>Contacto Principal
                             </label>
-                            <input type="text"
-                                   class="form-control"
-                                   id="contactoProveedor"
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="contactoProveedor" 
                                    name="contacto"
                                    placeholder="Ej: Juan Pérez"
                                    maxlength="100">
@@ -181,9 +171,9 @@
                             <label for="emailProveedor" class="form-label">
                                 <i class="bi bi-envelope me-1"></i>Email
                             </label>
-                            <input type="email"
-                                   class="form-control"
-                                   id="emailProveedor"
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="emailProveedor" 
                                    name="email"
                                    placeholder="contacto@proveedor.com"
                                    maxlength="100">
@@ -192,13 +182,13 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="telefonoProveedor" class="form-label">Teléfono <span class="text-muted">(8 dígitos)</span></label>
-                            <input type="tel"
-                                   class="form-control"
-                                   id="telefonoProveedor"
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="telefonoProveedor" 
                                    name="telefono"
-                                   placeholder="12345678"
-                                   maxlength="8"
-                                   pattern="[0-9]{8}"
+                                   placeholder="12345678" 
+                                   maxlength="8" 
+                                   pattern="[0-9]{8}" 
                                    title="Debe ingresar exactamente 8 dígitos">
                             <div class="invalid-feedback"></div>
                             <small class="form-text text-muted">Número de teléfono</small>
@@ -209,9 +199,9 @@
                         <label for="direccionProveedor" class="form-label">
                             <i class="bi bi-geo-alt me-1"></i>Dirección
                         </label>
-                        <textarea class="form-control"
-                                  id="direccionProveedor"
-                                  name="direccion"
+                        <textarea class="form-control" 
+                                  id="direccionProveedor" 
+                                  name="direccion" 
                                   rows="3"
                                   placeholder="Dirección comercial del proveedor"
                                   maxlength="500"></textarea>
@@ -222,10 +212,10 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <div class="form-check">
-                                <input class="form-check-input"
-                                       type="checkbox"
-                                       id="activoProveedor"
-                                       name="activo"
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="activoProveedor" 
+                                       name="activo" 
                                        checked>
                                 <label class="form-check-label" for="activoProveedor">
                                     <i class="bi bi-check-circle me-1"></i>Proveedor Activo
