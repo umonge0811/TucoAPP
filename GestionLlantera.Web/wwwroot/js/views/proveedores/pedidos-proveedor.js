@@ -970,6 +970,165 @@ function seleccionarTodosProductos() {
 }
 
 /**
+ * Generar mensaje de WhatsApp para el pedido
+ */
+function generarMensajeWhatsAppPedido(pedidoData) {
+    console.log('📱 Generando mensaje de WhatsApp para pedido:', pedidoData);
+
+    if (!pedidoData) {
+        console.error('❌ No hay datos del pedido para generar mensaje');
+        return null;
+    }
+
+    try {
+        const fecha = new Date(pedidoData.fechaPedido).toLocaleDateString('es-ES');
+        
+        let mensaje = `🛒 *PEDIDO #${pedidoData.pedidoId}*\n`;
+        mensaje += `📅 Fecha: ${fecha}\n`;
+        mensaje += `🏢 Para: ${pedidoData.proveedorNombre}\n\n`;
+        
+        mensaje += `📦 *PRODUCTOS SOLICITADOS:*\n`;
+        
+        if (pedidoData.detallePedidos && pedidoData.detallePedidos.length > 0) {
+            pedidoData.detallePedidos.forEach((detalle, index) => {
+                mensaje += `${index + 1}. ${detalle.productoNombre}\n`;
+                
+                // Agregar información de llanta si existe
+                if (detalle.llanta && detalle.llanta.ancho && detalle.llanta.diametro) {
+                    if (detalle.llanta.perfil && detalle.llanta.perfil > 0) {
+                        mensaje += `   📏 Medida: ${detalle.llanta.ancho}/${detalle.llanta.perfil}/R${detalle.llanta.diametro}\n`;
+                    } else {
+                        mensaje += `   📏 Medida: ${detalle.llanta.ancho}/R${detalle.llanta.diametro}\n`;
+                    }
+                    
+                    if (detalle.llanta.marca) {
+                        mensaje += `   🏷️ Marca: ${detalle.llanta.marca}\n`;
+                    }
+                }
+                
+                mensaje += `   📊 Cantidad: ${detalle.cantidad} unidades\n`;
+                if (detalle.precioUnitario && detalle.precioUnitario > 0) {
+                    mensaje += `   💰 Precio unitario: ₡${detalle.precioUnitario.toFixed(2)}\n`;
+                }
+                mensaje += `\n`;
+            });
+        }
+        
+        if (pedidoData.montoTotal && pedidoData.montoTotal > 0) {
+            mensaje += `💰 *TOTAL ESTIMADO: ₡${pedidoData.montoTotal.toFixed(2)}*\n\n`;
+        }
+        
+        mensaje += `📋 Favor confirmar disponibilidad y tiempos de entrega.\n`;
+        mensaje += `¡Gracias! 🙏`;
+
+        console.log('✅ Mensaje de WhatsApp generado:', mensaje);
+        return mensaje;
+        
+    } catch (error) {
+        console.error('❌ Error generando mensaje de WhatsApp:', error);
+        return null;
+    }
+}
+
+/**
+ * Enviar pedido por WhatsApp automáticamente
+ */
+async function enviarPedidoPorWhatsApp(pedidoData) {
+    console.log('📱 === ENVIANDO PEDIDO POR WHATSAPP ===');
+    
+    try {
+        // Generar mensaje
+        const mensaje = generarMensajeWhatsAppPedido(pedidoData);
+        
+        if (!mensaje) {
+            throw new Error('No se pudo generar el mensaje de WhatsApp');
+        }
+
+        // Obtener número de teléfono del proveedor si existe
+        let numeroWhatsApp = null;
+        if (pedidoData.proveedor && pedidoData.proveedor.telefono) {
+            // Limpiar número de teléfono
+            numeroWhatsApp = pedidoData.proveedor.telefono.replace(/\D/g, '');
+            
+            // Validar que sea un número de Costa Rica (8 dígitos)
+            if (numeroWhatsApp.length === 8) {
+                numeroWhatsApp = `506${numeroWhatsApp}`;
+            } else if (numeroWhatsApp.length === 11 && numeroWhatsApp.startsWith('506')) {
+                // Ya tiene código de país
+            } else {
+                // Número inválido, usar envío sin número
+                numeroWhatsApp = null;
+            }
+        }
+
+        // Crear URL de WhatsApp
+        let whatsappUrl;
+        if (numeroWhatsApp) {
+            whatsappUrl = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+            console.log(`📱 Enviando a número específico: ${numeroWhatsApp}`);
+        } else {
+            whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+            console.log('📱 Enviando sin número específico');
+        }
+
+        // Mostrar SweetAlert con opción de enviar
+        const result = await Swal.fire({
+            title: '📱 Enviar Pedido por WhatsApp',
+            html: `
+                <div class="text-start">
+                    <p><strong>Pedido #${pedidoData.pedidoId}</strong> creado exitosamente.</p>
+                    <p><strong>Proveedor:</strong> ${pedidoData.proveedorNombre}</p>
+                    ${numeroWhatsApp ? 
+                        `<p><strong>📞 Teléfono:</strong> ${pedidoData.proveedor.telefono}</p>` : 
+                        '<p class="text-warning">⚠️ No hay número de teléfono registrado para este proveedor</p>'
+                    }
+                    <hr>
+                    <p class="mb-3">¿Desea enviar el pedido por WhatsApp?</p>
+                    <div class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                        <small><strong>Vista previa del mensaje:</strong></small>
+                        <div style="white-space: pre-line; font-size: 0.9em;">${mensaje}</div>
+                    </div>
+                </div>
+            `,
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: '📱 Enviar por WhatsApp',
+            cancelButtonText: '✅ Solo Continuar',
+            confirmButtonColor: '#25D366',
+            cancelButtonColor: '#28a745',
+            reverseButtons: true,
+            width: '600px'
+        });
+
+        if (result.isConfirmed) {
+            // Abrir WhatsApp
+            window.open(whatsappUrl, '_blank');
+            
+            // Mostrar confirmación
+            Swal.fire({
+                icon: 'success',
+                title: '📱 WhatsApp Abierto',
+                text: 'Se ha abierto WhatsApp con el mensaje del pedido',
+                timer: 2000,
+                timerProgressBar: true,
+                confirmButtonColor: '#25D366'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error enviando pedido por WhatsApp:', error);
+        
+        // Mostrar error pero no bloquear el flujo
+        Swal.fire({
+            icon: 'warning',
+            title: 'Error en WhatsApp',
+            text: 'No se pudo preparar el mensaje de WhatsApp, pero el pedido se creó correctamente.',
+            confirmButtonColor: '#ffc107'
+        });
+    }
+}
+
+/**
  * Finalizar pedido
  */
 async function finalizarPedido() {
@@ -1071,8 +1230,14 @@ async function finalizarPedido() {
 
         if (success) {
             console.log('✅ Pedido creado exitosamente con ID:', pedidoId);
-            mostrarExito(`${mensaje}${pedidoId ? `. ID del pedido: ${pedidoId}` : ''}`);
+            
+            // Cerrar modal de pedido
             $('#modalNuevoPedido').modal('hide');
+            
+            // Enviar automáticamente por WhatsApp
+            await enviarPedidoPorWhatsApp(data);
+            
+            // Recargar pedidos y limpiar formulario
             await cargarPedidos();
             limpiarFormulario();
         } else {
@@ -1843,5 +2008,7 @@ window.verDetallePedido = verDetallePedido;
 window.cambiarEstadoPedido = cambiarEstadoPedido;
 window.aplicarFiltros = aplicarFiltros;
 window.cargarPedidosDeProveedor = cargarPedidosDeProveedor;
+window.generarMensajeWhatsAppPedido = generarMensajeWhatsAppPedido;
+window.enviarPedidoPorWhatsApp = enviarPedidoPorWhatsApp;
 
 console.log('✅ Módulo de pedidos a proveedores cargado completamente');
