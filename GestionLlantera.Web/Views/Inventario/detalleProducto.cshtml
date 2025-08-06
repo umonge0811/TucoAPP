@@ -551,7 +551,7 @@
             stockMinimo: @Model.StockMinimo,
             precio: '@((Model.Precio ?? Model.PrecioCalculado ?? 0).ToString("N0"))',
             imagenPrincipal: '@(Model.Imagenes != null && Model.Imagenes.Any() ? Model.Imagenes.First().UrlImagen : "")',
-            medida: '@Html.Raw(Html.Encode(Model.Llanta?.Ancho.ToString() ?? "").Replace("'", "\\\'"))',
+            medida: '@Html.Raw(Html.Encode(Model.Llanta != null && Model.Llanta.Ancho.HasValue ? $"{Model.Llanta.Ancho}/{Model.Llanta.Perfil}/R{Model.Llanta.Diametro}" : "").Replace("'", "\\\'"))',
             marca: '@Html.Raw(Html.Encode(Model.Llanta?.Marca ?? "").Replace("'", "\\\'"))'
         };
 
