@@ -7,20 +7,27 @@ using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Services
 {
-    // La clase implementa la interfaz IRolesService que definimos anteriormente
+    // ✅ SERVICIO DE ROLES CENTRALIZADO
+    // Esta clase implementa la interfaz IRolesService y gestiona todas las operaciones relacionadas con roles
+    // Ahora utiliza ApiConfigurationService para centralizar las URLs de la API
     public class RolesService : IRolesService
     {
         // Variables privadas para manejar las dependencias inyectadas
-        private readonly HttpClient _httpClient;           // Cliente HTTP para hacer llamadas a la API
-        private readonly ILogger<RolesService> _logger;    // Logger para registrar eventos y errores
-        private readonly JsonSerializerOptions _jsonOptions; // Opciones de serialización JSON
+        private readonly HttpClient _httpClient;                    // Cliente HTTP para hacer llamadas a la API
+        private readonly ILogger<RolesService> _logger;             // Logger para registrar eventos y errores
+        private readonly JsonSerializerOptions _jsonOptions;        // Opciones de serialización JSON
+        private readonly ApiConfigurationService _apiConfig;        // ✅ NUEVO: Servicio de configuración centralizada
 
         // Constructor que recibe las dependencias necesarias mediante inyección de dependencias
-        public RolesService(IHttpClientFactory httpClientFactory, ILogger<RolesService> logger)
+        public RolesService(
+            IHttpClientFactory httpClientFactory, 
+            ILogger<RolesService> logger,
+            ApiConfigurationService apiConfig)  // ✅ NUEVO: Inyectar servicio de configuración
         {
             // Inicializamos las dependencias inyectadas
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _apiConfig = apiConfig;  // ✅ NUEVO: Asignar servicio de configuración
 
             // Configuramos las opciones de serialización JSON
             _jsonOptions = new JsonSerializerOptions
@@ -31,16 +38,20 @@ namespace GestionLlantera.Web.Services
         }
 
 
-        // Método para obtener todos los roles del sistema
+        // ✅ MÉTODO CENTRALIZADO: Obtener todos los roles del sistema
         public async Task<List<RoleDTO>> ObtenerTodosLosRoles()
         {
             try
             {
                 // Registramos el inicio de la operación
-                _logger.LogInformation("Obteniendo todos los roles");
+                _logger.LogInformation("Obteniendo todos los roles desde: {BaseUrl}", _apiConfig.BaseUrl);
 
-                // Realizamos la petición GET a la API
-                var response = await _httpClient.GetAsync("api/Roles/ObtenerTodosRoles");
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl("Roles/ObtenerTodosRoles");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos la petición GET a la API usando la URL centralizada
+                var response = await _httpClient.GetAsync(url);
 
                 // Verificamos que la respuesta sea exitosa (código 2xx)
                 response.EnsureSuccessStatusCode();
@@ -73,16 +84,20 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para obtener un rol específico por su ID
+        // ✅ MÉTODO CENTRALIZADO: Obtener un rol específico por su ID
         public async Task<RoleDTO> ObtenerRolPorId(int rolId)
         {
             try
             {
                 // Registramos la operación incluyendo el ID del rol
-                _logger.LogInformation("Obteniendo rol con ID: {RolId}", rolId);
+                _logger.LogInformation("Obteniendo rol con ID: {RolId} desde: {BaseUrl}", rolId, _apiConfig.BaseUrl);
 
-                // Realizamos la petición GET a la API con el ID específico
-                var response = await _httpClient.GetAsync($"api/Roles/obtener-rol-id/{rolId}");
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl($"Roles/obtener-rol-id/{rolId}");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos la petición GET a la API usando la URL centralizada
+                var response = await _httpClient.GetAsync(url);
 
                 // Verificamos que la respuesta sea exitosa
                 response.EnsureSuccessStatusCode();
@@ -104,16 +119,20 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para crear un nuevo rol en el sistema
+        // ✅ MÉTODO CENTRALIZADO: Crear un nuevo rol en el sistema
         public async Task<bool> CrearRol(RoleDTO rol)
         {
             try
             {
                 // Registramos el intento de creación del rol con su nombre
-                _logger.LogInformation("Creando nuevo rol: {NombreRol}", rol.NombreRol);
+                _logger.LogInformation("Creando nuevo rol: {NombreRol} en: {BaseUrl}", rol.NombreRol, _apiConfig.BaseUrl);
 
-                // Realizamos una petición POST a la API enviando el objeto rol serializado como JSON
-                var response = await _httpClient.PostAsJsonAsync("api/Roles/CrearRoles", rol);
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl("Roles/CrearRoles");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos una petición POST a la API usando la URL centralizada
+                var response = await _httpClient.PostAsJsonAsync(url, rol);
 
                 // Verificamos si la operación fue exitosa
                 if (response.IsSuccessStatusCode)
