@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Services.Interfaces;
 using Tuco.Clases.DTOs;
 using System.Text.Json;
@@ -43,7 +42,7 @@ namespace GestionLlantera.Web.Services
                 }
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl("api/Anuncios");
+                var url = _apiConfig.GetApiUrl("Anuncios");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);
@@ -96,7 +95,7 @@ namespace GestionLlantera.Web.Services
                 }
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/Anuncios/{anuncioId}");
+                var url = _apiConfig.GetApiUrl($"Anuncios/{anuncioId}");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);
@@ -145,7 +144,7 @@ namespace GestionLlantera.Web.Services
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl("api/Anuncios");
+                var url = _apiConfig.GetApiUrl("Anuncios");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.PostAsync(url, content);
@@ -189,7 +188,7 @@ namespace GestionLlantera.Web.Services
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/Anuncios/{anuncioId}");
+                var url = _apiConfig.GetApiUrl($"Anuncios/{anuncioId}");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.PutAsync(url, content);
@@ -230,7 +229,7 @@ namespace GestionLlantera.Web.Services
                 }
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/Anuncios/{anuncioId}");
+                var url = _apiConfig.GetApiUrl($"Anuncios/{anuncioId}");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.DeleteAsync(url);
