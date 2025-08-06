@@ -1155,7 +1155,7 @@ async function cargarAnuncios() {
     try {
         console.log('📢 Cargando anuncios del sistema...');
 
-        const response = await fetch('/Dashboard/ObtenerAnuncios', {
+        const response = await fetch('/api/Anuncios', {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -1169,9 +1169,9 @@ async function cargarAnuncios() {
 
         const resultado = await response.json();
 
-        if (resultado.success && Array.isArray(resultado.data)) {
-            mostrarAnuncios(resultado.data);
-            console.log('✅ Anuncios cargados correctamente:', resultado.data);
+        if (resultado.success && Array.isArray(resultado.anuncios)) {
+            mostrarAnuncios(resultado.anuncios);
+            console.log('✅ Anuncios cargados correctamente:', resultado.anuncios);
         } else {
             console.warn('⚠️ No se pudieron obtener los anuncios');
             mostrarErrorAnuncios();
@@ -1297,7 +1297,7 @@ async function eliminarAnuncio(anuncioId, titulo) {
             return;
         }
 
-        const response = await fetch(`/Dashboard/EliminarAnuncio?id=${anuncioId}`, {
+        const response = await fetch(`/api/Anuncios/${anuncioId}`, {
             method: 'DELETE',
             credentials: 'include',
             headers: {
@@ -1340,7 +1340,7 @@ async function editarAnuncio(anuncioId) {
     try {
         console.log('✏️ Editando anuncio con ID:', anuncioId);
 
-        const response = await fetch(`/Dashboard/ObtenerAnuncioPorId?id=${anuncioId}`, {
+        const response = await fetch(`/api/Anuncios/${anuncioId}`, {
             method: 'GET',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' }
@@ -1352,11 +1352,11 @@ async function editarAnuncio(anuncioId) {
 
         const resultado = await response.json();
 
-        if (!resultado.success || !resultado.data) {
+        if (!resultado.success || !resultado.anuncio) {
             throw new Error(resultado.message || 'No se pudieron obtener los datos del anuncio.');
         }
 
-        const anuncio = resultado.data;
+        const anuncio = resultado.anuncio;
 
         // Llenar el modal de nuevo anuncio con los datos del anuncio a editar
         const modal = document.getElementById('newAnnouncementModal');
@@ -1535,12 +1535,12 @@ async function manejarNuevoAnuncio(e) {
 
         if (esEdicion) {
             // Actualizar anuncio existente
-            url = `/Dashboard/ActualizarAnuncio?id=${anuncioId}`;
+            url = `/api/Anuncios/${anuncioId}`;
             method = 'PUT';
             console.log('✏️ Actualizando anuncio existente:', anuncioId);
         } else {
             // Crear nuevo anuncio
-            url = '/Dashboard/CrearAnuncio';
+            url = '/api/Anuncios';
             method = 'POST';
             console.log('🆕 Creando nuevo anuncio');
         }
