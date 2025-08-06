@@ -15,17 +15,21 @@ namespace GestionLlantera.Web.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMemoryCache _cache;
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5); // Cache corto para permisos
+        // ✅ SERVICIO CENTRALIZADO PARA CONFIGURACIÓN DE API
+        private readonly ApiConfigurationService _apiConfig;
 
         public PermisosGlobalService(
             IHttpClientFactory httpClientFactory,
             ILogger<PermisosGlobalService> logger,
             IHttpContextAccessor httpContextAccessor,
-            IMemoryCache cache)
+            IMemoryCache cache,
+            ApiConfigurationService apiConfig)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
             _cache = cache;
+            _apiConfig = apiConfig;
         }
 
         /// <summary>
