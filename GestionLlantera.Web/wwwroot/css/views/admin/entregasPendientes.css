@@ -41,12 +41,13 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    margin: 0 auto;
+    margin: 0;
     width: 100%;
 }
 
 .table {
     margin-bottom: 0;
+    width: 100%;
 }
 
 .table th {
@@ -293,11 +294,13 @@ code {
 .entregas-container {
     padding: 20px;
     width: 100%;
+    max-width: 100%;
 }
 
 .table-entregas {
     margin-bottom: 0;
     width: 100%;
+    table-layout: fixed;
 }
 
 .table-entregas th {
@@ -553,11 +556,20 @@ code {
     .table-responsive {
         margin: 0;
         width: 100%;
+        max-width: 100%;
     }
     
     .entregas-container {
         width: 100%;
-        max-width: none;
+        max-width: 100%;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    /* Asegurar que la sección de lista ocupe todo el ancho */
+    .card-body {
+        padding: 1.5rem;
+        width: 100%;
     }
 }
 
