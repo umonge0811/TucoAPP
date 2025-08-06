@@ -1176,7 +1176,38 @@
     </div>
 </div>
 
-
+<!-- Modal para ingresar número de WhatsApp -->
+<div class="modal fade" id="modalWhatsAppNumero" tabindex="-1" aria-labelledby="modalWhatsAppNumeroLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalWhatsAppNumeroLabel">
+                    <i class="fab fa-whatsapp text-success me-2"></i>Compartir por WhatsApp
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="numeroWhatsApp" class="form-label">Número de teléfono:</label>
+                    <input type="text" class="form-control" id="numeroWhatsApp" 
+                           placeholder="Ej: 50664724275" 
+                           pattern="[0-9]+" 
+                           title="Solo números permitidos">
+                    <div class="form-text">Ingresa el número completo con código de país (sin espacios ni +)</div>
+                </div>
+                <div class="producto-preview" id="productoPreview">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnEnviarWhatsApp">
+                    <i class="fab fa-whatsapp me-2"></i>Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
     /* CSS adicional para mejorar la experiencia */

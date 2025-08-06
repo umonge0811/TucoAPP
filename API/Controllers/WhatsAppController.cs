@@ -118,6 +118,62 @@ namespace API.Controllers
                 return StatusCode(500, new { success = false, message = "Error en prueba rápida" });
             }
         }
+
+        [HttpPost("compartir-producto")]
+        public async Task<IActionResult> CompartirProducto([FromBody] CompartirProductoRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("📱🛞 Compartiendo producto - Número: {Numero}, Producto: {Producto}", 
+                    request.Numero, request.NombreProducto);
+
+                if (string.IsNullOrEmpty(request.Numero) || string.IsNullOrEmpty(request.NombreProducto))
+                {
+                    return BadRequest(new { success = false, message = "Número y nombre del producto son requeridos" });
+                }
+
+                // Primero enviar la imagen (si existe)
+                bool imagenEnviada = true;
+                if (!string.IsNullOrEmpty(request.UrlImagen))
+                {
+                    imagenEnviada = await _whatsAppService.EnviarImagenAsync(request.Numero, request.UrlImagen);
+                }
+
+                // Luego enviar el mensaje con detalles del producto
+                var mensaje = $"🛞 *{request.NombreProducto}*\n\n" +
+                             $"💰 Precio: ₡{request.Precio}\n" +
+                             $"📦 Stock disponible: {request.Stock} unidades\n\n" +
+                             $"🔗 Ver más detalles:\n{request.UrlProducto}";
+
+                var mensajeEnviado = await _whatsAppService.EnviarMensajeAsync(request.Numero, mensaje);
+
+                if (imagenEnviada && mensajeEnviado)
+                {
+                    return Ok(new 
+                    { 
+                        success = true, 
+                        message = "Producto compartido exitosamente",
+                        numero = request.Numero,
+                        producto = request.NombreProducto,
+                        timestamp = DateTime.Now
+                    });
+                }
+                else
+                {
+                    return StatusCode(500, new { 
+                        success = false, 
+                        message = "Error al compartir el producto",
+                        imagenEnviada = imagenEnviada,
+                        mensajeEnviado = mensajeEnviado
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error compartiendo producto por WhatsApp");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
     }
 
     public class EnviarMensajeRequest
@@ -130,5 +186,15 @@ namespace API.Controllers
     {
         public string Numero { get; set; } = string.Empty;
         public string UrlImagen { get; set; } = string.Empty;
+    }
+
+    public class CompartirProductoRequest
+    {
+        public string Numero { get; set; } = string.Empty;
+        public string NombreProducto { get; set; } = string.Empty;
+        public string Precio { get; set; } = string.Empty;
+        public string UrlImagen { get; set; } = string.Empty;
+        public string UrlProducto { get; set; } = string.Empty;
+        public int Stock { get; set; } = 0;
     }
 }

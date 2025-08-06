@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Funcionalidad para la gestión de inventario - VERSIÓN FINAL
  * Ordenamiento + Paginación + Filtros integrados
  */
@@ -1595,39 +1595,8 @@ $(document).ready(function () {
         }, 500);
     });
 
-    $("#btnAjustarStockVistaRapida").click(function () {
-        console.log('📦 === ABRIENDO MODAL AJUSTE DESDE VISTA RÁPIDA ===');
-
-        const productoId = $(this).data("id");
-        console.log('📦 Producto ID desde vista rápida:', productoId);
-
-        if (!productoId) {
-            console.error('❌ No se pudo obtener el ProductoId desde vista rápida');
-            mostrarAlertaSimple("Error: No se pudo identificar el producto", "danger");
-            return;
-        }
-
-        // ✅ ENCONTRAR LA FILA DEL PRODUCTO EN LA TABLA
-        const $fila = $(`tr[data-id="${productoId}"]`);
-
-        if ($fila.length === 0) {
-            console.error('❌ No se encontró la fila del producto en la tabla');
-            mostrarAlertaSimple("Error: No se pudo encontrar el producto en la tabla", "danger");
-            return;
-        }
-
-        // ✅ CARGAR INFORMACIÓN DEL PRODUCTO (IGUAL QUE EL OTRO BOTÓN)
-        cargarInformacionProductoEnModal(productoId, $fila);
-
-        // Cerrar modal de vista rápida y abrir modal de ajuste
-        $("#detallesProductoModal").modal("hide");
-        setTimeout(() => {
-            $("#ajusteStockModal").modal("show");
-        }, 500);
-    });
 
 
-    
     // ========================================
     // EVENTOS PARA ELIMINAR PRODUCTO
     // ========================================
@@ -1745,7 +1714,7 @@ $(document).ready(function () {
 
         // Evento para confirmar eliminación
         $('#btnConfirmarEliminacion').off('click').on('click', function () {
-            ejecutarEliminacionProducto(productoId, nombreProducto, $fila, modal);
+            ejecutarEliminacionProducto(productoId, nombreProducto, $fila);
         });
     }
 
@@ -1868,7 +1837,7 @@ $(document).ready(function () {
         compartirPorEmail();
     });
 
-   
+
 
     // Funciones de compartir
     function compartirPorWhatsApp() {
@@ -2124,7 +2093,6 @@ $(document).ready(function () {
 
     // ========================================
     // ✅ FUNCIONES DE COMPATIBILIDAD
-    // Para mantener código existente funcionando
     // ========================================
 
     /**
@@ -2277,3 +2245,63 @@ $(document).ready(function () {
         }
     });
 });
+
+// Variable global para almacenar el producto a compartir
+let productoParaCompartir = null;
+
+// Funciones de compartir actualizadas para el nuevo modal
+function compartirPorWhatsApp() {
+    const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
+    const fila = $(`tr[data-id="${productoId}"]`);
+
+    if (!productoId || fila.length === 0) {
+        mostrarNotificacion("Error", "No se pudo identificar el producto para compartir.", "danger");
+        return;
+    }
+
+    // Cargar datos del producto
+    productoParaCompartir = {
+        nombre: $("#nombreProductoVistaRapida").text(),
+        precio: $("#precioProductoVistaRapida").text(),
+        stock: $("#stockProductoVistaRapida").text(),
+        urlImagen: fila.find("td:eq(1) img").attr("src"), // Capturar la primera imagen de la tabla
+        urlProducto: `${window.location.origin}/Inventario/DetalleProducto/${productoId}`
+    };
+
+    // Configurar y mostrar el modal del número de WhatsApp
+    $("#modalWhatsAppNumero").modal("show");
+}
+
+function compartirPorEmail() {
+    try {
+        const nombre = $("#nombreProductoVistaRapida").text();
+        const precio = $("#precioProductoVistaRapida").text();
+        const stock = $("#stockProductoVistaRapida").text();
+        const descripcion = $("#descripcionVistaRapida").text();
+        const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
+
+        const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
+        const asunto = `Producto: ${nombre}`;
+        const cuerpo = `Hola,
+
+            Te comparto información sobre este producto:
+
+            🛞 PRODUCTO: ${nombre}
+
+            💰 PRECIO: ${precio}
+            📦 STOCK DISPONIBLE: ${stock} unidades
+            📝 DESCRIPCIÓN: ${descripcion}
+
+            🔗 Ver detalles completos:
+            ${urlProducto}
+
+            Saludos.`;
+
+        const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+        window.location.href = emailUrl;
+        console.log('✅ Compartido por Email');
+    } catch (error) {
+        console.error('❌ Error al compartir por Email:', error);
+        mostrarNotificacion("Error", "No se pudo compartir por Email", "danger");
+    }
+}

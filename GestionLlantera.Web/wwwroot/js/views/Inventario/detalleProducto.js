@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Funcionalidad específica para la vista de detalle de producto
  * Maneja el ajuste de stock desde la página de detalle
  */
@@ -316,6 +316,37 @@ function compartirProducto() {
         return;
     }
 
+    // Preparar datos del producto
+    window.productoParaCompartir = {
+        nombre: contexto.nombre,
+        precio: contexto.precio || '0',
+        stock: contexto.stock || 0,
+        urlImagen: contexto.imagenUrl || '',
+        urlProducto: window.location.href
+    };
+
+    // Mostrar modal de WhatsApp si existe, sino usar método tradicional
+    if ($("#modalWhatsAppNumero").length > 0) {
+        // Mostrar preview en el modal
+        $("#productoPreview").html(`
+            <div class="d-flex align-items-center">
+                <img src="${contexto.imagenUrl || '/images/no-image.png'}" alt="${contexto.nombre}" class="me-3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                <div>
+                    <h6 class="mb-1">${contexto.nombre}</h6>
+                    <p class="mb-0 text-muted">₡${contexto.precio} - ${contexto.stock} unidades</p>
+                </div>
+            </div>
+        `);
+
+        $("#modalWhatsAppNumero").modal('show');
+    } else {
+        // Fallback al método tradicional
+        usarMetodoTradicional();
+    }
+}
+
+function usarMetodoTradicional() {
+    const contexto = window.productoContexto;
     const nombre = contexto.nombre;
     const precio = contexto.precio || '0';
     const url = window.location.href;
