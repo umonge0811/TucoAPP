@@ -1558,7 +1558,7 @@ $(document).ready(function () {
     console.log('✅ Sistema de ajuste de stock inicializado correctamente');
     console.log('🚀 Inventario - Sistema completo');
 
-    // ✅ Limpiar eventos previos
+    // ✅ LIMPIAR EVENTOS PREVIOS
     $(document).off('click', '.producto-img-mini');
     $(document).off('click', '.producto-img-link');
     $(document).off('click', '.producto-img-mini img');
@@ -2041,7 +2041,7 @@ $(document).ready(function () {
     });
 
     // ========================================
-    // ✅ SISTEMA UNIFICADO DE NOTIFICACIONES
+    // ✅ FUNCIÓN UNIFICADA DE NOTIFICACIONES
     // Reemplazar TODAS las funciones de notificación existentes
     // ========================================
 
@@ -2266,7 +2266,7 @@ function compartirPorWhatsApp() {
                     </div>
                 </div>
             `);
-            
+
             // Mostrar el modal del número de WhatsApp
             $("#modalWhatsAppNumero").modal("show");
         } else {
@@ -2298,23 +2298,24 @@ function compartirDirectoPorWhatsApp() {
             urlImagen = `${window.location.origin}${imagenProducto}`;
         }
 
-        // ✅ USAR EL FORMATO CORRECTO Y UNIFICADO
+        // ✅ FORMATO CORRECTO Y UNIFICADO
+        const baseUrl = window.location.hostname === 'localhost' ? 'https://umongegds-tucoapp.replit.app' : window.location.origin;
         let mensaje = `¡Hola! Te comparto este producto:\n\n`;
         mensaje += `${nombre}\n`;
         mensaje += `Precio: ${precio}\n`;
         mensaje += `Stock: ${stock}\n`;
-        mensaje += `Más detalles: ${window.location.origin}/Inventario/DetalleProducto/${productoId}\n\n`;
+        mensaje += `Más detalles: ${baseUrl}/Inventario/DetalleProducto/${productoId}\n\n`;
 
         if (urlImagen) {
-            mensaje += `Imagen: ${urlImagen}`;
+            mensaje += `Imagen: ${baseUrl}${urlImagen}`;
         }
 
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
 
         window.open(whatsappUrl, '_blank');
-        
+
         mostrarNotificacion("Producto compartido por WhatsApp exitosamente", "success");
-        
+
     } catch (error) {
         console.error('❌ Error en compartir directo:', error);
         mostrarNotificacion("Error al compartir por WhatsApp", "danger");
@@ -2343,9 +2344,9 @@ function enviarProductoPorWhatsApp() {
         mensaje += `Precio: ${productoParaCompartir.precio}\n`;
         mensaje += `Stock: ${productoParaCompartir.stock}\n`;
         mensaje += `Más detalles: ${productoParaCompartir.urlProducto}\n\n`;
-        
+
         if (incluirImagen && productoParaCompartir.urlImagen && !productoParaCompartir.urlImagen.includes('no-image.png')) {
-            mensaje += `Imagen: ${window.location.origin}${productoParaCompartir.urlImagen}`;
+            mensaje += `Imagen: ${productoParaCompartir.urlImagen}`;
         }
 
         // Construir la URL de WhatsApp con el número específico
@@ -2397,9 +2398,9 @@ Saludos.`;
 
         const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
         window.location.href = emailUrl;
-        
+
         mostrarNotificacion("Cliente de email abierto correctamente", "info");
-        
+
     } catch (error) {
         console.error('❌ Error al compartir por Email:', error);
         mostrarNotificacion("Error al compartir por Email", "danger");
