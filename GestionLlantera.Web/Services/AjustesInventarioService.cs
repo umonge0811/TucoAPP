@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
@@ -6,15 +6,31 @@ using Tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Services
 {
+    /// <summary>
+    /// Servicio para gestión de ajustes de inventario pendientes
+    /// ✅ ACTUALIZADO: Usa ApiConfigurationService para URLs centralizadas
+    /// </summary>
     public class AjustesInventarioService : IAjustesInventarioService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<AjustesInventarioService> _logger;
+        private readonly ApiConfigurationService _apiConfig;
 
-        public AjustesInventarioService(IHttpClientFactory httpClientFactory, ILogger<AjustesInventarioService> logger)
+        /// <summary>
+        /// Constructor con ApiConfigurationService centralizado
+        /// </summary>
+        public AjustesInventarioService(
+            IHttpClientFactory httpClientFactory, 
+            ILogger<AjustesInventarioService> logger,
+            ApiConfigurationService apiConfig)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _apiConfig = apiConfig;
+            
+            // ✅ LOG DE DIAGNÓSTICO
+            _logger.LogInformation("🔧 AjustesInventarioService inicializado con URL base: {BaseUrl}", 
+                _apiConfig.BaseUrl);
         }
 
         public async Task<bool> CrearAjustePendienteAsync(SolicitudAjusteInventarioDTO solicitud, string jwtToken)
