@@ -338,7 +338,7 @@ $(document).ready(function () {
         if (!window.productoParaCompartir && window.productoContexto) {
             console.log('🔧 Configurando producto para compartir desde contexto');
             const contexto = window.productoContexto;
-            const baseUrl = window.location.hostname === 'localhost' ? 'https://umongegds-tucoapp.replit.app' : window.location.origin;
+            const baseUrl = window.appConfig ? window.appConfig.webBaseUrl : window.location.origin;
             window.productoParaCompartir = {
                 nombre: contexto.nombre || 'Producto',
                 precio: contexto.precio ? `₡${contexto.precio}` : '₡0',
@@ -566,7 +566,7 @@ function enviarProductoPorWhatsApp() {
             console.log('📱 Usando modal de WhatsApp');
 
             // Configurar el producto para compartir globalmente
-            const baseUrl = window.location.hostname === 'localhost' ? 'https://umongegds-tucoapp.replit.app' : window.location.origin;
+            const baseUrl = window.appConfig ? window.appConfig.webBaseUrl : window.location.origin;
             window.productoParaCompartir = {
                 nombre: nombre,
                 precio: `₡${precio}`,
@@ -583,8 +583,8 @@ function enviarProductoPorWhatsApp() {
         } else {
             console.log('📱 Envío directo sin modal');
 
-            // ✅ CONSTRUIR MENSAJE UNIFICADO
-            const baseUrl = window.location.hostname === 'localhost' ? 'https://umongegds-tucoapp.replit.app' : window.location.origin;
+            // ✅ CONSTRUIR MENSAJE UNIFICADO - Usar configuración dinámica
+            const baseUrl = window.appConfig ? window.appConfig.webBaseUrl : window.location.origin;
             let mensaje = `¡Hola! Te comparto este producto:\n\n`;
             mensaje += `${nombre}\n`;
             mensaje += `Precio: ₡${precio}\n`;
@@ -592,7 +592,7 @@ function enviarProductoPorWhatsApp() {
             mensaje += `Más detalles: ${baseUrl}/Inventario/DetalleProducto/${productoId}\n\n`;
 
             if (imagenPrincipal && !imagenPrincipal.includes('no-image.png')) {
-                mensaje += `Imagen: ${baseUrl}${imagenPrincipal}`;
+                mensaje += `Imagen: ${window.appConfig ? window.appConfig.apiBaseUrl : baseUrl}${imagenPrincipal}`;
             }
 
             // Crear URL de WhatsApp
@@ -639,11 +639,11 @@ function enviarConNumeroEspecifico() {
         mensaje += `Stock: ${producto.stock}\n`;
         
         // Usar URL pública para enlaces
-        const baseUrl = window.location.hostname === 'localhost' ? 'https://umongegds-tucoapp.replit.app' : window.location.origin;
+        const baseUrl = window.appConfig ? window.appConfig.webBaseUrl : window.location.origin;
         mensaje += `Más detalles: ${baseUrl}/Inventario/DetalleProducto/${window.productoContexto?.id || ''}\n\n`;
         
         if (incluirImagen && producto.urlImagen && !producto.urlImagen.includes('no-image.png')) {
-            mensaje += `Imagen: ${baseUrl}${producto.urlImagen}`;
+            mensaje += `Imagen: ${window.appConfig ? window.appConfig.apiBaseUrl : baseUrl}${producto.urlImagen}`;
         }
 
         // Construir URL de WhatsApp con número específico

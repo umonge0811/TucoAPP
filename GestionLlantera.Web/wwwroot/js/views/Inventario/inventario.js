@@ -2295,11 +2295,11 @@ function compartirDirectoPorWhatsApp() {
         const fila = $(`tr[data-id="${productoId}"]`);
         const imagenProducto = fila.find("td:eq(1) img").attr("src");
         if (imagenProducto && !imagenProducto.includes('no-image.png')) {
-            urlImagen = `${window.location.origin}${imagenProducto}`;
+            urlImagen = `${window.appConfig ? window.appConfig.apiBaseUrl : window.location.origin}${imagenProducto}`;
         }
 
-        // ✅ FORMATO CORRECTO Y UNIFICADO
-        const baseUrl = window.location.hostname === 'localhost' ? 'https://umongegds-tucoapp.replit.app' : window.location.origin;
+        // ✅ FORMATO CORRECTO Y UNIFICADO - Usar configuración dinámica
+        const baseUrl = window.appConfig ? window.appConfig.webBaseUrl : window.location.origin;
         let mensaje = `¡Hola! Te comparto este producto:\n\n`;
         mensaje += `${nombre}\n`;
         mensaje += `Precio: ${precio}\n`;
