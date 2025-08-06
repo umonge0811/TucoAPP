@@ -1214,23 +1214,78 @@ function mostrarAnuncios(anuncios) {
         // Generar elementos de anuncios
         anuncios.forEach(anuncio => {
             const anuncioElement = document.createElement('div');
-            anuncioElement.className = 'announcement-item mb-3 p-3 border rounded shadow-sm';
+            
+            // Determinar clase CSS según prioridad
+            let priorityClass = '';
+            let priorityIcon = '';
+            switch (anuncio.prioridad) {
+                case 'Critica':
+                    priorityClass = 'border-danger';
+                    priorityIcon = '<i class="fas fa-exclamation-triangle text-danger me-1"></i>';
+                    break;
+                case 'Alta':
+                    priorityClass = 'border-warning';
+                    priorityIcon = '<i class="fas fa-exclamation text-warning me-1"></i>';
+                    break;
+                case 'Normal':
+                    priorityClass = 'border-info';
+                    priorityIcon = '<i class="fas fa-info-circle text-info me-1"></i>';
+                    break;
+                case 'Baja':
+                    priorityClass = 'border-secondary';
+                    priorityIcon = '<i class="fas fa-minus text-secondary me-1"></i>';
+                    break;
+            }
+
+            const esImportante = anuncio.esImportante;
+            const importanteIcon = esImportante ? '<i class="fas fa-star text-warning me-1" title="Anuncio importante"></i>' : '';
+            const fechaVencimiento = anuncio.fechaVencimiento ? new Date(anuncio.fechaVencimiento) : null;
+            const estaVencido = fechaVencimiento && fechaVencimiento < new Date();
+            
+            anuncioElement.className = `announcement-item mb-3 p-3 border rounded shadow-sm ${priorityClass} ${estaVencido ? 'bg-light opacity-75' : ''}`;
             anuncioElement.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="announcement-title mb-0">${anuncio.titulo || 'Anuncio sin título'}</h6>
-                    <small class="announcement-date text-muted">
-                        ${new Date(anuncio.fechaCreacion).toLocaleDateString()}
-                        ${anuncio.fechaExpiracion ? ` - Expira: ${new Date(anuncio.fechaExpiracion).toLocaleDateString()}` : ''}
-                    </small>
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="flex-grow-1">
+                        <h6 class="announcement-title mb-1 d-flex align-items-center">
+                            ${priorityIcon}
+                            ${importanteIcon}
+                            ${anuncio.titulo || 'Anuncio sin título'}
+                            ${estaVencido ? '<span class="badge bg-danger ms-2 small">VENCIDO</span>' : ''}
+                        </h6>
+                        <div class="announcement-meta small text-muted">
+                            <span class="me-3">
+                                <i class="fas fa-tag me-1"></i>${anuncio.tipoAnuncio || 'General'}
+                            </span>
+                            <span class="me-3">
+                                <i class="fas fa-user me-1"></i>${anuncio.nombreCreador || 'Sistema'}
+                            </span>
+                            <span>
+                                <i class="fas fa-calendar me-1"></i>${new Date(anuncio.fechaCreacion).toLocaleDateString()}
+                            </span>
+                        </div>
+                    </div>
+                    ${fechaVencimiento ? `<small class="text-muted">
+                        Expira: ${fechaVencimiento.toLocaleDateString()}
+                    </small>` : ''}
                 </div>
-                <p class="announcement-content mb-2">${anuncio.contenido || ''}</p>
-                <div class="announcement-actions text-end">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="editarAnuncio(${anuncio.anuncioId})">
-                        <i class="bi bi-pencil"></i> Editar
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarAnuncio(${anuncio.anuncioId}, '${(anuncio.titulo || 'Anuncio sin título').replace(/'/g, "\\'")}')">
-                        <i class="bi bi-trash"></i> Eliminar
-                    </button>
+                <p class="announcement-content mb-3">${anuncio.contenido || ''}</p>
+                <div class="announcement-actions d-flex justify-content-between align-items-center">
+                    <div class="announcement-badges">
+                        <span class="badge bg-${anuncio.prioridad === 'Critica' ? 'danger' : anuncio.prioridad === 'Alta' ? 'warning' : anuncio.prioridad === 'Normal' ? 'info' : 'secondary'} me-1">
+                            ${anuncio.prioridad}
+                        </span>
+                        <span class="badge bg-${anuncio.activo ? 'success' : 'secondary'}">
+                            ${anuncio.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="editarAnuncio(${anuncio.anuncioId})" title="Editar anuncio">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarAnuncio(${anuncio.anuncioId}, '${(anuncio.titulo || 'Anuncio sin título').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" title="Eliminar anuncio">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
                 </div>
             `;
             container.appendChild(anuncioElement);
@@ -1373,13 +1428,21 @@ async function editarAnuncio(anuncioId) {
             modalTitle.innerHTML = '<i class="fas fa-edit text-primary me-2"></i>Editar Anuncio';
         }
 
-        // Llenar campos del formulario - Usar los nombres correctos del formulario
-        const tituloField = form.querySelector('input[name="titulo"]') || form.querySelector('input[name="tituloAnuncio"]');
-        const contenidoField = form.querySelector('textarea[name="contenido"]') || form.querySelector('textarea[name="contenidoAnuncio"]');
-        const fechaField = form.querySelector('input[name="fechaVencimiento"]') || form.querySelector('input[name="fechaExpiracionAnuncio"]');
+        // Llenar todos los campos del formulario usando los IDs correctos
+        const tituloField = document.getElementById('tituloAnuncio');
+        const contenidoField = document.getElementById('contenidoAnuncio');
+        const fechaField = document.getElementById('fechaVencimientoAnuncio');
+        const tipoField = document.getElementById('tipoAnuncio');
+        const prioridadField = document.getElementById('prioridadAnuncio');
+        const importanteField = document.getElementById('esImportante');
+        const activoField = document.getElementById('activoAnuncio');
 
         if (tituloField) tituloField.value = anuncio.titulo || '';
         if (contenidoField) contenidoField.value = anuncio.contenido || '';
+        if (tipoField) tipoField.value = anuncio.tipoAnuncio || 'General';
+        if (prioridadField) prioridadField.value = anuncio.prioridad || 'Normal';
+        if (importanteField) importanteField.checked = anuncio.esImportante || false;
+        if (activoField) activoField.checked = anuncio.activo ?? true;
 
         // Formatear fecha para el input type="date"
         if (anuncio.fechaVencimiento && fechaField) {
@@ -1389,6 +1452,9 @@ async function editarAnuncio(anuncioId) {
             const day = fecha.getDate().toString().padStart(2, '0');
             fechaField.value = `${year}-${month}-${day}`;
         }
+
+        // Actualizar vista previa con los datos cargados
+        actualizarVistaPrevia();
 
         // Guardar el ID del anuncio para la actualización
         form.setAttribute('data-editing-anuncio-id', anuncioId);
@@ -1449,57 +1515,32 @@ async function manejarNuevoAnuncio(e) {
     // Intentar capturar datos de múltiples formas
     console.log('🎯 === CAPTURA DE DATOS MÚLTIPLE ===');
     
-    // Método 1: FormData - Usando los nombres reales del formulario
-    const tituloFormData = formData.get('titulo') || formData.get('tituloAnuncio');
-    const contenidoFormData = formData.get('contenido') || formData.get('contenidoAnuncio');
-    const fechaFormData = formData.get('fechaVencimiento') || formData.get('fechaExpiracionAnuncio');
-    
-    console.log('Método FormData:', {
-        titulo: tituloFormData,
-        contenido: contenidoFormData,
-        fecha: fechaFormData
-    });
+    // Capturar datos usando getElementById con los IDs correctos del nuevo modal
+    const titulo = document.getElementById('tituloAnuncio')?.value?.trim() || '';
+    const contenido = document.getElementById('contenidoAnuncio')?.value?.trim() || '';
+    const fechaVencimiento = document.getElementById('fechaVencimientoAnuncio')?.value || null;
+    const tipoAnuncio = document.getElementById('tipoAnuncio')?.value || 'General';
+    const prioridad = document.getElementById('prioridadAnuncio')?.value || 'Normal';
+    const esImportante = document.getElementById('esImportante')?.checked || false;
+    const activo = document.getElementById('activoAnuncio')?.checked ?? true;
 
-    // Método 2: querySelector por name - Probar ambos nombres
-    const tituloByName = form.querySelector('input[name="titulo"]')?.value || 
-                        form.querySelector('input[name="tituloAnuncio"]')?.value || '';
-    const contenidoByName = form.querySelector('textarea[name="contenido"]')?.value || 
-                           form.querySelector('textarea[name="contenidoAnuncio"]')?.value || '';
-    const fechaByName = form.querySelector('input[name="fechaVencimiento"]')?.value || 
-                       form.querySelector('input[name="fechaExpiracionAnuncio"]')?.value || '';
-    
-    console.log('Método querySelector by name:', {
-        titulo: tituloByName,
-        contenido: contenidoByName,
-        fecha: fechaByName
-    });
-
-    // Método 3: getElementById - Probar ambos IDs
-    const tituloById = document.getElementById('titulo')?.value || 
-                      document.getElementById('tituloAnuncio')?.value || '';
-    const contenidoById = document.getElementById('contenido')?.value || 
-                         document.getElementById('contenidoAnuncio')?.value || '';
-    const fechaById = document.getElementById('fechaVencimiento')?.value || 
-                     document.getElementById('fechaExpiracionAnuncio')?.value || '';
-    
-    console.log('Método getElementById:', {
-        titulo: tituloById,
-        contenido: contenidoById,
-        fecha: fechaById
-    });
-
-    // Seleccionar los mejores valores (priorizar los que no estén vacíos)
-    const titulo = tituloFormData || tituloByName || tituloById || '';
-    const contenido = contenidoFormData || contenidoByName || contenidoById || '';
-    const fechaVencimiento = fechaFormData || fechaByName || fechaById || null;
+    console.log('🎯 === DATOS CAPTURADOS DEL FORMULARIO ===');
+    console.log('Título:', titulo);
+    console.log('Contenido:', contenido);
+    console.log('Fecha Vencimiento:', fechaVencimiento);
+    console.log('Tipo:', tipoAnuncio);
+    console.log('Prioridad:', prioridad);
+    console.log('Es Importante:', esImportante);
+    console.log('Activo:', activo);
 
     const anuncioData = {
         titulo: titulo,
         contenido: contenido,
         fechaVencimiento: fechaVencimiento,
-        tipoAnuncio: 'General',
-        prioridad: 'Normal',
-        esImportante: false
+        tipoAnuncio: tipoAnuncio,
+        prioridad: prioridad,
+        esImportante: esImportante,
+        activo: activo
     };
 
     console.log('📋 === DATOS FINALES DEL ANUNCIO ===');
@@ -1723,26 +1764,49 @@ document.addEventListener('DOMContentLoaded', function () {
                 form.removeAttribute('data-editing-anuncio-id');
 
                 // Limpiar campos manualmente - Usar nombres correctos
-                const tituloField = document.getElementById('titulo') || document.getElementById('tituloAnuncio') || 
-                                   form.querySelector('input[name="titulo"]') || form.querySelector('input[name="tituloAnuncio"]');
-                const contenidoField = document.getElementById('contenido') || document.getElementById('contenidoAnuncio') || 
-                                      form.querySelector('textarea[name="contenido"]') || form.querySelector('textarea[name="contenidoAnuncio"]');
-                const fechaField = document.getElementById('fechaVencimiento') || document.getElementById('fechaExpiracionAnuncio') || 
-                                  form.querySelector('input[name="fechaVencimiento"]') || form.querySelector('input[name="fechaExpiracionAnuncio"]');
+                const tituloField = document.getElementById('tituloAnuncio');
+                const contenidoField = document.getElementById('contenidoAnuncio');
+                const fechaField = document.getElementById('fechaVencimientoAnuncio');
+                const tipoField = document.getElementById('tipoAnuncio');
+                const prioridadField = document.getElementById('prioridadAnuncio');
+                const importanteField = document.getElementById('esImportante');
+                const activoField = document.getElementById('activoAnuncio');
 
                 if (tituloField) tituloField.value = '';
                 if (contenidoField) contenidoField.value = '';
                 if (fechaField) fechaField.value = '';
+                if (tipoField) tipoField.value = 'General';
+                if (prioridadField) prioridadField.value = 'Normal';
+                if (importanteField) importanteField.checked = false;
+                if (activoField) activoField.checked = true;
+
+                // Limpiar vista previa
+                actualizarVistaPrevia();
 
                 // Restaurar título del modal
                 const modalTitle = newAnnouncementModal.querySelector('.modal-title');
                 if (modalTitle) {
-                    modalTitle.innerHTML = '<i class="fas fa-bullhorn text-primary me-2"></i>Nuevo Anuncio';
+                    modalTitle.innerHTML = '<i class="fas fa-bullhorn me-2"></i>Nuevo Anuncio';
                 }
 
                 console.log('✅ Modal de anuncio limpiado correctamente');
             }
         });
+
+        // Configurar vista previa en tiempo real
+        const form = document.getElementById('newAnnouncementForm');
+        if (form) {
+            // Eventos para actualizar vista previa
+            const tituloField = document.getElementById('tituloAnuncio');
+            const contenidoField = document.getElementById('contenidoAnuncio');
+            const tipoField = document.getElementById('tipoAnuncio');
+            const prioridadField = document.getElementById('prioridadAnuncio');
+
+            if (tituloField) tituloField.addEventListener('input', actualizarVistaPrevia);
+            if (contenidoField) contenidoField.addEventListener('input', actualizarVistaPrevia);
+            if (tipoField) tipoField.addEventListener('change', actualizarVistaPrevia);
+            if (prioridadField) prioridadField.addEventListener('change', actualizarVistaPrevia);
+        }
     }
 
 
@@ -1777,5 +1841,65 @@ window.dashboardModule = {
     obtenerEstadisticas: obtenerEstadisticasDashboard,
     cargarAnuncios: cargarAnuncios // Exportar también la carga de anuncios
 };
+
+/**
+ * 👁️ FUNCIÓN: Actualizar vista previa del anuncio en tiempo real
+ */
+function actualizarVistaPrevia() {
+    try {
+        const tituloField = document.getElementById('tituloAnuncio');
+        const contenidoField = document.getElementById('contenidoAnuncio');
+        const tipoField = document.getElementById('tipoAnuncio');
+        const prioridadField = document.getElementById('prioridadAnuncio');
+
+        const previewTitulo = document.getElementById('previewTitulo');
+        const previewContenido = document.getElementById('previewContenido');
+        const previewTipo = document.getElementById('previewTipo');
+        const previewPrioridad = document.getElementById('previewPrioridad');
+
+        if (previewTitulo) {
+            const titulo = tituloField?.value || '';
+            previewTitulo.textContent = titulo || 'Título aparecerá aquí...';
+            previewTitulo.className = titulo ? 'fw-bold' : 'text-muted';
+        }
+
+        if (previewContenido) {
+            const contenido = contenidoField?.value || '';
+            previewContenido.textContent = contenido || 'Contenido aparecerá aquí...';
+            previewContenido.className = contenido ? 'small' : 'text-muted small';
+        }
+
+        if (previewTipo) {
+            const tipo = tipoField?.value || 'General';
+            previewTipo.textContent = `Tipo: ${tipo}`;
+        }
+
+        if (previewPrioridad) {
+            const prioridad = prioridadField?.value || 'Normal';
+            previewPrioridad.textContent = `Prioridad: ${prioridad}`;
+            
+            // Cambiar color según prioridad
+            previewPrioridad.className = 'small';
+            switch (prioridad) {
+                case 'Critica':
+                    previewPrioridad.className += ' text-danger fw-bold';
+                    break;
+                case 'Alta':
+                    previewPrioridad.className += ' text-warning fw-bold';
+                    break;
+                case 'Normal':
+                    previewPrioridad.className += ' text-info';
+                    break;
+                case 'Baja':
+                    previewPrioridad.className += ' text-secondary';
+                    break;
+            }
+        }
+
+        console.log('👁️ Vista previa actualizada');
+    } catch (error) {
+        console.error('❌ Error actualizando vista previa:', error);
+    }
+}
 
 console.log('📊 Módulo Dashboard cargado correctamente');
