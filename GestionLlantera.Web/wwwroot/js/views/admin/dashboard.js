@@ -1189,7 +1189,7 @@ function mostrarAnuncios(anuncios) {
     try {
         console.log('📢 Mostrando anuncios:', anuncios);
 
-        const container = document.querySelector('.announcements-list');
+        const container = document.querySelector('.announcements-container'); // Corregido aquí
         if (!container) {
             console.warn('⚠️ Contenedor de anuncios no encontrado');
             return;
@@ -1214,7 +1214,7 @@ function mostrarAnuncios(anuncios) {
         // Generar elementos de anuncios
         anuncios.forEach(anuncio => {
             const anuncioElement = document.createElement('div');
-            
+
             // Determinar clase CSS según prioridad
             let priorityClass = '';
             let priorityIcon = '';
@@ -1241,7 +1241,7 @@ function mostrarAnuncios(anuncios) {
             const importanteIcon = esImportante ? '<i class="fas fa-star text-warning me-1" title="Anuncio importante"></i>' : '';
             const fechaVencimiento = anuncio.fechaVencimiento ? new Date(anuncio.fechaVencimiento) : null;
             const estaVencido = fechaVencimiento && fechaVencimiento < new Date();
-            
+
             anuncioElement.className = `announcement-item mb-3 p-3 border rounded shadow-sm ${priorityClass} ${estaVencido ? 'bg-light opacity-75' : ''}`;
             anuncioElement.innerHTML = `
                 <div class="d-flex justify-content-between align-items-start mb-2">
@@ -1303,7 +1303,7 @@ function mostrarAnuncios(anuncios) {
  */
 function mostrarErrorAnuncios() {
     try {
-        const container = document.querySelector('.announcements-list');
+        const container = document.querySelector('.announcements-container'); // Corregido aquí
         if (!container) return;
 
         container.innerHTML = `
@@ -1514,7 +1514,7 @@ async function manejarNuevoAnuncio(e) {
 
     // Intentar capturar datos de múltiples formas
     console.log('🎯 === CAPTURA DE DATOS MÚLTIPLE ===');
-    
+
     // Capturar datos usando getElementById con los IDs correctos del nuevo modal
     const titulo = document.getElementById('tituloAnuncio')?.value?.trim() || '';
     const contenido = document.getElementById('contenidoAnuncio')?.value?.trim() || '';
@@ -1635,7 +1635,7 @@ async function manejarNuevoAnuncio(e) {
 
         if (resultado.success) {
             console.log('✅ Operación exitosa en el servidor');
-            
+
             // Mostrar mensaje de éxito
             await Swal.fire({
                 title: '✅ ¡Éxito!',
@@ -1679,7 +1679,7 @@ async function manejarNuevoAnuncio(e) {
         console.error('Tipo de error:', error.constructor.name);
         console.error('Mensaje:', error.message);
         console.error('Stack:', error.stack);
-        
+
         await Swal.fire({
             title: '❌ Error',
             text: `No se pudo procesar el anuncio: ${error.message}`,
@@ -1877,7 +1877,7 @@ function actualizarVistaPrevia() {
         if (previewPrioridad) {
             const prioridad = prioridadField?.value || 'Normal';
             previewPrioridad.textContent = `Prioridad: ${prioridad}`;
-            
+
             // Cambiar color según prioridad
             previewPrioridad.className = 'small';
             switch (prioridad) {
