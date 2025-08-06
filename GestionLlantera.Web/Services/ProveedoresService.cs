@@ -14,9 +14,9 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<ProveedoresService> _logger;
         private readonly IConfiguration _configuration;
-        private readonly IApiConfigurationService _apiConfig; // Agregado ApiConfigurationService
+        private readonly ApiConfigurationService _apiConfig; // Agregado ApiConfigurationService
 
-        public ProveedoresService(IHttpClientFactory httpClientFactory, ILogger<ProveedoresService> logger, IConfiguration configuration, IApiConfigurationService apiConfig) // Inyectado ApiConfigurationService
+        public ProveedoresService(IHttpClientFactory httpClientFactory, ILogger<ProveedoresService> logger, IConfiguration configuration, ApiConfigurationService apiConfig) // Inyectado ApiConfigurationService
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
