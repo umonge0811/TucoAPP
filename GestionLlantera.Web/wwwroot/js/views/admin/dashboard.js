@@ -1270,23 +1270,25 @@ function mostrarAnuncios(anuncios) {
                 </div>
                 <p class="announcement-content mb-3">${anuncio.contenido || ''}</p>
                 <div class="announcement-actions d-flex justify-content-between align-items-center">
-                    <div class="announcement-badges">
-                        <span class="badge bg-${anuncio.prioridad === 'Critica' ? 'danger' : anuncio.prioridad === 'Alta' ? 'warning' : anuncio.prioridad === 'Normal' ? 'info' : 'secondary'} me-1">
-                            ${anuncio.prioridad}
-                        </span>
-                        <span class="badge bg-${anuncio.activo ? 'success' : 'secondary'}">
-                            ${anuncio.activo ? 'Activo' : 'Inactivo'}
-                        </span>
+                        <div class="announcement-badges">
+                            <span class="badge bg-${anuncio.prioridad === 'Critica' ? 'danger' : anuncio.prioridad === 'Alta' ? 'warning' : anuncio.prioridad === 'Normal' ? 'info' : 'secondary'} me-1">
+                                ${anuncio.prioridad}
+                            </span>
+                            <span class="badge bg-${anuncio.activo ? 'success' : 'secondary'}">
+                                ${anuncio.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </div>
+                        ${anuncio.usuarioCreadorId === getCurrentUserId() ? `
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="editarAnuncio(${anuncio.anuncioId})" title="Editar anuncio">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="eliminarAnuncio(${anuncio.anuncioId}, '${(anuncio.titulo || 'Anuncio sin título').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" title="Eliminar anuncio">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        ` : ''}
                     </div>
-                    <div>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="editarAnuncio(${anuncio.anuncioId})" title="Editar anuncio">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarAnuncio(${anuncio.anuncioId}, '${(anuncio.titulo || 'Anuncio sin título').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" title="Eliminar anuncio">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
-                </div>
             `;
             container.appendChild(anuncioElement);
         });
