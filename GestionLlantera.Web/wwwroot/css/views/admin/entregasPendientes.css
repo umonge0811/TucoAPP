@@ -41,6 +41,8 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin: 0 auto;
+    width: 100%;
 }
 
 .table {
@@ -290,10 +292,12 @@ code {
 /* Estilos para entregas pendientes */
 .entregas-container {
     padding: 20px;
+    width: 100%;
 }
 
 .table-entregas {
     margin-bottom: 0;
+    width: 100%;
 }
 
 .table-entregas th {
@@ -543,6 +547,17 @@ code {
     /* Mostrar tabla en desktop */
     #tablaEntregasPendientes {
         display: block !important;
+    }
+    
+    /* Asegurar centrado correcto en desktop */
+    .table-responsive {
+        margin: 0;
+        width: 100%;
+    }
+    
+    .entregas-container {
+        width: 100%;
+        max-width: none;
     }
 }
 
