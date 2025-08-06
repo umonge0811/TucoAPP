@@ -84,6 +84,15 @@ builder.Services.AddMemoryCache();
 // ✅ HTTPCLIENT FACTORY (más simple y confiable)
 builder.Services.AddHttpClient();
 
+// ✅ REGISTRAR CONFIGURACIÓN DE LA API (CENTRALIZADA)
+// Configura la sección ApiSettings del appsettings.json para inyección de dependencias
+builder.Services.Configure<GestionLlantera.Web.Services.ApiSettings>(
+    builder.Configuration.GetSection("ApiSettings"));
+
+// ✅ REGISTRAR SERVICIO DE CONFIGURACIÓN DE API (CENTRALIZADO)
+// Este servicio permite acceder a la URL base de la API desde cualquier parte de la aplicación
+builder.Services.AddScoped<GestionLlantera.Web.Services.ApiConfigurationService>();
+
 // ✅ CONFIGURACIÓN ADICIONAL DE HTTP CLIENT (opcional - se puede mantener o eliminar)
 builder.Services.AddHttpClient("APIClient", client =>
 {
