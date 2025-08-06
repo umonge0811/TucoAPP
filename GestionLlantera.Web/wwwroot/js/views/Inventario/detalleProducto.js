@@ -302,7 +302,7 @@ $(document).ready(function () {
 
     console.log('✅ Funcionalidad de detalle de producto inicializada');
 
-    
+
 });
 
 /**
@@ -338,31 +338,35 @@ function compartirPorWhatsApp() {
             urlImagen = `${window.location.origin}${primeraImagen}`;
         }
 
-        // Crear mensaje optimizado para WhatsApp
-        let mensaje = `*${nombre}*\n\n`;
+        // ✅ USAR EL FORMATO CORRECTO QUE TE GUSTA
+        let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+        mensaje += `${nombre}\n`;
         mensaje += `Precio: ₡${precio}\n`;
-        mensaje += `Stock disponible: ${stock} unidades\n\n`;
-        
+        mensaje += `Stock: ${stock} unidades\n`;
+        mensaje += `Más detalles: ${window.location.href}\n\n`;
+
         if (urlImagen) {
-            mensaje += `Ver imagen:\n${urlImagen}\n\n`;
+            mensaje += `Imagen: ${urlImagen}`;
         }
-        
-        mensaje += `Más información:\n${window.location.href}`;
 
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
 
         window.open(whatsappUrl, '_blank');
-        console.log('✅ Compartido por WhatsApp');
-        
-        // Mostrar notificación de éxito
-        if (typeof mostrarToastExito === 'function') {
-            mostrarToastExito('¡Producto compartido por WhatsApp!');
+        console.log('✅ Compartido por WhatsApp desde detalle producto');
+
+        // ✅ USAR LA NOTIFICACIÓN CORRECTA SIN TOAST DE ERROR
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('Producto compartido por WhatsApp exitosamente', 'success');
+        } else if (typeof toastr !== 'undefined') {
+            toastr.success('Producto compartido por WhatsApp exitosamente');
         }
-        
+
     } catch (error) {
         console.error('❌ Error al compartir por WhatsApp:', error);
-        if (typeof mostrarToastError === 'function') {
-            mostrarToastError('No se pudo compartir por WhatsApp');
+        if (typeof mostrarNotificacion === 'function') {
+            mostrarNotificacion('Error al compartir por WhatsApp', 'danger');
+        } else if (typeof toastr !== 'undefined') {
+            toastr.error('No se pudo compartir por WhatsApp');
         }
     }
 }
@@ -543,4 +547,3 @@ function interceptarEliminacionParaDetalle() {
         return originalAjax.call(this, options);
     };
 }
-

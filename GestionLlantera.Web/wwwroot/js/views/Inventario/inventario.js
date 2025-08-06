@@ -2298,16 +2298,16 @@ function compartirDirectoPorWhatsApp() {
             urlImagen = `${window.location.origin}${imagenProducto}`;
         }
 
-        // Crear mensaje optimizado para WhatsApp
-        let mensaje = `*${nombre}*\n\n`;
+        // ✅ USAR EL FORMATO CORRECTO Y UNIFICADO
+        let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+        mensaje += `${nombre}\n`;
         mensaje += `Precio: ${precio}\n`;
-        mensaje += `Stock disponible: ${stock}\n\n`;
+        mensaje += `Stock: ${stock}\n`;
+        mensaje += `Más detalles: ${window.location.origin}/Inventario/DetalleProducto/${productoId}\n\n`;
 
         if (urlImagen) {
-            mensaje += `Ver imagen:\n${urlImagen}\n\n`;
+            mensaje += `Imagen: ${urlImagen}`;
         }
-
-        mensaje += `Más información:\n${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
 
         const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
 
@@ -2337,16 +2337,16 @@ function enviarProductoPorWhatsApp() {
     }
 
     try {
-        // Construir el mensaje
-        let mensaje = `*${productoParaCompartir.nombre}*\n\n`;
+        // ✅ CONSTRUIR EL MENSAJE CON EL FORMATO UNIFICADO
+        let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+        mensaje += `${productoParaCompartir.nombre}\n`;
         mensaje += `Precio: ${productoParaCompartir.precio}\n`;
-        mensaje += `Stock disponible: ${productoParaCompartir.stock}\n\n`;
+        mensaje += `Stock: ${productoParaCompartir.stock}\n`;
+        mensaje += `Más detalles: ${productoParaCompartir.urlProducto}\n\n`;
         
         if (incluirImagen && productoParaCompartir.urlImagen && !productoParaCompartir.urlImagen.includes('no-image.png')) {
-            mensaje += `Ver imagen:\n${window.location.origin}${productoParaCompartir.urlImagen}\n\n`;
+            mensaje += `Imagen: ${window.location.origin}${productoParaCompartir.urlImagen}`;
         }
-        
-        mensaje += `Más información:\n${productoParaCompartir.urlProducto}`;
 
         // Construir la URL de WhatsApp con el número específico
         const urlWhatsApp = `https://wa.me/506${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
