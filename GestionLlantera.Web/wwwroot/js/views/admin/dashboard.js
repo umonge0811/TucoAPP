@@ -793,7 +793,7 @@ function getCurrentUserId() {
         if (userElement) {
             return parseInt(userElement.getAttribute('data-user-id'));
         }
-        
+
         // Fallback: obtener desde cookies JWT si está disponible
         const cookies = document.cookie.split(';');
         for (let cookie of cookies) {
@@ -807,7 +807,7 @@ function getCurrentUserId() {
                 }
             }
         }
-        
+
         // Último fallback: asumir ID 4 basado en los logs
         console.warn('No se pudo obtener userId, usando fallback');
         return 4;
@@ -1565,10 +1565,21 @@ document.addEventListener('DOMContentLoaded', function () {
     if (newAnnouncementModal) {
         newAnnouncementModal.addEventListener('hidden.bs.modal', function () {
             console.log('🔄 Limpiando modal de anuncio al cerrarse...');
+
             const form = document.getElementById('newAnnouncementForm');
             if (form) {
+                // Resetear formulario completamente
                 form.reset();
-                form.removeAttribute('data-editing-anuncio-id'); // Limpiar estado de edición
+                form.removeAttribute('data-editing-anuncio-id');
+
+                // Limpiar campos manualmente
+                const tituloField = document.getElementById('tituloAnuncio') || form.querySelector('input[name="tituloAnuncio"]');
+                const contenidoField = document.getElementById('contenidoAnuncio') || form.querySelector('textarea[name="contenidoAnuncio"]');
+                const fechaField = document.getElementById('fechaExpiracionAnuncio') || form.querySelector('input[name="fechaExpiracionAnuncio"]');
+
+                if (tituloField) tituloField.value = '';
+                if (contenidoField) contenidoField.value = '';
+                if (fechaField) fechaField.value = '';
 
                 // Restaurar título del modal
                 const modalTitle = newAnnouncementModal.querySelector('.modal-title');
