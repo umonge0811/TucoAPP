@@ -144,6 +144,202 @@
     border-left: 4px solid #007bff;
 }
 
+/* ========================================
+   ESTILOS RESPONSIVE PARA PEDIDOS
+   ======================================== */
+
+/* =====================================
+   ESTILOS PARA DESKTOP (por defecto)
+   ===================================== */
+
+.pedidos-container {
+    width: 100%;
+}
+
+.tabla-pedidos-responsive {
+    display: table;
+    width: 100%;
+}
+
+.pedido-card-mobile {
+    display: none;
+}
+
+/* =====================================
+   ESTILOS PARA MOBILE Y TABLET
+   ===================================== */
+
+@media (max-width: 991px) {
+    /* Ocultar tabla en dispositivos móviles */
+    .tabla-pedidos-responsive {
+        display: none !important;
+    }
+
+    /* Mostrar tarjetas en móviles */
+    .pedido-card-mobile {
+        display: block;
+        margin-bottom: 1.25rem;
+        border: 1px solid #dee2e6;
+        border-radius: 0.75rem;
+        padding: 1.25rem;
+        background: white;
+        box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pedido-card-mobile:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
+    }
+
+    .pedido-card-mobile:active {
+        transform: scale(0.98);
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+    }
+
+    /* Header de la tarjeta */
+    .pedido-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #dee2e6;
+        flex-wrap: wrap;
+    }
+
+    .pedido-titulo-mobile {
+        font-weight: 600;
+        font-size: 1.15rem;
+        color: #212529;
+        margin: 0;
+        line-height: 1.3;
+        margin-bottom: 0.25rem;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .pedido-id-mobile {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        font-weight: 500;
+    }
+
+    .pedido-estado-mobile {
+        margin-left: auto;
+        flex-shrink: 0;
+    }
+
+    /* Información del pedido */
+    .pedido-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .pedido-info-label {
+        font-weight: 500;
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .pedido-info-value {
+        color: #6c757d;
+        text-align: right;
+        flex: 1;
+        margin-left: 1rem;
+        word-break: break-word;
+    }
+
+    /* Acciones de la tarjeta */
+    .pedido-acciones-mobile {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .botones-accion-mobile-pedidos {
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .botones-accion-mobile-pedidos .btn {
+        font-size: 0.8rem;
+        padding: 0.5rem 0.6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        min-height: 42px;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .botones-accion-mobile-pedidos .btn i {
+        font-size: 0.85em;
+        flex-shrink: 0;
+    }
+}
+
+/* =====================================
+   OPTIMIZACIONES PARA TABLETS
+   ===================================== */
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .pedido-card-mobile {
+        padding: 1.5rem;
+    }
+
+    .pedido-titulo-mobile {
+        font-size: 1.25rem;
+    }
+
+    .botones-accion-mobile-pedidos {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* =====================================
+   OPTIMIZACIONES PARA MÓVILES PEQUEÑOS
+   ===================================== */
+
+@media (max-width: 575px) {
+    .pedido-card-mobile {
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        border-radius: 0.5rem;
+        border-left: 1px solid #dee2e6;
+        border-right: 1px solid #dee2e6;
+        padding: 1rem;
+    }
+
+    .pedido-titulo-mobile {
+        font-size: 1.1rem;
+    }
+
+    .pedido-info-row {
+        font-size: 0.8rem;
+    }
+
+    .botones-accion-mobile-pedidos {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+    }
+
+    .botones-accion-mobile-pedidos .btn {
+        font-size: 0.85rem;
+        padding: 0.6rem;
+        min-height: 44px;
+    }
+}
+
 /* ===== ESTILOS PARA ORDENAMIENTO DE TABLA ===== */
 .sortable {
     cursor: pointer;
