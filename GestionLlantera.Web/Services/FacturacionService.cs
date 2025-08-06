@@ -11,15 +11,30 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<FacturacionService> _logger;
+        private readonly ApiConfigurationService _apiConfig;
         private const decimal IVA_PORCENTAJE = 0.13m; // 13% IVA en Costa Rica
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         private readonly string _baseUrl;
 
-        public FacturacionService(IHttpClientFactory httpClientFactory, ILogger<FacturacionService> logger, IConfiguration config)
+        /// <summary>
+        /// ✅ CONSTRUCTOR: CONFIGURACIÓN DE DEPENDENCIAS
+        /// Inicializa el servicio de facturación con todas las dependencias necesarias
+        /// </summary>
+        /// <param name="httpClientFactory">Factory para crear clientes HTTP</param>
+        /// <param name="logger">Logger para registrar operaciones y errores</param>
+        /// <param name="config">Configuración de la aplicación</param>
+        /// <param name="apiConfig">Servicio centralizado para URLs de la API</param>
+        public FacturacionService(IHttpClientFactory httpClientFactory, ILogger<FacturacionService> logger, IConfiguration config, ApiConfigurationService apiConfig)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
             _baseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
+            
+            /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+            _apiConfig = apiConfig;
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 FacturacionService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         public async Task<decimal> CalcularTotalVentaAsync(List<ProductoVentaDTO> productos)
