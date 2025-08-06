@@ -27,7 +27,7 @@ namespace GestionLlantera.Web.Services
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
             _apiConfig = apiConfig;
-            
+
             // ✅ LOG DE DIAGNÓSTICO
             _logger.LogInformation("🔧 AjustesInventarioService inicializado con URL base: {BaseUrl}", 
                 _apiConfig.BaseUrl);
@@ -42,7 +42,7 @@ namespace GestionLlantera.Web.Services
                     solicitud.InventarioProgramadoId, solicitud.ProductoId);
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/TomaInventario/{solicitud.InventarioProgramadoId}/ajustar-discrepancia");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{solicitud.InventarioProgramadoId}/ajustar-discrepancia");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 // ✅ CONFIGURAR TOKEN JWT
@@ -94,7 +94,7 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("✏️ Ajuste ID: {AjusteId}, Producto: {ProductoId}", ajusteId, solicitud.ProductoId);
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/TomaInventario/ajustes/{ajusteId}");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/ajustes/{ajusteId}");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 // ✅ CONFIGURAR TOKEN JWT
@@ -198,7 +198,7 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📋 Obteniendo ajustes pendientes para inventario {InventarioId}", inventarioId);
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/TomaInventario/{inventarioId}/ajustes");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/ajustes");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 ConfigurarAutenticacion(jwtToken);
@@ -239,7 +239,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/TomaInventario/{inventarioId}/productos/{productoId}/ajustes");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/productos/{productoId}/ajustes");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 ConfigurarAutenticacion(jwtToken);
@@ -275,7 +275,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/TomaInventario/ajustes/{ajusteId}");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/ajustes/{ajusteId}");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 ConfigurarAutenticacion(jwtToken);
@@ -304,7 +304,7 @@ namespace GestionLlantera.Web.Services
             try
             {
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/TomaInventario/{inventarioId}/ajustes/resumen");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/ajustes/resumen");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 ConfigurarAutenticacion(jwtToken);
@@ -336,7 +336,7 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioId);
 
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
-                var url = _apiConfig.GetApiUrl($"api/TomaInventario/{inventarioId}/aplicar-ajustes");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/aplicar-ajustes");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 ConfigurarAutenticacion(jwtToken);
