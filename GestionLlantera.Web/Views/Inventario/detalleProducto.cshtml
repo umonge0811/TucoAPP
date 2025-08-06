@@ -54,7 +54,7 @@
                 <i class="bi bi-arrow-left me-2"></i>
                 <span>Volver al Inventario</span>
             </a>
-            
+
             <a asp-controller="Inventario" asp-action="EditarProducto" asp-route-id="@Model.ProductoId" 
                class="btn btn-primary d-flex align-items-center justify-content-center" 
                asp-permiso="EditarProductos">
@@ -114,7 +114,7 @@
                                         {
                                             var imagen = Model.Imagenes[i];
                                             <div class="carousel-item @(i == 0 ? "active" : "")">
-                    
+
                                                 <img src="@imagen.UrlImagen" 
                                                      class="d-block w-100 img-fluid rounded"
                                                      alt="@Model.NombreProducto"
@@ -169,7 +169,7 @@
                                     <!-- Precio calculado automáticamente -->
                                     <h4 class="precio-detalle text-success">₡@((Model.PrecioCalculado ?? 0).ToString("N0"))</h4>
                                     <small class="text-success fw-bold"><i class="bi bi-calculator me-1"></i>Precio Calculado Automáticamente</small>
-        
+
                                     <div class="row mt-2">
                                         <div class="col-4">
                                             <small class="text-muted">Costo:</small><br>
@@ -190,7 +190,7 @@
                                     <!-- Precio manual -->
                                     <h4 class="precio-detalle text-primary">₡@((Model.Precio ?? 0).ToString("N0"))</h4>
                                     <small class="text-primary fw-bold"><i class="bi bi-pencil me-1"></i>Precio Manual</small>
-        
+
                                     @if (Model.Costo.HasValue || Model.PorcentajeUtilidad.HasValue)
                                     {
                                         <div class="alert alert-warning mt-2" role="alert">
@@ -322,7 +322,7 @@
             </div>
         </div>
     }
-</div> <!-- ← ESTA ETIQUETA FALTABA -->
+</div>
 
             <div class="dashboard-card">
                 <div class="card-header">
@@ -469,14 +469,79 @@
     </div>
 </div>
 
+<!-- Modal de WhatsApp para compartir producto -->
+<div class="modal fade" id="modalWhatsAppNumero" tabindex="-1" aria-labelledby="modalWhatsAppNumeroLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalWhatsAppNumeroLabel">
+                    <i class="bi bi-whatsapp me-2"></i>
+                    Compartir por WhatsApp
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Preview del producto -->
+                <div class="mb-3">
+                    <h6>Producto a compartir:</h6>
+                    <div id="productoPreview" class="p-3 bg-light rounded">
+                        <!-- Se llenará dinámicamente -->
+                    </div>
+                </div>
 
+                <!-- Número de WhatsApp -->
+                <div class="mb-3">
+                    <label for="numeroWhatsApp" class="form-label">
+                        <i class="bi bi-phone me-1"></i>
+                        Número de WhatsApp (Costa Rica)
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">+506</span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="numeroWhatsApp" 
+                               placeholder="XXXXXXXX" 
+                               maxlength="8" 
+                               pattern="[0-9]{8}">
+                    </div>
+                    <div class="form-text">Ingrese el número sin espacios ni guiones</div>
+                </div>
+
+                <!-- Opción para incluir imagen -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="incluirImagen" checked>
+                        <label class="form-check-label" for="incluirImagen">
+                            <i class="bi bi-image me-1"></i>
+                            Incluir imagen del producto
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnEnviarWhatsApp" disabled>
+                    <span class="normal-state">
+                        <i class="bi bi-whatsapp me-2"></i>Enviar por WhatsApp
+                    </span>
+                    <span class="loading-state" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Enviando...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script src="~/js/views/inventario/imagenes.js"></script>
     <script src="~/js/views/inventario/exportarInventario.js"></script>
     <script src="~/js/views/inventario/inventario.js"></script>
     <script src="~/js/views/inventario/detalleProducto.js"></script>
-    
+
     <script>
         // ✅ CONTEXTO DEL PRODUCTO PARA JAVASCRIPT
         window.productoContexto = {
@@ -484,15 +549,90 @@
             nombre: '@Html.Raw(Model.NombreProducto.Replace("'", "\\'"))',
             stock: @Model.CantidadEnInventario,
             stockMinimo: @Model.StockMinimo,
-            precio: '@((Model.Precio ?? Model.PrecioCalculado ?? 0).ToString("N0"))'
+            precio: '@((Model.Precio ?? Model.PrecioCalculado ?? 0).ToString("N0"))',
+            // Incluir la URL de la primera imagen si existe, para el modal de WhatsApp
+            imagenPrincipal: '@(Model.Imagenes != null && Model.Imagenes.Any() ? Model.Imagenes.First().UrlImagen : "")'
         };
 
         // ✅ INICIALIZAR CUANDO EL DOM ESTÉ LISTO
         $(document).ready(function() {
             // Inicializar tooltips
             inicializarTooltips();
-            
+
+            // Habilitar botón de enviar WhatsApp si el número es válido
+            $('#numeroWhatsApp').on('input', function() {
+                if ($(this).val().length === 8 && /^[0-9]+$/.test($(this).val())) {
+                    $('#btnEnviarWhatsApp').prop('disabled', false);
+                } else {
+                    $('#btnEnviarWhatsApp').prop('disabled', true);
+                }
+            });
+
+            // Lógica para llenar el preview del producto en el modal
+            $('#modalWhatsAppNumero').on('show.bs.modal', function (event) {
+                const producto = window.productoContexto;
+                $('#productoPreview').html(`
+                    <div class="d-flex align-items-center">
+                        ${producto.imagenPrincipal ? `<img src="${producto.imagenPrincipal}" alt="${producto.nombre}" class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">` : ''}
+                        <div>
+                            <strong>${producto.nombre}</strong><br>
+                            <small>ID: ${producto.id}</small><br>
+                            <small class="text-success">₡${producto.precio}</small>
+                        </div>
+                    </div>
+                `);
+                // Resetear el número y el estado del botón al abrir el modal
+                $('#numeroWhatsApp').val('');
+                $('#btnEnviarWhatsApp').prop('disabled', true);
+            });
+
+            // Lógica para enviar por WhatsApp
+            $('#btnEnviarWhatsApp').on('click', function() {
+                const numero = $('#numeroWhatsApp').val();
+                const incluirImagen = $('#incluirImagen').is(':checked');
+                const producto = window.productoContexto;
+
+                if (!numero || numero.length !== 8 || !/^[0-9]+$/.test(numero)) {
+                    alert('Por favor, ingrese un número de WhatsApp válido de 8 dígitos.');
+                    return;
+                }
+
+                let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+                mensaje += `*${producto.nombre}*\n`;
+                mensaje += `Precio: ₡${producto.precio}\n`;
+                mensaje += `Stock: ${producto.stock} unidades\n`;
+                mensaje += `Más detalles: ${window.location.origin}${window.location.pathname}\n`; // URL de la página actual
+
+                if (incluirImagen && producto.imagenPrincipal) {
+                    // Nota: WhatsApp no soporta enviar imágenes directamente por URL en mensajes de texto.
+                    // Se enviará el enlace a la imagen. Para una integración más avanzada, se necesitaría una API de WhatsApp.
+                    mensaje += `\nImagen: ${producto.imagenPrincipal}`;
+                }
+
+                const urlWhatsApp = `https://wa.me/+506${numero}?text=${encodeURIComponent(mensaje)}`;
+
+                // Mostrar estado de carga
+                $(this).find('.normal-state').hide();
+                $(this).find('.loading-state').show();
+                $(this).prop('disabled', true);
+
+                // Simular envío (en una app real, se haría una llamada a la API)
+                setTimeout(() => {
+                    window.open(urlWhatsApp, '_blank');
+                    $('#modalWhatsAppNumero').modal('hide');
+                    // Ocultar estado de carga y resetear el botón
+                    $(this).find('.loading-state').hide();
+                    $(this).find('.normal-state').show();
+                }, 1500); // Simula un pequeño retraso
+            });
+
             console.log('🎯 Vista de detalle lista con contexto:', window.productoContexto);
         });
+
+        // Función para ser llamada desde el botón en el HTML
+        function compartirProducto() {
+            $('#modalWhatsAppNumero').modal('show');
+        }
+
     </script>
 }
