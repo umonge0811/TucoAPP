@@ -1649,7 +1649,7 @@ async function manejarNuevoAnuncio(e) {
 
     console.log('📢 === FIN DEL PROCESAMIENTO DE ANUNCIO ===');
 }
-}
+
 
 // ========================================
 // EVENTOS DE INICIALIZACIÓN
