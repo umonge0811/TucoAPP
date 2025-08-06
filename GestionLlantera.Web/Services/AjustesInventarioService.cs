@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Services.Interfaces;
+using GestionLlantera.Web.Services.Interfaces;
 using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
@@ -6,15 +6,31 @@ using Tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Services
 {
+    /// <summary>
+    /// Servicio para gestión de ajustes de inventario pendientes
+    /// ✅ ACTUALIZADO: Usa ApiConfigurationService para URLs centralizadas
+    /// </summary>
     public class AjustesInventarioService : IAjustesInventarioService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<AjustesInventarioService> _logger;
+        private readonly ApiConfigurationService _apiConfig;
 
-        public AjustesInventarioService(IHttpClientFactory httpClientFactory, ILogger<AjustesInventarioService> logger)
+        /// <summary>
+        /// Constructor con ApiConfigurationService centralizado
+        /// </summary>
+        public AjustesInventarioService(
+            IHttpClientFactory httpClientFactory, 
+            ILogger<AjustesInventarioService> logger,
+            ApiConfigurationService apiConfig)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _apiConfig = apiConfig;
+
+            // ✅ LOG DE DIAGNÓSTICO
+            _logger.LogInformation("🔧 AjustesInventarioService inicializado con URL base: {BaseUrl}", 
+                _apiConfig.BaseUrl);
         }
 
         public async Task<bool> CrearAjustePendienteAsync(SolicitudAjusteInventarioDTO solicitud, string jwtToken)
@@ -24,6 +40,10 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📝 === CREANDO AJUSTE PENDIENTE (WEB SERVICE) ===");
                 _logger.LogInformation("📝 Inventario: {InventarioId}, Producto: {ProductoId}",
                     solicitud.InventarioProgramadoId, solicitud.ProductoId);
+
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{solicitud.InventarioProgramadoId}/ajustar-discrepancia");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 // ✅ CONFIGURAR TOKEN JWT
                 ConfigurarAutenticacion(jwtToken);
@@ -39,7 +59,7 @@ namespace GestionLlantera.Web.Services
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 // ✅ ENVIAR A LA API
-                var response = await _httpClient.PostAsync($"api/TomaInventario/{solicitud.InventarioProgramadoId}/ajustar-discrepancia", content);
+                var response = await _httpClient.PostAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📡 Respuesta API: Status={Status}, Content={Content}",
@@ -73,6 +93,10 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("✏️ === ACTUALIZANDO AJUSTE PENDIENTE (WEB SERVICE) ===");
                 _logger.LogInformation("✏️ Ajuste ID: {AjusteId}, Producto: {ProductoId}", ajusteId, solicitud.ProductoId);
 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"TomaInventario/ajustes/{ajusteId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 // ✅ CONFIGURAR TOKEN JWT
                 ConfigurarAutenticacion(jwtToken);
 
@@ -87,7 +111,7 @@ namespace GestionLlantera.Web.Services
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 // ✅ ENVIAR A LA API (USAR PUT)
-                var response = await _httpClient.PutAsync($"api/TomaInventario/ajustes/{ajusteId}", content);
+                var response = await _httpClient.PutAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📡 Respuesta actualización API: Status={Status}, Content={Content}",
@@ -173,9 +197,13 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("📋 Obteniendo ajustes pendientes para inventario {InventarioId}", inventarioId);
 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/ajustes");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/ajustes");
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -210,9 +238,13 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/productos/{productoId}/ajustes");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/productos/{productoId}/ajustes");
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -242,9 +274,13 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"TomaInventario/ajustes/{ajusteId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.DeleteAsync($"api/TomaInventario/ajustes/{ajusteId}");
+                var response = await _httpClient.DeleteAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -267,9 +303,13 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/ajustes/resumen");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/ajustes/resumen");
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -295,9 +335,13 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("🔥 === APLICANDO AJUSTES PENDIENTES (WEB SERVICE) ===");
                 _logger.LogInformation("🔥 Inventario ID: {InventarioId}", inventarioId);
 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/aplicar-ajustes");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.PostAsync($"api/TomaInventario/{inventarioId}/aplicar-ajustes", null);
+                var response = await _httpClient.PostAsync(url, null);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📡 Respuesta aplicar ajustes: Status={Status}, Content={Content}",

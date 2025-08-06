@@ -13,7 +13,7 @@ using System.Text.Json;
 // ✅ CLASE PARA DESERIALIZAR LA RESPUESTA DEL API
 public class ApiResponse
 {
-    public List<DetalleInventarioDTO> productos { get;set; } = new List<DetalleInventarioDTO>();
+    public List<DetalleInventarioDTO> productos { get; set; } = new List<DetalleInventarioDTO>();
     public ApiEstadisticas estadisticas { get; set; } = new ApiEstadisticas();
 }
 
@@ -36,11 +36,16 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<TomaInventarioService> _logger;
+        private readonly ApiConfigurationService _apiConfig; // ✅ AGREGADO: Servicio centralizado
 
-        public TomaInventarioService(IHttpClientFactory httpClientFactory, ILogger<TomaInventarioService> logger)
+        public TomaInventarioService(IHttpClientFactory httpClientFactory, ILogger<TomaInventarioService> logger, ApiConfigurationService apiConfig)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _apiConfig = apiConfig; // ✅ ASIGNADO: Servicio centralizado
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 TomaInventarioService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         // =====================================
@@ -59,8 +64,9 @@ namespace GestionLlantera.Web.Services
                 // ✅ CONFIGURAR TOKEN JWT
                 ConfigurarAutenticacion(jwtToken);
 
-                // ✅ REALIZAR PETICIÓN A LA API
-                var response = await _httpClient.PostAsync($"api/TomaInventario/{inventarioId}/iniciar", null);
+                // ✅ REALIZAR PETICIÓN A LA API usando ApiConfigurationService
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/iniciar");
+                var response = await _httpClient.PostAsync(url, null);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -93,7 +99,8 @@ namespace GestionLlantera.Web.Services
 
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}");
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -134,7 +141,8 @@ namespace GestionLlantera.Web.Services
 
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/productos");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/productos");
+                var response = await _httpClient.GetAsync(url);
 
                 _logger.LogInformation("📦 Código de respuesta: {StatusCode}", response.StatusCode);
                 _logger.LogInformation("📦 Respuesta exitosa: {IsSuccess}", response.IsSuccessStatusCode);
@@ -248,8 +256,9 @@ namespace GestionLlantera.Web.Services
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                // ✅ ENVIAR A LA API
-                var response = await _httpClient.PostAsync($"api/TomaInventario/{conteo.InventarioProgramadoId}/productos/{conteo.ProductoId}/conteo", content);
+                // ✅ ENVIAR A LA API usando ApiConfigurationService
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{conteo.InventarioProgramadoId}/productos/{conteo.ProductoId}/conteo");
+                var response = await _httpClient.PostAsync(url, content);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -306,7 +315,8 @@ namespace GestionLlantera.Web.Services
 
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/progreso");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/progreso");
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -415,7 +425,8 @@ namespace GestionLlantera.Web.Services
 
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.PostAsync($"api/TomaInventario/{inventarioId}/completar", null);
+                var url = _apiConfig.GetApiUrl($"TomaInventario/{inventarioId}/completar");
+                var response = await _httpClient.PostAsync(url, null);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -446,7 +457,8 @@ namespace GestionLlantera.Web.Services
 
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.PostAsync($"api/Inventario/inventarios-programados/{inventarioId}/cancelar", null);
+                var url = _apiConfig.GetApiUrl($"Inventario/inventarios-programados/{inventarioId}/cancelar");
+                var response = await _httpClient.PostAsync(url, null);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -545,7 +557,7 @@ namespace GestionLlantera.Web.Services
         /// </summary>
         public async Task<List<InventarioProgramadoDTO>?> ObtenerInventariosAsignadosAsync(int usuarioId, string jwtToken)
         {
-             try
+            try
             {
                 _logger.LogInformation("📦 === SERVICIO: OBTENIENDO INVENTARIOS ASIGNADOS ===");
                 _logger.LogInformation("📦 Usuario ID: {UsuarioId}", usuarioId);
@@ -554,7 +566,8 @@ namespace GestionLlantera.Web.Services
 
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/inventarios-asignados/{usuarioId}");
+                var url = _apiConfig.GetApiUrl($"TomaInventario/inventarios-asignados/{usuarioId}");
+                var response = await _httpClient.GetAsync(url);
 
                 _logger.LogInformation("📦 Código de respuesta: {StatusCode}", response.StatusCode);
                 _logger.LogInformation("📦 Respuesta exitosa: {IsSuccess}", response.IsSuccessStatusCode);
@@ -614,7 +627,8 @@ namespace GestionLlantera.Web.Services
 
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.PostAsync($"api/TomaInventario/NotificarConteoCompletado/{inventarioId}", null);
+                var url = _apiConfig.GetApiUrl($"TomaInventario/NotificarConteoCompletado/{inventarioId}");
+                var response = await _httpClient.PostAsync(url, null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -627,7 +641,7 @@ namespace GestionLlantera.Web.Services
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error al notificar conteo completado. Status: {StatusCode}, Error: {Error}", 
+                    _logger.LogError("❌ Error al notificar conteo completado. Status: {StatusCode}, Error: {Error}",
                         response.StatusCode, errorContent);
                     return false;
                 }

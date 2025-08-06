@@ -12,11 +12,13 @@ namespace GestionLlantera.Web.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<ReportesService> _logger;
+        private readonly ApiConfigurationService _apiConfig; // Agregado ApiConfigurationService
 
-        public ReportesService(IHttpClientFactory httpClientFactory, ILogger<ReportesService> logger)
+        public ReportesService(IHttpClientFactory httpClientFactory, ILogger<ReportesService> logger, ApiConfigurationService apiConfig) // Inyectado ApiConfigurationService
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _apiConfig = apiConfig; // Asignado ApiConfigurationService
         }
 
         public async Task<byte[]> DescargarExcelAsync(int inventarioId, string jwtToken)
@@ -40,7 +42,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para Excel");
                 }
 
-                var response = await httpClient.GetAsync($"api/Reportes/inventario/{inventarioId}/excel");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Reportes/inventario/{inventarioId}/excel");
+                _logger.LogDebug("🌐 URL construida para descargar Excel: {url}", url);
+
+                var response = await httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -82,7 +88,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para PDF");
                 }
 
-                var response = await httpClient.GetAsync($"api/Reportes/inventario/{inventarioId}/pdf");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Reportes/inventario/{inventarioId}/pdf");
+                _logger.LogDebug("🌐 URL construida para descargar PDF: {url}", url);
+
+                var response = await httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -124,7 +134,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para obtener datos");
                 }
 
-                var response = await httpClient.GetAsync($"api/Reportes/inventario/{inventarioId}");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Reportes/inventario/{inventarioId}");
+                _logger.LogDebug("🌐 URL construida para obtener reporte: {url}", url);
+
+                var response = await httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -167,7 +181,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para PDF de pedido");
                 }
 
-                var response = await httpClient.GetAsync($"api/reportes/pedido/{pedidoId}/pdf");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"reportes/pedido/{pedidoId}/pdf");
+                _logger.LogDebug("🌐 URL construida para descargar PDF pedido: {url}", url);
+
+                var response = await httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {

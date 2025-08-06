@@ -7,20 +7,27 @@ using Tuco.Clases.DTOs.Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Services
 {
-    // La clase implementa la interfaz IRolesService que definimos anteriormente
+    // ✅ SERVICIO DE ROLES CENTRALIZADO
+    // Esta clase implementa la interfaz IRolesService y gestiona todas las operaciones relacionadas con roles
+    // Ahora utiliza ApiConfigurationService para centralizar las URLs de la API
     public class RolesService : IRolesService
     {
         // Variables privadas para manejar las dependencias inyectadas
-        private readonly HttpClient _httpClient;           // Cliente HTTP para hacer llamadas a la API
-        private readonly ILogger<RolesService> _logger;    // Logger para registrar eventos y errores
-        private readonly JsonSerializerOptions _jsonOptions; // Opciones de serialización JSON
+        private readonly HttpClient _httpClient;                    // Cliente HTTP para hacer llamadas a la API
+        private readonly ILogger<RolesService> _logger;             // Logger para registrar eventos y errores
+        private readonly JsonSerializerOptions _jsonOptions;        // Opciones de serialización JSON
+        private readonly ApiConfigurationService _apiConfig;        // ✅ NUEVO: Servicio de configuración centralizada
 
         // Constructor que recibe las dependencias necesarias mediante inyección de dependencias
-        public RolesService(IHttpClientFactory httpClientFactory, ILogger<RolesService> logger)
+        public RolesService(
+            IHttpClientFactory httpClientFactory, 
+            ILogger<RolesService> logger,
+            ApiConfigurationService apiConfig)  // ✅ NUEVO: Inyectar servicio de configuración
         {
             // Inicializamos las dependencias inyectadas
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _apiConfig = apiConfig;  // ✅ NUEVO: Asignar servicio de configuración
 
             // Configuramos las opciones de serialización JSON
             _jsonOptions = new JsonSerializerOptions
@@ -31,16 +38,20 @@ namespace GestionLlantera.Web.Services
         }
 
 
-        // Método para obtener todos los roles del sistema
+        // ✅ MÉTODO CENTRALIZADO: Obtener todos los roles del sistema
         public async Task<List<RoleDTO>> ObtenerTodosLosRoles()
         {
             try
             {
                 // Registramos el inicio de la operación
-                _logger.LogInformation("Obteniendo todos los roles");
+                _logger.LogInformation("Obteniendo todos los roles desde: {BaseUrl}", _apiConfig.BaseUrl);
 
-                // Realizamos la petición GET a la API
-                var response = await _httpClient.GetAsync("api/Roles/ObtenerTodosRoles");
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl("Roles/ObtenerTodosRoles");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos la petición GET a la API usando la URL centralizada
+                var response = await _httpClient.GetAsync(url);
 
                 // Verificamos que la respuesta sea exitosa (código 2xx)
                 response.EnsureSuccessStatusCode();
@@ -73,16 +84,20 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para obtener un rol específico por su ID
+        // ✅ MÉTODO CENTRALIZADO: Obtener un rol específico por su ID
         public async Task<RoleDTO> ObtenerRolPorId(int rolId)
         {
             try
             {
                 // Registramos la operación incluyendo el ID del rol
-                _logger.LogInformation("Obteniendo rol con ID: {RolId}", rolId);
+                _logger.LogInformation("Obteniendo rol con ID: {RolId} desde: {BaseUrl}", rolId, _apiConfig.BaseUrl);
 
-                // Realizamos la petición GET a la API con el ID específico
-                var response = await _httpClient.GetAsync($"api/Roles/obtener-rol-id/{rolId}");
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl($"Roles/obtener-rol-id/{rolId}");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos la petición GET a la API usando la URL centralizada
+                var response = await _httpClient.GetAsync(url);
 
                 // Verificamos que la respuesta sea exitosa
                 response.EnsureSuccessStatusCode();
@@ -104,16 +119,20 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para crear un nuevo rol en el sistema
+        // ✅ MÉTODO CENTRALIZADO: Crear un nuevo rol en el sistema
         public async Task<bool> CrearRol(RoleDTO rol)
         {
             try
             {
                 // Registramos el intento de creación del rol con su nombre
-                _logger.LogInformation("Creando nuevo rol: {NombreRol}", rol.NombreRol);
+                _logger.LogInformation("Creando nuevo rol: {NombreRol} en: {BaseUrl}", rol.NombreRol, _apiConfig.BaseUrl);
 
-                // Realizamos una petición POST a la API enviando el objeto rol serializado como JSON
-                var response = await _httpClient.PostAsJsonAsync("api/Roles/CrearRoles", rol);
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl("Roles/CrearRoles");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos una petición POST a la API usando la URL centralizada
+                var response = await _httpClient.PostAsJsonAsync(url, rol);
 
                 // Verificamos si la operación fue exitosa
                 if (response.IsSuccessStatusCode)
@@ -137,28 +156,32 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para actualizar un rol existente
+        // ✅ MÉTODO CENTRALIZADO: Actualizar un rol existente
         public async Task<bool> ActualizarRol(int rolId, RoleDTO rol)
         {
             try
             {
-                // Registramos el intento de actualización
-                _logger.LogInformation("Actualizando rol {RolId}", rolId);
+                // Registramos el intento de actualización con información detallada
+                _logger.LogInformation("Actualizando rol {RolId}: {NombreRol} en: {BaseUrl}", rolId, rol.NombreRol, _apiConfig.BaseUrl);
 
-                // Realizamos una petición PUT a la API con el ID del rol y los nuevos datos
-                var response = await _httpClient.PutAsJsonAsync($"api/Roles/actualizarRole/{rolId}", rol);
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl($"Roles/actualizarRole/{rolId}");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos una petición PUT a la API usando la URL centralizada
+                var response = await _httpClient.PutAsJsonAsync(url, rol);
 
                 // Verificamos si la actualización fue exitosa
                 if (response.IsSuccessStatusCode)
                 {
                     // Registramos el éxito de la operación
-                    _logger.LogInformation("Rol actualizado exitosamente");
+                    _logger.LogInformation("Rol {RolId} actualizado exitosamente", rolId);
                     return true;
                 }
 
                 // Si no fue exitosa, capturamos y registramos el error
                 var error = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Error al actualizar rol: {Error}", error);
+                _logger.LogWarning("Error al actualizar rol {RolId}: {Error}", rolId, error);
                 return false;
             }
             catch (Exception ex)
@@ -169,28 +192,32 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para eliminar un rol del sistema
+        // ✅ MÉTODO CENTRALIZADO: Eliminar un rol del sistema
         public async Task<bool> EliminarRol(int rolId)
         {
             try
             {
-                // Registramos el intento de eliminación
-                _logger.LogInformation("Eliminando rol con ID: {RolId}", rolId);
+                // Registramos el intento de eliminación con información de la URL base
+                _logger.LogInformation("Eliminando rol con ID: {RolId} desde: {BaseUrl}", rolId, _apiConfig.BaseUrl);
 
-                // Realizamos una petición DELETE a la API
-                var response = await _httpClient.DeleteAsync($"api/Roles/{rolId}");
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl($"Roles/{rolId}");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos una petición DELETE a la API usando la URL centralizada
+                var response = await _httpClient.DeleteAsync(url);
 
                 // Verificamos si la eliminación fue exitosa
                 if (response.IsSuccessStatusCode)
                 {
                     // Registramos el éxito de la operación
-                    _logger.LogInformation("Rol eliminado exitosamente");
+                    _logger.LogInformation("Rol {RolId} eliminado exitosamente", rolId);
                     return true;
                 }
 
                 // Si no fue exitosa, capturamos y registramos el error
                 var error = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Error al eliminar rol: {Error}", error);
+                _logger.LogWarning("Error al eliminar rol {RolId}: {Error}", rolId, error);
                 return false;
             }
             catch (Exception ex)
@@ -201,21 +228,28 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para obtener los permisos asignados a un rol específico
+        // ✅ MÉTODO CENTRALIZADO: Obtener los permisos asignados a un rol específico
         public async Task<List<PermisoDTO>> ObtenerPermisosDeRol(int rolId)
         {
             try
             {
-                // Registramos la solicitud de permisos
-                _logger.LogInformation("Obteniendo permisos para el rol {RolId}", rolId);
+                // Registramos la solicitud de permisos con información de la URL base
+                _logger.LogInformation("Obteniendo permisos para el rol {RolId} desde: {BaseUrl}", rolId, _apiConfig.BaseUrl);
 
-                // Realizamos la petición GET a la API
-                var response = await _httpClient.GetAsync($"api/Roles/obtener-permisos-del-rol/{rolId}");
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl($"Roles/obtener-permisos-del-rol/{rolId}");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos la petición GET a la API usando la URL centralizada
+                var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
                 // Leemos y deserializamos la respuesta
                 var content = await response.Content.ReadAsStringAsync();
                 var permisos = JsonSerializer.Deserialize<List<PermisoDTO>>(content, _jsonOptions);
+
+                // Log adicional para ver la cantidad de permisos obtenidos
+                _logger.LogInformation("Se obtuvieron {Count} permisos para el rol {RolId}", permisos?.Count ?? 0, rolId);
 
                 // Retornamos la lista de permisos o una lista vacía si es null
                 return permisos ?? new List<PermisoDTO>();
@@ -228,16 +262,20 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para obtener todos los permisos disponibles en el sistema
+        // ✅ MÉTODO CENTRALIZADO: Obtener todos los permisos disponibles en el sistema
         public async Task<List<PermisoDTO>> ObtenerTodosLosPermisos()
         {
             try
             {
-                // Registramos el inicio de la operación
-                _logger.LogInformation("Obteniendo todos los permisos disponibles");
+                // Registramos el inicio de la operación con información de la URL base
+                _logger.LogInformation("Obteniendo todos los permisos disponibles desde: {BaseUrl}", _apiConfig.BaseUrl);
 
-                // Realizamos la petición GET a la API para obtener los permisos
-                var response = await _httpClient.GetAsync("api/Permisos/obtener-todos");
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl("Permisos/obtener-todos");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos la petición GET a la API usando la URL centralizada
+                var response = await _httpClient.GetAsync(url);
                 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -248,13 +286,13 @@ namespace GestionLlantera.Web.Services
 
                 // Leemos el contenido de la respuesta
                 var content = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation("Respuesta de API: {Content}", content);
+                _logger.LogDebug("Respuesta de API: {Content}", content);
 
                 // Deserializamos el JSON a una lista de PermisoDTO
                 var permisos = JsonSerializer.Deserialize<List<PermisoDTO>>(content, _jsonOptions);
 
                 // Registramos la cantidad de permisos obtenidos
-                _logger.LogInformation("Se obtuvieron {Count} permisos", permisos?.Count ?? 0);
+                _logger.LogInformation("Se obtuvieron {Count} permisos disponibles", permisos?.Count ?? 0);
 
                 // Retornamos la lista de permisos o una lista vacía si es null
                 return permisos ?? new List<PermisoDTO>();
@@ -267,23 +305,25 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para asignar nuevos permisos a un rol
+        // ✅ MÉTODO CENTRALIZADO: Asignar nuevos permisos a un rol
         public async Task<bool> AsignarPermisosARol(int rolId, List<int> permisoIds)
         {
             try
             {
-                // Registramos el inicio de la operación con detalles
+                // Registramos el inicio de la operación con detalles e información de la URL base
                 _logger.LogInformation(
-                    "Asignando {Count} permisos al rol {RolId}",
+                    "Asignando {Count} permisos al rol {RolId} desde: {BaseUrl}",
                     permisoIds.Count,
-                    rolId
+                    rolId,
+                    _apiConfig.BaseUrl
                 );
 
-                // Realizamos la petición POST a la API para asignar los permisos
-                var response = await _httpClient.PostAsJsonAsync(
-                    $"api/Roles/agregar-permisos-al-rol/{rolId}",
-                    permisoIds
-                );
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl($"Roles/agregar-permisos-al-rol/{rolId}");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos la petición POST a la API usando la URL centralizada
+                var response = await _httpClient.PostAsJsonAsync(url, permisoIds);
 
                 // Verificamos si la operación fue exitosa
                 if (response.IsSuccessStatusCode)
@@ -317,23 +357,25 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        // Método para actualizar los permisos existentes de un rol
+        // ✅ MÉTODO CENTRALIZADO: Actualizar los permisos existentes de un rol
         public async Task<bool> ActualizarPermisosDeRol(int rolId, List<int> permisoIds)
         {
             try
             {
-                // Registramos el inicio de la actualización de permisos
+                // Registramos el inicio de la actualización con información detallada
                 _logger.LogInformation(
-                    "Actualizando permisos para el rol {RolId}. Total permisos: {Count}",
+                    "Actualizando permisos para el rol {RolId}. Total permisos: {Count} desde: {BaseUrl}",
                     rolId,
-                    permisoIds.Count
+                    permisoIds.Count,
+                    _apiConfig.BaseUrl
                 );
 
-                // Realizamos la petición PUT a la API para actualizar los permisos
-                var response = await _httpClient.PutAsJsonAsync(
-                    $"api/Roles/actualizar-permisos-del-rol/{rolId}",
-                    permisoIds
-                );
+                // ✅ USAR URL CENTRALIZADA: Construir la URL usando el servicio de configuración
+                var url = _apiConfig.GetApiUrl($"Roles/actualizar-permisos-del-rol/{rolId}");
+                _logger.LogDebug("URL construida: {Url}", url);
+
+                // Realizamos la petición PUT a la API usando la URL centralizada
+                var response = await _httpClient.PutAsJsonAsync(url, permisoIds);
 
                 // Verificamos si la actualización fue exitosa
                 if (response.IsSuccessStatusCode)

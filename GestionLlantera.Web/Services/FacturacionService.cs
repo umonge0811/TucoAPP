@@ -11,15 +11,30 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<FacturacionService> _logger;
+        private readonly ApiConfigurationService _apiConfig;
         private const decimal IVA_PORCENTAJE = 0.13m; // 13% IVA en Costa Rica
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         private readonly string _baseUrl;
 
-        public FacturacionService(IHttpClientFactory httpClientFactory, ILogger<FacturacionService> logger, IConfiguration config)
+        /// <summary>
+        /// ✅ CONSTRUCTOR: CONFIGURACIÓN DE DEPENDENCIAS
+        /// Inicializa el servicio de facturación con todas las dependencias necesarias
+        /// </summary>
+        /// <param name="httpClientFactory">Factory para crear clientes HTTP</param>
+        /// <param name="logger">Logger para registrar operaciones y errores</param>
+        /// <param name="config">Configuración de la aplicación</param>
+        /// <param name="apiConfig">Servicio centralizado para URLs de la API</param>
+        public FacturacionService(IHttpClientFactory httpClientFactory, ILogger<FacturacionService> logger, IConfiguration config, ApiConfigurationService apiConfig)
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
             _baseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
+            
+            /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+            _apiConfig = apiConfig;
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 FacturacionService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         public async Task<decimal> CalcularTotalVentaAsync(List<ProductoVentaDTO> productos)
@@ -103,7 +118,10 @@ namespace GestionLlantera.Web.Services
                 {
                     try
                     {
-                        var response = await _httpClient.GetAsync($"api/Inventario/productos/{producto.ProductoId}");
+                        var url = _apiConfig.GetApiUrl($"Inventario/productos/{producto.ProductoId}");
+                        _logger.LogInformation("🌐 URL construida: {url}", url);
+                        
+                        var response = await _httpClient.GetAsync(url);
 
                         if (!response.IsSuccessStatusCode)
                         {
@@ -179,11 +197,13 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("🛒 Obteniendo productos para venta desde FacturacionService");
 
-                var url = "/api/Facturacion/productos-venta?soloConStock=true";
+                var url = _apiConfig.GetApiUrl("Facturacion/productos-venta?soloConStock=true");
                 if (!string.IsNullOrWhiteSpace(busqueda))
                 {
                     url += $"&busqueda={Uri.EscapeDataString(busqueda)}";
                 }
+
+                _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);
 
@@ -282,7 +302,10 @@ namespace GestionLlantera.Web.Services
                             productoAjuste.ProductoId, productoAjuste.Cantidad);
 
                         // Llamar al endpoint de ajuste de stock en la API
-                        var httpResponse = await _httpClient.PostAsync($"api/Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock", content);
+                        var urlAjuste = _apiConfig.GetApiUrl($"Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock");
+                        _logger.LogInformation("🌐 URL construida: {url}", urlAjuste);
+                        
+                        var httpResponse = await _httpClient.PostAsync(urlAjuste, content);
 
                         if (httpResponse.IsSuccessStatusCode)
                         {
@@ -379,7 +402,10 @@ namespace GestionLlantera.Web.Services
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
-                var response = await client.GetAsync($"{_baseUrl}/api/Facturacion/facturas/pendientes");
+                var url = _apiConfig.GetApiUrl("Facturacion/facturas/pendientes");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -457,7 +483,8 @@ namespace GestionLlantera.Web.Services
                 }
 
                 var queryString = string.Join("&", queryParams);
-                var url = $"{_baseUrl}/api/Facturacion/proformas?{queryString}";
+                var endpoint = $"Facturacion/proformas?{queryString}";
+                var url = _apiConfig.GetApiUrl(endpoint);
 
                 _logger.LogInformation("📋 URL construida: {Url}", url);
 
@@ -545,15 +572,15 @@ namespace GestionLlantera.Web.Services
 
                 if (esProforma)
                 {
-                    // ✅ PARA PROFORMAS: Usar endpoint específico para marcar como facturada
-                    endpoint = $"api/Facturacion/proformas/{facturaId}/marcar-facturada";
+                    // ✅ PARA PROFORMAS: Usar servicio centralizado
+                    endpoint = _apiConfig.GetApiUrl($"Facturacion/proformas/{facturaId}/marcar-facturada");
                     tipoDocumento = "Proforma";
                     _logger.LogInformation("📋 Marcando proforma como facturada usando endpoint: {Endpoint}", endpoint);
                 }
                 else
                 {
-                    // ✅ PARA FACTURAS: Usar endpoint de completar factura
-                    endpoint = $"api/Facturacion/facturas/{facturaId}/completar";
+                    // ✅ PARA FACTURAS: Usar servicio centralizado
+                    endpoint = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}/completar");
                     tipoDocumento = "Factura";
                     _logger.LogInformation("📋 Completando factura usando endpoint: {Endpoint}", endpoint);
                 }
@@ -624,8 +651,11 @@ namespace GestionLlantera.Web.Services
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                // Usar el endpoint correcto de la API
-                var response = await _httpClient.PostAsync("api/Facturacion/facturas", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/facturas");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -719,7 +749,10 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
 
                 // Llamar al endpoint del API para verificar stock
-                var response = await _httpClient.PostAsync("api/Facturacion/verificar-stock-factura", content);
+                var url = _apiConfig.GetApiUrl("Facturacion/verificar-stock-factura");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -1190,7 +1223,10 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
 
                 // Llamar al endpoint del API para eliminar productos
-                var response = await _httpClient.PostAsync("api/Facturacion/eliminar-productos-factura", content);
+                var url = _apiConfig.GetApiUrl("Facturacion/eliminar-productos-factura");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -1251,7 +1287,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync("api/Facturacion/pendientes-entrega");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/pendientes-entrega");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.GetAsync(url);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📦 Respuesta de la API: {StatusCode}", response.StatusCode);
@@ -1375,7 +1415,11 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
 
-                var response = await _httpClient.PostAsJsonAsync("api/Facturacion/registrar-pendientes-entrega", datosParaAPI);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/registrar-pendientes-entrega");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsJsonAsync(url, datosParaAPI);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📦 Respuesta de API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -1437,7 +1481,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync($"api/Facturacion/facturas/{facturaId}");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -1490,7 +1538,11 @@ namespace GestionLlantera.Web.Services
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync("api/Facturacion/marcar-entregados", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/marcar-entregados");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PutAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -1528,7 +1580,11 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.PutAsync($"api/Facturacion/marcar-proforma-facturada/{proformaId}", 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Facturacion/marcar-proforma-facturada/{proformaId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PutAsync(url, 
                     new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"));
 
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -1575,7 +1631,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para marcar entregado por código");
                 }
 
-                var response = await _httpClient.PostAsJsonAsync("api/Facturacion/marcar-entregado-por-codigo", request);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/marcar-entregado-por-codigo");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsJsonAsync(url, request);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
