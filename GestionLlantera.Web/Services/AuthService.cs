@@ -47,7 +47,7 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint usando servicio de configuración
-                var loginUrl = _apiConfigService.BuildApiUrl("/api/auth/login");
+                var loginUrl = $"{_apiConfigService.GetBaseUrl()}/api/auth/login";
                 
                 // ✅ PETICIÓN: Enviar credenciales al endpoint de autenticación
                 var response = await client.PostAsJsonAsync(loginUrl, new
@@ -93,7 +93,7 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint de verificación
-                var checkUrl = _apiConfigService.BuildApiUrl($"/api/auth/check-usuario-activo?token={token}");
+                var checkUrl = $"{_apiConfigService.GetBaseUrl()}/api/auth/check-usuario-activo?token={token}";
                 
                 // ✅ PETICIÓN: Verificar estado del usuario
                 var response = await client.GetAsync(checkUrl);
@@ -132,7 +132,7 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint de activación
-                var activarUrl = _apiConfigService.BuildApiUrl($"/api/auth/activar-cuenta?token={token}");
+                var activarUrl = $"{_apiConfigService.GetBaseUrl()}/api/auth/activar-cuenta?token={token}";
                 
                 // ✅ PETICIÓN: Solicitar activación de cuenta
                 var response = await client.GetAsync(activarUrl);
@@ -176,7 +176,7 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint de regeneración
-                var regenerarUrl = _apiConfigService.BuildApiUrl("/api/auth/regenerar-token");
+                var regenerarUrl = $"{_apiConfigService.GetBaseUrl()}/api/auth/regenerar-token";
                 
                 // ✅ PETICIÓN: Solicitar nuevo token
                 var response = await client.PostAsJsonAsync(regenerarUrl, token);
@@ -229,7 +229,7 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation($"Request Content: Token={request.Token}, NuevaContrasena=[OCULTA]");
 
                 // ✅ URL CENTRALIZADA: Construir endpoint de cambio de contraseña
-                var cambiarUrl = _apiConfigService.BuildApiUrl("/api/auth/CambiarContrasenaActivacion");
+                var cambiarUrl = $"{_apiConfigService.GetBaseUrl()}/api/auth/CambiarContrasenaActivacion";
                 
                 // ✅ PETICIÓN: Enviar solicitud de cambio
                 var response = await client.PostAsJsonAsync(cambiarUrl, request);
@@ -272,7 +272,7 @@ namespace GestionLlantera.Web.Services
                 var client = _clientFactory.CreateClient("APIClient");
                 
                 // ✅ URL CENTRALIZADA: Construir endpoint de solicitud de recuperación
-                var recuperacionUrl = _apiConfigService.BuildApiUrl("/api/auth/solicitar-recuperacion");
+                var recuperacionUrl = $"{_apiConfigService.GetBaseUrl()}/api/auth/solicitar-recuperacion";
                 
                 // ✅ PETICIÓN: Enviar solicitud de recuperación
                 var response = await client.PostAsJsonAsync(recuperacionUrl,
@@ -314,7 +314,7 @@ namespace GestionLlantera.Web.Services
                 };
 
                 // ✅ URL CENTRALIZADA: Construir endpoint de restablecimiento
-                var restablecerUrl = _apiConfigService.BuildApiUrl("/api/auth/restablecer-contrasena");
+                var restablecerUrl = $"{_apiConfigService.GetBaseUrl()}/api/auth/restablecer-contrasena";
                 
                 // ✅ PETICIÓN: Enviar solicitud de restablecimiento
                 var response = await client.PostAsJsonAsync(restablecerUrl, request);
