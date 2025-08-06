@@ -67,8 +67,12 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/Permisos/verificar/{permiso}");
+                _logger.LogDebug("🌐 URL construida para verificar permiso: {url}", url);
+
                 // Hacer petición a la API
-                var response = await _httpClient.GetAsync($"api/Permisos/verificar/{permiso}");
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
