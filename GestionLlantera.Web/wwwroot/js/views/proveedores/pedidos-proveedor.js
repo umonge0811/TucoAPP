@@ -315,7 +315,7 @@ function llenarSelectProveedores() {
         // Verificar si tiene los datos mínimos necesarios
         // Nota: Usar !== undefined y !== null para aceptar ID = 0
         const tieneId = proveedor && (
-            (proveedor.id !== undefined && proveedor.id !== null) || 
+            (proveedor.id !== undefined && proveedor.id !== null) ||
             (proveedor.proveedorId !== undefined && proveedor.proveedorId !== null)
         );
         const tieneNombre = proveedor && (proveedor.nombre || proveedor.nombreProveedor);
@@ -457,7 +457,7 @@ function aplicarFiltros() {
     pedidosFiltrados = pedidosData.filter(pedido => {
         const cumpleProveedor = !proveedorId || pedido.proveedorId.toString() === proveedorId;
         const cumpleEstado = !estado || pedido.estado === estado;
-        const cumpleBusqueda = !busqueda || 
+        const cumpleBusqueda = !busqueda ||
             pedido.pedidoId.toString().includes(busqueda) ||
             (pedido.proveedorNombre && pedido.proveedorNombre.toLowerCase().includes(busqueda));
 
@@ -609,26 +609,19 @@ function configurarOrdenamientoTablaProductos() {
 
         if (rows.length === 0) {
             console.warn('⚠️ NO HAY FILAS PARA ORDENAR');
-            console.warn('🔍 Intentando buscar filas con selectores alternativos...');
-
-            // Buscar filas con data-producto-id
+            console.log('🔍 Intentando buscar filas con data-producto-id');
             const filasConData = $('tr[data-producto-id]');
             console.log('📋 Filas con data-producto-id encontradas:', filasConData.length);
 
             if (filasConData.length > 0) {
                 console.log('✅ Usando filas encontradas con data-producto-id');
-                // Usar estas filas en lugar de las del tbody
                 const filasArray = filasConData.toArray();
                 console.log('📋 Filas a ordenar:', filasArray.length);
-
-                // Continuar con el ordenamiento usando filasArray
                 ordenarFilas(filasArray, column, $(this));
                 return;
             }
-
             return;
         }
-
         ordenarFilas(rows, column, $(this));
     });
 }
@@ -725,15 +718,15 @@ function cargarProductosEnTabla() {
         }
 
         return `
-            <tr class="${rowClass}" 
+            <tr class="${rowClass}"
                 data-producto-id="${producto.productoId}"
                 data-nombre="${producto.nombreProducto || ''}"
                 data-marca="${marcaInfo}"
                 data-medida="${medidaLlanta}"
                 data-stock="${stockDisponible}">
                 <td>
-                    <input type="checkbox" class="form-check-input producto-checkbox" 
-                           value="${producto.productoId}" 
+                    <input type="checkbox" class="form-check-input producto-checkbox"
+                           value="${producto.productoId}"
                            onchange="toggleProductoSeleccionado(${producto.productoId})">
                 </td>
                 <td class="text-center">
@@ -762,13 +755,13 @@ function cargarProductosEnTabla() {
                     </div>
                 </td>
                 <td>
-                    <input type="number" class="form-control form-control-sm cantidad-producto" 
-                           value="1" min="1" max="${stockDisponible}" style="width: 80px;" 
+                    <input type="number" class="form-control form-control-sm cantidad-producto"
+                           value="1" min="1" max="${stockDisponible}" style="width: 80px;"
                            onchange="actualizarCantidadProducto(${producto.productoId}, this.value)"
                            disabled>
                 </td>
                 <td>
-                    <input type="number" class="form-control form-control-sm precio-producto" 
+                    <input type="number" class="form-control form-control-sm precio-producto"
                            value="0.00" min="0" step="0.01" style="width: 100px;"
                            onchange="actualizarPrecioProducto(${producto.productoId}, this.value)"
                            disabled>
@@ -914,7 +907,7 @@ function filtrarProductosPedido() {
 
                     // Buscar en marca de llanta
                     if (llantaInfo.marca) {
-                        cumpleBusqueda = llantaInfo.marcatoLowerCase().includes(busqueda);
+                        cumpleBusqueda = llantaInfo.marca.toLowerCase().includes(busqueda);
                     }
 
                     // Buscar en modelo de llanta
@@ -1075,6 +1068,10 @@ async function finalizarPedido() {
             $('#modalNuevoPedido').modal('hide');
             await cargarPedidos();
             limpiarFormulario();
+
+            // Si el pedido fue exitoso, se podría ofrecer enviar por WhatsApp
+            // Aquí se asume que hay un botón o una acción para llamar a enviarPedidoPorWhatsApp()
+            // Por ejemplo: Swal.fire({... confirmButtonText: 'Enviar por WhatsApp', preConfirm: enviarPedidoPorWhatsApp})
         } else {
             const errorMsg = resultado?.message || resultado?.details || resultado?.error || 'Error desconocido al crear el pedido';
             console.error('❌ Error creando pedido:', errorMsg);
@@ -1199,8 +1196,8 @@ async function verDetallePedido(pedidoId) {
 
         // Función para obtener información de llanta desde productosInventario
         const obtenerInfoLlanta = (productoNombre) => {
-            const producto = productosInventario.find(p => 
-                p.nombreProducto === productoNombre || 
+            const producto = productosInventario.find(p =>
+                p.nombreProducto === productoNombre ||
                 p.nombreProducto.toLowerCase().includes(productoNombre.toLowerCase())
             );
 
@@ -1291,7 +1288,7 @@ async function verDetallePedido(pedidoId) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${pedido.detallePedidos && pedido.detallePedidos.length > 0 ? 
+                        ${pedido.detallePedidos && pedido.detallePedidos.length > 0 ?
                             pedido.detallePedidos.map(detalle => {
                                 const medidaLlanta = obtenerInfoLlanta(detalle.productoNombre);
                                 const esLlanta = medidaLlanta !== 'N/A';
@@ -1302,8 +1299,8 @@ async function verDetallePedido(pedidoId) {
                                             <span class="badge bg-secondary">${detalle.cantidad}</span>
                                         </td>
                                         <td class="text-center">
-                                            ${esLlanta ? 
-                                                `<span class="badge bg-info text-dark">${medidaLlanta}</span>` : 
+                                            ${esLlanta ?
+                                                `<span class="badge bg-info text-dark">${medidaLlanta}</span>` :
                                                 '<span class="text-muted">N/A</span>'
                                             }
                                         </td>
@@ -1318,7 +1315,7 @@ async function verDetallePedido(pedidoId) {
                                         </td>
                                     </tr>
                                 `;
-                            }).join('') 
+                            }).join('')
                             : `
                                 <tr>
                                     <td colspan="5" class="text-center text-muted py-3">
@@ -1390,7 +1387,7 @@ async function verDetallePedido(pedidoId) {
  */
 async function cambiarEstadoPedido(pedidoId, estadoActual) {
     console.log(`🔄 Cambiando estado del pedido ${pedidoId} de ${estadoActual} a...`);
-    
+
     try {
         // Estados disponibles - Solo Recibido y Cancelado
         const estadosDisponibles = ['Recibido', 'Cancelado'];
@@ -1524,7 +1521,7 @@ async function cambiarEstadoPedido(pedidoId, estadoActual) {
 
     } catch (error) {
         console.error("❌ Error al cambiar el estado del pedido:", error);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error al cambiar estado',
@@ -1534,6 +1531,174 @@ async function cambiarEstadoPedido(pedidoId, estadoActual) {
         });
     }
 }
+
+
+/**
+ * Generar mensaje de WhatsApp para el pedido
+ * @param {object} data - Objeto con información del proveedor y productos.
+ * @param {object} data.proveedor - Información del proveedor.
+ * @param {array} data.productos - Array de productos seleccionados.
+ * @returns {string} El mensaje formateado para WhatsApp.
+ */
+function generarMensajeWhatsAppPedido(data) {
+    const { proveedor, productos } = data;
+
+    let mensaje = `¡Hola ${proveedor.nombre || proveedor.nombreProveedor || 'proveedor'}!\n\n`;
+    mensaje += `He realizado un nuevo pedido desde la plataforma:\n\n`;
+    mensaje += `*Pedido para: ${proveedor.nombre || proveedor.nombreProveedor || 'Sin nombre'}.*\n`;
+    mensaje += `*Contacto: ${proveedor.contacto || 'No especificado'}*\n`;
+    mensaje += `*Teléfono: ${proveedor.telefono || 'No especificado'}*\n\n`;
+
+    mensaje += `*Detalle del Pedido:*\n`;
+    productos.forEach((producto, index) => {
+        mensaje += `${index + 1}. ${producto.nombreProducto} - Cantidad: ${producto.cantidad} - Precio Unitario: ₡${(producto.precioUnitario || 0).toFixed(2)}\n`;
+    });
+
+    const cantidadTotal = productos.reduce((sum, p) => sum + p.cantidad, 0);
+    const montoTotal = productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0);
+
+    mensaje += `\n*Total de productos: ${cantidadTotal}*\n`;
+    mensaje += `*Monto total estimado: ₡${montoTotal.toFixed(2)}*\n\n`;
+    mensaje += `Por favor, confirme la recepción de este pedido y los detalles.\n`;
+    mensaje += `Gracias.`;
+
+    return mensaje;
+}
+
+/**
+ * Enviar pedido por WhatsApp
+ */
+function enviarPedidoPorWhatsApp() {
+    console.log('📱 === ENVIANDO PEDIDO POR WHATSAPP ===');
+
+    try {
+        // Verificar que tengamos proveedor seleccionado
+        if (!proveedorSeleccionado) {
+            mostrarError('No se pudo identificar el proveedor para enviar el mensaje');
+            return;
+        }
+
+        // Verificar que tengamos productos seleccionados
+        if (!productosSeleccionados || productosSeleccionados.length === 0) {
+            mostrarError('No hay productos en el pedido para enviar');
+            return;
+        }
+
+        // Generar mensaje de WhatsApp
+        const mensaje = generarMensajeWhatsAppPedido({
+            proveedor: proveedorSeleccionado,
+            productos: productosSeleccionados
+        });
+
+        // Obtener número de WhatsApp del proveedor
+        let numeroWhatsApp = '';
+        if (proveedorSeleccionado.telefono) {
+            // Limpiar el número eliminando caracteres no numéricos
+            numeroWhatsApp = proveedorSeleccionado.telefono.replace(/\D/g, '');
+
+            // Si el número tiene 8 dígitos, agregar código de país de Costa Rica
+            if (numeroWhatsApp.length === 8) {
+                numeroWhatsApp = '506' + numeroWhatsApp;
+            }
+        }
+
+        // Construir URL de WhatsApp
+        let whatsappUrl;
+        if (numeroWhatsApp) {
+            console.log(`📱 Enviando a número específico: ${numeroWhatsApp}`);
+            whatsappUrl = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+        } else {
+            console.log('📱 Enviando sin número específico (compartir general)');
+            whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+        }
+
+        // Cerrar el SweetAlert
+        Swal.close();
+
+        // Mostrar loading breve
+        Swal.fire({
+            title: 'Abriendo WhatsApp...',
+            text: 'Preparando mensaje del pedido',
+            icon: 'info',
+            timer: 1500,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            allowOutsideClick: false
+        });
+
+        // Abrir WhatsApp después de un breve delay
+        setTimeout(() => {
+            window.open(whatsappUrl, '_blank');
+
+            // Mostrar confirmación
+            mostrarExito('Mensaje del pedido enviado a WhatsApp exitosamente');
+        }, 1500);
+
+    } catch (error) {
+        console.error('❌ Error enviando pedido por WhatsApp:', error);
+        mostrarError('Error al enviar pedido por WhatsApp: ' + error.message);
+    }
+}
+
+
+/**
+ * Eliminar pedido con confirmación
+ */
+async function eliminarPedido(pedidoId) {
+    console.log('🗑️ Eliminando pedido:', pedidoId);
+
+    const result = await Swal.fire({
+        title: '¿Eliminar Pedido?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '✅ Sí, eliminar',
+        cancelButtonText: '❌ Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+        Swal.fire({
+            title: 'Eliminando...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        const response = await fetch(`/api/PedidosProveedor/${pedidoId}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Eliminado!',
+                text: 'El pedido ha sido eliminado correctamente',
+                timer: 2000,
+                timerProgressBar: true
+            });
+
+            // Recargar la lista
+            await cargarPedidos();
+        } else {
+            throw new Error(data.message || 'Error eliminando pedido');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando pedido:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'No se pudo eliminar el pedido'
+        });
+    }
+}
+
+
 
 // =====================================
 // FUNCIONES DE UI
@@ -1764,63 +1929,6 @@ function limpiarFormulario() {
     actualizarResumenPedido();
 }
 
-/**
- * ✅ FUNCIÓN: Eliminar pedido con confirmación
- */
-async function eliminarPedido(pedidoId) {
-    console.log('🗑️ Eliminando pedido:', pedidoId);
-
-    const result = await Swal.fire({
-        title: '¿Eliminar Pedido?',
-        text: 'Esta acción no se puede deshacer',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '✅ Sí, eliminar',
-        cancelButtonText: '❌ Cancelar'
-    });
-
-    if (!result.isConfirmed) return;
-
-    try {
-        Swal.fire({
-            title: 'Eliminando...',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
-
-        const response = await fetch(`/api/PedidosProveedor/${pedidoId}`, {
-            method: 'DELETE'
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Eliminado!',
-                text: 'El pedido ha sido eliminado correctamente',
-                timer: 2000,
-                timerProgressBar: true
-            });
-
-            // Recargar la lista
-            await cargarPedidos();
-        } else {
-            throw new Error(data.message || 'Error eliminando pedido');
-        }
-
-    } catch (error) {
-        console.error('❌ Error eliminando pedido:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: error.message || 'No se pudo eliminar el pedido'
-        });
-    }
-}
-
 
 
 // =====================================
@@ -1843,5 +1951,6 @@ window.verDetallePedido = verDetallePedido;
 window.cambiarEstadoPedido = cambiarEstadoPedido;
 window.aplicarFiltros = aplicarFiltros;
 window.cargarPedidosDeProveedor = cargarPedidosDeProveedor;
+window.enviarPedidoPorWhatsApp = enviarPedidoPorWhatsApp; // Exportar la nueva función
 
 console.log('✅ Módulo de pedidos a proveedores cargado completamente');
