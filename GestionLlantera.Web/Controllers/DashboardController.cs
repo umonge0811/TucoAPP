@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using GestionLlantera.Web.Services.Interfaces;
 using Tuco.Clases.DTOs;
+using Microsoft.Extensions.Logging; // Asegurarse de que ILogger esté disponible
+using System.Linq; // Necesario para Select y Join
+using System.Threading.Tasks; // Necesario para Task
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -45,6 +48,24 @@ namespace GestionLlantera.Web.Controllers
             if (string.IsNullOrEmpty(token))
             {
                 token = User.FindFirst("access_token")?.Value;
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                token = Request.Cookies["JwtToken"];
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                // Último intento: buscar en headers
+                if (Request.Headers.ContainsKey("Authorization"))
+                {
+                    var authHeader = Request.Headers["Authorization"].ToString();
+                    if (authHeader.StartsWith("Bearer "))
+                    {
+                        token = authHeader.Substring(7);
+                    }
+                }
             }
 
             if (string.IsNullOrEmpty(token))
@@ -205,18 +226,23 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔔 Obteniendo anuncios desde el servicio...");
 
-                var (success, anuncios, message) = await _anunciosService.ObtenerAnunciosAsync();
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("❌ Token JWT no encontrado para ObtenerAnuncios");
+                    return Json(new { success = false, message = "Token de autenticación no válido o sesión expirada." });
+                }
 
-                if (success)
+                var resultado = await _anunciosService.ObtenerAnunciosAsync(token);
+
+                if (!resultado.success)
                 {
-                    _logger.LogInformation("✅ Anuncios obtenidos exitosamente. Total: {Count}", anuncios.Count);
-                    return Json(new { success = true, data = anuncios });
+                    _logger.LogWarning("⚠️ No se pudieron obtener los anuncios: {Message}", resultado.mensaje);
+                    return Json(new { success = false, message = resultado.mensaje });
                 }
-                else
-                {
-                    _logger.LogWarning("⚠️ No se pudieron obtener los anuncios: {Message}", message);
-                    return Json(new { success = false, message });
-                }
+
+                _logger.LogInformation("✅ Anuncios obtenidos exitosamente. Total: {Count}", resultado.anuncios.Count());
+                return Json(new { success = true, data = resultado.anuncios });
             }
             catch (Exception ex)
             {
@@ -232,18 +258,23 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔔 Obteniendo anuncio {AnuncioId} desde el servicio...", id);
 
-                var (success, anuncio, message) = await _anunciosService.ObtenerAnuncioPorIdAsync(id);
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("❌ Token JWT no encontrado para ObtenerAnuncioPorId {AnuncioId}", id);
+                    return Json(new { success = false, message = "Token de autenticación no válido o sesión expirada." });
+                }
 
-                if (success && anuncio != null)
+                var resultado = await _anunciosService.ObtenerAnuncioPorIdAsync(id, token);
+
+                if (!resultado.success || resultado.anuncio == null)
                 {
-                    _logger.LogInformation("✅ Anuncio obtenido exitosamente: {Titulo}", anuncio.Titulo);
-                    return Json(new { success = true, data = anuncio });
+                    _logger.LogWarning("⚠️ No se pudo obtener el anuncio {AnuncioId}: {Message}", id, resultado.mensaje);
+                    return Json(new { success = false, message = resultado.mensaje });
                 }
-                else
-                {
-                    _logger.LogWarning("⚠️ No se pudo obtener el anuncio {AnuncioId}: {Message}", id, message);
-                    return Json(new { success = false, message });
-                }
+
+                _logger.LogInformation("✅ Anuncio obtenido exitosamente: {Titulo}", resultado.anuncio.Titulo);
+                return Json(new { success = true, data = resultado.anuncio });
             }
             catch (Exception ex)
             {
@@ -257,24 +288,32 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("🔔 Creando nuevo anuncio: {Titulo}", anuncioDto.Titulo);
+                _logger.LogInformation("🔔 Creando nuevo anuncio con Título: {Titulo}", anuncioDto.Titulo);
 
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("❌ Datos de entrada inválidos para crear anuncio.");
                     return Json(new { success = false, message = "Datos de entrada inválidos" });
                 }
 
-                var (success, anuncio, message) = await _anunciosService.CrearAnuncioAsync(anuncioDto);
-
-                if (success)
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogInformation("✅ Anuncio creado exitosamente: {Titulo}", anuncio?.Titulo);
-                    return Json(new { success = true, data = anuncio, message });
+                    _logger.LogWarning("❌ Token JWT no encontrado para CrearAnuncio.");
+                    return Json(new { success = false, message = "Token de autenticación no válido o sesión expirada." });
+                }
+
+                var resultado = await _anunciosService.CrearAnuncioAsync(anuncioDto, token);
+
+                if (resultado.success)
+                {
+                    _logger.LogInformation("✅ Anuncio creado exitosamente: {Titulo}", resultado.anuncio?.Titulo);
+                    return Json(new { success = true, data = resultado.anuncio, message = resultado.mensaje });
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se pudo crear el anuncio: {Message}", message);
-                    return Json(new { success = false, message });
+                    _logger.LogWarning("⚠️ No se pudo crear el anuncio: {Message}", resultado.mensaje);
+                    return Json(new { success = false, message = resultado.mensaje });
                 }
             }
             catch (Exception ex)
@@ -289,24 +328,32 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("🔔 Actualizando anuncio {AnuncioId}: {Titulo}", id, anuncioDto.Titulo);
+                _logger.LogInformation("🔔 Actualizando anuncio {AnuncioId} con Título: {Titulo}", id, anuncioDto.Titulo);
 
                 if (!ModelState.IsValid)
                 {
+                    _logger.LogWarning("❌ Datos de entrada inválidos para actualizar anuncio {AnuncioId}.", id);
                     return Json(new { success = false, message = "Datos de entrada inválidos" });
                 }
 
-                var (success, message) = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto);
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("❌ Token JWT no encontrado para ActualizarAnuncio {AnuncioId}.", id);
+                    return Json(new { success = false, message = "Token de autenticación no válido o sesión expirada." });
+                }
 
-                if (success)
+                var resultado = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto, token);
+
+                if (resultado.success)
                 {
                     _logger.LogInformation("✅ Anuncio actualizado exitosamente: {AnuncioId}", id);
-                    return Json(new { success = true, message });
+                    return Json(new { success = true, message = resultado.mensaje });
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se pudo actualizar el anuncio {AnuncioId}: {Message}", id, message);
-                    return Json(new { success = false, message });
+                    _logger.LogWarning("⚠️ No se pudo actualizar el anuncio {AnuncioId}: {Message}", id, resultado.mensaje);
+                    return Json(new { success = false, message = resultado.mensaje });
                 }
             }
             catch (Exception ex)
@@ -323,17 +370,24 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔔 Eliminando anuncio {AnuncioId}", id);
 
-                var (success, message) = await _anunciosService.EliminarAnuncioAsync(id);
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("❌ Token JWT no encontrado para EliminarAnuncio {AnuncioId}.", id);
+                    return Json(new { success = false, message = "Token de autenticación no válido o sesión expirada." });
+                }
 
-                if (success)
+                var resultado = await _anunciosService.EliminarAnuncioAsync(id, token);
+
+                if (resultado.success)
                 {
                     _logger.LogInformation("✅ Anuncio eliminado exitosamente: {AnuncioId}", id);
-                    return Json(new { success = true, message });
+                    return Json(new { success = true, message = resultado.mensaje });
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ No se pudo eliminar el anuncio {AnuncioId}: {Message}", id, message);
-                    return Json(new { success = false, message });
+                    _logger.LogWarning("⚠️ No se pudo eliminar el anuncio {AnuncioId}: {Message}", id, resultado.mensaje);
+                    return Json(new { success = false, message = resultado.mensaje });
                 }
             }
             catch (Exception ex)
