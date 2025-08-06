@@ -294,8 +294,18 @@
                     {
                         <li class="list-group-item d-flex justify-content-between">
                             <span>Medidas:</span>
-                            <span>@Model.Llanta.Ancho/@Model.Llanta.Perfil R@Model.Llanta.Diametro</span>
+                            <span>
+                                @if (Model.Llanta.Perfil.HasValue && Model.Llanta.Perfil.Value > 0)
+                                {
+                                    @($"{Model.Llanta.Ancho}/{Model.Llanta.Perfil}/R{Model.Llanta.Diametro}")
+                                }
+                                else
+                                {
+                                    @($"{Model.Llanta.Ancho}/R{Model.Llanta.Diametro}")
+                                }
+                            </span>
                         </li>
+                    }</span></li>
                     }
                     @if (!string.IsNullOrEmpty(Model.Llanta.IndiceVelocidad))
                     {
