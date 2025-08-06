@@ -1661,6 +1661,8 @@ function enviarPedidoPorWhatsApp(proveedor = null, productos = null) {
             whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
         }
 
+        console.log('📱 URL de WhatsApp construida:', whatsappUrl);
+
         // Cerrar el SweetAlert
         Swal.close();
 
@@ -1677,10 +1679,13 @@ function enviarPedidoPorWhatsApp(proveedor = null, productos = null) {
 
         // Abrir WhatsApp después de un breve delay
         setTimeout(() => {
+            console.log('📱 Abriendo WhatsApp con URL:', whatsappUrl);
             window.open(whatsappUrl, '_blank');
 
             // Mostrar confirmación
-            mostrarExito('Mensaje del pedido enviado a WhatsApp exitosamente');
+            setTimeout(() => {
+                mostrarExito('Mensaje del pedido enviado a WhatsApp exitosamente');
+            }, 500);
         }, 1500);
 
     } catch (error) {
