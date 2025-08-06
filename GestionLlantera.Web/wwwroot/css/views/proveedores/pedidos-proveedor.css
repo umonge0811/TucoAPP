@@ -410,6 +410,290 @@
     background-color: #198754 !important;
 }
 
+/* ========================================
+   ESTILOS PARA MODAL NUEVO PEDIDO MÓVIL
+   ======================================== */
+
+@media (max-width: 991px) {
+    /* Modal de nuevo pedido responsive */
+    #modalNuevoPedido .modal-dialog {
+        max-width: 98%;
+        margin: 0.25rem;
+        height: calc(100vh - 0.5rem);
+    }
+
+    #modalNuevoPedido .modal-content {
+        height: 100%;
+        border-radius: 0.5rem;
+    }
+
+    #modalNuevoPedido .modal-header {
+        padding: 1rem;
+        border-bottom: 2px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 1000;
+    }
+
+    #modalNuevoPedido .modal-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    #modalNuevoPedido .modal-body {
+        padding: 1rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    /* Paso 1 - Selección de proveedor */
+    #pasoSeleccionarProveedor .row {
+        margin-bottom: 1rem;
+    }
+
+    #pasoSeleccionarProveedor .col-md-8,
+    #pasoSeleccionarProveedor .col-md-4 {
+        margin-bottom: 1rem;
+    }
+
+    #pasoSeleccionarProveedor .form-select,
+    #pasoSeleccionarProveedor .btn {
+        font-size: 1rem;
+        padding: 0.75rem;
+        min-height: 50px;
+    }
+
+    #infoProveedorSeleccionado .card {
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    #infoProveedorSeleccionado .card-body {
+        padding: 1rem;
+    }
+
+    #infoProveedorSeleccionado .row .col-md-6 {
+        margin-bottom: 0.5rem;
+    }
+
+    #infoProveedorSeleccionado p {
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    /* Botón siguiente paso */
+    #btnSiguientePaso {
+        width: 100%;
+        padding: 0.875rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    /* Paso 2 - Selección de productos */
+    #pasoSeleccionarProductos .row.mb-3 {
+        margin-bottom: 1rem;
+    }
+
+    #pasoSeleccionarProductos .col-md-6,
+    #pasoSeleccionarProductos .col-md-3 {
+        margin-bottom: 0.75rem;
+    }
+
+    #pasoSeleccionarProductos .form-control,
+    #pasoSeleccionarProductos .form-select {
+        font-size: 1rem;
+        padding: 0.75rem;
+        min-height: 50px;
+    }
+
+    #pasoSeleccionarProductos .btn.w-100 {
+        padding: 0.875rem;
+        font-size: 1rem;
+        font-weight: 600;
+        min-height: 55px;
+    }
+
+    /* Tabla de productos en móvil */
+    #pasoSeleccionarProductos .table-responsive {
+        max-height: 60vh;
+        border-radius: 0.5rem;
+        border: 1px solid #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+    #pasoSeleccionarProductos .table {
+        font-size: 0.85rem;
+        margin-bottom: 0;
+    }
+
+    #pasoSeleccionarProductos .table th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    #pasoSeleccionarProductos .table td {
+        padding: 0.75rem 0.5rem;
+        vertical-align: middle;
+    }
+
+    /* Checkbox más grande en móvil */
+    #pasoSeleccionarProductos .form-check-input {
+        width: 1.2rem;
+        height: 1.2rem;
+        margin-top: 0;
+    }
+
+    /* Inputs de cantidad y precio en móvil */
+    #pasoSeleccionarProductos .cantidad-producto,
+    #pasoSeleccionarProductos .precio-producto {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+        min-height: 40px;
+    }
+
+    /* Columnas específicas en móvil */
+    #pasoSeleccionarProductos .table th:nth-child(1),
+    #pasoSeleccionarProductos .table td:nth-child(1) {
+        width: 50px;
+        text-align: center;
+    }
+
+    #pasoSeleccionarProductos .table th:nth-child(2),
+    #pasoSeleccionarProductos .table td:nth-child(2) {
+        width: 60px;
+        text-align: center;
+    }
+
+    #pasoSeleccionarProductos .table th:nth-child(7),
+    #pasoSeleccionarProductos .table td:nth-child(7) {
+        width: 80px;
+    }
+
+    #pasoSeleccionarProductos .table th:nth-child(8),
+    #pasoSeleccionarProductos .table td:nth-child(8) {
+        width: 100px;
+    }
+
+    /* Resumen del pedido en móvil */
+    #pasoSeleccionarProductos .card.bg-light {
+        border-radius: 0.5rem;
+        border: 2px solid #007bff;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    }
+
+    #pasoSeleccionarProductos .card.bg-light .card-body {
+        padding: 1rem;
+    }
+
+    #pasoSeleccionarProductos .card.bg-light .row .col-md-4 {
+        margin-bottom: 0.75rem;
+        text-align: center;
+        font-size: 0.95rem;
+    }
+
+    /* Badge del contador */
+    #contadorSeleccionados {
+        font-size: 0.8rem;
+        padding: 0.3rem 0.6rem;
+    }
+
+    /* Botón anterior */
+    .btn-outline-secondary.btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        min-height: 44px;
+    }
+}
+
+/* Optimizaciones para móviles muy pequeños */
+@media (max-width: 575px) {
+    #modalNuevoPedido .modal-dialog {
+        margin: 0;
+        height: 100vh;
+        max-width: 100%;
+    }
+
+    #modalNuevoPedido .modal-content {
+        border-radius: 0;
+        height: 100%;
+    }
+
+    #modalNuevoPedido .modal-header {
+        padding: 0.75rem;
+    }
+
+    #modalNuevoPedido .modal-title {
+        font-size: 1rem;
+    }
+
+    #modalNuevoPedido .modal-body {
+        padding: 0.75rem;
+    }
+
+    /* Tabla más compacta en móviles pequeños */
+    #pasoSeleccionarProductos .table {
+        font-size: 0.8rem;
+    }
+
+    #pasoSeleccionarProductos .table th,
+    #pasoSeleccionarProductos .table td {
+        padding: 0.5rem 0.25rem;
+    }
+
+    /* Inputs más compactos */
+    #pasoSeleccionarProductos .cantidad-producto,
+    #pasoSeleccionarProductos .precio-producto {
+        font-size: 0.85rem;
+        padding: 0.4rem;
+        min-height: 38px;
+    }
+
+    /* Resumen más compacto */
+    #pasoSeleccionarProductos .card.bg-light .card-body {
+        padding: 0.75rem;
+    }
+
+    #pasoSeleccionarProductos .card.bg-light .row .col-md-4 {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Modal de proveedor rápido en móvil */
+@media (max-width: 768px) {
+    #modalProveedorRapido .modal-dialog {
+        max-width: 95%;
+        margin: 1rem;
+    }
+
+    #modalProveedorRapido .modal-content {
+        border-radius: 0.5rem;
+    }
+
+    #modalProveedorRapido .modal-body {
+        padding: 1.5rem;
+    }
+
+    #modalProveedorRapido .form-control {
+        font-size: 1rem;
+        padding: 0.75rem;
+        min-height: 50px;
+    }
+
+    #modalProveedorRapido .btn {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        min-height: 50px;
+    }
+}
+
 /* Responsivo */
 @media (max-width: 768px) {
     .modal-xl {
