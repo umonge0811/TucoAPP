@@ -334,16 +334,29 @@ $(document).ready(function () {
     $("#modalWhatsAppNumero").on('show.bs.modal', function() {
         console.log('📱 Abriendo modal WhatsApp');
         
-        const producto = window.productoParaCompartir || window.productoContexto;
+        // ✅ ASEGURAR QUE window.productoParaCompartir ESTÉ CONFIGURADO
+        if (!window.productoParaCompartir && window.productoContexto) {
+            console.log('🔧 Configurando producto para compartir desde contexto');
+            const contexto = window.productoContexto;
+            window.productoParaCompartir = {
+                nombre: contexto.nombre || 'Producto',
+                precio: contexto.precio ? `₡${contexto.precio}` : '₡0',
+                stock: contexto.stock ? `${contexto.stock} unidades` : '0 unidades',
+                urlImagen: contexto.imagenPrincipal || '',
+                urlProducto: window.location.href
+            };
+        }
+        
+        const producto = window.productoParaCompartir;
         
         if (producto) {
             console.log('📦 Datos del producto para preview:', producto);
             
             // Configurar datos del preview
             const nombreProducto = producto.nombre || 'Producto sin nombre';
-            const precioProducto = producto.precio ? (producto.precio.includes('₡') ? producto.precio : `₡${producto.precio}`) : '₡0';
-            const stockProducto = producto.stock ? (typeof producto.stock === 'string' ? producto.stock : `${producto.stock} unidades`) : '0 unidades';
-            const imagenProducto = producto.urlImagen || producto.imagenPrincipal || '';
+            const precioProducto = producto.precio || '₡0';
+            const stockProducto = producto.stock || '0 unidades';
+            const imagenProducto = producto.urlImagen || '';
             
             $("#productoPreview").html(`
                 <div class="d-flex align-items-center">
