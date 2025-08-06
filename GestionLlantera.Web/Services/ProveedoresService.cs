@@ -99,7 +99,11 @@ namespace GestionLlantera.Web.Services
                 var json = JsonConvert.SerializeObject(proveedor);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("api/Proveedores", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Proveedores");
+                _logger.LogDebug("🌐 URL construida para crear proveedor: {url}", url);
+
+                var response = await _httpClient.PostAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -130,7 +134,11 @@ namespace GestionLlantera.Web.Services
                 var json = JsonConvert.SerializeObject(proveedor);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"api/Proveedores/{proveedor.ProveedorId}", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Proveedores/{proveedor.ProveedorId}");
+                _logger.LogDebug("🌐 URL construida para actualizar proveedor: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -159,7 +167,11 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("🗑️ Eliminando proveedor: {Id}", id);
                 ConfigurarAutenticacion(token);
 
-                var response = await _httpClient.DeleteAsync($"api/Proveedores/{id}");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Proveedores/{id}");
+                _logger.LogDebug("🌐 URL construida para eliminar proveedor: {url}", url);
+
+                var response = await _httpClient.DeleteAsync(url);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -193,11 +205,14 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                string url = "api/PedidosProveedor";
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                string endpoint = "PedidosProveedor";
                 if (proveedorId.HasValue)
                 {
-                    url += $"?proveedorId={proveedorId}";
+                    endpoint += $"?proveedorId={proveedorId}";
                 }
+                var url = _apiConfig.GetApiUrl(endpoint);
+                _logger.LogDebug("🌐 URL construida para obtener pedidos proveedor: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);
                 var content = await response.Content.ReadAsStringAsync();
@@ -310,7 +325,11 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync("api/Proveedores");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Proveedores");
+                _logger.LogDebug("🌐 URL construida para obtener todos los proveedores: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -343,7 +362,11 @@ namespace GestionLlantera.Web.Services
                 var json = JsonConvert.SerializeObject(estadoData);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PatchAsync($"api/Proveedores/{proveedorId}/estado", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Proveedores/{proveedorId}/estado");
+                _logger.LogDebug("🌐 URL construida para cambiar estado proveedor: {url}", url);
+
+                var response = await _httpClient.PatchAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (response.IsSuccessStatusCode)
@@ -383,7 +406,12 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📦 JSON enviado: {Json}", json);
 
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync("api/PedidosProveedor", content);
+                
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("PedidosProveedor");
+                _logger.LogDebug("🌐 URL construida para crear pedido proveedor: {url}", url);
+                
+                var response = await _httpClient.PostAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📦 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -431,7 +459,11 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("📦 Obteniendo productos para facturación desde servicio de proveedores");
 
-                var response = await _httpClient.GetAsync("/Facturacion/ObtenerProductosParaFacturacion");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrlWithoutApiPrefix("Facturacion/ObtenerProductosParaFacturacion");
+                _logger.LogDebug("🌐 URL construida para obtener productos facturación: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -473,7 +505,11 @@ namespace GestionLlantera.Web.Services
                 var json = JsonConvert.SerializeObject(estadoData);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"api/PedidosProveedor/{pedidoId}/estado", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"PedidosProveedor/{pedidoId}/estado");
+                _logger.LogDebug("🌐 URL construida para cambiar estado pedido: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📦 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
