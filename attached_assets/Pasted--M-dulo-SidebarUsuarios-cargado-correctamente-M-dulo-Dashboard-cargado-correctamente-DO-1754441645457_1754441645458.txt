@@ -1,0 +1,203 @@
+ 👥 Módulo SidebarUsuarios cargado correctamente
+ 📊 Módulo Dashboard cargado correctamente
+ 👥 DOM cargado, inicializando sidebar usuarios...
+ 🚀 Dashboard cargado exitosamente
+ ✅ Evento de formulario de nueva nota configurado
+ ✅ Evento de formulario de nuevo anuncio configurado
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 📊 Dashboard - Inicializando módulo principal
+ 📊 Cargando alertas de stock...
+ 📊 Cargando estadísticas de inventario total...
+ 🏆 Cargando información del top vendedor...
+ 👥 Cargando información de usuarios conectados...
+ No se pudo obtener userId, usando fallback
+getCurrentUserId @ dashboard.js:812
+cargarNotasRapidas @ dashboard.js:824
+inicializarDashboard @ dashboard.js:40
+(anonymous) @ dashboard.js:1751
+setTimeout
+(anonymous) @ dashboard.js:1750
+ 📝 Cargando notas rápidas...
+ 📢 Cargando anuncios del sistema...
+ ⚠️ No se pudieron obtener los anuncios
+cargarAnuncios @ dashboard.js:1176
+await in cargarAnuncios
+inicializarDashboard @ dashboard.js:41
+(anonymous) @ dashboard.js:1751
+setTimeout
+(anonymous) @ dashboard.js:1750
+ 📡 Respuesta del servidor (inventario): 200
+ ✅ Datos de inventario total recibidos: Object
+ 📊 Actualizando tarjeta de inventario total: Object
+ ✅ Valor total actualizado: ₡1 898 300
+ ✅ Detalle actualizado: 7 (48 unidades)
+ 📡 Respuesta del servidor: 200
+ ✅ Datos de alertas recibidos: Object
+ 📊 Actualizando vista con datos: Object
+ ✅ Vista de alertas de stock actualizada correctamente
+ 🏆 Mostrando datos del top vendedor: Object
+ ✅ Top vendedor mostrado correctamente
+ ✅ Top vendedor cargado correctamente: Object
+ 📝 Mostrando notas rápidas: Array(0)
+ ✅ Notas rápidas cargadas correctamente: Array(0)
+ 👥 Mostrando datos de usuarios conectados: Object
+ ✅ Panel de usuarios conectados (bottom) actualizado
+ ✅ Contador del sidebar actualizado: 1 usuarios
+ ✅ Usuarios conectados mostrados correctamente
+ ✅ Usuarios conectados cargados correctamente: Object
+ 📊 Inicializando eventos de formularios...
+ 🔄 Configurando refresco automático...
+ ✅ Dashboard inicializado correctamente
+ 👥 Inicializando módulo de usuarios conectados del sidebar
+ ✅ Módulo de usuarios conectados del sidebar inicializado
+ ✅ Contador del sidebar actualizado: 1 usuarios
+ ✅ Panel de usuarios conectados (sidebar) actualizado
+ 📢 === INICIANDO PROCESAMIENTO DE ANUNCIO ===
+ 📋 Formulario obtenido: 
+ 📋 ID del formulario: newAnnouncementForm
+ 📋 Elementos del formulario: HTMLFormControlsCollection(8)
+ ✏️ Modo edición: false ID: null
+ 🔍 === ANALIZANDO ELEMENTOS DEL FORMULARIO ===
+ Elemento 0: Object
+ Elemento 1: Object
+ Elemento 2: Object
+ Elemento 3: Object
+ Elemento 4: Object
+ Elemento 5: Object
+ Elemento 6: Object
+ Elemento 7: Object
+ 📦 === CONTENIDO DE FORMDATA ===
+ __RequestVerificationToken: "CfDJ8E-MSibRVNlJt8pQIXro9-cCerrtYa-I5V9MiznclX-UEipofCGYx4bKe60mo-UiumD9xjGUfJSJ74jkwO1JH_nWVOKlhWyqlu8Ewmv25I3fh8zdIW41MvV3ZXD0RL9hQ22d1eEzA7NnvVEVfJ98EaCNh3bogih_5FoyBcYjQcL2M0o4xv_kpjyU2X6oNN-k5w"
+ titulo: "Nota de Pruebas2w"
+ contenido: "123456"
+ tipoImportancia: "Informativo"
+ fechaVencimiento: ""
+ 🎯 === CAPTURA DE DATOS MÚLTIPLE ===
+ Método FormData: Object
+ Método querySelector by name: Object
+ Método getElementById: Object
+ 📋 === DATOS FINALES DEL ANUNCIO ===
+ Datos finales a enviar: Object
+dashboard.js:1545 🆕 Creando nuevo anuncio
+dashboard.js:1548 🌐 === PREPARANDO PETICIÓN HTTP ===
+dashboard.js:1549 URL: /Dashboard/CrearAnuncio
+dashboard.js:1550 Method: POST
+dashboard.js:1551 Body JSON: {
+  "titulo": "Nota de Pruebas2w",
+  "contenido": "123456",
+  "fechaVencimiento": null,
+  "tipoAnuncio": "General",
+  "prioridad": "Normal",
+  "esImportante": false
+}
+dashboard.js:1563 Opciones de petición: Object
+dashboard.js:1567 📡 === RESPUESTA DEL SERVIDOR ===
+dashboard.js:1568 Status: 200
+dashboard.js:1569 StatusText: 
+dashboard.js:1570 Headers: Array(3)
+dashboard.js:1578 📄 Respuesta en texto crudo: {"success":false,"message":"Error interno al crear anuncio"}
+dashboard.js:1583 ✅ JSON parseado correctamente: Object
+dashboard.js:1590 🎯 === RESULTADO DEL SERVIDOR ===
+dashboard.js:1591 Success: false
+dashboard.js:1592 Message: Error interno al crear anuncio
+dashboard.js:1593 Data: undefined
+dashboard.js:1632 ❌ Error reportado por el servidor: Error interno al crear anuncio
+manejarNuevoAnuncio @ dashboard.js:1632
+dashboard.js:1637 ❌ === ERROR PROCESANDO ANUNCIO ===
+manejarNuevoAnuncio @ dashboard.js:1637
+dashboard.js:1638 Tipo de error: Error
+manejarNuevoAnuncio @ dashboard.js:1638
+dashboard.js:1639 Mensaje: Error interno al crear anuncio
+manejarNuevoAnuncio @ dashboard.js:1639
+dashboard.js:1640 Stack: Error: Error interno al crear anuncio
+    at HTMLFormElement.manejarNuevoAnuncio (https://localhost:7038/js/views/admin/dashboard.js:1633:19)
+manejarNuevoAnuncio @ dashboard.js:1640
+dashboard.js:1650 📢 === FIN DEL PROCESAMIENTO DE ANUNCIO ===
+dashboard.js:1418 📢 === INICIANDO PROCESAMIENTO DE ANUNCIO ===
+dashboard.js:1421 📋 Formulario obtenido: <form id=​"newAnnouncementForm">​…​</form>​
+dashboard.js:1422 📋 ID del formulario: newAnnouncementForm
+dashboard.js:1423 📋 Elementos del formulario: HTMLFormControlsCollection(8)
+dashboard.js:1427 ✏️ Modo edición: false ID: null
+dashboard.js:1430 🔍 === ANALIZANDO ELEMENTOS DEL FORMULARIO ===
+dashboard.js:1433 Elemento 0: Object
+dashboard.js:1433 Elemento 1: Object
+dashboard.js:1433 Elemento 2: Object
+dashboard.js:1433 Elemento 3: Object
+dashboard.js:1433 Elemento 4: Object
+dashboard.js:1433 Elemento 5: Object
+dashboard.js:1433 Elemento 6: Object
+dashboard.js:1433 Elemento 7: Object
+dashboard.js:1444 📦 === CONTENIDO DE FORMDATA ===
+dashboard.js:1446 __RequestVerificationToken: "CfDJ8E-MSibRVNlJt8pQIXro9-cCerrtYa-I5V9MiznclX-UEipofCGYx4bKe60mo-UiumD9xjGUfJSJ74jkwO1JH_nWVOKlhWyqlu8Ewmv25I3fh8zdIW41MvV3ZXD0RL9hQ22d1eEzA7NnvVEVfJ98EaCNh3bogih_5FoyBcYjQcL2M0o4xv_kpjyU2X6oNN-k5w"
+dashboard.js:1446 titulo: "Nota de Pruebas2w"
+dashboard.js:1446 contenido: "123456"
+dashboard.js:1446 tipoImportancia: "Informativo"
+dashboard.js:1446 fechaVencimiento: "2025-08-06"
+dashboard.js:1450 🎯 === CAPTURA DE DATOS MÚLTIPLE ===
+dashboard.js:1457 Método FormData: Object
+dashboard.js:1471 Método querySelector by name: Object
+dashboard.js:1485 Método getElementById: Object
+dashboard.js:1505 📋 === DATOS FINALES DEL ANUNCIO ===
+dashboard.js:1506 Datos finales a enviar: Object
+dashboard.js:1545 🆕 Creando nuevo anuncio
+dashboard.js:1548 🌐 === PREPARANDO PETICIÓN HTTP ===
+dashboard.js:1549 URL: /Dashboard/CrearAnuncio
+dashboard.js:1550 Method: POST
+dashboard.js:1551 Body JSON: {
+  "titulo": "Nota de Pruebas2w",
+  "contenido": "123456",
+  "fechaVencimiento": "2025-08-06",
+  "tipoAnuncio": "General",
+  "prioridad": "Normal",
+  "esImportante": false
+}
+dashboard.js:1563 Opciones de petición: Object
+dashboard.js:707 🔄 Refrescando datos del dashboard automáticamente...
+dashboard.js:66 📊 Cargando alertas de stock...
+dashboard.js:183 📊 Cargando estadísticas de inventario total...
+dashboard.js:266 🏆 Cargando información del top vendedor...
+dashboard.js:384 👥 Cargando información de usuarios conectados...
+dashboard.js:1567 📡 === RESPUESTA DEL SERVIDOR ===
+dashboard.js:1568 Status: 200
+dashboard.js:1569 StatusText: 
+dashboard.js:1570 Headers: Array(3)
+dashboard.js:1578 📄 Respuesta en texto crudo: {"success":false,"message":"Error interno al crear anuncio"}
+dashboard.js:1583 ✅ JSON parseado correctamente: Object
+dashboard.js:1590 🎯 === RESULTADO DEL SERVIDOR ===
+dashboard.js:1591 Success: false
+dashboard.js:1592 Message: Error interno al crear anuncio
+dashboard.js:1593 Data: undefined
+dashboard.js:1632 ❌ Error reportado por el servidor: Error interno al crear anuncio
+manejarNuevoAnuncio @ dashboard.js:1632
+dashboard.js:1637 ❌ === ERROR PROCESANDO ANUNCIO ===
+manejarNuevoAnuncio @ dashboard.js:1637
+dashboard.js:1638 Tipo de error: Error
+manejarNuevoAnuncio @ dashboard.js:1638
+dashboard.js:1639 Mensaje: Error interno al crear anuncio
+manejarNuevoAnuncio @ dashboard.js:1639
+dashboard.js:1640 Stack: Error: Error interno al crear anuncio
+    at HTMLFormElement.manejarNuevoAnuncio (https://localhost:7038/js/views/admin/dashboard.js:1633:19)
+manejarNuevoAnuncio @ dashboard.js:1640
+dashboard.js:772 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+dashboard.js:76 📡 Respuesta del servidor: 200
+dashboard.js:83 ✅ Datos de alertas recibidos: Object
+dashboard.js:114 📊 Actualizando vista con datos: Object
+dashboard.js:155 ✅ Vista de alertas de stock actualizada correctamente
+dashboard.js:193 📡 Respuesta del servidor (inventario): 200
+dashboard.js:200 ✅ Datos de inventario total recibidos: Object
+dashboard.js:218 📊 Actualizando tarjeta de inventario total: Object
+dashboard.js:233 ✅ Valor total actualizado: ₡1 898 300
+dashboard.js:241 ✅ Detalle actualizado: 7 (48 unidades)
+dashboard.js:299 🏆 Mostrando datos del top vendedor: Object
+dashboard.js:336 ✅ Top vendedor mostrado correctamente
+dashboard.js:283 ✅ Top vendedor cargado correctamente: Object
+dashboard.js:417 👥 Mostrando datos de usuarios conectados: Object
+dashboard.js:514 ✅ Panel de usuarios conectados (bottom) actualizado
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+dashboard.js:450 ✅ Usuarios conectados mostrados correctamente
+dashboard.js:401 ✅ Usuarios conectados cargados correctamente: Object
+dashboard.js:1650 📢 === FIN DEL PROCESAMIENTO DE ANUNCIO ===
+dashboard.js:772 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
