@@ -55,9 +55,8 @@ namespace API.Services
         {
             try
             {
-                // Formatear el número para Costa Rica
-                var numeroFormateado = FormatearNumeroCostaRica(numero);
-                _logger.LogInformation("📱 Enviando mensaje de WhatsApp a: {NumeroOriginal} -> {NumeroFormateado}", numero, numeroFormateado);
+                // Usar el número tal como viene sin formatear
+                _logger.LogInformation("📱 Enviando mensaje de WhatsApp a: {Numero}", numero);
 
                 var client = new RestClient(_apiUrl);
                 var request = new RestRequest("", Method.Post);
@@ -70,7 +69,7 @@ namespace API.Services
                     token_qr = _token,
                     mensajes = new[]
                     {
-                        new { numero = numeroFormateado, mensaje = mensaje }
+                        new { numero = numero, mensaje = mensaje }
                     }
                 };
 
@@ -109,9 +108,8 @@ namespace API.Services
         {
             try
             {
-                // Formatear el número para Costa Rica
-                var numeroFormateado = FormatearNumeroCostaRica(numero);
-                _logger.LogInformation("📱🖼️ Enviando imagen de WhatsApp a: {NumeroOriginal} -> {NumeroFormateado}", numero, numeroFormateado);
+                // Usar el número tal como viene sin formatear
+                _logger.LogInformation("📱🖼️ Enviando imagen de WhatsApp a: {Numero}", numero);
 
                 var client = new RestClient(_apiUrl);
                 var request = new RestRequest("", Method.Post);
@@ -124,7 +122,7 @@ namespace API.Services
                     token_qr = _token,
                     mensajes = new[]
                     {
-                        new { numero = numeroFormateado, url = urlImagen }
+                        new { numero = numero, url = urlImagen }
                     }
                 };
 
