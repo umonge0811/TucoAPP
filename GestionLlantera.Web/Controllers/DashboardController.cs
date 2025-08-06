@@ -5,6 +5,7 @@ using Tuco.Clases.DTOs;
 using Microsoft.Extensions.Logging; // Asegurarse de que ILogger esté disponible
 using System.Linq; // Necesario para Select y Join
 using System.Threading.Tasks; // Necesario para Task
+using System.Security.Claims; // Necesario para ClaimTypes
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -24,11 +25,43 @@ namespace GestionLlantera.Web.Controllers
             _anunciosService = anunciosService; // Inicializar el servicio de anuncios
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            // Especificamos que use el layout administrativo
-            ViewData["Layout"] = "_AdminLayout";
-            return View();
+            try
+            {
+                _logger.LogInformation("📊 Cargando página principal del dashboard");
+
+                // Obtener información del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ No se encontró token JWT válido");
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // Obtener el ID del usuario actual desde los claims
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "userId" || c.Type == "sub" || c.Type == ClaimTypes.NameIdentifier);
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    ViewBag.CurrentUserId = userId;
+                    _logger.LogInformation("👤 ID del usuario actual: {UserId}", userId);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ No se pudo obtener el ID del usuario desde los claims");
+                    ViewBag.CurrentUserId = 0; // O manejar como un error si es crítico
+                }
+
+                // Pasar información básica a la vista si es necesario
+                ViewBag.UserToken = token;
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error cargando dashboard");
+                return View("Error");
+            }
         }
 
         /// <summary>

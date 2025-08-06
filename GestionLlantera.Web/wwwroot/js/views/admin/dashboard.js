@@ -791,7 +791,17 @@ function getCurrentUserId() {
         // Intentar obtener desde el elemento de usuario si existe
         const userElement = document.querySelector('[data-user-id]');
         if (userElement) {
-            return parseInt(userElement.getAttribute('data-user-id'));
+            const userId = parseInt(userElement.getAttribute('data-user-id'));
+            console.log('👤 UserId obtenido desde data-user-id:', userId);
+            return userId;
+        }
+
+        // Intentar obtener desde meta tag si existe
+        const metaElement = document.querySelector('meta[name="user-id"]');
+        if (metaElement) {
+            const userId = parseInt(metaElement.getAttribute('content'));
+            console.log('👤 UserId obtenido desde meta tag:', userId);
+            return userId;
         }
 
         // Fallback: obtener desde cookies JWT si está disponible
@@ -801,19 +811,29 @@ function getCurrentUserId() {
             if (name === 'JwtToken' && value) {
                 try {
                     const payload = JSON.parse(atob(value.split('.')[1]));
-                    return parseInt(payload.userId || payload.sub || payload.nameidentifier);
+                    const userId = parseInt(payload.userId || payload.sub || payload.nameidentifier);
+                    console.log('👤 UserId obtenido desde JWT:', userId);
+                    return userId;
                 } catch (e) {
                     console.warn('No se pudo decodificar JWT token');
                 }
             }
         }
 
-        // Último fallback: asumir ID 4 basado en los logs
-        console.warn('No se pudo obtener userId, usando fallback');
-        return 4;
+        // Fallback: obtener desde sessionStorage/localStorage si existe
+        const storedUserId = localStorage.getItem('currentUserId') || sessionStorage.getItem('currentUserId');
+        if (storedUserId) {
+            const userId = parseInt(storedUserId);
+            console.log('👤 UserId obtenido desde storage:', userId);
+            return userId;
+        }
+
+        // Último fallback: retornar null para indicar que no se pudo obtener
+        console.warn('⚠️ No se pudo obtener userId de ninguna fuente');
+        return null;
     } catch (error) {
-        console.error('Error obteniendo userId:', error);
-        return 4; // Fallback
+        console.error('❌ Error obteniendo userId:', error);
+        return null;
     }
 }
 
@@ -1278,16 +1298,28 @@ function mostrarAnuncios(anuncios) {
                                 ${anuncio.activo ? 'Activo' : 'Inactivo'}
                             </span>
                         </div>
-                        ${anuncio.usuarioCreadorId === getCurrentUserId() ? `
-                        <div>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="editarAnuncio(${anuncio.anuncioId})" title="Editar anuncio">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="eliminarAnuncio(${anuncio.anuncioId}, '${(anuncio.titulo || 'Anuncio sin título').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" title="Eliminar anuncio">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                        ` : ''}
+                        ${(() => {
+                            const currentUserId = getCurrentUserId();
+                            const esCreador = currentUserId !== null && anuncio.usuarioCreadorId === currentUserId;
+                            
+                            console.log('🔍 Verificando permisos anuncio:', {
+                                anuncioId: anuncio.anuncioId,
+                                usuarioCreadorId: anuncio.usuarioCreadorId,
+                                currentUserId: currentUserId,
+                                esCreador: esCreador
+                            });
+                            
+                            return esCreador ? `
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="editarAnuncio(${anuncio.anuncioId})" title="Editar anuncio">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarAnuncio(${anuncio.anuncioId}, '${(anuncio.titulo || 'Anuncio sin título').replace(/'/g, "\\'").replace(/"/g, '\\"')}')" title="Eliminar anuncio">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            ` : '';
+                        })()}
                     </div>
             `;
             container.appendChild(anuncioElement);
