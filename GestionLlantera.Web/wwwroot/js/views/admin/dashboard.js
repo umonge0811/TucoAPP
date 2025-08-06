@@ -1411,21 +1411,112 @@ async function editarAnuncio(anuncioId) {
  */
 async function manejarNuevoAnuncio(e) {
     e.preventDefault();
-    console.log('📢 Procesando anuncio...');
+    console.log('📢 === INICIANDO PROCESAMIENTO DE ANUNCIO ===');
 
     const form = e.target;
+    console.log('📋 Formulario obtenido:', form);
+    console.log('📋 ID del formulario:', form.id);
+    console.log('📋 Elementos del formulario:', form.elements);
+
     const anuncioId = form.getAttribute('data-editing-anuncio-id');
     const esEdicion = anuncioId !== null && anuncioId !== '';
+    console.log('✏️ Modo edición:', esEdicion, 'ID:', anuncioId);
 
+    // Log detallado de todos los elementos del formulario
+    console.log('🔍 === ANALIZANDO ELEMENTOS DEL FORMULARIO ===');
+    for (let i = 0; i < form.elements.length; i++) {
+        const element = form.elements[i];
+        console.log(`Elemento ${i}:`, {
+            name: element.name,
+            id: element.id,
+            type: element.type,
+            value: element.value,
+            tagName: element.tagName
+        });
+    }
+
+    // Crear FormData y verificar contenido
     const formData = new FormData(form);
+    console.log('📦 === CONTENIDO DE FORMDATA ===');
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: "${value}"`);
+    }
+
+    // Intentar capturar datos de múltiples formas
+    console.log('🎯 === CAPTURA DE DATOS MÚLTIPLE ===');
+    
+    // Método 1: FormData
+    const tituloFormData = formData.get('tituloAnuncio');
+    const contenidoFormData = formData.get('contenidoAnuncio');
+    const fechaFormData = formData.get('fechaExpiracionAnuncio');
+    
+    console.log('Método FormData:', {
+        titulo: tituloFormData,
+        contenido: contenidoFormData,
+        fecha: fechaFormData
+    });
+
+    // Método 2: querySelector por name
+    const tituloByName = form.querySelector('input[name="tituloAnuncio"]')?.value || '';
+    const contenidoByName = form.querySelector('textarea[name="contenidoAnuncio"]')?.value || '';
+    const fechaByName = form.querySelector('input[name="fechaExpiracionAnuncio"]')?.value || '';
+    
+    console.log('Método querySelector by name:', {
+        titulo: tituloByName,
+        contenido: contenidoByName,
+        fecha: fechaByName
+    });
+
+    // Método 3: getElementById
+    const tituloById = document.getElementById('tituloAnuncio')?.value || '';
+    const contenidoById = document.getElementById('contenidoAnuncio')?.value || '';
+    const fechaById = document.getElementById('fechaExpiracionAnuncio')?.value || '';
+    
+    console.log('Método getElementById:', {
+        titulo: tituloById,
+        contenido: contenidoById,
+        fecha: fechaById
+    });
+
+    // Seleccionar los mejores valores (priorizar los que no estén vacíos)
+    const titulo = tituloFormData || tituloByName || tituloById || '';
+    const contenido = contenidoFormData || contenidoByName || contenidoById || '';
+    const fechaVencimiento = fechaFormData || fechaByName || fechaById || null;
+
     const anuncioData = {
-        titulo: formData.get('tituloAnuncio'),
-        contenido: formData.get('contenidoAnuncio'),
-        fechaVencimiento: formData.get('fechaExpiracionAnuncio') || null,
+        titulo: titulo,
+        contenido: contenido,
+        fechaVencimiento: fechaVencimiento,
         tipoAnuncio: 'General',
         prioridad: 'Normal',
         esImportante: false
     };
+
+    console.log('📋 === DATOS FINALES DEL ANUNCIO ===');
+    console.log('Datos finales a enviar:', anuncioData);
+
+    // Validación básica
+    if (!anuncioData.titulo || anuncioData.titulo.trim() === '') {
+        console.error('❌ ERROR: Título vacío');
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'El título del anuncio es obligatorio.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
+    if (!anuncioData.contenido || anuncioData.contenido.trim() === '') {
+        console.error('❌ ERROR: Contenido vacío');
+        await Swal.fire({
+            title: '❌ Error',
+            text: 'El contenido del anuncio es obligatorio.',
+            icon: 'error',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
 
     try {
         let response;
@@ -1444,7 +1535,12 @@ async function manejarNuevoAnuncio(e) {
             console.log('🆕 Creando nuevo anuncio');
         }
 
-        response = await fetch(url, {
+        console.log('🌐 === PREPARANDO PETICIÓN HTTP ===');
+        console.log('URL:', url);
+        console.log('Method:', method);
+        console.log('Body JSON:', JSON.stringify(anuncioData, null, 2));
+
+        const requestOptions = {
             method: method,
             credentials: 'include',
             headers: {
@@ -1452,11 +1548,43 @@ async function manejarNuevoAnuncio(e) {
                 'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify(anuncioData)
-        });
+        };
 
-        const resultado = await response.json();
+        console.log('Opciones de petición:', requestOptions);
+
+        response = await fetch(url, requestOptions);
+
+        console.log('📡 === RESPUESTA DEL SERVIDOR ===');
+        console.log('Status:', response.status);
+        console.log('StatusText:', response.statusText);
+        console.log('Headers:', [...response.headers.entries()]);
+
+        if (!response.ok) {
+            console.error('❌ Respuesta no exitosa:', response.status, response.statusText);
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
+        }
+
+        const responseText = await response.text();
+        console.log('📄 Respuesta en texto crudo:', responseText);
+
+        let resultado;
+        try {
+            resultado = JSON.parse(responseText);
+            console.log('✅ JSON parseado correctamente:', resultado);
+        } catch (parseError) {
+            console.error('❌ Error parseando JSON:', parseError);
+            console.error('Texto que causó el error:', responseText);
+            throw new Error('Respuesta del servidor no es JSON válido');
+        }
+
+        console.log('🎯 === RESULTADO DEL SERVIDOR ===');
+        console.log('Success:', resultado.success);
+        console.log('Message:', resultado.message);
+        console.log('Data:', resultado.data);
 
         if (resultado.success) {
+            console.log('✅ Operación exitosa en el servidor');
+            
             // Mostrar mensaje de éxito
             await Swal.fire({
                 title: '✅ ¡Éxito!',
@@ -1469,10 +1597,12 @@ async function manejarNuevoAnuncio(e) {
             // Cerrar modal y limpiar formulario
             const modal = bootstrap.Modal.getInstance(document.getElementById('newAnnouncementModal'));
             if (modal) {
+                console.log('🚪 Cerrando modal...');
                 modal.hide();
             }
 
             // Limpiar formulario y resetear el estado de edición
+            console.log('🧹 Limpiando formulario...');
             form.reset();
             form.removeAttribute('data-editing-anuncio-id');
 
@@ -1480,25 +1610,35 @@ async function manejarNuevoAnuncio(e) {
             const modalTitle = document.querySelector('#newAnnouncementModal .modal-title');
             if (modalTitle) {
                 modalTitle.innerHTML = '<i class="fas fa-bullhorn text-primary me-2"></i>Nuevo Anuncio';
+                console.log('🔄 Título del modal restaurado');
             }
 
             // Recargar anuncios
+            console.log('🔄 Recargando lista de anuncios...');
             cargarAnuncios();
 
             console.log('✅ Anuncio procesado correctamente');
         } else {
+            console.error('❌ Error reportado por el servidor:', resultado.message);
             throw new Error(resultado.message || 'Error al procesar el anuncio');
         }
 
     } catch (error) {
-        console.error('❌ Error procesando anuncio:', error);
+        console.error('❌ === ERROR PROCESANDO ANUNCIO ===');
+        console.error('Tipo de error:', error.constructor.name);
+        console.error('Mensaje:', error.message);
+        console.error('Stack:', error.stack);
+        
         await Swal.fire({
             title: '❌ Error',
-            text: 'No se pudo procesar el anuncio. Inténtalo de nuevo.',
+            text: `No se pudo procesar el anuncio: ${error.message}`,
             icon: 'error',
             confirmButtonText: 'Entendido'
         });
     }
+
+    console.log('📢 === FIN DEL PROCESAMIENTO DE ANUNCIO ===');
+}
 }
 
 // ========================================
