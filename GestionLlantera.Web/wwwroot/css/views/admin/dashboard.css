@@ -213,6 +213,40 @@
 
 /* ===== ESTILOS DE ANUNCIOS ===== */
 
+/* Contenedor de anuncios con scroll */
+.announcements-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.announcements-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.announcements-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.announcements-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.announcements-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Espaciado entre anuncios */
+.announcement-item {
+    margin-bottom: 1rem !important;
+}
+
+.announcement-item:last-child {
+    margin-bottom: 0 !important;
+}
+
 /* Modal de anuncios */
 .modal-dialog.modal-lg {
     max-width: 800px;
