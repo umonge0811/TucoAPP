@@ -14,12 +14,14 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<ProveedoresService> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IApiConfigurationService _apiConfig; // Agregado ApiConfigurationService
 
-        public ProveedoresService(IHttpClientFactory httpClientFactory, ILogger<ProveedoresService> logger, IConfiguration configuration)
+        public ProveedoresService(IHttpClientFactory httpClientFactory, ILogger<ProveedoresService> logger, IConfiguration configuration, IApiConfigurationService apiConfig) // Inyectado ApiConfigurationService
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
             _configuration = configuration;
+            _apiConfig = apiConfig; // Asignado ApiConfigurationService
         }
 
         private void ConfigurarAutenticacion(string token)
@@ -45,7 +47,11 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.GetAsync("api/Proveedores");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Proveedores");
+                _logger.LogDebug("🌐 URL construida para obtener proveedores: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
