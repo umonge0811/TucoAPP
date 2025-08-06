@@ -13,7 +13,7 @@ using System.Text.Json;
 // ✅ CLASE PARA DESERIALIZAR LA RESPUESTA DEL API
 public class ApiResponse
 {
-    public List<DetalleInventarioDTO> productos { get;set; } = new List<DetalleInventarioDTO>();
+    public List<DetalleInventarioDTO> productos { get; set; } = new List<DetalleInventarioDTO>();
     public ApiEstadisticas estadisticas { get; set; } = new ApiEstadisticas();
 }
 
@@ -36,11 +36,16 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<TomaInventarioService> _logger;
+        private readonly ApiConfigurationService _apiConfig; // ✅ AGREGADO: Servicio centralizado
 
-        public TomaInventarioService(IHttpClientFactory httpClientFactory, ILogger<TomaInventarioService> logger)
+        public TomaInventarioService(HttpClient httpClient, ILogger<TomaInventarioService> logger, ApiConfigurationService apiConfig)
         {
-            _httpClient = httpClientFactory.CreateClient("APIClient");
+            _httpClient = httpClient;
             _logger = logger;
+            _apiConfig = apiConfig; // ✅ ASIGNADO: Servicio centralizado
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 TomaInventarioService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         // =====================================
@@ -545,7 +550,7 @@ namespace GestionLlantera.Web.Services
         /// </summary>
         public async Task<List<InventarioProgramadoDTO>?> ObtenerInventariosAsignadosAsync(int usuarioId, string jwtToken)
         {
-             try
+            try
             {
                 _logger.LogInformation("📦 === SERVICIO: OBTENIENDO INVENTARIOS ASIGNADOS ===");
                 _logger.LogInformation("📦 Usuario ID: {UsuarioId}", usuarioId);
@@ -627,7 +632,7 @@ namespace GestionLlantera.Web.Services
                 else
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error al notificar conteo completado. Status: {StatusCode}, Error: {Error}", 
+                    _logger.LogError("❌ Error al notificar conteo completado. Status: {StatusCode}, Error: {Error}",
                         response.StatusCode, errorContent);
                     return false;
                 }
