@@ -41,6 +41,10 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("📝 Inventario: {InventarioId}, Producto: {ProductoId}",
                     solicitud.InventarioProgramadoId, solicitud.ProductoId);
 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/TomaInventario/{solicitud.InventarioProgramadoId}/ajustar-discrepancia");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 // ✅ CONFIGURAR TOKEN JWT
                 ConfigurarAutenticacion(jwtToken);
 
@@ -55,7 +59,7 @@ namespace GestionLlantera.Web.Services
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 // ✅ ENVIAR A LA API
-                var response = await _httpClient.PostAsync($"api/TomaInventario/{solicitud.InventarioProgramadoId}/ajustar-discrepancia", content);
+                var response = await _httpClient.PostAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📡 Respuesta API: Status={Status}, Content={Content}",
@@ -89,6 +93,10 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("✏️ === ACTUALIZANDO AJUSTE PENDIENTE (WEB SERVICE) ===");
                 _logger.LogInformation("✏️ Ajuste ID: {AjusteId}, Producto: {ProductoId}", ajusteId, solicitud.ProductoId);
 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/TomaInventario/ajustes/{ajusteId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 // ✅ CONFIGURAR TOKEN JWT
                 ConfigurarAutenticacion(jwtToken);
 
@@ -103,7 +111,7 @@ namespace GestionLlantera.Web.Services
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 // ✅ ENVIAR A LA API (USAR PUT)
-                var response = await _httpClient.PutAsync($"api/TomaInventario/ajustes/{ajusteId}", content);
+                var response = await _httpClient.PutAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📡 Respuesta actualización API: Status={Status}, Content={Content}",
