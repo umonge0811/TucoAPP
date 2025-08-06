@@ -145,7 +145,11 @@ namespace GestionLlantera.Web.Services
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"api/notasrapidas/{id}", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"notasrapidas/{id}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -188,7 +192,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.DeleteAsync($"api/notasrapidas/{notaId}?usuarioId={usuarioId}");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"notasrapidas/{notaId}?usuarioId={usuarioId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.DeleteAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -235,7 +243,11 @@ namespace GestionLlantera.Web.Services
                 var json = JsonSerializer.Serialize(requestData);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PatchAsync($"api/notasrapidas/{notaId}/favorita", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"notasrapidas/{notaId}/favorita");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PatchAsync(url, content);
 
                 if (response.IsSuccessStatusCode)
                 {
