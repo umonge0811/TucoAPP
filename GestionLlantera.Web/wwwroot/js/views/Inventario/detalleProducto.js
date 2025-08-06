@@ -322,23 +322,50 @@ function compartirProducto() {
     compartirPorWhatsApp();
 }
 
-// Funciones de compartir mejoradas
+// Funciones de compartir mejoradas - UNIFICADA CON INVENTARIO.JS
 function compartirPorWhatsApp() {
     try {
-        const contexto = window.productoContexto;
-        if (!contexto) {
-            console.error('❌ No hay contexto del producto disponible');
+        // ✅ INTENTAR OBTENER DATOS DEL CONTEXTO O DE LA PÁGINA DIRECTAMENTE
+        let nombre, precio, stock, productoId;
+        
+        // Primero intentar con window.productoContexto
+        if (window.productoContexto) {
+            nombre = window.productoContexto.nombre;
+            precio = window.productoContexto.precio || '0';
+            stock = window.productoContexto.stock || 0;
+            productoId = window.productoContexto.productoId;
+        } else {
+            // ✅ FALLBACK: Obtener datos directamente de la página de detalle
+            // Buscar elementos en la página de detalle
+            nombre = $('h1').first().text() || $('.product-title').text() || 'Producto';
+            
+            // Buscar precio en elementos comunes
+            precio = $('.precio, .price, [class*="precio"]').first().text() || '0';
+            if (precio.includes('₡')) {
+                precio = precio.replace('₡', '').trim();
+            }
+            
+            // Buscar stock en elementos comunes  
+            const stockText = $('.stock-info span, .stock, [class*="stock"]').first().text() || '0';
+            stock = stockText.match(/\d+/) ? stockText.match(/\d+/)[0] + ' unidades' : '0 unidades';
+            
+            // Obtener ID del producto de la URL
+            const urlParts = window.location.pathname.split('/');
+            productoId = urlParts[urlParts.length - 1];
+            
+            console.log('📦 Datos obtenidos de la página:', { nombre, precio, stock, productoId });
+        }
+
+        // Validar que tenemos datos mínimos
+        if (!nombre || nombre === 'Producto') {
+            console.error('❌ No se pudieron obtener los datos del producto');
+            mostrarNotificacion('No se pudo identificar el producto para compartir.', 'danger');
             return;
         }
 
-        const nombre = contexto.nombre;
-        const precio = contexto.precio || '0';
-        const stock = contexto.stock || 0;
-        const productoId = contexto.productoId;
-
         // Obtener URL de la primera imagen si existe
         let urlImagen = '';
-        const primeraImagen = $('.carousel-item.active img').attr('src');
+        const primeraImagen = $('.carousel-item.active img').attr('src') || $('.product-image img').attr('src');
         if (primeraImagen && !primeraImagen.includes('no-image.png')) {
             urlImagen = `${window.location.origin}${primeraImagen}`;
         }
@@ -347,7 +374,7 @@ function compartirPorWhatsApp() {
         let mensaje = `¡Hola! Te comparto este producto:\n\n`;
         mensaje += `${nombre}\n`;
         mensaje += `Precio: ₡${precio}\n`;
-        mensaje += `Stock: ${stock} unidades\n`;
+        mensaje += `Stock: ${stock}\n`;
         mensaje += `Más detalles: ${window.location.href}\n\n`;
 
         if (urlImagen) {
