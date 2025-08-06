@@ -119,7 +119,11 @@ namespace GestionLlantera.Web.Services
                 var jsonContent = JsonConvert.SerializeObject(permisos.ToList());
                 var content = new StringContent(jsonContent, System.Text.Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("api/Permisos/verificar-multiples", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("api/Permisos/verificar-multiples");
+                _logger.LogDebug("🌐 URL construida para verificar múltiples permisos: {url}", url);
+
+                var response = await _httpClient.PostAsync(url, content);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -163,7 +167,11 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync("api/Permisos/es-administrador");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("api/Permisos/es-administrador");
+                _logger.LogDebug("🌐 URL construida para verificar administrador: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                     return false;
@@ -195,7 +203,11 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync("api/Permisos/mis-permisos");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("api/Permisos/mis-permisos");
+                _logger.LogDebug("🌐 URL construida para obtener mis permisos: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                     return new List<string>();
