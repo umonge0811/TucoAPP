@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Models.DTOs;
+using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
@@ -6,17 +6,30 @@ using System.Net.Http.Headers;
 
 namespace GestionLlantera.Web.Services
 {
+    /// <summary>
+    /// Servicio para gestionar notificaciones del usuario
+    /// Utiliza ApiConfigurationService para URLs centralizadas
+    /// </summary>
     public class NotificacionService : INotificacionService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<NotificacionService> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ApiConfigurationService _apiConfig;
 
-        public NotificacionService(HttpClient httpClient, ILogger<NotificacionService> logger, IHttpContextAccessor httpContextAccessor)
+        /// <summary>
+        /// Constructor con inyección del servicio de configuración centralizado
+        /// </summary>
+        public NotificacionService(
+            HttpClient httpClient, 
+            ILogger<NotificacionService> logger, 
+            IHttpContextAccessor httpContextAccessor,
+            ApiConfigurationService apiConfig)
         {
             _httpClient = httpClient;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
+            _apiConfig = apiConfig;
         }
 
         private void ConfigurarAuthorizationHeader()
@@ -53,8 +66,11 @@ namespace GestionLlantera.Web.Services
                 ConfigurarAuthorizationHeader();
                 _logger.LogInformation("Obteniendo notificaciones del usuario...");
 
-                // ✅ CORREGIR LA RUTA - Con N mayúscula
-                var response = await _httpClient.GetAsync("api/Notificaciones/mis-notificaciones");
+                // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
+                var url = _apiConfig.GetApiUrl("Notificaciones/mis-notificaciones");
+                _logger.LogInformation($"🌐 URL construida: {url}");
+                
+                var response = await _httpClient.GetAsync(url);
                 _logger.LogInformation($"Respuesta API: {response.StatusCode}");
 
                 if (response.IsSuccessStatusCode)
@@ -86,8 +102,11 @@ namespace GestionLlantera.Web.Services
             {
                 ConfigurarAuthorizationHeader();
 
-                // ✅ CORREGIR LA RUTA - Con N mayúscula
-                var response = await _httpClient.GetAsync("api/Notificaciones/conteo-no-leidas");
+                // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
+                var url = _apiConfig.GetApiUrl("Notificaciones/conteo-no-leidas");
+                _logger.LogInformation($"🌐 URL construida: {url}");
+                
+                var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -110,8 +129,11 @@ namespace GestionLlantera.Web.Services
             {
                 ConfigurarAuthorizationHeader();
 
-                // ✅ CORREGIR LA RUTA - Con N mayúscula
-                var response = await _httpClient.PutAsync($"api/Notificaciones/{notificacionId}/marcar-leida", null);
+                // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
+                var url = _apiConfig.GetApiUrl($"Notificaciones/{notificacionId}/marcar-leida");
+                _logger.LogInformation($"🌐 URL construida: {url}");
+                
+                var response = await _httpClient.PutAsync(url, null);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -127,8 +149,11 @@ namespace GestionLlantera.Web.Services
             {
                 ConfigurarAuthorizationHeader();
 
-                // ✅ CORREGIR LA RUTA - Con N mayúscula
-                var response = await _httpClient.PutAsync("api/Notificaciones/marcar-todas-leidas", null);
+                // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
+                var url = _apiConfig.GetApiUrl("Notificaciones/marcar-todas-leidas");
+                _logger.LogInformation($"🌐 URL construida: {url}");
+                
+                var response = await _httpClient.PutAsync(url, null);
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
