@@ -1538,7 +1538,11 @@ namespace GestionLlantera.Web.Services
 
                 var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync("api/Facturacion/marcar-entregados", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/marcar-entregados");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PutAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
@@ -1576,7 +1580,11 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.PutAsync($"api/Facturacion/marcar-proforma-facturada/{proformaId}", 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Facturacion/marcar-proforma-facturada/{proformaId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PutAsync(url, 
                     new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"));
 
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -1623,7 +1631,11 @@ namespace GestionLlantera.Web.Services
                     _logger.LogWarning("⚠️ No se proporcionó token JWT para marcar entregado por código");
                 }
 
-                var response = await _httpClient.PostAsJsonAsync("api/Facturacion/marcar-entregado-por-codigo", request);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Facturacion/marcar-entregado-por-codigo");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+                
+                var response = await _httpClient.PostAsJsonAsync(url, request);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
