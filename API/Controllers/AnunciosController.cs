@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -128,7 +127,7 @@ namespace API.Controllers
                     return BadRequest(new { success = false, message = "Datos de entrada inválidos", errors = ModelState });
                 }
 
-                var usuarioId = this.ObtenerIdUsuarioActual();
+                var usuarioId = GetUsuarioId();
                 if (!usuarioId.HasValue)
                 {
                     return Unauthorized(new { success = false, message = "Usuario no autorizado" });
@@ -199,7 +198,7 @@ namespace API.Controllers
                     return BadRequest(new { success = false, message = "Datos de entrada inválidos", errors = ModelState });
                 }
 
-                var usuarioId = this.ObtenerIdUsuarioActual();
+                var usuarioId = GetUsuarioId();
                 if (!usuarioId.HasValue)
                 {
                     return Unauthorized(new { success = false, message = "Usuario no autorizado" });
@@ -212,7 +211,7 @@ namespace API.Controllers
                 }
 
                 // Verificar que el usuario sea el creador del anuncio o tenga permisos de administrador
-                if (anuncio.UsuarioCreadorId != usuarioId.Value)
+                if (anuncio.UsuarioCreadorId != usuarioId)
                 {
                     // Aquí podrías agregar lógica para verificar si es administrador
                     return Forbid();
@@ -255,7 +254,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🔔 === ELIMINANDO ANUNCIO {AnuncioId} ===", id);
 
-                var usuarioId = this.ObtenerIdUsuarioActual();
+                var usuarioId = GetUsuarioId();
                 if (!usuarioId.HasValue)
                 {
                     return Unauthorized(new { success = false, message = "Usuario no autorizado" });
@@ -268,7 +267,7 @@ namespace API.Controllers
                 }
 
                 // Verificar que el usuario sea el creador del anuncio o tenga permisos de administrador
-                if (anuncio.UsuarioCreadorId != usuarioId.Value)
+                if (anuncio.UsuarioCreadorId != usuarioId)
                 {
                     // Aquí podrías agregar lógica para verificar si es administrador
                     return Forbid();
@@ -301,7 +300,7 @@ namespace API.Controllers
             {
                 _logger.LogInformation("🔔 === CAMBIANDO ESTADO ANUNCIO {AnuncioId} a {Estado} ===", id, activo ? "ACTIVO" : "INACTIVO");
 
-                var usuarioId = this.ObtenerIdUsuarioActual();
+                var usuarioId = GetUsuarioId();
                 if (!usuarioId.HasValue)
                 {
                     return Unauthorized(new { success = false, message = "Usuario no autorizado" });
@@ -314,7 +313,7 @@ namespace API.Controllers
                 }
 
                 // Verificar que el usuario sea el creador del anuncio o tenga permisos de administrador
-                if (anuncio.UsuarioCreadorId != usuarioId.Value)
+                if (anuncio.UsuarioCreadorId != usuarioId)
                 {
                     return Forbid();
                 }
@@ -338,7 +337,7 @@ namespace API.Controllers
         /// <summary>
         /// Obtiene el ID del usuario actual desde los claims
         /// </summary>
-        private int? ObtenerIdUsuarioActual()
+        private int? GetUsuarioId()
         {
             try
             {
