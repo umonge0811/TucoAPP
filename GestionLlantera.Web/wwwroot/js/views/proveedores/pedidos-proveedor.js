@@ -1585,47 +1585,14 @@ function generarMensajeWhatsAppPedido(data) {
 
     mensaje += `*Detalle del Pedido:*\n`;
     productos.forEach((producto, index) => {
-        // Obtener información de llanta si es disponible
-        const obtenerInfoLlanta = (productoNombre) => {
-            const productoEnInventario = productosInventario.find(p =>
-                p.nombreProducto === productoNombre ||
-                p.nombreProducto.toLowerCase().includes(productoNombre.toLowerCase())
-            );
-
-            if (productoEnInventario && (productoEnInventario.llanta || (productoEnInventario.Llanta && productoEnInventario.Llanta.length > 0))) {
-                const llantaInfo = productoEnInventario.llanta || productoEnInventario.Llanta[0];
-
-                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
-                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
-                        return `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
-                    } else {
-                        return `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
-                    }
-                }
-            }
-            return null;
-        };
-
-        const medidaLlanta = obtenerInfoLlanta(producto.nombreProducto);
-        const esLlanta = medidaLlanta !== null;
-
-        mensaje += `${index + 1}. *${producto.nombreProducto}*\n`;
-        
-        if (esLlanta) {
-            mensaje += `   *Medida:* ${medidaLlanta}\n`;
-        }
-        
-        mensaje += `   *Cantidad:* ${producto.cantidad}\n`;
-        mensaje += `   *Precio Unitario:* ₡${(producto.precioUnitario || 0).toFixed(2)}\n`;
-        mensaje += `   *Subtotal:* ₡${(producto.cantidad * (producto.precioUnitario || 0)).toFixed(2)}\n\n`;
+        mensaje += `${index + 1}. ${producto.nombreProducto} - Cantidad: ${producto.cantidad} - Precio Unitario: ₡${(producto.precioUnitario || 0).toFixed(2)}\n`;
     });
 
     const cantidadTotal = productos.reduce((sum, p) => sum + p.cantidad, 0);
     const montoTotal = productos.reduce((sum, p) => sum + (p.cantidad * p.precioUnitario), 0);
 
-    mensaje += `*RESUMEN DEL PEDIDO:*\n`;
-    mensaje += `*Total de productos:* ${cantidadTotal}\n`;
-    mensaje += `*Monto total estimado:* ₡${montoTotal.toFixed(2)}\n\n`;
+    mensaje += `\n*Total de productos: ${cantidadTotal}*\n`;
+    mensaje += `*Monto total estimado: ₡${montoTotal.toFixed(2)}*\n\n`;
     mensaje += `Por favor, confirme la recepción de este pedido y los detalles.\n`;
     mensaje += `Gracias.`;
 
