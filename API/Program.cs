@@ -177,8 +177,7 @@ builder.Services.AddScoped<AjustesInventarioPendientesService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<VerificacionProformasService>();
 
-// Servicio de WhatsApp
-builder.Services.AddScoped<API.Services.WhatsAppService>();
+// Servicios personalizados registrados aquí
 
 // Construir la aplicación
 var app = builder.Build();
