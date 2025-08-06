@@ -13,30 +13,56 @@ namespace GestionLlantera.Web.Services
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<InventarioService> _logger;
+        private readonly IConfiguration _configuration;
+        /// ✅ SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+        // Este servicio permite acceder a la URL base de la API de forma centralizada
+        // y construir URLs completas para los endpoints del inventario
+        private readonly ApiConfigurationService _apiConfig;
 
-        public InventarioService(IHttpClientFactory httpClientFactory, ILogger<InventarioService> logger)
+        /// ✅ CONSTRUCTOR: CONFIGURACIÓN DE DEPENDENCIAS
+        /// <summary>
+        /// Inicializa el servicio de inventario con todas las dependencias necesarias
+        /// </summary>
+        /// <param name="httpClient">Cliente HTTP para realizar peticiones a la API</param>
+        /// <param name="logger">Logger para registrar operaciones y errores</param>
+        /// <param name="configuration">Configuración de la aplicación</param>
+        /// <param name="apiConfig">Servicio centralizado para URLs de la API</param>
+        public InventarioService(HttpClient httpClient, ILogger<InventarioService> logger, IConfiguration configuration, ApiConfigurationService apiConfig)
         {
-            _httpClient = httpClientFactory.CreateClient("APIClient");
+            _httpClient = httpClient;
             _logger = logger;
+            _configuration = configuration;
+            /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+            _apiConfig = apiConfig;
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 InventarioService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
-        // En InventarioService.cs
-        // REEMPLAZA COMPLETAMENTE el método ObtenerProductosAsync() en InventarioService.cs:
-
-        public async Task<List<ProductoDTO>> ObtenerProductosAsync(string jwtToken)
+        /// ✅ OPERACIÓN: OBTENER TODOS LOS PRODUCTOS DEL INVENTARIO
+        /// <summary>
+        /// Obtiene la lista completa de productos desde la API
+        /// </summary>
+        /// <param name="jwtToken">Token JWT para autenticación (opcional)</param>
+        /// <returns>Lista de productos del inventario</returns>
+        public async Task<List<ProductoDTO>> ObtenerProductosAsync(string? jwtToken = null)
         {
             try
             {
-                _logger.LogInformation("🚀 Iniciando solicitud para obtener productos con autenticación");
+                _logger.LogInformation("🔍 Iniciando obtención de productos desde la API");
 
-                // 🔑 CONFIGURAR EL TOKEN EN EL HEADER DE AUTORIZACIÓN
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                /// ✅ CONFIGURACIÓN: AUTENTICACIÓN JWT
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                    _logger.LogInformation("🔐 Token JWT configurado para la petición");
+                }
 
-                _logger.LogInformation("🔐 Token JWT configurado en headers de autorización");
+                /// ✅ CONSTRUCCIÓN DE URL CENTRALIZADA
+                var url = _apiConfig.GetApiUrl("Inventario");
+                _logger.LogInformation("🌐 URL construida: {Url}", url);
 
-                var response = await _httpClient.GetAsync("api/Inventario/productos");
+                var response = await _httpClient.GetAsync(url);
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
@@ -159,13 +185,13 @@ namespace GestionLlantera.Web.Services
                 }
 
                 _logger.LogInformation($"🎉 PROCESO COMPLETADO: {productos.Count} productos procesados exitosamente");
-                
+
                 // Log adicional para verificar que se están devolviendo productos
                 if (productos.Count == 0)
                 {
                     _logger.LogWarning("⚠️ ADVERTENCIA: Se procesaron 0 productos - verificar datos en API");
                 }
-                
+
                 return productos;
             }
             catch (Exception ex)
@@ -175,7 +201,7 @@ namespace GestionLlantera.Web.Services
                 return new List<ProductoDTO>();
             }
         }
-        
+
         // Añade este método en InventarioService
         private List<ProductoDTO> MapearRespuestaProductos(string jsonResponse)
         {
@@ -2038,7 +2064,7 @@ namespace GestionLlantera.Web.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error en API: {StatusCode} - {Content}", 
+                    _logger.LogError("❌ Error en API: {StatusCode} - {Content}",
                         response.StatusCode, errorContent);
                     return new List<dynamic>();
                 }
@@ -2054,7 +2080,7 @@ namespace GestionLlantera.Web.Services
 
                 // ✅ DESERIALIZAR RESPUESTA COMO LISTA DE OBJETOS DINÁMICOS
                 var discrepancias = JsonConvert.DeserializeObject<List<object>>(content);
-                
+
                 if (discrepancias == null)
                 {
                     _logger.LogWarning("⚠️ No se pudo deserializar la respuesta");
@@ -2089,7 +2115,5 @@ namespace GestionLlantera.Web.Services
                 return new List<dynamic>();
             }
         }
-
-
     }
 }
