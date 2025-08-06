@@ -167,6 +167,18 @@ builder.Services.AddAuthorization(options =>
     //    ? Sistema escalable y mantenible
 });
 
+// Configurar servicios de negocio
+builder.Services.AddScoped<PermisosService>();
+builder.Services.AddScoped<NotificacionService>();
+builder.Services.AddScoped<TomaInventarioService>();
+builder.Services.AddScoped<ReporteInventarioService>();
+builder.Services.AddScoped<ReportePedidosService>();
+builder.Services.AddScoped<AjustesInventarioPendientesService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<VerificacionProformasService>();
+
+// Servicios personalizados registrados aquí
+
 // Construir la aplicación
 var app = builder.Build();
 

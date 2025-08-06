@@ -1,0 +1,58 @@
+function enviarConNumeroEspecifico() {
+    console.log('📞 === ENVIANDO CON NÚMERO ESPECÍFICO ===');
+
+    const numeroWhatsApp = $("#numeroWhatsApp").val().replace(/\D/g, '');
+    const incluirImagen = $("#incluirImagen").is(":checked");
+    const producto = window.productoParaCompartir;
+
+    if (!producto) {
+        mostrarNotificacion("Error: No hay producto seleccionado para enviar.", "danger");
+        return;
+    }
+
+    if (numeroWhatsApp.length !== 8) {
+        mostrarNotificacion("Por favor, ingrese un número de WhatsApp válido de 8 dígitos.", "warning");
+        return;
+    }
+
+    try {
+        // ✅ CONSTRUIR MENSAJE CON FORMATO UNIFICADO
+        let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+        mensaje += `${producto.nombre.replace('₡', '').trim()}\n`;
+        mensaje += `Precio: ${producto.precio}\n`;
+        mensaje += `Stock: ${producto.stock}\n`;
+        mensaje += `Más detalles: ${producto.urlProducto}\n\n`;
+        
+        if (incluirImagen && producto.urlImagen && !producto.urlImagen.includes('no-image.png')) {
+            mensaje += `Imagen: ${window.location.origin}${producto.urlImagen}`;
+        }
+
+        // Construir URL de WhatsApp con número específico
+        const urlWhatsApp = `https://wa.me/506${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+        // Mostrar estado de carga
+        const $btnEnviar = $("#btnEnviarWhatsApp");
+        $btnEnviar.find('.normal-state').hide();
+        $btnEnviar.find('.loading-state').show();
+        $btnEnviar.prop('disabled', true);
+
+        // Simular envío y abrir WhatsApp
+        setTimeout(() => {
+            window.open(urlWhatsApp, '_blank');
+            
+            // Ocultar modal y mostrar notificación
+            $("#modalWhatsAppNumero").modal("hide");
+            mostrarNotificacion("Mensaje enviado a WhatsApp correctamente", "success");
+
+            // Restablecer estado del botón
+            $btnEnviar.find('.loading-state').hide();
+            $btnEnviar.find('.normal-state').show();
+            $btnEnviar.prop('disabled', true);
+
+        }, 1500);
+
+    } catch (error) {
+        console.error('❌ Error al enviar por WhatsApp:', error);
+        mostrarNotificacion("Error al enviar por WhatsApp: " + error.message, "danger");
+    }
+}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Funcionalidad para la gestión de inventario - VERSIÓN FINAL
  * Ordenamiento + Paginación + Filtros integrados
  */
@@ -487,8 +487,8 @@ function procesarImagenesDelProducto(imagenes) {
         // ✅ UNA SOLA IMAGEN - CORREGIDA
         $contenedorImagenes.html(`
             <div class="carousel-item active">
-                <img src="${imagenes[0]}" 
-                     class="img-fluid" 
+                <img src="${imagenes[0]}"
+                     class="img-fluid"
                      alt="Imagen del producto"
                      onload="this.style.opacity=1"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
@@ -508,8 +508,8 @@ function procesarImagenesDelProducto(imagenes) {
             const activo = index === 0 ? 'active' : '';
             imagenesHtml += `
                 <div class="carousel-item ${activo}">
-                    <img src="${imagen}" 
-                         class="img-fluid" 
+                    <img src="${imagen}"
+                         class="img-fluid"
                          alt="Imagen del producto ${index + 1}"
                          onload="this.style.opacity=1"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
@@ -521,8 +521,8 @@ function procesarImagenesDelProducto(imagenes) {
                 </div>
             `;
             indicadoresHtml += `
-                <button type="button" data-bs-target="#carruselImagenesModal" data-bs-slide-to="${index}" 
-                        class="${activo}" aria-current="${index === 0 ? 'true' : 'false'}" 
+                <button type="button" data-bs-target="#carruselImagenesModal" data-bs-slide-to="${index}"
+                        class="${activo}" aria-current="${index === 0 ? 'true' : 'false'}"
                         aria-label="Slide ${index + 1}"></button>
             `;
         });
@@ -1062,44 +1062,135 @@ function actualizarFilaProductoEnTabla(productoId, stockNuevo, stockBajo, stockM
 function mostrarNotificacion(mensaje, tipo = 'info', titulo = '') {
     console.log(`🔔 [NOTIFICACIÓN] Tipo: ${tipo}, Mensaje: ${mensaje}`);
 
-    // ✅ USAR TOASTR DIRECTAMENTE SIN COMPLICACIONES
-    if (typeof toastr !== 'undefined') {
-        console.log('✅ Usando Toastr directamente');
-
-        // Configuración simple y efectiva
-        toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "timeOut": tipo === 'success' ? "3000" : "5000",
-            "preventDuplicates": true
-        };
-
-        // Convertir tipo 'danger' a 'error' para Toastr
-        const tipoToastr = tipo === 'danger' ? 'error' : tipo;
-
-        // Mostrar notificación
-        if (titulo) {
-            toastr[tipoToastr](mensaje, titulo);
-        } else {
-            toastr[tipoToastr](mensaje);
+    try {
+        // Prevenir múltiples notificaciones del mismo mensaje
+        if (window.ultimaNotificacion === mensaje && Date.now() - window.ultimaNotificacionTiempo < 2000) {
+            console.log('🚫 Notificación duplicada bloqueada');
+            return;
         }
 
-        return;
-    }
+        window.ultimaNotificacion = mensaje;
+        window.ultimaNotificacionTiempo = Date.now();
 
-    // ✅ FALLBACK simple si no hay Toastr
-    console.warn('⚠️ Toastr no disponible, usando alert');
-    alert((titulo ? titulo + ': ' : '') + mensaje);
+        // ✅ VERIFICAR SI TOASTR ESTÁ DISPONIBLE
+        if (typeof toastr !== 'undefined' && toastr !== null) {
+            console.log('✅ Usando Toastr');
+
+            // ✅ CONFIGURAR TOASTR
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": tipo === 'success' ? "4000" : "6000",
+                "preventDuplicates": true
+            };
+
+            // Convertir tipo 'danger' a 'error' para Toastr
+            const tipoToastr = tipo === 'danger' ? 'error' : tipo;
+
+            // Verificar que el método existe y ejecutar
+            if (typeof toastr[tipoToastr] === 'function') {
+                toastr[tipoToastr](mensaje);
+                return;
+            }
+        }
+
+        // ✅ FALLBACK con SweetAlert si está disponible
+        if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+            console.log('✅ Usando SweetAlert como fallback');
+            const icono = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
+            Swal.fire({
+                icon: icono,
+                title: titulo || (tipo === 'success' ? '¡Éxito!' : tipo === 'danger' ? 'Error' : 'Información'),
+                text: mensaje,
+                timer: 3000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        // ✅ FALLBACK final con Bootstrap Alert
+        crearAlertaBootstrap(mensaje, tipo, titulo);
+
+    } catch (error) {
+        console.error('❌ Error en mostrarNotificacion:', error);
+        // Fallback de emergencia
+        alert('Notificación: ' + mensaje);
+    }
+}
+/**
+ * Función de compatibilidad con el formato anterior
+ * @param {string} titulo - Título
+ * @param {string} mensaje - Mensaje
+ * @param {string} tipo - Tipo
+ */
+function mostrarNotificacionLegacy(titulo, mensaje, tipo) {
+    mostrarNotificacion(mensaje, tipo, titulo);
 }
 
 /**
- * Función de compatibilidad - SIMPLIFICADA
+ * Función de compatibilidad con formato simple
+ * @param {string} mensaje - Mensaje
+ * @param {string} tipo - Tipo
  */
 function mostrarAlertaSimple(mensaje, tipo) {
     mostrarNotificacion(mensaje, tipo);
 }
 
+
+/**
+ * Función para crear alertas Bootstrap personalizadas
+ * SOLO se usa como fallback cuando no hay Toastr o SweetAlert
+ */
+function crearAlertaBootstrap(mensaje, tipo, titulo = '') {
+    const colorBootstrap = {
+        'success': 'success',
+        'danger': 'danger',
+        'warning': 'warning',
+        'info': 'info'
+    }[tipo] || 'info';
+
+    const icono = {
+        'success': 'bi-check-circle',
+        'danger': 'bi-exclamation-triangle',
+        'warning': 'bi-exclamation-triangle',
+        'info': 'bi-info-circle'
+    }[tipo] || 'bi-info-circle';
+
+    const alertId = 'alert-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    const mensajeCompleto = titulo ? `<strong>${titulo}:</strong> ${mensaje}` : mensaje;
+
+    const alertHtml = `
+    <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm"
+         style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;"
+         role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+                ${mensajeCompleto}
+            </div>
+            <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+`;
+
+    // Verificar que no existe ya una alerta con el mismo mensaje
+    if ($(`div[role="alert"]:contains("${mensaje.substring(0, 20)}")`).length > 0) {
+        console.log('🚫 Alerta Bootstrap duplicada bloqueada');
+        return;
+    }
+
+    $('body').append(alertHtml);
+
+    // Auto-remover
+    setTimeout(() => {
+        $(`#${alertId}`).fadeOut(300, function () {
+            $(this).remove();
+        });
+    }, tipo === 'danger' ? 8000 : 5000);
+
+    console.log(`✅ Alerta Bootstrap creada: ${alertId}`);
+}
 
 /**
  * Función principal para ejecutar el ajuste de stock
@@ -1465,9 +1556,9 @@ $(document).ready(function () {
     });
 
     console.log('✅ Sistema de ajuste de stock inicializado correctamente');
-    console.log('🚀 Inventario - Inicializando sistema completo');
+    console.log('🚀 Inventario - Sistema completo');
 
-    // Limpiar eventos previos
+    // ✅ LIMPIAR EVENTOS PREVIOS
     $(document).off('click', '.producto-img-mini');
     $(document).off('click', '.producto-img-link');
     $(document).off('click', '.producto-img-mini img');
@@ -1595,39 +1686,8 @@ $(document).ready(function () {
         }, 500);
     });
 
-    $("#btnAjustarStockVistaRapida").click(function () {
-        console.log('📦 === ABRIENDO MODAL AJUSTE DESDE VISTA RÁPIDA ===');
-
-        const productoId = $(this).data("id");
-        console.log('📦 Producto ID desde vista rápida:', productoId);
-
-        if (!productoId) {
-            console.error('❌ No se pudo obtener el ProductoId desde vista rápida');
-            mostrarAlertaSimple("Error: No se pudo identificar el producto", "danger");
-            return;
-        }
-
-        // ✅ ENCONTRAR LA FILA DEL PRODUCTO EN LA TABLA
-        const $fila = $(`tr[data-id="${productoId}"]`);
-
-        if ($fila.length === 0) {
-            console.error('❌ No se encontró la fila del producto en la tabla');
-            mostrarAlertaSimple("Error: No se pudo encontrar el producto en la tabla", "danger");
-            return;
-        }
-
-        // ✅ CARGAR INFORMACIÓN DEL PRODUCTO (IGUAL QUE EL OTRO BOTÓN)
-        cargarInformacionProductoEnModal(productoId, $fila);
-
-        // Cerrar modal de vista rápida y abrir modal de ajuste
-        $("#detallesProductoModal").modal("hide");
-        setTimeout(() => {
-            $("#ajusteStockModal").modal("show");
-        }, 500);
-    });
 
 
-    
     // ========================================
     // EVENTOS PARA ELIMINAR PRODUCTO
     // ========================================
@@ -1710,7 +1770,7 @@ $(document).ready(function () {
                         </div>
                         <div class="alert alert-danger">
                             <i class="bi bi-exclamation-triangle me-2"></i>
-                            <strong>¡Atención!</strong> Esta acción es <strong>irreversible</strong>. 
+                            <strong>¡Atención!</strong> Esta acción es <strong>irreversible</strong>.
                             Se eliminarán todas las imágenes y datos asociados.
                         </div>
                     </div>
@@ -1745,7 +1805,7 @@ $(document).ready(function () {
 
         // Evento para confirmar eliminación
         $('#btnConfirmarEliminacion').off('click').on('click', function () {
-            ejecutarEliminacionProducto(productoId, nombreProducto, $fila, modal);
+            ejecutarEliminacionProducto(productoId, nombreProducto, $fila);
         });
     }
 
@@ -1868,61 +1928,7 @@ $(document).ready(function () {
         compartirPorEmail();
     });
 
-   
 
-    // Funciones de compartir
-    function compartirPorWhatsApp() {
-        try {
-            const nombre = $("#nombreProductoVistaRapida").text();
-            const precio = $("#precioProductoVistaRapida").text();
-            const stock = $("#stockProductoVistaRapida").text();
-            const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
-
-            const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
-            const mensaje = `🛞 *${nombre}*\n\n💰 Precio: ${precio}\n📦 Stock disponible: ${stock} unidades\n\n🔗 Ver más detalles:\n${urlProducto}`;
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
-
-            window.open(whatsappUrl, '_blank');
-            console.log('✅ Compartido por WhatsApp');
-        } catch (error) {
-            console.error('❌ Error al compartir por WhatsApp:', error);
-            mostrarNotificacion("Error", "No se pudo compartir por WhatsApp", "danger");
-        }
-    }
-
-    function compartirPorEmail() {
-        try {
-            const nombre = $("#nombreProductoVistaRapida").text();
-            const precio = $("#precioProductoVistaRapida").text();
-            const stock = $("#stockProductoVistaRapida").text();
-            const descripcion = $("#descripcionVistaRapida").text();
-            const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
-
-            const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
-            const asunto = `Producto: ${nombre}`;
-            const cuerpo = `Hola,
-
-                Te comparto información sobre este producto:
-
-                🛞 PRODUCTO: ${nombre}
-
-                💰 PRECIO: ${precio}
-                📦 STOCK DISPONIBLE: ${stock} unidades
-                📝 DESCRIPCIÓN: ${descripcion}
-
-                🔗 Ver detalles completos:
-                ${urlProducto}
-
-                Saludos.`;
-
-            const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
-            window.location.href = emailUrl;
-            console.log('✅ Compartido por Email');
-        } catch (error) {
-            console.error('❌ Error al compartir por Email:', error);
-            mostrarNotificacion("Error", "No se pudo compartir por Email", "danger");
-        }
-    }
 
     // Función de validación
     function validarFormularioAjuste() {
@@ -1943,7 +1949,7 @@ $(document).ready(function () {
         }
 
         return esValido;
-    }   
+    }
 
 
     // Ordenamiento original por select (mantener compatibilidad)
@@ -1995,10 +2001,47 @@ $(document).ready(function () {
 
     console.log('✅ Inventario - Sistema completo inicializado correctamente');
 
+    // ✅ EVENTOS PARA EL MODAL DE WHATSAPP
+    $("#btnEnviarWhatsApp").click(function() {
+        enviarProductoPorWhatsApp();
+    });
 
+    $("#numeroWhatsApp").on('input', function() {
+        // Limpiar caracteres no numéricos
+        let numero = $(this).val().replace(/\D/g, '');
+
+        // Limitar a 8 dígitos
+        if (numero.length > 8) {
+            numero = numero.substring(0, 8);
+        }
+
+        $(this).val(numero);
+
+        // Validar y actualizar estado del botón
+        const esValido = numero.length === 8;
+        $("#btnEnviarWhatsApp").prop('disabled', !esValido);
+
+        if (numero.length === 8) {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+        } else if (numero.length > 0) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+        } else {
+            $(this).removeClass('is-valid is-invalid');
+        }
+    });
+
+    // Limpiar modal al cerrar
+    $("#modalWhatsAppNumero").on('hidden.bs.modal', function() {
+        $("#numeroWhatsApp").val('').removeClass('is-valid is-invalid');
+        $("#incluirImagen").prop('checked', true);
+        $("#btnEnviarWhatsApp").prop('disabled', true);
+        const $btn = $("#btnEnviarWhatsApp");
+        $btn.find('.normal-state').show();
+        $btn.find('.loading-state').hide();
+    });
 
     // ========================================
-    // ✅ SISTEMA UNIFICADO DE NOTIFICACIONES
+    // ✅ FUNCIÓN UNIFICADA DE NOTIFICACIONES
     // Reemplazar TODAS las funciones de notificación existentes
     // ========================================
 
@@ -2024,127 +2067,30 @@ $(document).ready(function () {
             // ✅ CONFIGURAR TOASTR CON ESTILOS COMPLETOS
             toastr.options = {
                 "closeButton": true,
-                "debug": false,
-                "newestOnTop": true,
                 "progressBar": true,
                 "positionClass": "toast-top-right",
-                "preventDuplicates": true,
-                "onclick": null,
-                "showDuration": "300",
-                "hideDuration": "1000",
                 "timeOut": tipo === 'success' ? "4000" : "6000",
-                "extendedTimeOut": "1000",
-                "showEasing": "swing",
-                "hideEasing": "linear",
-                "showMethod": "fadeIn",
-                "hideMethod": "fadeOut",
-                "tapToDismiss": true,
-                "escapeHtml": false
+                "preventDuplicates": true
             };
 
-            // ✅ PERSONALIZAR MENSAJE CON ICONOS
-            const iconos = {
-                'success': '✅ ',
-                'danger': '❌ ',
-                'warning': '⚠️ ',
-                'info': 'ℹ️ '
-            };
-
+            // Convertir tipo 'danger' a 'error' para Toastr
             const tipoToastr = tipo === 'danger' ? 'error' : tipo;
-            const icono = iconos[tipo] || iconos[tipoToastr] || '';
-            const mensajeConIcono = icono + mensaje;
 
-            // ✅ MOSTRAR TOASTR
+            // Mostrar notificación
             if (titulo) {
-                toastr[tipoToastr](mensajeConIcono, titulo);
+                toastr[tipoToastr](mensaje, titulo);
             } else {
-                toastr[tipoToastr](mensajeConIcono);
+                toastr[tipoToastr](mensaje);
             }
 
             return;
         }
 
-        // ✅ FALLBACK SIMPLE SI NO HAY TOASTR
-        console.warn('⚠️ Toastr no disponible');
+        // ✅ FALLBACK simple si no hay Toastr
+        console.warn('⚠️ Toastr no disponible, usando alert');
         alert((titulo ? titulo + ': ' : '') + mensaje);
     }
-    /**
-     * Función para crear alertas Bootstrap personalizadas
-     * SOLO se usa como fallback cuando no hay Toastr o SweetAlert
-     */
-    function crearAlertaBootstrap(mensaje, tipo, titulo = '') {
-        const colorBootstrap = {
-            'success': 'success',
-            'danger': 'danger',
-            'warning': 'warning',
-            'info': 'info'
-        }[tipo] || 'info';
 
-        const icono = {
-            'success': 'bi-check-circle',
-            'danger': 'bi-exclamation-triangle',
-            'warning': 'bi-exclamation-triangle',
-            'info': 'bi-info-circle'
-        }[tipo] || 'bi-info-circle';
-
-        const alertId = 'alert-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        const mensajeCompleto = titulo ? `<strong>${titulo}:</strong> ${mensaje}` : mensaje;
-
-        const alertHtml = `
-        <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm" 
-             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;" 
-             role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
-                <div class="flex-grow-1">
-                    ${mensajeCompleto}
-                </div>
-                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        </div>
-    `;
-
-        // Verificar que no existe ya una alerta con el mismo mensaje
-        if ($(`div[role="alert"]:contains("${mensaje.substring(0, 20)}")`).length > 0) {
-            console.log('🚫 Alerta Bootstrap duplicada bloqueada');
-            return;
-        }
-
-        $('body').append(alertHtml);
-
-        // Auto-remover
-        setTimeout(() => {
-            $(`#${alertId}`).fadeOut(300, function () {
-                $(this).remove();
-            });
-        }, tipo === 'danger' ? 8000 : 5000);
-
-        console.log(`✅ Alerta Bootstrap creada: ${alertId}`);
-    }
-
-    // ========================================
-    // ✅ FUNCIONES DE COMPATIBILIDAD
-    // Para mantener código existente funcionando
-    // ========================================
-
-    /**
-     * Función de compatibilidad con el formato anterior
-     * @param {string} titulo - Título
-     * @param {string} mensaje - Mensaje  
-     * @param {string} tipo - Tipo
-     */
-    function mostrarNotificacionLegacy(titulo, mensaje, tipo) {
-        mostrarNotificacion(mensaje, tipo, titulo);
-    }
-
-    /**
-     * Función de compatibilidad con formato simple
-     * @param {string} mensaje - Mensaje
-     * @param {string} tipo - Tipo
-     */
-    function mostrarAlertaSimple(mensaje, tipo) {
-        mostrarNotificacion(mensaje, tipo);
-    }
 
     // ========================================
     // FUNCIÓN PARA ACTUALIZAR CONTADORES DE LA TABLA
@@ -2277,3 +2223,197 @@ $(document).ready(function () {
         }
     });
 });
+
+// ========================================
+// ✅ FUNCIONES UNIFICADAS DE COMPARTIR
+// ========================================
+
+// Variable global para almacenar el producto a compartir
+let productoParaCompartir = null;
+
+// Función principal de WhatsApp desde modal de vista rápida
+function compartirPorWhatsApp() {
+    try {
+        const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
+        const fila = $(`tr[data-id="${productoId}"]`);
+
+        if (!productoId || fila.length === 0) {
+            mostrarNotificacion("No se pudo identificar el producto para compartir.", "danger");
+            return;
+        }
+
+        // Cargar datos del producto
+        productoParaCompartir = {
+            nombre: $("#nombreProductoVistaRapida").text(),
+            precio: $("#precioProductoVistaRapida").text(),
+            stock: $("#stockProductoVistaRapida").text(),
+            urlImagen: fila.find("td:eq(1) img").attr("src"),
+            urlProducto: `${window.appConfig ? window.appConfig.apiBaseUrl : window.location.origin}/Inventario/DetalleProducto/${productoId}`,
+            medida: fila.find("td:eq(3) .medida-llanta").text().trim(), // Capturar medida
+            marca: fila.find("td:eq(4) .marca-modelo span").first().text().trim() // Capturar marca
+        };
+
+        // Verificar si existe el modal de número de WhatsApp
+        if ($("#modalWhatsAppNumero").length > 0) {
+            // Mostrar preview del producto en el modal
+            $("#productoPreview").html(`
+                <div class="d-flex align-items-center">
+                    <img src="${productoParaCompartir.urlImagen || '/images/no-image.png'}"
+                         alt="${productoParaCompartir.nombre}"
+                         class="me-3"
+                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                    <div>
+                        <h6 class="mb-1">${productoParaCompartir.nombre}</h6>
+                        <p class="mb-0 text-muted">${productoParaCompartir.precio} - ${productoParaCompartir.stock} unidades disponibles</p>
+                    </div>
+                </div>
+            `);
+
+            // Mostrar el modal del número de WhatsApp
+            $("#modalWhatsAppNumero").modal("show");
+        } else {
+            // Método directo sin modal
+            compartirDirectoPorWhatsApp();
+        }
+
+        console.log('✅ Función compartir WhatsApp ejecutada correctamente');
+
+    } catch (error) {
+        console.error('❌ Error al compartir por WhatsApp:', error);
+        mostrarNotificacion("Error al compartir por WhatsApp: " + error.message, "danger");
+    }
+}
+
+// Función para compartir directamente sin modal
+function compartirDirectoPorWhatsApp() {
+    try {
+        const nombre = $("#nombreProductoVistaRapida").text();
+        const precio = $("#precioProductoVistaRapida").text();
+        const stock = $("#stockProductoVistaRapida").text();
+        const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
+
+        // Obtener URL de la imagen del producto
+        let urlImagen = '';
+        const fila = $(`tr[data-id="${productoId}"]`);
+        const imagenProducto = fila.find("td:eq(1) img").attr("src");
+        if (imagenProducto && !imagenProducto.includes('no-image.png')) {
+            urlImagen = `${window.appConfig ? window.appConfig.apiBaseUrl : window.location.origin}${imagenProducto}`;
+        }
+
+        // ✅ FORMATO CORRECTO Y UNIFICADO - Usar configuración dinámica
+        const baseUrl = window.appConfig ? window.appConfig.webBaseUrl : window.location.origin;
+        let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+        mensaje += `${nombre}\n`;
+        mensaje += `Precio: ${precio}\n`;
+        mensaje += `Stock: ${stock}\n`;
+        mensaje += `Más detalles: ${baseUrl}/Inventario/DetalleProducto/${productoId}\n\n`;
+
+        if (urlImagen) {
+            mensaje += `Imagen: ${baseUrl}${urlImagen}`;
+        }
+
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+
+        window.open(whatsappUrl, '_blank');
+
+        mostrarNotificacion("Producto compartido por WhatsApp exitosamente", "success");
+
+    } catch (error) {
+        console.error('❌ Error en compartir directo:', error);
+        mostrarNotificacion("Error al compartir por WhatsApp", "danger");
+    }
+}
+
+// Función para enviar con número específico
+function enviarProductoPorWhatsApp() {
+    if (!productoParaCompartir) {
+        mostrarNotificacion("Error: No hay producto seleccionado para enviar.", "danger");
+        return;
+    }
+
+    const numeroWhatsApp = $("#numeroWhatsApp").val().replace(/\D/g, '');
+    const incluirImagen = $("#incluirImagen").is(":checked");
+
+    if (numeroWhatsApp.length !== 8) {
+        mostrarNotificacion("Por favor, ingrese un número de WhatsApp válido de 8 dígitos.", "warning");
+        return;
+    }
+
+    try {
+        // ✅ CONSTRUIR MENSAJE CON FORMATO UNIFICADO
+        let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+        mensaje += `${productoParaCompartir.nombre.replace('₡', '').trim()}\n`;
+
+        // Agregar información de llanta si está disponible en el producto
+        if (productoParaCompartir.medida && productoParaCompartir.medida !== '-' && productoParaCompartir.medida !== '') {
+            mensaje += `Medida: ${productoParaCompartir.medida}\n`;
+        }
+        if (productoParaCompartir.marca && productoParaCompartir.marca !== '-' && productoParaCompartir.marca !== '') {
+            mensaje += `Marca: ${productoParaCompartir.marca}\n`;
+        }
+
+        mensaje += `Precio: ${productoParaCompartir.precio}\n`;
+        mensaje += `Stock: ${productoParaCompartir.stock}\n`;
+        mensaje += `Más detalles: ${productoParaCompartir.urlProducto}\n\n`;
+
+        if (incluirImagen && productoParaCompartir.urlImagen && !productoParaCompartir.urlImagen.includes('no-image.png')) {
+            mensaje += `Imagen: ${productoParaCompartir.urlImagen}`;
+        }
+
+        // Construir la URL de WhatsApp con el número específico
+        const urlWhatsApp = `https://wa.me/506${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+        // Abrir WhatsApp
+        window.open(urlWhatsApp, '_blank');
+
+        // Ocultar modal y mostrar notificación
+        $("#modalWhatsAppNumero").modal("hide");
+        mostrarNotificacion("Mensaje enviado a WhatsApp correctamente", "success");
+
+        // Restablecer estado del botón
+        const $btnEnviar = $("#btnEnviarWhatsApp");
+        $btnEnviar.find('.normal-state').show();
+        $btnEnviar.find('.loading-state').hide();
+        $btnEnviar.prop('disabled', true);
+
+    } catch (error) {
+        console.error('❌ Error al enviar por WhatsApp:', error);
+        mostrarNotificacion("Error al enviar por WhatsApp: " + error.message, "danger");
+    }
+}
+
+// Función para compartir por email
+function compartirPorEmail() {
+    try {
+        const nombre = $("#nombreProductoVistaRapida").text();
+        const precio = $("#precioProductoVistaRapida").text();
+        const stock = $("#stockProductoVistaRapida").text();
+        const descripcion = $("#descripcionVistaRapida").text();
+        const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
+
+        const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
+        const asunto = `Producto: ${nombre}`;
+        const cuerpo = `Hola,
+
+Te comparto información sobre este producto:
+
+PRODUCTO: ${nombre}
+PRECIO: ${precio}
+STOCK DISPONIBLE: ${stock} unidades
+DESCRIPCIÓN: ${descripcion}
+
+Ver detalles completos:
+${urlProducto}
+
+Saludos.`;
+
+        const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+        window.location.href = emailUrl;
+
+        mostrarNotificacion("Cliente de email abierto correctamente", "info");
+
+    } catch (error) {
+        console.error('❌ Error al compartir por Email:', error);
+        mostrarNotificacion("Error al compartir por Email", "danger");
+    }
+}

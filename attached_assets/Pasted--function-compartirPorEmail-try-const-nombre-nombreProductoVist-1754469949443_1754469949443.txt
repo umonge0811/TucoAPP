@@ -1,0 +1,120 @@
+    function compartirPorEmail() {
+        try {
+            const nombre = $("#nombreProductoVistaRapida").text();
+            const precio = $("#precioProductoVistaRapida").text();
+            const stock = $("#stockProductoVistaRapida").text();
+            const descripcion = $("#descripcionVistaRapida").text();
+            const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
+
+            const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
+            const asunto = `Producto: ${nombre}`;
+            const cuerpo = `Hola,
+
+                Te comparto información sobre este producto:
+
+                🛞 PRODUCTO: ${nombre}
+
+                💰 PRECIO: ${precio}
+                📦 STOCK DISPONIBLE: ${stock} unidades
+                📝 DESCRIPCIÓN: ${descripcion}
+
+                🔗 Ver detalles completos:
+                ${urlProducto}
+
+                Saludos.`;
+
+            const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+            window.location.href = emailUrl;
+            console.log('✅ Compartido por Email');
+        } catch (error) {
+            console.error('❌ Error al compartir por Email:', error);
+            mostrarNotificacion("Error", "No se pudo compartir por Email", "danger");
+        }
+    }
+
+    // ✅ FUNCIÓN PARA ENVIAR PRODUCTO POR WHATSAPP USANDO LA API
+    function enviarProductoPorWhatsApp() {
+        console.log('📱 === ENVIANDO PRODUCTO POR WHATSAPP ===');
+
+        // Validar que tenemos los datos del producto
+        if (!productoParaCompartir) {
+            mostrarNotificacion("Error: No se han cargado los datos del producto", "danger");
+            return;
+        }
+
+        // Obtener número ingresado
+        const numeroIngresado = $("#numeroWhatsApp").val().trim();
+        if (!numeroIngresado || numeroIngresado.length !== 8) {
+            mostrarNotificacion("Por favor ingrese un número válido de 8 dígitos", "warning");
+            $("#numeroWhatsApp").focus();
+            return;
+        }
+
+        // Formar número completo con código de país
+        const numeroCompleto = `506${numeroIngresado}`;
+        const incluirImagen = $("#incluirImagen").is(':checked');
+
+        console.log('📱 Datos a enviar:', {
+            numero: numeroCompleto,
+            producto: productoParaCompartir.nombre,
+            incluirImagen: incluirImagen
+        });
+
+        // Mostrar estado de carga
+        const $btn = $("#btnEnviarWhatsApp");
+        $btn.prop('disabled', true);
+        $btn.find('.normal-state').hide();
+        $btn.find('.loading-state').show();
+
+        // Preparar datos para la API
+        const datosEnvio = {
+            numero: numeroCompleto,
+            nombreProducto: productoParaCompartir.nombre,
+            precio: productoParaCompartir.precio,
+            stock: productoParaCompartir.stock,
+            urlProducto: productoParaCompartir.urlProducto,
+            urlImagen: incluirImagen ? productoParaCompartir.urlImagen : null
+        };
+
+        // Enviar usando la API
+        $.ajax({
+            url: 'https://localhost:7273/api/WhatsApp/compartir-producto',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(datosEnvio),
+            success: function(response) {
+                console.log('✅ Respuesta exitosa:', response);
+                
+                // Cerrar modal
+                $("#modalWhatsAppNumero").modal("hide");
+                
+                // Mostrar mensaje de éxito
+                mostrarNotificacion(`Producto enviado exitosamente a +${numeroCompleto}`, "success");
+                
+                console.log('✅ Producto compartido por WhatsApp exitosamente');
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Error enviando por WhatsApp:', error);
+                console.error('❌ Response:', xhr.responseText);
+                
+                let mensajeError = 'Error al enviar el mensaje por WhatsApp';
+                
+                if (xhr.responseText) {
+                    try {
+                        const errorResponse = JSON.parse(xhr.responseText);
+                        mensajeError = errorResponse.message || mensajeError;
+                    } catch (e) {
+                        mensajeError = `Error ${xhr.status}: ${error}`;
+                    }
+                }
+                
+                mostrarNotificacion(mensajeError, "danger");
+            },
+            complete: function() {
+                // Rehabilitar botón
+                $btn.prop('disabled', false);
+                $btn.find('.normal-state').show();
+                $btn.find('.loading-state').hide();
+            }
+        });
+    }

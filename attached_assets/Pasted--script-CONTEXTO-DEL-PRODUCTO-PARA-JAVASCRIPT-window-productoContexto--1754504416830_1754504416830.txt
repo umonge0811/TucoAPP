@@ -1,0 +1,93 @@
+    <script>
+        // ✅ CONTEXTO DEL PRODUCTO PARA JAVASCRIPT
+        window.productoContexto = {
+            id: @Model.ProductoId,
+            nombre: '@Html.Raw(Model.NombreProducto.Replace("'", "\\'"))',
+            stock: @Model.CantidadEnInventario,
+            stockMinimo: @Model.StockMinimo,
+            precio: '@((Model.Precio ?? Model.PrecioCalculado ?? 0).ToString("N0"))',
+            // Incluir la URL de la primera imagen si existe, para el modal de WhatsApp
+            imagenPrincipal: '@(Model.Imagenes != null && Model.Imagenes.Any() ? Model.Imagenes.First().UrlImagen : "")'
+        };
+
+        // ✅ INICIALIZAR CUANDO EL DOM ESTÉ LISTO
+        $(document).ready(function() {
+            // Inicializar tooltips
+            inicializarTooltips();
+
+            // Habilitar botón de enviar WhatsApp si el número es válido
+            $('#numeroWhatsApp').on('input', function() {
+                if ($(this).val().length === 8 && /^[0-9]+$/.test($(this).val())) {
+                    $('#btnEnviarWhatsApp').prop('disabled', false);
+                } else {
+                    $('#btnEnviarWhatsApp').prop('disabled', true);
+                }
+            });
+
+            // Lógica para llenar el preview del producto en el modal
+            $('#modalWhatsAppNumero').on('show.bs.modal', function (event) {
+                const producto = window.productoContexto;
+                $('#productoPreview').html(`
+                    <div class="d-flex align-items-center">
+                        ${producto.imagenPrincipal ? `<img src="${producto.imagenPrincipal}" alt="${producto.nombre}" class="img-thumbnail me-3" style="width: 80px; height: 80px; object-fit: cover;">` : ''}
+                        <div>
+                            <strong>${producto.nombre}</strong><br>
+                            <small>ID: ${producto.id}</small><br>
+                            <small class="text-success">₡${producto.precio}</small>
+                        </div>
+                    </div>
+                `);
+                // Resetear el número y el estado del botón al abrir el modal
+                $('#numeroWhatsApp').val('');
+                $('#btnEnviarWhatsApp').prop('disabled', true);
+            });
+
+            // Lógica para enviar por WhatsApp
+            $('#btnEnviarWhatsApp').on('click', function() {
+                const numero = $('#numeroWhatsApp').val();
+                const incluirImagen = $('#incluirImagen').is(':checked');
+                const producto = window.productoContexto;
+
+                if (!numero || numero.length !== 8 || !/^[0-9]+$/.test(numero)) {
+                    alert('Por favor, ingrese un número de WhatsApp válido de 8 dígitos.');
+                    return;
+                }
+
+                let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+                mensaje += `*${producto.nombre}*\n`;
+                mensaje += `Precio: ₡${producto.precio}\n`;
+                mensaje += `Stock: ${producto.stock} unidades\n`;
+                mensaje += `Más detalles: ${window.location.origin}${window.location.pathname}\n`; // URL de la página actual
+
+                if (incluirImagen && producto.imagenPrincipal) {
+                    // Nota: WhatsApp no soporta enviar imágenes directamente por URL en mensajes de texto.
+                    // Se enviará el enlace a la imagen. Para una integración más avanzada, se necesitaría una API de WhatsApp.
+                    mensaje += `\nImagen: ${producto.imagenPrincipal}`;
+                }
+
+                const urlWhatsApp = `https://wa.me/+506${numero}?text=${encodeURIComponent(mensaje)}`;
+
+                // Mostrar estado de carga
+                $(this).find('.normal-state').hide();
+                $(this).find('.loading-state').show();
+                $(this).prop('disabled', true);
+
+                // Simular envío (en una app real, se haría una llamada a la API)
+                setTimeout(() => {
+                    window.open(urlWhatsApp, '_blank');
+                    $('#modalWhatsAppNumero').modal('hide');
+                    // Ocultar estado de carga y resetear el botón
+                    $(this).find('.loading-state').hide();
+                    $(this).find('.normal-state').show();
+                }, 1500); // Simula un pequeño retraso
+            });
+
+            console.log('🎯 Vista de detalle lista con contexto:', window.productoContexto);
+        });
+
+        // Función para ser llamada desde el botón en el HTML
+        function compartirProducto() {
+            $('#modalWhatsAppNumero').modal('show');
+        }
+
+    </script>
