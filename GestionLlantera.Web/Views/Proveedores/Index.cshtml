@@ -168,20 +168,21 @@
                                    class="form-control" 
                                    id="emailProveedor" 
                                    name="email"
-                                   placeholder="proveedor@ejemplo.com">
+                                   placeholder="contacto@proveedor.com"
+                                   maxlength="100">
                             <div class="invalid-feedback"></div>
                             <small class="form-text text-muted">Correo electrónico de contacto</small>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="telefonoProveedor" class="form-label">
-                                <i class="bi bi-telephone me-1"></i>Teléfono
-                            </label>
+                            <label for="telefonoProveedor" class="form-label">Teléfono <span class="text-muted">(8 dígitos)</span></label>
                             <input type="tel" 
                                    class="form-control" 
                                    id="telefonoProveedor" 
                                    name="telefono"
-                                   placeholder="8888-8888"
-                                   maxlength="15">
+                                   placeholder="12345678" 
+                                   maxlength="8" 
+                                   pattern="[0-9]{8}" 
+                                   title="Debe ingresar exactamente 8 dígitos">
                             <div class="invalid-feedback"></div>
                             <small class="form-text text-muted">Número de teléfono</small>
                         </div>
@@ -195,7 +196,7 @@
                                   id="direccionProveedor" 
                                   name="direccion" 
                                   rows="3"
-                                  placeholder="Dirección completa del proveedor"
+                                  placeholder="Dirección comercial del proveedor"
                                   maxlength="500"></textarea>
                         <div class="invalid-feedback"></div>
                         <small class="form-text text-muted">Dirección física del proveedor</small>

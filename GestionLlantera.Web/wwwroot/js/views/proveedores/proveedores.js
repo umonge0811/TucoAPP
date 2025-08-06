@@ -93,6 +93,15 @@ function configurarEventListeners() {
     $('#nombreProveedor, #contactoProveedor, #emailProveedor, #telefonoProveedor, #direccionProveedor').on('input blur', function() {
         validarCampoEnTiempoReal($(this));
     });
+
+    // Permitir solo números en el campo teléfono y limitar a 8 dígitos
+    $('#telefonoProveedor').on('input', function() {
+        let valor = $(this).val().replace(/[^0-9]/g, ''); // Solo números
+        if (valor.length > 8) {
+            valor = valor.substring(0, 8); // Limitar a 8 dígitos
+        }
+        $(this).val(valor);
+    });
 }
 
 // =====================================
@@ -604,12 +613,9 @@ function validarCampoEnTiempoReal(campo) {
             break;
 
         case 'telefonoProveedor':
-            if (valor && !/^[\d\-\s\+\(\)]+$/.test(valor)) {
+            if (valor && !/^[0-9]{8}$/.test(valor)) {
                 esValido = false;
-                mensaje = 'El teléfono solo puede contener números, espacios y guiones';
-            } else if (valor && valor.replace(/[\D]/g, '').length < 8) {
-                esValido = false;
-                mensaje = 'El teléfono debe tener al menos 8 dígitos';
+                mensaje = 'El teléfono debe tener exactamente 8 dígitos (solo números)';
             }
             break;
 
