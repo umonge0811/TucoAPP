@@ -550,7 +550,9 @@
             stock: @Model.CantidadEnInventario,
             stockMinimo: @Model.StockMinimo,
             precio: '@((Model.Precio ?? Model.PrecioCalculado ?? 0).ToString("N0"))',
-            imagenPrincipal: '@(Model.Imagenes != null && Model.Imagenes.Any() ? Model.Imagenes.First().UrlImagen : "")'
+            imagenPrincipal: '@(Model.Imagenes != null && Model.Imagenes.Any() ? Model.Imagenes.First().UrlImagen : "")',
+            medida: '@Html.Raw(Html.Encode(Model.Llanta?.Ancho.ToString() ?? "").Replace("'", "\\\'"))',
+            marca: '@Html.Raw(Html.Encode(Model.Llanta?.Marca ?? "").Replace("'", "\\\'"))'
         };
 
         // Función para ser llamada desde el botón en el HTML

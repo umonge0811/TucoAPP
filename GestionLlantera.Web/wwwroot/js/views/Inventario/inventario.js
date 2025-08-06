@@ -487,8 +487,8 @@ function procesarImagenesDelProducto(imagenes) {
         // ✅ UNA SOLA IMAGEN - CORREGIDA
         $contenedorImagenes.html(`
             <div class="carousel-item active">
-                <img src="${imagenes[0]}" 
-                     class="img-fluid" 
+                <img src="${imagenes[0]}"
+                     class="img-fluid"
                      alt="Imagen del producto"
                      onload="this.style.opacity=1"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
@@ -508,8 +508,8 @@ function procesarImagenesDelProducto(imagenes) {
             const activo = index === 0 ? 'active' : '';
             imagenesHtml += `
                 <div class="carousel-item ${activo}">
-                    <img src="${imagen}" 
-                         class="img-fluid" 
+                    <img src="${imagen}"
+                         class="img-fluid"
                          alt="Imagen del producto ${index + 1}"
                          onload="this.style.opacity=1"
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"
@@ -521,8 +521,8 @@ function procesarImagenesDelProducto(imagenes) {
                 </div>
             `;
             indicadoresHtml += `
-                <button type="button" data-bs-target="#carruselImagenesModal" data-bs-slide-to="${index}" 
-                        class="${activo}" aria-current="${index === 0 ? 'true' : 'false'}" 
+                <button type="button" data-bs-target="#carruselImagenesModal" data-bs-slide-to="${index}"
+                        class="${activo}" aria-current="${index === 0 ? 'true' : 'false'}"
                         aria-label="Slide ${index + 1}"></button>
             `;
         });
@@ -1121,7 +1121,7 @@ function mostrarNotificacion(mensaje, tipo = 'info', titulo = '') {
 /**
  * Función de compatibilidad con el formato anterior
  * @param {string} titulo - Título
- * @param {string} mensaje - Mensaje  
+ * @param {string} mensaje - Mensaje
  * @param {string} tipo - Tipo
  */
 function mostrarNotificacionLegacy(titulo, mensaje, tipo) {
@@ -1161,8 +1161,8 @@ function crearAlertaBootstrap(mensaje, tipo, titulo = '') {
     const mensajeCompleto = titulo ? `<strong>${titulo}:</strong> ${mensaje}` : mensaje;
 
     const alertHtml = `
-    <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm" 
-         style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;" 
+    <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm"
+         style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;"
          role="alert">
         <div class="d-flex align-items-center">
             <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
@@ -1770,7 +1770,7 @@ $(document).ready(function () {
                         </div>
                         <div class="alert alert-danger">
                             <i class="bi bi-exclamation-triangle me-2"></i>
-                            <strong>¡Atención!</strong> Esta acción es <strong>irreversible</strong>. 
+                            <strong>¡Atención!</strong> Esta acción es <strong>irreversible</strong>.
                             Se eliminarán todas las imágenes y datos asociados.
                         </div>
                     </div>
@@ -1949,7 +1949,7 @@ $(document).ready(function () {
         }
 
         return esValido;
-    }   
+    }
 
 
     // Ordenamiento original por select (mantener compatibilidad)
@@ -2248,7 +2248,9 @@ function compartirPorWhatsApp() {
             precio: $("#precioProductoVistaRapida").text(),
             stock: $("#stockProductoVistaRapida").text(),
             urlImagen: fila.find("td:eq(1) img").attr("src"),
-            urlProducto: `${window.location.origin}/Inventario/DetalleProducto/${productoId}`
+            urlProducto: `${window.appConfig ? window.appConfig.apiBaseUrl : window.location.origin}/Inventario/DetalleProducto/${productoId}`,
+            medida: fila.find("td:eq(3) .medida-llanta").text().trim(), // Capturar medida
+            marca: fila.find("td:eq(4) .marca-modelo span").first().text().trim() // Capturar marca
         };
 
         // Verificar si existe el modal de número de WhatsApp
@@ -2256,9 +2258,9 @@ function compartirPorWhatsApp() {
             // Mostrar preview del producto en el modal
             $("#productoPreview").html(`
                 <div class="d-flex align-items-center">
-                    <img src="${productoParaCompartir.urlImagen || '/images/no-image.png'}" 
-                         alt="${productoParaCompartir.nombre}" 
-                         class="me-3" 
+                    <img src="${productoParaCompartir.urlImagen || '/images/no-image.png'}"
+                         alt="${productoParaCompartir.nombre}"
+                         class="me-3"
                          style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                     <div>
                         <h6 class="mb-1">${productoParaCompartir.nombre}</h6>
@@ -2338,9 +2340,18 @@ function enviarProductoPorWhatsApp() {
     }
 
     try {
-        // ✅ CONSTRUIR EL MENSAJE CON EL FORMATO UNIFICADO
+        // ✅ CONSTRUIR MENSAJE CON FORMATO UNIFICADO
         let mensaje = `¡Hola! Te comparto este producto:\n\n`;
-        mensaje += `${productoParaCompartir.nombre}\n`;
+        mensaje += `${productoParaCompartir.nombre.replace('₡', '').trim()}\n`;
+
+        // Agregar información de llanta si está disponible en el producto
+        if (productoParaCompartir.medida && productoParaCompartir.medida !== '-' && productoParaCompartir.medida !== '') {
+            mensaje += `Medida: ${productoParaCompartir.medida}\n`;
+        }
+        if (productoParaCompartir.marca && productoParaCompartir.marca !== '-' && productoParaCompartir.marca !== '') {
+            mensaje += `Marca: ${productoParaCompartir.marca}\n`;
+        }
+
         mensaje += `Precio: ${productoParaCompartir.precio}\n`;
         mensaje += `Stock: ${productoParaCompartir.stock}\n`;
         mensaje += `Más detalles: ${productoParaCompartir.urlProducto}\n\n`;
