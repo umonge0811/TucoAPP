@@ -47,7 +47,7 @@
 
     <!-- Filtros y búsqueda -->
     <div class="row mb-3">
-        <div class="col-12">
+        <div class="col-md-8">
             <div class="d-flex gap-2">
                 <div class="input-group flex-grow-1">
                     <span class="input-group-text"><i class="bi bi-search"></i></span>
@@ -59,6 +59,16 @@
                 <button class="btn btn-outline-secondary" onclick="limpiarFiltros()">
                     <i class="bi bi-arrow-clockwise me-1"></i>Limpiar Filtros
                 </button>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
+                <button type="button" class="btn btn-primary" onclick="abrirModalProveedor()">
+                    <i class="bi bi-plus-circle me-1"></i>Nuevo Proveedor
+                </button>
+                <a href="/Proveedores/PedidosProveedor" class="btn btn-outline-primary">
+                    <i class="bi bi-box-seam me-1"></i>Gestionar Pedidos
+                </a>
             </div>
         </div>
     </div>
