@@ -1,6 +1,7 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authentication;
 using GestionLlantera.Web.Services.Interfaces;
 using Tuco.Clases.DTOs;
 
@@ -16,6 +17,27 @@ namespace GestionLlantera.Web.Controllers
         {
             _anunciosService = anunciosService;
             _logger = logger;
+        }
+
+        /// <summary>
+        /// Método privado para obtener el token de autenticación
+        /// </summary>
+        private async Task<string?> ObtenerTokenAsync()
+        {
+            try
+            {
+                var token = await HttpContext.GetTokenAsync("access_token");
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ No se encontró token de acceso");
+                }
+                return token;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo token de autenticación");
+                return null;
+            }
         }
 
         /// <summary>
@@ -45,11 +67,12 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔔 Obteniendo anuncios desde API");
 
-                var resultado = await _anunciosService.ObtenerAnunciosAsync();
+                var token = await ObtenerTokenAsync();
+                var resultado = await _anunciosService.ObtenerAnunciosAsync(token);
 
                 if (resultado.success)
                 {
-                    return Json(new { success = true, anuncios = resultado.anuncios });
+                    return Json(new { success = true, data = resultado.anuncios });
                 }
                 else
                 {
@@ -67,17 +90,18 @@ namespace GestionLlantera.Web.Controllers
         /// API: Obtener anuncio por ID
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerAnuncio(int id)
+        public async Task<IActionResult> ObtenerAnuncioPorId(int id)
         {
             try
             {
                 _logger.LogInformation("🔔 Obteniendo anuncio {AnuncioId}", id);
 
-                var resultado = await _anunciosService.ObtenerAnuncioPorIdAsync(id);
+                var token = await ObtenerTokenAsync();
+                var resultado = await _anunciosService.ObtenerAnuncioPorIdAsync(id, token);
 
                 if (resultado.success)
                 {
-                    return Json(new { success = true, anuncio = resultado.anuncio });
+                    return Json(new { success = true, data = resultado.anuncio });
                 }
                 else
                 {
@@ -106,11 +130,12 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos de entrada inválidos" });
                 }
 
-                var resultado = await _anunciosService.CrearAnuncioAsync(anuncioDto);
+                var token = await ObtenerTokenAsync();
+                var resultado = await _anunciosService.CrearAnuncioAsync(anuncioDto, token);
 
                 if (resultado.success)
                 {
-                    return Json(new { success = true, anuncio = resultado.anuncio, message = "Anuncio creado exitosamente" });
+                    return Json(new { success = true, data = resultado.anuncio, message = "Anuncio creado exitosamente" });
                 }
                 else
                 {
@@ -139,7 +164,8 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Datos de entrada inválidos" });
                 }
 
-                var resultado = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto);
+                var token = await ObtenerTokenAsync();
+                var resultado = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto, token);
 
                 if (resultado.success)
                 {
@@ -167,7 +193,8 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔔 Eliminando anuncio {AnuncioId}", id);
 
-                var resultado = await _anunciosService.EliminarAnuncioAsync(id);
+                var token = await ObtenerTokenAsync();
+                var resultado = await _anunciosService.EliminarAnuncioAsync(id, token);
 
                 if (resultado.success)
                 {
@@ -195,7 +222,8 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔔 Cambiando estado del anuncio {AnuncioId} a {Estado}", id, activo ? "ACTIVO" : "INACTIVO");
 
-                var resultado = await _anunciosService.CambiarEstadoAnuncioAsync(id, activo);
+                var token = await ObtenerTokenAsync();
+                var resultado = await _anunciosService.CambiarEstadoAnuncioAsync(id, activo, token);
 
                 if (resultado.success)
                 {

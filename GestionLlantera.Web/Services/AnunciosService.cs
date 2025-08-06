@@ -30,14 +30,14 @@ namespace GestionLlantera.Web.Services
             };
         }
 
-        public async Task<(bool success, List<AnuncioDTO> anuncios, string message)> ObtenerAnunciosAsync()
+        public async Task<(bool success, List<AnuncioDTO> anuncios, string message)> ObtenerAnunciosAsync(string? token = null)
         {
             try
             {
                 _logger.LogInformation("🔔 Obteniendo anuncios desde la API");
 
                 // Configurar autenticación
-                await ConfigurarAutenticacionAsync();
+                await ConfigurarAutenticacionAsync(token);
 
                 var response = await _httpClient.GetAsync("api/anuncios");
 
@@ -64,14 +64,14 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, AnuncioDTO? anuncio, string message)> ObtenerAnuncioPorIdAsync(int anuncioId)
+        public async Task<(bool success, AnuncioDTO? anuncio, string message)> ObtenerAnuncioPorIdAsync(int anuncioId, string? token = null)
         {
             try
             {
                 _logger.LogInformation("🔔 Obteniendo anuncio {AnuncioId} desde la API", anuncioId);
 
                 // Configurar autenticación
-                await ConfigurarAutenticacionAsync();
+                await ConfigurarAutenticacionAsync(token);
 
                 var response = await _httpClient.GetAsync($"api/anuncios/{anuncioId}");
 
@@ -98,14 +98,14 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, AnuncioDTO? anuncio, string message)> CrearAnuncioAsync(CrearAnuncioDTO anuncioDto)
+        public async Task<(bool success, AnuncioDTO? anuncio, string message)> CrearAnuncioAsync(CrearAnuncioDTO anuncioDto, string? token = null)
         {
             try
             {
                 _logger.LogInformation("🔔 Creando anuncio: {Titulo}", anuncioDto.Titulo);
 
                 // Configurar autenticación
-                await ConfigurarAutenticacionAsync();
+                await ConfigurarAutenticacionAsync(token);
 
                 var json = JsonSerializer.Serialize(anuncioDto, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -140,14 +140,14 @@ namespace GestionLlantera.Web.Services
             return (false, null, "Error desconocido al crear anuncio");
         }
 
-        public async Task<(bool success, string message)> ActualizarAnuncioAsync(int anuncioId, ActualizarAnuncioDTO anuncioDto)
+        public async Task<(bool success, string message)> ActualizarAnuncioAsync(int anuncioId, ActualizarAnuncioDTO anuncioDto, string? token = null)
         {
             try
             {
                 _logger.LogInformation("🔔 Actualizando anuncio {AnuncioId}: {Titulo}", anuncioId, anuncioDto.Titulo);
 
                 // Configurar autenticación
-                await ConfigurarAutenticacionAsync();
+                await ConfigurarAutenticacionAsync(token);
 
                 var json = JsonSerializer.Serialize(anuncioDto, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -173,14 +173,14 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, string message)> EliminarAnuncioAsync(int anuncioId)
+        public async Task<(bool success, string message)> EliminarAnuncioAsync(int anuncioId, string? token = null)
         {
             try
             {
                 _logger.LogInformation("🔔 Eliminando anuncio {AnuncioId}", anuncioId);
 
                 // Configurar autenticación
-                await ConfigurarAutenticacionAsync();
+                await ConfigurarAutenticacionAsync(token);
 
                 var response = await _httpClient.DeleteAsync($"api/anuncios/{anuncioId}");
 
@@ -203,14 +203,14 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, string message)> CambiarEstadoAnuncioAsync(int anuncioId, bool activo)
+        public async Task<(bool success, string message)> CambiarEstadoAnuncioAsync(int anuncioId, bool activo, string? token = null)
         {
             try
             {
                 _logger.LogInformation("🔔 Cambiando estado de anuncio {AnuncioId} a {Estado}", anuncioId, activo ? "ACTIVO" : "INACTIVO");
 
                 // Configurar autenticación
-                await ConfigurarAutenticacionAsync();
+                await ConfigurarAutenticacionAsync(token);
 
                 var json = JsonSerializer.Serialize(activo, _jsonOptions);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -239,18 +239,27 @@ namespace GestionLlantera.Web.Services
         /// <summary>
         /// Configura la autenticación para las peticiones HTTP
         /// </summary>
-        private async Task ConfigurarAutenticacionAsync()
+        private async Task ConfigurarAutenticacionAsync(string? token = null)
         {
             try
             {
+                // Si se proporciona un token directamente, usarlo
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    _logger.LogDebug("🔐 Token de autenticación configurado directamente para AnunciosService");
+                    return;
+                }
+
+                // Si no, intentar obtenerlo del contexto HTTP
                 var context = _httpContextAccessor.HttpContext;
                 if (context != null)
                 {
-                    var token = await context.GetTokenAsync("access_token");
-                    if (!string.IsNullOrEmpty(token))
+                    var contextToken = await context.GetTokenAsync("access_token");
+                    if (!string.IsNullOrEmpty(contextToken))
                     {
-                        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                        _logger.LogDebug("🔐 Token de autenticación configurado para AnunciosService");
+                        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", contextToken);
+                        _logger.LogDebug("🔐 Token de autenticación configurado desde contexto para AnunciosService");
                     }
                     else
                     {
