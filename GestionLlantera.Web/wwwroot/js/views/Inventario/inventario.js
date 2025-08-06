@@ -1094,12 +1094,78 @@ function mostrarNotificacion(mensaje, tipo = 'info', titulo = '') {
 }
 
 /**
- * Función de compatibilidad - SIMPLIFICADA
+ * Función de compatibilidad con el formato anterior
+ * @param {string} titulo - Título
+ * @param {string} mensaje - Mensaje  
+ * @param {string} tipo - Tipo
+ */
+function mostrarNotificacionLegacy(titulo, mensaje, tipo) {
+    mostrarNotificacion(mensaje, tipo, titulo);
+}
+
+/**
+ * Función de compatibilidad con formato simple
+ * @param {string} mensaje - Mensaje
+ * @param {string} tipo - Tipo
  */
 function mostrarAlertaSimple(mensaje, tipo) {
     mostrarNotificacion(mensaje, tipo);
 }
 
+
+/**
+ * Función para crear alertas Bootstrap personalizadas
+ * SOLO se usa como fallback cuando no hay Toastr o SweetAlert
+ */
+function crearAlertaBootstrap(mensaje, tipo, titulo = '') {
+    const colorBootstrap = {
+        'success': 'success',
+        'danger': 'danger',
+        'warning': 'warning',
+        'info': 'info'
+    }[tipo] || 'info';
+
+    const icono = {
+        'success': 'bi-check-circle',
+        'danger': 'bi-exclamation-triangle',
+        'warning': 'bi-exclamation-triangle',
+        'info': 'bi-info-circle'
+    }[tipo] || 'bi-info-circle';
+
+    const alertId = 'alert-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    const mensajeCompleto = titulo ? `<strong>${titulo}:</strong> ${mensaje}` : mensaje;
+
+    const alertHtml = `
+    <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm" 
+         style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;" 
+         role="alert">
+        <div class="d-flex align-items-center">
+            <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
+            <div class="flex-grow-1">
+                ${mensajeCompleto}
+            </div>
+            <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+`;
+
+    // Verificar que no existe ya una alerta con el mismo mensaje
+    if ($(`div[role="alert"]:contains("${mensaje.substring(0, 20)}")`).length > 0) {
+        console.log('🚫 Alerta Bootstrap duplicada bloqueada');
+        return;
+    }
+
+    $('body').append(alertHtml);
+
+    // Auto-remover
+    setTimeout(() => {
+        $(`#${alertId}`).fadeOut(300, function () {
+            $(this).remove();
+        });
+    }, tipo === 'danger' ? 8000 : 5000);
+
+    console.log(`✅ Alerta Bootstrap creada: ${alertId}`);
+}
 
 /**
  * Función principal para ejecutar el ajuste de stock
@@ -1467,7 +1533,7 @@ $(document).ready(function () {
     console.log('✅ Sistema de ajuste de stock inicializado correctamente');
     console.log('🚀 Inventario - Inicializando sistema completo');
 
-    // Limpiar eventos previos
+    // ✅ Limpiar eventos previos
     $(document).off('click', '.producto-img-mini');
     $(document).off('click', '.producto-img-link');
     $(document).off('click', '.producto-img-mini img');
@@ -1893,92 +1959,6 @@ $(document).ready(function () {
         }
     }
 
-    // ✅ FUNCIÓN PARA ENVIAR PRODUCTO POR WHATSAPP USANDO LA API
-    function enviarProductoPorWhatsApp() {
-        console.log('📱 === ENVIANDO PRODUCTO POR WHATSAPP ===');
-
-        // Validar que tenemos los datos del producto
-        if (!productoParaCompartir) {
-            mostrarNotificacion("Error: No se han cargado los datos del producto", "danger");
-            return;
-        }
-
-        // Obtener número ingresado
-        const numeroIngresado = $("#numeroWhatsApp").val().trim();
-        if (!numeroIngresado || numeroIngresado.length !== 8) {
-            mostrarNotificacion("Por favor ingrese un número válido de 8 dígitos", "warning");
-            $("#numeroWhatsApp").focus();
-            return;
-        }
-
-        // Formar número completo con código de país
-        const numeroCompleto = `506${numeroIngresado}`;
-        const incluirImagen = $("#incluirImagen").is(':checked');
-
-        console.log('📱 Datos a enviar:', {
-            numero: numeroCompleto,
-            producto: productoParaCompartir.nombre,
-            incluirImagen: incluirImagen
-        });
-
-        // Mostrar estado de carga
-        const $btn = $("#btnEnviarWhatsApp");
-        $btn.prop('disabled', true);
-        $btn.find('.normal-state').hide();
-        $btn.find('.loading-state').show();
-
-        // Preparar datos para la API
-        const datosEnvio = {
-            numero: numeroCompleto,
-            nombreProducto: productoParaCompartir.nombre,
-            precio: productoParaCompartir.precio,
-            stock: productoParaCompartir.stock,
-            urlProducto: productoParaCompartir.urlProducto,
-            urlImagen: incluirImagen ? productoParaCompartir.urlImagen : null
-        };
-
-        // Enviar usando la API
-        $.ajax({
-            url: 'https://localhost:7273/api/WhatsApp/compartir-producto',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(datosEnvio),
-            success: function(response) {
-                console.log('✅ Respuesta exitosa:', response);
-                
-                // Cerrar modal
-                $("#modalWhatsAppNumero").modal("hide");
-                
-                // Mostrar mensaje de éxito
-                mostrarNotificacion(`Producto enviado exitosamente a +${numeroCompleto}`, "success");
-                
-                console.log('✅ Producto compartido por WhatsApp exitosamente');
-            },
-            error: function(xhr, status, error) {
-                console.error('❌ Error enviando por WhatsApp:', error);
-                console.error('❌ Response:', xhr.responseText);
-                
-                let mensajeError = 'Error al enviar el mensaje por WhatsApp';
-                
-                if (xhr.responseText) {
-                    try {
-                        const errorResponse = JSON.parse(xhr.responseText);
-                        mensajeError = errorResponse.message || mensajeError;
-                    } catch (e) {
-                        mensajeError = `Error ${xhr.status}: ${error}`;
-                    }
-                }
-                
-                mostrarNotificacion(mensajeError, "danger");
-            },
-            complete: function() {
-                // Rehabilitar botón
-                $btn.prop('disabled', false);
-                $btn.find('.normal-state').show();
-                $btn.find('.loading-state').hide();
-            }
-        });
-    }
 
     // Función de validación
     function validarFormularioAjuste() {
@@ -2059,18 +2039,18 @@ $(document).ready(function () {
     $("#numeroWhatsApp").on('input', function() {
         // Limpiar caracteres no numéricos
         let numero = $(this).val().replace(/\D/g, '');
-        
+
         // Limitar a 8 dígitos
         if (numero.length > 8) {
             numero = numero.substring(0, 8);
         }
-        
+
         $(this).val(numero);
-        
+
         // Validar y actualizar estado del botón
         const esValido = numero.length === 8;
         $("#btnEnviarWhatsApp").prop('disabled', !esValido);
-        
+
         if (numero.length === 8) {
             $(this).removeClass('is-invalid').addClass('is-valid');
         } else if (numero.length > 0) {
@@ -2161,82 +2141,7 @@ $(document).ready(function () {
         console.warn('⚠️ Toastr no disponible');
         alert((titulo ? titulo + ': ' : '') + mensaje);
     }
-    /**
-     * Función para crear alertas Bootstrap personalizadas
-     * SOLO se usa como fallback cuando no hay Toastr o SweetAlert
-     */
-    function crearAlertaBootstrap(mensaje, tipo, titulo = '') {
-        const colorBootstrap = {
-            'success': 'success',
-            'danger': 'danger',
-            'warning': 'warning',
-            'info': 'info'
-        }[tipo] || 'info';
 
-        const icono = {
-            'success': 'bi-check-circle',
-            'danger': 'bi-exclamation-triangle',
-            'warning': 'bi-exclamation-triangle',
-            'info': 'bi-info-circle'
-        }[tipo] || 'bi-info-circle';
-
-        const alertId = 'alert-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        const mensajeCompleto = titulo ? `<strong>${titulo}:</strong> ${mensaje}` : mensaje;
-
-        const alertHtml = `
-        <div id="${alertId}" class="alert alert-${colorBootstrap} alert-dismissible fade show shadow-sm" 
-             style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;" 
-             role="alert">
-            <div class="d-flex align-items-center">
-                <i class="bi ${icono} me-2" style="font-size: 1.2rem;"></i>
-                <div class="flex-grow-1">
-                    ${mensajeCompleto}
-                </div>
-                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        </div>
-    `;
-
-        // Verificar que no existe ya una alerta con el mismo mensaje
-        if ($(`div[role="alert"]:contains("${mensaje.substring(0, 20)}")`).length > 0) {
-            console.log('🚫 Alerta Bootstrap duplicada bloqueada');
-            return;
-        }
-
-        $('body').append(alertHtml);
-
-        // Auto-remover
-        setTimeout(() => {
-            $(`#${alertId}`).fadeOut(300, function () {
-                $(this).remove();
-            });
-        }, tipo === 'danger' ? 8000 : 5000);
-
-        console.log(`✅ Alerta Bootstrap creada: ${alertId}`);
-    }
-
-    // ========================================
-    // ✅ FUNCIONES DE COMPATIBILIDAD
-    // ========================================
-
-    /**
-     * Función de compatibilidad con el formato anterior
-     * @param {string} titulo - Título
-     * @param {string} mensaje - Mensaje  
-     * @param {string} tipo - Tipo
-     */
-    function mostrarNotificacionLegacy(titulo, mensaje, tipo) {
-        mostrarNotificacion(mensaje, tipo, titulo);
-    }
-
-    /**
-     * Función de compatibilidad con formato simple
-     * @param {string} mensaje - Mensaje
-     * @param {string} tipo - Tipo
-     */
-    function mostrarAlertaSimple(mensaje, tipo) {
-        mostrarNotificacion(mensaje, tipo);
-    }
 
     // ========================================
     // FUNCIÓN PARA ACTUALIZAR CONTADORES DE LA TABLA
