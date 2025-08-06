@@ -1,8 +1,8 @@
 
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication;
 using GestionLlantera.Web.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Tuco.Clases.DTOs;
 
 namespace GestionLlantera.Web.Controllers
@@ -20,225 +20,242 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Método privado para obtener el token de autenticación
+        /// Método auxiliar para obtener el token JWT del usuario autenticado
         /// </summary>
-        private async Task<string?> ObtenerTokenAsync()
+        /// <returns>El token JWT o null si no se encuentra</returns>
+        private string? ObtenerTokenJWT()
         {
-            try
+            // Intentar diferentes métodos para obtener el token, igual que otros controladores
+            var token = User.FindFirst("jwt_token")?.Value;
+
+            if (string.IsNullOrEmpty(token))
             {
-                var token = await HttpContext.GetTokenAsync("access_token");
-                if (string.IsNullOrEmpty(token))
+                token = User.FindFirst("JwtToken")?.Value;
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                token = User.FindFirst("access_token")?.Value;
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                token = Request.Cookies["JwtToken"];
+            }
+
+            if (string.IsNullOrEmpty(token))
+            {
+                // Último intento: buscar en headers
+                if (Request.Headers.ContainsKey("Authorization"))
                 {
-                    _logger.LogWarning("⚠️ No se encontró token de acceso");
+                    var authHeader = Request.Headers["Authorization"].ToString();
+                    if (authHeader.StartsWith("Bearer "))
+                    {
+                        token = authHeader.Substring(7);
+                    }
                 }
-                return token;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error obteniendo token de autenticación");
-                return null;
-            }
+
+            return token;
         }
 
         /// <summary>
-        /// Vista principal de anuncios
+        /// Obtener ID del usuario desde los claims
         /// </summary>
-        public async Task<IActionResult> Index()
+        private int GetUsuarioId()
         {
             try
             {
-                _logger.LogInformation("🔔 === CARGANDO VISTA DE ANUNCIOS ===");
-                return View();
+                var userIdClaim = User.FindFirst("userId")?.Value;
+                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+                {
+                    return userId;
+                }
+
+                var nameIdentifierClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                if (!string.IsNullOrEmpty(nameIdentifierClaim) && int.TryParse(nameIdentifierClaim, out int userIdFromNameIdentifier))
+                {
+                    return userIdFromNameIdentifier;
+                }
+
+                _logger.LogWarning("No se pudo obtener el ID del usuario de los claims");
+                return 4; // Fallback
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al cargar vista de anuncios");
-                return View("Error");
+                _logger.LogError(ex, "Error al obtener ID del usuario");
+                return 4; // Fallback
             }
         }
 
         /// <summary>
-        /// API: Obtener todos los anuncios
+        /// Obtener todos los anuncios activos
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> ObtenerAnuncios()
         {
             try
             {
-                _logger.LogInformation("🔔 Obteniendo anuncios desde API");
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
 
-                var token = await ObtenerTokenAsync();
                 var resultado = await _anunciosService.ObtenerAnunciosAsync(token);
 
-                if (resultado.success)
+                return Json(new
                 {
-                    return Json(new { success = true, data = resultado.anuncios });
-                }
-                else
-                {
-                    return Json(new { success = false, message = resultado.message });
-                }
+                    success = resultado.success,
+                    anuncios = resultado.anuncios,
+                    message = resultado.mensaje
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al obtener anuncios");
+                _logger.LogError(ex, "Error al obtener anuncios");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
         /// <summary>
-        /// API: Obtener anuncio por ID
+        /// Obtener un anuncio específico por ID
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerAnuncioPorId(int id)
+        public async Task<IActionResult> ObtenerAnuncio(int id)
         {
             try
             {
-                _logger.LogInformation("🔔 Obteniendo anuncio {AnuncioId}", id);
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
 
-                var token = await ObtenerTokenAsync();
                 var resultado = await _anunciosService.ObtenerAnuncioPorIdAsync(id, token);
 
-                if (resultado.success)
+                return Json(new
                 {
-                    return Json(new { success = true, data = resultado.anuncio });
-                }
-                else
-                {
-                    return Json(new { success = false, message = resultado.message });
-                }
+                    success = resultado.success,
+                    anuncio = resultado.anuncio,
+                    message = resultado.mensaje
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al obtener anuncio {AnuncioId}", id);
+                _logger.LogError(ex, "Error al obtener anuncio");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
         /// <summary>
-        /// API: Crear nuevo anuncio
+        /// Crear nuevo anuncio
         /// </summary>
         [HttpPost]
         public async Task<IActionResult> CrearAnuncio([FromBody] CrearAnuncioDTO anuncioDto)
         {
             try
             {
-                _logger.LogInformation("🔔 Creando nuevo anuncio: {Titulo}", anuncioDto.Titulo);
-
-                if (!ModelState.IsValid)
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
                 {
-                    return Json(new { success = false, message = "Datos de entrada inválidos" });
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
                 }
 
-                var token = await ObtenerTokenAsync();
                 var resultado = await _anunciosService.CrearAnuncioAsync(anuncioDto, token);
 
-                if (resultado.success)
+                return Json(new
                 {
-                    return Json(new { success = true, data = resultado.anuncio, message = "Anuncio creado exitosamente" });
-                }
-                else
-                {
-                    return Json(new { success = false, message = resultado.message });
-                }
+                    success = resultado.success,
+                    anuncio = resultado.anuncio,
+                    message = resultado.mensaje
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al crear anuncio");
+                _logger.LogError(ex, "Error al crear anuncio");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
         /// <summary>
-        /// API: Actualizar anuncio existente
+        /// Actualizar anuncio existente
         /// </summary>
         [HttpPut]
         public async Task<IActionResult> ActualizarAnuncio(int id, [FromBody] ActualizarAnuncioDTO anuncioDto)
         {
             try
             {
-                _logger.LogInformation("🔔 Actualizando anuncio {AnuncioId}: {Titulo}", id, anuncioDto.Titulo);
-
-                if (!ModelState.IsValid)
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
                 {
-                    return Json(new { success = false, message = "Datos de entrada inválidos" });
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
                 }
 
-                var token = await ObtenerTokenAsync();
                 var resultado = await _anunciosService.ActualizarAnuncioAsync(id, anuncioDto, token);
 
-                if (resultado.success)
+                return Json(new
                 {
-                    return Json(new { success = true, message = resultado.message });
-                }
-                else
-                {
-                    return Json(new { success = false, message = resultado.message });
-                }
+                    success = resultado.success,
+                    message = resultado.mensaje
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al actualizar anuncio {AnuncioId}", id);
+                _logger.LogError(ex, "Error al actualizar anuncio");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
         /// <summary>
-        /// API: Eliminar anuncio
+        /// Eliminar (desactivar) anuncio
         /// </summary>
         [HttpDelete]
         public async Task<IActionResult> EliminarAnuncio(int id)
         {
             try
             {
-                _logger.LogInformation("🔔 Eliminando anuncio {AnuncioId}", id);
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no válido" });
+                }
 
-                var token = await ObtenerTokenAsync();
                 var resultado = await _anunciosService.EliminarAnuncioAsync(id, token);
 
-                if (resultado.success)
+                return Json(new
                 {
-                    return Json(new { success = true, message = resultado.message });
-                }
-                else
-                {
-                    return Json(new { success = false, message = resultado.message });
-                }
+                    success = resultado.success,
+                    message = resultado.mensaje
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al eliminar anuncio {AnuncioId}", id);
+                _logger.LogError(ex, "Error al eliminar anuncio");
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
+    }
 
-        /// <summary>
-        /// API: Cambiar estado de anuncio (activo/inactivo)
-        /// </summary>
-        [HttpPatch]
-        public async Task<IActionResult> CambiarEstadoAnuncio(int id, [FromBody] bool activo)
-        {
-            try
-            {
-                _logger.LogInformation("🔔 Cambiando estado del anuncio {AnuncioId} a {Estado}", id, activo ? "ACTIVO" : "INACTIVO");
+    // DTOs para el controlador Web
+    public class CrearAnuncioDTO
+    {
+        public string Titulo { get; set; } = string.Empty;
+        public string Contenido { get; set; } = string.Empty;
+        public string? TipoAnuncio { get; set; }
+        public string? Prioridad { get; set; }
+        public bool EsImportante { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+    }
 
-                var token = await ObtenerTokenAsync();
-                var resultado = await _anunciosService.CambiarEstadoAnuncioAsync(id, activo, token);
-
-                if (resultado.success)
-                {
-                    return Json(new { success = true, message = resultado.message });
-                }
-                else
-                {
-                    return Json(new { success = false, message = resultado.message });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error al cambiar estado del anuncio {AnuncioId}", id);
-                return Json(new { success = false, message = "Error interno del servidor" });
-            }
-        }
+    public class ActualizarAnuncioDTO
+    {
+        public string Titulo { get; set; } = string.Empty;
+        public string Contenido { get; set; } = string.Empty;
+        public string? TipoAnuncio { get; set; }
+        public string? Prioridad { get; set; }
+        public bool EsImportante { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public bool? Activo { get; set; }
     }
 }

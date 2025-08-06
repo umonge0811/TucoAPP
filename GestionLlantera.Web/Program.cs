@@ -73,6 +73,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // ✅ NUEVO: Servicio de Notas Rápidas
 builder.Services.AddScoped<INotasRapidasService, NotasRapidasService>();
+builder.Services.AddScoped<IAnunciosService, AnunciosService>();
 
 // ✅ NUEVO: Servicio de Anuncios
 builder.Services.AddScoped<IAnunciosService, AnunciosService>();

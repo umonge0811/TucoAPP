@@ -1155,7 +1155,7 @@ async function cargarAnuncios() {
     try {
         console.log('📢 Cargando anuncios del sistema...');
 
-        const response = await fetch('/api/Anuncios', {
+        const response = await fetch('/Anuncios/ObtenerAnuncios', {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -1352,7 +1352,7 @@ async function eliminarAnuncio(anuncioId, titulo) {
             return;
         }
 
-        const response = await fetch(`/api/Anuncios/${anuncioId}`, {
+        const response = await fetch(`/Anuncios/EliminarAnuncio?id=${anuncioId}`, {
             method: 'DELETE',
             credentials: 'include',
             headers: {
@@ -1395,7 +1395,7 @@ async function editarAnuncio(anuncioId) {
     try {
         console.log('✏️ Editando anuncio con ID:', anuncioId);
 
-        const response = await fetch(`/api/Anuncios/${anuncioId}`, {
+        const response = await fetch(`/Anuncios/ObtenerAnuncio?id=${anuncioId}`, {
             method: 'GET',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' }
@@ -1576,12 +1576,12 @@ async function manejarNuevoAnuncio(e) {
 
         if (esEdicion) {
             // Actualizar anuncio existente
-            url = `/api/Anuncios/${anuncioId}`;
+            url = `/Anuncios/ActualizarAnuncio?id=${anuncioId}`;
             method = 'PUT';
             console.log('✏️ Actualizando anuncio existente:', anuncioId);
         } else {
             // Crear nuevo anuncio
-            url = '/api/Anuncios';
+            url = '/Anuncios/CrearAnuncio';
             method = 'POST';
             console.log('🆕 Creando nuevo anuncio');
         }

@@ -1,280 +1,253 @@
 
+using GestionLlantera.Web.Services.Interfaces;
+using Tuco.Clases.DTOs;
 using System.Text.Json;
 using System.Text;
-using Tuco.Clases.DTOs;
-using GestionLlantera.Web.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication;
 using System.Net.Http.Headers;
 
 namespace GestionLlantera.Web.Services
 {
+    /// <summary>
+    /// Servicio para gestionar anuncios en la capa Web
+    /// </summary>
     public class AnunciosService : IAnunciosService
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<AnunciosService> _logger;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly JsonSerializerOptions _jsonOptions;
 
-        public AnunciosService(
-            HttpClient httpClient, 
-            ILogger<AnunciosService> logger,
-            IHttpContextAccessor httpContextAccessor)
+        public AnunciosService(IHttpClientFactory httpClientFactory, ILogger<AnunciosService> logger)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
-            _httpContextAccessor = httpContextAccessor;
-            _jsonOptions = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true
-            };
         }
 
-        public async Task<(bool success, List<AnuncioDTO> anuncios, string message)> ObtenerAnunciosAsync(string? token = null)
+        /// <summary>
+        /// Obtener todos los anuncios activos
+        /// </summary>
+        public async Task<(bool success, List<AnuncioDTO> anuncios, string mensaje)> ObtenerAnunciosAsync(string jwtToken)
         {
             try
             {
-                _logger.LogInformation("🔔 Obteniendo anuncios desde la API");
+                _logger.LogInformation("Obteniendo anuncios desde la API");
 
-                // Configurar autenticación
-                await ConfigurarAutenticacionAsync(token);
-
-                var response = await _httpClient.GetAsync("api/anuncios");
-
-                if (response.IsSuccessStatusCode)
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
                 {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<JsonElement>(jsonResponse, _jsonOptions);
-                    
-                    if (apiResponse.TryGetProperty("anuncios", out var anunciosElement))
-                    {
-                        var anuncios = JsonSerializer.Deserialize<List<AnuncioDTO>>(anunciosElement.GetRawText(), _jsonOptions);
-                        _logger.LogInformation("✅ Se obtuvieron {Count} anuncios", anuncios?.Count ?? 0);
-                        return (true, anuncios ?? new List<AnuncioDTO>(), "Anuncios obtenidos exitosamente");
-                    }
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                _logger.LogWarning("⚠️ No se pudieron obtener los anuncios. Status: {StatusCode}", response.StatusCode);
-                return (false, new List<AnuncioDTO>(), $"Error al obtener anuncios: {response.StatusCode}");
+                var response = await _httpClient.GetAsync("api/Anuncios");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Error al obtener anuncios: {StatusCode}", response.StatusCode);
+                    return (false, new List<AnuncioDTO>(), "Error al obtener anuncios desde la API");
+                }
+
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Respuesta de anuncios recibida: {Content}", jsonContent);
+
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var resultado = JsonSerializer.Deserialize<AnunciosApiResponse>(jsonContent, options);
+
+                if (resultado?.Success == true && resultado.Anuncios != null)
+                {
+                    _logger.LogInformation("✅ {Count} anuncios obtenidos correctamente", resultado.Anuncios.Count);
+                    return (true, resultado.Anuncios, "Anuncios obtenidos correctamente");
+                }
+
+                return (false, new List<AnuncioDTO>(), "No se pudieron obtener los anuncios");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Excepción al obtener anuncios");
+                _logger.LogError(ex, "Error al obtener anuncios");
                 return (false, new List<AnuncioDTO>(), "Error interno al obtener anuncios");
             }
         }
 
-        public async Task<(bool success, AnuncioDTO? anuncio, string message)> ObtenerAnuncioPorIdAsync(int anuncioId, string? token = null)
+        /// <summary>
+        /// Obtener un anuncio por ID
+        /// </summary>
+        public async Task<(bool success, AnuncioDTO anuncio, string mensaje)> ObtenerAnuncioPorIdAsync(int anuncioId, string jwtToken)
         {
             try
             {
-                _logger.LogInformation("🔔 Obteniendo anuncio {AnuncioId} desde la API", anuncioId);
+                _logger.LogInformation("Obteniendo anuncio {AnuncioId} desde la API", anuncioId);
 
-                // Configurar autenticación
-                await ConfigurarAutenticacionAsync(token);
-
-                var response = await _httpClient.GetAsync($"api/anuncios/{anuncioId}");
-
-                if (response.IsSuccessStatusCode)
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
                 {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<JsonElement>(jsonResponse, _jsonOptions);
-                    
-                    if (apiResponse.TryGetProperty("anuncio", out var anuncioElement))
-                    {
-                        var anuncio = JsonSerializer.Deserialize<AnuncioDTO>(anuncioElement.GetRawText(), _jsonOptions);
-                        _logger.LogInformation("✅ Anuncio obtenido: {Titulo}", anuncio?.Titulo);
-                        return (true, anuncio, "Anuncio obtenido exitosamente");
-                    }
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                _logger.LogWarning("⚠️ No se pudo obtener el anuncio {AnuncioId}. Status: {StatusCode}", anuncioId, response.StatusCode);
-                return (false, null, $"Error al obtener anuncio: {response.StatusCode}");
+                var response = await _httpClient.GetAsync($"api/Anuncios/{anuncioId}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Error al obtener anuncio {AnuncioId}: {StatusCode}", anuncioId, response.StatusCode);
+                    return (false, null, "Error al obtener el anuncio");
+                }
+
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var resultado = JsonSerializer.Deserialize<AnuncioApiResponse>(jsonContent, options);
+
+                if (resultado?.Success == true && resultado.Anuncio != null)
+                {
+                    return (true, resultado.Anuncio, "Anuncio obtenido correctamente");
+                }
+
+                return (false, null, "No se pudo obtener el anuncio");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Excepción al obtener anuncio {AnuncioId}", anuncioId);
-                return (false, null, "Error interno al obtener anuncio");
-            }
-        }
-
-        public async Task<(bool success, AnuncioDTO? anuncio, string message)> CrearAnuncioAsync(CrearAnuncioDTO anuncioDto, string? token = null)
-        {
-            try
-            {
-                _logger.LogInformation("🔔 Creando anuncio: {Titulo}", anuncioDto.Titulo);
-
-                // Configurar autenticación
-                await ConfigurarAutenticacionAsync(token);
-
-                var json = JsonSerializer.Serialize(anuncioDto, _jsonOptions);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PostAsync("api/anuncios", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var jsonResponse = await response.Content.ReadAsStringAsync();
-                    var apiResponse = JsonSerializer.Deserialize<JsonElement>(jsonResponse, _jsonOptions);
-                    
-                    if (apiResponse.TryGetProperty("anuncio", out var anuncioElement))
-                    {
-                        var anuncio = JsonSerializer.Deserialize<AnuncioDTO>(anuncioElement.GetRawText(), _jsonOptions);
-                        _logger.LogInformation("✅ Anuncio creado exitosamente: {Titulo}", anuncio?.Titulo);
-                        return (true, anuncio, "Anuncio creado exitosamente");
-                    }
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error al crear anuncio. Status: {StatusCode}, Content: {Content}", response.StatusCode, errorContent);
-                    return (false, null, $"Error al crear anuncio: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Excepción al crear anuncio");
-                return (false, null, "Error interno al crear anuncio");
-            }
-
-            return (false, null, "Error desconocido al crear anuncio");
-        }
-
-        public async Task<(bool success, string message)> ActualizarAnuncioAsync(int anuncioId, ActualizarAnuncioDTO anuncioDto, string? token = null)
-        {
-            try
-            {
-                _logger.LogInformation("🔔 Actualizando anuncio {AnuncioId}: {Titulo}", anuncioId, anuncioDto.Titulo);
-
-                // Configurar autenticación
-                await ConfigurarAutenticacionAsync(token);
-
-                var json = JsonSerializer.Serialize(anuncioDto, _jsonOptions);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PutAsync($"api/anuncios/{anuncioId}", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogInformation("✅ Anuncio actualizado exitosamente: {AnuncioId}", anuncioId);
-                    return (true, "Anuncio actualizado exitosamente");
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error al actualizar anuncio {AnuncioId}. Status: {StatusCode}, Content: {Content}", anuncioId, response.StatusCode, errorContent);
-                    return (false, $"Error al actualizar anuncio: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Excepción al actualizar anuncio {AnuncioId}", anuncioId);
-                return (false, "Error interno al actualizar anuncio");
-            }
-        }
-
-        public async Task<(bool success, string message)> EliminarAnuncioAsync(int anuncioId, string? token = null)
-        {
-            try
-            {
-                _logger.LogInformation("🔔 Eliminando anuncio {AnuncioId}", anuncioId);
-
-                // Configurar autenticación
-                await ConfigurarAutenticacionAsync(token);
-
-                var response = await _httpClient.DeleteAsync($"api/anuncios/{anuncioId}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogInformation("✅ Anuncio eliminado exitosamente: {AnuncioId}", anuncioId);
-                    return (true, "Anuncio eliminado exitosamente");
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error al eliminar anuncio {AnuncioId}. Status: {StatusCode}, Content: {Content}", anuncioId, response.StatusCode, errorContent);
-                    return (false, $"Error al eliminar anuncio: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Excepción al eliminar anuncio {AnuncioId}", anuncioId);
-                return (false, "Error interno al eliminar anuncio");
-            }
-        }
-
-        public async Task<(bool success, string message)> CambiarEstadoAnuncioAsync(int anuncioId, bool activo, string? token = null)
-        {
-            try
-            {
-                _logger.LogInformation("🔔 Cambiando estado de anuncio {AnuncioId} a {Estado}", anuncioId, activo ? "ACTIVO" : "INACTIVO");
-
-                // Configurar autenticación
-                await ConfigurarAutenticacionAsync(token);
-
-                var json = JsonSerializer.Serialize(activo, _jsonOptions);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PatchAsync($"api/anuncios/{anuncioId}/estado", content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogInformation("✅ Estado del anuncio cambiado exitosamente a: {Estado}", activo ? "ACTIVO" : "INACTIVO");
-                    return (true, $"Anuncio {(activo ? "activado" : "desactivado")} exitosamente");
-                }
-                else
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error al cambiar estado del anuncio {AnuncioId}. Status: {StatusCode}, Content: {Content}", anuncioId, response.StatusCode, errorContent);
-                    return (false, $"Error al cambiar estado del anuncio: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Excepción al cambiar estado del anuncio {AnuncioId}", anuncioId);
-                return (false, "Error interno al cambiar estado del anuncio");
+                _logger.LogError(ex, "Error al obtener anuncio {AnuncioId}", anuncioId);
+                return (false, null, "Error interno al obtener el anuncio");
             }
         }
 
         /// <summary>
-        /// Configura la autenticación para las peticiones HTTP
+        /// Crear nuevo anuncio
         /// </summary>
-        private async Task ConfigurarAutenticacionAsync(string? token = null)
+        public async Task<(bool success, AnuncioDTO anuncio, string mensaje)> CrearAnuncioAsync(object anuncioDto, string jwtToken)
         {
             try
             {
-                // Si se proporciona un token directamente, usarlo
-                if (!string.IsNullOrEmpty(token))
+                _logger.LogInformation("Creando nuevo anuncio");
+
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
                 {
-                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    _logger.LogDebug("🔐 Token de autenticación configurado directamente para AnunciosService");
-                    return;
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                // Si no, intentar obtenerlo del contexto HTTP
-                var context = _httpContextAccessor.HttpContext;
-                if (context != null)
+                var json = JsonSerializer.Serialize(anuncioDto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync("api/Anuncios", content);
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var resultado = JsonSerializer.Deserialize<AnuncioApiResponse>(jsonResponse, options);
+
+                if (resultado?.Success == true)
                 {
-                    var contextToken = await context.GetTokenAsync("access_token");
-                    if (!string.IsNullOrEmpty(contextToken))
-                    {
-                        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", contextToken);
-                        _logger.LogDebug("🔐 Token de autenticación configurado desde contexto para AnunciosService");
-                    }
-                    else
-                    {
-                        _logger.LogWarning("⚠️ No se encontró token de acceso en el contexto HTTP");
-                    }
+                    _logger.LogInformation("✅ Anuncio creado correctamente");
+                    return (true, resultado.Anuncio, "Anuncio creado correctamente");
                 }
-                else
-                {
-                    _logger.LogWarning("⚠️ HttpContext es null en AnunciosService");
-                }
+
+                return (false, null, resultado?.Message ?? "Error al crear el anuncio");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error configurando autenticación en AnunciosService");
+                _logger.LogError(ex, "Error al crear anuncio");
+                return (false, null, "Error interno al crear el anuncio");
             }
+        }
+
+        /// <summary>
+        /// Actualizar anuncio existente
+        /// </summary>
+        public async Task<(bool success, string mensaje)> ActualizarAnuncioAsync(int anuncioId, object anuncioDto, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("Actualizando anuncio {AnuncioId}", anuncioId);
+
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var json = JsonSerializer.Serialize(anuncioDto);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync($"api/Anuncios/{anuncioId}", content);
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var resultado = JsonSerializer.Deserialize<ApiResponse>(jsonResponse, options);
+
+                if (resultado?.Success == true)
+                {
+                    _logger.LogInformation("✅ Anuncio {AnuncioId} actualizado correctamente", anuncioId);
+                    return (true, "Anuncio actualizado correctamente");
+                }
+
+                return (false, resultado?.Message ?? "Error al actualizar el anuncio");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar anuncio {AnuncioId}", anuncioId);
+                return (false, "Error interno al actualizar el anuncio");
+            }
+        }
+
+        /// <summary>
+        /// Eliminar (desactivar) anuncio
+        /// </summary>
+        public async Task<(bool success, string mensaje)> EliminarAnuncioAsync(int anuncioId, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("Eliminando anuncio {AnuncioId}", anuncioId);
+
+                // Configurar headers de autorización
+                _httpClient.DefaultRequestHeaders.Clear();
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var response = await _httpClient.DeleteAsync($"api/Anuncios/{anuncioId}");
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var resultado = JsonSerializer.Deserialize<ApiResponse>(jsonResponse, options);
+
+                if (resultado?.Success == true)
+                {
+                    _logger.LogInformation("✅ Anuncio {AnuncioId} eliminado correctamente", anuncioId);
+                    return (true, "Anuncio eliminado correctamente");
+                }
+
+                return (false, resultado?.Message ?? "Error al eliminar el anuncio");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al eliminar anuncio {AnuncioId}", anuncioId);
+                return (false, "Error interno al eliminar el anuncio");
+            }
+        }
+
+        // Clases para deserializar las respuestas de la API
+        private class AnunciosApiResponse
+        {
+            public bool Success { get; set; }
+            public List<AnuncioDTO> Anuncios { get; set; } = new();
+            public string Message { get; set; } = string.Empty;
+        }
+
+        private class AnuncioApiResponse
+        {
+            public bool Success { get; set; }
+            public AnuncioDTO Anuncio { get; set; }
+            public string Message { get; set; } = string.Empty;
+        }
+
+        private class ApiResponse
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; } = string.Empty;
         }
     }
 }

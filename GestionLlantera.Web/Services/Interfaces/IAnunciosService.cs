@@ -5,11 +5,10 @@ namespace GestionLlantera.Web.Services.Interfaces
 {
     public interface IAnunciosService
     {
-        Task<(bool success, List<AnuncioDTO> anuncios, string message)> ObtenerAnunciosAsync(string? token = null);
-        Task<(bool success, AnuncioDTO? anuncio, string message)> ObtenerAnuncioPorIdAsync(int anuncioId, string? token = null);
-        Task<(bool success, AnuncioDTO? anuncio, string message)> CrearAnuncioAsync(CrearAnuncioDTO anuncioDto, string? token = null);
-        Task<(bool success, string message)> ActualizarAnuncioAsync(int anuncioId, ActualizarAnuncioDTO anuncioDto, string? token = null);
-        Task<(bool success, string message)> EliminarAnuncioAsync(int anuncioId, string? token = null);
-        Task<(bool success, string message)> CambiarEstadoAnuncioAsync(int anuncioId, bool activo, string? token = null);
+        Task<(bool success, List<AnuncioDTO> anuncios, string mensaje)> ObtenerAnunciosAsync(string jwtToken);
+        Task<(bool success, AnuncioDTO anuncio, string mensaje)> ObtenerAnuncioPorIdAsync(int anuncioId, string jwtToken);
+        Task<(bool success, AnuncioDTO anuncio, string mensaje)> CrearAnuncioAsync(object anuncioDto, string jwtToken);
+        Task<(bool success, string mensaje)> ActualizarAnuncioAsync(int anuncioId, object anuncioDto, string jwtToken);
+        Task<(bool success, string mensaje)> EliminarAnuncioAsync(int anuncioId, string jwtToken);
     }
 }
