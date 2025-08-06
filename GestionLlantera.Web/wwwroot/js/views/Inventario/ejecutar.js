@@ -7067,9 +7067,20 @@ async function exportarInventario(inventarioId) {
  * ✅ FUNCIÓN: Volver a la lista de inventarios
  */
 function volverAInventarios() {
-    if (confirm('¿Estás seguro de que quieres salir de la toma de inventario?')) {
-        window.location.href = '/Inventario/ProgramarInventario';
-    }
+    Swal.fire({
+        title: '¿Salir del Inventario?',
+        text: '¿Estás seguro de que quieres salir de la toma de inventario?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = '/Inventario/ProgramarInventario';
+        }
+    });
 }
 
 /**
