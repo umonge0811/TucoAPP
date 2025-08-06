@@ -318,8 +318,53 @@ function compartirProducto() {
         return;
     }
 
-    // Usar método tradicional directamente
-    usarMetodoTradicional();
+    // Usar función de WhatsApp mejorada
+    compartirPorWhatsApp();
+}
+
+// Funciones de compartir mejoradas
+function compartirPorWhatsApp() {
+    try {
+        const contexto = window.productoContexto;
+        const nombre = contexto.nombre;
+        const precio = contexto.precio || '0';
+        const stock = contexto.stock || 0;
+        const productoId = contexto.productoId;
+
+        // Obtener URL de la primera imagen si existe
+        let urlImagen = '';
+        const primeraImagen = $('.carousel-item.active img').attr('src');
+        if (primeraImagen && !primeraImagen.includes('no-image.png')) {
+            urlImagen = `${window.location.origin}${primeraImagen}`;
+        }
+
+        // Crear mensaje optimizado para WhatsApp
+        let mensaje = `*${nombre}*\n\n`;
+        mensaje += `Precio: ₡${precio}\n`;
+        mensaje += `Stock disponible: ${stock} unidades\n\n`;
+        
+        if (urlImagen) {
+            mensaje += `Ver imagen:\n${urlImagen}\n\n`;
+        }
+        
+        mensaje += `Más información:\n${window.location.href}`;
+
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+
+        window.open(whatsappUrl, '_blank');
+        console.log('✅ Compartido por WhatsApp');
+        
+        // Mostrar notificación de éxito
+        if (typeof mostrarToastExito === 'function') {
+            mostrarToastExito('¡Producto compartido por WhatsApp!');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error al compartir por WhatsApp:', error);
+        if (typeof mostrarToastError === 'function') {
+            mostrarToastError('No se pudo compartir por WhatsApp');
+        }
+    }
 }
 
 function usarMetodoTradicional() {
@@ -328,7 +373,7 @@ function usarMetodoTradicional() {
     const precio = contexto.precio || '0';
     const url = window.location.href;
 
-    const mensaje = `🛞 *${nombre}*\n\n💰 Precio: ₡${precio}\n\n🔗 Ver detalles:\n${url}`;
+    const mensaje = `*${nombre}*\n\nPrecio: ₡${precio}\n\nVer detalles:\n${url}`;
 
     if (navigator.share) {
         // API Web Share (móviles modernos)

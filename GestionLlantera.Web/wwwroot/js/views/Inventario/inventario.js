@@ -1913,12 +1913,32 @@ $(document).ready(function () {
             const stock = $("#stockProductoVistaRapida").text();
             const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
 
-            const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
-            const mensaje = `🛞 *${nombre}*\n\n💰 Precio: ${precio}\n📦 Stock disponible: ${stock} unidades\n\n🔗 Ver más detalles:\n${urlProducto}`;
+            // Obtener URL de la imagen del producto
+            let urlImagen = '';
+            const imagenProducto = $("#imagenProductoVistaRapida").attr('src');
+            if (imagenProducto && !imagenProducto.includes('no-image.png')) {
+                urlImagen = `${window.location.origin}${imagenProducto}`;
+            }
+
+            // Crear mensaje optimizado para WhatsApp (sin emojis problemáticos)
+            let mensaje = `*${nombre}*\n\n`;
+            mensaje += `Precio: ${precio}\n`;
+            mensaje += `Stock disponible: ${stock}\n\n`;
+            
+            if (urlImagen) {
+                mensaje += `Ver imagen:\n${urlImagen}\n\n`;
+            }
+            
+            mensaje += `Mas informacion:\n${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
+
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
 
             window.open(whatsappUrl, '_blank');
             console.log('✅ Compartido por WhatsApp');
+            
+            // Mostrar notificación de éxito
+            mostrarNotificacion("Éxito", "Producto compartido por WhatsApp", "success");
+            
         } catch (error) {
             console.error('❌ Error al compartir por WhatsApp:', error);
             mostrarNotificacion("Error", "No se pudo compartir por WhatsApp", "danger");
