@@ -1,0 +1,1457 @@
+:7038/api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+:7038/api/permisos/verificar-admin:1  Failed to load resource: the server responded with a status of 500 ()
+:7038/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp:1  Failed to load resource: the server responded with a status of 404 ()
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1021: Object
+ ✅ Botones generados para producto 1021: Crear Ajuste
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1022: Object
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1022: Object
+ ✅ Botones generados para producto 1022: Crear Ajuste
+ ✅ Productos renderizados correctamente con filtros preservados
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 12.5% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ❌ Ocultando panel de ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 7 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 🚨 DETECTIVE: ¡Alguien reseteó la barra a 0px!
+(anonymous) @ ejecutar.js:7118
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+actualizarEstadisticasUI @ ejecutar.js:4622
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+guardarConteoProducto @ ejecutar.js:4402
+await in guardarConteoProducto
+(anonymous) @ ejecutar.js:1786
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+ 🚨 Stack trace del culpable:
+(anonymous) @ ejecutar.js:7119
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+actualizarEstadisticasUI @ ejecutar.js:4622
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+guardarConteoProducto @ ejecutar.js:4402
+await in guardarConteoProducto
+(anonymous) @ ejecutar.js:1786
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+ console.trace
+(anonymous) @ ejecutar.js:7120
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+actualizarEstadisticasUI @ ejecutar.js:4622
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+guardarConteoProducto @ ejecutar.js:4402
+await in guardarConteoProducto
+(anonymous) @ ejecutar.js:1786
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 12.5% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ❌ Ocultando panel de ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 7 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 🎉 Conteo guardado y datos actualizados
+ 🔍 Badges encontrados: Array(29)
+ 📝 === ABRIENDO MODAL DE CONTEO ===
+ 📝 Producto ID: 20
+ 📝 Producto encontrado: Llanta Agregar Marca Agrega Modelo
+ 📝 Sin conteo anterior
+ 🧮 Calculando diferencia: Sistema=1, Físico=0, Diferencia=-1
+ ✅ Modal de conteo abierto exitosamente
+:7038/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🧮 Calculando diferencia: Sistema=1, Físico=1, Diferencia=0
+ 🖱️ Click en botón guardar conteo
+ 💾 === INICIANDO GUARDADO DE CONTEO ===
+ 📊 Datos del conteo: Object
+ 🔄 Cambiando botón a estado de carga...
+ 📤 Enviando datos de conteo: Object
+ 📡 Respuesta recibida: 200
+ ✅ Resultado exitoso: Object
+ ✅ Éxito: Conteo guardado exitosamente
+ 🔍 DETECTIVE: cargarProductosInventario ejecutándose...
+ 📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===
+ 📦 Inventario ID: 5113
+ 📦 Tipo de inventarioId: string
+ 📦 URL que se va a llamar: /TomaInventario/ObtenerProductos/5113
+ 📦 Realizando fetch...
+ 📦 Respuesta recibida:
+ 📦 Status: 200
+ 📦 StatusText: 
+ 📦 OK: true
+ 📦 Parseando JSON...
+ 📦 Datos recibidos: Object
+ 📦 Tipo de data: object
+ 📦 Data.success: true
+ 📦 Data.productos: Array(8)
+ 📦 Cantidad de productos: 8
+ 🔍 === DEBUGGING PRODUCTOS CARGADOS ===
+ 🔍 Respuesta completa: Object
+ 🔍 Productos array: Array(8)
+ 🔍 Estadísticas: Object
+ 🔍 Primer producto: Object
+ 🔍 Propiedades del primer producto: Array(19)
+ ✅ Cargados 8 productos
+ 🎨 Renderizando productos...
+ 🎨 Total productos a renderizar: 8
+ 🎨 Filtros activos: Object
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 17: Object
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 17: Object
+ ✅ Botones generados para producto 17: Crear Ajuste
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 20: Object
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 20: Object
+ ✅ Botones generados para producto 20: Crear Ajuste
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1016: Object
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1016: Object
+ ✅ Botones generados para producto 1016: Crear Ajuste
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1017: Object
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1017: Object
+ ✅ Botones generados para producto 1017: Crear Ajuste
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1018: Object
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1018: Object
+ ✅ Botones generados para producto 1018: Crear Ajuste
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1019: Object
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1019: Object
+ ✅ Botones generados para producto 1019: Crear Ajuste
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1021: Object
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1021: Object
+ ✅ Botones generados para producto 1021: Crear Ajuste
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1022: Object
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1022: Object
+ ✅ Botones generados para producto 1022: Crear Ajuste
+ ✅ Productos renderizados correctamente con filtros preservados
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 25% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ❌ Ocultando panel de ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 6 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 25% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ❌ Ocultando panel de ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 6 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 🎉 Conteo guardado y datos actualizados
+ 🔍 Badges encontrados: Array(30)
+ 📝 === ABRIENDO MODAL DE CONTEO ===
+ 📝 Producto ID: 1016
+ 📝 Producto encontrado: Llanta Kumho Mobile
+ 📝 Sin conteo anterior
+ 🧮 Calculando diferencia: Sistema=5, Físico=0, Diferencia=-5
+ ✅ Modal de conteo abierto exitosamente
+:7038/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🔍 Badges encontrados: Array(30)
+ 🧮 Calculando diferencia: Sistema=5, Físico=4, Diferencia=-1
+ 🖱️ Click en botón guardar conteo
+ 💾 === INICIANDO GUARDADO DE CONTEO ===
+ 📊 Datos del conteo: Object
+ 🔄 Cambiando botón a estado de carga...
+ 📤 Enviando datos de conteo: Object
+ 📡 Respuesta recibida: 200
+ ✅ Resultado exitoso: Object
+ ✅ Éxito: Conteo guardado exitosamente
+ 🔍 DETECTIVE: cargarProductosInventario ejecutándose...
+ 📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===
+ 📦 Inventario ID: 5113
+ 📦 Tipo de inventarioId: string
+ 📦 URL que se va a llamar: /TomaInventario/ObtenerProductos/5113
+ 📦 Realizando fetch...
+ 📦 Respuesta recibida:
+ 📦 Status: 200
+ 📦 StatusText: 
+ 📦 OK: true
+ 📦 Parseando JSON...
+ 📦 Datos recibidos: Object
+ 📦 Tipo de data: object
+ 📦 Data.success: true
+ 📦 Data.productos: Array(8)
+ 📦 Cantidad de productos: 8
+ 🔍 === DEBUGGING PRODUCTOS CARGADOS ===
+ 🔍 Respuesta completa: Object
+ 🔍 Productos array: Array(8)
+ 🔍 Estadísticas: Object
+ 🔍 Primer producto: Object
+ 🔍 Propiedades del primer producto: Array(19)
+ ✅ Cargados 8 productos
+ 🎨 Renderizando productos...
+ 🎨 Total productos a renderizar: 8
+ 🎨 Filtros activos: Object
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 17: Object
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 17: Object
+ ✅ Botones generados para producto 17: Crear Ajuste
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 20: Object
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 20: Object
+ ✅ Botones generados para producto 20: Crear Ajuste
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1016: Object
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1016: Object
+ 🟡 Producto 1016: Mostrando botón CREAR AJUSTE
+ ✅ Botones generados para producto 1016: Crear Ajuste
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1017: Object
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1017: Object
+ ✅ Botones generados para producto 1017: Crear Ajuste
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1018: Object
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1018: Object
+ ✅ Botones generados para producto 1018: Crear Ajuste
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1019: Object
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1019: Object
+ ✅ Botones generados para producto 1019: Crear Ajuste
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1021: Object
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1021: Object
+ ✅ Botones generados para producto 1021: Crear Ajuste
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1022: Object
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1022: Object
+ ✅ Botones generados para producto 1022: Crear Ajuste
+ ✅ Productos renderizados correctamente con filtros preservados
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 37.5% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 5 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 37.5% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 5 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 🎉 Conteo guardado y datos actualizados
+ 🔍 Badges encontrados: Array(32)
+ 📝 === ABRIENDO MODAL DE CONTEO ===
+ 📝 Producto ID: 1017
+ 📝 Producto encontrado: Llanta Test
+ 📝 Sin conteo anterior
+ 🧮 Calculando diferencia: Sistema=7, Físico=0, Diferencia=-7
+ ✅ Modal de conteo abierto exitosamente
+:7038/uploads/productos/abef5f29-6fb0-4865-843b-5454e4b374ef_Slam_R100_3-removebg-preview.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🔍 DETECTIVE: actualizarEstadisticas ejecutándose...
+ 📊 Estadísticas actualizadas correctamente: 0% completado
+ 📋 Cargando ajustes pendientes...
+ ✅ Cargados 0 ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🧮 Calculando diferencia: Sistema=7, Físico=7, Diferencia=0
+ 🔒 Auto-protección: Barra restaurada a 37.5%
+ 🚨 DETECTIVE: ¡Alguien reseteó la barra a 0px!
+(anonymous) @ ejecutar.js:7118
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ 🚨 Stack trace del culpable:
+(anonymous) @ ejecutar.js:7119
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ console.trace
+(anonymous) @ ejecutar.js:7120
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ 🖱️ Click en botón guardar conteo
+ 💾 === INICIANDO GUARDADO DE CONTEO ===
+ 📊 Datos del conteo: Object
+ 🔄 Cambiando botón a estado de carga...
+ 📤 Enviando datos de conteo: Object
+ 📡 Respuesta recibida: 200
+ ✅ Resultado exitoso: Object
+ ✅ Éxito: Conteo guardado exitosamente
+ 🔍 DETECTIVE: cargarProductosInventario ejecutándose...
+ 📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===
+ 📦 Inventario ID: 5113
+ 📦 Tipo de inventarioId: string
+ 📦 URL que se va a llamar: /TomaInventario/ObtenerProductos/5113
+ 📦 Realizando fetch...
+ 📦 Respuesta recibida:
+ 📦 Status: 200
+ 📦 StatusText: 
+ 📦 OK: true
+ 📦 Parseando JSON...
+ 📦 Datos recibidos: Object
+ 📦 Tipo de data: object
+ 📦 Data.success: true
+ 📦 Data.productos: Array(8)
+ 📦 Cantidad de productos: 8
+ 🔍 === DEBUGGING PRODUCTOS CARGADOS ===
+ 🔍 Respuesta completa: Object
+ 🔍 Productos array: Array(8)
+ 🔍 Estadísticas: Object
+ 🔍 Primer producto: Object
+ 🔍 Propiedades del primer producto: Array(19)
+ ✅ Cargados 8 productos
+ 🎨 Renderizando productos...
+ 🎨 Total productos a renderizar: 8
+ 🎨 Filtros activos: Object
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 17: Object
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔍 Producto 17: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 17: Object
+ ✅ Botones generados para producto 17: Crear Ajuste
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 20: Object
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔍 Producto 20: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 20: Object
+ ✅ Botones generados para producto 20: Crear Ajuste
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1016: Object
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔍 Producto 1016: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1016: Object
+ 🟡 Producto 1016: Mostrando botón CREAR AJUSTE
+ ✅ Botones generados para producto 1016: Crear Ajuste
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1017: Object
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔍 Producto 1017: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1017: Object
+ ✅ Botones generados para producto 1017: Crear Ajuste
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1018: Object
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1018: Object
+ ✅ Botones generados para producto 1018: Crear Ajuste
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1019: Object
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1019: Object
+ ✅ Botones generados para producto 1019: Crear Ajuste
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1021: Object
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1021: Object
+ ✅ Botones generados para producto 1021: Crear Ajuste
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1022: Object
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1022: Object
+ ✅ Botones generados para producto 1022: Crear Ajuste
+ ✅ Productos renderizados correctamente con filtros preservados
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 50% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 4 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 50% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 4 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 🎉 Conteo guardado y datos actualizados
+ 🔍 Badges encontrados: Array(33)
+ 💾 Estado de filtros UI guardado: Object
+ 🔍 Aplicando filtros: Object
+ ✅ Filtrado: 4 de 8 productos
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1018: Object
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔍 Producto 1018: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1018: Object
+ ✅ Botones generados para producto 1018: Crear Ajuste
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1019: Object
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1019: Object
+ ✅ Botones generados para producto 1019: Crear Ajuste
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1021: Object
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1021: Object
+ ✅ Botones generados para producto 1021: Crear Ajuste
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1022: Object
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1022: Object
+ ✅ Botones generados para producto 1022: Crear Ajuste
+ ✅ Renderizados 4 productos filtrados
+ 💾 Estado de filtros UI guardado: Object
+ ⚡ Filtro rápido aplicado con contorno: pendientes
+ 📝 === ABRIENDO MODAL DE CONTEO ===
+ 📝 Producto ID: 1018
+ 📝 Producto encontrado: Llanta Firestone Extreme
+ 📝 Sin conteo anterior
+ 🧮 Calculando diferencia: Sistema=5, Físico=0, Diferencia=-5
+ ✅ Modal de conteo abierto exitosamente
+:7038/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png:1  Failed to load resource: the server responded with a status of 404 ()
+ 🔍 Badges encontrados: Array(20)
+ 🧮 Calculando diferencia: Sistema=5, Físico=5, Diferencia=0
+ 🖱️ Click en botón guardar conteo
+ 💾 === INICIANDO GUARDADO DE CONTEO ===
+ 📊 Datos del conteo: Object
+ 🔄 Cambiando botón a estado de carga...
+ 📤 Enviando datos de conteo: Object
+ 📡 Respuesta recibida: 200
+ ✅ Resultado exitoso: Object
+ ✅ Éxito: Conteo guardado exitosamente
+ 🔍 DETECTIVE: cargarProductosInventario ejecutándose...
+ 📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===
+ 📦 Inventario ID: 5113
+ 📦 Tipo de inventarioId: string
+ 📦 URL que se va a llamar: /TomaInventario/ObtenerProductos/5113
+ 📦 Realizando fetch...
+ 📦 Respuesta recibida:
+ 📦 Status: 200
+ 📦 StatusText: 
+ 📦 OK: true
+ 📦 Parseando JSON...
+ 📦 Datos recibidos: Object
+ 📦 Tipo de data: object
+ 📦 Data.success: true
+ 📦 Data.productos: Array(8)
+ 📦 Cantidad de productos: 8
+ 🔍 === DEBUGGING PRODUCTOS CARGADOS ===
+ 🔍 Respuesta completa: Object
+ 🔍 Productos array: Array(8)
+ 🔍 Estadísticas: Object
+ 🔍 Primer producto: Object
+ 🔍 Propiedades del primer producto: Array(19)
+ ✅ Cargados 8 productos
+ 🎨 Renderizando productos...
+ 🎨 Total productos a renderizar: 8
+ 🎨 Filtros activos: Object
+ 🔍 Reaplicando filtros activos después de actualización...
+ 🔍 Aplicando filtros: Object
+ ✅ Filtrado: 3 de 8 productos
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1019: Object
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔍 Producto 1019: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1019: Object
+ ✅ Botones generados para producto 1019: Crear Ajuste
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1021: Object
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1021: Object
+ ✅ Botones generados para producto 1021: Crear Ajuste
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1022: Object
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1022: Object
+ ✅ Botones generados para producto 1022: Crear Ajuste
+ ✅ Renderizados 3 productos filtrados
+ ✅ Productos renderizados correctamente con filtros preservados
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 62.5% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 3 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 62.5% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 3 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 🎉 Conteo guardado y datos actualizados
+ 🔍 Badges encontrados: Array(18)
+ 📝 === ABRIENDO MODAL DE CONTEO ===
+ 📝 Producto ID: 1019
+ 📝 Producto encontrado: Llanta Continental Urban
+ 📝 Sin conteo anterior
+ 🧮 Calculando diferencia: Sistema=20, Físico=0, Diferencia=-20
+ ✅ Modal de conteo abierto exitosamente
+:7038/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp:1  Failed to load resource: the server responded with a status of 404 ()
+ 🧮 Calculando diferencia: Sistema=20, Físico=2, Diferencia=-18
+ 🧮 Calculando diferencia: Sistema=20, Físico=20, Diferencia=0
+ 🖱️ Click en botón guardar conteo
+ 💾 === INICIANDO GUARDADO DE CONTEO ===
+ 📊 Datos del conteo: Object
+ 🔄 Cambiando botón a estado de carga...
+ 📤 Enviando datos de conteo: Object
+ 📡 Respuesta recibida: 200
+ ✅ Resultado exitoso: Object
+ ✅ Éxito: Conteo guardado exitosamente
+ 🔍 DETECTIVE: cargarProductosInventario ejecutándose...
+ 📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===
+ 📦 Inventario ID: 5113
+ 📦 Tipo de inventarioId: string
+ 📦 URL que se va a llamar: /TomaInventario/ObtenerProductos/5113
+ 📦 Realizando fetch...
+ 📦 Respuesta recibida:
+ 📦 Status: 200
+ 📦 StatusText: 
+ 📦 OK: true
+ 📦 Parseando JSON...
+ 📦 Datos recibidos: Object
+ 📦 Tipo de data: object
+ 📦 Data.success: true
+ 📦 Data.productos: Array(8)
+ 📦 Cantidad de productos: 8
+ 🔍 === DEBUGGING PRODUCTOS CARGADOS ===
+ 🔍 Respuesta completa: Object
+ 🔍 Productos array: Array(8)
+ 🔍 Estadísticas: Object
+ 🔍 Primer producto: Object
+ 🔍 Propiedades del primer producto: Array(19)
+ ✅ Cargados 8 productos
+ 🎨 Renderizando productos...
+ 🎨 Total productos a renderizar: 8
+ 🎨 Filtros activos: Object
+ 🔍 Reaplicando filtros activos después de actualización...
+ 🔍 Aplicando filtros: Object
+ ✅ Filtrado: 2 de 8 productos
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1021: Object
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔍 Producto 1021: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1021: Object
+ ✅ Botones generados para producto 1021: Crear Ajuste
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1022: Object
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1022: Object
+ ✅ Botones generados para producto 1022: Crear Ajuste
+ ✅ Renderizados 2 productos filtrados
+ ✅ Productos renderizados correctamente con filtros preservados
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 75% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 2 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 75% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 2 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 🎉 Conteo guardado y datos actualizados
+ 🔍 Badges encontrados: Array(16)
+ 📝 === ABRIENDO MODAL DE CONTEO ===
+ 📝 Producto ID: 1021
+ 📝 Producto encontrado: Llanta Kumho Miller
+ 📝 Sin conteo anterior
+ 🧮 Calculando diferencia: Sistema=9, Físico=0, Diferencia=-9
+ ✅ Modal de conteo abierto exitosamente
+:7038/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp:1  Failed to load resource: the server responded with a status of 404 ()
+ 🔍 Badges encontrados: Array(16)
+ 🧮 Calculando diferencia: Sistema=9, Físico=9, Diferencia=0
+ 🖱️ Click en botón guardar conteo
+ 💾 === INICIANDO GUARDADO DE CONTEO ===
+ 📊 Datos del conteo: Object
+ 🔄 Cambiando botón a estado de carga...
+ 📤 Enviando datos de conteo: Object
+ 📡 Respuesta recibida: 200
+ ✅ Resultado exitoso: Object
+ ✅ Éxito: Conteo guardado exitosamente
+ 🔍 DETECTIVE: cargarProductosInventario ejecutándose...
+ 📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===
+ 📦 Inventario ID: 5113
+ 📦 Tipo de inventarioId: string
+ 📦 URL que se va a llamar: /TomaInventario/ObtenerProductos/5113
+ 📦 Realizando fetch...
+ 📦 Respuesta recibida:
+ 📦 Status: 200
+ 📦 StatusText: 
+ 📦 OK: true
+ 📦 Parseando JSON...
+ 📦 Datos recibidos: Object
+ 📦 Tipo de data: object
+ 📦 Data.success: true
+ 📦 Data.productos: Array(8)
+ 📦 Cantidad de productos: 8
+ 🔍 === DEBUGGING PRODUCTOS CARGADOS ===
+ 🔍 Respuesta completa: Object
+ 🔍 Productos array: Array(8)
+ 🔍 Estadísticas: Object
+ 🔍 Primer producto: Object
+ 🔍 Propiedades del primer producto: Array(19)
+ ✅ Cargados 8 productos
+ 🎨 Renderizando productos...
+ 🎨 Total productos a renderizar: 8
+ 🎨 Filtros activos: Object
+ 🔍 Reaplicando filtros activos después de actualización...
+ 🔍 Aplicando filtros: Object
+ ✅ Filtrado: 1 de 8 productos
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 DEBUG crearFilaProducto - Producto 1022: Object
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔍 Producto 1022: No hay ajustes pendientes cargados
+ 🔧 crearNuevosBotonesAccion - Producto 1022: Object
+ ✅ Botones generados para producto 1022: Crear Ajuste
+ ✅ Renderizados 1 productos filtrados
+ ✅ Productos renderizados correctamente con filtros preservados
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 87.5% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 1 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 87.5% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🔍 === CONDICIONES BÁSICAS ===
+ 📊 Todo contado: false (pendientes: 1 )
+ 📦 Hay productos: true (total: 8 )
+ 📝 Tiene permisos conteo: true
+ ✅ Tiene permisos validación: false
+ 👑 Es admin: false
+ 🎛️ Panel finalización existe: true
+ 🎛️ Panel conteo completado existe: false
+ ❌ === INVENTARIO NO LISTO ===
+ 🚫 Razón: Aún hay productos pendientes de contar
+ 🎉 Conteo guardado y datos actualizados
+ 🔍 Badges encontrados: Array(14)
+ 📝 === ABRIENDO MODAL DE CONTEO ===
+ 📝 Producto ID: 1022
+ 📝 Producto encontrado: Producto Ordenando URL API
+ 📝 Sin conteo anterior
+ 🧮 Calculando diferencia: Sistema=2, Físico=0, Diferencia=-2
+ ✅ Modal de conteo abierto exitosamente
+84a7110a-cf50-4b1d-b04f-fa71866652cb_descargar%20(2).jpg:1  Failed to load resource: the server responded with a status of 404 ()
+ 🔍 DETECTIVE: actualizarEstadisticas ejecutándose...
+ 📊 Estadísticas actualizadas correctamente: 0% completado
+ 📋 Cargando ajustes pendientes...
+ ✅ Cargados 0 ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ 🔍 Ajustes pendientes: Array(0)
+ ⚠️ No hay ajustes pendientes para contar
+ 📊 Actualizando estadísticas del panel con: Object
+ ✅ Panel actualizado: 0 ajustes pendientes
+ 🧮 Calculando diferencia: Sistema=2, Físico=2, Diferencia=0
+ 🔄 Restaurando estado de filtros UI: Object
+ ✅ Estado de filtros UI restaurado con contorno
+ 🔒 Auto-protección: Barra restaurada a 87.5%
+ 🚨 DETECTIVE: ¡Alguien reseteó la barra a 0px!
+(anonymous) @ ejecutar.js:7118
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ 🚨 Stack trace del culpable:
+(anonymous) @ ejecutar.js:7119
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ console.trace
+(anonymous) @ ejecutar.js:7120
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ 🖱️ Click en botón guardar conteo
+ 💾 === INICIANDO GUARDADO DE CONTEO ===
+ 📊 Datos del conteo: Object
+ 🔄 Cambiando botón a estado de carga...
+ 📤 Enviando datos de conteo: Object
+ 📡 Respuesta recibida: 200
+ ✅ Resultado exitoso: Object
+ ✅ Éxito: Conteo guardado exitosamente
+ 🔍 DETECTIVE: cargarProductosInventario ejecutándose...
+ 📦 === DEPURACIÓN: CARGANDO PRODUCTOS ===
+ 📦 Inventario ID: 5113
+ 📦 Tipo de inventarioId: string
+ 📦 URL que se va a llamar: /TomaInventario/ObtenerProductos/5113
+ 📦 Realizando fetch...
+ 📦 Respuesta recibida:
+ 📦 Status: 200
+ 📦 StatusText: 
+ 📦 OK: true
+ 📦 Parseando JSON...
+ 📦 Datos recibidos: Object
+ 📦 Tipo de data: object
+ 📦 Data.success: true
+ 📦 Data.productos: Array(8)
+ 📦 Cantidad de productos: 8
+ 🔍 === DEBUGGING PRODUCTOS CARGADOS ===
+ 🔍 Respuesta completa: Object
+ 🔍 Productos array: Array(8)
+ 🔍 Estadísticas: Object
+ 🔍 Primer producto: Object
+ 🔍 Propiedades del primer producto: Array(19)
+ ✅ Cargados 8 productos
+ 🎨 Renderizando productos...
+ 🎨 Total productos a renderizar: 8
+ 🎨 Filtros activos: Object
+ 🔍 Reaplicando filtros activos después de actualización...
+ 🔍 Aplicando filtros: Object
+ ✅ Filtrado: 0 de 8 productos
+ ✅ Productos renderizados correctamente con filtros preservados
+ 📊 Actualizando estadísticas UI...
+ 📊 Estadísticas actuales: Object
+ ✅ Estadísticas actualizadas: 100% completado
+ 🔍 === DEBUG: VERIFICANDO PANELES ===
+ 📊 Estadísticas actuales: Object
+ 🔄 Ajustes pendientes: 0
+ 🔒 Permisos inventario actual: Object
+ ✅ Mostrando panel de ajustes pendientes
+ 🔄 Actualizando panel de ajustes pendientes...
+ 📊 Contando ajustes por tipo...
+ejecutar.js:951 🔍 Ajustes pendientes: Array(0)
+ejecutar.js:962 ⚠️ No hay ajustes pendientes para contar
+ejecutar.js:921 📊 Actualizando estadísticas del panel con: Object
+ejecutar.js:937 ✅ Panel actualizado: 0 ajustes pendientes
+ejecutar.js:1328 🔍 === CONDICIONES BÁSICAS ===
+ejecutar.js:1329 📊 Todo contado: true (pendientes: 0 )
+ejecutar.js:1330 📦 Hay productos: true (total: 8 )
+ejecutar.js:1331 📝 Tiene permisos conteo: true
+ejecutar.js:1332 ✅ Tiene permisos validación: false
+ejecutar.js:1333 👑 Es admin: false
+ejecutar.js:1339 🎛️ Panel finalización existe: true
+ejecutar.js:1340 🎛️ Panel conteo completado existe: false
+ejecutar.js:1343 ✅ === INVENTARIO LISTO PARA PROCESAR ===
+ejecutar.js:1363 📝 Usuario solo puede notificar conteo completado
+ejecutar.js:1370 ⚠️ Panel conteoCompletadoPanel no existe, creando dinámicamente...
+mostrarPanelesSegunProgreso @ ejecutar.js:1370
+actualizarEstadisticasUI @ ejecutar.js:4667
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+guardarConteoProducto @ ejecutar.js:4402
+await in guardarConteoProducto
+(anonymous) @ ejecutar.js:1786
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+ejecutar.js:1409 🔨 Creando panel de conteo completado dinámicamente...
+ejecutar.js:1642 ✅ Event listeners configurados para panel de conteo completado
+ejecutar.js:1517 ✅ Panel de conteo completado creado y configurado
+ejecutar.js:4603 📊 Actualizando estadísticas UI...
+ejecutar.js:4604 📊 Estadísticas actuales: Object
+ejecutar.js:4664 ✅ Estadísticas actualizadas: 100% completado
+ejecutar.js:1304 🔍 === DEBUG: VERIFICANDO PANELES ===
+ejecutar.js:1307 📊 Estadísticas actuales: Object
+ejecutar.js:1308 🔄 Ajustes pendientes: 0
+ejecutar.js:1309 🔒 Permisos inventario actual: Object
+ejecutar.js:1313 ✅ Mostrando panel de ajustes pendientes
+ejecutar.js:915 🔄 Actualizando panel de ajustes pendientes...
+ejecutar.js:950 📊 Contando ajustes por tipo...
+ejecutar.js:951 🔍 Ajustes pendientes: Array(0)
+ejecutar.js:962 ⚠️ No hay ajustes pendientes para contar
+ejecutar.js:921 📊 Actualizando estadísticas del panel con: Object
+ejecutar.js:937 ✅ Panel actualizado: 0 ajustes pendientes
+ejecutar.js:1328 🔍 === CONDICIONES BÁSICAS ===
+ejecutar.js:1329 📊 Todo contado: true (pendientes: 0 )
+ejecutar.js:1330 📦 Hay productos: true (total: 8 )
+ejecutar.js:1331 📝 Tiene permisos conteo: true
+ejecutar.js:1332 ✅ Tiene permisos validación: false
+ejecutar.js:1333 👑 Es admin: false
+ejecutar.js:1339 🎛️ Panel finalización existe: true
+ejecutar.js:1340 🎛️ Panel conteo completado existe: true
+ejecutar.js:1343 ✅ === INVENTARIO LISTO PARA PROCESAR ===
+ejecutar.js:1363 📝 Usuario solo puede notificar conteo completado
+ejecutar.js:1537 ✅ Panel de conteo completado actualizado
+ejecutar.js:1368 ✅ Panel de conteo completado mostrado
+ejecutar.js:4405 🎉 Conteo guardado y datos actualizados
+ejecutar.js:728 🔍 Badges encontrados: Array(13)
+ejecutar.js:728 🔍 Badges encontrados: Array(13)
+ejecutar.js:4051 💾 Estado de filtros UI guardado: Object
+ejecutar.js:3812 🔍 Aplicando filtros: Object
+ejecutar.js:3871 ✅ Filtrado: 1 de 8 productos
+ejecutar.js:3714 🔍 Producto 1016: No hay ajustes pendientes cargados
+ejecutar.js:3405 🔧 DEBUG crearFilaProducto - Producto 1016: Object
+ejecutar.js:3714 🔍 Producto 1016: No hay ajustes pendientes cargados
+ejecutar.js:3714 🔍 Producto 1016: No hay ajustes pendientes cargados
+ejecutar.js:3516 🔧 crearNuevosBotonesAccion - Producto 1016: Object
+ejecutar.js:3574 🟡 Producto 1016: Mostrando botón CREAR AJUSTE
+ejecutar.js:3616 ✅ Botones generados para producto 1016: Crear Ajuste
+ejecutar.js:3911 ✅ Renderizados 1 productos filtrados
+ejecutar.js:4051 💾 Estado de filtros UI guardado: Object
+ejecutar.js:4161 ⚡ Filtro rápido aplicado con contorno: discrepancias
+ejecutar.js:5405 🔄 === ABRIENDO MODAL PARA CREAR AJUSTE ===
+ejecutar.js:5406 🔄 Producto ID: 1016
+ejecutar.js:3714 🔍 Producto 1016: No hay ajustes pendientes cargados
+ejecutar.js:5434 🔄 Producto válido para crear ajuste: Llanta Kumho Mobile
+ejecutar.js:5456 🔧 Configurando modal para modo CREAR
+ejecutar.js:5539 ✅ Event listeners de vista previa configurados
+ejecutar.js:5514 ✅ Modal configurado correctamente para modo CREAR
+ejecutar.js:5443 ✅ Modal de ajuste pendiente abierto en modo CREAR
+ejecutar.js:728 🔍 Badges encontrados: Array(17)
+ejecutar.js:728 🔍 Badges encontrados: Array(17)
+ejecutar.js:728 🔍 Badges encontrados: Array(17)
+ejecutar.js:5502 🖱️ Click en botón CREAR ajuste pendiente
+ejecutar.js:5654 💾 === GUARDANDO NUEVO AJUSTE PENDIENTE ===
+ejecutar.js:5704 📤 Enviando solicitud de ajuste pendiente: Object
+ejecutar.js:5748 ❌ Error guardando ajuste pendiente: Error: Error al registrar el ajuste pendiente
+    at guardarNuevoAjustePendiente (ejecutar.js:5744:19)
+guardarNuevoAjustePendiente @ ejecutar.js:5748
+await in guardarNuevoAjustePendiente
+(anonymous) @ ejecutar.js:5503
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+ejecutar.js:5252 ❌ Error: Error al guardar ajuste pendiente: Error al registrar el ajuste pendiente
+mostrarError @ ejecutar.js:5252
+guardarNuevoAjustePendiente @ ejecutar.js:5749
+await in guardarNuevoAjustePendiente
+(anonymous) @ ejecutar.js:5503
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+ejecutar.js:728 🔍 Badges encontrados: Array(17)
+ejecutar.js:7151 🔍 DETECTIVE: actualizarEstadisticas ejecutándose...
+ejecutar.js:4483 📊 Estadísticas actualizadas correctamente: 0% completado
+ejecutar.js:1978 📋 Cargando ajustes pendientes...
+ejecutar.js:1998 ✅ Cargados 0 ajustes pendientes
+ejecutar.js:915 🔄 Actualizando panel de ajustes pendientes...
+ejecutar.js:950 📊 Contando ajustes por tipo...
+ejecutar.js:951 🔍 Ajustes pendientes: Array(0)
+ejecutar.js:962 ⚠️ No hay ajustes pendientes para contar
+ejecutar.js:921 📊 Actualizando estadísticas del panel con: Object
+ejecutar.js:937 ✅ Panel actualizado: 0 ajustes pendientes
+ejecutar.js:4063 🔄 Restaurando estado de filtros UI: Object
+ejecutar.js:4111 ✅ Estado de filtros UI restaurado con contorno
+ejecutar.js:4658 🔒 Auto-protección: Barra restaurada a 100%
+ejecutar.js:7118 🚨 DETECTIVE: ¡Alguien reseteó la barra a 0px!
+(anonymous) @ ejecutar.js:7118
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ejecutar.js:7119 🚨 Stack trace del culpable:
+(anonymous) @ ejecutar.js:7119
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ejecutar.js:7120 console.trace
+(anonymous) @ ejecutar.js:7120
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ejecutar.js:728 🔍 Badges encontrados: Array(17)
+ejecutar.js:728 🔍 Badges encontrados: Array(17)
+5113:1 Blocked aria-hidden on an element because its descendant retained focus. The focus must not be hidden from assistive technology users. Avoid using aria-hidden on a focused element or its ancestor. Consider using the inert attribute instead, which will also prevent focus. For more details, see the aria-hidden section of the WAI-ARIA specification at https://w3c.github.io/aria/#aria-hidden.
+Element with focus: <button.btn-close>
+Ancestor with aria-hidden: <div.admin-wrapper> <div class=​"admin-wrapper" aria-hidden=​"true">​…​</div>​flex
+ejecutar.js:728 🔍 Badges encontrados: (17) ['1', '1', '📝 Conteo • 🔧 Ajustes', 'En Progreso', '0', 'Listo para finalizar', '1', '5', '4', 'Contado', '⚠️ Dif: -1', 'Listo para revisión', 'Listo para finalizar', 'ID: -', 'Accesorio', 'Activo', '2 sesiones']
+ejecutar.js:728 🔍 Badges encontrados: (17) ['1', '1', '📝 Conteo • 🔧 Ajustes', 'En Progreso', '0', 'Listo para finalizar', '1', '5', '4', 'Contado', '⚠️ Dif: -1', 'Listo para revisión', 'Listo para finalizar', 'ID: -', 'Accesorio', 'Activo', '2 sesiones']
+ejecutar.js:728 🔍 Badges encontrados: (17) ['1', '1', '📝 Conteo • 🔧 Ajustes', 'En Progreso', '0', 'Listo para finalizar', '1', '5', '4', 'Contado', '⚠️ Dif: -1', 'Listo para revisión', 'Listo para finalizar', 'ID: -', 'Accesorio', 'Activo', '2 sesiones']
+ejecutar.js:728 🔍 Badges encontrados: (17) ['1', '1', '📝 Conteo • 🔧 Ajustes', 'En Progreso', '0', 'Listo para finalizar', '1', '5', '4', 'Contado', '⚠️ Dif: -1', 'Listo para revisión', 'Listo para finalizar', 'ID: -', 'Accesorio', 'Activo', '2 sesiones']
+ejecutar.js:5502 🖱️ Click en botón CREAR ajuste pendiente
+ejecutar.js:5654 💾 === GUARDANDO NUEVO AJUSTE PENDIENTE ===
+ejecutar.js:5704 📤 Enviando solicitud de ajuste pendiente: {inventarioProgramadoId: 5113, productoId: 1016, tipoAjuste: 'sistema_a_fisico', cantidadSistemaOriginal: 5, cantidadFisicaContada: 4, …}
+ejecutar.js:5748 ❌ Error guardando ajuste pendiente: Error: Error al registrar el ajuste pendiente
+    at guardarNuevoAjustePendiente (ejecutar.js:5744:19)
+guardarNuevoAjustePendiente @ ejecutar.js:5748
+await in guardarNuevoAjustePendiente
+(anonymous) @ ejecutar.js:5503
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+ejecutar.js:5252 ❌ Error: Error al guardar ajuste pendiente: Error al registrar el ajuste pendiente
+mostrarError @ ejecutar.js:5252
+guardarNuevoAjustePendiente @ ejecutar.js:5749
+await in guardarNuevoAjustePendiente
+(anonymous) @ ejecutar.js:5503
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
+ejecutar.js:7151 🔍 DETECTIVE: actualizarEstadisticas ejecutándose...
+ejecutar.js:4483 📊 Estadísticas actualizadas correctamente: 0% completado
+ejecutar.js:1978 📋 Cargando ajustes pendientes...
+ejecutar.js:1998 ✅ Cargados 0 ajustes pendientes
+ejecutar.js:915 🔄 Actualizando panel de ajustes pendientes...
+ejecutar.js:950 📊 Contando ajustes por tipo...
+ejecutar.js:951 🔍 Ajustes pendientes: []
+ejecutar.js:962 ⚠️ No hay ajustes pendientes para contar
+ejecutar.js:921 📊 Actualizando estadísticas del panel con: {entradas: 0, salidas: 0, ajustes_sistema: 0, correcciones: 0, total: 0}
+ejecutar.js:937 ✅ Panel actualizado: 0 ajustes pendientes
+ejecutar.js:4063 🔄 Restaurando estado de filtros UI: {busquedaRapida: '', filtroEstado: 'discrepancia', filtroTipo: '', botonActivoClass: 'discrepancias'}
+ejecutar.js:4111 ✅ Estado de filtros UI restaurado con contorno
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:115 ⚠️ Botón de usuarios conectados del sidebar no encontrado
+actualizarContadorSidebar @ sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:115
+cargarUsuariosConectadosSidebar @ sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:76
+await in cargarUsuariosConectadosSidebar
+(anonymous) @ sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:41
+setInterval
+inicializarSidebarUsuarios @ sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:40
+(anonymous) @ sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:211
+setTimeout
+(anonymous) @ sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:210
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+ejecutar.js:4658 🔒 Auto-protección: Barra restaurada a 100%
+ejecutar.js:7118 🚨 DETECTIVE: ¡Alguien reseteó la barra a 0px!
+(anonymous) @ ejecutar.js:7118
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ejecutar.js:7119 🚨 Stack trace del culpable:
+(anonymous) @ ejecutar.js:7119
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ejecutar.js:7120 console.trace
+(anonymous) @ ejecutar.js:7120
+(anonymous) @ ejecutar.js:7113
+attributes
+style @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+$ @ jquery.min.js:2
+css @ jquery.min.js:2
+(anonymous) @ ejecutar.js:4656
+setInterval
+actualizarEstadisticasUI @ ejecutar.js:4650
+cargarProductosInventario @ ejecutar.js:3342
+await in cargarProductosInventario
+(anonymous) @ ejecutar.js:7143
+inicializarEjecutorInventario @ ejecutar.js:884
+await in inicializarEjecutorInventario
+(anonymous) @ ejecutar.js:858
+e @ jquery.min.js:2
+(anonymous) @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+ejecutar.js:728 🔍 Badges encontrados: (17) ['1', '1', '📝 Conteo • 🔧 Ajustes', 'En Progreso', '0', 'Listo para finalizar', '1', '5', '4', 'Contado', '⚠️ Dif: -1', 'Listo para revisión', 'Listo para finalizar', 'ID: -', 'Accesorio', 'Activo', '2 sesiones']
