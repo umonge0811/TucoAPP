@@ -197,9 +197,13 @@ namespace GestionLlantera.Web.Services
             {
                 _logger.LogInformation("📋 Obteniendo ajustes pendientes para inventario {InventarioId}", inventarioId);
 
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/TomaInventario/{inventarioId}/ajustes");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/ajustes");
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -234,9 +238,13 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/TomaInventario/{inventarioId}/productos/{productoId}/ajustes");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.GetAsync($"api/TomaInventario/{inventarioId}/productos/{productoId}/ajustes");
+                var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -266,9 +274,13 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/TomaInventario/ajustes/{ajusteId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
                 ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.DeleteAsync($"api/TomaInventario/ajustes/{ajusteId}");
+                var response = await _httpClient.DeleteAsync(url);
 
                 if (!response.IsSuccessStatusCode)
                 {
