@@ -144,7 +144,11 @@ namespace GestionLlantera.Web.Services
                 var json = JsonSerializer.Serialize(anuncioDto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("api/Anuncios", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("api/Anuncios");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PostAsync(url, content);
 
                 var jsonResponse = await response.Content.ReadAsStringAsync();
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -184,7 +188,11 @@ namespace GestionLlantera.Web.Services
                 var json = JsonSerializer.Serialize(anuncioDto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"api/Anuncios/{anuncioId}", content);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/Anuncios/{anuncioId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
 
                 var jsonResponse = await response.Content.ReadAsStringAsync();
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -221,7 +229,11 @@ namespace GestionLlantera.Web.Services
                     _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var response = await _httpClient.DeleteAsync($"api/Anuncios/{anuncioId}");
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"api/Anuncios/{anuncioId}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.DeleteAsync(url);
 
                 var jsonResponse = await response.Content.ReadAsStringAsync();
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
