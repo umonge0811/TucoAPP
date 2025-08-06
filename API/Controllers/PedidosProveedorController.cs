@@ -256,7 +256,6 @@ namespace API.Controllers
                     .Include(pp => pp.Usuario)
                     .Include(pp => pp.DetallePedidos)
                         .ThenInclude(dp => dp.Producto)
-                            .ThenInclude(p => p.Llanta)
                     .Where(pp => pp.PedidoId == nuevoPedido.PedidoId)
                     .Select(pp => new
                     {
@@ -267,30 +266,13 @@ namespace API.Controllers
                         pp.Estado,
                         pp.UsuarioId,
                         UsuarioNombre = pp.Usuario.NombreUsuario,
-                        Proveedor = new
-                        {
-                            pp.Proveedor.ProveedorId,
-                            pp.Proveedor.NombreProveedor,
-                            pp.Proveedor.Contacto,
-                            pp.Proveedor.Telefono,
-                            pp.Proveedor.Direccion
-                        },
                         DetallePedidos = pp.DetallePedidos.Select(dp => new
                         {
                             dp.DetalleId,
                             dp.ProductoId,
                             ProductoNombre = dp.Producto.NombreProducto,
                             dp.Cantidad,
-                            dp.PrecioUnitario,
-                            // Información de llanta si existe
-                            Llanta = dp.Producto.Llanta != null ? new
-                            {
-                                dp.Producto.Llanta.Ancho,
-                                dp.Producto.Llanta.Perfil,
-                                dp.Producto.Llanta.Diametro,
-                                dp.Producto.Llanta.Marca,
-                                dp.Producto.Llanta.Modelo
-                            } : null
+                            dp.PrecioUnitario
                         }).ToList(),
                         TotalProductos = pp.DetallePedidos.Count(),
                         MontoTotal = pp.DetallePedidos.Sum(dp => dp.Cantidad * (dp.PrecioUnitario ?? 0))
