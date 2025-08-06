@@ -300,6 +300,46 @@ $(document).ready(function () {
         $(this).siblings('.invalid-feedback').remove();
     });
 
+    // ✅ EVENTOS PARA EL MODAL DE WHATSAPP
+    $("#numeroWhatsApp").on('input', function() {
+        // Limpiar caracteres no numéricos
+        let numero = $(this).val().replace(/\D/g, '');
+
+        // Limitar a 8 dígitos
+        if (numero.length > 8) {
+            numero = numero.substring(0, 8);
+        }
+
+        $(this).val(numero);
+
+        // Validar y actualizar estado del botón
+        const esValido = numero.length === 8;
+        $("#btnEnviarWhatsApp").prop('disabled', !esValido);
+
+        if (numero.length === 8) {
+            $(this).removeClass('is-invalid').addClass('is-valid');
+        } else if (numero.length > 0) {
+            $(this).removeClass('is-valid').addClass('is-invalid');
+        } else {
+            $(this).removeClass('is-valid is-invalid');
+        }
+    });
+
+    // Evento para enviar con número específico
+    $("#btnEnviarWhatsApp").off('click').on('click', function() {
+        enviarConNumeroEspecifico();
+    });
+
+    // Limpiar modal al cerrar
+    $("#modalWhatsAppNumero").on('hidden.bs.modal', function() {
+        $("#numeroWhatsApp").val('').removeClass('is-valid is-invalid');
+        $("#incluirImagen").prop('checked', true);
+        $("#btnEnviarWhatsApp").prop('disabled', true);
+        const $btn = $("#btnEnviarWhatsApp");
+        $btn.find('.normal-state').show();
+        $btn.find('.loading-state').hide();
+    });
+
     console.log('✅ Funcionalidad de detalle de producto inicializada');
 
 
@@ -307,92 +347,18 @@ $(document).ready(function () {
 
 /**
  * Función para compartir producto desde vista detalle
- * Usa los datos del contexto del producto
+ * Usa la función unificada de WhatsApp
  */
 function compartirProducto() {
-    console.log('📤 Compartiendo producto...');
-
-    const contexto = window.productoContexto;
-    if (!contexto) {
-        console.error('❌ No hay contexto del producto disponible');
-        return;
-    }
-
-    // Usar función de WhatsApp mejorada
-    compartirPorWhatsApp();
+    enviarProductoPorWhatsApp();
 }
 
-// Funciones de compartir mejoradas - UNIFICADA CON INVENTARIO.JS
+/**
+ * Función de compatibilidad para mantener la interfaz existente
+ * Redirige a la función unificada
+ */
 function compartirPorWhatsApp() {
-    try {
-        // ✅ INTENTAR OBTENER DATOS DEL CONTEXTO O DE LA PÁGINA DIRECTAMENTE
-        let nombre, precio, stock, productoId;
-        
-        // Primero intentar con window.productoContexto
-        if (window.productoContexto) {
-            nombre = window.productoContexto.nombre;
-            precio = window.productoContexto.precio || '0';
-            stock = window.productoContexto.stock || 0;
-            productoId = window.productoContexto.productoId;
-        } else {
-            // ✅ FALLBACK: Obtener datos directamente de la página de detalle
-            // Buscar elementos en la página de detalle
-            nombre = $('h1').first().text() || $('.product-title').text() || 'Producto';
-            
-            // Buscar precio en elementos comunes
-            precio = $('.precio, .price, [class*="precio"]').first().text() || '0';
-            if (precio.includes('₡')) {
-                precio = precio.replace('₡', '').trim();
-            }
-            
-            // Buscar stock en elementos comunes  
-            const stockText = $('.stock-info span, .stock, [class*="stock"]').first().text() || '0';
-            stock = stockText.match(/\d+/) ? stockText.match(/\d+/)[0] + ' unidades' : '0 unidades';
-            
-            // Obtener ID del producto de la URL
-            const urlParts = window.location.pathname.split('/');
-            productoId = urlParts[urlParts.length - 1];
-            
-            console.log('📦 Datos obtenidos de la página:', { nombre, precio, stock, productoId });
-        }
-
-        // Validar que tenemos datos mínimos
-        if (!nombre || nombre === 'Producto') {
-            console.error('❌ No se pudieron obtener los datos del producto');
-            mostrarNotificacion('No se pudo identificar el producto para compartir.', 'danger');
-            return;
-        }
-
-        // Obtener URL de la primera imagen si existe
-        let urlImagen = '';
-        const primeraImagen = $('.carousel-item.active img').attr('src') || $('.product-image img').attr('src');
-        if (primeraImagen && !primeraImagen.includes('no-image.png')) {
-            urlImagen = `${window.location.origin}${primeraImagen}`;
-        }
-
-        // ✅ USAR EL FORMATO CORRECTO Y UNIFICADO (IGUAL QUE INVENTARIO.JS)
-        let mensaje = `¡Hola! Te comparto este producto:\n\n`;
-        mensaje += `${nombre}\n`;
-        mensaje += `Precio: ₡${precio}\n`;
-        mensaje += `Stock: ${stock}\n`;
-        mensaje += `Más detalles: ${window.location.href}\n\n`;
-
-        if (urlImagen) {
-            mensaje += `Imagen: ${urlImagen}`;
-        }
-
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
-
-        window.open(whatsappUrl, '_blank');
-        console.log('✅ Compartido por WhatsApp desde detalle producto');
-
-        // ✅ USAR LA MISMA NOTIFICACIÓN QUE INVENTARIO.JS
-        mostrarNotificacion('Producto compartido por WhatsApp exitosamente', 'success');
-
-    } catch (error) {
-        console.error('❌ Error al compartir por WhatsApp:', error);
-        mostrarNotificacion('Error al compartir por WhatsApp', 'danger');
-    }
+    enviarProductoPorWhatsApp();
 }
 
 function usarMetodoTradicional() {
@@ -518,6 +484,151 @@ function mostrarToast(mensaje, tipo = 'info', icono = 'bi-info-circle') {
     $toast.on('hidden.bs.toast', function () {
         $(this).remove();
     });
+}
+
+/**
+ * Función unificada para enviar producto por WhatsApp desde vista detalle
+ * Compatible con el modal de número o envío directo
+ */
+function enviarProductoPorWhatsApp() {
+    console.log('📤 === ENVIANDO PRODUCTO POR WHATSAPP DESDE DETALLE ===');
+
+    try {
+        // ✅ OBTENER DATOS DEL CONTEXTO DEL PRODUCTO
+        const contexto = window.productoContexto;
+        
+        if (!contexto) {
+            console.error('❌ No hay contexto del producto disponible');
+            mostrarNotificacion('No se pudo identificar el producto para compartir.', 'danger');
+            return;
+        }
+
+        // ✅ PREPARAR DATOS DEL PRODUCTO
+        const nombre = contexto.nombre || 'Producto';
+        const precio = contexto.precio || '0';
+        const stock = contexto.stock || 0;
+        const productoId = contexto.id;
+        const imagenPrincipal = contexto.imagenPrincipal || '';
+
+        console.log('📦 Datos del producto:', { nombre, precio, stock, productoId });
+
+        // ✅ VERIFICAR SI EXISTE EL MODAL DE WHATSAPP
+        if ($("#modalWhatsAppNumero").length > 0) {
+            console.log('📱 Usando modal de WhatsApp');
+
+            // Configurar el producto para compartir globalmente
+            window.productoParaCompartir = {
+                nombre: nombre,
+                precio: `₡${precio}`,
+                stock: `${stock} unidades`,
+                urlImagen: imagenPrincipal,
+                urlProducto: window.location.href
+            };
+
+            // Mostrar preview del producto en el modal
+            $("#productoPreview").html(`
+                <div class="d-flex align-items-center">
+                    ${imagenPrincipal ? `<img src="${imagenPrincipal}" alt="${nombre}" class="me-3" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">` : ''}
+                    <div>
+                        <h6 class="mb-1">${nombre}</h6>
+                        <p class="mb-0 text-muted">₡${precio} - ${stock} unidades disponibles</p>
+                    </div>
+                </div>
+            `);
+            
+            // Mostrar el modal
+            $("#modalWhatsAppNumero").modal("show");
+
+        } else {
+            console.log('📱 Envío directo sin modal');
+
+            // ✅ CONSTRUIR MENSAJE UNIFICADO
+            let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+            mensaje += `${nombre}\n`;
+            mensaje += `Precio: ₡${precio}\n`;
+            mensaje += `Stock: ${stock} unidades\n`;
+            mensaje += `Más detalles: ${window.location.href}\n\n`;
+
+            if (imagenPrincipal && !imagenPrincipal.includes('no-image.png')) {
+                mensaje += `Imagen: ${window.location.origin}${imagenPrincipal}`;
+            }
+
+            // Crear URL de WhatsApp
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+
+            // Abrir WhatsApp
+            window.open(whatsappUrl, '_blank');
+            
+            // Mostrar notificación
+            mostrarNotificacion('Producto compartido por WhatsApp exitosamente', 'success');
+        }
+
+    } catch (error) {
+        console.error('❌ Error al enviar por WhatsApp:', error);
+        mostrarNotificacion('Error al compartir por WhatsApp: ' + error.message, 'danger');
+    }
+}
+
+/**
+ * Función para enviar con número específico (llamada desde el modal)
+ */
+function enviarConNumeroEspecifico() {
+    console.log('📞 === ENVIANDO CON NÚMERO ESPECÍFICO ===');
+
+    const numeroWhatsApp = $("#numeroWhatsApp").val().replace(/\D/g, '');
+    const incluirImagen = $("#incluirImagen").is(":checked");
+    const producto = window.productoParaCompartir;
+
+    if (!producto) {
+        mostrarNotificacion("Error: No hay producto seleccionado para enviar.", "danger");
+        return;
+    }
+
+    if (numeroWhatsApp.length !== 8) {
+        mostrarNotificacion("Por favor, ingrese un número de WhatsApp válido de 8 dígitos.", "warning");
+        return;
+    }
+
+    try {
+        // ✅ CONSTRUIR MENSAJE CON FORMATO UNIFICADO
+        let mensaje = `¡Hola! Te comparto este producto:\n\n`;
+        mensaje += `${producto.nombre.replace('₡', '').trim()}\n`;
+        mensaje += `Precio: ${producto.precio}\n`;
+        mensaje += `Stock: ${producto.stock}\n`;
+        mensaje += `Más detalles: ${producto.urlProducto}\n\n`;
+        
+        if (incluirImagen && producto.urlImagen && !producto.urlImagen.includes('no-image.png')) {
+            mensaje += `Imagen: ${window.location.origin}${producto.urlImagen}`;
+        }
+
+        // Construir URL de WhatsApp con número específico
+        const urlWhatsApp = `https://wa.me/506${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+        // Mostrar estado de carga
+        const $btnEnviar = $("#btnEnviarWhatsApp");
+        $btnEnviar.find('.normal-state').hide();
+        $btnEnviar.find('.loading-state').show();
+        $btnEnviar.prop('disabled', true);
+
+        // Simular envío y abrir WhatsApp
+        setTimeout(() => {
+            window.open(urlWhatsApp, '_blank');
+            
+            // Ocultar modal y mostrar notificación
+            $("#modalWhatsAppNumero").modal("hide");
+            mostrarNotificacion("Mensaje enviado a WhatsApp correctamente", "success");
+
+            // Restablecer estado del botón
+            $btnEnviar.find('.loading-state').hide();
+            $btnEnviar.find('.normal-state').show();
+            $btnEnviar.prop('disabled', true);
+
+        }, 1500);
+
+    } catch (error) {
+        console.error('❌ Error al enviar por WhatsApp:', error);
+        mostrarNotificacion("Error al enviar por WhatsApp: " + error.message, "danger");
+    }
 }
 
 /**
