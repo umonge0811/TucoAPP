@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -11,15 +11,21 @@ namespace GestionLlantera.Web.Services
         private readonly TucoContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<NotificacionDirectService> _logger;
+        private readonly ApiConfigurationService _apiConfig; // ✅ AGREGADO: Servicio centralizado
 
         public NotificacionDirectService(
             TucoContext context,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<NotificacionDirectService> logger)
+            ILogger<NotificacionDirectService> logger,
+            ApiConfigurationService apiConfig) // ✅ INYECTADO: Servicio centralizado
         {
             _context = context;
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
+            _apiConfig = apiConfig; // ✅ ASIGNADO: Servicio centralizado
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 NotificacionDirectService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         public async Task<List<NotificacionDTO>> ObtenerMisNotificacionesAsync()
