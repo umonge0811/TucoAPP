@@ -14,8 +14,12 @@ namespace API.Services
         public WhatsAppService(ILogger<WhatsAppService> logger, IConfiguration configuration)
         {
             _logger = logger;
-            _token = configuration["WhatsApp:Token"] ?? "tutoken"; // Token por defecto para pruebas
+            _token = configuration["WhatsApp:Token"] ?? "GA250806023031"; // Token por defecto para pruebas
             _apiUrl = configuration["WhatsApp:ApiUrl"] ?? "https://script.google.com/macros/s/AKfycbyoBhxuklU5D3LTguTcYAS85klwFINHxxd-FroauC4CmFVvS0ua/exec";
+            
+            // Log de configuración para debugging
+            _logger.LogInformation("🔧 WhatsApp Service configurado - Token: {Token}, URL: {ApiUrl}", 
+                _token?.Substring(0, Math.Min(6, _token.Length)) + "...", _apiUrl);
         }
 
         /// <summary>
@@ -74,12 +78,17 @@ namespace API.Services
                 request.AddParameter("application/json", jsonPayload, ParameterType.RequestBody);
 
                 _logger.LogInformation("📤 Enviando payload: {Payload}", jsonPayload);
+                _logger.LogInformation("🌐 URL destino: {Url}", _apiUrl);
+                _logger.LogInformation("🔑 Token usado: {Token}", _token?.Substring(0, Math.Min(6, _token.Length)) + "...");
 
                 var response = await client.ExecuteAsync(request);
 
+                _logger.LogInformation("📡 Respuesta recibida - StatusCode: {StatusCode}", response.StatusCode);
+                _logger.LogInformation("📄 Contenido respuesta: {Content}", response.Content);
+
                 if (response.IsSuccessful)
                 {
-                    _logger.LogInformation("✅ Mensaje enviado exitosamente. Respuesta: {Response}", response.Content);
+                    _logger.LogInformation("✅ Mensaje enviado exitosamente");
                     return true;
                 }
                 else
