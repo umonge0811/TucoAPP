@@ -186,11 +186,13 @@ function mostrarPendientes(pendientes) {
     console.log('📦 === MOSTRANDO PENDIENTES ===');
     console.log('📦 Total pendientes recibidos:', pendientes.length);
 
-    const tbody = document.getElementById('tablaEntregasPendientesBody');
+    const tbody = document.getElementById('bodyEntregasPendientes');
     const cardsContainer = document.getElementById('entregasCardsMobile');
 
     if (!tbody || !cardsContainer) {
         console.error('❌ No se encontró el tbody de la tabla o el contenedor de tarjetas');
+        console.log('❌ Buscando tbody con ID:', 'bodyEntregasPendientes', 'encontrado:', !!tbody);
+        console.log('❌ Buscando cards container con ID:', 'entregasCardsMobile', 'encontrado:', !!cardsContainer);
         return;
     }
 
@@ -201,14 +203,14 @@ function mostrarPendientes(pendientes) {
     if (!pendientes || pendientes.length === 0) {
         console.log('📦 No hay pendientes para mostrar');
         $('#sinResultados').show();
-        $('#tablaPendientes').hide();
+        $('#tablaEntregasPendientes').hide();
         $('#entregasCardsMobile').hide(); // Ocultar contenedor de tarjetas también
         actualizarPaginacionEntregas([]);
         return;
     }
 
     $('#sinResultados').hide();
-    $('#tablaPendientes').show();
+    $('#tablaEntregasPendientes').show();
     $('#entregasCardsMobile').show(); // Mostrar contenedor de tarjetas
 
     // Calcular índices para paginación
@@ -243,7 +245,7 @@ function mostrarPaginacionEntregas(paginaActual, totalPaginas) {
     console.log('📄 === MOSTRANDO PAGINACIÓN DE ENTREGAS ===');
     console.log('📄 Página actual:', paginaActual, 'Total páginas:', totalPaginas);
 
-    const paginacion = $('#paginacionEntregas');
+    const paginacion = $('#paginacionEntregasPendientes');
     if (paginacion.length === 0) {
         console.error('❌ No se encontró el contenedor de paginación');
         return;
@@ -336,7 +338,7 @@ function cambiarPaginaEntregas(nuevaPagina) {
     mostrarPendientes(pendientesFiltrados);
 
     // Scroll suave hacia la tabla
-    document.getElementById('tablaPendientes').scrollIntoView({
+    document.getElementById('tablaEntregasPendientes').scrollIntoView({
         behavior: 'smooth',
         block: 'start'
     });
@@ -827,7 +829,7 @@ function actualizarContadorResultados(mostrados, total) {
     } else {
         // Crear elemento si no existe
         const contador = `<div id="contadorResultados" class="text-muted small mb-2">${texto}</div>`;
-        $('#tablaPendientes').before(contador);
+        $('#tablaEntregasPendientes').before(contador);
     }
 }
 // =========================================
@@ -837,7 +839,7 @@ function actualizarContadorResultados(mostrados, total) {
 function mostrarIndicadorCarga(mostrar) {
     if (mostrar) {
         $('#loadingIndicator').show();
-        $('#tablaPendientes').hide();
+        $('#tablaEntregasPendientes').hide();
         $('#sinResultados').hide();
         $('#entregasCardsMobile').hide(); // Ocultar tarjetas mientras carga
     } else {
@@ -895,11 +897,11 @@ function mostrarError(mensaje) {
 function mostrarLoading(mostrar) {
     if (mostrar) {
         $('#loadingIndicator').show();
-        $('#tablaPendientes').hide();
+        $('#tablaEntregasPendientes').hide();
         $('#sinResultados').hide();
     } else {
         $('#loadingIndicator').hide();
-        $('#tablaPendientes').show();
+        $('#tablaEntregasPendientes').show();
     }
 }
 
