@@ -1062,37 +1062,68 @@ function actualizarFilaProductoEnTabla(productoId, stockNuevo, stockBajo, stockM
 function mostrarNotificacion(mensaje, tipo = 'info', titulo = '') {
     console.log(`🔔 [NOTIFICACIÓN] Tipo: ${tipo}, Mensaje: ${mensaje}`);
 
-    // ✅ USAR TOASTR DIRECTAMENTE SIN COMPLICACIONES
-    if (typeof toastr !== 'undefined') {
-        console.log('✅ Usando Toastr directamente');
-
-        // Configuración simple y efectiva
-        toastr.options = {
-            "closeButton": true,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "timeOut": tipo === 'success' ? "3000" : "5000",
-            "preventDuplicates": true
-        };
-
-        // Convertir tipo 'danger' a 'error' para Toastr
-        const tipoToastr = tipo === 'danger' ? 'error' : tipo;
-
-        // Mostrar notificación
-        if (titulo) {
-            toastr[tipoToastr](mensaje, titulo);
-        } else {
-            toastr[tipoToastr](mensaje);
+    try {
+        // Prevenir múltiples notificaciones del mismo mensaje
+        if (window.ultimaNotificacion === mensaje && Date.now() - window.ultimaNotificacionTiempo < 2000) {
+            console.log('🚫 Notificación duplicada bloqueada');
+            return;
         }
 
-        return;
+        window.ultimaNotificacion = mensaje;
+        window.ultimaNotificacionTiempo = Date.now();
+
+        // ✅ VERIFICAR SI TOASTR ESTÁ DISPONIBLE Y ES FUNCIÓN
+        if (typeof window.toastr === 'object' && window.toastr !== null) {
+            console.log('✅ Usando Toastr');
+
+            // ✅ CONFIGURAR TOASTR CON ESTILOS COMPLETOS
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": tipo === 'success' ? "4000" : "6000",
+                "preventDuplicates": true
+            };
+
+            // Convertir tipo 'danger' a 'error' para Toastr
+            const tipoToastr = tipo === 'danger' ? 'error' : tipo;
+
+            // Verificar que el método existe antes de llamarlo
+            if (typeof toastr[tipoToastr] === 'function') {
+                if (titulo) {
+                    toastr[tipoToastr](mensaje, titulo);
+                } else {
+                    toastr[tipoToastr](mensaje);
+                }
+                return;
+            }
+        }
+
+        // ✅ FALLBACK con SweetAlert si está disponible
+        if (typeof Swal !== 'undefined' && typeof Swal.fire === 'function') {
+            console.log('✅ Usando SweetAlert como fallback');
+            const icono = tipo === 'danger' ? 'error' : tipo === 'warning' ? 'warning' : tipo === 'success' ? 'success' : 'info';
+            Swal.fire({
+                icon: icono,
+                title: titulo || (tipo === 'success' ? '¡Éxito!' : tipo === 'danger' ? 'Error' : 'Información'),
+                text: mensaje,
+                timer: 3000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        // ✅ FALLBACK final con alert nativo
+        console.warn('⚠️ Ninguna librería de notificaciones disponible, usando alert');
+        const prefijo = tipo === 'success' ? '✅ ' : tipo === 'danger' ? '❌ ' : tipo === 'warning' ? '⚠️ ' : 'ℹ️ ';
+        alert(prefijo + (titulo ? titulo + ': ' : '') + mensaje);
+
+    } catch (error) {
+        console.error('❌ Error en mostrarNotificacion:', error);
+        // Fallback de emergencia
+        alert('Notificación: ' + mensaje);
     }
-
-    // ✅ FALLBACK simple si no hay Toastr
-    console.warn('⚠️ Toastr no disponible, usando alert');
-    alert((titulo ? titulo + ': ' : '') + mensaje);
 }
-
 /**
  * Función de compatibilidad con el formato anterior
  * @param {string} titulo - Título
@@ -1531,7 +1562,7 @@ $(document).ready(function () {
     });
 
     console.log('✅ Sistema de ajuste de stock inicializado correctamente');
-    console.log('🚀 Inventario - Inicializando sistema completo');
+    console.log('🚀 Inventario - Sistema completo');
 
     // ✅ Limpiar eventos previos
     $(document).off('click', '.producto-img-mini');
@@ -1924,21 +1955,21 @@ $(document).ready(function () {
             let mensaje = `*${nombre}*\n\n`;
             mensaje += `Precio: ${precio}\n`;
             mensaje += `Stock disponible: ${stock}\n\n`;
-            
+
             if (urlImagen) {
                 mensaje += `Ver imagen:\n${urlImagen}\n\n`;
             }
-            
+
             mensaje += `Mas informacion:\n${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
 
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
 
             window.open(whatsappUrl, '_blank');
             console.log('✅ Compartido por WhatsApp');
-            
+
             // Mostrar notificación de éxito
             mostrarNotificacion("Éxito", "Producto compartido por WhatsApp", "success");
-            
+
         } catch (error) {
             console.error('❌ Error al compartir por WhatsApp:', error);
             mostrarNotificacion("Error", "No se pudo compartir por WhatsApp", "danger");
@@ -1978,6 +2009,7 @@ $(document).ready(function () {
             mostrarNotificacion("Error", "No se pudo compartir por Email", "danger");
         }
     }
+
 
 
     // Función de validación
@@ -2117,48 +2149,27 @@ $(document).ready(function () {
             // ✅ CONFIGURAR TOASTR CON ESTILOS COMPLETOS
             toastr.options = {
                 "closeButton": true,
-                "debug": false,
-                "newestOnTop": true,
                 "progressBar": true,
                 "positionClass": "toast-top-right",
-                "preventDuplicates": true,
-                "onclick": null,
-                "showDuration": "300",
-                "hideDuration": "1000",
                 "timeOut": tipo === 'success' ? "4000" : "6000",
-                "extendedTimeOut": "1000",
-                "showEasing": "swing",
-                "hideEasing": "linear",
-                "showMethod": "fadeIn",
-                "hideMethod": "fadeOut",
-                "tapToDismiss": true,
-                "escapeHtml": false
+                "preventDuplicates": true
             };
 
-            // ✅ PERSONALIZAR MENSAJE CON ICONOS
-            const iconos = {
-                'success': '✅ ',
-                'danger': '❌ ',
-                'warning': '⚠️ ',
-                'info': 'ℹ️ '
-            };
-
+            // Convertir tipo 'danger' a 'error' para Toastr
             const tipoToastr = tipo === 'danger' ? 'error' : tipo;
-            const icono = iconos[tipo] || iconos[tipoToastr] || '';
-            const mensajeConIcono = icono + mensaje;
 
-            // ✅ MOSTRAR TOASTR
+            // Mostrar notificación
             if (titulo) {
-                toastr[tipoToastr](mensajeConIcono, titulo);
+                toastr[tipoToastr](mensaje, titulo);
             } else {
-                toastr[tipoToastr](mensajeConIcono);
+                toastr[tipoToastr](mensaje);
             }
 
             return;
         }
 
-        // ✅ FALLBACK SIMPLE SI NO HAY TOASTR
-        console.warn('⚠️ Toastr no disponible');
+        // ✅ FALLBACK simple si no hay Toastr
+        console.warn('⚠️ Toastr no disponible, usando alert');
         alert((titulo ? titulo + ': ' : '') + mensaje);
     }
 
@@ -2332,36 +2343,42 @@ function compartirPorWhatsApp() {
     $("#modalWhatsAppNumero").modal("show");
 }
 
-function compartirPorEmail() {
-    try {
-        const nombre = $("#nombreProductoVistaRapida").text();
-        const precio = $("#precioProductoVistaRapida").text();
-        const stock = $("#stockProductoVistaRapida").text();
-        const descripcion = $("#descripcionVistaRapida").text();
-        const productoId = $("#btnVerDetallesCompletos").attr("href").split('/').pop();
-
-        const urlProducto = `${window.location.origin}/Inventario/DetalleProducto/${productoId}`;
-        const asunto = `Producto: ${nombre}`;
-        const cuerpo = `Hola,
-
-            Te comparto información sobre este producto:
-
-            🛞 PRODUCTO: ${nombre}
-
-            💰 PRECIO: ${precio}
-            📦 STOCK DISPONIBLE: ${stock} unidades
-            📝 DESCRIPCIÓN: ${descripcion}
-
-            🔗 Ver detalles completos:
-            ${urlProducto}
-
-            Saludos.`;
-
-        const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
-        window.location.href = emailUrl;
-        console.log('✅ Compartido por Email');
-    } catch (error) {
-        console.error('❌ Error al compartir por Email:', error);
-        mostrarNotificacion("Error", "No se pudo compartir por Email", "danger");
+function enviarProductoPorWhatsApp() {
+    if (!productoParaCompartir) {
+        mostrarNotificacion("Error: No hay producto seleccionado para enviar.", "danger");
+        return;
     }
+
+    const numeroWhatsApp = $("#numeroWhatsApp").val().replace(/\D/g, '');
+    const incluirImagen = $("#incluirImagen").is(":checked");
+
+    if (numeroWhatsApp.length !== 8) {
+        mostrarNotificacion("Por favor, ingrese un número de WhatsApp válido de 8 dígitos.", "warning");
+        return;
+    }
+
+    // Construir el mensaje
+    let mensaje = `*${productoParaCompartir.nombre}*\n\n`;
+    mensaje += `Precio: ${productoParaCompartir.precio}\n`;
+    mensaje += `Stock disponible: ${productoParaCompartir.stock}\n\n`;
+    if (incluirImagen && productoParaCompartir.urlImagen) {
+        mensaje += `Ver imagen:\n${productoParaCompartir.urlImagen}\n\n`;
+    }
+    mensaje += `Más información:\n${productoParaCompartir.urlProducto}`;
+
+    // Construir la URL de WhatsApp
+    const urlWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+    // Abrir WhatsApp
+    window.open(urlWhatsApp, '_blank');
+
+    // Ocultar modal y mostrar notificación
+    $("#modalWhatsAppNumero").modal("hide");
+    mostrarNotificacion("Enviando producto por WhatsApp...", "info");
+
+    // Restablecer estado del botón
+    const $btnEnviar = $("#btnEnviarWhatsApp");
+    $btnEnviar.find('.normal-state').show();
+    $btnEnviar.find('.loading-state').hide();
+    $btnEnviar.prop('disabled', true);
 }
