@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +42,7 @@ namespace API.Controllers
                 _logger.LogInformation("Obteniendo notificaciones para usuario ID: {UserId}", userId.Value);
 
                 var notificaciones = await _context.Notificaciones
-                    .Where(n => n.UsuarioId == userId.Value)
+                    .Where(n => n.UsuarioId == userId.Value && n.EsVisible)
                     .OrderByDescending(n => n.FechaCreacion)
                     .Take(50)
                     .Select(n => new NotificacionDTO
@@ -89,7 +89,7 @@ namespace API.Controllers
                 }
 
                 var conteo = await _context.Notificaciones
-                    .CountAsync(n => n.UsuarioId == userId.Value && !n.Leida);
+                    .CountAsync(n => n.UsuarioId == userId.Value && !n.Leida && n.EsVisible);
 
                 _logger.LogInformation("Usuario {UserId} tiene {Count} notificaciones no leídas", userId.Value, conteo);
 
@@ -117,7 +117,7 @@ namespace API.Controllers
                 }
 
                 var notificacion = await _context.Notificaciones
-                    .FirstOrDefaultAsync(n => n.NotificacionId == id && n.UsuarioId == userId.Value);
+                    .FirstOrDefaultAsync(n => n.NotificacionId == id && n.UsuarioId == userId.Value && n.EsVisible);
 
                 if (notificacion == null)
                 {
@@ -153,7 +153,7 @@ namespace API.Controllers
                 }
 
                 var notificacionesNoLeidas = await _context.Notificaciones
-                    .Where(n => n.UsuarioId == userId.Value && !n.Leida)
+                    .Where(n => n.UsuarioId == userId.Value && !n.Leida && n.EsVisible)
                     .ToListAsync();
 
                 foreach (var notificacion in notificacionesNoLeidas)
@@ -251,6 +251,82 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Oculta una notificación (soft delete)
+        /// </summary>
+        [HttpPut("{id}/ocultar")]
+        public async Task<IActionResult> OcultarNotificacion(int id)
+        {
+            try
+            {
+                var userId = ObtenerUsuarioIdDelToken();
+                if (userId == null)
+                {
+                    return Unauthorized();
+                }
+
+                var notificacion = await _context.Notificaciones
+                    .FirstOrDefaultAsync(n => n.NotificacionId == id && n.UsuarioId == userId.Value && n.EsVisible);
+
+                if (notificacion == null)
+                {
+                    return NotFound(new { message = "Notificación no encontrada" });
+                }
+
+                notificacion.EsVisible = false;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Notificación {NotificacionId} ocultada para usuario {UserId}", id, userId.Value);
+
+                return Ok(new { message = "Notificación ocultada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ocultar notificación: {Id}", id);
+                return StatusCode(500, new { message = "Error al ocultar notificación" });
+            }
+        }
+
+        /// <summary>
+        /// Oculta todas las notificaciones del usuario
+        /// </summary>
+        [HttpPut("ocultar-todas")]
+        public async Task<IActionResult> OcultarTodasNotificaciones()
+        {
+            try
+            {
+                var userId = ObtenerUsuarioIdDelToken();
+                if (userId == null)
+                {
+                    return Unauthorized();
+                }
+
+                var notificacionesVisibles = await _context.Notificaciones
+                    .Where(n => n.UsuarioId == userId.Value && n.EsVisible)
+                    .ToListAsync();
+
+                foreach (var notificacion in notificacionesVisibles)
+                {
+                    notificacion.EsVisible = false;
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Se ocultaron {Count} notificaciones para usuario {UserId}", notificacionesVisibles.Count, userId.Value);
+
+                return Ok(new
+                {
+                    message = "Todas las notificaciones fueron ocultadas",
+                    cantidad = notificacionesVisibles.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ocultar todas las notificaciones");
+                return StatusCode(500, new { message = "Error al ocultar notificaciones" });
             }
         }
 
