@@ -210,22 +210,24 @@
 
 <!-- Modal para ver detalles -->
 <div class="modal fade" id="modalDetallesPendiente" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="bi bi-info-circle me-2"></i>
-                    Detalles del Pendiente
+                    <span class="d-none d-md-inline">Detalles del Pendiente</span>
+                    <span class="d-md-none">Detalles</span>
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-3">
                 <div id="detallesPendienteContent">
                     <!-- Se llenará dinámicamente -->
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary btn-modal-mobile" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
                     Cerrar
                 </button>
             </div>
